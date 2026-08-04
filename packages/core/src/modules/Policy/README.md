@@ -1,37 +1,51 @@
 # Policy
 
-OpenAPM-shaped governance for `@bapm/core` (M8): local dual-read discovery,
-parse/validate, rule evaluate, and install/lock/update gate helpers.
+OpenAPM-shaped governance for `@bapm/core` (P4): local dual-read + minimal
+remote discovery, `extends` resolve/merge with host-class pin, rule evaluate,
+and install/lock/update gate helpers.
 
 ## Public API
 
-| Export                                     | Kind                                                      |
-| ------------------------------------------ | --------------------------------------------------------- |
-| `APM_POLICY_FILE` / `BAPM_POLICY_FILE`     | constants (`apm-policy.yml` / `bapm-policy.yml`)          |
-| `DEFAULT_POLICY_PROVIDERS`                 | ordered providers — M8 = `["local"]` only                 |
-| `discoverPolicyPath`                       | dual-read / explicit; neither → absent                    |
-| `parsePolicy` / `loadPolicy`               | mapping-root parse; enum coerce; pl-005/009               |
-| `evaluateInstallPolicy`                    | deny/allow/require/max_depth/pinned + enforcement         |
-| `runPolicyGate` / `assertPolicyGateAllows` | discover → evaluate; escape hatch                         |
-| `isPolicyDisabled`                         | `noPolicy` / `BAPM_POLICY_DISABLE` / `APM_POLICY_DISABLE` |
-| `PolicyError`                              | typed errors                                              |
+| Export                                     | Kind                                                              |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| `APM_POLICY_FILE` / `BAPM_POLICY_FILE`     | constants (`apm-policy.yml` / `bapm-policy.yml`)                  |
+| `DEFAULT_POLICY_PROVIDERS`                 | `["local", "github-owner-dotgithub"]` (documented order)          |
+| `discoverPolicyPath`                       | local dual-read / explicit; neither → absent                      |
+| `discoverPolicyWithProviders`              | ordered providers; `discovery:` / injectable remotes + HTTP       |
+| `selectProjectRemote`                      | pl-012 origin / single / multi fail-closed / none skip            |
+| `parsePolicy` / `loadPolicy`               | mapping-root parse; extends resolve; pl-005/009                   |
+| `resolvePolicyChain`                       | depth ≤5, cycle reject, host-class pin, §6.4 merge                |
+| `mergePolicies` / `hostClassOf`            | §6.4 gate families + eTLD+1 host class                            |
+| `evaluateInstallPolicy`                    | deny/allow/require/max_depth/pinned + enforcement                 |
+| `runPolicyGate` / `assertPolicyGateAllows` | discover → resolve → evaluate; escape hatch                       |
+| `isPolicyDisabled`                         | `noPolicy` / `BAPM_POLICY_DISABLE` / `APM_POLICY_DISABLE`         |
+| `PolicyError`                              | typed errors                                                      |
 
-## Discovery providers (M8)
+## Discovery providers (P4)
 
-Registered default: **local dual-read only**. Remote org policy
-(`github-owner-dotgithub`) is **deferred N/A** — not required for M8.
+Default: **local** dual-read first, then **`github-owner-dotgithub`**
+(`<owner>/.github/apm-policy.yml` on the implementation-default host,
+`github.com`). Selectable via policy `discovery.providers` or gate options.
+ADO / multi-candidate cascades are out of scope.
+
+## Extends / merge
+
+- Depth ≤5; cycles rejected with named members (pl-003)
+- Host-class pin against leaf (pl-004)
+- §6.4 merge for gate families (pl-006); mcp/compilation merge thin/N/A
+- `fetch_failure: block` aborts on remote/extends fetch failure (pl-010)
 
 ## Gate wiring
 
 Install / lock / mutating update call the gate **after resolve plan** and
 **before** `downloadPackages` / durable modules writes (plan → gate → download).
+Gate evaluates the **merged** effective document.
 
-## Deferred
+## Deferred / out of scope
 
-- `extends` merge chain (pl-003/006), host-class pin (pl-004)
-- Remote fetch + `fetch_failure` remote path (pl-010/012)
 - Thin `bapm policy status` CLI (diagnostics via install/lock for now)
-- pl-013/014/015/016 security/audit hooks
+- Marketplace/plugin, Registry host, approve/deny UX, full ADO cascade
+- Multi-target adapters beyond cursor
 
 ## Escape
 

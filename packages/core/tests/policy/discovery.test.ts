@@ -107,11 +107,11 @@ describe("M8 discovery — no parent walk", () => {
   });
 });
 
-describe("M8 discovery — providers local-only", () => {
-  test("default provider list is local-only (no remote required)", () => {
+describe("M8 discovery — providers include local + remote", () => {
+  test("default provider list includes local and github-owner-dotgithub", () => {
     const providers = getDefaultPolicyProviders();
     const text = JSON.stringify(providers);
     expect(text).toMatch(/local/i);
-    expect(text).not.toMatch(/github-owner-dotgithub/i);
+    expect(text).toMatch(/github-owner-dotgithub/i);
   });
 });

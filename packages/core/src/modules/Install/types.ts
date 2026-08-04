@@ -37,6 +37,36 @@ export type RunInstallOptions = {
   policy?: string;
   /** Skip policy discovery + checks (`--no-policy` / env disable). */
   noPolicy?: boolean;
+  /** Override ordered policy discovery providers. */
+  policyProviders?: string[];
+  /** Alias for `policyProviders`. */
+  providers?: string[];
+  /** Injectable git remotes for pl-012 / remote discovery. */
+  listGitRemotes?: (cwd?: string) => Array<{ name: string; url: string }>;
+  remotes?: Array<{ name: string; url: string }>;
+  /** Injectable HTTP for remote policy / extends. */
+  fetchPolicyUrl?: (url: string) => {
+    ok?: boolean;
+    text?: string;
+    body?: string;
+    status?: number;
+    url?: string;
+  };
+  httpGet?: (url: string) => {
+    ok?: boolean;
+    text?: string;
+    body?: string;
+    status?: number;
+    url?: string;
+  };
+  /** Injectable extends ancestor fetcher. */
+  fetchAncestor?: (
+    ref: string,
+    context: { leafHostClass: string; chain: string[] },
+  ) => unknown;
+  /** When remote fetch fails before a document exists (pl-010). */
+  defaultFetchFailure?: "off" | "warn" | "block";
+  implementationDefaultHost?: string;
   /**
    * Deploy transitive (dependency) MCP servers when no grant surface applies
    * (`--trust-transitive-mcp`). Direct `dependencies.mcp` always eligible.

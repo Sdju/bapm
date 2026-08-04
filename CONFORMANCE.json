@@ -5,29 +5,31 @@
   "classes": {
     "consumer": "claimed",
     "producer": "claimed",
-    "governance": "floor",
+    "governance": "claimed",
     "registry": "n/a"
   },
   "claim_posture": {
     "consumer": "claimed",
     "producer": "claimed",
-    "governance": "floor",
+    "governance": "claimed",
     "registry": "n/a"
   },
   "optional_features": [],
   "limitations": [
     "Multi-target adapters beyond cursor are out of scope",
     "Marketplace / plugin surfaces are out of scope",
-    "Governance remote providers and policy extends deferred to P4",
     "Registry host / rg-001 not claimed (N/A)",
     "Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names",
-    "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes"
+    "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
+    "ADO / multi-candidate policy cascades and marketplace/plugin governance UX are out of scope",
+    "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)"
   ],
   "scope_out": [
     "multi-target",
     "marketplace/plugin",
     "registry host",
-    "P4 remote/extends",
+    "full ADO cascade",
+    "approve/deny UX",
     "full Python Mode B port"
   ],
   "requirements": [
@@ -551,12 +553,12 @@
       "keyword": "MUST",
       "section": "6.4",
       "conformance_class": "governance",
-      "status": "skipped",
+      "status": "active",
       "fixtures": [
         "tests/fixtures/spec-conformance/policy/valid-extends.yml",
         "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
       ],
-      "rationale": "P4 deferred: remote policy providers / extends not claimed in Governance floor"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/extends-resolve.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts"
     },
     {
       "id": "req-pl-004",
@@ -564,7 +566,7 @@
       "section": "6.4",
       "conformance_class": "governance",
       "status": "active",
-      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts; packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
     },
     {
       "id": "req-pl-005",
@@ -580,7 +582,7 @@
       "section": "6.4",
       "conformance_class": "governance",
       "status": "active",
-      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts; packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
     },
     {
       "id": "req-pl-007",
@@ -612,31 +614,31 @@
       "section": "6.2",
       "conformance_class": "governance",
       "status": "active",
-      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
     },
     {
       "id": "req-pl-011",
       "keyword": "MUST",
       "section": "6.1.1",
       "conformance_class": "governance",
-      "status": "skipped",
+      "status": "active",
       "fixtures": [
         "tests/fixtures/spec-conformance/policy/valid-extends.yml",
         "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
       ],
-      "rationale": "P4 deferred: remote policy providers / extends not claimed in Governance floor"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts"
     },
     {
       "id": "req-pl-012",
       "keyword": "MUST",
       "section": "6.1.1",
       "conformance_class": "governance",
-      "status": "skipped",
+      "status": "active",
       "fixtures": [
         "tests/fixtures/spec-conformance/policy/valid-extends.yml",
         "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
       ],
-      "rationale": "P4 deferred: remote policy providers / extends not claimed in Governance floor"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts"
     },
     {
       "id": "req-pl-013",

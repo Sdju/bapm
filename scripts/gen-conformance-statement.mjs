@@ -148,9 +148,15 @@ function buildMarkdown(json) {
     `| Consumer | **${json.classes.consumer}** | Primary claim (cursor deploy matrix; waivers below) |`,
   );
   lines.push(`| Producer | **${json.classes.producer}** | init/pack/pr-004 surface |`);
-  lines.push(
-    `| Governance | **${json.classes.governance}** (local floor) | Local dual-read + install gate; remote providers and \`extends\` not claimed |`,
-  );
+  const govNotes =
+    String(json.classes.governance).toLowerCase() === "claimed"
+      ? "Ordered providers `local` then `github-owner-dotgithub`; extends resolve/merge + host-class pin"
+      : "Local dual-read + install gate; remote providers and `extends` not claimed";
+  const govLabel =
+    String(json.classes.governance).toLowerCase() === "claimed"
+      ? `**${json.classes.governance}**`
+      : `**${json.classes.governance}** (local floor)`;
+  lines.push(`| Governance | ${govLabel} | ${govNotes} |`);
   lines.push(
     `| Registry | **${json.classes.registry}** | No registry host; req-rg-001 not claimed |`,
   );
@@ -174,7 +180,7 @@ function buildMarkdown(json) {
   }
   if (json.scope_out?.length) {
     lines.push("");
-    lines.push("### Scope out (P3)");
+    lines.push("### Scope out");
     lines.push("");
     for (const item of json.scope_out) {
       lines.push(`- ${item}`);

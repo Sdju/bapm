@@ -5,21 +5,22 @@ spec_version: v0.1
 claim_posture:
   consumer: claimed
   producer: claimed
-  governance: floor
+  governance: claimed
   registry: n/a
 limitations:
 - Multi-target adapters beyond cursor are out of scope
 - Marketplace / plugin surfaces are out of scope
-- Governance remote providers and policy extends deferred to P4
 - Registry host / rg-001 not claimed (N/A)
 - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
-- Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent
-  passes
+- Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
+- ADO / multi-candidate policy cascades and marketplace/plugin governance UX are out of scope
+- 'Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)'
 scope_out:
 - multi-target
 - marketplace/plugin
 - registry host
-- P4 remote/extends
+- full ADO cascade
+- approve/deny UX
 - full Python Mode B port
 requirements:
 - id: req-mf-001
@@ -402,18 +403,20 @@ requirements:
   class: governance
   keyword: MUST
   section: '6.4'
-  status: skipped
+  status: active
   fixture:
   - tests/fixtures/spec-conformance/policy/valid-extends.yml
   - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
-  rationale: 'P4 deferred: remote policy providers / extends not claimed in Governance floor'
+  citation: packages/core/tests/acceptance/p4-governance-remote-extends/extends-resolve.test.ts;
+    packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts
 - id: req-pl-004
   class: governance
   keyword: MUST
   section: '6.4'
   status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
+  citation: packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts;
+    packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
+    packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
 - id: req-pl-005
   class: governance
   keyword: MUST
@@ -426,8 +429,9 @@ requirements:
   keyword: MUST
   section: '6.4'
   status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
+  citation: packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts;
+    packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
+    packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
 - id: req-pl-007
   class: governance
   keyword: MUST
@@ -454,26 +458,29 @@ requirements:
   keyword: MUST
   section: '6.2'
   status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
+  citation: packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts;
+    packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
+    packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
 - id: req-pl-011
   class: governance
   keyword: MUST
   section: 6.1.1
-  status: skipped
+  status: active
   fixture:
   - tests/fixtures/spec-conformance/policy/valid-extends.yml
   - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
-  rationale: 'P4 deferred: remote policy providers / extends not claimed in Governance floor'
+  citation: packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts;
+    packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts;
+    packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts
 - id: req-pl-012
   class: governance
   keyword: MUST
   section: 6.1.1
-  status: skipped
+  status: active
   fixture:
   - tests/fixtures/spec-conformance/policy/valid-extends.yml
   - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
-  rationale: 'P4 deferred: remote policy providers / extends not claimed in Governance floor'
+  citation: packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts
 - id: req-pl-013
   class: governance
   keyword: MUST

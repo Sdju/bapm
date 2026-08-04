@@ -40,9 +40,10 @@ describe("p3 Mode B — published conformance statement (req-cf-002)", () => {
     // Registry must be N/A — not a full claim.
     expect(md).toMatch(/Registry[^\n]{0,80}(N\/A|n\/a|not claimed|deferred)/i);
 
-    // Governance floor: remote/extends not fully claimed.
-    expect(md).toMatch(/floor|local|limited/i);
-    expect(md).toMatch(/extends|remote/i);
+    // Governance claimed: remote + extends evidenced (not local-only floor).
+    expect(md).toMatch(/Governance[^\n]{0,120}claim/i);
+    expect(md).toMatch(/github-owner-dotgithub|extends|remote/i);
+    expect(md).not.toMatch(/Governance[^\n]{0,80}\*\*floor\*\*/i);
 
     const json = loadJsonFile(conformanceJsonPath) as Record<string, unknown>;
     const blob = JSON.stringify(json).toLowerCase();
@@ -55,9 +56,7 @@ describe("p3 Mode B — published conformance statement (req-cf-002)", () => {
     expect(classes.producer, "Producer must be claimed").toMatch(
       /claim|active|yes|true|floor/i,
     );
-    expect(classes.governance, "Governance must be floor/limited").toMatch(
-      /floor|limited|partial|local|claim/i,
-    );
+    expect(classes.governance, "Governance must be claimed").toMatch(/^claimed$/i);
     expect(classes.registry, "Registry must be N/A").toMatch(
       /n\/a|na|not.?claimed|deferred|none|false/i,
     );

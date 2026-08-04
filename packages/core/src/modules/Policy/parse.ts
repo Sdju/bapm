@@ -13,6 +13,7 @@ const KNOWN_TOP_LEVEL = new Set([
   "fetch_failure",
   "dependencies",
   "extends",
+  "discovery",
   "mcp",
   "manifest",
   "unmanaged_files",

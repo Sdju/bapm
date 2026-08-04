@@ -19,7 +19,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 |-------|---------|-------|
 | Consumer | **claimed** | Primary claim (cursor deploy matrix; waivers below) |
 | Producer | **claimed** | init/pack/pr-004 surface |
-| Governance | **floor** (local floor) | Local dual-read + install gate; remote providers and `extends` not claimed |
+| Governance | **claimed** | Ordered providers `local` then `github-owner-dotgithub`; extends resolve/merge + host-class pin |
 | Registry | **n/a** | No registry host; req-rg-001 not claimed |
 
 ## Coverage summary
@@ -28,24 +28,26 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 |-------|-------:|--------:|----:|
 | Producer | 12 | 0 | 0 |
 | Consumer | 62 | 19 | 0 |
-| Governance | 13 | 3 | 0 |
+| Governance | 16 | 0 | 0 |
 | Registry | 0 | 0 | 1 |
 
 ## Limitations / non-conformance
 
 - Multi-target adapters beyond cursor are out of scope
 - Marketplace / plugin surfaces are out of scope
-- Governance remote providers and policy extends deferred to P4
 - Registry host / rg-001 not claimed (N/A)
 - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
+- ADO / multi-candidate policy cascades and marketplace/plugin governance UX are out of scope
+- Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)
 
-### Scope out (P3)
+### Scope out
 
 - multi-target
 - marketplace/plugin
 - registry host
-- P4 remote/extends
+- full ADO cascade
+- approve/deny UX
 - full Python Mode B port
 
 ## Per-requirement coverage
@@ -103,16 +105,16 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-mf-023 | MUST | 4.5 | consumer | active | packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts · tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml; tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml; tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml; tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml; tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml |
 | req-pl-001 | MUST | 6.1 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/policy/security-integrity.yml |
 | req-pl-002 | MUST | 6.2 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/policy/security-integrity.yml |
-| req-pl-003 | MUST | 6.4 | governance | skipped | tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml — P4 deferred: remote policy providers / extends not claimed in Governance floor |
-| req-pl-004 | MUST | 6.4 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
+| req-pl-003 | MUST | 6.4 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/extends-resolve.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts · tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml |
+| req-pl-004 | MUST | 6.4 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts; packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-005 | MUST | 6.5 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
-| req-pl-006 | MUST | 6.4 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
+| req-pl-006 | MUST | 6.4 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts; packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-007 | MUST | 6.3.1 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-008 | MUST | 6.3.1 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-009 | MUST | 6.6 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
-| req-pl-010 | MUST | 6.2 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
-| req-pl-011 | MUST | 6.1.1 | governance | skipped | tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml — P4 deferred: remote policy providers / extends not claimed in Governance floor |
-| req-pl-012 | MUST | 6.1.1 | governance | skipped | tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml — P4 deferred: remote policy providers / extends not claimed in Governance floor |
+| req-pl-010 | MUST | 6.2 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
+| req-pl-011 | MUST | 6.1.1 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts · tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml |
+| req-pl-012 | MUST | 6.1.1 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts · tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml |
 | req-pl-013 | MUST | 6.8 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/policy/security-integrity.yml |
 | req-pl-014 | MUST | 6.8 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/policy/security-integrity.yml |
 | req-pl-015 | MUST | 6.3.5 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
@@ -166,9 +168,6 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 ## Waivers
 
 - **req-mf-016** (skipped): Soft limitation: mf-016 not claimed active in P3 floor
-- **req-pl-003** (skipped): P4 deferred: remote policy providers / extends not claimed in Governance floor
-- **req-pl-011** (skipped): P4 deferred: remote policy providers / extends not claimed in Governance floor
-- **req-pl-012** (skipped): P4 deferred: remote policy providers / extends not claimed in Governance floor
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
 - **req-sc-002** (skipped): Out of scope for P3: marketplace / plugin / soft extras deferred
 - **req-sc-003** (skipped): Out of scope for P3: marketplace / plugin / soft extras deferred

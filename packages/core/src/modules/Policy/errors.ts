@@ -7,7 +7,13 @@ export type PolicyErrorCode =
   | "POLICY_YAML_PARSE"
   | "POLICY_YAML_SAFE_SUBSET"
   | "POLICY_VALIDATION"
-  | "POLICY_VIOLATION";
+  | "POLICY_VIOLATION"
+  | "POLICY_EXTENDS_CYCLE"
+  | "POLICY_EXTENDS_DEPTH"
+  | "POLICY_EXTENDS_FETCH"
+  | "POLICY_HOST_CLASS_PIN"
+  | "POLICY_REMOTE_AMBIGUOUS"
+  | "POLICY_FETCH_FAILURE";
 
 export class PolicyError extends Error {
   readonly code: PolicyErrorCode;

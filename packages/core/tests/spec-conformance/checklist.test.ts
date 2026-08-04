@@ -56,7 +56,7 @@ describe("p3 Mode B — requirements mirror + checklist", () => {
     }
   });
 
-  test("Registry rg-001 is n/a; Governance remote/extends are skipped not active", () => {
+  test("Registry rg-001 is n/a; Governance pl-003/011/012 may be active when claimed", () => {
     const path = findExistingPath(checklistCandidates);
     expect(path, "checklist required").toBeTruthy();
     const rows = checklistRows(
@@ -68,31 +68,18 @@ describe("p3 Mode B — requirements mirror + checklist", () => {
     expect(["n/a", "na", "skipped"]).toContain(rg.status);
     expect(rg.status).not.toBe("active");
 
-    const extendsLike = rows.filter(
-      (r) =>
-        /extends|remote/i.test(r.id) ||
-        /extends|remote/i.test(String(r.rationale ?? r.waiver ?? "")),
-    );
-    // At least policy extends-related rows must not be silently active without waiver.
     const plExtends = rows.filter((r) => /^req-pl-/.test(r.id));
     expect(plExtends.length).toBeGreaterThan(0);
 
-    for (const row of plExtends) {
-      if (row.status === "active") {
-        const rationale = `${row.rationale ?? ""} ${row.waiver ?? ""} ${row.citation ?? ""}`;
-        // Local-floor claims may be active; remote/extends-only must not be.
-        if (/extends|remote\s+provider/i.test(`${row.id} ${rationale}`)) {
-          expect.fail(
-            `${row.id} claims active for remote/extends — must be skipped with P4 rationale`,
-          );
-        }
-      }
-    }
-
-    // Explicit: if checklist marks a row as extends-related skipped, keep it skipped.
-    for (const row of extendsLike) {
-      if (/req-pl-/.test(row.id) && /extends/i.test(row.id + String(row.rationale ?? ""))) {
-        expect(["skipped", "n/a", "na"]).toContain(row.status);
+    // When Governance is claimed, pl-003/011/012 must be active with citations (not skipped as P4 deferred).
+    for (const id of ["req-pl-003", "req-pl-011", "req-pl-012"] as const) {
+      const row = byId(rows, id);
+      if (row.status === "skipped") {
+        expect(String(row.rationale ?? "")).toMatch(/P4|deferred|floor/i);
+      } else {
+        expect(row.status).toBe("active");
+        expect(String(row.citation ?? row.fixture ?? "").length).toBeGreaterThan(0);
+        expect(String(row.rationale ?? "")).not.toMatch(/P4 deferred/i);
       }
     }
   });

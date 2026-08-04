@@ -61,6 +61,17 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const policyPath = options.policyPath ?? options.policy;
   const noPolicy = options.noPolicy === true;
   const trustTransitiveMcp = options.trustTransitiveMcp === true;
+  const policyPorts = {
+    policyProviders: options.policyProviders ?? options.providers,
+    providers: options.providers ?? options.policyProviders,
+    listGitRemotes: options.listGitRemotes,
+    remotes: options.remotes,
+    fetchPolicyUrl: options.fetchPolicyUrl,
+    httpGet: options.httpGet,
+    fetchAncestor: options.fetchAncestor,
+    defaultFetchFailure: options.defaultFetchFailure,
+    implementationDefaultHost: options.implementationDefaultHost,
+  };
 
   if (options.archivePath) {
     await extractArchiveIntoProject(options.archivePath, cwd);
@@ -106,6 +117,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       policyPath,
       noPolicy,
       nodes,
+      ...policyPorts,
     });
     const packages = nodes
       .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
@@ -147,6 +159,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       policy: policyPath,
       noPolicy,
       ...ports,
+      ...policyPorts,
     });
     lockPath = result.lockPath;
     nodes = result.nodes;
@@ -454,6 +467,15 @@ function applyPolicyGate(args: {
   policyPath?: string;
   noPolicy: boolean;
   nodes: ResolvedNode[];
+  policyProviders?: string[];
+  providers?: string[];
+  listGitRemotes?: RunInstallOptions["listGitRemotes"];
+  remotes?: RunInstallOptions["remotes"];
+  fetchPolicyUrl?: RunInstallOptions["fetchPolicyUrl"];
+  httpGet?: RunInstallOptions["httpGet"];
+  fetchAncestor?: RunInstallOptions["fetchAncestor"];
+  defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
+  implementationDefaultHost?: string;
 }): unknown[] {
   const candidates = nodesToCandidates(args.nodes);
   const gate = assertPolicyGateAllows({
@@ -461,6 +483,15 @@ function applyPolicyGate(args: {
     policyPath: args.policyPath,
     policy: args.policyPath,
     noPolicy: args.noPolicy,
+    providers: args.providers ?? args.policyProviders,
+    policyProviders: args.policyProviders ?? args.providers,
+    listGitRemotes: args.listGitRemotes,
+    remotes: args.remotes,
+    fetchPolicyUrl: args.fetchPolicyUrl,
+    httpGet: args.httpGet,
+    fetchAncestor: args.fetchAncestor as never,
+    defaultFetchFailure: args.defaultFetchFailure,
+    implementationDefaultHost: args.implementationDefaultHost,
     candidates,
     dependencies: candidates.map((c) => ({
       name: c.id,

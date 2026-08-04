@@ -142,6 +142,31 @@ export type ResolveAndLockOptions = ResolvePorts & {
   policy?: string;
   /** Skip policy discovery + checks. */
   noPolicy?: boolean;
+  /** Override ordered policy discovery providers. */
+  policyProviders?: string[];
+  providers?: string[];
+  listGitRemotes?: (cwd?: string) => Array<{ name: string; url: string }>;
+  remotes?: Array<{ name: string; url: string }>;
+  fetchPolicyUrl?: (url: string) => {
+    ok?: boolean;
+    text?: string;
+    body?: string;
+    status?: number;
+    url?: string;
+  };
+  httpGet?: (url: string) => {
+    ok?: boolean;
+    text?: string;
+    body?: string;
+    status?: number;
+    url?: string;
+  };
+  fetchAncestor?: (
+    ref: string,
+    context: { leafHostClass: string; chain: string[] },
+  ) => unknown;
+  defaultFetchFailure?: "off" | "warn" | "block";
+  implementationDefaultHost?: string;
   experimentalRegistries?: boolean;
   registryBaseUrl?: string;
   mirrorUrl?: string;

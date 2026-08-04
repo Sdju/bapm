@@ -1,6 +1,6 @@
 /**
  * Mode B seed oracles — valid/invalid fixtures from tests/fixtures/spec-conformance/.
- * Governance extends-cycle is intentionally not asserted as active (P4 / skipped).
+ * Governance extends fixtures are claimed active (P4).
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -119,8 +119,8 @@ describe("Mode B seed oracles — lockfile", () => {
   });
 });
 
-describe("Mode B seed oracles — policy (local floor)", () => {
-  test("security-integrity.yml parses for local-floor claim", () => {
+describe("Mode B seed oracles — policy (governance claimed)", () => {
+  test("security-integrity.yml parses for governance claim", () => {
     const path = fixturePath("policy/security-integrity.yml");
     expect(existsSync(path)).toBe(true);
     const result = parsePolicy(
@@ -130,9 +130,19 @@ describe("Mode B seed oracles — policy (local floor)", () => {
     expect(result.document?.security ?? result.policy?.security).toBeTruthy();
   });
 
-  test("extends fixtures exist but are not claimed active (P4 skipped)", () => {
+  test("extends fixtures parse; cycle fixture retains self-extends for resolve reject", () => {
     expect(existsSync(fixturePath("policy/valid-extends.yml"))).toBe(true);
     expect(existsSync(fixturePath("policy/invalid-extends-cycle.yml"))).toBe(true);
-    // Intentionally no parse/assert for extends-cycle as Governance active claim.
+    const valid = parsePolicy(
+      loadYamlDocument(readFixture("policy/valid-extends.yml"), fixturePath("policy/valid-extends.yml")),
+    );
+    expect(String(valid.document.extends ?? valid.policy?.extends)).toMatch(/contoso-enterprise/);
+    const cycle = parsePolicy(
+      loadYamlDocument(
+        readFixture("policy/invalid-extends-cycle.yml"),
+        fixturePath("policy/invalid-extends-cycle.yml"),
+      ),
+    );
+    expect(String(cycle.document.extends ?? cycle.policy?.extends)).toMatch(/invalid-extends-cycle/);
   });
 });
