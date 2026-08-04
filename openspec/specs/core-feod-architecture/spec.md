@@ -43,14 +43,14 @@ Shared YAML safe-subset loading used by both Manifest and Lockfile MUST live und
 - **THEN** the import path MUST target a concrete file under `src/common/` (for example `@/common/yaml/loadYamlDocument`) and MUST NOT use a `common` barrel
 
 ### Requirement: Thin package entry preserves named exports
-The package root `src/index.ts` MUST be a thin façade that re-exports the public surface from `app` (public API assembly). After migration, `@bapm/core` MUST continue to expose every previously exported named symbol (values and types) with the same export names. New Resolver, Install, Primitives, M6 lifecycle/integrity, and M7 producer (init scaffold / pack / release-check) public symbols MUST be re-exported from the package entry without breaking existing export names.
+The package root `src/index.ts` MUST be a thin façade that re-exports the public surface from `app` (public API assembly). After migration, `@bapm/core` MUST continue to expose every previously exported named symbol (values and types) with the same export names. New Resolver, Install, Primitives, M6 lifecycle/integrity, M7 producer (init scaffold / pack / release-check), and M8 Policy public symbols MUST be re-exported from the package entry without breaking existing export names.
 
 #### Scenario: Existing named exports remain available
 - **WHEN** a consumer imports the set of symbols previously exported from `@bapm/core` (including Manifest/Lockfile/Resolver APIs, `loadYamlDocument`, `BAPM_NAME`, and `getVersion`)
 - **THEN** each named export MUST still resolve from the package entry without requiring a new import path
 
 #### Scenario: Unit and acceptance tests import from package entry
-- **WHEN** existing `packages/core` unit tests and M1–M6 acceptance suites import from `../src/index.ts` or the package entry
+- **WHEN** existing `packages/core` unit tests and M1–M7 acceptance suites import from `../src/index.ts` or the package entry
 - **THEN** those imports MUST continue to typecheck and run without changing the consumer-facing export names
 
 #### Scenario: Resolver symbols exported from package entry
@@ -67,6 +67,10 @@ The package root `src/index.ts` MUST be a thin façade that re-exports the publi
 
 #### Scenario: Producer symbols exported from package entry
 - **WHEN** a consumer imports M7 producer public symbols (init scaffold / pack archive / check-release APIs, names flexible) from `@bapm/core`
+- **THEN** those named exports MUST resolve from the package entry
+
+#### Scenario: Policy symbols exported from package entry
+- **WHEN** a consumer imports M8 Policy public symbols (parse/discover/evaluate/gate APIs, names flexible) from `@bapm/core`
 - **THEN** those named exports MUST resolve from the package entry
 
 ### Requirement: Domain module Resolver
@@ -123,3 +127,14 @@ Producer pack/archive, secret-path refusal, archive extract helpers, and release
 #### Scenario: Producer modules do not hard-depend on cursor
 - **WHEN** pack or init needs target tokens or layout
 - **THEN** they MUST NOT import `bapm-target-cursor` and MUST NOT require a new `bapm-target-*` package
+
+### Requirement: Domain module Policy
+Policy parse, dual-file discovery, rule evaluation, and install-gate helpers MUST live under `packages/core/src/modules/Policy` as a directory with an `index.ts` public entry. Deep imports into Policy internals from outside that module MUST NOT be used. Single-file modules MUST NOT be used. Policy MUST consume shared YAML via `common` concrete paths (and MAY consume Manifest/Resolver/Lockfile only through their public APIs when evaluating candidates). Policy MUST NOT import `bapm-target-cursor` or other concrete target packages. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
+
+#### Scenario: App imports Policy only via public entry
+- **WHEN** app public API code needs parse, discover, evaluate, or gate behavior
+- **THEN** it MUST import from `@/modules/Policy` and MUST NOT deep-import `modules/Policy/` internals
+
+#### Scenario: Policy does not hard-depend on cursor
+- **WHEN** Policy evaluates an install plan
+- **THEN** it MUST NOT import `bapm-target-cursor` and MUST NOT require a new `bapm-target-*` package
