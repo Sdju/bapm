@@ -1,0 +1,3 @@
+# Minimal valid v1 lock (checklist C §1)
+lockfile_version: "1"
+dependencies: []

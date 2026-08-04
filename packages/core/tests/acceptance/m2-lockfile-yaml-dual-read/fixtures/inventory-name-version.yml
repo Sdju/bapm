@@ -1,0 +1,7 @@
+# Inventory name/version preserved; not identity (req-lk-019)
+lockfile_version: "1"
+dependencies:
+  - repo_url: github.com/contoso/example
+    name: display-name-only
+    version: "9.9.9"
+    resolved_commit: "7f3c9a4d2e1b8c7f0a9e6d5c4b3a2918f7e6d5c4"

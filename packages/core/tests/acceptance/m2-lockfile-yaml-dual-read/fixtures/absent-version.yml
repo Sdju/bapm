@@ -1,0 +1,2 @@
+# Absent lockfile_version → default "1" on read (APM legacy)
+dependencies: []

@@ -1,0 +1,7 @@
+# Bare 64-hex hash → normalize to sha256:<hex> (req-lk-016)
+lockfile_version: "2"
+dependencies:
+  - repo_url: registry.example.com/contoso/pkg
+    source: registry
+    resolved_url: https://registry.example.com/contoso/pkg/1.0.0.tgz
+    resolved_hash: "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"

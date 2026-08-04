@@ -1,0 +1,14 @@
+# Unordered deps — emit must sort by (repo_url, virtual_path) (req-lk-005)
+lockfile_version: "1"
+dependencies:
+  - repo_url: github.com/contoso/zeta
+    resolved_commit: "3333333333333333333333333333333333333333"
+    depth: 0
+  - repo_url: github.com/contoso/alpha
+    virtual_path: instructions/z
+    resolved_commit: "1111111111111111111111111111111111111111"
+    depth: 99
+  - repo_url: github.com/contoso/alpha
+    virtual_path: instructions/a
+    resolved_commit: "2222222222222222222222222222222222222222"
+    depth: 1

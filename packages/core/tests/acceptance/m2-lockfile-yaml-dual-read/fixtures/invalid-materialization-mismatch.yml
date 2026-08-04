@@ -1,0 +1,6 @@
+# materialization_repo_url normalizes to different identity (req-lk-022)
+lockfile_version: "1"
+dependencies:
+  - repo_url: github.com/contoso/alpha
+    materialization_repo_url: github.com/contoso/other-repo
+    resolved_commit: "1111111111111111111111111111111111111111"

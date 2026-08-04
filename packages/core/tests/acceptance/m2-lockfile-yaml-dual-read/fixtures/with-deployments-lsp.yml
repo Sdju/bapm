@@ -1,0 +1,12 @@
+# Unknown APM blocks preserved as bags (design §5)
+lockfile_version: "1"
+dependencies: []
+deployments:
+  - target: copilot
+    files:
+      - a.md
+lsp_servers:
+  - name: example-lsp
+lsp_configs:
+  example-lsp:
+    command: example
