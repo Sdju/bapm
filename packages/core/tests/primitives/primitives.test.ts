@@ -1,5 +1,5 @@
 /**
- * M4 checklist C §5–9 — primitives discovery + pr-001/002/003 + skill bundle.
+ * Primitives discovery + pr-001/002/003 + skill bundle.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -15,9 +15,9 @@ import {
   typeOfPrimitive,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../install/helpers.ts";
 
-describe("M4 primitives discovery (pr-001..003) (§5–9)", () => {
+describe("primitives discovery (pr-001..003)", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -33,9 +33,7 @@ describe("M4 primitives discovery (pr-001..003) (§5–9)", () => {
 
     const discover = getDiscoverPrimitives();
     const found = primitivesOf(discover({ cwd: project.cwd }));
-    const foo = found.find(
-      (p) => nameOf(p) === "foo" || String(p.path ?? "").includes("foo"),
-    );
+    const foo = found.find((p) => nameOf(p) === "foo" || String(p.path ?? "").includes("foo"));
     expect(foo).toBeTruthy();
     expect(sourceOf(foo!)).toBe("local");
   });
@@ -62,8 +60,7 @@ describe("M4 primitives discovery (pr-001..003) (§5–9)", () => {
       }),
     );
     const skill = found.find(
-      (p) =>
-        nameOf(p) === "dep-skill" || String(p.path ?? "").includes("dep-skill"),
+      (p) => nameOf(p) === "dep-skill" || String(p.path ?? "").includes("dep-skill"),
     );
     expect(skill).toBeTruthy();
     expect(sourceOf(skill!)).toMatch(/^dependency:(dep-pkg|example\/dep-pkg)/);

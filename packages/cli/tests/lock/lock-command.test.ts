@@ -167,13 +167,26 @@ describe("M3 bapm lock CLI", () => {
     mkdirSync(join(project.cwd, ".agents"), { recursive: true });
     mkdirSync(join(project.cwd, ".github", "instructions"), { recursive: true });
     writeFileSync(join(project.cwd, ".agents", "keep.txt"), "x\n", "utf8");
+    mkdirSync(join(project.cwd, "leaf", ".apm", "skills", "x"), { recursive: true });
     writeFileSync(
       join(project.cwd, "bapm.yml"),
-      `name: cli-harness\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+      `name: cli-harness\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
       "utf8",
     );
-    const before = listFilesRecursive(join(project.cwd, ".agents"));
+    writeFileSync(
+      join(project.cwd, "leaf", "apm.yml"),
+      `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+      "utf8",
+    );
+    writeFileSync(
+      join(project.cwd, "leaf", ".apm", "skills", "x", "SKILL.md"),
+      "---\nname: x\n---\n# X\n",
+      "utf8",
+    );
+    const beforeAgents = listFilesRecursive(join(project.cwd, ".agents"));
+    const beforeGh = listFilesRecursive(join(project.cwd, ".github"));
     await withCwd(project.cwd, () => withCapturedIo(() => runCli(["lock"])));
-    expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(before);
+    expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(beforeAgents);
+    expect(listFilesRecursive(join(project.cwd, ".github"))).toEqual(beforeGh);
   });
 });

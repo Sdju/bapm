@@ -1,6 +1,5 @@
 /**
- * M4 checklist C §1–4 — install pipeline: modules + lock, no hard cursor dep,
- * integrate without registered target.
+ * Install pipeline: modules + lock, no hard cursor dep, integrate without registered target.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -25,14 +24,14 @@ import {
 
 const COMMIT = "ffffffffffffffffffffffffffffffffffffffff";
 
-describe("M4 install pipeline — modules + lock (§1–4)", () => {
+describe("install pipeline — modules + lock", () => {
   let project: TempProject;
 
   afterEach(() => {
     project?.cleanup();
   });
 
-  test("warm install places modules under apm_modules; lock write-back dual-read (§1)", async () => {
+  test("warm install places modules under apm_modules; lock write-back dual-read", async () => {
     project = createTempProject();
     const ports = createFakePorts({ commitsByRef: { main: COMMIT } });
     writeManifest(
@@ -63,7 +62,7 @@ describe("M4 install pipeline — modules + lock (§1–4)", () => {
     expect(deps.length).toBeGreaterThanOrEqual(1);
   });
 
-  test("fresh install writes lock + modules from manifest only (§2)", async () => {
+  test("fresh install writes lock + modules from manifest only", async () => {
     project = createTempProject();
     const ports = createFakePorts({ commitsByRef: { main: COMMIT } });
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
@@ -92,7 +91,7 @@ describe("M4 install pipeline — modules + lock (§1–4)", () => {
     expect(listFilesRecursive(modulesDir(project.cwd)).length).toBeGreaterThan(0);
   });
 
-  test("core package graph: depends on bapm-target-api, not bapm-target-cursor (§3)", () => {
+  test("core package graph: depends on bapm-target-api, not bapm-target-cursor", () => {
     const pkg = readCorePackageJson();
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
     expect(deps["bapm-target-cursor"]).toBeUndefined();
@@ -104,7 +103,7 @@ describe("M4 install pipeline — modules + lock (§1–4)", () => {
     expect(deps["bapm-target-api"]).toBeTruthy();
   });
 
-  test("integrate without registered target: modules+lock OK, no harness writes (§4)", async () => {
+  test("integrate without registered target: modules+lock OK, no harness writes", async () => {
     project = createTempProject();
     const ports = createFakePorts();
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
@@ -139,8 +138,8 @@ describe("M4 install pipeline — modules + lock (§1–4)", () => {
     expect(existsSync(modulesDir(project.cwd))).toBe(true);
     expect(existingLockPath(project.cwd)).toBeTruthy();
     expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(beforeAgents);
-    expect(
-      hasHarnessWrites(project.cwd, [".agents", ".cursor", ".github/instructions"]),
-    ).toBe(false);
+    expect(hasHarnessWrites(project.cwd, [".agents", ".cursor", ".github/instructions"])).toBe(
+      false,
+    );
   });
 });

@@ -1,5 +1,6 @@
 /**
- * M4 checklist C §21–23 — CLI install happy path, --frozen, lock still no deploy.
+ * CLI install happy path and --frozen.
+ * Help lists install (runtime.test.ts); lock no-deploy (lock/lock-command.test.ts).
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -7,37 +8,21 @@ import {
   mkdirSync,
   writeFileSync,
   readFileSync,
-  readdirSync,
-  statSync,
   mkdtempSync,
   rmSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
 function createTempProject(): TempProject {
-  const cwd = mkdtempSync(join(tmpdir(), "bapm-cli-m4-"));
+  const cwd = mkdtempSync(join(tmpdir(), "bapm-cli-install-"));
   return {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
   };
-}
-
-function listFilesRecursive(root: string): string[] {
-  if (!existsSync(root)) return [];
-  const out: string[] = [];
-  const walk = (dir: string) => {
-    for (const name of readdirSync(dir)) {
-      const p = join(dir, name);
-      if (statSync(p).isDirectory()) walk(p);
-      else out.push(p.slice(root.length + 1));
-    }
-  };
-  walk(root);
-  return out.sort();
 }
 
 async function withCapturedIo<T>(
@@ -86,14 +71,14 @@ function writeLeafProject(cwd: string, name: string): void {
   );
 }
 
-describe("M4 CLI install (§21–23)", () => {
+describe("CLI install", () => {
   let project: TempProject;
 
   afterEach(() => {
     project?.cleanup();
   });
 
-  test("bapm install happy path — exit 0, modules + lock (§21)", async () => {
+  test("bapm install happy path — exit 0, modules + lock", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "cli-install-happy");
 
@@ -110,7 +95,7 @@ describe("M4 CLI install (§21–23)", () => {
     expect(existsSync(join(project.cwd, "apm_modules"))).toBe(true);
   });
 
-  test("bapm install --frozen missing lock fails before mutation (§22)", async () => {
+  test("bapm install --frozen missing lock fails before mutation", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "cli-frozen-nolock");
 
@@ -126,13 +111,11 @@ describe("M4 CLI install (§21–23)", () => {
     expect(existsSync(join(project.cwd, "apm.lock.yaml"))).toBe(false);
   });
 
-  test("bapm install --frozen with valid lock does not rewrite lock bytes (§22)", async () => {
+  test("bapm install --frozen with valid lock does not rewrite lock bytes", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "cli-frozen-ok");
     // First produce a lock via `lock` (M3), then frozen install must preserve bytes
-    const lockResult = await withCwd(project.cwd, () =>
-      withCapturedIo(() => runCli(["lock"])),
-    );
+    const lockResult = await withCwd(project.cwd, () => withCapturedIo(() => runCli(["lock"])));
     expect(lockResult.result).toBe(0);
     const lockFile = existsSync(join(project.cwd, "bapm.lock.yaml"))
       ? join(project.cwd, "bapm.lock.yaml")
@@ -144,35 +127,5 @@ describe("M4 CLI install (§21–23)", () => {
     );
     expect(result).toBe(0);
     expect(Buffer.compare(readFileSync(lockFile), before)).toBe(0);
-  });
-
-  test("help describes real install, not permanent stub (§21 help)", async () => {
-    const { result, stdout } = await withCapturedIo(() => runCli(["help"]));
-    expect(result).toBe(0);
-    const text = stdout.join("\n");
-    expect(text).toMatch(/\binstall\b/i);
-    expect(text).not.toMatch(/install\s+.*\(stub\)/i);
-  });
-
-  test("bapm lock still does not deploy harness files (§23)", async () => {
-    project = createTempProject();
-    mkdirSync(join(project.cwd, ".agents"), { recursive: true });
-    mkdirSync(join(project.cwd, ".github", "instructions"), { recursive: true });
-    writeFileSync(join(project.cwd, ".agents", "keep.txt"), "x\n", "utf8");
-    writeLeafProject(project.cwd, "cli-lock-no-deploy");
-    mkdirSync(join(project.cwd, "leaf", ".apm", "skills", "x"), { recursive: true });
-    writeFileSync(
-      join(project.cwd, "leaf", ".apm", "skills", "x", "SKILL.md"),
-      "---\nname: x\n---\n# X\n",
-      "utf8",
-    );
-
-    const beforeAgents = listFilesRecursive(join(project.cwd, ".agents"));
-    const beforeGh = listFilesRecursive(join(project.cwd, ".github"));
-
-    await withCwd(project.cwd, () => withCapturedIo(() => runCli(["lock"])));
-
-    expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(beforeAgents);
-    expect(listFilesRecursive(join(project.cwd, ".github"))).toEqual(beforeGh);
   });
 });

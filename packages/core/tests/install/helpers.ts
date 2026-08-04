@@ -1,6 +1,6 @@
 /**
- * M4 install-materialize acceptance helpers.
- * Reuses M3 resolve ports/temp projects; adds install/primitives accessors.
+ * Install / materialize test helpers.
+ * Reuses resolve ports/temp projects; adds install/primitives accessors.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -22,10 +22,10 @@ export {
   writeManifest,
   writeText,
   type TempProject,
-} from "../../resolve/helpers.ts";
+} from "../resolve/helpers.ts";
 
 const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const repoRoot = resolve(coreRoot, "../..");
 
 export function readCorePackageJson(): {
@@ -60,12 +60,9 @@ export function getDiscoverPrimitives(): (options: Record<string, unknown>) => u
   return fn as (options: Record<string, unknown>) => unknown;
 }
 
-export function getResolvePrimitiveConflicts(): (
-  options: Record<string, unknown>,
-) => unknown {
+export function getResolvePrimitiveConflicts(): (options: Record<string, unknown>) => unknown {
   const c = core as Record<string, unknown>;
-  const fn =
-    c.resolvePrimitiveConflicts ?? c.resolveConflicts ?? c.resolvePrimitiveConflict;
+  const fn = c.resolvePrimitiveConflicts ?? c.resolveConflicts ?? c.resolvePrimitiveConflict;
   if (typeof fn !== "function") {
     throw new TypeError(
       "expected @bapm/core to export resolvePrimitiveConflicts (or resolveConflicts)",
@@ -95,11 +92,7 @@ export function diagnosticsOf(result: unknown): unknown[] {
 }
 
 export function sourceOf(primitive: Record<string, unknown>): string {
-  const raw =
-    primitive.source ??
-    primitive.attribution ??
-    primitive.origin ??
-    primitive.from;
+  const raw = primitive.source ?? primitive.attribution ?? primitive.origin ?? primitive.from;
   if (typeof raw === "string") return raw;
   throw new TypeError("expected primitive.source (local | dependency:<name>)");
 }
@@ -158,7 +151,7 @@ function listUnder(root: string): string[] {
   return out;
 }
 
-/** Load bapm-target-api (apply scaffolds the package). */
+/** Load bapm-target-api. */
 export async function importTargetApi(): Promise<Record<string, unknown>> {
   try {
     return (await import("bapm-target-api")) as Record<string, unknown>;
@@ -171,7 +164,7 @@ export async function importTargetApi(): Promise<Record<string, unknown>> {
   }
 }
 
-/** Load bapm-target-cursor (apply scaffolds the package). */
+/** Load bapm-target-cursor via test alias (core must not hard-depend on it). */
 export async function importTargetCursor(): Promise<Record<string, unknown>> {
   try {
     return (await import("bapm-target-cursor")) as Record<string, unknown>;
@@ -185,10 +178,7 @@ export async function importTargetCursor(): Promise<Record<string, unknown>> {
 }
 
 export function getCreateRegistry(api: Record<string, unknown>): () => unknown {
-  const fn =
-    api.createTargetRegistry ??
-    api.createRegistry ??
-    api.createTargetApiRegistry;
+  const fn = api.createTargetRegistry ?? api.createRegistry ?? api.createTargetApiRegistry;
   if (typeof fn !== "function") {
     throw new TypeError(
       "expected bapm-target-api to export createTargetRegistry (or createRegistry)",
@@ -209,9 +199,7 @@ export function getRegisterTarget(
   }
   const fn = api.registerTarget ?? api.register;
   if (typeof fn !== "function") {
-    throw new TypeError(
-      "expected bapm-target-api registry.register or registerTarget export",
-    );
+    throw new TypeError("expected bapm-target-api registry.register or registerTarget export");
   }
   return fn as (target: unknown) => unknown;
 }

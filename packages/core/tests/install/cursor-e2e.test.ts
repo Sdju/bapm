@@ -1,8 +1,9 @@
 /**
- * M4 checklist C §20 — optional bapm-target-cursor e2e skills materialize.
+ * Optional bapm-target-cursor e2e skills materialize via install.
+ * Package identity / unit materialize live in packages/target-cursor/tests/.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   createFakePorts,
@@ -13,33 +14,18 @@ import {
   importTargetApi,
   importTargetCursor,
   listFilesRecursive,
-  repoRoot,
   writeText,
   type TempProject,
 } from "./helpers.ts";
 
-describe("M4 bapm-target-cursor e2e (§20)", () => {
+describe("bapm-target-cursor install e2e", () => {
   let project: TempProject;
 
   afterEach(() => {
     project?.cleanup();
   });
 
-  test("packages/target-cursor is bapm-target-cursor depending on bapm-target-api only", () => {
-    const pkgDir = join(repoRoot, "packages", "target-cursor");
-    expect(existsSync(pkgDir)).toBe(true);
-    const pkg = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8")) as {
-      name?: string;
-      dependencies?: Record<string, string>;
-      scripts?: Record<string, string>;
-    };
-    expect(pkg.name).toBe("bapm-target-cursor");
-    expect(pkg.dependencies?.["bapm-target-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
-    expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
-  });
-
-  test("cursor e2e — skill under registered root (.agents/skills/... or documented) (§20)", async () => {
+  test("cursor e2e — skill under registered root (.agents/skills/... or documented)", async () => {
     project = createTempProject();
     const ports = createFakePorts();
     mkdirSync(join(project.cwd, "skill-dep"), { recursive: true });
@@ -67,8 +53,7 @@ describe("M4 bapm-target-cursor e2e (§20)", () => {
 
     const registry = getCreateRegistry(api)();
     const register = getRegisterTarget(api, registry);
-    const cursorTarget =
-      typeof createCursor === "function" ? createCursor() : createCursor;
+    const cursorTarget = typeof createCursor === "function" ? createCursor() : createCursor;
     register(cursorTarget);
 
     const runInstall = getRunInstall();

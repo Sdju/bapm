@@ -58,6 +58,7 @@ test("help subcommand lists help, version, install, lock and exits 0", async () 
   expect(text).toMatch(/help/i);
   expect(text).toMatch(/version/i);
   expect(text).toMatch(/install/i);
+  expect(text).not.toMatch(/install\s+.*\(stub\)/i);
   expect(text).toMatch(/\block\b/i);
 });
 

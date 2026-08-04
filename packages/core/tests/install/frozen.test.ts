@@ -1,5 +1,5 @@
 /**
- * M4 checklist C §16–19 — basic frozen (lk-006).
+ * Basic frozen install (lk-006).
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -19,14 +19,14 @@ import {
 
 const COMMIT = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
-describe("M4 basic frozen lk-006 (§16–19)", () => {
+describe("basic frozen install (lk-006)", () => {
   let project: TempProject;
 
   afterEach(() => {
     project?.cleanup();
   });
 
-  test("frozen missing lock fails before modules/lock/target writes (§16)", async () => {
+  test("frozen missing lock fails before modules/lock/target writes", async () => {
     project = createTempProject();
     const ports = createFakePorts({ commitsByRef: { main: COMMIT } });
     writeManifest(
@@ -60,7 +60,7 @@ describe("M4 basic frozen lk-006 (§16–19)", () => {
     expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(beforeAgents);
   });
 
-  test("frozen missing direct pin fails closed (§17)", async () => {
+  test("frozen missing direct pin fails closed", async () => {
     project = createTempProject();
     const ports = createFakePorts({ commitsByRef: { main: COMMIT } });
     writeManifest(
@@ -92,7 +92,7 @@ describe("M4 basic frozen lk-006 (§16–19)", () => {
     expect(Buffer.compare(readLockBytes(project.cwd), before)).toBe(0);
   });
 
-  test("frozen success leaves lock bytes unchanged (§18)", async () => {
+  test("frozen success leaves lock bytes unchanged", async () => {
     project = createTempProject();
     const ports = createFakePorts({ commitsByRef: { main: COMMIT } });
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
@@ -126,7 +126,7 @@ describe("M4 basic frozen lk-006 (§16–19)", () => {
     expect(Buffer.compare(readLockBytes(project.cwd), before)).toBe(0);
   });
 
-  test("frozen + update/re-resolve rejected without mutation (§19)", async () => {
+  test("frozen + update/re-resolve rejected without mutation", async () => {
     project = createTempProject();
     const ports = createFakePorts({ commitsByRef: { main: COMMIT } });
     writeManifest(

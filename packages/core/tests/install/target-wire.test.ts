@@ -1,53 +1,30 @@
 /**
- * M4 checklist C §13–15 — target/targets wire (tg-008 / tg-004).
+ * target/targets wire during install (tg-008 / tg-004).
+ * Mutual exclusion of target+targets is covered by manifest/validate.test.ts.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadManifest, parseManifest } from "@bapm/core";
+import { parseManifest } from "@bapm/core";
 import {
   createFakePorts,
   createTempProject,
-  expectThrowsMatching,
   getRegisterTarget,
   getCreateRegistry,
   getRunInstall,
   importTargetApi,
-  writeManifest,
   writeText,
   type TempProject,
 } from "./helpers.ts";
 
-describe("M4 target/targets wire tg-008 / tg-004 (§13–15)", () => {
+describe("target/targets wire (tg-008 / tg-004)", () => {
   let project: TempProject;
 
   afterEach(() => {
     project?.cleanup();
   });
 
-  test("mutual exclusion — both target and targets → hard error (§13)", () => {
-    expectThrowsMatching(
-      () =>
-        parseManifest({
-          name: "both",
-          version: "0.0.1",
-          target: "cursor",
-          targets: ["copilot"],
-          dependencies: { apm: [] },
-        }),
-      /target/i,
-    );
-
-    project = createTempProject();
-    writeManifest(
-      project.cwd,
-      "bapm.yml",
-      `name: both\nversion: 0.0.1\ntarget: cursor\ntargets:\n  - copilot\ndependencies:\n  apm: []\n`,
-    );
-    expectThrowsMatching(() => loadManifest({ cwd: project.cwd }), /target/i);
-  });
-
-  test("intersection — dep targets:[copilot] not deployed to active cursor (§14)", async () => {
+  test("intersection — dep targets:[copilot] not deployed to active cursor", async () => {
     project = createTempProject();
     const ports = createFakePorts();
     mkdirSync(join(project.cwd, "copilot-only"), { recursive: true });
@@ -98,12 +75,10 @@ describe("M4 target/targets wire tg-008 / tg-004 (§13–15)", () => {
     });
 
     expect(materializedNames).not.toContain("co");
-    expect(existsSync(join(project.cwd, ".agents", "skills", "co", "SKILL.md"))).toBe(
-      false,
-    );
+    expect(existsSync(join(project.cwd, ".agents", "skills", "co", "SKILL.md"))).toBe(false);
   });
 
-  test("vendor id x-acme-editor accepted as id (tg-004) (§15)", () => {
+  test("vendor id x-acme-editor accepted as id (tg-004)", () => {
     const doc = parseManifest({
       name: "vendor",
       version: "0.0.1",
