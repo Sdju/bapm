@@ -1,0 +1,19 @@
+{
+  "name": "@bapm/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "bapm documentation (VitePress)",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "esbuild": "catalog:",
+    "typescript": "~6.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
+    "vitepress": "catalog:"
+  }
+}
