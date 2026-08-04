@@ -57,6 +57,13 @@ export type ResolvedNode = {
   version?: string;
   /** Absolute path to materialized package tree (local source or modules cache). */
   packageRoot?: string;
+  /** Registry lock fields (M10). */
+  source?: string;
+  resolved_url?: string;
+  resolved_hash?: string;
+  registry_base_url?: string;
+  registry_owner?: string;
+  registry_repo?: string;
 };
 
 export type ResolveGraphResult = {
@@ -93,6 +100,12 @@ export type ResolveDependencyGraphOptions = ResolvePorts & {
   skipDownload?: boolean;
   /** Alias for `skipDownload` (plan → gate → download). */
   planOnly?: boolean;
+  /** Opt-in experimental registries (also via BAPM_EXPERIMENTAL_REGISTRIES=1). */
+  experimentalRegistries?: boolean;
+  /** Override registry base URL (tests). */
+  registryBaseUrl?: string;
+  /** Mirror base URL for rs-009 replay (tests / install). */
+  mirrorUrl?: string;
 };
 
 export type DownloadPackageSpec = {
@@ -129,6 +142,9 @@ export type ResolveAndLockOptions = ResolvePorts & {
   policy?: string;
   /** Skip policy discovery + checks. */
   noPolicy?: boolean;
+  experimentalRegistries?: boolean;
+  registryBaseUrl?: string;
+  mirrorUrl?: string;
 };
 
 export type ResolveAndLockResult = {

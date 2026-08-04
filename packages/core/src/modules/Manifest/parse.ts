@@ -9,7 +9,8 @@ import type {
   RegistryEntry,
 } from "./types.ts";
 
-/** Mutually exclusive source discriminators (path may accompany git as virtual_path). */
+/** Mutually exclusive source discriminators (path may accompany git as virtual_path;
+ * `registry` name may accompany `id` as named-registry pointer). */
 const SOURCE_KEYS = ["git", "id", "path", "registry"] as const;
 /** Allowlisted object-dep meta keys (APM depEntry / reject_unknown_git_fields). */
 const DEP_META_KEYS = new Set([
@@ -21,6 +22,8 @@ const DEP_META_KEYS = new Set([
   "allow_insecure",
   "type",
   "prerelease",
+  /** Named registry pointer companion to `id:` (M10). */
+  "registry",
 ]);
 
 const SEMVER_RE =
@@ -189,11 +192,13 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   const hasRegistry = "registry" in obj;
 
   // `path` with `git` is a virtual_path companion, not a second source kind (APM parse_from_dict).
+  // `registry` with `id` is a named-registry pointer companion (M10), not a second source.
   const sourceKinds: string[] = [];
   if (hasGit) sourceKinds.push("git");
   if (hasId) sourceKinds.push("id");
   if (hasPath && !hasGit) sourceKinds.push("path");
-  if (hasRegistry) sourceKinds.push("registry");
+  // Bare `registry:` without `id` counts as registry source; with `id` it is meta only.
+  if (hasRegistry && !hasId) sourceKinds.push("registry");
 
   const unknownKeys = Object.keys(obj).filter(
     (k) =>

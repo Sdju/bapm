@@ -13,3 +13,5 @@ export const COMMAND_INIT = "init";
 export const COMMAND_PACK = "pack";
 export const COMMAND_COMPILE = "compile";
 export const COMMAND_CACHE = "cache";
+export const COMMAND_PUBLISH = "publish";
+export const COMMAND_SELF_UPDATE = "self-update";

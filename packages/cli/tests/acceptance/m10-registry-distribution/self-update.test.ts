@@ -27,16 +27,12 @@ describe("CLI M10 bapm self-update --check", () => {
     meta = await startMockNpmMetadata({ latest: "9.9.9" });
     project = createTempProject();
 
-    const { result, combined } = await runInProject(
-      project.cwd,
-      ["self-update", "--check"],
-      {
-        BAPM_SELF_UPDATE_METADATA_URL: meta.baseUrl,
-        BAPM_NPM_REGISTRY: meta.baseUrl,
-        npm_config_registry: meta.baseUrl,
-        BAPM_VERSION_OVERRIDE: "0.1.0",
-      },
-    );
+    const { result, combined } = await runInProject(project.cwd, ["self-update", "--check"], {
+      BAPM_SELF_UPDATE_METADATA_URL: meta.baseUrl,
+      BAPM_NPM_REGISTRY: meta.baseUrl,
+      npm_config_registry: meta.baseUrl,
+      BAPM_VERSION_OVERRIDE: "0.1.0",
+    });
 
     expectKnownCommand(combined, "self-update");
     expect(combined).toMatch(/update|newer|available|9\.9\.9/i);
@@ -48,16 +44,12 @@ describe("CLI M10 bapm self-update --check", () => {
     meta = await startMockNpmMetadata({ latest: "0.1.0" });
     project = createTempProject();
 
-    const { result, combined } = await runInProject(
-      project.cwd,
-      ["self-update", "--check"],
-      {
-        BAPM_SELF_UPDATE_METADATA_URL: meta.baseUrl,
-        BAPM_NPM_REGISTRY: meta.baseUrl,
-        npm_config_registry: meta.baseUrl,
-        BAPM_VERSION_OVERRIDE: "0.1.0",
-      },
-    );
+    const { result, combined } = await runInProject(project.cwd, ["self-update", "--check"], {
+      BAPM_SELF_UPDATE_METADATA_URL: meta.baseUrl,
+      BAPM_NPM_REGISTRY: meta.baseUrl,
+      npm_config_registry: meta.baseUrl,
+      BAPM_VERSION_OVERRIDE: "0.1.0",
+    });
 
     expectKnownCommand(combined, "self-update");
     expect(combined).toMatch(/up[- ]to[- ]date|no update|current|latest/i);
@@ -68,16 +60,12 @@ describe("CLI M10 bapm self-update --check", () => {
     meta = await startMockNpmMetadata({ latest: "1.2.3" });
     project = createTempProject();
 
-    const { result, combined } = await runInProject(
-      project.cwd,
-      ["self-update", "--check"],
-      {
-        BAPM_SELF_UPDATE_METADATA_URL: meta.baseUrl,
-        BAPM_NPM_REGISTRY: meta.baseUrl,
-        npm_config_registry: meta.baseUrl,
-        BAPM_VERSION_OVERRIDE: "0.0.0",
-      },
-    );
+    const { result, combined } = await runInProject(project.cwd, ["self-update", "--check"], {
+      BAPM_SELF_UPDATE_METADATA_URL: meta.baseUrl,
+      BAPM_NPM_REGISTRY: meta.baseUrl,
+      npm_config_registry: meta.baseUrl,
+      BAPM_VERSION_OVERRIDE: "0.0.0",
+    });
 
     expectKnownCommand(combined, "self-update");
     expect(combined).toMatch(/unknown|undetermined|0\.0\.0|skip|warn|cannot/i);
@@ -92,9 +80,9 @@ describe("CLI M10 bapm self-update --check", () => {
     const viaHelp = await runInProject(project.cwd, ["help", "self-update"]);
     const text = [viaFlag.combined, viaHelp.combined].join("\n");
 
-    expect(
-      viaFlag.result === 0 || viaHelp.result === 0 || /self-update|--check/i.test(text),
-    ).toBe(true);
+    expect(viaFlag.result === 0 || viaHelp.result === 0 || /self-update|--check/i.test(text)).toBe(
+      true,
+    );
     // Once command exists, help must mention check + upgrade
     if (!/unknown command/i.test(text)) {
       expect(text).toMatch(/--check/);

@@ -18,6 +18,7 @@ import {
   APM_MODULES_DIR,
   DEFAULT_PARALLEL_DOWNLOADS,
   downloadPackages,
+  materializeRegistryNodes,
   resolveAndLock,
   resolveDependencyGraph,
   type ResolvedNode,
@@ -79,6 +80,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     gitRemote: options.gitRemote,
     tagLister: options.tagLister,
     downloader: options.downloader,
+    experimentalRegistries: options.experimentalRegistries,
+    registryBaseUrl: options.registryBaseUrl,
+    mirrorUrl: options.mirrorUrl,
   };
 
   if (frozen) {
@@ -112,6 +116,11 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       packages,
       parallelDownloads: options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS,
       downloader: options.downloader,
+    });
+    await materializeRegistryNodes(nodes, {
+      cwd,
+      mirrorUrl: options.mirrorUrl,
+      registryBaseUrl: options.registryBaseUrl,
     });
     lockPath = loaded?.sourcePath;
     lockDocument = loaded?.document;

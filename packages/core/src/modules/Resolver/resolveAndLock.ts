@@ -11,6 +11,11 @@ import {
   type PolicyCandidate,
   type PolicyGateResult,
 } from "@/modules/Policy";
+import {
+  createRegistryClient,
+  fetchAndMaterializeRegistry,
+  rewriteDownloadBase,
+} from "@/modules/Registry";
 import { downloadPackages } from "./download.ts";
 import { purgeModulesInstallPaths } from "./purge.ts";
 import { resolveDependencyGraph } from "./resolveGraph.ts";
@@ -64,6 +69,9 @@ export async function resolveAndLock(
     downloader: options.downloader,
     existingLock,
     skipDownload: true,
+    experimentalRegistries: options.experimentalRegistries,
+    registryBaseUrl: options.registryBaseUrl,
+    mirrorUrl: options.mirrorUrl,
   });
 
   const candidates = nodesToPolicyCandidates(graph.nodes);
@@ -104,6 +112,12 @@ export async function resolveAndLock(
     downloader: options.downloader,
   });
 
+  await materializeRegistryNodes(graph.nodes, {
+    cwd,
+    mirrorUrl: options.mirrorUrl,
+    registryBaseUrl: options.registryBaseUrl,
+  });
+
   const document = buildLockDocument(graph.nodes, existingLock);
   const lockPath = writeLockfile(document, {
     cwd,
@@ -119,6 +133,47 @@ export async function resolveAndLock(
   };
 }
 
+export async function materializeRegistryNodes(
+  nodes: ResolvedNode[],
+  options: { cwd: string; mirrorUrl?: string; registryBaseUrl?: string },
+): Promise<void> {
+  const registryNodes = nodes.filter((n) => n.kind === "registry");
+  for (const n of registryNodes) {
+    if (!n.resolved_url || !n.resolved_hash || !n.version) {
+      throw new Error(`Registry node ${n.name} missing resolved_url/hash/version`);
+    }
+    const owner = n.registry_owner ?? n.name.split("/")[0]!;
+    const repo = n.registry_repo ?? n.name.split("/").slice(1).join("/");
+    const baseUrl = n.registry_base_url ?? options.registryBaseUrl ?? "";
+    const mirror = options.mirrorUrl ?? options.registryBaseUrl;
+    const dest = n.packageRoot;
+    if (!dest) throw new Error(`Registry node ${n.name} missing packageRoot`);
+
+    let fetchUrl: string | undefined;
+    if (mirror) {
+      fetchUrl = rewriteDownloadBase(n.resolved_url, mirror);
+    }
+
+    const client = baseUrl
+      ? createRegistryClient({ baseUrl })
+      : createRegistryClient({
+          baseUrl: new URL(n.resolved_url).origin,
+        });
+
+    await fetchAndMaterializeRegistry({
+      cwd: options.cwd,
+      baseUrl: client.baseUrl,
+      owner,
+      repo,
+      version: n.version,
+      expectedDigest: n.resolved_hash,
+      dest,
+      client,
+      fetchUrl,
+    });
+  }
+}
+
 export function nodesToPolicyCandidates(nodes: ResolvedNode[]): PolicyCandidate[] {
   return nodes.map((n) => ({
     id: n.name,
@@ -129,7 +184,7 @@ export function nodesToPolicyCandidates(nodes: ResolvedNode[]): PolicyCandidate[
     direct: n.depth === 1,
     kind: n.kind,
     path: n.path,
-    source: n.kind === "local" ? "local" : undefined,
+    source: n.kind === "local" ? "local" : n.kind === "registry" ? "registry" : undefined,
   }));
 }
 
@@ -240,6 +295,22 @@ function buildLockDocument(
       continue;
     }
 
+    if (n.kind === "registry") {
+      const entry: LockedDependency = {
+        name: n.name,
+        repo_url: n.repo_url ?? n.identity,
+        source: "registry",
+        version: n.version,
+        resolved_url: n.resolved_url,
+        resolved_hash: n.resolved_hash,
+      };
+      if (n.constraint) entry.constraint = n.constraint;
+      (entry as Record<string, unknown>).resolved_by = n.resolved_by;
+      (entry as Record<string, unknown>).depth = n.depth;
+      deps.push(entry);
+      continue;
+    }
+
     const entry: LockedDependency = {
       name: n.name,
       repo_url: n.repo_url ?? n.identity,
@@ -257,17 +328,19 @@ function buildLockDocument(
     deps.push(entry);
   }
 
+  const hasRegistry = deps.some((d) => d.source === "registry");
   const version =
-    existing?.lockfile_version === "2" || deps.some((d) => d.constraint || d.resolved_tag)
+    existing?.lockfile_version === "2" ||
+    hasRegistry ||
+    deps.some((d) => d.constraint || d.resolved_tag)
       ? ("2" as const)
       : existing?.lockfile_version === "1"
         ? ("1" as const)
         : ("1" as const);
 
-  // Force "2" when git-semver fields present (M2 serialize also bumps)
-  const lockfile_version: "1" | "2" = deps.some((d) => d.constraint || d.resolved_tag)
-    ? "2"
-    : version;
+  // Force "2" when git-semver fields or registry present
+  const lockfile_version: "1" | "2" =
+    hasRegistry || deps.some((d) => d.constraint || d.resolved_tag) ? "2" : version;
 
   return {
     lockfile_version,

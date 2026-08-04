@@ -129,7 +129,9 @@ describe("M10 registry HTTP client (mock HTTP)", () => {
         url: registry.baseUrl,
       });
       await clientListVersions(client, "contoso", "demo");
-      const listReq = registry.requests.find((r) => r.method === "GET" && /\/versions\/?$/.test(r.url));
+      const listReq = registry.requests.find(
+        (r) => r.method === "GET" && /\/versions\/?$/.test(r.url),
+      );
       expect(listReq).toBeTruthy();
       expect(listReq!.authorization).toBeUndefined();
     } finally {

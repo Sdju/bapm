@@ -66,12 +66,14 @@ describe("M10 core flat publish archive", () => {
 
     const paths = listZipPaths(bytes);
     expect(paths.some((p) => p === "apm.yml" || p.endsWith("/apm.yml"))).toBe(true);
-    expect(paths.some((p) => p === ".apm/instructions.md" || p.endsWith(".apm/instructions.md"))).toBe(
-      true,
-    );
+    expect(
+      paths.some((p) => p === ".apm/instructions.md" || p.endsWith(".apm/instructions.md")),
+    ).toBe(true);
     // Must not be M7/plugin wrapper layout (no nested package root folder only)
     const entries = unzipSync(bytes);
-    expect(entries["apm.yml"] || Object.keys(entries).find((k) => k.endsWith("apm.yml"))).toBeTruthy();
+    expect(
+      entries["apm.yml"] || Object.keys(entries).find((k) => k.endsWith("apm.yml")),
+    ).toBeTruthy();
     const apmYmlKey = entries["apm.yml"]
       ? "apm.yml"
       : Object.keys(entries).find((k) => k === "apm.yml" || k.endsWith("/apm.yml"));

@@ -11,7 +11,6 @@ import {
   expectKnownCommand,
   runInProject,
   startMockPublishRegistry,
-  writePublishProject,
   writeText,
   type MockPublishRegistry,
   type TempProject,
@@ -55,9 +54,7 @@ dependencies:
     expectKnownCommand(combined, "publish");
     expect(result).toBe(0);
     expect(registry.puts.length).toBe(1);
-    expect(registry.puts[0]!.url).toMatch(
-      /\/v1\/packages\/contoso\/demo\/versions\/1\.2\.3\/?$/,
-    );
+    expect(registry.puts[0]!.url).toMatch(/\/v1\/packages\/contoso\/demo\/versions\/1\.2\.3\/?$/);
     expect(registry.puts[0]!.body.subarray(0, 2).toString("utf8")).toBe("PK");
     const bodyText = registry.puts[0]!.body.toString("binary");
     expect(bodyText.includes("apm.yml")).toBe(true);
@@ -83,11 +80,9 @@ dependencies:
     );
     writeText(project.cwd, ".apm/keep.txt", "x\n");
 
-    const { result, combined } = await runInProject(
-      project.cwd,
-      ["publish", "--dry-run"],
-      { BAPM_EXPERIMENTAL_REGISTRIES: "1" },
-    );
+    const { result, combined } = await runInProject(project.cwd, ["publish", "--dry-run"], {
+      BAPM_EXPERIMENTAL_REGISTRIES: "1",
+    });
 
     expectKnownCommand(combined, "publish");
     expect(result).toBe(0);
@@ -144,11 +139,10 @@ dependencies:
     const zipPath = join(project.cwd, "prebuilt.zip");
     writeFileSync(zipPath, zipBytes);
 
-    const { result, combined } = await runInProject(
-      project.cwd,
-      ["publish", "--zip", zipPath],
-      { BAPM_EXPERIMENTAL_REGISTRIES: "1", BAPM_REGISTRY_TOKEN: "tok" },
-    );
+    const { result, combined } = await runInProject(project.cwd, ["publish", "--zip", zipPath], {
+      BAPM_EXPERIMENTAL_REGISTRIES: "1",
+      BAPM_REGISTRY_TOKEN: "tok",
+    });
 
     expectKnownCommand(combined, "publish");
     expect(result).toBe(0);

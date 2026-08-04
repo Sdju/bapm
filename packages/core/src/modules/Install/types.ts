@@ -42,6 +42,9 @@ export type RunInstallOptions = {
    * (`--trust-transitive-mcp`). Direct `dependencies.mcp` always eligible.
    */
   trustTransitiveMcp?: boolean;
+  experimentalRegistries?: boolean;
+  registryBaseUrl?: string;
+  mirrorUrl?: string;
 };
 
 /** Alias for design naming flexibility. */

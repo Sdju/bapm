@@ -11,6 +11,8 @@ import {
   COMMAND_OUTDATED,
   COMMAND_PACK,
   COMMAND_PRUNE,
+  COMMAND_PUBLISH,
+  COMMAND_SELF_UPDATE,
   COMMAND_UNINSTALL,
   COMMAND_UPDATE,
   COMMAND_VERSION,
@@ -27,6 +29,8 @@ import { lockCommand } from "@/commands/lock.ts";
 import { outdatedCommand } from "@/commands/outdated.ts";
 import { packCommand } from "@/commands/pack.ts";
 import { pruneCommand } from "@/commands/prune.ts";
+import { publishCommand } from "@/commands/publish.ts";
+import { selfUpdateCommand } from "@/commands/self-update.ts";
 import { uninstallCommand } from "@/commands/uninstall.ts";
 import { updateCommand } from "@/commands/update.ts";
 import { versionCommand } from "@/commands/version.ts";
@@ -42,6 +46,8 @@ import { lock } from "./init/lock.ts";
 import { outdated } from "./init/outdated.ts";
 import { pack } from "./init/pack.ts";
 import { prune } from "./init/prune.ts";
+import { publish } from "./init/publish.ts";
+import { selfUpdate } from "./init/selfUpdate.ts";
 import { uninstall } from "./init/uninstall.ts";
 import { update } from "./init/update.ts";
 import { version } from "./init/version.ts";
@@ -54,6 +60,8 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_INIT]: (argv) => initCommand(argv, init),
   [COMMAND_INSTALL]: (argv) => installCommand(argv, install),
   [COMMAND_PACK]: (argv) => packCommand(argv, pack),
+  [COMMAND_PUBLISH]: (argv) => publishCommand(argv, publish),
+  [COMMAND_SELF_UPDATE]: (argv) => selfUpdateCommand(argv, selfUpdate),
   [COMMAND_LOCK]: (argv) => lockCommand(argv, lock),
   [COMMAND_UPDATE]: (argv) => updateCommand(argv, update),
   [COMMAND_OUTDATED]: (argv) => outdatedCommand(argv, outdated),

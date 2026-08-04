@@ -5,7 +5,6 @@
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
 import {
   buildFlatPackageZip,
   createTempProject,
@@ -244,9 +243,7 @@ dependencies:
   test("registries.default used when per-dep registry name omitted", async () => {
     const bytes = buildFlatPackageZip({ name: "acme/pkg", version: "1.0.0" });
     registry = await startMockRegistry({
-      packages: [
-        { owner: "acme", repo: "pkg", versions: [{ version: "1.0.0", bytes }] },
-      ],
+      packages: [{ owner: "acme", repo: "pkg", versions: [{ version: "1.0.0", bytes }] }],
     });
 
     project = createTempProject();
@@ -273,9 +270,7 @@ dependencies:
   test("named registry routes to correct base URL", async () => {
     const bytes = buildFlatPackageZip({ name: "acme/pkg", version: "1.0.0" });
     registry = await startMockRegistry({
-      packages: [
-        { owner: "acme", repo: "pkg", versions: [{ version: "1.0.0", bytes }] },
-      ],
+      packages: [{ owner: "acme", repo: "pkg", versions: [{ version: "1.0.0", bytes }] }],
     });
     const other = await startMockRegistry({ packages: [] });
     mirror = other;

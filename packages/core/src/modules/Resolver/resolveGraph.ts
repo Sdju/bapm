@@ -3,6 +3,18 @@ import { isAbsolute, resolve } from "node:path";
 import { loadManifest } from "@/modules/Manifest";
 import { loadLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
+import {
+  createRegistryClient,
+  downloadUrl,
+  experimentalRegistriesRemediation,
+  isExperimentalRegistriesEnabled,
+  modulesRegistryDest,
+  parsePackageId,
+  pickRegistryVersion,
+  registryRepoUrl,
+  resolveRegistryBaseUrl,
+  RegistryError,
+} from "@/modules/Registry";
 import { classifyDependencyRef } from "./classify.ts";
 import { MAX_RESOLVE_DEPTH } from "./constants.ts";
 import {
@@ -57,6 +69,13 @@ type EdgeRecord = {
   path?: string;
   packageRoot?: string;
   repo_url?: string;
+  source?: string;
+  resolved_url?: string;
+  resolved_hash?: string;
+  version?: string;
+  registry_base_url?: string;
+  registry_owner?: string;
+  registry_repo?: string;
 };
 
 type WarmPin = {
@@ -66,6 +85,10 @@ type WarmPin = {
   resolved_at?: string;
   repo_url: string;
   name?: string;
+  source?: string;
+  resolved_url?: string;
+  resolved_hash?: string;
+  version?: string;
 };
 
 function normalizeScope(scope: string[] | undefined): Set<string> {
@@ -118,6 +141,9 @@ export async function resolveDependencyGraph(
   const tagLister: TagLister = options.tagLister ?? createDefaultTagLister();
   const downloader: Downloader = options.downloader ?? createDefaultDownloader();
   const skipDownload = options.skipDownload === true || options.planOnly === true;
+  const experimentalRegistries = isExperimentalRegistriesEnabled({
+    experimentalRegistries: options.experimentalRegistries,
+  });
 
   const { document: manifest } = loadManifest({ cwd });
   const rootName = manifest.name;
@@ -176,12 +202,31 @@ export async function resolveDependencyGraph(
 
     const classified = classifyDependencyRef(normalizeEntry(item.entry));
 
-    if (classified.kind === "registry" || classified.kind === "marketplace") {
+    if (classified.kind === "marketplace") {
       throw new ResolverError(
         "RESOLVE_REGISTRY_DEFERRED",
-        `Registry dependency fetch is deferred/unsupported in M3 (id=${classified.id ?? "?"}); ` +
-          `registry HTTP client is out of scope — not falling back to git`,
+        `Marketplace dependency is deferred/unsupported (marketplace=${String((classified.raw as { marketplace?: string })?.marketplace ?? "?")}); not falling back to registry or git`,
       );
+    }
+
+    if (classified.kind === "registry") {
+      if (!experimentalRegistries) {
+        throw new ResolverError(
+          "RESOLVE_REGISTRY_DEFERRED",
+          `Registry dependency resolve is experimental/deferred until enabled (id=${classified.id ?? "?"}). ${experimentalRegistriesRemediation()} — not falling back to git`,
+        );
+      }
+      await resolveRegistry(item, classified, {
+        cwd,
+        manifestRegistries: manifest.registries,
+        registryBaseUrl: options.registryBaseUrl,
+        warmByIdentity,
+        edgesByIdentity,
+        visitOrder,
+        updateRefs,
+        shouldUpdate: item.shouldUpdate,
+      });
+      continue;
     }
 
     if (classified.kind === "local") {
@@ -263,16 +308,171 @@ function indexWarmPins(
     const identity = repo.startsWith("local:")
       ? repo
       : normalizeRepoIdentity(repo.includes("://") ? repo : `https://${repo}`);
-    map.set(identity, {
+    const pin: WarmPin = {
       repo_url: repo,
       resolved_commit: typeof d.resolved_commit === "string" ? d.resolved_commit : undefined,
       constraint: typeof d.constraint === "string" ? d.constraint : undefined,
       resolved_tag: typeof d.resolved_tag === "string" ? d.resolved_tag : undefined,
       resolved_at: typeof d.resolved_at === "string" ? d.resolved_at : undefined,
       name: typeof d.name === "string" ? d.name : undefined,
-    });
+      source: typeof d.source === "string" ? d.source : undefined,
+      resolved_url: typeof d.resolved_url === "string" ? d.resolved_url : undefined,
+      resolved_hash: typeof d.resolved_hash === "string" ? d.resolved_hash : undefined,
+      version: typeof d.version === "string" ? d.version : undefined,
+    };
+    map.set(identity, pin);
+    // Registry packages also index by package id (owner/repo) for mirror replay
+    if (pin.source === "registry" && pin.name) {
+      map.set(`registry:${pin.name}`, pin);
+      map.set(pin.name, pin);
+    }
   }
   return map;
+}
+
+async function resolveRegistry(
+  item: QueueItem,
+  classified: ClassifiedDependency,
+  ctx: {
+    cwd: string;
+    manifestRegistries?: Record<string, import("@/modules/Manifest").RegistryEntry | string>;
+    registryBaseUrl?: string;
+    warmByIdentity: Map<string, WarmPin>;
+    edgesByIdentity: Map<string, EdgeRecord[]>;
+    visitOrder: string[];
+    updateRefs: boolean;
+    shouldUpdate: boolean;
+  },
+): Promise<void> {
+  const packageId = classified.id;
+  if (!packageId) {
+    throw new ResolverError("RESOLVE_FAILED", "Registry dependency missing id:");
+  }
+
+  const { owner, repo } = parsePackageId(packageId);
+  const rawObj = classified.raw as ObjectDependency;
+  const versionConstraint =
+    (typeof rawObj.version === "string" ? rawObj.version : undefined) ??
+    (typeof rawObj.ref === "string" ? rawObj.ref : undefined) ??
+    "*";
+
+  let baseUrl: string;
+  let registryName: string | undefined;
+  try {
+    const resolved = resolveRegistryBaseUrl({
+      registries: ctx.manifestRegistries,
+      registryName: classified.registry,
+      registryBaseUrl: ctx.registryBaseUrl,
+    });
+    baseUrl = resolved.baseUrl;
+    registryName = resolved.registryName;
+  } catch (cause) {
+    if (cause instanceof RegistryError) {
+      throw new ResolverError("RESOLVE_FAILED", cause.message, { cause });
+    }
+    throw cause;
+  }
+
+  const lockUrl = registryRepoUrl(baseUrl, packageId);
+  const identity = lockUrl;
+  const warm =
+    ctx.warmByIdentity.get(`registry:${packageId}`) ??
+    ctx.warmByIdentity.get(packageId) ??
+    ctx.warmByIdentity.get(identity);
+
+  const reResolve = ctx.updateRefs && ctx.shouldUpdate;
+  let version: string;
+  let digest: string;
+  let resolved_url: string;
+
+  const warmOk =
+    !reResolve &&
+    warm?.source === "registry" &&
+    typeof warm.resolved_hash === "string" &&
+    typeof warm.version === "string" &&
+    typeof warm.resolved_url === "string";
+
+  if (warmOk) {
+    version = warm!.version!;
+    digest = warm!.resolved_hash!;
+    resolved_url = warm!.resolved_url!;
+  } else {
+    try {
+      const client = createRegistryClient({
+        baseUrl,
+        registryName,
+      });
+      const listed = await client.listVersions(owner, repo);
+      const picked = pickRegistryVersion(listed, versionConstraint);
+      version = picked.version;
+      digest = picked.digest;
+      resolved_url = downloadUrl(baseUrl, owner, repo, version);
+    } catch (cause) {
+      const message =
+        cause instanceof Error
+          ? cause.message
+          : typeof cause === "object" && cause !== null && "message" in cause
+            ? String((cause as { message: unknown }).message)
+            : String(cause);
+      throw new ResolverError(
+        "RESOLVE_FAILED",
+        `Registry fetch failed for ${packageId} (no git fallback): ${message}`,
+        { cause },
+      );
+    }
+  }
+
+  const dest = modulesRegistryDest(ctx.cwd, packageId, version);
+  const chain = [...item.chain, `${packageId}@${version}`];
+
+  const record: EdgeRecord = {
+    identity,
+    kind: "registry",
+    classified,
+    depth: item.depth,
+    chain,
+    constraint: versionConstraint,
+    name: packageId,
+    packageRoot: dest,
+    repo_url: lockUrl,
+    source: "registry",
+    resolved_url,
+    resolved_hash: digest,
+    version,
+    registry_base_url: baseUrl,
+    registry_owner: owner,
+    registry_repo: repo,
+  };
+  pushEdge(ctx.edgesByIdentity, record);
+
+  if (item.depth === 1) {
+    ctx.visitOrder.push(packageId);
+  }
+  // Registry packages do not expand transitive deps in M10 MVP (flat zip may lack nested graph).
+}
+
+function edgeToNode(e: EdgeRecord): ResolvedNode {
+  return {
+    name: e.name,
+    identity: e.identity,
+    kind: e.kind,
+    depth: e.depth,
+    resolved_by: e.chain.join("->"),
+    repo_url: e.repo_url,
+    path: e.path,
+    resolved_commit: e.resolved_commit,
+    constraint: e.constraint,
+    resolved_tag: e.resolved_tag,
+    resolved_at: e.resolved_at,
+    packageRoot: e.packageRoot,
+    version: e.version,
+    source: e.source,
+    resolved_url: e.resolved_url,
+    resolved_hash: e.resolved_hash,
+    registry_base_url: e.registry_base_url,
+    registry_owner: e.registry_owner,
+    registry_repo: e.registry_repo,
+  };
 }
 
 async function resolveLocal(
@@ -604,23 +804,6 @@ async function applyIntersectionPick(
   // Stable-ish order by depth then name
   nodes.sort((a, b) => a.depth - b.depth || a.name.localeCompare(b.name));
   return nodes;
-}
-
-function edgeToNode(e: EdgeRecord): ResolvedNode {
-  return {
-    name: e.name,
-    identity: e.identity,
-    kind: e.kind,
-    depth: e.depth,
-    resolved_by: e.chain.join("->"),
-    repo_url: e.repo_url,
-    path: e.path,
-    resolved_commit: e.resolved_commit,
-    constraint: e.constraint,
-    resolved_tag: e.resolved_tag,
-    resolved_at: e.resolved_at,
-    packageRoot: e.packageRoot,
-  };
 }
 
 function formatChainDiag(e: EdgeRecord): string {

@@ -111,6 +111,7 @@ export {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
+  materializeRegistryNodes,
 } from "@/modules/Resolver";
 
 export type {
@@ -309,6 +310,54 @@ export {
   cacheClean,
   cleanModulesCache,
 } from "@/modules/Cache";
+
+export type {
+  BuildPublishArchiveOptions,
+  BuildPublishArchiveResult,
+  CheckSelfUpdateOptions,
+  CheckSelfUpdateResult,
+  CreateRegistryClientOptions,
+  RegistryClient,
+  RegistryHttpRequest,
+  RegistryHttpResponse,
+  RegistryHttpTransport,
+  RegistryVersionInfo,
+  RegistryErrorCode,
+} from "@/modules/Registry";
+
+export {
+  RegistryError,
+  EXPERIMENTAL_REGISTRIES_ENV,
+  isExperimentalRegistriesEnabled,
+  experimentalRegistriesRemediation,
+  assertExperimentalRegistriesEnabled,
+  createRegistryClient,
+  createRegistryHttpClient,
+  createPackageRegistryClient,
+  sha256Digest,
+  sha256Hex,
+  digestsEqual,
+  verifyArchiveDigest,
+  createFetchTransport,
+  resolveRegistryToken,
+  buildPublishArchive,
+  createPublishArchive,
+  packPublishArchive,
+  buildRegistryPublishZip,
+  checkSelfUpdate,
+  compareSelfUpdate,
+  runSelfUpdateCheck,
+  fetchLatestCliVersion,
+  resolveRegistryBaseUrl,
+  parsePackageId,
+  registryRepoUrl,
+  downloadUrl,
+  pickRegistryVersion,
+  materializeRegistryArchive,
+  fetchAndMaterializeRegistry,
+  rewriteDownloadBase,
+  modulesRegistryDest,
+} from "@/modules/Registry";
 
 export const BAPM_NAME = "bapm";
 

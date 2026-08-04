@@ -5,12 +5,7 @@
  */
 import * as core from "@bapm/core";
 import { createHash } from "node:crypto";
-import {
-  createServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import {
   existsSync,
   mkdirSync,
@@ -90,9 +85,7 @@ export function buildFlatPackageZip(options?: {
   const name = options?.name ?? "contoso/demo";
   const version = options?.version ?? "1.0.0";
   const files: Record<string, Uint8Array> = {
-    "apm.yml": utf8(
-      `name: ${name}\nversion: "${version}"\ndependencies:\n  apm: []\n  mcp: []\n`,
-    ),
+    "apm.yml": utf8(`name: ${name}\nversion: "${version}"\ndependencies:\n  apm: []\n  mcp: []\n`),
     ".apm/keep.txt": utf8("registry-package\n"),
   };
   for (const [path, contents] of Object.entries(options?.extraFiles ?? {})) {
@@ -290,11 +283,7 @@ export function pickValue(names: string[], label: string): unknown {
 /** Registry HTTP client factory (M10). */
 export function getCreateRegistryClient(): (options?: Record<string, unknown>) => unknown {
   return pickExport(
-    [
-      "createRegistryClient",
-      "createRegistryHttpClient",
-      "createPackageRegistryClient",
-    ],
+    ["createRegistryClient", "createRegistryHttpClient", "createPackageRegistryClient"],
     "M10 registry HTTP client",
   ) as (options?: Record<string, unknown>) => unknown;
 }
@@ -512,9 +501,12 @@ export async function clientDownload(
   for (const name of ["download", "downloadVersion", "downloadArchive"] as const) {
     const fn = c[name];
     if (typeof fn === "function") {
-      const result = await (
-        fn as (a: string, b: string, v: string) => Promise<unknown>
-      ).call(client, owner, repo, version);
+      const result = await (fn as (a: string, b: string, v: string) => Promise<unknown>).call(
+        client,
+        owner,
+        repo,
+        version,
+      );
       if (result instanceof Uint8Array) return result;
       if (Buffer.isBuffer(result)) return new Uint8Array(result);
       if (result && typeof result === "object") {

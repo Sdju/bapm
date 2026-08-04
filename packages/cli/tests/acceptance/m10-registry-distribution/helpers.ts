@@ -2,12 +2,7 @@
  * CLI M10 registry distribution acceptance helpers.
  */
 import { createHash } from "node:crypto";
-import {
-  createServer,
-  type IncomingMessage,
-  type Server,
-  type ServerResponse,
-} from "node:http";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import {
   existsSync,
   mkdirSync,
@@ -83,9 +78,7 @@ export async function runInProject(
     }
   }
   try {
-    const { result, stdout, stderr } = await withCwd(cwd, () =>
-      withCapturedIo(() => runCli(argv)),
-    );
+    const { result, stdout, stderr } = await withCwd(cwd, () => withCapturedIo(() => runCli(argv)));
     return {
       result,
       stdout,
@@ -120,10 +113,7 @@ export function sha256Digest(content: Uint8Array | Buffer): string {
 }
 
 /** Minimal store-only ZIP (no fflate dep in CLI package). */
-export function buildFlatPackageZip(options?: {
-  name?: string;
-  version?: string;
-}): Uint8Array {
+export function buildFlatPackageZip(options?: { name?: string; version?: string }): Uint8Array {
   const name = options?.name ?? "contoso/demo";
   const version = options?.version ?? "1.0.0";
   const enc = new TextEncoder();

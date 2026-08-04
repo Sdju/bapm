@@ -24,7 +24,7 @@ export type { ResolverErrorCode } from "./errors.ts";
 export { classifyDependencyRef } from "./classify.ts";
 export { resolveDependencyGraph } from "./resolveGraph.ts";
 export { downloadPackages } from "./download.ts";
-export { resolveAndLock } from "./resolveAndLock.ts";
+export { resolveAndLock, materializeRegistryNodes } from "./resolveAndLock.ts";
 export { purgeModulesInstallPaths } from "./purge.ts";
 export { normalizeRepoIdentity, toLockRepoUrl, identityToCacheDir } from "./identity.ts";
 export {
