@@ -1,0 +1,54 @@
+# core-feod-architecture Specification
+
+## Purpose
+
+Defines the library FEOD layer layout and import boundaries for `@bapm/core` so domain modules stay isolated under a profile separate from the CLI, while the package public export surface remains stable.
+
+## Requirements
+
+### Requirement: Library FEOD layer directories exist under src
+The `packages/core` package MUST organize source code under `src/` into the library FEOD layers: `app`, `modules`, `common`, `globals`, and an empty `pages` stub directory. The pages layer directory name MUST be `pages` (NOT `commands`). The `pages` directory MAY contain only a placeholder (for example `.gitkeep`) and MUST NOT host domain logic.
+
+#### Scenario: Layer roots are present after migration
+- **WHEN** the FEOD migration of `packages/core` is complete
+- **THEN** `src/app`, `src/modules`, `src/common`, `src/globals`, and `src/pages` directories MUST exist under `packages/core`
+
+#### Scenario: Pages stub has no domain logic
+- **WHEN** inspecting `src/pages` after migration
+- **THEN** it MUST NOT contain Manifest, Lockfile, or other domain implementation files
+
+### Requirement: Path alias maps @ to src
+The TypeScript configuration for `packages/core` MUST resolve the path alias `@/*` to `./src/*` so cross-level imports use `@/` rather than deep relative paths across layers.
+
+#### Scenario: Alias resolves a cross-level import
+- **WHEN** a file under `src/app` imports a module public API via `@/modules/<Name>`
+- **THEN** the TypeScript project MUST resolve that import through the `@/*` path mapping to `src/*`
+
+### Requirement: Domain modules Manifest and Lockfile
+Manifest and Lockfile logic MUST live under `src/modules/Manifest` and `src/modules/Lockfile` respectively. Each MUST be a directory with an `index.ts` public entry. Deep imports into module internals from outside that module MUST NOT be used. Single-file modules MUST NOT be used.
+
+#### Scenario: App imports Manifest only via public entry
+- **WHEN** app public API code needs Manifest behavior
+- **THEN** it MUST import from `@/modules/Manifest` (the module `index.ts`) and MUST NOT import files under `modules/Manifest/` internals
+
+#### Scenario: Lockfile does not deep-import Manifest
+- **WHEN** Lockfile code needs shared YAML loading or related helpers that Manifest also uses
+- **THEN** it MUST obtain them from `common` (concrete file paths) or from Manifest's public API only, and MUST NOT import Manifest internal paths such as former `manifest/yaml-load` internals
+
+### Requirement: Shared YAML lives in common without barrel
+Shared YAML safe-subset loading used by both Manifest and Lockfile MUST live under `src/common/` as concrete files. The `common` layer MUST NOT contain any `index.ts` / barrel file.
+
+#### Scenario: Common YAML imported by concrete path
+- **WHEN** Manifest or Lockfile needs the shared YAML loader
+- **THEN** the import path MUST target a concrete file under `src/common/` (for example `@/common/yaml/loadYamlDocument`) and MUST NOT use a `common` barrel
+
+### Requirement: Thin package entry preserves named exports
+The package root `src/index.ts` MUST be a thin façade that re-exports the public surface from `app` (public API assembly). After migration, `@bapm/core` MUST continue to expose every previously exported named symbol (values and types) with the same export names.
+
+#### Scenario: Existing named exports remain available
+- **WHEN** a consumer imports the set of symbols previously exported from `@bapm/core` (including Manifest/Lockfile APIs, `loadYamlDocument`, `BAPM_NAME`, and `getVersion`)
+- **THEN** each named export MUST still resolve from the package entry without requiring a new import path
+
+#### Scenario: Unit and acceptance tests import from package entry
+- **WHEN** existing `packages/core` unit tests and M1/M2 acceptance suites import from `../src/index.ts` or the package entry
+- **THEN** those imports MUST continue to typecheck and run without changing the consumer-facing export names
