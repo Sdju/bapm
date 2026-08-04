@@ -43,6 +43,22 @@ export type MaterializeContext = {
   [key: string]: unknown;
 };
 
+/** One harness file written by materialize (cwd-relative path). */
+export type DeployedFile = {
+  /** Project-/cwd-relative path using `/` separators. */
+  path: string;
+  /** Optional content hash (host may omit; core can compute). */
+  hash?: string;
+};
+
+/**
+ * Report returned by `materialize` so core can record lock inventory
+ * (`deployed_file_hashes`) without importing concrete host packages.
+ */
+export type MaterializeReport = {
+  deployedFiles: DeployedFile[];
+};
+
 /** Detection predicate hook — true when this host should activate for the project. */
 export type TargetDetectFn = (ctx: { cwd: string }) => boolean | Promise<boolean>;
 
@@ -58,7 +74,7 @@ export type BapmTarget = {
   materialize: (
     primitives: AttributedPrimitiveSet,
     ctx?: MaterializeContext,
-  ) => void | Promise<void>;
+  ) => void | MaterializeReport | Promise<void | MaterializeReport>;
   getDeployRoots?: () => string[];
   [key: string]: unknown;
 };

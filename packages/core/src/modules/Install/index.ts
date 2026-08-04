@@ -8,6 +8,7 @@
  * - Types / `InstallError`
  *
  * Target interaction is only via `bapm-target-api` (no concrete host imports).
+ * Deployed inventory uses SHA-256 of file bytes (see `deployedInventory.ts`).
  */
 
 export type {
@@ -23,3 +24,4 @@ export { InstallError } from "./errors.ts";
 export { enforceFrozen } from "./frozen.ts";
 export { runInstall, installProject } from "./runInstall.ts";
 export { declaredTargetIds } from "./targets.ts";
+export { DEPLOYED_HASH_ALGO, hashFileBytes } from "./deployedInventory.ts";

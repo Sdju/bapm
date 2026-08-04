@@ -1,6 +1,6 @@
 /**
- * Optional bapm-target-cursor e2e skills materialize via install.
- * Package identity / unit materialize live in packages/target-cursor/tests/.
+ * Install ↔ mock target e2e: skills materialize via registry (no concrete cursor import).
+ * Real cursor e2e lives under packages/cli and packages/target-cursor.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -12,20 +12,19 @@ import {
   getRegisterTarget,
   getRunInstall,
   importTargetApi,
-  importTargetCursor,
   listFilesRecursive,
   writeText,
   type TempProject,
 } from "./helpers.ts";
 
-describe("bapm-target-cursor install e2e", () => {
+describe("install target materialize e2e (mock host)", () => {
   let project: TempProject;
 
   afterEach(() => {
     project?.cleanup();
   });
 
-  test("cursor e2e — skill under registered root (.agents/skills/... or documented)", async () => {
+  test("mock cursor-like target — skill under registered root", async () => {
     project = createTempProject();
     const ports = createFakePorts();
     mkdirSync(join(project.cwd, "skill-dep"), { recursive: true });
@@ -46,15 +45,46 @@ describe("bapm-target-cursor install e2e", () => {
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
     const api = await importTargetApi();
-    const cursorPkg = await importTargetCursor();
-    const createCursor =
-      cursorPkg.createCursorTarget ?? cursorPkg.createTarget ?? cursorPkg.default;
-    expect(typeof createCursor).toBe("function");
-
     const registry = getCreateRegistry(api)();
     const register = getRegisterTarget(api, registry);
-    const cursorTarget = typeof createCursor === "function" ? createCursor() : createCursor;
-    register(cursorTarget);
+    register({
+      id: "cursor",
+      deployRoots: [".agents/skills", ".cursor"],
+      detect: () => true,
+      materialize: async (
+        primitives: unknown,
+        ctx?: { cwd?: string },
+      ): Promise<{ deployedFiles: Array<{ path: string }> }> => {
+        const cwd = ctx?.cwd ?? project.cwd;
+        const list = Array.isArray(primitives)
+          ? primitives
+          : ((primitives as { primitives?: unknown[] })?.primitives ?? []);
+        const deployedFiles: Array<{ path: string }> = [];
+        for (const raw of list) {
+          const p = raw as { name?: string; type?: string; path?: string };
+          if (!/skill/i.test(String(p.type ?? "skill"))) continue;
+          const name = String(p.name ?? "unnamed");
+          const destDir = join(cwd, ".agents", "skills", name);
+          mkdirSync(destDir, { recursive: true });
+          const dest = join(destDir, "SKILL.md");
+          const body =
+            p.path && existsSync(p.path) ? undefined : "---\nname: hello\n---\n# Hello\n";
+          if (p.path && existsSync(p.path)) {
+            const { readFileSync, cpSync, statSync } = await import("node:fs");
+            const src = p.path.endsWith("SKILL.md") ? p.path : join(p.path, "SKILL.md");
+            if (existsSync(src) && statSync(src).isFile()) {
+              cpSync(src, dest);
+            } else {
+              writeFileSync(dest, readFileSync(p.path, "utf8"), "utf8");
+            }
+          } else {
+            writeFileSync(dest, body!, "utf8");
+          }
+          deployedFiles.push({ path: `.agents/skills/${name}/SKILL.md` });
+        }
+        return { deployedFiles };
+      },
+    });
 
     const runInstall = getRunInstall();
     await runInstall({
@@ -71,17 +101,9 @@ describe("bapm-target-cursor install e2e", () => {
     const agentsSkills = existsSync(join(project.cwd, ".agents", "skills"))
       ? listFilesRecursive(join(project.cwd, ".agents", "skills"))
       : [];
-    const cursorFiles = existsSync(join(project.cwd, ".cursor"))
-      ? listFilesRecursive(join(project.cwd, ".cursor"))
-      : [];
 
-    const deployed =
-      existsSync(tg003) ||
-      agentsSkills.some((f) => /hello|SKILL\.md/i.test(f)) ||
-      cursorFiles.some((f) => /hello|SKILL\.md/i.test(f));
+    const deployed = existsSync(tg003) || agentsSkills.some((f) => /hello|SKILL\.md/i.test(f));
     expect(deployed).toBe(true);
-
-    // Must not escape registered roots — no skill dump at project root
     expect(existsSync(join(project.cwd, "hello", "SKILL.md"))).toBe(false);
   });
 });

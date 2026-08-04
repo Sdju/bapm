@@ -1,7 +1,8 @@
-import { runInstall } from "./services/runInstall.ts";
+import { runInstall, formatInstallHelp, parseInstallArgs } from "./services/runInstall.ts";
 import type { InstallDeps, InstallOptions, InstallResult } from "./types/install.types.ts";
 
 export type { InstallDeps, InstallOptions, InstallResult };
+export { formatInstallHelp, parseInstallArgs };
 
 export function createInstall(deps?: InstallDeps) {
   const resolved: InstallDeps = deps ?? {
@@ -13,6 +14,9 @@ export function createInstall(deps?: InstallDeps) {
   return {
     async run(options: InstallOptions): Promise<InstallResult> {
       return runInstall(resolved, options);
+    },
+    formatHelp(): string {
+      return formatInstallHelp(resolved);
     },
   };
 }

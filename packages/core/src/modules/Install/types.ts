@@ -7,11 +7,18 @@ export type RunInstallOptions = {
   /** Rejected when combined with frozen. */
   update?: boolean;
   updateRefs?: boolean;
+  /**
+   * Force activation of a registered target id even when `detect` is false
+   * (e.g. CLI `--target cursor`). Alias: `forceTarget`.
+   */
+  forcedTarget?: string;
+  /** Alias for `forcedTarget`. */
+  forceTarget?: string;
   /** Injected target registry (from bapm-target-api). */
   targetRegistry?: TargetRegistry;
   /** Alias accepted by acceptance helpers. */
   registry?: TargetRegistry;
-  /** Override active target ids (else from manifest / detection). */
+  /** Override active target ids (else from manifest / detection / forced). */
   activeTargets?: string[];
   parallelDownloads?: number;
   maxDepth?: number;

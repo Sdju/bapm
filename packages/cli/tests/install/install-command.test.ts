@@ -3,14 +3,7 @@
  * Help lists install (runtime.test.ts); lock no-deploy (lock/lock-command.test.ts).
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import {
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  readFileSync,
-  mkdtempSync,
-  rmSync,
-} from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runCli } from "../../src/index.ts";

@@ -1,13 +1,13 @@
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
-import type { BapmTarget, TargetRegistry } from "bapm-target-api";
+import type { BapmTarget, MaterializeReport, TargetRegistry } from "bapm-target-api";
 import {
   loadManifest,
   type BapmManifest,
   type DependencyEntry,
   type ObjectDependency,
 } from "@/modules/Manifest";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadLockfileOrNull, writeLockfile, type LockfileDocument } from "@/modules/Lockfile";
 import {
   APM_MODULES_DIR,
   DEFAULT_PARALLEL_DOWNLOADS,
@@ -21,26 +21,40 @@ import {
   resolvePrimitiveConflicts,
   type AttributedPrimitive,
 } from "@/modules/Primitives";
+import {
+  applyDeployedHashesToLock,
+  cleanupOrphanDeployedFiles,
+  collectDeployedHashes,
+  verifyDeployedFileHashes,
+} from "./deployedInventory.ts";
+import { InstallError } from "./errors.ts";
 import { enforceFrozen } from "./frozen.ts";
 import { declaredTargetIds } from "./targets.ts";
 import type { InstallResult, RunInstallOptions } from "./types.ts";
 
 /**
- * Run install: frozen gate → resolve/download → primitives → targets → lock (unless frozen).
+ * Run install: frozen gate → resolve/download → orphan cleanup → primitives →
+ * targets (forced or detect) → write deployed_file_hashes (unless frozen).
  */
 export async function runInstall(options: RunInstallOptions = {}): Promise<InstallResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
   const frozen = options.frozen === true;
   const updateRefs = options.updateRefs === true || options.update === true;
+  const forcedTargetId = options.forcedTarget ?? options.forceTarget;
 
   if (frozen) {
     enforceFrozen({ cwd, updateRefs, update: options.update });
   }
 
   const { document: rootManifest } = loadManifest({ cwd });
+  const previousLock = loadLockfileOrNull({ cwd });
+
+  const registry = (options.targetRegistry ?? options.registry) as TargetRegistry | undefined;
+  assertForcedTargetRegistered(forcedTargetId, registry);
 
   let lockPath: string | undefined;
   let nodes: ResolvedNode[] = [];
+  let lockDocument: LockfileDocument | undefined;
 
   const ports = {
     gitRemote: options.gitRemote,
@@ -49,7 +63,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   };
 
   if (frozen) {
-    const loaded = loadLockfileOrNull({ cwd });
+    const loaded = previousLock;
     const graph = await resolveDependencyGraph({
       cwd,
       updateRefs: false,
@@ -74,6 +88,12 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       downloader: options.downloader,
     });
     lockPath = loaded?.sourcePath;
+    lockDocument = loaded?.document;
+
+    // lk-017 lite: re-verify deployed_file_hashes when present (before harness mutation)
+    if (lockDocument) {
+      verifyDeployedFileHashes({ cwd, document: lockDocument });
+    }
   } else {
     const result = await resolveAndLock({
       cwd,
@@ -85,6 +105,21 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     });
     lockPath = result.lockPath;
     nodes = result.nodes;
+    const reloaded = loadLockfileOrNull({ cwd });
+    lockDocument = reloaded?.document;
+    if (reloaded) {
+      lockPath = reloaded.sourcePath;
+    }
+  }
+
+  const currentDepNames = new Set(nodes.map((n) => n.name).filter(Boolean));
+
+  if (!frozen) {
+    cleanupOrphanDeployedFiles({
+      cwd,
+      previous: previousLock?.document,
+      currentDepNames,
+    });
   }
 
   const declarationOrder =
@@ -102,20 +137,25 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     declarationOrder,
   });
 
-  const registry = (options.targetRegistry ?? options.registry) as TargetRegistry | undefined;
   const activeTargets = await resolveActiveTargets({
     cwd,
     rootManifest,
     registry,
     override: options.activeTargets,
+    forcedTargetId,
   });
+
+  const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
+  const materializedPrimitives: AttributedPrimitive[] = [];
 
   if (registry && activeTargets.length > 0) {
     const packageTargets = collectPackageDeclaredTargets(nodes, raw);
     for (const targetId of activeTargets) {
       const target = findTarget(registry, targetId);
       if (!target) continue;
-      const detected = await target.detect({ cwd });
+
+      const isForced = Boolean(forcedTargetId && forcedTargetId === targetId);
+      const detected = isForced ? true : await target.detect({ cwd });
       if (!detected) continue;
 
       const filtered = filterByIntersection(
@@ -124,10 +164,27 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         packageTargets,
         rootManifest,
       );
-      await target.materialize(filtered, {
+      materializedPrimitives.push(...filtered);
+      const report = (await target.materialize(filtered, {
         cwd,
         targetId,
         deployRoots: [...target.deployRoots],
+      })) as void | MaterializeReport;
+      allDeployed.push(...collectDeployedHashes(cwd, report));
+    }
+  }
+
+  if (!frozen && lockDocument && allDeployed.length > 0) {
+    const wrote = applyDeployedHashesToLock({
+      document: lockDocument,
+      deployed: allDeployed,
+      primitives: materializedPrimitives.length > 0 ? materializedPrimitives : resolved.primitives,
+    });
+    if (wrote) {
+      lockPath = writeLockfile(lockDocument, {
+        cwd,
+        sourcePath: lockPath,
+        sourceFilename: previousLock?.sourceFilename,
       });
     }
   }
@@ -145,13 +202,32 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 /** Alias preferred by design docs. */
 export const installProject = runInstall;
 
+function assertForcedTargetRegistered(
+  forcedTargetId: string | undefined,
+  registry: TargetRegistry | undefined,
+): void {
+  if (!forcedTargetId) return;
+  if (!registry || !findTarget(registry, forcedTargetId)) {
+    throw new InstallError(
+      "INSTALL_UNKNOWN_TARGET",
+      `Unknown or unregistered target: ${forcedTargetId}`,
+      { details: { target: forcedTargetId } },
+    );
+  }
+}
+
 async function resolveActiveTargets(args: {
   cwd: string;
   rootManifest: BapmManifest;
   registry?: TargetRegistry;
   override?: string[];
+  forcedTargetId?: string;
 }): Promise<string[]> {
   if (args.override && args.override.length > 0) return [...args.override];
+
+  if (args.forcedTargetId) {
+    return [args.forcedTargetId];
+  }
 
   const declared = declaredTargetIds(args.rootManifest);
   if (declared.length > 0) return declared;

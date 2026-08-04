@@ -164,19 +164,6 @@ export async function importTargetApi(): Promise<Record<string, unknown>> {
   }
 }
 
-/** Load bapm-target-cursor via test alias (core must not hard-depend on it). */
-export async function importTargetCursor(): Promise<Record<string, unknown>> {
-  try {
-    return (await import("bapm-target-cursor")) as Record<string, unknown>;
-  } catch (e) {
-    throw new TypeError(
-      `expected package bapm-target-cursor to resolve (packages/target-cursor): ${
-        e instanceof Error ? e.message : String(e)
-      }`,
-    );
-  }
-}
-
 export function getCreateRegistry(api: Record<string, unknown>): () => unknown {
   const fn = api.createTargetRegistry ?? api.createRegistry ?? api.createTargetApiRegistry;
   if (typeof fn !== "function") {

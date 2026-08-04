@@ -41,9 +41,7 @@ describe("target registry contracts", () => {
     const listed = registry.list();
     const found = listed.find((t) => t.id === "mock-editor");
     expect(found).toBeTruthy();
-    expect(found!.deployRoots).toEqual(
-      expect.arrayContaining([".agents/skills", ".cursor"]),
-    );
+    expect(found!.deployRoots).toEqual(expect.arrayContaining([".agents/skills", ".cursor"]));
     expect(registry.get("mock-editor")?.id).toBe("mock-editor");
     expect(registry.getAll()).toHaveLength(1);
   });

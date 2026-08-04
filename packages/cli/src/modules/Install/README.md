@@ -1,6 +1,12 @@
 # Install
 
-Thin CLI wrapper over `@bapm/core` `runInstall`. Registers `bapm-target-cursor` for e2e
-host materialize. Parses `--frozen` / rejects frozen+`--update`.
+CLI Install module — thin FEOD wrapper over `@bapm/core` install + cursor
+host materialize. Parses `--frozen`, `--target <id>`, `--update`; hard-errors
+unknown flags; rejects frozen+`--update`.
 
-Domain logic lives in `@bapm/core` — this module stays a FEOD command-facing service.
+## Public API
+
+- `createInstall` / `InstallApi`
+- `parseInstallArgs` / `formatInstallHelp`
+
+Cursor registration uses workspace dep `bapm-target-cursor` here (not in core).

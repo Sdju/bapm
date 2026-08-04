@@ -1,19 +1,34 @@
 # bapm-target-cursor
 
-Minimal **Cursor** host for bapm M4.
+Minimal **Cursor** host for bapm (M5 polish).
 
-## Detection
+## Detection vs forced target
 
-Activates when the project contains a `.cursor/` directory (presence predicate).
+| Mode                           | When active                                                                    | Creates roots?                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| **Auto-detect**                | `.cursor/` **directory** **or** legacy `.cursorrules` **file** at project root | Only when materialize runs after a positive detect                                                       |
+| **Forced** (`--target cursor`) | Explicit CLI/core forced target id, even if detect is false                    | MAY `mkdir` registered roots (`.cursor/`, `.agents/skills`, `.cursor/rules`, `.cursor/agents`) as needed |
+
+Auto-detect without force MUST NOT create `.cursor/` solely for MCP opt-in. Forced activation is owned by Install / CLI; this package’s `detect` stays an honest presence predicate.
 
 ## Deploy roots (tg-002 / tg-003)
 
 Registered roots:
 
-- `.agents/skills` — preferred OpenAPM skills path (`<name>/SKILL.md`)
-- `.cursor` — cursor-native companion root (detection + optional native files)
+- `.agents/skills` — skills → `<name>/SKILL.md`
+- `.cursor` — companion root (detection + rules/agents)
 
-Skills are materialized under `.agents/skills/<name>/SKILL.md` (tg-003). Writes never escape these roots.
+## Materialize routing
+
+| Primitive type | Destination                      |
+| -------------- | -------------------------------- |
+| skill          | `.agents/skills/<name>/SKILL.md` |
+| instruction    | `.cursor/rules/<name>.mdc`       |
+| agent          | `.cursor/agents/<name>.md`       |
+
+Thin copy/write from source content (minimal frontmatter only when content is missing). Writes are idempotent overwrites, never escape registered roots, and **never** write `.cursor/mcp.json`.
+
+`materialize` returns a `MaterializeReport` (`deployedFiles: { path }[]`) via `bapm-target-api` for lock inventory.
 
 ## Dependencies
 
