@@ -11,7 +11,7 @@ import {
   runInProject,
   writeCompileProject,
   type TempProject,
-} from "./helpers.ts";
+} from "../mcp/helpers.ts";
 
 describe("CLI M9 thin compile → AGENTS.md", () => {
   let project: TempProject;

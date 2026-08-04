@@ -11,7 +11,7 @@ import {
   runInProject,
   writeModulesCacheProject,
   type TempProject,
-} from "./helpers.ts";
+} from "../mcp/helpers.ts";
 
 describe("CLI M9 thin cache info|clean", () => {
   let project: TempProject;

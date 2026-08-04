@@ -3,17 +3,10 @@
  * Specs: target-cursor-minimal, cursor-mcp-deploy. Checklist D §1, 5.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCursorTarget } from "../../../src/index.ts";
+import { createCursorTarget } from "../../src/index.ts";
 
 type TempDir = { cwd: string; cleanup: () => void };
 
@@ -22,15 +15,11 @@ function createTempDir(prefix = "bapm-m9-cursor-"): TempDir {
   return { cwd, cleanup: () => rmSync(cwd, { recursive: true, force: true }) };
 }
 
-function getConfigureMcp(target: Record<string, unknown>): (
-  servers: unknown,
-  ctx: { cwd: string; deployRoots?: string[] },
-) => unknown | Promise<unknown> {
+function getConfigureMcp(
+  target: Record<string, unknown>,
+): (servers: unknown, ctx: { cwd: string; deployRoots?: string[] }) => unknown | Promise<unknown> {
   const fn =
-    target.configureMcp ??
-    target.writeMcpConfig ??
-    target.deployMcp ??
-    target.configureMcpServers;
+    target.configureMcp ?? target.writeMcpConfig ?? target.deployMcp ?? target.configureMcpServers;
   if (typeof fn !== "function") {
     throw new TypeError(
       "expected createCursorTarget() to expose configureMcp (or writeMcpConfig/deployMcp)",
@@ -86,10 +75,10 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
     const target = createCursorTarget() as unknown as Record<string, unknown>;
     const configureMcp = getConfigureMcp(target);
 
-    await configureMcp(
-      [{ name: "bounded", transport: "stdio", command: "true" }],
-      { cwd: project.cwd, deployRoots: [".cursor", ".agents/skills"] },
-    );
+    await configureMcp([{ name: "bounded", transport: "stdio", command: "true" }], {
+      cwd: project.cwd,
+      deployRoots: [".cursor", ".agents/skills"],
+    });
 
     expect(existsSync(join(project.cwd, ".cursor", "mcp.json"))).toBe(true);
     expect(existsSync(join(project.cwd, "mcp.json"))).toBe(false);

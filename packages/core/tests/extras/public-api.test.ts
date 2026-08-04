@@ -3,11 +3,7 @@
  * Specs: executable-mcp-trust, compile-agents-md, cache-cli-ux, core-feod-architecture.
  */
 import { expect, test, describe } from "vite-plus/test";
-import {
-  getCacheInfo,
-  getCompileAgentsMd,
-  getEvaluateExecutableTrust,
-} from "./helpers.ts";
+import { getCacheInfo, getCompileAgentsMd, getEvaluateExecutableTrust } from "./helpers.ts";
 
 describe("core M9 public API (MUST exports)", () => {
   test("exports executable trust gate for sc-009", () => {

@@ -28,11 +28,7 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     project = createTempProject();
     writeDirectMcpProject(project.cwd, { withCursorDir: true });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
     expect(result).toBe(0);
 
@@ -63,11 +59,7 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     project = createTempProject();
     writeDirectMcpProject(project.cwd);
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
     expect(result).toBe(0);
     expect(hasLock(project.cwd)).toBe(true);
@@ -80,11 +72,7 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     project = createTempProject();
     writeDirectMcpProject(project.cwd);
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
     expect(result).toBe(0);
     expect(existsSync(mcpJsonPath(project.cwd))).toBe(true);

@@ -28,11 +28,7 @@ describe("CLI M9 sc-009 executable trust for MCP", () => {
     project = createTempProject();
     writeDepMcpProject(project.cwd, { approveDep: false, withSkill: true });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
 
     const servers = readMcpServers(project.cwd);
@@ -47,11 +43,7 @@ describe("CLI M9 sc-009 executable trust for MCP", () => {
     project = createTempProject();
     writeDepMcpProject(project.cwd, { approveDep: true });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
     expect(result).toBe(0);
     expect(readMcpServers(project.cwd)).toHaveProperty("test-stdio-server");
@@ -61,11 +53,7 @@ describe("CLI M9 sc-009 executable trust for MCP", () => {
     project = createTempProject();
     writeDepMcpProject(project.cwd, { approveDep: true, aliasAllowExecutables: true });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
     expect(result).toBe(0);
     expect(readMcpServers(project.cwd)).toHaveProperty("test-stdio-server");
@@ -75,11 +63,7 @@ describe("CLI M9 sc-009 executable trust for MCP", () => {
     project = createTempProject();
     writeDepMcpProject(project.cwd, { approveDep: false, withSkill: true });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
 
     expect(readMcpServers(project.cwd)).not.toHaveProperty("test-stdio-server");

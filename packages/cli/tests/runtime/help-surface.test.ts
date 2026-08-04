@@ -3,8 +3,8 @@
  * Specs: cli-runtime-surface. Checklist D §21.
  */
 import { expect, test } from "vite-plus/test";
-import { runCli } from "../../../src/index.ts";
-import { withCapturedIo } from "./helpers.ts";
+import { runCli } from "../../src/index.ts";
+import { withCapturedIo } from "../mcp/helpers.ts";
 
 test("help lists compile and cache", async () => {
   const { result, stdout, stderr } = await withCapturedIo(() => runCli(["help"]));
