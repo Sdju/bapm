@@ -41,21 +41,13 @@ export function createTempProject(): TempProject {
 
 export type LockFilename = "apm.lock.yaml" | "bapm.lock.yaml";
 
-export function writeLock(
-  cwd: string,
-  filename: LockFilename,
-  contents: string,
-): string {
+export function writeLock(cwd: string, filename: LockFilename, contents: string): string {
   const path = join(cwd, filename);
   writeFileSync(path, contents, "utf8");
   return path;
 }
 
-export function copyFixtureAs(
-  cwd: string,
-  fixtureName: string,
-  filename: LockFilename,
-): string {
+export function copyFixtureAs(cwd: string, fixtureName: string, filename: LockFilename): string {
   const dest = join(cwd, filename);
   cpSync(fixturePath(fixtureName), dest);
   return dest;

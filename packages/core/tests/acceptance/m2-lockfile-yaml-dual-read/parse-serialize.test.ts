@@ -13,13 +13,7 @@ import {
   parseLockfile,
   serializeLockfile,
 } from "@bapm/core";
-import {
-  depsOf,
-  expectThrowsMatching,
-  fixturePath,
-  lockOf,
-  readFixture,
-} from "./helpers.ts";
+import { depsOf, expectThrowsMatching, fixturePath, lockOf, readFixture } from "./helpers.ts";
 
 function loadFixture(name: string) {
   return loadLockfile({ path: fixturePath(name) });
@@ -46,7 +40,7 @@ describe("M2 parse — container / version", () => {
     expect(depsOf(doc)).toHaveLength(0);
   });
 
-  test("absent lockfile_version defaults to \"1\" on read", () => {
+  test('absent lockfile_version defaults to "1" on read', () => {
     const doc = lockOf(parseFixture("absent-version.yml"));
     expect(doc.lockfile_version).toBe("1");
   });
@@ -67,7 +61,7 @@ describe("M2 parse — container / version", () => {
     rejectFixture("invalid-missing-dependencies.yml", /dependenc|LOCKFILE_FORMAT|required/i);
   });
 
-  test("unsupported lockfile_version \"3\" rejected with upgrade/regenerate hint", () => {
+  test('unsupported lockfile_version "3" rejected with upgrade/regenerate hint', () => {
     const err = expectThrowsMatching(
       () => loadFixture("invalid-version-3.yml"),
       /upgrade|regenerate|unsupported|version/i,
@@ -77,10 +71,7 @@ describe("M2 parse — container / version", () => {
   });
 
   test("YAML anchors/aliases rejected (safe subset)", () => {
-    rejectFixture(
-      "invalid-yaml-anchor-alias.yml",
-      /anchor|alias|tag|safe|unsupported|YAML/i,
-    );
+    rejectFixture("invalid-yaml-anchor-alias.yml", /anchor|alias|tag|safe|unsupported|YAML/i);
   });
 });
 
@@ -104,13 +95,10 @@ describe("M2 parse — git / registry entry shapes", () => {
   });
 
   test("registry entry missing resolved_hash rejected", () => {
-    rejectFixture(
-      "invalid-registry-missing-hash.yml",
-      /resolved_hash|registry|lk-003|required/i,
-    );
+    rejectFixture("invalid-registry-missing-hash.yml", /resolved_hash|registry|lk-003|required/i);
   });
 
-  test("serialize registry lock keeps lockfile_version \"2\"", () => {
+  test('serialize registry lock keeps lockfile_version "2"', () => {
     const doc = lockOf(loadFixture("v2-with-registry.yml"));
     const yaml = serializeLockfile(doc);
     const reparsed = parseYaml(yaml) as Record<string, unknown>;
@@ -119,7 +107,7 @@ describe("M2 parse — git / registry entry shapes", () => {
 });
 
 describe("M2 serialize — monotonic v2 / omit unset / sort / hashes", () => {
-  test("loaded v2 without registry remains \"2\" on serialize (no demote)", () => {
+  test('loaded v2 without registry remains "2" on serialize (no demote)', () => {
     const doc = lockOf(loadFixture("monotonic-v2-no-registry.yml"));
     expect(doc.lockfile_version).toBe("2");
     const yaml = serializeLockfile(doc);
@@ -159,9 +147,8 @@ dependencies:
 
     const mat = lockOf(loadFixture("materialization-sort-exclusion.yml"));
     const matYaml = serializeLockfile(mat);
-    const matDeps = (
-      parseYaml(matYaml) as { dependencies: Record<string, unknown>[] }
-    ).dependencies;
+    const matDeps = (parseYaml(matYaml) as { dependencies: Record<string, unknown>[] })
+      .dependencies;
     expect(matDeps.map((d) => d.repo_url)).toEqual([
       "github.com/contoso/alpha",
       "github.com/contoso/beta",
@@ -175,9 +162,7 @@ dependencies:
       "sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
     );
     const yaml = serializeLockfile(doc);
-    expect(yaml).toMatch(
-      /sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9/,
-    );
+    expect(yaml).toMatch(/sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9/);
     expect(yaml).not.toMatch(
       /resolved_hash:\s*["']?b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9["']?\s*$/m,
     );
@@ -250,10 +235,7 @@ dependencies:
     const ordered = (
       parseYaml(serializeLockfile(twin)) as { dependencies: Record<string, unknown>[] }
     ).dependencies.map((d) => d.repo_url);
-    expect(ordered).toEqual([
-      "github.com/contoso/example",
-      "github.com/contoso/other",
-    ]);
+    expect(ordered).toEqual(["github.com/contoso/example", "github.com/contoso/other"]);
   });
 
   test("deferred runtime field shapes accepted without resolve/hash verify", () => {

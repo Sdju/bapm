@@ -9,11 +9,7 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { cpSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  discoverLockfilePath,
-  loadLockfile,
-  serializeLockfile,
-} from "@bapm/core";
+import { discoverLockfilePath, loadLockfile, serializeLockfile } from "@bapm/core";
 import {
   createTempProject,
   depsOf,
