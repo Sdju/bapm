@@ -1,14 +1,14 @@
 /**
- * CLI p2-lk-018 CI-default-frozen acceptance helpers.
+ * Shared CLI install test helpers (temp project, env-isolated runCli).
  */
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
-export function createTempProject(prefix = "bapm-p2-lk018-cli-"): TempProject {
+export function createTempProject(prefix = "bapm-cli-install-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
@@ -50,7 +50,7 @@ export async function withCwd<T>(cwd: string, fn: () => Promise<T>): Promise<T> 
 
 /**
  * Run CLI with an isolated env overlay. Always clears host `CI` unless the
- * overlay sets it — host CI=true must not leak into acceptance.
+ * overlay sets it — host CI=true must not leak into install tests.
  */
 export async function runInProject(
   cwd: string,

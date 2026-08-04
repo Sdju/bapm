@@ -77,7 +77,7 @@ describe("CLI install UX", () => {
     project?.cleanup();
   });
 
-  test("install help documents --frozen and --target; not a stub", async () => {
+  test("install help documents --frozen, --no-frozen, CI default, and --target; not a stub", async () => {
     const viaInstallHelp = await withCapturedIo(() => runCli(["install", "--help"]));
     const viaHelpInstall = await withCapturedIo(() => runCli(["help", "install"]));
     const text = [
@@ -91,8 +91,12 @@ describe("CLI install UX", () => {
     expect(viaInstallHelp.result === 0 || viaHelpInstall.result === 0).toBe(true);
     expect(text).not.toMatch(/\(stub\)|not implemented/i);
     expect(text).toMatch(/--frozen/);
+    expect(text).toMatch(/--no-frozen/);
     expect(text).toMatch(/--target/);
+    expect(text).toMatch(/\bCI\b/);
+    expect(text).toMatch(/frozen/i);
   });
+
 
   test("unknown install flag hard-errors (not soft-ignore)", async () => {
     project = createTempProject();

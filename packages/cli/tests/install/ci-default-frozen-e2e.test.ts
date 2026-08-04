@@ -1,6 +1,7 @@
 /**
- * p2-lk-018: CI-truthy defaults install to frozen; --no-frozen opt-out; flag conflicts.
+ * CLI E2E: CI-truthy defaults install to frozen; --no-frozen opt-out; flag conflicts.
  * Specs: cli-runtime-surface, install-pipeline (req-lk-018).
+ * Unit parse coverage lives in ci-default-frozen.test.ts.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -13,7 +14,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("CLI p2-lk-018 CI-default frozen (req-lk-018)", () => {
+describe("CLI CI-default frozen install (req-lk-018 e2e)", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
