@@ -1,0 +1,38 @@
+schema: spec-driven
+
+context: |
+  Project: bapm (Better Agent Package Manager / Better APM)
+  Goal: TypeScript analog of microsoft/apm (Agent Package Manager) with a clean layered architecture.
+
+  Stack:
+  - TypeScript (ESM)
+  - vite-plus (vp): tsdown/pack, oxlint, oxfmt, vitest, Vite Task
+  - pnpm workspaces + catalog
+  - VitePress for docs (apps/docs)
+
+  Packages:
+  - @bapm/core — domain library (manifest, lockfile, resolver, install, adapters, primitives)
+  - bapm — CLI binary (thin wrapper over @bapm/core)
+  - @bapm/docs — VitePress documentation
+
+  Conventions:
+  - Prefer vp over raw pnpm/npm for install/add/run/check/pack
+  - Russian for user-facing chat; English for code identifiers and public docs headings unless noted
+  - .samples/ is gitignored — local clones of external references (e.g. microsoft/apm)
+  - Spec-driven development via OpenSpec (/opsx-propose, /opsx-apply, …)
+
+  Domain reference:
+  - APM uses apm.yml + apm.lock.yaml, installs skills/prompts/agents/hooks/plugins/MCP across agent clients
+  - bapm should mirror the product surface with clearer module boundaries in TypeScript
+
+  Orchestration:
+  - Prefer /orchestrate for multi-step implementation: parent only dispatches Task subagents
+  - OpenSpec explore/propose → separate acceptance tests (TDD RED) → apply → accept → merge
+  - See .cursor/skills/orchestrate/SKILL.md
+
+rules:
+  proposal:
+    - Prefer small, reviewable changes
+    - Call out non-goals explicitly
+  tasks:
+    - Keep tasks concrete and verifiable (build/test/check)
