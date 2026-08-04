@@ -1,0 +1,6 @@
+# Mutual exclusion target + targets
+name: both-targets
+version: "1.0.0"
+target: copilot
+targets:
+  - cursor

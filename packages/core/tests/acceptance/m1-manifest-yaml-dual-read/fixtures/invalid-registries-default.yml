@@ -1,0 +1,7 @@
+# registries.default must name a declared registry entry
+name: invalid-registries-default
+version: "1.0.0"
+registries:
+  contoso:
+    url: https://registry.contoso.example.com
+  default: missing-registry

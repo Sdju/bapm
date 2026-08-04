@@ -1,0 +1,5 @@
+# Broken YAML syntax — MUST reject with parse diagnostic
+name: broken
+version: "1.0.0"
+dependencies: [
+  this is not: valid: yaml

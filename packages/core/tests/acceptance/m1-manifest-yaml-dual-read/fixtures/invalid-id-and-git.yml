@@ -1,0 +1,8 @@
+# Both id and git — MUST reject (req-mf-011)
+name: id-and-git
+version: "1.0.0"
+dependencies:
+  apm:
+    - id: contoso/pkg
+      git: https://github.com/contoso/pkg.git
+      version: "1.0.0"

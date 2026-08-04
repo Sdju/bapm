@@ -1,0 +1,4 @@
+# Unknown top-level key retained on model (ext-001 read-side)
+name: unknown-key-project
+version: "1.0.0"
+future_feature_flag: true

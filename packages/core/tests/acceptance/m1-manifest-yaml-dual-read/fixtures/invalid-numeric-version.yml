@@ -1,0 +1,3 @@
+# Numeric (unquoted) version — MUST reject (string identity)
+name: numeric-version
+version: 1.0

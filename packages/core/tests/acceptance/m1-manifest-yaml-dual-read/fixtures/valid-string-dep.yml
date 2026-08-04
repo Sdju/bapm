@@ -1,0 +1,6 @@
+# String-form apm dependency (req-mf-007) — parse only, no resolve
+name: string-dep-project
+version: "1.0.0"
+dependencies:
+  apm:
+    - owner/repo#v1.0.0

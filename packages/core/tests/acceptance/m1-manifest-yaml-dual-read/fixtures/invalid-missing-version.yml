@@ -1,0 +1,3 @@
+# Missing version — MUST reject (req-mf-003)
+name: no-version-project
+description: version absent

@@ -1,0 +1,17 @@
+# APM-canonical object deps: single sources, git+path virtual, parent+path, alias
+name: object-deps-project
+version: "1.0.0"
+dependencies:
+  apm:
+    - git: https://github.com/owner/repo.git
+      ref: v1.0.0
+    - path: ./packages/local-skill
+    - id: contoso/baseline
+      version: "^2.0.0"
+    - git: https://github.com/owner/virtual.git
+      path: instructions/security
+      ref: v2.0
+    - git: parent
+      path: packages/shared-skills
+    - git: https://github.com/owner/aliased.git
+      alias: my-alias

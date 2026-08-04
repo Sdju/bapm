@@ -1,0 +1,8 @@
+# registries.default is a special-case name pointer, not a registry URL
+# (OpenAPM §4.2.3 / APM _parse_registries_block)
+name: registries-default-ok
+version: "1.0.0"
+registries:
+  internal:
+    url: https://registry.internal.example.com/apm
+  default: internal

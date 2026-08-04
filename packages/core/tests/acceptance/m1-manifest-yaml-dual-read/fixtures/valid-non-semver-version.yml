@@ -1,0 +1,3 @@
+# Non-semver version string — MUST accept; MAY warn (req-mf-004)
+name: non-semver-project
+version: "not-a-semver"

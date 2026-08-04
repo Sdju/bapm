@@ -1,0 +1,5 @@
+# dependencies must be a mapping when present
+name: deps-not-mapping
+version: "1.0.0"
+dependencies:
+  - owner/repo#v1.0.0

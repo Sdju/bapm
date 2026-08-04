@@ -1,0 +1,6 @@
+# Valid https registries block (req-mf-014)
+name: registries-ok
+version: "1.0.0"
+registries:
+  contoso:
+    url: https://registry.contoso.example.com

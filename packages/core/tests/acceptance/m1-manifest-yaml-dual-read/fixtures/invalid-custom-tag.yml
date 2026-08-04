@@ -1,0 +1,4 @@
+# Custom YAML tag — MUST reject (req-mf-020)
+name: custom-tag
+version: "1.0.0"
+meta: !custom something

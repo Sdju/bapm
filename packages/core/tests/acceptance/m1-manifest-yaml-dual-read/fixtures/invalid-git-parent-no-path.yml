@@ -1,0 +1,6 @@
+# APM: git: parent REQUIRES path (monorepo sibling / inheritance)
+name: invalid-git-parent-no-path
+version: "1.0.0"
+dependencies:
+  apm:
+    - git: parent

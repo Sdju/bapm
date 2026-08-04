@@ -1,0 +1,3 @@
+# Empty name string — MUST reject
+name: ""
+version: "1.0.0"

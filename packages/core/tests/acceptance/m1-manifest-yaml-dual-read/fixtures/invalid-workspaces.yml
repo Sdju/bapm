@@ -1,0 +1,5 @@
+# workspaces forbidden on OpenAPM v0.1 (req-mf-021)
+name: has-workspaces
+version: "1.0.0"
+workspaces:
+  - packages/*
