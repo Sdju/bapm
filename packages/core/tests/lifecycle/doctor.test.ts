@@ -1,5 +1,5 @@
 /**
- * M6 core doctor basics — checklist C §22–23.
+ * Core doctor basics — checklist C §22–23.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -12,7 +12,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("M6 core doctor basics", () => {
+describe("core doctor basics", () => {
   let project: TempProject;
 
   afterEach(() => {

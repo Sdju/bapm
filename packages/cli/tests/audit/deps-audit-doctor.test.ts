@@ -1,5 +1,5 @@
 /**
- * M6 CLI deps / audit / doctor — thin commands + exit codes.
+ * CLI deps / audit / doctor — thin commands + exit codes.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -13,9 +13,9 @@ import {
   writeLeafProject,
   writeLock,
   type TempProject,
-} from "./helpers.ts";
+} from "../lifecycle/helpers.ts";
 
-describe("M6 CLI deps + audit + doctor", () => {
+describe("CLI deps + audit + doctor", () => {
   let project: TempProject;
 
   afterEach(() => {

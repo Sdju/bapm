@@ -1,5 +1,5 @@
 /**
- * M6 core update acceptance — checklist C §1–5 (rs-011/rs-012, lk-010, frozen, dry-run).
+ * Core update — checklist C §1–5 (rs-011/rs-012, lk-010, frozen, dry-run).
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -23,7 +23,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("M6 core update (rs-011 / rs-012 / lk-010)", () => {
+describe("core update (rs-011 / rs-012 / lk-010)", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -140,7 +140,10 @@ describe("M6 core update (rs-011 / rs-012 / lk-010)", () => {
     const installPath = join(modRoot, "stale");
     mkdirSync(installPath, { recursive: true });
     writeText(join(installPath, "STALE_MARKER"), "stale-content\n");
-    writeText(join(installPath, "apm.yml"), `name: stale\nversion: 1.0.0\ndependencies:\n  apm: []\n`);
+    writeText(
+      join(installPath, "apm.yml"),
+      `name: stale\nversion: 1.0.0\ndependencies:\n  apm: []\n`,
+    );
 
     const downloadsBefore = ports.downloadCalls.length;
     const runUpdate = getRunUpdate();
@@ -234,7 +237,8 @@ describe("M6 core update (rs-011 / rs-012 / lk-010)", () => {
       downloader: ports.downloader,
     });
 
-    const plan = typeof result === "object" && result ? JSON.stringify(result) : String(result ?? "");
+    const plan =
+      typeof result === "object" && result ? JSON.stringify(result) : String(result ?? "");
     expect(plan.length + (ports.tagListCalls.length > 0 ? 1 : 0)).toBeGreaterThan(0);
     expect(Buffer.compare(readLockBytes(project.cwd), beforeLock)).toBe(0);
     expect(listFilesRecursive(mod)).toEqual(beforeMods);

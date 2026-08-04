@@ -1,5 +1,5 @@
 /**
- * M6 core deps inspect acceptance — checklist C §14–16.
+ * Core deps inspect — checklist C §14–16.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -14,7 +14,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("M6 core deps list / tree / why", () => {
+describe("core deps list / tree / why", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -65,7 +65,7 @@ describe("M6 core deps list / tree / why", () => {
   test("§16 deps why offline chains (SHOULD rs-005)", async () => {
     const why = getDepsWhyOptional();
     if (!why) {
-      // Allowed soft defer for M6 — keep suite honest without blocking MUST RED.
+      // Soft defer for deps why (rs-005 SHOULD) — suite stays honest without blocking MUST.
       expect(why).toBeUndefined();
       return;
     }

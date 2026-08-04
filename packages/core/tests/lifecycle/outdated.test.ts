@@ -1,5 +1,5 @@
 /**
- * M6 core outdated acceptance — checklist C §6–8.
+ * Core outdated — checklist C §6–8.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -20,7 +20,7 @@ function statusOf(row: Record<string, unknown>): string {
   return String(row.status ?? row.state ?? row.result ?? "").toLowerCase();
 }
 
-describe("M6 core outdated", () => {
+describe("core outdated", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -109,19 +109,16 @@ describe("M6 core outdated", () => {
     );
     const ports = createFakePorts();
 
-    await expectRejectsMatching(
-      async () => {
-        const result = await getRunOutdated()({
-          cwd: project.cwd,
-          gitRemote: ports.gitRemote,
-          tagLister: ports.tagLister,
-        });
-        if (exitCodeOf(result) === 0) {
-          throw new Error("outdated succeeded without lock");
-        }
-        throw new Error(`outdated failed: lock missing (exit ${exitCodeOf(result)})`);
-      },
-      /lock/i,
-    );
+    await expectRejectsMatching(async () => {
+      const result = await getRunOutdated()({
+        cwd: project.cwd,
+        gitRemote: ports.gitRemote,
+        tagLister: ports.tagLister,
+      });
+      if (exitCodeOf(result) === 0) {
+        throw new Error("outdated succeeded without lock");
+      }
+      throw new Error(`outdated failed: lock missing (exit ${exitCodeOf(result)})`);
+    }, /lock/i);
   });
 });

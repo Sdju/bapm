@@ -1,5 +1,5 @@
 /**
- * M6 CLI update / outdated — thin flags + exit codes.
+ * CLI update / outdated — thin flags + exit codes.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -14,7 +14,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("M6 CLI update + outdated", () => {
+describe("CLI update + outdated", () => {
   let project: TempProject;
 
   afterEach(() => {

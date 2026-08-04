@@ -1,11 +1,11 @@
 /**
- * CLI M6 acceptance helpers — capture IO, temp projects, assert known commands.
+ * CLI lifecycle test helpers — capture IO, temp projects, assert known commands.
  */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 

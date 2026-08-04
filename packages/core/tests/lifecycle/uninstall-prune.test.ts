@@ -1,5 +1,5 @@
 /**
- * M6 core uninstall + prune acceptance — checklist C §9–13.
+ * Core uninstall + prune — checklist C §9–13.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -22,7 +22,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("M6 core uninstall + prune", () => {
+describe("core uninstall + prune", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -32,7 +32,10 @@ describe("M6 core uninstall + prune", () => {
   test("§9 uninstall direct removes manifest, modules, deploy inventory, lock entry", async () => {
     project = createTempProject();
     mkdirSync(join(project.cwd, "pkg-x"), { recursive: true });
-    writeText(join(project.cwd, "pkg-x", "apm.yml"), `name: pkg-x\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+    writeText(
+      join(project.cwd, "pkg-x", "apm.yml"),
+      `name: pkg-x\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    );
     writeManifest(
       project.cwd,
       "bapm.yml",
@@ -51,7 +54,10 @@ describe("M6 core uninstall + prune", () => {
 
     const mod = modulesDir(project.cwd);
     mkdirSync(join(mod, "pkg-x"), { recursive: true });
-    writeText(join(mod, "pkg-x", "apm.yml"), `name: pkg-x\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+    writeText(
+      join(mod, "pkg-x", "apm.yml"),
+      `name: pkg-x\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    );
     mkdirSync(join(mod, "pkg-keep"), { recursive: true });
     writeText(
       join(mod, "pkg-keep", "apm.yml"),
@@ -104,7 +110,10 @@ describe("M6 core uninstall + prune", () => {
   test("§11 dry-run uninstall reports only; no mutation", async () => {
     project = createTempProject();
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
-    writeText(join(project.cwd, "leaf", "apm.yml"), `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+    writeText(
+      join(project.cwd, "leaf", "apm.yml"),
+      `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    );
     writeManifest(
       project.cwd,
       "bapm.yml",
@@ -112,7 +121,10 @@ describe("M6 core uninstall + prune", () => {
     );
     const mod = modulesDir(project.cwd);
     mkdirSync(join(mod, "leaf"), { recursive: true });
-    writeText(join(mod, "leaf", "apm.yml"), `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+    writeText(
+      join(mod, "leaf", "apm.yml"),
+      `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    );
     writeLock(
       project.cwd,
       "bapm.lock.yaml",
@@ -138,7 +150,10 @@ describe("M6 core uninstall + prune", () => {
   test("§12 prune removes orphan modules; keeps declared", async () => {
     project = createTempProject();
     mkdirSync(join(project.cwd, "kept"), { recursive: true });
-    writeText(join(project.cwd, "kept", "apm.yml"), `name: kept\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+    writeText(
+      join(project.cwd, "kept", "apm.yml"),
+      `name: kept\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    );
     writeManifest(
       project.cwd,
       "bapm.yml",
@@ -146,7 +161,10 @@ describe("M6 core uninstall + prune", () => {
     );
     const mod = modulesDir(project.cwd);
     mkdirSync(join(mod, "kept"), { recursive: true });
-    writeText(join(mod, "kept", "apm.yml"), `name: kept\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+    writeText(
+      join(mod, "kept", "apm.yml"),
+      `name: kept\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    );
     mkdirSync(join(mod, "orphan-extra"), { recursive: true });
     writeText(join(mod, "orphan-extra", "junk.txt"), "orphan\n");
     writeLock(

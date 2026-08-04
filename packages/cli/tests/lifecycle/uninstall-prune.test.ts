@@ -1,5 +1,5 @@
 /**
- * M6 CLI uninstall + prune — flags + exit codes.
+ * CLI uninstall + prune — flags + exit codes.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -15,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("M6 CLI uninstall + prune", () => {
+describe("CLI uninstall + prune", () => {
   let project: TempProject;
 
   afterEach(() => {

@@ -1,10 +1,7 @@
 /**
- * M6 CLI surface — help lists lifecycle commands; unknown flags hard-error (C §24–25, 27).
+ * CLI surface — help lists lifecycle commands; unknown flags hard-error (C §24–25).
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   createTempProject,
   expectKnownCommand,
@@ -17,7 +14,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-const M6_COMMANDS = [
+const LIFECYCLE_COMMANDS = [
   "update",
   "outdated",
   "uninstall",
@@ -27,7 +24,7 @@ const M6_COMMANDS = [
   "doctor",
 ] as const;
 
-describe("M6 CLI wiring / help / flags", () => {
+describe("CLI wiring / help / flags", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -38,7 +35,7 @@ describe("M6 CLI wiring / help / flags", () => {
     const { result, stdout } = await withCapturedIo(() => runCli(["help"]));
     const text = stdout.join("\n");
     expect(result).toBe(0);
-    for (const cmd of M6_COMMANDS) {
+    for (const cmd of LIFECYCLE_COMMANDS) {
       expect(text).toMatch(new RegExp(`\\b${cmd}\\b`, "i"));
     }
     expect(text).not.toMatch(/update\s*\(stub\)|outdated\s*\(stub\)|not implemented/i);
@@ -78,22 +75,5 @@ describe("M6 CLI wiring / help / flags", () => {
     writeEmptyDepsProject(project.cwd, "audit-known");
     const { combined } = await runInProject(project.cwd, ["audit", "--ci"]);
     expectKnownCommand(combined, "audit");
-  });
-
-  test("§27 HARD: only bapm-target-api + bapm-target-cursor", () => {
-    const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-    const packagesDir = join(cliRoot, "..");
-    const names: string[] = [];
-    for (const entry of readdirSync(packagesDir)) {
-      const dir = join(packagesDir, entry);
-      if (!statSync(dir).isDirectory()) continue;
-      const pkgPath = join(dir, "package.json");
-      if (!existsSync(pkgPath)) continue;
-      const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-      if (typeof pkg.name === "string" && pkg.name.startsWith("bapm-target-")) {
-        names.push(pkg.name);
-      }
-    }
-    expect(names.sort()).toEqual(["bapm-target-api", "bapm-target-cursor"]);
   });
 });

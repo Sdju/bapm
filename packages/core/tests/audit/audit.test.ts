@@ -1,5 +1,5 @@
 /**
- * M6 core audit --ci / integrity acceptance — checklist C §17–21.
+ * Core audit --ci / integrity — checklist C §17–21.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { join } from "node:path";
@@ -13,9 +13,9 @@ import {
   writeManifest,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../lifecycle/helpers.ts";
 
-describe("M6 core audit --ci (lk-017 / sc-001)", () => {
+describe("core audit --ci (lk-017 / sc-001)", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -100,7 +100,7 @@ describe("M6 core audit --ci (lk-017 / sc-001)", () => {
     expect(exitCodeOf(result)).not.toBe(0);
   });
 
-  test("§21 missing tree_sha256 alone does not fail M6 CI gate", async () => {
+  test("§21 missing tree_sha256 alone does not fail CI gate", async () => {
     project = createTempProject();
     writeManifest(
       project.cwd,

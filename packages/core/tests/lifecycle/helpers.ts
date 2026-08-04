@@ -1,6 +1,5 @@
 /**
- * M6 lifecycle/integrity acceptance helpers.
- * Domain APIs are expected from @bapm/core (apply phase); getters fail closed when missing → RED.
+ * Lifecycle / integrity test helpers for @bapm/core domain APIs.
  */
 import * as core from "@bapm/core";
 import { loadLockfile } from "@bapm/core";
@@ -23,7 +22,7 @@ import {
   writeManifest,
   writeText,
   type TempProject,
-} from "../../install/helpers.ts";
+} from "../install/helpers.ts";
 
 export {
   createFakePorts,
@@ -51,7 +50,7 @@ function pickExport(names: string[]): AnyFn {
     if (typeof fn === "function") return fn as AnyFn;
   }
   throw new TypeError(
-    `expected @bapm/core to export one of [${names.join(", ")}] (M6 lifecycle/integrity public API)`,
+    `expected @bapm/core to export one of [${names.join(", ")}] (lifecycle/integrity public API)`,
   );
 }
 
@@ -82,11 +81,15 @@ export function getRunPrune(): (options: Record<string, unknown>) => Promise<unk
 }
 
 export function getDepsList(): (options: Record<string, unknown>) => Promise<unknown> | unknown {
-  return pickExport(["listDeps", "depsList", "runDepsList"]);
+  return pickExport(["listDeps", "depsList", "runDepsList"]) as (
+    options: Record<string, unknown>,
+  ) => Promise<unknown> | unknown;
 }
 
 export function getDepsTree(): (options: Record<string, unknown>) => Promise<unknown> | unknown {
-  return pickExport(["treeDeps", "depsTree", "runDepsTree"]);
+  return pickExport(["treeDeps", "depsTree", "runDepsTree"]) as (
+    options: Record<string, unknown>,
+  ) => Promise<unknown> | unknown;
 }
 
 /** Optional SHOULD (rs-005); returns undefined when deferred. */
@@ -167,7 +170,12 @@ export function diagnosticsText(result: unknown): string {
 
 export function pinOf(dep: Record<string, unknown>): string {
   return String(
-    dep.resolved_commit ?? dep.resolvedCommit ?? dep.commit ?? dep.resolved_tag ?? dep.version ?? "",
+    dep.resolved_commit ??
+      dep.resolvedCommit ??
+      dep.commit ??
+      dep.resolved_tag ??
+      dep.version ??
+      "",
   );
 }
 
