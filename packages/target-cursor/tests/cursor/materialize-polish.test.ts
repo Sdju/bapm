@@ -1,5 +1,5 @@
 /**
- * M5 acceptance: skills harden + instructions→rules + agents→agents + no MCP.
+ * Skills harden + instructions→rules + agents→agents + no MCP.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCursorTarget } from "../../../src/index.ts";
+import { createCursorTarget } from "../../src/index.ts";
 
 function listFilesRecursive(root: string): string[] {
   if (!existsSync(root)) return [];
@@ -30,7 +30,7 @@ function listFilesRecursive(root: string): string[] {
   return out;
 }
 
-describe("M5 cursor materialize polish", () => {
+describe("cursor materialize polish", () => {
   let cwd: string;
 
   afterEach(() => {
@@ -46,9 +46,7 @@ describe("M5 cursor materialize polish", () => {
     writeFileSync(src, body, "utf8");
 
     const target = createCursorTarget();
-    const primitives = [
-      { name: "hello", type: "skill", source: "local" as const, path: src },
-    ];
+    const primitives = [{ name: "hello", type: "skill", source: "local" as const, path: src }];
     const ctx = { cwd, targetId: "cursor", deployRoots: target.deployRoots };
 
     await target.materialize(primitives, ctx);
@@ -68,14 +66,13 @@ describe("M5 cursor materialize polish", () => {
     writeFileSync(src, "# Style rule\n", "utf8");
 
     const target = createCursorTarget();
-    expect(target.deployRoots).toEqual(
-      expect.arrayContaining([".agents/skills", ".cursor"]),
-    );
+    expect(target.deployRoots).toEqual(expect.arrayContaining([".agents/skills", ".cursor"]));
 
-    await target.materialize(
-      [{ name: "style", type: "instruction", source: "local", path: src }],
-      { cwd, targetId: "cursor", deployRoots: target.deployRoots },
-    );
+    await target.materialize([{ name: "style", type: "instruction", source: "local", path: src }], {
+      cwd,
+      targetId: "cursor",
+      deployRoots: target.deployRoots,
+    });
 
     const dest = join(cwd, ".cursor", "rules", "style.mdc");
     expect(existsSync(dest)).toBe(true);
@@ -91,10 +88,11 @@ describe("M5 cursor materialize polish", () => {
     writeFileSync(src, "# Reviewer agent\n", "utf8");
 
     const target = createCursorTarget();
-    await target.materialize(
-      [{ name: "reviewer", type: "agent", source: "local", path: src }],
-      { cwd, targetId: "cursor", deployRoots: target.deployRoots },
-    );
+    await target.materialize([{ name: "reviewer", type: "agent", source: "local", path: src }], {
+      cwd,
+      targetId: "cursor",
+      deployRoots: target.deployRoots,
+    });
 
     const dest = join(cwd, ".cursor", "agents", "reviewer.md");
     expect(existsSync(dest)).toBe(true);
@@ -151,10 +149,7 @@ describe("M5 cursor materialize polish", () => {
       deployedFiles?: Array<{ path: string; hash?: string }>;
       deployedPaths?: string[];
     };
-    const paths =
-      report.deployedFiles?.map((f) => f.path) ??
-      report.deployedPaths ??
-      [];
+    const paths = report.deployedFiles?.map((f) => f.path) ?? report.deployedPaths ?? [];
     expect(paths.some((p) => p.includes(".agents/skills/reported"))).toBe(true);
   });
 });

@@ -1,13 +1,13 @@
 /**
- * M5 acceptance: cursor detect — `.cursor/` dir and legacy `.cursorrules` file.
+ * Cursor detect — `.cursor/` dir and legacy `.cursorrules` file.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCursorTarget } from "../../../src/index.ts";
+import { createCursorTarget } from "../../src/index.ts";
 
-describe("M5 cursor detect", () => {
+describe("cursor detect", () => {
   let cwd: string;
 
   afterEach(() => {

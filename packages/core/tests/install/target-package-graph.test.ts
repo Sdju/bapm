@@ -1,12 +1,13 @@
 /**
- * M5 acceptance: package graph — core↔api only; no vite cursor alias; only api+cursor hosts.
+ * Target package graph — only api+cursor hosts; no vite cursor alias in core.
+ * Core→api-only dep also covered in install-pipeline.test.ts (kept here for host catalog HARD).
  */
 import { expect, test } from "vite-plus/test";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const coreRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const coreRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const repoRoot = resolve(coreRoot, "../..");
 const packagesDir = join(repoRoot, "packages");
 
@@ -27,21 +28,7 @@ function listBapmTargetPackageNames(): string[] {
 }
 
 test("HARD: only bapm-target-api and bapm-target-cursor among bapm-target-*", () => {
-  expect(listBapmTargetPackageNames()).toEqual([
-    "bapm-target-api",
-    "bapm-target-cursor",
-  ]);
-});
-
-test("core package.json depends on bapm-target-api only among bapm-target-*", () => {
-  const pkg = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  };
-  const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-  const targetDeps = Object.keys(deps).filter((n) => n.startsWith("bapm-target-"));
-  expect(targetDeps).toEqual(["bapm-target-api"]);
-  expect(deps["bapm-target-cursor"]).toBeUndefined();
+  expect(listBapmTargetPackageNames()).toEqual(["bapm-target-api", "bapm-target-cursor"]);
 });
 
 test("core vite/test config has no path alias for bapm-target-cursor", () => {

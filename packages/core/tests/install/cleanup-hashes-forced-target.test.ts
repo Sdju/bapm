@@ -1,5 +1,5 @@
 /**
- * M5 acceptance: forced target activation, orphan cleanup, deployed_file_hashes / lk-017 lite.
+ * Forced target activation, orphan cleanup, deployed_file_hashes / lk-017 lite.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -19,13 +19,13 @@ import {
   writeManifest,
   writeText,
   type TempProject,
-} from "../../install/helpers.ts";
+} from "./helpers.ts";
 
 function sha256(content: string | Buffer): string {
   return createHash("sha256").update(content).digest("hex");
 }
 
-describe("M5 core install — forced target / cleanup / hashes", () => {
+describe("core install — forced target / cleanup / hashes", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -85,9 +85,7 @@ describe("M5 core install — forced target / cleanup / hashes", () => {
     });
 
     expect(materializeCalls).toBe(1);
-    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(
-      true,
-    );
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
   });
 
   test("unknown forcedTarget id is rejected without harness writes", async () => {
@@ -165,11 +163,7 @@ describe("M5 core install — forced target / cleanup / hashes", () => {
       detect: () => false,
       materialize: async () => {
         mkdirSync(join(project.cwd, ".agents", "skills", "x"), { recursive: true });
-        writeFileSync(
-          join(project.cwd, ".agents", "skills", "x", "SKILL.md"),
-          "oops\n",
-          "utf8",
-        );
+        writeFileSync(join(project.cwd, ".agents", "skills", "x", "SKILL.md"), "oops\n", "utf8");
       },
     });
 
@@ -274,11 +268,7 @@ describe("M5 core install — forced target / cleanup / hashes", () => {
       detect: () => true,
       materialize: async () => {
         mkdirSync(join(project.cwd, ".agents", "skills", "hello"), { recursive: true });
-        writeFileSync(
-          join(project.cwd, deployedRel),
-          "---\nname: hello\n---\n# Hello\n",
-          "utf8",
-        );
+        writeFileSync(join(project.cwd, deployedRel), "---\nname: hello\n---\n# Hello\n", "utf8");
         return {
           deployedFiles: [{ path: deployedRel }],
         };

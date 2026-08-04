@@ -1,17 +1,11 @@
 /**
- * M5 acceptance: CLI install UX — help, unknown flags, --target, frozen+update.
+ * CLI install UX — help, unknown flags, --target, frozen+update.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import {
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  mkdtempSync,
-  rmSync,
-} from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
@@ -76,7 +70,7 @@ function writeLeafWithCursor(cwd: string, name: string): void {
   );
 }
 
-describe("M5 CLI install UX", () => {
+describe("CLI install UX", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -151,9 +145,7 @@ describe("M5 CLI install UX", () => {
 
     expect(stderr.join("\n")).not.toMatch(/not implemented|unknown.*flag/i);
     expect(result).toBe(0);
-    expect(
-      existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md")),
-    ).toBe(true);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
   });
 
   test("unknown --target id rejected", async () => {
@@ -172,9 +164,7 @@ describe("M5 CLI install UX", () => {
     project = createTempProject();
     writeLeafWithCursor(project.cwd, "happy-cursor");
 
-    const { result } = await withCwd(project.cwd, () =>
-      withCapturedIo(() => runCli(["install"])),
-    );
+    const { result } = await withCwd(project.cwd, () => withCapturedIo(() => runCli(["install"])));
 
     expect(result).toBe(0);
     expect(existsSync(join(project.cwd, "apm_modules"))).toBe(true);
@@ -182,8 +172,6 @@ describe("M5 CLI install UX", () => {
       existsSync(join(project.cwd, "bapm.lock.yaml")) ||
       existsSync(join(project.cwd, "apm.lock.yaml"));
     expect(hasLock).toBe(true);
-    expect(
-      existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md")),
-    ).toBe(true);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
   });
 });
