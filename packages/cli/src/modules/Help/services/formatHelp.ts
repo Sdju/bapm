@@ -12,8 +12,10 @@ Usage:
 Commands:
   help       Show this help
   version    Print version
+  init       Scaffold a new ${deps.manifestFile} (producer)
   lock       Resolve dependencies and write the lockfile (no host deploy)
-  install    Install agentic dependencies from ${deps.manifestFile}
+  install    Install agentic dependencies from ${deps.manifestFile} (or a pack .zip)
+  pack       Build a plain-zip producer archive (--archive / --check-release)
   update     Re-resolve pins (rs-011/rs-012); --dry-run / -y
   outdated   Compare lock pins to remote tips (exit 0 when outdated)
   uninstall  Remove packages from manifest, modules, deploy, lock
@@ -33,6 +35,7 @@ export function formatInstallTopicHelp(deps: HelpContentDeps): string {
 
 Usage:
   bapm install [options]
+  bapm install <archive.zip>   Install from a pack-produced plain zip archive
 
 Options:
   --frozen          Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
@@ -41,5 +44,6 @@ Options:
   --help, -h        Show this help
 
 Unknown flags are rejected. --frozen cannot be combined with --update.
+A local .zip path is detected as a pack archive (install-from-archive round-trip).
 `;
 }

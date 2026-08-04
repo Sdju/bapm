@@ -3,9 +3,11 @@ import {
   COMMAND_DEPS,
   COMMAND_DOCTOR,
   COMMAND_HELP,
+  COMMAND_INIT,
   COMMAND_INSTALL,
   COMMAND_LOCK,
   COMMAND_OUTDATED,
+  COMMAND_PACK,
   COMMAND_PRUNE,
   COMMAND_UNINSTALL,
   COMMAND_UPDATE,
@@ -15,9 +17,11 @@ import { auditCommand } from "@/commands/audit.ts";
 import { depsCommand } from "@/commands/deps.ts";
 import { doctorCommand } from "@/commands/doctor.ts";
 import { helpCommand } from "@/commands/help.ts";
+import { initCommand } from "@/commands/init.ts";
 import { installCommand } from "@/commands/install.ts";
 import { lockCommand } from "@/commands/lock.ts";
 import { outdatedCommand } from "@/commands/outdated.ts";
+import { packCommand } from "@/commands/pack.ts";
 import { pruneCommand } from "@/commands/prune.ts";
 import { uninstallCommand } from "@/commands/uninstall.ts";
 import { updateCommand } from "@/commands/update.ts";
@@ -26,9 +30,11 @@ import { audit } from "./init/audit.ts";
 import { deps } from "./init/deps.ts";
 import { doctor } from "./init/doctor.ts";
 import { help } from "./init/help.ts";
+import { init } from "./init/init.ts";
 import { install } from "./init/install.ts";
 import { lock } from "./init/lock.ts";
 import { outdated } from "./init/outdated.ts";
+import { pack } from "./init/pack.ts";
 import { prune } from "./init/prune.ts";
 import { uninstall } from "./init/uninstall.ts";
 import { update } from "./init/update.ts";
@@ -39,7 +45,9 @@ export type CommandHandler = (argv: string[]) => Promise<number>;
 const handlers: Record<string, CommandHandler> = {
   [COMMAND_HELP]: (argv) => helpCommand(argv, help),
   [COMMAND_VERSION]: (argv) => versionCommand(argv, version),
+  [COMMAND_INIT]: (argv) => initCommand(argv, init),
   [COMMAND_INSTALL]: (argv) => installCommand(argv, install),
+  [COMMAND_PACK]: (argv) => packCommand(argv, pack),
   [COMMAND_LOCK]: (argv) => lockCommand(argv, lock),
   [COMMAND_UPDATE]: (argv) => updateCommand(argv, update),
   [COMMAND_OUTDATED]: (argv) => outdatedCommand(argv, outdated),

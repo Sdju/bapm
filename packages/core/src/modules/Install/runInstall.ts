@@ -21,6 +21,7 @@ import {
   resolvePrimitiveConflicts,
   type AttributedPrimitive,
 } from "@/modules/Primitives";
+import { extractPackArchive } from "@/modules/Pack";
 import {
   applyDeployedHashesToLock,
   cleanupOrphanDeployedFiles,
@@ -33,14 +34,18 @@ import { declaredTargetIds } from "./targets.ts";
 import type { InstallResult, RunInstallOptions } from "./types.ts";
 
 /**
- * Run install: frozen gate → resolve/download → orphan cleanup → primitives →
- * targets (forced or detect) → write deployed_file_hashes (unless frozen).
+ * Run install: optional archive extract → frozen gate → resolve/download →
+ * orphan cleanup → primitives → targets → write deployed_file_hashes.
  */
 export async function runInstall(options: RunInstallOptions = {}): Promise<InstallResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
   const frozen = options.frozen === true;
   const updateRefs = options.updateRefs === true || options.update === true;
   const forcedTargetId = options.forcedTarget ?? options.forceTarget;
+
+  if (options.archivePath) {
+    await extractArchiveIntoProject(options.archivePath, cwd);
+  }
 
   if (frozen) {
     enforceFrozen({ cwd, updateRefs, update: options.update });
@@ -201,6 +206,35 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
 /** Alias preferred by design docs. */
 export const installProject = runInstall;
+
+async function extractArchiveIntoProject(archivePath: string, cwd: string): Promise<void> {
+  const resolvedArchive = resolve(archivePath);
+  try {
+    await extractPackArchive({
+      archivePath: resolvedArchive,
+      outputDir: cwd,
+      cwd,
+    });
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new InstallError("INSTALL_ARCHIVE", `Install from archive failed: ${message}`, {
+      cause,
+      details: { archivePath: resolvedArchive },
+    });
+  }
+
+  // Fail closed if landed layout has no dual-read parseable manifest
+  try {
+    loadManifest({ cwd });
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new InstallError(
+      "INSTALL_ARCHIVE",
+      `Archive install left no parseable manifest under project root: ${message}`,
+      { cause, details: { archivePath: resolvedArchive } },
+    );
+  }
+}
 
 function assertForcedTargetRegistered(
   forcedTargetId: string | undefined,

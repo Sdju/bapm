@@ -16,9 +16,10 @@ orphan cleanup → primitives discover/conflict → invoke registered targets vi
 
 - `forcedTarget` / `forceTarget` — activate a registered target even when `detect` is false; unknown ids fail closed
 - `frozen` — lk-006 pin gate + lk-017 lite re-verify of `deployed_file_hashes` when present (no lock rewrite)
+- `archivePath` — local pack `.zip` path; extract into project root via Pack helper, then dual-read parse landed manifest and continue install orchestration (M7 install-from-archive)
 
 ## Boundaries
 
-- Consumes Manifest / Lockfile / Resolver / Primitives only through public module APIs
+- Consumes Manifest / Lockfile / Resolver / Primitives / Pack only through public module APIs
 - Speaks to hosts only through `bapm-target-api` — never imports `bapm-target-cursor`
 - Inventory / cleanup helpers live under this module (`deployedInventory.ts`), not as a new top-level module

@@ -2,6 +2,8 @@ import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { stringify } from "yaml";
 import { discoverManifestPath } from "./discover.ts";
+import type { ManifestWarning } from "./errors.ts";
+import { parseManifestDocument } from "./parse.ts";
 import type { BapmManifest } from "./types.ts";
 
 export type WriteManifestOptions = {
@@ -12,6 +14,16 @@ export type WriteManifestOptions = {
   sourceFilename?: string;
   /** Absolute path that was loaded; preferred write-back target. */
   sourcePath?: string;
+};
+
+export type WriteProducerManifestOptions = WriteManifestOptions & {
+  /** Optional sink for non-blocking warnings (e.g. mf-004). */
+  onWarning?: (warning: ManifestWarning) => void;
+};
+
+export type WriteProducerManifestResult = {
+  path: string;
+  warnings: ManifestWarning[];
 };
 
 /**
@@ -27,6 +39,7 @@ export function serializeManifest(document: BapmManifest | Record<string, unknow
 
 /**
  * Write manifest YAML back to the discovered dual-read path (or explicit path).
+ * Does not validate — prefer {@link writeProducerManifest} for producer emit.
  */
 export function writeManifest(
   document: BapmManifest | Record<string, unknown>,
@@ -45,3 +58,23 @@ export function writeManifest(
   writeFileSync(dest, serializeManifest(document), "utf8");
   return dest;
 }
+
+/**
+ * Producer write path: parse/validate before durable emit (mf-*).
+ * Preserves vendor `x-*` keys; mf-004 non-semver is a non-blocking warning.
+ */
+export function writeProducerManifest(
+  document: BapmManifest | Record<string, unknown>,
+  options: WriteProducerManifestOptions = {},
+): WriteProducerManifestResult {
+  const { document: validated, warnings } = parseManifestDocument(document);
+  for (const warning of warnings) {
+    options.onWarning?.(warning);
+  }
+  const path = writeManifest(validated, options);
+  return { path, warnings };
+}
+
+/** Aliases for acceptance / design naming flexibility. */
+export const emitManifest = writeProducerManifest;
+export const writeManifestValidated = writeProducerManifest;

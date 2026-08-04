@@ -1,5 +1,6 @@
 import type { ManifestWarning } from "./errors.ts";
 import { ManifestError } from "./errors.ts";
+import { isValidTargetToken } from "./targets.ts";
 import type {
   BapmManifest,
   DependencyEntry,
@@ -68,6 +69,7 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
         { path: "target" },
       );
     }
+    assertValidTargetToken(raw.target, "target");
   }
 
   if ("targets" in raw && raw.targets !== undefined) {
@@ -80,6 +82,9 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
         'Manifest "targets" must be an array of non-empty strings',
         { path: "targets" },
       );
+    }
+    for (let i = 0; i < raw.targets.length; i++) {
+      assertValidTargetToken(String(raw.targets[i]), `targets[${i}]`);
     }
   }
 
@@ -350,6 +355,16 @@ function validateRegistries(value: unknown): Record<string, RegistryEntry | stri
   }
 
   return out;
+}
+
+/** mf-005: canonical | alias | x-<vendor>-<name>; diagnostic names the bad token. */
+function assertValidTargetToken(token: string, path: string): void {
+  if (isValidTargetToken(token)) return;
+  throw new ManifestError(
+    "MANIFEST_VALIDATION",
+    `Invalid target token "${token}" (mf-005): must be a canonical host id, recognised alias, or x-<vendor>-<name>`,
+    { path, details: { token } },
+  );
 }
 
 function assertHttpUrl(url: string, path: string): void {

@@ -26,6 +26,11 @@ export type RunInstallOptions = {
   gitRemote?: GitRemote;
   tagLister?: TagLister;
   downloader?: Downloader;
+  /**
+   * Local pack zip path — extract into project root before install orchestration
+   * (M7 install-from-archive round-trip).
+   */
+  archivePath?: string;
 };
 
 /** Alias for design naming flexibility. */

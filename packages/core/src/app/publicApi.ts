@@ -18,6 +18,9 @@ export type {
   ManifestErrorCode,
   ManifestWarning,
   WriteManifestOptions,
+  WriteProducerManifestOptions,
+  WriteProducerManifestResult,
+  CreateMinimalManifestOptions,
 } from "@/modules/Manifest";
 
 export {
@@ -31,6 +34,15 @@ export {
   loadYamlDocument,
   serializeManifest,
   writeManifest,
+  writeProducerManifest,
+  emitManifest,
+  writeManifestValidated,
+  createMinimalManifest,
+  createMinimalManifestDocument,
+  CANONICAL_TARGET_TOKENS,
+  TARGET_ALIAS_TOKENS,
+  VENDOR_TARGET_RE,
+  isValidTargetToken,
 } from "@/modules/Manifest";
 
 export type {
@@ -186,6 +198,31 @@ export { runAuditCi, auditCi, runAudit } from "@/modules/Audit";
 
 export type { DoctorResult, RunDoctorOptions, DoctorCheck } from "@/modules/Doctor";
 export { runDoctor, doctor, checkDoctor } from "@/modules/Doctor";
+
+export type {
+  RunPackOptions,
+  RunPackResult,
+  ExtractPackArchiveOptions,
+  ExtractPackArchiveResult,
+  CheckReleaseTagOptions,
+  CheckReleaseTagResult,
+  PackErrorCode,
+} from "@/modules/Pack";
+
+export {
+  PackError,
+  runPack,
+  packProject,
+  packArchive,
+  extractPackArchive,
+  unpackArchive,
+  extractPack,
+  checkReleaseTag,
+  checkRelease,
+  runCheckRelease,
+  isSecretPackPath,
+  describeSecretRefuse,
+} from "@/modules/Pack";
 
 export const BAPM_NAME = "bapm";
 

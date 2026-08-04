@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "bapm-target-api": "workspace:*",
+    "fflate": "catalog:",
     "semver": "catalog:",
     "yaml": "catalog:"
   },

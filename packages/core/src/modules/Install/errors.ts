@@ -5,6 +5,7 @@ export type InstallErrorCode =
   | "INSTALL_FROZEN_HASH_MISMATCH"
   | "INSTALL_UNKNOWN_TARGET"
   | "INSTALL_TARGET_FIELDS"
+  | "INSTALL_ARCHIVE"
   | "INSTALL_FAILED";
 
 export class InstallError extends Error {

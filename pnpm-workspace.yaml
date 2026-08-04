@@ -16,6 +16,7 @@ catalog:
   yaml: ^2.9.0
   semver: ^7.8.5
   '@types/semver': ^7.8.0
+  fflate: ^0.8.3
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
