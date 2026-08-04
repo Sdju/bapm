@@ -1,0 +1,62 @@
+{
+  "name": "bapm",
+  "version": "0.0.0",
+  "description": "bapm CLI — Better Agent Package Manager",
+  "license": "MIT",
+  "bin": {
+    "bapm": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./cli": "./dist/cli.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test",
+    "check": "vp check",
+    "prepublishOnly": "vp run build"
+  },
+  "dependencies": {
+    "@bapm/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "bumpp": "^11.1.0",
+    "typescript": "^7.0.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "feod": {
+    "srcRoot": "src",
+    "aliasPrefix": "@",
+    "layerDirs": {
+      "app": "app",
+      "pages": "commands",
+      "modules": "modules",
+      "common": "common",
+      "global": "globals"
+    },
+    "common": {
+      "allowIndex": false
+    },
+    "modules": {
+      "publicEntry": "index.ts",
+      "allowDeepImports": false,
+      "singleFileModules": false
+    },
+    "pages": {
+      "useFileBasedRouting": false,
+      "modulePages": false,
+      "privateModulesPrefix": null
+    }
+  }
+}
