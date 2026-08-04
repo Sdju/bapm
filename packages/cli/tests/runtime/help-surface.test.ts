@@ -1,6 +1,6 @@
 /**
- * M9 MUST: help lists compile, cache (and MCP path via install).
- * Specs: cli-runtime-surface. Checklist D §21.
+ * CLI help surface: compile/cache (M9), publish/self-update (M10), MCP install path.
+ * Specs: cli-runtime-surface.
  */
 import { expect, test } from "vite-plus/test";
 import { runCli } from "../../src/index.ts";
@@ -12,6 +12,17 @@ test("help lists compile and cache", async () => {
   expect(result).toBe(0);
   expect(text).toMatch(/\bcompile\b/i);
   expect(text).toMatch(/\bcache\b/i);
+});
+
+test("help lists publish and self-update", async () => {
+  const { result, stdout, stderr } = await withCapturedIo(() => runCli(["help"]));
+  const text = [...stdout, ...stderr].join("\n");
+  expect(result).toBe(0);
+  expect(text).toMatch(/\bpublish\b/i);
+  expect(text).toMatch(/\bself-update\b/i);
+  if (/unknown command|not a (?:valid )?command|unrecognized command/i.test(text)) {
+    throw new Error(`CLI treated "help" as unknown command:\n${text}`);
+  }
 });
 
 test("install help documents MCP / trust-transitive path", async () => {

@@ -10,7 +10,7 @@ import {
   startMockNpmMetadata,
   type MockNpmMeta,
   type TempProject,
-} from "./helpers.ts";
+} from "../registry/helpers.ts";
 
 describe("CLI M10 bapm self-update --check", () => {
   let project: TempProject | undefined;

@@ -14,7 +14,7 @@ import {
   writeText,
   type MockPublishRegistry,
   type TempProject,
-} from "./helpers.ts";
+} from "../registry/helpers.ts";
 
 describe("CLI M10 bapm publish (flat zip PUT)", () => {
   let project: TempProject | undefined;

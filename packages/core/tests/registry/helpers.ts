@@ -1,7 +1,5 @@
 /**
- * M10 registry distribution acceptance helpers — mock HTTP registry + pickExport.
- * Specs: registry-http-client, registry-resolve-install, producer-publish.
- * Checklist: m10-registry-acceptance.md §C.
+ * Registry distribution test helpers — mock HTTP registry + pickExport.
  */
 import * as core from "@bapm/core";
 import { createHash } from "node:crypto";
@@ -17,13 +15,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { zipSync, unzipSync } from "fflate";
-
-export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
-export const repoRoot = resolve(coreRoot, "../..");
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
@@ -413,23 +406,6 @@ export async function expectRejectsMatching(
     throw new Error(`expected error matching ${pattern}, got: ${haystack}`);
   }
   return thrown;
-}
-
-export function listBapmTargetPackageNames(): string[] {
-  const packagesDir = join(repoRoot, "packages");
-  if (!existsSync(packagesDir)) return [];
-  const names: string[] = [];
-  for (const entry of readdirSync(packagesDir)) {
-    const dir = join(packagesDir, entry);
-    if (!statSync(dir).isDirectory()) continue;
-    const pkgPath = join(dir, "package.json");
-    if (!existsSync(pkgPath)) continue;
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-    if (typeof pkg.name === "string" && pkg.name.startsWith("bapm-target-")) {
-      names.push(pkg.name);
-    }
-  }
-  return names.sort();
 }
 
 /** Enable experimental registries gate for the duration of fn. */

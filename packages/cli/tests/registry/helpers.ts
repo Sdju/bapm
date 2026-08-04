@@ -1,26 +1,12 @@
 /**
- * CLI M10 registry distribution acceptance helpers.
+ * CLI registry / publish / self-update test helpers.
  */
 import { createHash } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { runCli } from "../../../src/index.ts";
-
-export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const cliRoot = resolve(suiteDir, "../../..");
-export const repoRoot = resolve(cliRoot, "../..");
+import { dirname, join } from "node:path";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
@@ -320,23 +306,6 @@ export function writePublishProject(
     `name: ${name}\nversion: "${version}"\ndependencies:\n  apm: []\n  mcp: []\n`,
   );
   writeText(cwd, ".apm/keep.txt", "publish-me\n");
-}
-
-export function listBapmTargetPackageNames(): string[] {
-  const packagesDir = join(repoRoot, "packages");
-  if (!existsSync(packagesDir)) return [];
-  const names: string[] = [];
-  for (const entry of readdirSync(packagesDir)) {
-    const dir = join(packagesDir, entry);
-    if (!statSync(dir).isDirectory()) continue;
-    const pkgPath = join(dir, "package.json");
-    if (!existsSync(pkgPath)) continue;
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-    if (typeof pkg.name === "string" && pkg.name.startsWith("bapm-target-")) {
-      names.push(pkg.name);
-    }
-  }
-  return names.sort();
 }
 
 export { runCli };
