@@ -114,11 +114,11 @@ Materialized packages MUST be placed under a project-relative modules directory 
 - **THEN** both MUST appear in the resolved graph with correct depth / `resolved_by`, and both MUST be representable in the written lock
 
 ### Requirement: Populate lock via M2 dual-read write rules
-Successful `resolveAndLock` MUST write the lock through the existing Lockfile dual-read / write-back / fresh-default rules (same loaded filename; fresh create → `bapm.lock.yaml`; both brand lockfiles present → hard error). Emitted dependencies MUST satisfy OpenAPM sort and monotonic version policy from lockfile R/W. Each git pin MUST include a 40-hex `resolved_commit` at minimum; content/`tree_sha256` MAY be omitted in M3 when not cheaply available after download. On direct-dep or resolve failure, the operation MUST NOT report success (prefer no partial success commit of the lock).
+Successful `resolveAndLock` MUST write the lock through the existing Lockfile dual-read / write-back / fresh-default rules (same loaded filename; fresh create → `bapm.lock.yaml`; both brand lockfiles present → hard error). Emitted dependencies MUST satisfy OpenAPM sort and monotonic version policy from lockfile R/W. Each git pin MUST include a 40-hex `resolved_commit` and MUST include a computed `tree_sha256` envelope (OpenAPM req-lk-015) for the on-disk package tree after download. Local-path and registry-only entries remain exempt from `tree_sha256`. On direct-dep or resolve failure, the operation MUST NOT report success (prefer no partial success commit of the lock).
 
 #### Scenario: Fresh lock defaults to bapm.lock.yaml
 - **WHEN** `resolveAndLock` succeeds on a project with no lockfile
-- **THEN** the written file MUST be `bapm.lock.yaml` and git entries MUST include `resolved_commit`
+- **THEN** the written file MUST be `bapm.lock.yaml` and git entries MUST include `resolved_commit` and `tree_sha256`
 
 #### Scenario: Write-back apm.lock.yaml
 - **WHEN** only `apm.lock.yaml` is present and re-lock succeeds
@@ -131,6 +131,10 @@ Successful `resolveAndLock` MUST write the lock through the existing Lockfile du
 #### Scenario: Direct dep failure is non-success
 - **WHEN** a direct dependency cannot be resolved or downloaded (for example broken git URL)
 - **THEN** the operation MUST fail (thrown error or non-success result) and MUST NOT present a successful lock write
+
+#### Scenario: Git pin records tree_sha256
+- **WHEN** `resolveAndLock` successfully downloads a git dependency into modules
+- **THEN** the written lock entry for that dependency MUST include `tree_sha256` matching a recompute of that package tree
 
 ### Requirement: Scoped update holds non-targeted pins
 When resolve runs in update mode with an explicit package scope set, the resolver MUST re-resolve only the scoped package identities and their transitive subtrees. Lock pins for non-scoped direct dependencies MUST remain character-identical for identity and resolved commit/tag fields that define the pin. Full (unscoped) update mode MUST continue to re-resolve every direct dependency against current manifest constraints (rs-011/rs-012).

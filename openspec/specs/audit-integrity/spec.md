@@ -28,9 +28,17 @@ When `deployed_file_hashes` (or equivalent lock inventory) are present, `audit -
 - **WHEN** the lock lists a deployed path that is absent on disk and `audit --ci` runs
 - **THEN** the exit code MUST be `1`
 
-### Requirement: tree_sha256 is soft for M6 accept
-Writing and auditing `tree_sha256` (OpenAPM lk-015) is SHOULD/soft for M6. Absence or incomplete tree hash coverage MUST NOT by itself block M6 acceptance; if deferred, validation notes MUST state the gap toward M7/M8.
+### Requirement: tree_sha256 is required for audit CI on git entries
+Writing and auditing `tree_sha256` (OpenAPM lk-015) is a MUST for Consumer integrity. For every git-sourced lock entry, `audit --ci` MUST require a recorded `tree_sha256` and MUST re-compute the canonical tree hash from the on-disk package tree under the modules directory. Missing field, missing package tree, or envelope mismatch MUST yield exit code `1` with a diagnostic naming the entry, expected envelope (when recorded), and observed envelope (when computable). Local-path and registry-only entries MUST NOT fail solely for absence of `tree_sha256`. Deployed-file hash checks (lk-017) remain in force unchanged.
 
-#### Scenario: Missing tree_sha256 does not fail M6 CI gate alone
-- **WHEN** `audit --ci` runs on a lock with git entries lacking `tree_sha256` but otherwise clean (lock present, deployed hashes OK)
-- **THEN** the run MUST still be allowed to exit `0` for the M6 CI subset unless a separate tree-hash check is explicitly enabled later
+#### Scenario: Missing tree_sha256 fails CI gate for git entry
+- **WHEN** `audit --ci` runs on a lock with a git entry lacking `tree_sha256` but otherwise clean deployed hashes
+- **THEN** the run MUST exit non-zero and diagnostics MUST name the entry
+
+#### Scenario: Mismatched tree_sha256 fails CI gate
+- **WHEN** `audit --ci` runs and the recomputed tree hash for a git entry differs from the recorded `tree_sha256`
+- **THEN** the run MUST exit `1` and diagnostics MUST include expected and observed envelopes
+
+#### Scenario: Matching tree_sha256 with clean deployed hashes exits zero
+- **WHEN** lock git entries have matching `tree_sha256`, deployed hashes verify, and `audit --ci` runs
+- **THEN** the exit code MUST be `0`
