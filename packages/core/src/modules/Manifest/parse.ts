@@ -19,6 +19,7 @@ const DEP_META_KEYS = new Set([
   "targets",
   "allow_insecure",
   "type",
+  "prerelease",
 ]);
 
 const SEMVER_RE =

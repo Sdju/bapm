@@ -1,6 +1,6 @@
 /**
  * Package public API assembly for @bapm/core.
- * Re-exports Manifest + Lockfile module surfaces and package-level constants.
+ * Re-exports Manifest + Lockfile + Resolver module surfaces and package-level constants.
  */
 
 export type {
@@ -56,6 +56,41 @@ export {
   serializeLockfile,
   isSemanticallyEquivalent,
 } from "@/modules/Lockfile";
+
+export type {
+  ClassifiedDependency,
+  DependencyKind,
+  DownloadArgs,
+  DownloadPackageSpec,
+  DownloadPackagesOptions,
+  Downloader,
+  FakeTag,
+  GitRemote,
+  ResolveAndLockOptions,
+  ResolveAndLockResult,
+  ResolveDependencyGraphOptions,
+  ResolveGraphResult,
+  ResolvePorts,
+  ResolvedNode,
+  TagLister,
+  ResolverErrorCode,
+} from "@/modules/Resolver";
+
+export {
+  ResolverError,
+  APM_MODULES_DIR,
+  MAX_RESOLVE_DEPTH,
+  DEFAULT_PARALLEL_DOWNLOADS,
+  classifyDependencyRef,
+  resolveDependencyGraph,
+  downloadPackages,
+  resolveAndLock,
+  normalizeRepoIdentity,
+  toLockRepoUrl,
+  createDefaultDownloader,
+  createDefaultGitRemote,
+  createDefaultTagLister,
+} from "@/modules/Resolver";
 
 export const BAPM_NAME = "bapm";
 

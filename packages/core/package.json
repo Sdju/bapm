@@ -22,10 +22,12 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
+    "semver": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
+    "@types/semver": "catalog:",
     "bumpp": "^11.1.0",
     "typescript": "^7.0.2",
     "vite": "catalog:",
