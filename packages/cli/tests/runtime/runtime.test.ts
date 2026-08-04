@@ -78,13 +78,12 @@ test("help flags -h and --help succeed", async () => {
   }
 });
 
-test("install stub fails with not-implemented and manifest/lock names", async () => {
+test("install without manifest fails closed (real install, not stub)", async () => {
   const { result, stderr } = await withCapturedIo(() => runCli(["install"]));
   const text = stderr.join("\n");
   expect(result).toBe(1);
-  expect(text).toMatch(/not implemented/i);
-  expect(text).toMatch(/bapm\.yml/);
-  expect(text).toMatch(/bapm\.lock\.yaml/);
+  expect(text).not.toMatch(/not implemented/i);
+  expect(text).toMatch(/manifest|apm\.yml|bapm\.yml/i);
 });
 
 test("unknown command reports error, shows help, exits 1", async () => {

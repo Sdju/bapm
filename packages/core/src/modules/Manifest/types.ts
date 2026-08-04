@@ -52,6 +52,10 @@ export type BapmManifest = {
   devDependencies?: DependencyLists;
   registries?: Record<string, RegistryEntry | string>;
   default_host?: string;
+  /** Single host target id (mutually exclusive with `targets`). Vendor ids `x-<vendor>-<name>` allowed. */
+  target?: string;
+  /** Multi host target ids (mutually exclusive with `target`). */
+  targets?: string[];
   [key: string]: unknown;
 };
 

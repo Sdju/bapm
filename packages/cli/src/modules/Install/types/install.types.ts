@@ -6,8 +6,10 @@ export interface InstallDeps {
 
 export interface InstallOptions {
   args: string[];
+  cwd?: string;
 }
 
 export interface InstallResult {
   ok: boolean;
+  message?: string;
 }

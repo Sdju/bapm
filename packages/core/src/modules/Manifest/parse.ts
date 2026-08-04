@@ -60,6 +60,29 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
     );
   }
 
+  if ("target" in raw && raw.target !== undefined) {
+    if (typeof raw.target !== "string" || !raw.target.trim()) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        'Manifest "target" must be a non-empty string (vendor ids x-<vendor>-<name> allowed)',
+        { path: "target" },
+      );
+    }
+  }
+
+  if ("targets" in raw && raw.targets !== undefined) {
+    if (
+      !Array.isArray(raw.targets) ||
+      raw.targets.some((t) => typeof t !== "string" || !t.trim())
+    ) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        'Manifest "targets" must be an array of non-empty strings',
+        { path: "targets" },
+      );
+    }
+  }
+
   if (!("name" in raw)) {
     throw new ManifestError("MANIFEST_VALIDATION", 'Manifest requires "name"', {
       path: "name",

@@ -26,7 +26,9 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@bapm/core": "workspace:*"
+    "@bapm/core": "workspace:*",
+    "bapm-target-api": "workspace:*",
+    "bapm-target-cursor": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

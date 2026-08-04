@@ -1,8 +1,6 @@
 # Install
 
-Install-stub adapter (not implemented yet). Soft IoC via `createInstall(deps?)`.
+Thin CLI wrapper over `@bapm/core` `runInstall`. Registers `bapm-target-cursor` for e2e
+host materialize. Parses `--frozen` / rejects frozen+`--update`.
 
-## Public API
-
-- `createInstall(deps?)` — returns `{ run(options) → InstallResult }`
-- Types: `InstallDeps`, `InstallOptions`, `InstallResult`, `InstallApi`
+Domain logic lives in `@bapm/core` — this module stays a FEOD command-facing service.

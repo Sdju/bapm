@@ -94,8 +94,8 @@ test("tsconfig maps @/* to ./src/*", () => {
   expect(tsconfig.compilerOptions?.paths?.["@/*"]).toEqual(["./src/*"]);
 });
 
-test("Manifest and Lockfile are directory modules with index.ts", () => {
-  for (const name of ["Manifest", "Lockfile"] as const) {
+test("Manifest, Lockfile, Resolver, Install, and Primitives are directory modules with index.ts", () => {
+  for (const name of ["Manifest", "Lockfile", "Resolver", "Install", "Primitives"] as const) {
     const modDir = join(srcRoot, "modules", name);
     expect(existsSync(modDir), `missing modules/${name}`).toBe(true);
     expect(statSync(modDir).isDirectory(), `modules/${name} must be a directory`).toBe(true);

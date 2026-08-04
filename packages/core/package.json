@@ -22,6 +22,7 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
+    "bapm-target-api": "workspace:*",
     "semver": "catalog:",
     "yaml": "catalog:"
   },

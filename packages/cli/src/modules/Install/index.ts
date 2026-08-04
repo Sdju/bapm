@@ -1,4 +1,4 @@
-import { runInstallStub } from "./services/runInstallStub.ts";
+import { runInstall } from "./services/runInstall.ts";
 import type { InstallDeps, InstallOptions, InstallResult } from "./types/install.types.ts";
 
 export type { InstallDeps, InstallOptions, InstallResult };
@@ -12,7 +12,7 @@ export function createInstall(deps?: InstallDeps) {
 
   return {
     async run(options: InstallOptions): Promise<InstallResult> {
-      return runInstallStub(resolved, options);
+      return runInstall(resolved, options);
     },
   };
 }

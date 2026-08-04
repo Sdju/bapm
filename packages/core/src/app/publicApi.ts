@@ -92,6 +92,40 @@ export {
   createDefaultTagLister,
 } from "@/modules/Resolver";
 
+export type {
+  AttributedPrimitive,
+  DiscoverPrimitivesOptions,
+  PrimitiveConflictDiagnostic,
+  PrimitiveSource,
+  PrimitiveType,
+  ResolvePrimitiveConflictsOptions,
+  ResolvePrimitiveConflictsResult,
+  PrimitivesErrorCode,
+} from "@/modules/Primitives";
+
+export {
+  PrimitivesError,
+  discoverPrimitives,
+  resolvePrimitiveConflicts,
+  resolveConflicts,
+} from "@/modules/Primitives";
+
+export type {
+  EnforceFrozenOptions,
+  InstallOptions,
+  InstallResult,
+  RunInstallOptions,
+  InstallErrorCode,
+} from "@/modules/Install";
+
+export {
+  InstallError,
+  enforceFrozen,
+  runInstall,
+  installProject,
+  declaredTargetIds,
+} from "@/modules/Install";
+
 export const BAPM_NAME = "bapm";
 
 export function getVersion(): string {

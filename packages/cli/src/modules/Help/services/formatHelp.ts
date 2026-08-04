@@ -12,7 +12,7 @@ Usage:
 Commands:
   help       Show this help
   version    Print version
-  lock       Resolve dependencies and write the lockfile
-  install    Install agentic dependencies from ${deps.manifestFile} (stub)
+  lock       Resolve dependencies and write the lockfile (no host deploy)
+  install    Install agentic dependencies from ${deps.manifestFile}
 `;
 }

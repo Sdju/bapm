@@ -2,12 +2,16 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
 
-const srcRoot = resolve(dirname(fileURLToPath(import.meta.url)), "src");
+const pkgRoot = dirname(fileURLToPath(import.meta.url));
+const srcRoot = resolve(pkgRoot, "src");
+/** Test-only resolve: e2e imports cursor without core package.json hard dep. */
+const targetCursorEntry = resolve(pkgRoot, "../target-cursor/src/index.ts");
 
 export default defineConfig({
   resolve: {
     alias: {
       "@": srcRoot,
+      "bapm-target-cursor": targetCursorEntry,
     },
   },
   pack: {
