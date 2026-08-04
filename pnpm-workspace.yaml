@@ -9,8 +9,11 @@ catalog:
   "@types/node": ^24
   typescript: ^5
   vite: npm:@voidzero-dev/vite-plus-core@latest
-  vitest: npm:@voidzero-dev/vite-plus-test@latest
+  vitest: 4.1.10
   vite-plus: latest
+  vitepress: ^1.6.4
+  esbuild: ^0.28.1
+  yaml: ^2.9.0
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
@@ -21,3 +24,5 @@ peerDependencyRules:
   allowedVersions:
     vite: "*"
     vitest: "*"
+allowBuilds:
+  esbuild: true

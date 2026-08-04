@@ -1,11 +1,16 @@
 {
-  "name": "bapm",
+  "name": "@bapm/root",
   "version": "0.0.0",
   "private": true,
+  "description": "Better Agent Package Manager — TypeScript APM with a clean architecture",
   "type": "module",
   "scripts": {
     "ready": "vp check && vp run -r test && vp run -r build",
-    "dev": "vp run website#dev"
+    "dev": "vp run --filter @bapm/docs dev",
+    "docs": "vp run --filter @bapm/docs dev",
+    "build": "vp run -r build",
+    "check": "vp check",
+    "test": "vp run -r test"
   },
   "devDependencies": {
     "vite-plus": "catalog:"

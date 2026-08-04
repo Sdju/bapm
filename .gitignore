@@ -26,3 +26,6 @@ dist-ssr
 
 # AI agent worktrees
 .claude/worktrees/
+
+# External references / samples (not part of the repo)
+.samples/
