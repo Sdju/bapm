@@ -1,0 +1,5 @@
+name: mini-root
+version: 0.1.0
+dependencies:
+  apm:
+    - path: ./packages/mid

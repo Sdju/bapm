@@ -1,0 +1,20 @@
+# Golden lock for diamond intersection-pick (semantic compare ignores generated_at / apm_version).
+# Winner for github.com/example/shared: highest in ∩(^1.0.0 ∩ ~1.2.0) = 1.2.9 via tightest chain.
+lockfile_version: "1"
+dependencies:
+  - name: shared
+    repo_url: github.com/example/shared
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    constraint: "~1.2.0"
+    resolved_tag: "v1.2.9"
+    resolved_at: "v1.2.9"
+    resolved_by: "root->via-b@~1.2.0"
+    depth: 2
+  - name: via-a
+    repo_url: github.com/example/via-a
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    depth: 1
+  - name: via-b
+    repo_url: github.com/example/via-b
+    resolved_commit: "cccccccccccccccccccccccccccccccccccccccc"
+    depth: 1

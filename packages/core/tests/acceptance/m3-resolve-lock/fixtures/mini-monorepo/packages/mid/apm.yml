@@ -1,0 +1,7 @@
+name: mid-pkg
+version: 0.1.0
+dependencies:
+  apm:
+    - path: ../leaf
+    - git: https://github.com/example/leaf-git.git
+      ref: main
