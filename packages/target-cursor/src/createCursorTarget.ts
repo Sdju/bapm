@@ -1,57 +1,15 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
-import type {
-  AttributedPrimitive,
-  AttributedPrimitiveSet,
-  BapmTarget,
-  MaterializeReport,
+import { cpSync, existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import type { BapmTarget, MaterializeReport } from "bapm-target-api";
+import {
+  assertUnderDeployRoots,
+  primitivesList,
+  readPrimitiveContent,
+  sanitizeName,
+  toPosixRel,
 } from "bapm-target-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".agents/skills", ".cursor"] as const;
-
-function primitivesList(set: AttributedPrimitiveSet): AttributedPrimitive[] {
-  if (Array.isArray(set)) return set;
-  if (set && typeof set === "object" && Array.isArray(set.primitives)) {
-    return set.primitives;
-  }
-  return [];
-}
-
-function sanitizeName(name: string): string {
-  return String(name || "unnamed").replace(/[/\\]/g, "-");
-}
-
-function isUnderRoot(cwd: string, absPath: string, rootRel: string): boolean {
-  const rootAbs = resolve(cwd, rootRel);
-  const rel = relative(rootAbs, absPath);
-  return rel === "" || (!rel.startsWith("..") && !rel.startsWith(`..${sep}`));
-}
-
-function assertUnderDeployRoots(cwd: string, absPath: string, deployRoots: string[]): void {
-  if (!deployRoots.some((r) => isUnderRoot(cwd, absPath, r))) {
-    throw new Error(`cursor materialize refuses path outside deploy roots: ${absPath}`);
-  }
-}
-
-function readPrimitiveContent(p: AttributedPrimitive, preferredFile?: string): string {
-  if (typeof p.content === "string") return p.content;
-  const src = p.path ? resolve(p.path) : undefined;
-  if (src && existsSync(src)) {
-    if (preferredFile) {
-      const nested = src.endsWith(preferredFile) ? src : join(src, preferredFile);
-      if (existsSync(nested) && statSync(nested).isFile()) {
-        return readFileSync(nested, "utf8");
-      }
-    }
-    if (statSync(src).isFile()) return readFileSync(src, "utf8");
-  }
-  const name = sanitizeName(String(p.name));
-  return `---\nname: ${name}\n---\n# ${name}\n`;
-}
-
-function toPosixRel(cwd: string, absPath: string): string {
-  return relative(cwd, absPath).split(sep).join("/");
-}
 
 /**
  * Create the Cursor target.

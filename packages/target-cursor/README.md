@@ -33,4 +33,5 @@ Thin copy/write from source content (minimal frontmatter only when content is mi
 ## Dependencies
 
 Depends only on `bapm-target-api` among bapm packages — not `@bapm/core`.
+Shared materialize helpers (`sanitizeName`, `assertUnderDeployRoots`, `readPrimitiveContent`, …) come from `bapm-target-api`; this package keeps Cursor detect and path routing only.
 Register via `createTargetRegistry().register(createCursorTarget())` in CLI or tests.

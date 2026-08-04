@@ -17,3 +17,12 @@ export type {
 } from "./types.ts";
 
 export { createTargetRegistry, createRegistry } from "./registry.ts";
+
+export {
+  assertUnderDeployRoots,
+  isUnderRoot,
+  primitivesList,
+  readPrimitiveContent,
+  sanitizeName,
+  toPosixRel,
+} from "./helpers.ts";

@@ -1,6 +1,6 @@
 # bapm-target-api
 
-Shared **contracts and registry** for bapm host targets.
+Shared **contracts, registry, and materialize helpers** for bapm host targets.
 
 ## Boundary
 
@@ -11,6 +11,21 @@ Shared **contracts and registry** for bapm host targets.
 | CLI / tests                            | Register concrete targets into a registry created here |
 
 Core Install discovers primitives and calls `materialize` on registered targets through this package. Host packages implement detection, deploy roots, and disk writes — core never imports them.
+
+## Helpers
+
+Optional fs/path helpers for host `materialize` (exported from the package root):
+
+| Symbol                   | Role                                             |
+| ------------------------ | ------------------------------------------------ |
+| `primitivesList`         | Normalize array / `{ primitives }` sets          |
+| `sanitizeName`           | Path-safe single segment from a primitive name   |
+| `isUnderRoot`            | Containment check under a deploy root            |
+| `assertUnderDeployRoots` | Refuse writes outside registered roots           |
+| `readPrimitiveContent`   | Inline content / source file / stub frontmatter  |
+| `toPosixRel`             | Absolute → cwd-relative path with `/` separators |
+
+Hosts keep target-specific detect + routing; shared path/content plumbing lives here.
 
 ## Materialize report
 
