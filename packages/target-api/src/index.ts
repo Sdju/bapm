@@ -6,9 +6,13 @@ export type {
   AttributedPrimitive,
   AttributedPrimitiveSet,
   BapmTarget,
+  ConfigureMcpContext,
+  ConfigureMcpFn,
+  ConfigureMcpReport,
   DeployedFile,
   MaterializeContext,
   MaterializeReport,
+  McpServerConfig,
   PrimitiveSource,
   PrimitiveType,
   TargetDetectFn,
@@ -20,6 +24,8 @@ export { createTargetRegistry, createRegistry } from "./registry.ts";
 
 export {
   assertUnderDeployRoots,
+  getConfigureMcp,
+  hasConfigureMcp,
   isUnderRoot,
   primitivesList,
   readPrimitiveContent,

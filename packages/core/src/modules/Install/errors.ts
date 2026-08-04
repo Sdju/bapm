@@ -6,6 +6,7 @@ export type InstallErrorCode =
   | "INSTALL_UNKNOWN_TARGET"
   | "INSTALL_TARGET_FIELDS"
   | "INSTALL_ARCHIVE"
+  | "INSTALL_MCP_TRUST"
   | "INSTALL_FAILED";
 
 export class InstallError extends Error {

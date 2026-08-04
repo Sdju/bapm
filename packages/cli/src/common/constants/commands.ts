@@ -11,3 +11,5 @@ export const COMMAND_AUDIT = "audit";
 export const COMMAND_DOCTOR = "doctor";
 export const COMMAND_INIT = "init";
 export const COMMAND_PACK = "pack";
+export const COMMAND_COMPILE = "compile";
+export const COMMAND_CACHE = "cache";

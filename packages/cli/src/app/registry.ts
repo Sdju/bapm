@@ -1,5 +1,7 @@
 import {
   COMMAND_AUDIT,
+  COMMAND_CACHE,
+  COMMAND_COMPILE,
   COMMAND_DEPS,
   COMMAND_DOCTOR,
   COMMAND_HELP,
@@ -14,6 +16,8 @@ import {
   COMMAND_VERSION,
 } from "@/common/constants/commands.ts";
 import { auditCommand } from "@/commands/audit.ts";
+import { cacheCommand } from "@/commands/cache.ts";
+import { compileCommand } from "@/commands/compile.ts";
 import { depsCommand } from "@/commands/deps.ts";
 import { doctorCommand } from "@/commands/doctor.ts";
 import { helpCommand } from "@/commands/help.ts";
@@ -27,6 +31,8 @@ import { uninstallCommand } from "@/commands/uninstall.ts";
 import { updateCommand } from "@/commands/update.ts";
 import { versionCommand } from "@/commands/version.ts";
 import { audit } from "./init/audit.ts";
+import { cache } from "./init/cache.ts";
+import { compile } from "./init/compile.ts";
 import { deps } from "./init/deps.ts";
 import { doctor } from "./init/doctor.ts";
 import { help } from "./init/help.ts";
@@ -56,6 +62,8 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_DEPS]: (argv) => depsCommand(argv, deps),
   [COMMAND_AUDIT]: (argv) => auditCommand(argv, audit),
   [COMMAND_DOCTOR]: (argv) => doctorCommand(argv, doctor),
+  [COMMAND_COMPILE]: (argv) => compileCommand(argv, compile),
+  [COMMAND_CACHE]: (argv) => cacheCommand(argv, cache),
   "-h": (argv) => helpCommand(argv, help),
   "--help": (argv) => helpCommand(argv, help),
   "-V": (argv) => versionCommand(argv, version),

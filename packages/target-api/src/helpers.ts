@@ -4,7 +4,12 @@
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
-import type { AttributedPrimitive, AttributedPrimitiveSet } from "./types.ts";
+import type {
+  AttributedPrimitive,
+  AttributedPrimitiveSet,
+  BapmTarget,
+  ConfigureMcpFn,
+} from "./types.ts";
 
 /** Normalize `AttributedPrimitiveSet` (array or `{ primitives }`) to a list. */
 export function primitivesList(set: AttributedPrimitiveSet): AttributedPrimitive[] {
@@ -57,4 +62,34 @@ export function readPrimitiveContent(p: AttributedPrimitive, preferredFile?: str
 /** Absolute path → cwd-relative path with `/` separators. */
 export function toPosixRel(cwd: string, absPath: string): string {
   return relative(cwd, absPath).split(sep).join("/");
+}
+
+const MCP_CONFIGURE_ALIASES = [
+  "configureMcp",
+  "writeMcpConfig",
+  "deployMcp",
+  "configureMcpServers",
+] as const;
+
+/** True when the target exposes an MCP configure hook (any documented alias). */
+export function hasConfigureMcp(target: BapmTarget | Record<string, unknown>): boolean {
+  return getConfigureMcp(target) !== undefined;
+}
+
+/**
+ * Resolve optional MCP configure from a registered target.
+ * Accepts `configureMcp` and documented aliases without requiring every host to
+ * use the same method name.
+ */
+export function getConfigureMcp(
+  target: BapmTarget | Record<string, unknown>,
+): ConfigureMcpFn | undefined {
+  const rec = target as Record<string, unknown>;
+  for (const key of MCP_CONFIGURE_ALIASES) {
+    const fn = rec[key];
+    if (typeof fn === "function") {
+      return (fn as ConfigureMcpFn).bind(target);
+    }
+  }
+  return undefined;
 }

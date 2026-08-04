@@ -264,6 +264,52 @@ export {
   assertPolicyGateAllows,
 } from "@/modules/Policy";
 
+export type {
+  ExecutableGrantEntry,
+  ExecutableGrantSurface,
+  ExecutableTrustDecision,
+  ExecutableTrustOutcome,
+  EvaluateExecutableTrustOptions,
+  ParseExecutableGrantsOptions,
+} from "@/modules/ExecutableTrust";
+
+export {
+  evaluateExecutableTrust,
+  evaluateMcpExecutableTrust,
+  gateExecutableMcp,
+  checkExecutableTrust,
+  hasGrantSurface,
+  parseExecutableGrants,
+} from "@/modules/ExecutableTrust";
+
+export type {
+  CollectedMcpServer,
+  CollectMcpServersOptions,
+  CollectMcpServersResult,
+  ApplyMcpInventoryOptions,
+} from "@/modules/Mcp";
+
+export { collectMcpServers, applyMcpInventoryToLock } from "@/modules/Mcp";
+
+export type { CompileAgentsMdOptions, CompileAgentsMdResult } from "@/modules/Compile";
+
+export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "@/modules/Compile";
+
+export type {
+  CacheCleanOptions,
+  CacheCleanResult,
+  CacheInfoOptions,
+  CacheInfoResult,
+} from "@/modules/Cache";
+
+export {
+  cacheInfo,
+  getCacheInfo,
+  modulesCacheInfo,
+  cacheClean,
+  cleanModulesCache,
+} from "@/modules/Cache";
+
 export const BAPM_NAME = "bapm";
 
 export function getVersion(): string {

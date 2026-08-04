@@ -18,16 +18,18 @@ Usage:
   bapm install <archive.zip>   Install from a pack-produced plain zip archive
 
 Options:
-  --frozen          Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
-  --target <id>     Force activation of a registered host target (e.g. cursor)
-  --update          Re-resolve mutable refs (rejected with --frozen)
-  --policy <path>   Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
-  --no-policy       Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
-  --help, -h        Show this help
+  --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
+  --target <id>            Force activation of a registered host target (e.g. cursor)
+  --update                 Re-resolve mutable refs (rejected with --frozen)
+  --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
+  --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
+  --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
+  --help, -h               Show this help
 
 Notes:
   Unknown flags are rejected. Combining --frozen with --update is an error.
   A local .zip path is consumed as a pack archive (install-from-archive).
+  When cursor is active, eligible MCP servers write .cursor/mcp.json (direct mcp by default).
 `;
 }
 
@@ -38,6 +40,7 @@ export function parseInstallArgs(argv: string[]): {
   archivePath?: string;
   policyPath?: string;
   noPolicy: boolean;
+  trustTransitiveMcp: boolean;
   help?: boolean;
   error?: string;
 } {
@@ -47,6 +50,7 @@ export function parseInstallArgs(argv: string[]): {
   let archivePath: string | undefined;
   let policyPath: string | undefined;
   let noPolicy = false;
+  let trustTransitiveMcp = false;
   let help = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -67,6 +71,10 @@ export function parseInstallArgs(argv: string[]): {
       noPolicy = true;
       continue;
     }
+    if (arg === "--trust-transitive-mcp") {
+      trustTransitiveMcp = true;
+      continue;
+    }
     if (arg === "--policy") {
       const next = argv[i + 1];
       if (!next || next.startsWith("-")) {
@@ -74,6 +82,7 @@ export function parseInstallArgs(argv: string[]): {
           frozen,
           update,
           noPolicy,
+          trustTransitiveMcp,
           error: "Missing value for --policy <path>",
         };
       }
@@ -84,7 +93,13 @@ export function parseInstallArgs(argv: string[]): {
     if (arg.startsWith("--policy=")) {
       policyPath = arg.slice("--policy=".length);
       if (!policyPath) {
-        return { frozen, update, noPolicy, error: "Missing value for --policy=<path>" };
+        return {
+          frozen,
+          update,
+          noPolicy,
+          trustTransitiveMcp,
+          error: "Missing value for --policy=<path>",
+        };
       }
       continue;
     }
@@ -95,6 +110,7 @@ export function parseInstallArgs(argv: string[]): {
           frozen,
           update,
           noPolicy,
+          trustTransitiveMcp,
           error: "Missing value for --target <id>",
         };
       }
@@ -105,7 +121,13 @@ export function parseInstallArgs(argv: string[]): {
     if (arg.startsWith("--target=")) {
       target = arg.slice("--target=".length);
       if (!target) {
-        return { frozen, update, noPolicy, error: "Missing value for --target=<id>" };
+        return {
+          frozen,
+          update,
+          noPolicy,
+          trustTransitiveMcp,
+          error: "Missing value for --target=<id>",
+        };
       }
       continue;
     }
@@ -115,6 +137,7 @@ export function parseInstallArgs(argv: string[]): {
         update,
         target,
         noPolicy,
+        trustTransitiveMcp,
         policyPath,
         error: `Unknown install flag: ${arg}`,
       };
@@ -127,6 +150,7 @@ export function parseInstallArgs(argv: string[]): {
         target,
         archivePath,
         noPolicy,
+        trustTransitiveMcp,
         policyPath,
         error: `Unexpected argument: ${arg}`,
       };
@@ -141,12 +165,13 @@ export function parseInstallArgs(argv: string[]): {
       target,
       archivePath,
       noPolicy,
+      trustTransitiveMcp,
       policyPath,
       error: "Frozen mode rejects --update (frozen+update mutation rejected)",
     };
   }
 
-  return { frozen, update, target, archivePath, policyPath, noPolicy, help };
+  return { frozen, update, target, archivePath, policyPath, noPolicy, trustTransitiveMcp, help };
 }
 
 function resolveLocalZipArchive(
@@ -205,6 +230,7 @@ async function runCoreInstall(
     target?: string;
     policyPath?: string;
     noPolicy: boolean;
+    trustTransitiveMcp: boolean;
   },
   archivePath: string | undefined,
 ): Promise<InstallResult> {
@@ -224,11 +250,13 @@ async function runCoreInstall(
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
+      trustTransitiveMcp: parsed.trustTransitiveMcp,
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),
     });
     emitPolicyDiagnostics(deps.name, result.policyDiagnostics ?? result.diagnostics);
+    emitTrustDiagnostics(deps.name, result.diagnostics);
     return { ok: true };
   } catch (error) {
     const message =
@@ -250,5 +278,16 @@ function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): void {
     const message = typeof rec.message === "string" ? rec.message : "";
     if (!/policy|enforcement|violat|denied/i.test(`${code}\n${message}`)) continue;
     console.error(`${name}: policy warning: ${message || code}`);
+  }
+}
+
+function emitTrustDiagnostics(name: string, diagnostics: unknown[]): void {
+  for (const d of diagnostics) {
+    if (!d || typeof d !== "object") continue;
+    const rec = d as Record<string, unknown>;
+    const code = typeof rec.code === "string" ? rec.code : "";
+    const message = typeof rec.message === "string" ? rec.message : "";
+    if (!/withhold|unapproved|mcp_trust|trust/i.test(`${code}\n${message}`)) continue;
+    console.error(`${name}: ${message || code}`);
   }
 }

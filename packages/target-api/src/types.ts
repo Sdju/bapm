@@ -63,6 +63,51 @@ export type MaterializeReport = {
 export type TargetDetectFn = (ctx: { cwd: string }) => boolean | Promise<boolean>;
 
 /**
+ * Host-agnostic MCP server definition passed to optional `configureMcp`.
+ * Concrete hosts map transport/command/url into their native config shape.
+ */
+export type McpServerConfig = {
+  name: string;
+  transport?: string;
+  type?: string;
+  command?: string;
+  args?: unknown[];
+  url?: string;
+  env?: Record<string, string>;
+  /** Package provenance (dependency name or local). */
+  packageName?: string;
+  [key: string]: unknown;
+};
+
+/** Context for optional MCP configure. */
+export type ConfigureMcpContext = {
+  cwd: string;
+  /** Active target id for this invocation. */
+  targetId?: TargetId;
+  /** Deploy roots declared by the target (relative to cwd). */
+  deployRoots?: string[];
+  [key: string]: unknown;
+};
+
+/**
+ * Report returned by `configureMcp` so core can record lock `mcp_*` inventory
+ * without importing concrete host packages.
+ */
+export type ConfigureMcpReport = {
+  /** Project-/cwd-relative path to the written MCP config (e.g. `.cursor/mcp.json`). */
+  configPath?: string;
+  /** Server names written/updated. */
+  servers?: string[];
+  deployedFiles?: DeployedFile[];
+};
+
+/** Optional MCP configure hook — targets that lack it are skipped for MCP. */
+export type ConfigureMcpFn = (
+  servers: McpServerConfig[] | Record<string, McpServerConfig>,
+  ctx?: ConfigureMcpContext,
+) => void | ConfigureMcpReport | Promise<void | ConfigureMcpReport>;
+
+/**
  * Host target contract. Concrete packages (e.g. bapm-target-cursor) implement this;
  * core only sees the shape via bapm-target-api.
  */
@@ -76,6 +121,11 @@ export type BapmTarget = {
     ctx?: MaterializeContext,
   ) => void | MaterializeReport | Promise<void | MaterializeReport>;
   getDeployRoots?: () => string[];
+  /**
+   * Optional host-agnostic MCP configure (M9). Cursor writes `.cursor/mcp.json`.
+   * Targets without this hook are skipped for MCP without failing non-MCP install.
+   */
+  configureMcp?: ConfigureMcpFn;
   [key: string]: unknown;
 };
 

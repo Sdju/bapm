@@ -23,10 +23,13 @@ Commands:
   deps       Inspect lock deps (list | tree | why)
   audit      Integrity checks (--ci gate)
   doctor     Environment and project sanity checks
+  compile    Emit AGENTS.md from discovered primitives (cursor)
+  cache      Modules-cache info | clean (apm_modules)
 
 Install flags (see also: bapm help install):
-  --frozen       Fail closed on lock drift; re-verify deployed hashes when present
-  --target <id>  Force a registered host target (e.g. cursor)
+  --frozen                 Fail closed on lock drift; re-verify deployed hashes when present
+  --target <id>            Force a registered host target (e.g. cursor)
+  --trust-transitive-mcp   Deploy dependency MCP (default: direct dependencies.mcp only)
 `;
 }
 
@@ -38,12 +41,19 @@ Usage:
   bapm install <archive.zip>   Install from a pack-produced plain zip archive
 
 Options:
-  --frozen          Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
-  --target <id>     Force activation of a registered host target (e.g. cursor)
-  --update          Re-resolve mutable refs (rejected with --frozen)
-  --policy <path>   Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
-  --no-policy       Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
-  --help, -h        Show this help
+  --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
+  --target <id>            Force activation of a registered host target (e.g. cursor)
+  --update                 Re-resolve mutable refs (rejected with --frozen)
+  --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
+  --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
+  --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
+  --help, -h               Show this help
+
+MCP / Cursor:
+  When the cursor target is active, eligible MCP servers are written to .cursor/mcp.json.
+  Direct dependencies.mcp are deployed by default. Transitive MCP requires --trust-transitive-mcp
+  (or an executables.allow / allowExecutables grant for that package — sc-009).
+  Auto-detect without .cursor/ does not mkdir solely for MCP.
 
 Unknown flags are rejected. --frozen cannot be combined with --update.
 A local .zip path is detected as a pack archive (install-from-archive round-trip).

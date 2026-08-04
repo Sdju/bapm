@@ -1,6 +1,12 @@
 import { join, resolve } from "node:path";
 import { existsSync } from "node:fs";
-import type { BapmTarget, MaterializeReport, TargetRegistry } from "bapm-target-api";
+import type {
+  BapmTarget,
+  ConfigureMcpReport,
+  MaterializeReport,
+  TargetRegistry,
+} from "bapm-target-api";
+import { getConfigureMcp } from "bapm-target-api";
 import {
   loadManifest,
   type BapmManifest,
@@ -23,6 +29,8 @@ import {
   type AttributedPrimitive,
 } from "@/modules/Primitives";
 import { extractPackArchive } from "@/modules/Pack";
+import { evaluateExecutableTrust, parseExecutableGrants } from "@/modules/ExecutableTrust";
+import { applyMcpInventoryToLock, collectMcpServers } from "@/modules/Mcp";
 import {
   applyDeployedHashesToLock,
   cleanupOrphanDeployedFiles,
@@ -36,7 +44,8 @@ import type { InstallResult, RunInstallOptions } from "./types.ts";
 
 /**
  * Run install: optional archive extract → frozen gate → plan → policy gate →
- * download → orphan cleanup → primitives → targets → write deployed_file_hashes.
+ * download → orphan cleanup → primitives → targets → MCP trust/configure →
+ * write deployed_file_hashes / mcp_* lock fields.
  */
 export async function runInstall(options: RunInstallOptions = {}): Promise<InstallResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
@@ -45,6 +54,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const forcedTargetId = options.forcedTarget ?? options.forceTarget;
   const policyPath = options.policyPath ?? options.policy;
   const noPolicy = options.noPolicy === true;
+  const trustTransitiveMcp = options.trustTransitiveMcp === true;
 
   if (options.archivePath) {
     await extractArchiveIntoProject(options.archivePath, cwd);
@@ -209,14 +219,198 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     }
   }
 
+  const mcpDiagnostics: unknown[] = [];
+  const mcpResult = await deployMcpAfterPolicy({
+    cwd,
+    rootManifest,
+    nodes,
+    registry,
+    activeTargets,
+    forcedTargetId,
+    trustTransitiveMcp,
+    frozen,
+    lockDocument,
+    lockPath,
+    previousLockFilename: previousLock?.sourceFilename,
+    diagnostics: mcpDiagnostics,
+  });
+  if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
+  if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
+
+  if (mcpResult.withholdFatal) {
+    throw new InstallError(
+      "INSTALL_MCP_TRUST",
+      mcpResult.withholdMessage ??
+        "MCP withheld: unapproved dependency executables (sc-009 fail-closed)",
+      { details: { withheld: mcpResult.withheldPackages } },
+    );
+  }
+
   return {
     ok: true,
     lockPath,
     modulesDir: join(cwd, APM_MODULES_DIR),
     activeTargets,
     primitivesCount: resolved.primitives.length,
-    diagnostics: [...policyDiagnostics, ...resolved.diagnostics],
+    diagnostics: [...policyDiagnostics, ...resolved.diagnostics, ...mcpDiagnostics],
     policyDiagnostics,
+  };
+}
+
+async function deployMcpAfterPolicy(args: {
+  cwd: string;
+  rootManifest: BapmManifest;
+  nodes: ResolvedNode[];
+  registry?: TargetRegistry;
+  activeTargets: string[];
+  forcedTargetId?: string;
+  trustTransitiveMcp: boolean;
+  frozen: boolean;
+  lockDocument?: LockfileDocument;
+  lockPath?: string;
+  previousLockFilename?: string;
+  diagnostics: unknown[];
+}): Promise<{
+  lockPath?: string;
+  lockDocument?: LockfileDocument;
+  withholdFatal: boolean;
+  withholdMessage?: string;
+  withheldPackages: string[];
+}> {
+  const grantSurface = parseExecutableGrants({
+    manifest: args.rootManifest as Record<string, unknown>,
+  });
+  const collected = collectMcpServers({
+    cwd: args.cwd,
+    rootManifest: args.rootManifest,
+    nodes: args.nodes,
+    trustTransitiveMcp: args.trustTransitiveMcp,
+    grantSurface,
+  });
+
+  if (collected.servers.length === 0) {
+    return {
+      lockPath: args.lockPath,
+      lockDocument: args.lockDocument,
+      withholdFatal: false,
+      withheldPackages: [],
+    };
+  }
+
+  const approved: typeof collected.servers = [];
+  const withheldPackages: string[] = [];
+  const rootName = String(args.rootManifest.name ?? "root");
+
+  for (const server of collected.servers) {
+    if (server.origin === "direct" || server.packageName === rootName) {
+      approved.push(server);
+      continue;
+    }
+    const decision = evaluateExecutableTrust({
+      grantSurface,
+      packageName: server.packageName,
+      executableType: "mcp",
+    });
+    if (decision.outcome === "skip") {
+      // No grant surface: only reach here for dep MCP when trust-transitive is on.
+      approved.push(server);
+      continue;
+    }
+    if (decision.allowed) {
+      approved.push(server);
+      continue;
+    }
+    withheldPackages.push(server.packageName);
+    args.diagnostics.push({
+      code: "MCP_TRUST_WITHHOLD",
+      message: decision.reason ?? `unapproved MCP from "${server.packageName}" withheld`,
+      packageName: server.packageName,
+      server: server.name,
+      withhold: true,
+      unapproved: true,
+    });
+  }
+
+  const uniqueWithheld = [...new Set(withheldPackages)];
+  const withholdFatal = grantSurface.present && uniqueWithheld.length > 0;
+  const withholdMessage = withholdFatal
+    ? `MCP withheld: unapproved dependency executables (${uniqueWithheld.join(", ")}). Add to executables.allow / allowExecutables or remove MCP.`
+    : undefined;
+
+  if (approved.length === 0) {
+    return {
+      lockPath: args.lockPath,
+      lockDocument: args.lockDocument,
+      withholdFatal,
+      withholdMessage,
+      withheldPackages: uniqueWithheld,
+    };
+  }
+
+  if (!args.registry || args.activeTargets.length === 0) {
+    return {
+      lockPath: args.lockPath,
+      lockDocument: args.lockDocument,
+      withholdFatal,
+      withholdMessage,
+      withheldPackages: uniqueWithheld,
+    };
+  }
+
+  let wroteConfig = false;
+  let configPath: string | undefined;
+  let configuredTargetId: string | undefined;
+  const configuredServers = approved;
+
+  for (const targetId of args.activeTargets) {
+    const target = findTarget(args.registry, targetId);
+    if (!target) continue;
+
+    const isForced = Boolean(args.forcedTargetId && args.forcedTargetId === targetId);
+    const detected = isForced ? true : await target.detect({ cwd: args.cwd });
+    if (!detected) continue;
+
+    const configureMcp = getConfigureMcp(target);
+    if (!configureMcp) continue;
+
+    const report = (await configureMcp(configuredServers, {
+      cwd: args.cwd,
+      targetId,
+      deployRoots: [...target.deployRoots],
+    })) as void | ConfigureMcpReport;
+
+    wroteConfig = true;
+    configuredTargetId = targetId;
+    configPath =
+      report && typeof report === "object" && typeof report.configPath === "string"
+        ? report.configPath
+        : ".cursor/mcp.json";
+    break;
+  }
+
+  let lockDocument = args.lockDocument;
+  let lockPath = args.lockPath;
+
+  if (wroteConfig && !args.frozen && lockDocument) {
+    applyMcpInventoryToLock({
+      document: lockDocument,
+      servers: configuredServers,
+      configPath,
+      targetId: configuredTargetId,
+    });
+    lockPath = writeLockfile(lockDocument, {
+      cwd: args.cwd,
+      sourcePath: lockPath,
+      sourceFilename: args.previousLockFilename,
+    });
+  }
+
+  return {
+    lockPath,
+    lockDocument,
+    withholdFatal,
+    withholdMessage,
+    withheldPackages: uniqueWithheld,
   };
 }
 

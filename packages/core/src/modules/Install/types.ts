@@ -37,6 +37,11 @@ export type RunInstallOptions = {
   policy?: string;
   /** Skip policy discovery + checks (`--no-policy` / env disable). */
   noPolicy?: boolean;
+  /**
+   * Deploy transitive (dependency) MCP servers when no grant surface applies
+   * (`--trust-transitive-mcp`). Direct `dependencies.mcp` always eligible.
+   */
+  trustTransitiveMcp?: boolean;
 };
 
 /** Alias for design naming flexibility. */
