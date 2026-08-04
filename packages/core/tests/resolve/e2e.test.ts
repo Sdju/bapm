@@ -140,10 +140,14 @@ describe("M3 e2e fixtures", () => {
 
     // Compare shared winner pin semantically (ignore generated_at / apm_version)
     const actualShared = depsOf(actual).find((d) =>
-      String(d.repo_url ?? d.name ?? "").toLowerCase().includes("shared"),
+      String(d.repo_url ?? d.name ?? "")
+        .toLowerCase()
+        .includes("shared"),
     );
     const goldenShared = depsOf(goldenDoc).find((d) =>
-      String(d.repo_url ?? d.name ?? "").toLowerCase().includes("shared"),
+      String(d.repo_url ?? d.name ?? "")
+        .toLowerCase()
+        .includes("shared"),
     );
     expect(actualShared).toBeTruthy();
     expect(goldenShared).toBeTruthy();

@@ -91,7 +91,9 @@ describe("M3 diamond intersection-pick (rs-001 / rs-010)", () => {
     });
     const nodes = graphNodes(result);
     const shared = nodes.filter((n) =>
-      String(n.name ?? n.repo_url ?? n.id ?? "").toLowerCase().includes("shared"),
+      String(n.name ?? n.repo_url ?? n.id ?? "")
+        .toLowerCase()
+        .includes("shared"),
     );
     expect(shared.length).toBe(1);
     const winner = shared[0]!;
@@ -180,9 +182,7 @@ describe("M3 git-semver pin + node-semver oracle (rs-002 / 007 / 014)", () => {
       downloader: ports.downloader,
     });
     const nodes = graphNodes(result);
-    const pkg = nodes.find((n) =>
-      String(n.repo_url ?? n.name ?? "").includes("semver-pkg"),
-    );
+    const pkg = nodes.find((n) => String(n.repo_url ?? n.name ?? "").includes("semver-pkg"));
     expect(pkg).toBeTruthy();
     expect(String(pkg!.constraint)).toBe("^1.2.0");
     expect(String(pkg!.resolved_tag)).toMatch(/v?1\.3\.0/);
@@ -213,18 +213,16 @@ describe("M3 git-semver pin + node-semver oracle (rs-002 / 007 / 014)", () => {
       tagLister: ports.tagLister,
       downloader: ports.downloader,
     });
-    const pkg = graphNodes(result).find((n) =>
-      String(n.repo_url ?? n.name ?? "").includes("pre"),
-    );
+    const pkg = graphNodes(result).find((n) => String(n.repo_url ?? n.name ?? "").includes("pre"));
     expect(pkg).toBeTruthy();
     expect(String(pkg!.resolved_tag)).not.toMatch(/beta/i);
     expect(String(pkg!.resolved_tag)).toMatch(/1\.2\.1/);
   });
 
   test("node-semver oracle — semver-dialect.json cases match (rs-007/014)", async () => {
-    const oracle = JSON.parse(
-      readFileSync(fixturePath("semver-dialect.json"), "utf8"),
-    ) as { cases: SemverCase[] };
+    const oracle = JSON.parse(readFileSync(fixturePath("semver-dialect.json"), "utf8")) as {
+      cases: SemverCase[];
+    };
 
     for (const c of oracle.cases) {
       project = createTempProject();

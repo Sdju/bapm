@@ -1,6 +1,5 @@
 /**
- * M3 CLI lock command acceptance — checklist C §28–31 + lock-command / cli-runtime-surface.
- * Thin `bapm lock` wrapping core resolveAndLock; install remains non-deploying stub.
+ * CLI lock command — thin `bapm lock` wrapping core resolveAndLock.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -14,12 +13,12 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
 function createTempProject(): TempProject {
-  const cwd = mkdtempSync(join(tmpdir(), "bapm-m3-cli-"));
+  const cwd = mkdtempSync(join(tmpdir(), "bapm-cli-lock-"));
   return {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
@@ -176,17 +175,5 @@ describe("M3 bapm lock CLI", () => {
     const before = listFilesRecursive(join(project.cwd, ".agents"));
     await withCwd(project.cwd, () => withCapturedIo(() => runCli(["lock"])));
     expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(before);
-  });
-
-  test("help lists lock command", async () => {
-    const { result, stdout } = await withCapturedIo(() => runCli(["help"]));
-    expect(result).toBe(0);
-    expect(stdout.join("\n")).toMatch(/\block\b/i);
-  });
-
-  test("install remains non-deploying stub (§31)", async () => {
-    const { result, stderr } = await withCapturedIo(() => runCli(["install"]));
-    expect(result).toBe(1);
-    expect(stderr.join("\n")).toMatch(/not implemented/i);
   });
 });

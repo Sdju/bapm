@@ -17,7 +17,6 @@ import {
   createTempProject,
   createFakePorts,
   expectRejectsMatching,
-  expectThrowsMatching,
   fakeCommit,
   graphNodes,
   walkOrder,
@@ -144,10 +143,7 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
     for (let i = 0; i < n; i++) {
       const dir = join(project.cwd, `d${i}`);
       mkdirSync(dir, { recursive: true });
-      const next =
-        i < n - 1
-          ? `  apm:\n    - path: ../d${i + 1}\n`
-          : `  apm: []\n`;
+      const next = i < n - 1 ? `  apm:\n    - path: ../d${i + 1}\n` : `  apm: []\n`;
       writeFileSync(
         join(dir, "apm.yml"),
         `name: d${i}\nversion: 0.0.1\ndependencies:\n${next}`,
@@ -242,21 +238,13 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
     const names = nodes.map((n) => String(n.name ?? n.id ?? n.path ?? "").toLowerCase());
     expect(names.some((n) => n.includes("mid"))).toBe(true);
     expect(names.some((n) => n.includes("leaf"))).toBe(true);
-    const leaf = nodes.find((n) => String(n.name ?? n.id ?? "").toLowerCase().includes("leaf"));
+    const leaf = nodes.find((n) =>
+      String(n.name ?? n.id ?? "")
+        .toLowerCase()
+        .includes("leaf"),
+    );
     expect(leaf).toBeTruthy();
     expect(Number(leaf!.depth ?? leaf!.level)).toBeGreaterThanOrEqual(2);
     expect(String(leaf!.resolved_by ?? "")).toMatch(/->|mid|root/i);
   });
-});
-
-// Sync throw path used only when API is sync; keep import smoke for missing export RED.
-test("classifyDependencyRef is a named export of @bapm/core", () => {
-  expect(typeof classifyDependencyRef).toBe("function");
-});
-
-test("missing nest still surfaces via expectThrowsMatching helper contract", () => {
-  // Guard: helper rethrows TypeError for missing functions during RED.
-  expectThrowsMatching(() => {
-    throw new Error("nest reserved for v0.2");
-  }, /nest/i);
 });

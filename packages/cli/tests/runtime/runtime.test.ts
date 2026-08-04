@@ -51,13 +51,14 @@ test("version long flag --version succeeds", async () => {
   expect(stdout.join("\n")).toMatch(/bapm \S+/);
 });
 
-test("help subcommand lists help, version, install and exits 0", async () => {
+test("help subcommand lists help, version, install, lock and exits 0", async () => {
   const { result, stdout } = await withCapturedIo(() => runCli(["help"]));
   const text = stdout.join("\n");
   expect(result).toBe(0);
   expect(text).toMatch(/help/i);
   expect(text).toMatch(/version/i);
   expect(text).toMatch(/install/i);
+  expect(text).toMatch(/\block\b/i);
 });
 
 test("default command (empty argv) is help", async () => {

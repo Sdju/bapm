@@ -6,6 +6,7 @@ export default defineConfig({
     ignorePatterns: [
       "packages/core/tests/manifest/fixtures/**",
       "packages/core/tests/lockfile/fixtures/**",
+      "packages/core/tests/resolve/fixtures/**",
     ],
   },
   lint: {

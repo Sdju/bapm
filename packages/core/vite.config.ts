@@ -27,7 +27,7 @@ export default defineConfig({
     ignorePatterns: [
       "tests/manifest/fixtures/**",
       "tests/lockfile/fixtures/**",
-      "tests/acceptance/**/fixtures/**",
+      "tests/resolve/fixtures/**",
     ],
   },
 });

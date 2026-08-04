@@ -1,7 +1,5 @@
 /**
- * M3 acceptance helpers — temp projects, fake ports, flexible result accessors.
- * Public API under test (design): classifyDependencyRef, resolveDependencyGraph,
- * downloadPackages, resolveAndLock, MAX_RESOLVE_DEPTH, APM_MODULES_DIR.
+ * Resolve/lock test helpers — temp projects, fake ports, flexible result accessors.
  */
 import {
   mkdirSync,
@@ -35,7 +33,7 @@ export type TempProject = {
 };
 
 export function createTempProject(): TempProject {
-  const cwd = mkdtempSync(join(tmpdir(), "bapm-m3-accept-"));
+  const cwd = mkdtempSync(join(tmpdir(), "bapm-resolve-"));
   return {
     cwd,
     cleanup: () => {
@@ -144,7 +142,10 @@ export function createFakePorts(options?: {
         commit: args.commit,
         dest: args.dest,
       });
-      if (args.repoUrl && (failUrls.has(args.repoUrl) || [...failUrls].some((u) => args.repoUrl!.includes(u)))) {
+      if (
+        args.repoUrl &&
+        (failUrls.has(args.repoUrl) || [...failUrls].some((u) => args.repoUrl!.includes(u)))
+      ) {
         throw new Error(`download failed: ${args.repoUrl}`);
       }
       ensureDir(args.dest);

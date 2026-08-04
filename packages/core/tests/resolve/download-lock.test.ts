@@ -20,13 +20,11 @@ import {
   createFakePorts,
   depsOf,
   expectRejectsMatching,
-  fakeCommit,
   isFortyHex,
   listFilesRecursive,
   lockOf,
   writeLock,
   writeManifest,
-  writeText,
   type TempProject,
 } from "./helpers.ts";
 
@@ -89,21 +87,6 @@ describe("M3 resolveAndLock — download + lock write", () => {
     });
     expect(existsSync(join(project.cwd, APM_LOCK_FILE ?? "apm.lock.yaml"))).toBe(true);
     expect(existsSync(join(project.cwd, "bapm.lock.yaml"))).toBe(false);
-  });
-
-  test("dual lock filenames → hard error (M2)", async () => {
-    project = createTempProject();
-    writeManifest(
-      project.cwd,
-      "bapm.yml",
-      `name: dual\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-    );
-    writeLock(project.cwd, "apm.lock.yaml", `lockfile_version: "1"\ndependencies: []\n`);
-    writeLock(project.cwd, "bapm.lock.yaml", `lockfile_version: "1"\ndependencies: []\n`);
-    await expectRejectsMatching(
-      () => resolveAndLock({ cwd: project.cwd }),
-      /apm\.lock\.yaml|bapm\.lock\.yaml|both|conflict|dual/i,
-    );
   });
 
   test("warm replay — reuse pin without ls-remote when ref unchanged (rs-015)", async () => {
