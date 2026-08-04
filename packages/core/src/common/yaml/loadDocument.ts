@@ -1,11 +1,12 @@
 import { isAlias, isCollection, isScalar, parseDocument, visit } from "yaml";
-import { ManifestError } from "./errors.ts";
+import { YamlError } from "./errors.ts";
 
 const STANDARD_YAML_TAG_PREFIX = "tag:yaml.org,2002:";
 
 /**
  * Parse YAML text with OpenAPM-strict safe-subset guards:
  * reject anchors, aliases, and custom tags (req-mf-020).
+ * Throws neutral YamlError — callers map to domain errors.
  */
 export function loadYamlDocument(source: string, sourcePath?: string): unknown {
   let doc;
@@ -16,8 +17,8 @@ export function loadYamlDocument(source: string, sourcePath?: string): unknown {
       strict: false,
     });
   } catch (cause) {
-    throw new ManifestError(
-      "MANIFEST_YAML_PARSE",
+    throw new YamlError(
+      "YAML_PARSE",
       `Invalid YAML syntax${sourcePath ? ` in ${sourcePath}` : ""}: ${cause instanceof Error ? cause.message : String(cause)}`,
       { path: sourcePath, cause },
     );
@@ -25,8 +26,8 @@ export function loadYamlDocument(source: string, sourcePath?: string): unknown {
 
   if (doc.errors.length > 0) {
     const first = doc.errors[0]!;
-    throw new ManifestError(
-      "MANIFEST_YAML_PARSE",
+    throw new YamlError(
+      "YAML_PARSE",
       `Invalid YAML syntax${sourcePath ? ` in ${sourcePath}` : ""}: ${first.message}`,
       { path: sourcePath, cause: first },
     );
@@ -58,12 +59,12 @@ export function loadYamlDocument(source: string, sourcePath?: string): unknown {
   });
 
   if (aliasOrAnchor) {
-    throw new ManifestError("MANIFEST_YAML_SAFE_SUBSET", aliasOrAnchor, {
+    throw new YamlError("YAML_SAFE_SUBSET", aliasOrAnchor, {
       path: sourcePath,
     });
   }
   if (customTag) {
-    throw new ManifestError("MANIFEST_YAML_SAFE_SUBSET", customTag, {
+    throw new YamlError("YAML_SAFE_SUBSET", customTag, {
       path: sourcePath,
     });
   }

@@ -1,5 +1,5 @@
-import { ManifestError } from "../manifest/errors.ts";
-import { loadYamlDocument } from "../manifest/yaml-load.ts";
+import { YamlError } from "@/common/yaml/errors.ts";
+import { loadYamlDocument } from "@/common/yaml/loadDocument.ts";
 import { LockfileError } from "./errors.ts";
 import { DEP_HASH_SCALAR_KEYS, normalizeHashMap, normalizeHashValue } from "./hash.ts";
 import { normalizePackageRepoUrl } from "./identity.ts";
@@ -14,11 +14,9 @@ export function loadLockfileYaml(source: string, sourcePath?: string): unknown {
   try {
     return loadYamlDocument(source, sourcePath);
   } catch (cause) {
-    if (cause instanceof ManifestError) {
+    if (cause instanceof YamlError) {
       const code =
-        cause.code === "MANIFEST_YAML_SAFE_SUBSET"
-          ? "LOCKFILE_YAML_SAFE_SUBSET"
-          : "LOCKFILE_YAML_PARSE";
+        cause.code === "YAML_SAFE_SUBSET" ? "LOCKFILE_YAML_SAFE_SUBSET" : "LOCKFILE_YAML_PARSE";
       throw new LockfileError(code, cause.message, {
         path: sourcePath ?? cause.path,
         cause,

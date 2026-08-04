@@ -115,3 +115,7 @@ ModuleName/
 
 - Unit-тесты модуля — внутри модуля / рядом с ним, изолированно
 - Интеграция команд и registry — на уровне `app` или package tests
+
+## Дополнительно
+
+- Library-профиль `@bapm/core` — [library-core.md](library-core.md) (не меняет CLI locked rules)

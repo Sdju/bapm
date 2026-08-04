@@ -7,6 +7,10 @@
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "types": ["node"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/modules/*": ["./src/modules/*/index.ts"]
+    },
     "strict": true,
     "noUnusedLocals": true,
     "declaration": true,

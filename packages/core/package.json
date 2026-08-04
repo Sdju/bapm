@@ -30,5 +30,29 @@
     "typescript": "^7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:"
+  },
+  "feod": {
+    "srcRoot": "src",
+    "aliasPrefix": "@",
+    "layerDirs": {
+      "app": "app",
+      "pages": "pages",
+      "modules": "modules",
+      "common": "common",
+      "global": "globals"
+    },
+    "common": {
+      "allowIndex": false
+    },
+    "modules": {
+      "publicEntry": "index.ts",
+      "allowDeepImports": false,
+      "singleFileModules": false
+    },
+    "pages": {
+      "useFileBasedRouting": false,
+      "modulePages": false,
+      "privateModulesPrefix": null
+    }
   }
 }

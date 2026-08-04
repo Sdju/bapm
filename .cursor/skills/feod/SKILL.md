@@ -247,3 +247,4 @@ export async function installCommand(argv: string[]): Promise<number> {
 
 - Матрица импортов и дерево решений — [reference.md](reference.md)
 - Шаблоны scaffold — [examples.md](examples.md)
+- Library-профиль `@bapm/core` — [library-core.md](library-core.md) (отдельно от CLI locked)
