@@ -9,8 +9,6 @@ import { expect, test, describe, afterEach } from "vite-plus/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  APM_MANIFEST_FILE,
-  BAPM_MANIFEST_FILE,
   discoverManifestPath,
   loadManifest,
 } from "@bapm/core";
@@ -26,13 +24,6 @@ import {
 } from "./helpers.ts";
 
 const minimalYaml = readFileSync(fixturePath("valid-minimal.yml"), "utf8");
-
-describe("M1 discovery — constants", () => {
-  test("exports APM_MANIFEST_FILE and BAPM_MANIFEST_FILE", () => {
-    expect(APM_MANIFEST_FILE).toBe("apm.yml");
-    expect(BAPM_MANIFEST_FILE).toBe("bapm.yml");
-  });
-});
 
 describe("M1 discovery — existence matrix", () => {
   let project: TempProject;

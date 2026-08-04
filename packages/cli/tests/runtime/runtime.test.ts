@@ -3,7 +3,7 @@
  * Preserves public runCli contract and help / version / install / unknown behavior.
  */
 import { expect, test } from "vite-plus/test";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 async function withCapturedIo<T>(
   fn: () => Promise<T>,

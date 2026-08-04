@@ -25,8 +25,8 @@ export default defineConfig({
   fmt: {
     // Intentionally invalid YAML fixtures must not be parsed by oxfmt.
     ignorePatterns: [
-      "tests/acceptance/m1-manifest-yaml-dual-read/fixtures/**",
-      "tests/acceptance/m2-lockfile-yaml-dual-read/fixtures/**",
+      "tests/manifest/fixtures/**",
+      "tests/lockfile/fixtures/**",
     ],
   },
 });

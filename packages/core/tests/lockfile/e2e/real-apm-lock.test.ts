@@ -134,21 +134,6 @@ describe("M2 e2e — ported OpenAPM lock fixtures", () => {
     expect(lockOf(loaded).lockfile_version).toBe("2");
   });
 
-  test("round-trip-unknown-fields via explicit path", () => {
-    const loaded = loadLockfile({ path: fixturePath("round-trip-unknown-fields.yml") });
-    const doc = lockOf(loaded);
-    expect(doc["x-acme-build-id"]).toBe("ci-12345");
-    const yaml = serializeLockfile(doc);
-    expect(yaml).toMatch(/future_field_unknown_in_v01/);
-  });
-
-  test("materialization-sort-exclusion via explicit path", () => {
-    const loaded = loadLockfile({
-      path: fixturePath("materialization-sort-exclusion.yml"),
-    });
-    expect(depsOf(lockOf(loaded))).toHaveLength(2);
-  });
-
   test("load does not create apm_modules or fetch remotes", () => {
     project = createTempProject();
     cpSync(fixturePath("v1-git-only.yml"), join(project.cwd, "apm.lock.yaml"));

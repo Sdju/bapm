@@ -4,7 +4,8 @@ export default defineConfig({
   fmt: {
     // Acceptance YAML fixtures include intentionally invalid documents.
     ignorePatterns: [
-      "packages/core/tests/acceptance/**/fixtures/**",
+      "packages/core/tests/manifest/fixtures/**",
+      "packages/core/tests/lockfile/fixtures/**",
     ],
   },
   lint: {

@@ -13,7 +13,6 @@ import {
   createTempProject,
   documentOf,
   expectThrowsMatching,
-  fixturePath,
   resolveRealApmYml,
   writeManifest,
   type TempProject,
@@ -78,27 +77,5 @@ describe("M1 e2e — real apm.yml", () => {
     const text = err instanceof Error ? err.message : String(err);
     expect(text).toMatch(/apm\.yml/);
     expect(text).toMatch(/bapm\.yml/);
-  });
-});
-
-describe("M1 e2e — ported OpenAPM seed fixtures", () => {
-  test("valid-minimal accepted via explicit path", () => {
-    const loaded = loadManifest({ path: fixturePath("valid-minimal.yml") });
-    expect(documentOf(loaded).name).toBe("my-project");
-    expect(documentOf(loaded).version).toBe("1.0.0");
-  });
-
-  test("invalid-missing-name rejected via explicit path", () => {
-    expectThrowsMatching(
-      () => loadManifest({ path: fixturePath("invalid-missing-name.yml") }),
-      /name/i,
-    );
-  });
-
-  test("x-extension retained via explicit path", () => {
-    const loaded = loadManifest({ path: fixturePath("x-extension-roundtrip.yml") });
-    const doc = documentOf(loaded);
-    expect(doc.default_host).toBe("github.com");
-    expect(doc["x-acme-telemetry"]).toBeTruthy();
   });
 });

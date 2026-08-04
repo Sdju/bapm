@@ -11,8 +11,8 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const acceptanceDir = dirname(fileURLToPath(import.meta.url));
-export const fixturesDir = join(acceptanceDir, "fixtures");
+export const suiteDir = dirname(fileURLToPath(import.meta.url));
+export const fixturesDir = join(suiteDir, "fixtures");
 
 /** Absolute path to a vendored fixture under `./fixtures/`. */
 export function fixturePath(name: string): string {
@@ -60,7 +60,7 @@ export function resolveRealApmLock(): {
   path: string;
   source: "samples" | "vendored";
 } {
-  const samples = join(acceptanceDir, "../../../../../.samples/apm/apm.lock.yaml");
+  const samples = join(suiteDir, "../../../../.samples/apm/apm.lock.yaml");
   if (existsSync(samples)) {
     return { path: samples, source: "samples" };
   }

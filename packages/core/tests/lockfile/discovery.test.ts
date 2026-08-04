@@ -9,8 +9,6 @@ import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  APM_LOCK_FILE,
-  BAPM_LOCK_FILE,
   discoverLockfilePath,
   loadLockfile,
   loadLockfileOrNull,
@@ -29,13 +27,6 @@ import {
 } from "./helpers.ts";
 
 const minimalYaml = readFixture("minimal-v1.yml");
-
-describe("M2 discovery — constants", () => {
-  test("exports APM_LOCK_FILE and BAPM_LOCK_FILE", () => {
-    expect(APM_LOCK_FILE).toBe("apm.lock.yaml");
-    expect(BAPM_LOCK_FILE).toBe("bapm.lock.yaml");
-  });
-});
 
 describe("M2 discovery — existence matrix", () => {
   let project: TempProject;

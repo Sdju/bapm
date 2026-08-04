@@ -10,7 +10,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "vite-plus/test";
 
-const coreRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const coreRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const srcRoot = join(coreRoot, "src");
 
 function readText(relativeFromCore: string): string {
