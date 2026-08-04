@@ -16,6 +16,7 @@ import {
   resolveDependencyGraph,
   type ResolvedNode,
 } from "@/modules/Resolver";
+import { assertPolicyGateAllows, type PolicyCandidate } from "@/modules/Policy";
 import {
   discoverPrimitives,
   resolvePrimitiveConflicts,
@@ -34,14 +35,16 @@ import { declaredTargetIds } from "./targets.ts";
 import type { InstallResult, RunInstallOptions } from "./types.ts";
 
 /**
- * Run install: optional archive extract → frozen gate → resolve/download →
- * orphan cleanup → primitives → targets → write deployed_file_hashes.
+ * Run install: optional archive extract → frozen gate → plan → policy gate →
+ * download → orphan cleanup → primitives → targets → write deployed_file_hashes.
  */
 export async function runInstall(options: RunInstallOptions = {}): Promise<InstallResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
   const frozen = options.frozen === true;
   const updateRefs = options.updateRefs === true || options.update === true;
   const forcedTargetId = options.forcedTarget ?? options.forceTarget;
+  const policyPath = options.policyPath ?? options.policy;
+  const noPolicy = options.noPolicy === true;
 
   if (options.archivePath) {
     await extractArchiveIntoProject(options.archivePath, cwd);
@@ -60,6 +63,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   let lockPath: string | undefined;
   let nodes: ResolvedNode[] = [];
   let lockDocument: LockfileDocument | undefined;
+  let policyDiagnostics: unknown[] = [];
 
   const ports = {
     gitRemote: options.gitRemote,
@@ -74,9 +78,16 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       updateRefs: false,
       maxDepth: options.maxDepth,
       existingLock: loaded?.document ?? null,
+      skipDownload: true,
       ...ports,
     });
     nodes = graph.nodes;
+    policyDiagnostics = applyPolicyGate({
+      cwd,
+      policyPath,
+      noPolicy,
+      nodes,
+    });
     const packages = nodes
       .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
       .map((n) => ({
@@ -106,10 +117,14 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       parallelDownloads: options.parallelDownloads,
       maxDepth: options.maxDepth,
       verbose: options.verbose,
+      policyPath,
+      policy: policyPath,
+      noPolicy,
       ...ports,
     });
     lockPath = result.lockPath;
     nodes = result.nodes;
+    policyDiagnostics = result.policyDiagnostics ?? [];
     const reloaded = loadLockfileOrNull({ cwd });
     lockDocument = reloaded?.document;
     if (reloaded) {
@@ -200,12 +215,67 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     modulesDir: join(cwd, APM_MODULES_DIR),
     activeTargets,
     primitivesCount: resolved.primitives.length,
-    diagnostics: resolved.diagnostics,
+    diagnostics: [...policyDiagnostics, ...resolved.diagnostics],
+    policyDiagnostics,
   };
 }
 
 /** Alias preferred by design docs. */
 export const installProject = runInstall;
+
+function applyPolicyGate(args: {
+  cwd: string;
+  policyPath?: string;
+  noPolicy: boolean;
+  nodes: ResolvedNode[];
+}): unknown[] {
+  const candidates = nodesToCandidates(args.nodes);
+  const gate = assertPolicyGateAllows({
+    cwd: args.cwd,
+    policyPath: args.policyPath,
+    policy: args.policyPath,
+    noPolicy: args.noPolicy,
+    candidates,
+    dependencies: candidates.map((c) => ({
+      name: c.id,
+      id: c.id,
+      ref: c.ref,
+      constraint: c.constraint,
+      direct: c.direct,
+      depth: c.depth,
+      path: c.path,
+      source: c.source,
+    })),
+    graphDepth: args.nodes.reduce((m, n) => Math.max(m, n.depth ?? 0), 0),
+    maxDepthObserved: args.nodes.reduce((m, n) => Math.max(m, n.depth ?? 0), 0),
+  });
+  const out: unknown[] = [...gate.diagnostics];
+  if (gate.result?.outcome === "warn") {
+    for (const v of gate.result.findings ?? gate.result.violations) {
+      out.push({
+        code: "POLICY_WARN",
+        message: v.message,
+        policy: true,
+        enforcement: "warn",
+      });
+    }
+  }
+  return out;
+}
+
+function nodesToCandidates(nodes: ResolvedNode[]): PolicyCandidate[] {
+  return nodes.map((n) => ({
+    id: n.name,
+    name: n.name,
+    ref: n.resolved_commit ?? n.constraint,
+    constraint: n.constraint ?? n.resolved_commit,
+    depth: n.depth,
+    direct: n.depth === 1,
+    kind: n.kind,
+    path: n.path,
+    source: n.kind === "local" ? "local" : undefined,
+  }));
+}
 
 async function extractArchiveIntoProject(archivePath: string, cwd: string): Promise<void> {
   const resolvedArchive = resolve(archivePath);

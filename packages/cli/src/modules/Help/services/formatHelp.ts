@@ -41,6 +41,8 @@ Options:
   --frozen          Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --target <id>     Force activation of a registered host target (e.g. cursor)
   --update          Re-resolve mutable refs (rejected with --frozen)
+  --policy <path>   Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
+  --no-policy       Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --help, -h        Show this help
 
 Unknown flags are rejected. --frozen cannot be combined with --update.

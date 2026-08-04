@@ -224,6 +224,46 @@ export {
   describeSecretRefuse,
 } from "@/modules/Pack";
 
+export type {
+  DiscoverPolicyOptions,
+  DiscoveredPolicy,
+  EvaluatePolicyOptions,
+  EvaluatePolicyResult,
+  LoadPolicyOptions,
+  LoadPolicyResult,
+  ParsePolicyResult,
+  PolicyCandidate,
+  PolicyDependencies,
+  PolicyDependencyInput,
+  PolicyDocument,
+  PolicyEnforcement,
+  PolicyGateOptions,
+  PolicyGateResult,
+  PolicyViolation,
+  PolicyErrorCode,
+  PolicyWarning,
+} from "@/modules/Policy";
+
+export {
+  PolicyError,
+  APM_POLICY_FILE,
+  BAPM_POLICY_FILE,
+  DEFAULT_POLICY_PROVIDERS,
+  POLICY_DISCOVERY_PROVIDERS,
+  defaultPolicyProviders,
+  discoverPolicyPath,
+  discoverLocalPolicyPath,
+  loadPolicy,
+  parsePolicy,
+  parsePolicyDocument,
+  evaluateInstallPolicy,
+  evaluatePolicy,
+  evaluatePolicyRules,
+  isPolicyDisabled,
+  runPolicyGate,
+  assertPolicyGateAllows,
+} from "@/modules/Policy";
+
 export const BAPM_NAME = "bapm";
 
 export function getVersion(): string {

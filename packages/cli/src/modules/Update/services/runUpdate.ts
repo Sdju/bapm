@@ -13,12 +13,16 @@ export function parseUpdateArgs(argv: string[]): {
   yes: boolean;
   dryRun: boolean;
   packages: string[];
+  policyPath?: string;
+  noPolicy: boolean;
   help?: boolean;
   error?: string;
 } {
   let yes = false;
   let dryRun = false;
   let help = false;
+  let policyPath: string | undefined;
+  let noPolicy = false;
   const packages: string[] = [];
 
   for (let i = 0; i < argv.length; i++) {
@@ -35,12 +39,32 @@ export function parseUpdateArgs(argv: string[]): {
       dryRun = true;
       continue;
     }
+    if (arg === "--no-policy") {
+      noPolicy = true;
+      continue;
+    }
+    if (arg === "--policy") {
+      const next = argv[i + 1];
+      if (!next || next.startsWith("-")) {
+        return { yes, dryRun, packages, noPolicy, error: "Missing value for --policy <path>" };
+      }
+      policyPath = next;
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--policy=")) {
+      policyPath = arg.slice("--policy=".length);
+      if (!policyPath) {
+        return { yes, dryRun, packages, noPolicy, error: "Missing value for --policy=<path>" };
+      }
+      continue;
+    }
     if (arg.startsWith("-")) {
-      return { yes, dryRun, packages, error: `Unknown update flag: ${arg}` };
+      return { yes, dryRun, packages, noPolicy, policyPath, error: `Unknown update flag: ${arg}` };
     }
     packages.push(arg);
   }
-  return { yes, dryRun, packages, help };
+  return { yes, dryRun, packages, policyPath, noPolicy, help };
 }
 
 export function formatUpdateHelp(deps: LifecycleCliDeps): string {
@@ -52,6 +76,8 @@ Usage:
 Options:
   -y, --yes       Apply without interactive confirm
   --dry-run       Print plan only; do not mutate lock/modules
+  --policy <path> Use explicit policy file
+  --no-policy     Skip policy discovery and checks
   --help, -h      Show this help
 `;
 }
@@ -90,6 +116,9 @@ export async function runUpdateCli(
       dryRun: parsed.dryRun,
       packages: parsed.packages.length ? parsed.packages : undefined,
       scope: parsed.packages.length ? parsed.packages : undefined,
+      policyPath: parsed.policyPath,
+      policy: parsed.policyPath,
+      noPolicy: parsed.noPolicy,
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),

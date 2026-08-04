@@ -32,6 +32,11 @@ export type RunUpdateOptions = {
   confirm?: () => boolean | Promise<boolean>;
   /** Whether stdin is a TTY (default: process.stdin.isTTY). */
   isTTY?: boolean;
+  /** Explicit policy file path. */
+  policyPath?: string;
+  policy?: string;
+  /** Skip policy gate. */
+  noPolicy?: boolean;
 };
 
 export type UpdateResult = {

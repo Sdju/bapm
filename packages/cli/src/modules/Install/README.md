@@ -1,14 +1,21 @@
 # Install
 
 CLI Install module — thin FEOD wrapper over `@bapm/core` install + cursor
-host materialize. Parses `--frozen`, `--target <id>`, `--update`, and an optional
-local pack `.zip` path (M7 install-from-archive); hard-errors unknown flags;
-rejects frozen+`--update`.
+host materialize. Parses `--frozen`, `--target <id>`, `--update`, `--policy`,
+`--no-policy`, and an optional local pack `.zip` path (M7 install-from-archive);
+hard-errors unknown flags; rejects frozen+`--update`.
 
 ## Public API
 
 - `createInstall` / `InstallApi`
 - `parseInstallArgs` / `formatInstallHelp`
+
+## Policy flags (M8)
+
+- `--policy <path>` — explicit policy file (wins over dual-read siblings)
+- `--no-policy` — skip gate (also `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1`)
+
+Thin `bapm policy status` deferred — diagnostics surface via install/lock.
 
 ## Archive path
 

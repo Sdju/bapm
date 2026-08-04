@@ -15,7 +15,7 @@ Transitive dependency classify, BFS resolve, modules-cache download, and lock po
 
 - **Modules dir:** `apm_modules` (APM wire parity; `bapm_modules` alias deferred)
 - **Diamond policy:** OpenAPM **intersection-pick** (highest in ∩); **not** APM first-wins
-- **Policy gate:** skipped until M8
+- **Policy gate:** plan → gate → download (M8); see `@/modules/Policy`
 - **Registry:** classify works; fetch fails closed as deferred/unsupported
 - **Hash minimum:** git pins MUST include `resolved_commit` (40-hex); `tree_sha256` optional/cheap only
 

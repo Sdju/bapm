@@ -21,6 +21,8 @@ Options:
   --frozen          Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --target <id>     Force activation of a registered host target (e.g. cursor)
   --update          Re-resolve mutable refs (rejected with --frozen)
+  --policy <path>   Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
+  --no-policy       Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --help, -h        Show this help
 
 Notes:
@@ -34,6 +36,8 @@ export function parseInstallArgs(argv: string[]): {
   update: boolean;
   target?: string;
   archivePath?: string;
+  policyPath?: string;
+  noPolicy: boolean;
   help?: boolean;
   error?: string;
 } {
@@ -41,6 +45,8 @@ export function parseInstallArgs(argv: string[]): {
   let update = false;
   let target: string | undefined;
   let archivePath: string | undefined;
+  let policyPath: string | undefined;
+  let noPolicy = false;
   let help = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -57,12 +63,38 @@ export function parseInstallArgs(argv: string[]): {
       update = true;
       continue;
     }
+    if (arg === "--no-policy") {
+      noPolicy = true;
+      continue;
+    }
+    if (arg === "--policy") {
+      const next = argv[i + 1];
+      if (!next || next.startsWith("-")) {
+        return {
+          frozen,
+          update,
+          noPolicy,
+          error: "Missing value for --policy <path>",
+        };
+      }
+      policyPath = next;
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--policy=")) {
+      policyPath = arg.slice("--policy=".length);
+      if (!policyPath) {
+        return { frozen, update, noPolicy, error: "Missing value for --policy=<path>" };
+      }
+      continue;
+    }
     if (arg === "--target") {
       const next = argv[i + 1];
       if (!next || next.startsWith("-")) {
         return {
           frozen,
           update,
+          noPolicy,
           error: "Missing value for --target <id>",
         };
       }
@@ -73,7 +105,7 @@ export function parseInstallArgs(argv: string[]): {
     if (arg.startsWith("--target=")) {
       target = arg.slice("--target=".length);
       if (!target) {
-        return { frozen, update, error: "Missing value for --target=<id>" };
+        return { frozen, update, noPolicy, error: "Missing value for --target=<id>" };
       }
       continue;
     }
@@ -82,6 +114,8 @@ export function parseInstallArgs(argv: string[]): {
         frozen,
         update,
         target,
+        noPolicy,
+        policyPath,
         error: `Unknown install flag: ${arg}`,
       };
     }
@@ -92,6 +126,8 @@ export function parseInstallArgs(argv: string[]): {
         update,
         target,
         archivePath,
+        noPolicy,
+        policyPath,
         error: `Unexpected argument: ${arg}`,
       };
     }
@@ -104,11 +140,13 @@ export function parseInstallArgs(argv: string[]): {
       update,
       target,
       archivePath,
+      noPolicy,
+      policyPath,
       error: "Frozen mode rejects --update (frozen+update mutation rejected)",
     };
   }
 
-  return { frozen, update, target, archivePath, help };
+  return { frozen, update, target, archivePath, policyPath, noPolicy, help };
 }
 
 function resolveLocalZipArchive(
@@ -165,6 +203,8 @@ async function runCoreInstall(
     frozen: boolean;
     update: boolean;
     target?: string;
+    policyPath?: string;
+    noPolicy: boolean;
   },
   archivePath: string | undefined,
 ): Promise<InstallResult> {
@@ -172,7 +212,7 @@ async function runCoreInstall(
   registry.register(createCursorTarget());
 
   try {
-    await coreRunInstall({
+    const result = await coreRunInstall({
       cwd: options.cwd,
       archivePath,
       frozen: parsed.frozen,
@@ -181,10 +221,14 @@ async function runCoreInstall(
       forcedTarget: parsed.target,
       forceTarget: parsed.target,
       targetRegistry: registry,
+      policyPath: parsed.policyPath,
+      policy: parsed.policyPath,
+      noPolicy: parsed.noPolicy,
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),
     });
+    emitPolicyDiagnostics(deps.name, result.policyDiagnostics ?? result.diagnostics);
     return { ok: true };
   } catch (error) {
     const message =
@@ -195,5 +239,16 @@ async function runCoreInstall(
           : String(error);
     console.error(`${deps.name}: ${message}`);
     return { ok: false, message };
+  }
+}
+
+function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): void {
+  for (const d of diagnostics) {
+    if (!d || typeof d !== "object") continue;
+    const rec = d as Record<string, unknown>;
+    const code = typeof rec.code === "string" ? rec.code : "";
+    const message = typeof rec.message === "string" ? rec.message : "";
+    if (!/policy|enforcement|violat|denied/i.test(`${code}\n${message}`)) continue;
+    console.error(`${name}: policy warning: ${message || code}`);
   }
 }

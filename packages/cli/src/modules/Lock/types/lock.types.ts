@@ -19,5 +19,8 @@ export type LockDeps = {
     updateRefs?: boolean;
     parallelDownloads?: number;
     verbose?: boolean;
+    policyPath?: string;
+    policy?: string;
+    noPolicy?: boolean;
   }) => Promise<{ lockPath: string }>;
 };

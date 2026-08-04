@@ -85,6 +85,14 @@ export type ResolveDependencyGraphOptions = ResolvePorts & {
   maxDepth?: number;
   /** When set, used for warm replay instead of loading from disk. */
   existingLock?: { dependencies?: Array<Record<string, unknown>> } | null;
+  /**
+   * Plan-only resolve: do not create `apm_modules` or download local path deps.
+   * Local packages are read from source paths. Git still materializes when needed
+   * to read child manifests (residual pl-002 gap for cold git trees).
+   */
+  skipDownload?: boolean;
+  /** Alias for `skipDownload` (plan → gate → download). */
+  planOnly?: boolean;
 };
 
 export type DownloadPackageSpec = {
@@ -115,10 +123,18 @@ export type ResolveAndLockOptions = ResolvePorts & {
   parallelDownloads?: number;
   maxDepth?: number;
   verbose?: boolean;
+  /** Explicit policy file path for install/lock gate. */
+  policyPath?: string;
+  /** Alias for `policyPath`. */
+  policy?: string;
+  /** Skip policy discovery + checks. */
+  noPolicy?: boolean;
 };
 
 export type ResolveAndLockResult = {
   document: Record<string, unknown>;
   lockPath: string;
   nodes: ResolvedNode[];
+  /** Policy gate diagnostics when policy applied (M8). */
+  policyDiagnostics?: unknown[];
 };

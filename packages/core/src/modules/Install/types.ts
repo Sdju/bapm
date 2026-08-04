@@ -31,6 +31,12 @@ export type RunInstallOptions = {
    * (M7 install-from-archive round-trip).
    */
   archivePath?: string;
+  /** Explicit policy file path (`--policy`). */
+  policyPath?: string;
+  /** Alias for `policyPath`. */
+  policy?: string;
+  /** Skip policy discovery + checks (`--no-policy` / env disable). */
+  noPolicy?: boolean;
 };
 
 /** Alias for design naming flexibility. */
@@ -43,6 +49,8 @@ export type InstallResult = {
   activeTargets: string[];
   primitivesCount: number;
   diagnostics: unknown[];
+  /** Policy gate warnings / findings (M8). */
+  policyDiagnostics?: unknown[];
 };
 
 export type EnforceFrozenOptions = {

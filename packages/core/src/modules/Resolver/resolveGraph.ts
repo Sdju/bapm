@@ -117,6 +117,7 @@ export async function resolveDependencyGraph(
   const gitRemote: GitRemote = options.gitRemote ?? createDefaultGitRemote();
   const tagLister: TagLister = options.tagLister ?? createDefaultTagLister();
   const downloader: Downloader = options.downloader ?? createDefaultDownloader();
+  const skipDownload = options.skipDownload === true || options.planOnly === true;
 
   const { document: manifest } = loadManifest({ cwd });
   const rootName = manifest.name;
@@ -136,7 +137,10 @@ export async function resolveDependencyGraph(
       : (loadLockfileOrNull({ cwd })?.document ?? null);
   const warmByIdentity = indexWarmPins(warmLock);
 
-  ensureModulesRoot(cwd);
+  // Plan-only: defer apm_modules creation until downloadPackages (pl-002).
+  if (!skipDownload) {
+    ensureModulesRoot(cwd);
+  }
 
   const queue: QueueItem[] = [];
   const visitOrder: string[] = [];
@@ -184,6 +188,7 @@ export async function resolveDependencyGraph(
       await resolveLocal(item, classified, {
         cwd,
         downloader,
+        skipDownload,
         edgesByIdentity,
         visitOrder,
         queue,
@@ -198,6 +203,7 @@ export async function resolveDependencyGraph(
       gitRemote,
       tagLister,
       downloader,
+      skipDownload,
       updateRefs,
       warmByIdentity,
       edgesByIdentity,
@@ -275,6 +281,7 @@ async function resolveLocal(
   ctx: {
     cwd: string;
     downloader: Downloader;
+    skipDownload?: boolean;
     edgesByIdentity: Map<string, EdgeRecord[]>;
     visitOrder: string[];
     queue: QueueItem[];
@@ -309,9 +316,11 @@ async function resolveLocal(
     );
   }
 
-  // Materialize local into modules cache (copy) for lock parity — optional but helpful
+  // Plan-only: read local source in place; materialize later via downloadPackages.
   const dest = modulesCacheDest(ctx.cwd, identity.replace(/^local:/, "local_"));
-  await ctx.downloader.download({ path: abs, dest, identity });
+  if (!ctx.skipDownload) {
+    await ctx.downloader.download({ path: abs, dest, identity });
+  }
 
   const record: EdgeRecord = {
     identity,
@@ -321,7 +330,7 @@ async function resolveLocal(
     chain,
     name,
     path: abs,
-    packageRoot: existsSync(dest) ? dest : abs,
+    packageRoot: !ctx.skipDownload && existsSync(dest) ? dest : abs,
     repo_url: identity,
   };
   pushEdge(ctx.edgesByIdentity, record);
@@ -354,6 +363,7 @@ async function resolveGit(
     gitRemote: GitRemote;
     tagLister: TagLister;
     downloader: Downloader;
+    skipDownload?: boolean;
     updateRefs: boolean;
     warmByIdentity: Map<string, WarmPin>;
     edgesByIdentity: Map<string, EdgeRecord[]>;
@@ -424,14 +434,19 @@ async function resolveGit(
     }
   }
 
-  // Download to read child manifest
+  // Download to read child manifest (needed for transitive discovery).
+  // When skipDownload and warm cache exists, reuse it; otherwise still download
+  // for cold git trees (residual pl-002 gap vs pure plan-only).
   const dest = modulesCacheDest(ctx.cwd, identity, resolved_commit);
-  await ctx.downloader.download({
-    repoUrl: gitUrl,
-    commit: resolved_commit,
-    dest,
-    identity,
-  });
+  const canReuseWarm = ctx.skipDownload === true && existsSync(dest);
+  if (!canReuseWarm) {
+    await ctx.downloader.download({
+      repoUrl: gitUrl,
+      commit: resolved_commit,
+      dest,
+      identity,
+    });
+  }
 
   let childName = warm?.name ?? nameHint;
   let childDeps: DependencyEntry[] = [];

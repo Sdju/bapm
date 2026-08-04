@@ -73,6 +73,9 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
     purgeInstallPaths: true,
     parallelDownloads: options.parallelDownloads,
     maxDepth: options.maxDepth,
+    policyPath: options.policyPath ?? options.policy,
+    policy: options.policy ?? options.policyPath,
+    noPolicy: options.noPolicy,
     ...ports,
   });
 
@@ -81,6 +84,9 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
       cwd,
       frozen: false,
       updateRefs: false,
+      policyPath: options.policyPath ?? options.policy,
+      policy: options.policy ?? options.policyPath,
+      noPolicy: options.noPolicy,
       ...ports,
     });
   } catch {

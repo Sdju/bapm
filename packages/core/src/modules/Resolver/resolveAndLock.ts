@@ -6,6 +6,11 @@ import {
   type LockedDependency,
   type LockfileDocument,
 } from "@/modules/Lockfile";
+import {
+  assertPolicyGateAllows,
+  type PolicyCandidate,
+  type PolicyGateResult,
+} from "@/modules/Policy";
 import { downloadPackages } from "./download.ts";
 import { purgeModulesInstallPaths } from "./purge.ts";
 import { resolveDependencyGraph } from "./resolveGraph.ts";
@@ -16,12 +21,11 @@ import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
 import { normalizeRepoIdentity } from "./identity.ts";
 
 /**
- * Orchestrate: load manifest → resolve → download missing → write lock via M2.
- * No target deploy. Policy skipped until M8.
+ * Orchestrate: load manifest → resolve plan → policy gate → download → write lock.
  */
 export async function resolveAndLock(
   options: ResolveAndLockOptions = {},
-): Promise<ResolveAndLockResult> {
+): Promise<ResolveAndLockResult & { policyDiagnostics?: unknown[] }> {
   const cwd = resolve(options.cwd ?? process.cwd());
   const updateRefs = options.updateRefs === true;
   const parallelDownloads = options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS;
@@ -48,6 +52,7 @@ export async function resolveAndLock(
     }
   }
 
+  // Plan only — no durable modules for local path deps (pl-002).
   const graph = await resolveDependencyGraph({
     cwd,
     updateRefs,
@@ -58,10 +63,30 @@ export async function resolveAndLock(
     tagLister: options.tagLister,
     downloader: options.downloader,
     existingLock,
+    skipDownload: true,
   });
 
-  // Ensure all nodes are materialized (resolve already downloads for transitive
-  // discovery; re-run downloadPackages for completeness / parallel fill)
+  const candidates = nodesToPolicyCandidates(graph.nodes);
+  const gate = assertPolicyGateAllows({
+    cwd,
+    policyPath: options.policyPath ?? options.policy,
+    policy: options.policy ?? options.policyPath,
+    noPolicy: options.noPolicy,
+    candidates,
+    dependencies: candidates.map((c) => ({
+      name: c.id,
+      id: c.id,
+      ref: c.ref,
+      constraint: c.constraint,
+      direct: c.direct,
+      depth: c.depth,
+      path: c.path,
+      source: c.source,
+    })),
+    graphDepth: maxNodeDepth(graph.nodes),
+    maxDepthObserved: maxNodeDepth(graph.nodes),
+  });
+
   const packages = graph.nodes
     .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
     .map((n) => ({
@@ -90,7 +115,44 @@ export async function resolveAndLock(
     document: document as unknown as Record<string, unknown>,
     lockPath,
     nodes: graph.nodes,
+    policyDiagnostics: collectGateDiagnostics(gate),
   };
+}
+
+export function nodesToPolicyCandidates(nodes: ResolvedNode[]): PolicyCandidate[] {
+  return nodes.map((n) => ({
+    id: n.name,
+    name: n.name,
+    ref: n.resolved_commit ?? n.constraint,
+    constraint: n.constraint ?? n.resolved_commit,
+    depth: n.depth,
+    direct: n.depth === 1,
+    kind: n.kind,
+    path: n.path,
+    source: n.kind === "local" ? "local" : undefined,
+  }));
+}
+
+export function maxNodeDepth(nodes: ResolvedNode[]): number {
+  return nodes.reduce((m, n) => Math.max(m, n.depth ?? 0), 0);
+}
+
+export function collectGateDiagnostics(gate: PolicyGateResult): unknown[] {
+  const out: unknown[] = [...gate.diagnostics];
+  if (gate.result) {
+    for (const w of gate.result.warnings) out.push(w);
+    if (gate.result.outcome === "warn") {
+      for (const v of gate.result.findings ?? gate.result.violations) {
+        out.push({
+          code: "POLICY_WARN",
+          message: v.message,
+          policy: true,
+          enforcement: "warn",
+        });
+      }
+    }
+  }
+  return out;
 }
 
 function collectPurgeNames(
