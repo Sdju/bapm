@@ -1,0 +1,2 @@
+# Intentionally invalid / non-code YAML fixtures (oxfmt must not parse them)
+tests/acceptance/**/fixtures/
