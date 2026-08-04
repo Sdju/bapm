@@ -62,3 +62,14 @@ Pack MUST NOT require Claude/marketplace `plugin.json` emission, `--format plugi
 #### Scenario: Default pack is plain archive not plugin format
 - **WHEN** pack runs with default M7 archive options
 - **THEN** the artifact MUST be a plain zip-of-tree layout and MUST NOT require host plugin.json bundles for success
+
+### Requirement: Pack remains distinct from registry publish flat zip
+M7 plain pack archive semantics MUST remain unchanged as the producer pack product. Registry publish builds a separate **flat** APM-wire zip (see `producer-publish`). Pack MAY share low-level zip create/extract helpers with publish but MUST NOT be rewritten into the registry publish layout or require registry HTTP.
+
+#### Scenario: Pack archive mode still produces M7 plain zip
+- **WHEN** `pack --archive` runs on a conforming project after M10
+- **THEN** the artifact MUST follow M7 plain-zip producer-pack rules and MUST NOT require a registry PUT
+
+#### Scenario: Publish does not replace pack command
+- **WHEN** both `pack` and `publish` are available
+- **THEN** each MUST remain independently invocable with its own flag surface
