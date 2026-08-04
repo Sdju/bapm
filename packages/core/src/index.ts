@@ -38,8 +38,28 @@ export { loadManifest } from "./manifest/load.ts";
 export { parseManifest, parseManifestDocument } from "./manifest/parse.ts";
 export { loadYamlDocument } from "./manifest/yaml-load.ts";
 
+export type {
+  DiscoverLockfileOptions,
+  DiscoveredLockfile,
+  LoadLockfileOptions,
+  LoadLockfileResult,
+  LockedDependency,
+  LockfileDocument,
+  LockfileInput,
+  LockFilename,
+  WriteLockfileOptions,
+} from "./lockfile/types.ts";
+
+export type { LockfileErrorCode } from "./lockfile/errors.ts";
+export { LockfileError } from "./lockfile/errors.ts";
+
+export { APM_LOCK_FILE, BAPM_LOCK_FILE, discoverLockfilePath } from "./lockfile/discover.ts";
+export { loadLockfile, loadLockfileOrNull, writeLockfile } from "./lockfile/load.ts";
+export { parseLockfile, parseLockfileDocument } from "./lockfile/parse.ts";
+export { serializeLockfile } from "./lockfile/serialize.ts";
+export { isSemanticallyEquivalent } from "./lockfile/equivalence.ts";
+
 export const BAPM_NAME = "bapm";
-export const BAPM_LOCK_FILE = "bapm.lock.yaml";
 
 export function getVersion(): string {
   return "0.0.0";

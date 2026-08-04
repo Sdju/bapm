@@ -1,14 +1,22 @@
 import { expect, test } from "vite-plus/test";
 import {
+  APM_LOCK_FILE,
   APM_MANIFEST_FILE,
+  BAPM_LOCK_FILE,
   BAPM_MANIFEST_FILE,
+  discoverLockfilePath,
   discoverManifestPath,
   getVersion,
+  isSemanticallyEquivalent,
+  loadLockfile,
   loadManifest,
+  parseLockfile,
   parseManifest,
   parseManifestDocument,
+  serializeLockfile,
+  writeLockfile,
 } from "../src/index.ts";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -93,6 +101,54 @@ test("discoverManifestPath + loadManifest round-trip on temp bapm.yml", () => {
     const loaded = loadManifest({ cwd });
     expect(loaded.document.name).toBe("unit");
     expect(loaded.sourceFilename).toBe("bapm.yml");
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
+test("lockfile filename constants", () => {
+  expect(APM_LOCK_FILE).toBe("apm.lock.yaml");
+  expect(BAPM_LOCK_FILE).toBe("bapm.lock.yaml");
+});
+
+test("parseLockfile accepts minimal lock and serialize emits version", () => {
+  const doc = parseLockfile('lockfile_version: "1"\ndependencies: []\n');
+  expect(doc.lockfile_version).toBe("1");
+  expect(doc.dependencies).toEqual([]);
+  expect(serializeLockfile(doc)).toMatch(/lockfile_version:\s*["']?1["']?/);
+});
+
+test("isSemanticallyEquivalent ignores generated_at / apm_version", () => {
+  const a = parseLockfile(`lockfile_version: "1"
+generated_at: "2020-01-01T00:00:00Z"
+apm_version: "0.1.0"
+dependencies: []
+`);
+  const b = parseLockfile(`lockfile_version: "1"
+generated_at: "2099-01-01T00:00:00Z"
+apm_version: "9.9.9"
+dependencies: []
+`);
+  expect(isSemanticallyEquivalent(a, b)).toBe(true);
+});
+
+test("discoverLockfilePath + writeLockfile fresh create bapm.lock.yaml", () => {
+  const cwd = mkdtempSync(join(tmpdir(), "bapm-core-lock-"));
+  try {
+    writeFileSync(join(cwd, "apm.lock.yaml"), 'lockfile_version: "1"\ndependencies: []\n', "utf8");
+    const found = discoverLockfilePath({ cwd });
+    expect(found.filename).toBe("apm.lock.yaml");
+    const loaded = loadLockfile({ cwd });
+    expect(loaded.document.lockfile_version).toBe("1");
+
+    const fresh = mkdtempSync(join(tmpdir(), "bapm-core-lock-fresh-"));
+    try {
+      writeLockfile(loaded.document, { cwd: fresh });
+      expect(existsSync(join(fresh, "bapm.lock.yaml"))).toBe(true);
+      expect(existsSync(join(fresh, "apm.lock.yaml"))).toBe(false);
+    } finally {
+      rmSync(fresh, { recursive: true, force: true });
+    }
   } finally {
     rmSync(cwd, { recursive: true, force: true });
   }
