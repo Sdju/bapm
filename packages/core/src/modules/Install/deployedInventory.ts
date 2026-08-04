@@ -104,7 +104,8 @@ function normalizeHashValue(value: string): string {
 
 /**
  * Collect deployed hash / presence violations without throwing (for audit --ci).
- * No-op (empty) when no inventory present. Does not fail on missing tree_sha256.
+ * No-op (empty) when no inventory present. tree_sha256 is handled separately via
+ * `collectTreeSha256Violations` (lk-015).
  */
 export function collectDeployedHashViolations(args: {
   cwd: string;

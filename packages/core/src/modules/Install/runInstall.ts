@@ -13,7 +13,12 @@ import {
   type DependencyEntry,
   type ObjectDependency,
 } from "@/modules/Manifest";
-import { loadLockfileOrNull, writeLockfile, type LockfileDocument } from "@/modules/Lockfile";
+import {
+  collectTreeSha256Violations,
+  loadLockfileOrNull,
+  writeLockfile,
+  type LockfileDocument,
+} from "@/modules/Lockfile";
 import {
   APM_MODULES_DIR,
   DEFAULT_PARALLEL_DOWNLOADS,
@@ -128,6 +133,8 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     // lk-017 lite: re-verify deployed_file_hashes when present (before harness mutation)
     if (lockDocument) {
       verifyDeployedFileHashes({ cwd, document: lockDocument });
+      // lk-015: re-verify git tree_sha256 fail-closed
+      verifyTreeSha256OrThrow({ cwd, document: lockDocument });
     }
   } else {
     const result = await resolveAndLock({
@@ -425,6 +432,22 @@ async function deployMcpAfterPolicy(args: {
 
 /** Alias preferred by design docs. */
 export const installProject = runInstall;
+
+function verifyTreeSha256OrThrow(args: { cwd: string; document: LockfileDocument }): void {
+  const violations = collectTreeSha256Violations(args);
+  if (violations.length === 0) return;
+  const first = violations[0]!;
+  throw new InstallError("INSTALL_FROZEN_HASH_MISMATCH", first.message, {
+    details: {
+      entry: first.entry,
+      kind: first.kind,
+      expected: first.expected,
+      observed: first.observed,
+      integrity: "tree_sha256",
+      frozen: true,
+    },
+  });
+}
 
 function applyPolicyGate(args: {
   cwd: string;

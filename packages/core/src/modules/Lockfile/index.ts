@@ -5,12 +5,13 @@
  *
  * - Types: `DiscoverLockfileOptions`, `DiscoveredLockfile`, `LoadLockfileOptions`,
  *   `LoadLockfileResult`, `LockedDependency`, `LockfileDocument`, `LockfileInput`,
- *   `LockFilename`, `WriteLockfileOptions`, `LockfileErrorCode`
+ *   `LockFilename`, `WriteLockfileOptions`, `LockfileErrorCode`, `TreeSha256Violation`
  * - Errors: `LockfileError`
  * - Constants: `APM_LOCK_FILE`, `BAPM_LOCK_FILE`
  * - Functions: `discoverLockfilePath`, `loadLockfile`, `loadLockfileOrNull`,
  *   `writeLockfile`, `parseLockfile`, `parseLockfileDocument`, `serializeLockfile`,
- *   `isSemanticallyEquivalent`
+ *   `isSemanticallyEquivalent`, `computeCanonicalTreeSha256`,
+ *   `collectTreeSha256Violations`, …
  *
  * ## Example
  *
@@ -39,3 +40,12 @@ export { loadLockfile, loadLockfileOrNull, writeLockfile } from "./load.ts";
 export { parseLockfile, parseLockfileDocument } from "./parse.ts";
 export { serializeLockfile } from "./serialize.ts";
 export { isSemanticallyEquivalent } from "./equivalence.ts";
+export type { TreeSha256Violation } from "./treeSha256.ts";
+export {
+  computeCanonicalTreeSha256,
+  treeSha256Equal,
+  formatTreeSha256Violation,
+  isGitSourcedLockEntry,
+  locateGitPackageTree,
+  collectTreeSha256Violations,
+} from "./treeSha256.ts";

@@ -1,6 +1,8 @@
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { loadManifest } from "@/modules/Manifest";
 import {
+  computeCanonicalTreeSha256,
   loadLockfileOrNull,
   writeLockfile,
   type LockedDependency,
@@ -23,6 +25,7 @@ import type { ResolveAndLockOptions, ResolveAndLockResult, ResolvedNode } from "
 import { DEFAULT_PARALLEL_DOWNLOADS } from "./constants.ts";
 import { classifyDependencyRef } from "./classify.ts";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
+import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity } from "./identity.ts";
 
 /**
@@ -325,6 +328,26 @@ function buildLockDocument(
     // Extra diagnostic fields accepted by M2 (unknown keys retained)
     (entry as Record<string, unknown>).resolved_by = n.resolved_by;
     (entry as Record<string, unknown>).depth = n.depth;
+
+    // lk-015: record canonical tree_sha256 for git-literal / git-semver
+    const treeRoot = n.packageRoot;
+    if (!treeRoot || !existsSync(treeRoot)) {
+      throw new ResolverError(
+        "RESOLVE_FAILED",
+        `Cannot compute tree_sha256: missing package tree for git entry ${n.name} (${n.repo_url ?? n.identity})`,
+        { details: { name: n.name, packageRoot: treeRoot } },
+      );
+    }
+    try {
+      entry.tree_sha256 = computeCanonicalTreeSha256(treeRoot);
+    } catch (cause) {
+      throw new ResolverError(
+        "RESOLVE_FAILED",
+        `Failed to compute tree_sha256 for git entry ${n.name} (${n.repo_url ?? n.identity})`,
+        { cause, details: { name: n.name, packageRoot: treeRoot } },
+      );
+    }
+
     deps.push(entry);
   }
 

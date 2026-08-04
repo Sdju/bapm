@@ -100,7 +100,7 @@ describe("core audit --ci (lk-017 / sc-001)", () => {
     expect(exitCodeOf(result)).not.toBe(0);
   });
 
-  test("§21 missing tree_sha256 alone does not fail CI gate", async () => {
+  test("§21 missing tree_sha256 on git entry fails CI gate (lk-015)", async () => {
     project = createTempProject();
     writeManifest(
       project.cwd,
@@ -117,6 +117,7 @@ describe("core audit --ci (lk-017 / sc-001)", () => {
     );
 
     const result = await getRunAuditCi()({ cwd: project.cwd, ci: true });
-    expect(exitCodeOf(result)).toBe(0);
+    expect(exitCodeOf(result)).not.toBe(0);
+    expect(diagnosticsText(result)).toMatch(/git-pkg|tree_sha256/i);
   });
 });

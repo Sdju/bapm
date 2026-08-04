@@ -1,11 +1,11 @@
 import { resolve } from "node:path";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { collectTreeSha256Violations, loadLockfileOrNull } from "@/modules/Lockfile";
 import { collectDeployedHashViolations } from "@/modules/Install";
 import type { AuditCiResult, RunAuditCiOptions } from "./types.ts";
 
 /**
- * CI gate: lock present; deployed files present; hash re-verify (lk-017/sc-001).
- * Does not fail solely on missing tree_sha256.
+ * CI gate: lock present; deployed files present; hash re-verify (lk-017/sc-001);
+ * git tree_sha256 re-verify (lk-015) — fail-closed on missing/mismatch.
  */
 export async function runAuditCi(options: RunAuditCiOptions = {}): Promise<AuditCiResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
@@ -31,7 +31,13 @@ export async function runAuditCi(options: RunAuditCiOptions = {}): Promise<Audit
     violations.push(v.message);
   }
 
-  // tree_sha256 absence is intentional soft — do not fail
+  const treeViolations = collectTreeSha256Violations({
+    cwd,
+    document: loaded.document,
+  });
+  for (const v of treeViolations) {
+    violations.push(v.message);
+  }
 
   if (violations.length > 0) {
     return {

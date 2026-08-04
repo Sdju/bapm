@@ -56,6 +56,7 @@ export type {
   LockFilename,
   WriteLockfileOptions,
   LockfileErrorCode,
+  TreeSha256Violation,
 } from "@/modules/Lockfile";
 
 export {
@@ -70,6 +71,12 @@ export {
   parseLockfileDocument,
   serializeLockfile,
   isSemanticallyEquivalent,
+  computeCanonicalTreeSha256,
+  treeSha256Equal,
+  formatTreeSha256Violation,
+  isGitSourcedLockEntry,
+  locateGitPackageTree,
+  collectTreeSha256Violations,
 } from "@/modules/Lockfile";
 
 export type {

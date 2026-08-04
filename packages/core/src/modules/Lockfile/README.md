@@ -6,10 +6,11 @@ Discover, load, validate, serialize, and compare OpenAPM/APM lockfiles (`apm.loc
 
 | Export                                                                                                                                                                   | Kind      |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| `LockfileDocument`, `LockedDependency`, `LockfileInput`, …                                                                                                               | types     |
-| `LockfileError`, `LockfileErrorCode`                                                                                                                                     | errors    |
-| `APM_LOCK_FILE`, `BAPM_LOCK_FILE`                                                                                                                                        | constants |
+| `LockfileDocument`, `LockedDependency`, `LockfileInput`, `TreeSha256Violation`, …                                                                              | types     |
+| `LockfileError`, `LockfileErrorCode`                                                                                                                           | errors    |
+| `APM_LOCK_FILE`, `BAPM_LOCK_FILE`                                                                                                                              | constants |
 | `discoverLockfilePath`, `loadLockfile`, `loadLockfileOrNull`, `writeLockfile`, `parseLockfile`, `parseLockfileDocument`, `serializeLockfile`, `isSemanticallyEquivalent` | functions |
+| `computeCanonicalTreeSha256`, `collectTreeSha256Violations`, `treeSha256Equal`, …                                                                              | lk-015    |
 
 Shared YAML safe-subset loading comes from `@/common/yaml/` (not Manifest internals).
 
