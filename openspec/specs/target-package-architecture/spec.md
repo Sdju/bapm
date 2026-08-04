@@ -65,3 +65,10 @@ For change `m5-cursor-install-polish`, the workspace MUST contain among packages
 #### Scenario: No vite cursor alias in core
 - **WHEN** inspecting `packages/core` vite/test resolve aliases after this change
 - **THEN** there MUST be no alias entry whose purpose is to redirect `bapm-target-cursor` into the monorepo source tree for core tests
+
+### Requirement: M6 ships only target-api and target-cursor among bapm-target packages
+For change `m6-lifecycle-integrity`, the workspace MUST contain among packages named `bapm-target-*` only `bapm-target-api` and `bapm-target-cursor`. The change MUST NOT scaffold, publish, or add workspace members for any additional `bapm-target-*` host. Primary implementation packages are `@bapm/core` and the CLI (`bapm`); target packages MAY be touched only for incidental hash/cleanup needs.
+
+#### Scenario: No second host package after M6
+- **WHEN** listing workspace packages matching `bapm-target-*` after this change is applied
+- **THEN** the only matches MUST be `bapm-target-api` and `bapm-target-cursor`
