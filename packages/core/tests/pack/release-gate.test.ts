@@ -1,5 +1,5 @@
 /**
- * M7 core — pr-004 release tag↔version gate (checklist C §10–12; pr-005 SHOULD advisory).
+ * Core pack — checkReleaseTag (tag↔version gate).
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {

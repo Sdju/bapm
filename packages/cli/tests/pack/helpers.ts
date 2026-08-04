@@ -1,14 +1,22 @@
 /**
- * CLI M7 producer acceptance helpers.
+ * CLI pack / install-from-archive test helpers.
  */
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
-export function createTempProject(prefix = "bapm-m7-cli-"): TempProject {
+export function createTempProject(prefix = "bapm-cli-pack-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,

@@ -1,5 +1,5 @@
 /**
- * M7 core — pack plain zip, schema fail, dry-run, sc-007 secrets (C §7–9, 18).
+ * Core pack — plain zip archive, schema fail, dry-run, secret refuse.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -50,7 +50,7 @@ describe("M7 pack — plain zip archive", () => {
 
   test("§8 pack fails on invalid manifest — no successful artifact", async () => {
     project = createTempProject();
-    writeText(join(project.cwd, "bapm.yml"), "version: \"1.0.0\"\n"); // missing name
+    writeText(join(project.cwd, "bapm.yml"), 'version: "1.0.0"\n'); // missing name
 
     const before = resolvePackArtifact(project.cwd);
     await expectRejectsMatching(

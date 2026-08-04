@@ -1,5 +1,5 @@
 /**
- * M7 core — pack → extractPackArchive round-trip (checklist C §17).
+ * Core pack — pack zip → extractPackArchive → loadManifest round-trip.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -26,8 +26,8 @@ describe("M7 round-trip — pack zip → extract → loadManifest", () => {
   });
 
   test("§17 extractPackArchive lands parseable manifest under output", async () => {
-    source = createTempProject("bapm-m7-rt-src-");
-    dest = createTempProject("bapm-m7-rt-dst-");
+    source = createTempProject("bapm-core-pack-rt-src-");
+    dest = createTempProject("bapm-core-pack-rt-dst-");
     writeConformingManifest(source.cwd, { name: "rt-pkg", version: "3.1.4" });
     writeText(join(source.cwd, ".apm", "keep.txt"), "packed\n");
 

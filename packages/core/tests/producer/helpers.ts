@@ -1,5 +1,5 @@
 /**
- * M7 producer toolchain acceptance helpers — pickExport for TDD RED APIs.
+ * Producer emit / serialize test helpers — pickExport for public @bapm/core APIs.
  */
 import * as core from "@bapm/core";
 import {
@@ -17,12 +17,12 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const repoRoot = resolve(coreRoot, "../..");
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
-export function createTempProject(prefix = "bapm-m7-core-"): TempProject {
+export function createTempProject(prefix = "bapm-core-producer-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
@@ -63,9 +63,7 @@ function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(
-    `expected @bapm/core to export one of [${names.join(", ")}] (${label})`,
-  );
+  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 /** Minimal scaffold for init / producer emit (mf-001..003). */
@@ -101,9 +99,7 @@ export function getLoadManifest(): (options: Record<string, unknown>) => unknown
 }
 
 /** Plain-zip pack (MUST path `--archive`). */
-export function getRunPack(): (
-  options: Record<string, unknown>,
-) => Promise<unknown> | unknown {
+export function getRunPack(): (options: Record<string, unknown>) => Promise<unknown> | unknown {
   return pickExport(["runPack", "packProject", "packArchive"], "M7 pack") as (
     options: Record<string, unknown>,
   ) => Promise<unknown> | unknown;
@@ -149,7 +145,10 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
   if (thrown === undefined) {
     throw new Error(`expected throw matching ${pattern}`);
   }
-  if (thrown instanceof TypeError && /is not a function|expected @bapm\/core to export/i.test(thrown.message)) {
+  if (
+    thrown instanceof TypeError &&
+    /is not a function|expected @bapm\/core to export/i.test(thrown.message)
+  ) {
     throw thrown;
   }
   const message =
@@ -182,7 +181,10 @@ export async function expectRejectsMatching(
   if (thrown === undefined) {
     throw new Error(`expected reject matching ${pattern}`);
   }
-  if (thrown instanceof TypeError && /is not a function|expected @bapm\/core to export/i.test(thrown.message)) {
+  if (
+    thrown instanceof TypeError &&
+    /is not a function|expected @bapm\/core to export/i.test(thrown.message)
+  ) {
     throw thrown;
   }
   const message =

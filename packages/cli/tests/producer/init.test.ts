@@ -1,5 +1,5 @@
 /**
- * CLI M7 — bapm init (checklist C §14–16).
+ * CLI init — fresh scaffold, refuse overwrite, unknown flags.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";

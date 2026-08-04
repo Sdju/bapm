@@ -1,5 +1,5 @@
 /**
- * M7 core — init emit + serialize / producer write (checklist C §1–6, mf-*).
+ * Core producer — createMinimalManifest, serialize, validate-before-write.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -66,7 +66,8 @@ describe("M7 producer write validate-before-emit", () => {
     const write = getProducerWrite();
     const dest = join(project.cwd, "bapm.yml");
     expectThrowsMatching(
-      () => write({ version: "1.0.0" } as Record<string, unknown>, { cwd: project.cwd, path: dest }),
+      () =>
+        write({ version: "1.0.0" } as Record<string, unknown>, { cwd: project.cwd, path: dest }),
       /name/i,
     );
     // Fail-closed: either no file, or not a successful conforming publish.

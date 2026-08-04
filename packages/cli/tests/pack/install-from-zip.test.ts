@@ -1,5 +1,5 @@
 /**
- * CLI M7 — install from pack zip round-trip + help wiring (C §17, 19).
+ * CLI pack — install from archive round-trip + producer help wiring.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, writeFileSync } from "node:fs";
@@ -26,8 +26,8 @@ describe("CLI install-from-archive round-trip", () => {
   });
 
   test("§17 pack zip → install <archive> lands parseable manifest", async () => {
-    source = createTempProject("bapm-m7-cli-src-");
-    dest = createTempProject("bapm-m7-cli-dst-");
+    source = createTempProject("bapm-cli-pack-src-");
+    dest = createTempProject("bapm-cli-pack-dst-");
     writeConformingManifest(source.cwd, { name: "zip-rt", version: "4.5.6" });
 
     const pack = await runInProject(source.cwd, ["pack", "--archive"]);
@@ -40,16 +40,16 @@ describe("CLI install-from-archive round-trip", () => {
     expectKnownCommand(install.combined, "install");
     expect(install.result).toBe(0);
 
-    expect(
-      existsSync(join(dest.cwd, "bapm.yml")) || existsSync(join(dest.cwd, "apm.yml")),
-    ).toBe(true);
+    expect(existsSync(join(dest.cwd, "bapm.yml")) || existsSync(join(dest.cwd, "apm.yml"))).toBe(
+      true,
+    );
     const { document: doc } = loadManifest({ cwd: dest.cwd });
     expect(doc.name).toBe("zip-rt");
     expect(doc.version).toBe("4.5.6");
   });
 
   test("corrupt / non-pack path fails closed", async () => {
-    dest = createTempProject("bapm-m7-cli-bad-");
+    dest = createTempProject("bapm-cli-pack-bad-");
     const bogus = join(dest.cwd, "not-a-pack.zip");
     writeFileSync(bogus, "not-a-zip", "utf8");
 

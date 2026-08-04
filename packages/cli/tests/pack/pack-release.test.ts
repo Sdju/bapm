@@ -1,9 +1,8 @@
 /**
- * CLI M7 — pack, --check-release, secrets, dry-run (C §7–12, 18–20).
+ * CLI pack — archive, --check-release, secrets, dry-run.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import {
   createTempProject,
   expectKnownCommand,
