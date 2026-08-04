@@ -29,8 +29,12 @@ The `lock` command MUST accept `--update` (force re-resolve of refs), `--verbose
 - **THEN** the command MUST accept the flag and pass the concurrency to core download orchestration (or documented equivalent)
 
 ### Requirement: lock does not claim install or target deploy
-The `lock` command MUST NOT initialize targets, MUST NOT copy packages into harness dirs, and MUST NOT change the product claim that `install` remains a non-deploying stub until a later milestone. If `install` later shares core resolve helpers, it MUST still not deploy targets in M3.
+The `lock` command MUST NOT initialize targets, MUST NOT copy packages into harness dirs, and MUST NOT deploy primitives. After M4, `install` MAY deploy via registered targets, but `lock` MUST remain non-deploying and MUST NOT invoke target `materialize`.
 
 #### Scenario: Harness dirs unchanged after lock
 - **WHEN** `lock` succeeds on a fixture project that already contains cursor/agents-style dirs
 - **THEN** those dirs MUST NOT gain new deployed primitive files from the lock command
+
+#### Scenario: lock does not call target materialize
+- **WHEN** `lock` runs in an environment where a target is registered for install e2e
+- **THEN** the lock path MUST NOT invoke that target's materialize contract
