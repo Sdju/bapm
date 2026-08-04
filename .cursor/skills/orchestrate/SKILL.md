@@ -17,7 +17,7 @@ Parent = диспетчер. Вся работа (чтение репо, OpenSpe
 1. Не используй Read/Edit/Write/Grep/Shell/Glob для реализации, проверки или «сверки» результата.
 2. Не вызывай `openspec`, `vp`, `git` сам — только субагент (включая conventional commits после успешных фаз).
 3. Решения next-step принимай **только** из structured report субагента.
-4. Параллель разрешена только для независимых read-only explore; фазы `acceptance → apply → accept → merge` строго последовательны; **commit после ok/pass — до следующей фазы**.
+4. Параллель разрешена только для независимых read-only explore; фазы `acceptance → apply → accept → promote → merge` строго последовательны; **commit после ok/pass — до следующей фазы**.
 5. Промпт субагента должен быть самодостаточным: цель, пути, TDD-правила, формат отчёта, что запрещено.
 
 ## OpenSpec (опционально)
@@ -54,11 +54,28 @@ Parent = диспетчер. Вся работа (чтение репо, OpenSpe
 - Read-only к фиче: не добавляет поведение.
 - Перезапускает acceptance-тесты; сверяет с proposal/specs (через OpenSpec show/status или чтение артефактов).
 - Вердикт: `pass` | `fail` + конкретные gaps. При `fail` — parent запускает `apply` снова с gaps (макс. 2 ретрая, потом эскалация user).
+- При `pass` — **обязательно** следующая фаза `promote` (не оставлять suite навсегда в `tests/acceptance/`).
+
+### Promote (фаза `promote`) — после успешной приёмки
+
+После `accept=pass` приёмочные тесты **не остаются** в `tests/acceptance/<change>/` как постоянный слой.
+
+Субагент для каждого файла/кейса выбирает:
+
+1. **Promote** — перенести в общие тесты пакета (например `tests/manifest/`, `tests/lockfile/`, `tests/architecture/`, или рядом с unit в `tests/`), сохранив покрытие; обновить импорты/пути fixtures.
+2. **Delete** — удалить, если кейс дублирует unit/уже не отражает продукт / был только gate для change.
+
+Правила:
+
+- Каталог `tests/acceptance/<change>/` после promote должен **исчезнуть** (или остаться пустым и быть удалён).
+- Не ослаблять покрытие молча: если удаляешь — в отчёте явное обоснование; полезные кейсы обязательно promote.
+- Прогнать `vp test` по затронутому пакету — GREEN.
+- Не менять production-код (кроме минимальных test-only path fixes).
 
 ### Merge (фаза `merge`)
 
 - При OpenSpec: archive/sync по `.cursor/skills/openspec-archive-change` / sync (как `/opsx-archive`).
-- Acceptance-тесты остаются в дереве (не удалять после archive).
+- К моменту merge acceptance уже **promoted или удалены** (фаза `promote` до merge).
 - После успешного archive parent запускает commit-субагента (`chore:`), затем `deliver`.
 
 ### Conventional commits (после успешных фаз)
@@ -71,6 +88,7 @@ Parent = диспетчер. Вся работа (чтение репо, OpenSpe
 | acceptance | `test` | acceptance/e2e (RED) |
 | apply | `feat` или `fix` | implementation + unit |
 | accept | skip или `test`/`docs` | только если были правки |
+| promote | `test` или `refactor` | move/delete acceptance → general |
 | merge | `chore` | archive/sync |
 
 Правила коммит-субагента:
@@ -85,12 +103,14 @@ Parent = диспетчер. Вся работа (чтение репо, OpenSpe
 
 ```markdown
 ## Report
-- phase: plan|acceptance|apply|accept|merge|commit
+- phase: plan|acceptance|apply|accept|promote|merge|commit
 - status: ok|blocked|fail
 - changeName: <kebab|none>
 - openspec: used|skipped
 - artifacts: <paths or —>
-- acceptanceTests: <paths or —>
+- acceptanceTests: <paths before promote, or — after>
+- promotedTests: <new general test paths or —>
+- deletedTests: <removed paths + why, or —>
 - commandsRun: <list>
 - tdd: red|green|n/a + evidence one-liner
 - commitSha: <sha or —>
@@ -165,7 +185,25 @@ Change: {{CHANGE}}
 1. Не добавляй фичи. Перезапусти acceptance-тесты.
 2. Сверь поведение со specs/proposal.
 3. status=pass только если acceptance GREEN и нет дыр относительно спеки.
-Верни structured report (phase: accept).
+4. Не переноси/не удаляй acceptance здесь — это фаза promote после pass.
+Верни structured report (phase: accept). next: promote при pass.
+```
+
+### promote
+
+```
+Ты субагент фазы promote репозитория bapm.
+Change: {{CHANGE}}
+Acceptance path: tests/acceptance/{{CHANGE}}/ в затронутом пакете.
+
+После успешной приёмки:
+1. Для каждого acceptance/e2e файла: либо ПЕРЕНЕСИ в общие тесты пакета
+   (tests/<area>/… или tests/ рядом с unit — без каталога acceptance/),
+   либо УДАЛИ с явным обоснованием (дубль unit / устарело / только gate change).
+2. Удали пустой tests/acceptance/{{CHANGE}}/ (и fixtures перенеси вместе с promoted).
+3. Не ослабляй покрытие без причины. Не меняй production-код.
+4. Запусти vp test по пакету — подтверди GREEN.
+Верни structured report (phase: promote) с promotedTests и deletedTests. next: merge.
 ```
 
 ### merge
@@ -175,7 +213,7 @@ Change: {{CHANGE}}
 Change: {{CHANGE}}
 
 1. Если OpenSpec использовался — archive/sync по openspec-archive-change.
-2. Оставь acceptance-тесты в репозитории.
+2. Acceptance к этому моменту уже promoted/deleted — не восстанавливай tests/acceptance/{{CHANGE}}/.
 3. Не коммить здесь — parent отдельно запустит commit-субагента после ok.
 Верни structured report (phase: merge).
 ```
@@ -186,7 +224,7 @@ Change: {{CHANGE}}
 Ты субагент фазы commit репозитория bapm.
 Change: {{CHANGE}}
 После фазы: {{PRIOR_PHASE}} (status ok/pass).
-Ожидаемый conventional type: {{COMMIT_TYPE}} (docs|chore|test|feat|fix).
+Ожидаемый conventional type: {{COMMIT_TYPE}} (docs|chore|test|feat|fix|refactor).
 Scope: {{SCOPE}}.
 
 1. Следуй user rule committing-changes-with-git: status, diff, log → stage только файлы этой фазы → commit через HEREDOC.
@@ -201,7 +239,7 @@ Scope: {{SCOPE}}.
 | Фаза | subagent_type | model |
 |------|---------------|-------|
 | plan explore | `explore` (medium/very thorough) | default |
-| plan propose / acceptance / apply / merge / commit | `generalPurpose` | default |
+| plan propose / acceptance / apply / promote / merge / commit | `generalPurpose` | default |
 | accept (опционально доп. review) | `bugbot` / `security-review` только если user явно просил | — |
 
 `run_in_background`: false для фаз pipeline (нужен отчёт). Параллель — только по явному указанию skill выше.
@@ -212,7 +250,7 @@ Parent пишет пользователю:
 
 1. Статус pipeline (все фазы ok / где fail)
 2. `changeName` и OpenSpec used/skipped
-3. Где лежат acceptance-тесты
+3. Куда promoted / что удалено из acceptance (из отчёта promote)
 4. 3–5 пунктов «что сделано» из summary субагентов
 5. Коммиты по фазам (`sha` + conventional message) из отчётов commit-субагентов
 6. Что не сделано / blocked
