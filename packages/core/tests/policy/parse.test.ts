@@ -2,12 +2,7 @@
  * M8 policy YAML parse/validate — checklist C §1–7 + policy-yaml-parse.
  */
 import { expect, test, describe } from "vite-plus/test";
-import {
-  expectThrowsMatching,
-  getParsePolicy,
-  policyOf,
-  warningsOf,
-} from "./helpers.ts";
+import { expectThrowsMatching, getParsePolicy, policyOf, warningsOf } from "./helpers.ts";
 
 describe("M8 parse — minimal + root shape", () => {
   test("minimal valid warn policy", () => {
@@ -16,7 +11,10 @@ describe("M8 parse — minimal + root shape", () => {
   });
 
   test("non-mapping root rejected (list)", () => {
-    expectThrowsMatching(() => getParsePolicy()(["not", "a", "mapping"]), /mapping|object|root|invalid/i);
+    expectThrowsMatching(
+      () => getParsePolicy()(["not", "a", "mapping"]),
+      /mapping|object|root|invalid/i,
+    );
   });
 
   test("non-mapping root rejected (scalar)", () => {
@@ -78,9 +76,7 @@ describe("M8 parse — tri-state allow (pl-005)", () => {
     const nulled = policyOf(
       parse({ name: "b", enforcement: "warn", dependencies: { allow: null } }),
     );
-    const empty = policyOf(
-      parse({ name: "c", enforcement: "warn", dependencies: { allow: [] } }),
-    );
+    const empty = policyOf(parse({ name: "c", enforcement: "warn", dependencies: { allow: [] } }));
     const populated = policyOf(
       parse({
         name: "d",

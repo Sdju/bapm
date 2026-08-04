@@ -17,7 +17,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const repoRoot = resolve(coreRoot, "../..");
 
 export type TempProject = { cwd: string; cleanup: () => void };
@@ -66,10 +66,7 @@ export function writeLeafProject(cwd: string, name: string): void {
     join(cwd, "bapm.yml"),
     `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
   );
-  writeText(
-    join(cwd, "leaf", "apm.yml"),
-    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "leaf", "apm.yml"), `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
 }
 
 export const BLOCK_DENY_LEAF_POLICY = `name: deny-leaf
@@ -105,9 +102,7 @@ function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(
-    `expected @bapm/core to export one of [${names.join(", ")}] (${label})`,
-  );
+  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 function pickValue(names: string[], label: string): unknown {
@@ -115,9 +110,7 @@ function pickValue(names: string[], label: string): unknown {
   for (const name of names) {
     if (name in c && c[name] !== undefined) return c[name];
   }
-  throw new TypeError(
-    `expected @bapm/core to export one of [${names.join(", ")}] (${label})`,
-  );
+  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export function getApmPolicyFile(): string {
@@ -133,10 +126,9 @@ export function getBapmPolicyFile(): string {
 }
 
 export function getDiscoverPolicyPath(): (options: Record<string, unknown>) => unknown {
-  return pickExport(
-    ["discoverPolicyPath", "discoverLocalPolicyPath"],
-    "M8 policy discovery",
-  ) as (options: Record<string, unknown>) => unknown;
+  return pickExport(["discoverPolicyPath", "discoverLocalPolicyPath"], "M8 policy discovery") as (
+    options: Record<string, unknown>,
+  ) => unknown;
 }
 
 export function getParsePolicy(): (input: unknown) => unknown {
@@ -199,7 +191,10 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
   if (thrown === undefined) {
     throw new Error(`expected throw matching ${pattern}`);
   }
-  if (thrown instanceof TypeError && /is not a function|expected @bapm\/core/i.test(thrown.message)) {
+  if (
+    thrown instanceof TypeError &&
+    /is not a function|expected @bapm\/core/i.test(thrown.message)
+  ) {
     throw thrown;
   }
   const message =
@@ -232,7 +227,10 @@ export async function expectRejectsMatching(
   if (thrown === undefined) {
     throw new Error(`expected reject matching ${pattern}`);
   }
-  if (thrown instanceof TypeError && /is not a function|expected @bapm\/core/i.test(thrown.message)) {
+  if (
+    thrown instanceof TypeError &&
+    /is not a function|expected @bapm\/core/i.test(thrown.message)
+  ) {
     throw thrown;
   }
   const message =

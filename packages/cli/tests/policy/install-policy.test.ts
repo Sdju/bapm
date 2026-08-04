@@ -4,7 +4,7 @@
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 import {
   BLOCK_DENY_LEAF,
   WARN_DENY_LEAF,
@@ -63,11 +63,7 @@ describe("CLI M8 install policy gate", () => {
     writePolicy(project.cwd, "apm-policy.yml", MINIMAL_WARN);
     const denyPath = writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--policy",
-      denyPath,
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--policy", denyPath]);
     expectKnownInstallFlags(combined);
     expect(result).not.toBe(0);
     expect(combined).toMatch(/policy|deny|block|leaf|violat/i);
