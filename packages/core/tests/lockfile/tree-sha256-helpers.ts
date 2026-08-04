@@ -1,5 +1,5 @@
 /**
- * Acceptance helpers for p1-lk-015-tree-sha256 (OpenAPM req-lk-015).
+ * Shared helpers for OpenAPM lk-015 tree_sha256 integration tests.
  * Fixture planting only — product algorithm is asserted via @bapm/core public API.
  */
 import * as core from "@bapm/core";
@@ -25,8 +25,8 @@ import {
   writeManifest,
   writeText,
   type TempProject,
-} from "../../lifecycle/helpers.ts";
-import { getRunInstall } from "../../install/helpers.ts";
+} from "../lifecycle/helpers.ts";
+import { getRunInstall } from "../install/helpers.ts";
 
 export {
   createFakePorts,
@@ -61,11 +61,11 @@ function pickExport(names: string[], label: string): AnyFn {
   throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
-/** Public OpenAPM §5.6.4 tree hash (MUST be exported by apply). */
+/** Public OpenAPM §5.6.4 tree hash. */
 export function getComputeCanonicalTreeSha256(): (rootDir: string) => string {
   return pickExport(
     ["computeCanonicalTreeSha256", "canonicalTreeSha256", "hashCanonicalTree"],
-    "p1-lk-015 tree_sha256",
+    "lk-015 tree_sha256",
   ) as (rootDir: string) => string;
 }
 

@@ -1,5 +1,5 @@
 /**
- * p1-lk-015: record tree_sha256 on git lock write (resolveAndLock).
+ * lk-015: record tree_sha256 on git lock write (resolveAndLock).
  */
 import { loadLockfile, resolveAndLock } from "@bapm/core";
 import { join } from "node:path";
@@ -15,11 +15,11 @@ import {
   writeManifest,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../lockfile/tree-sha256-helpers.ts";
 
 const COMMIT = "ffffffffffffffffffffffffffffffffffffffff";
 
-describe("p1-lk-015 record tree_sha256 on git lock write", () => {
+describe("lk-015 record tree_sha256 on git lock write", () => {
   let project: TempProject;
 
   afterEach(() => {

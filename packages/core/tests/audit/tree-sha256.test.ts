@@ -1,5 +1,5 @@
 /**
- * p1-lk-015: audit --ci re-verifies tree_sha256 (hard fail; closes M6 soft).
+ * lk-015: audit --ci re-verifies tree_sha256 (hard fail; closes M6 soft).
  */
 import { downloadPackages } from "@bapm/core";
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -15,12 +15,12 @@ import {
   writeManifest,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../lockfile/tree-sha256-helpers.ts";
 
 const COMMIT = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const BAD_TREE = `sha256:${"0".repeat(64)}`;
 
-describe("p1-lk-015 audit --ci tree_sha256 verify", () => {
+describe("lk-015 audit --ci tree_sha256 verify", () => {
   let project: TempProject;
 
   afterEach(() => {

@@ -1,11 +1,14 @@
 /**
- * p1-lk-015: frozen install re-verifies tree_sha256 for git entries.
+ * lk-015: frozen install re-verifies tree_sha256 for git entries.
  */
+import { downloadPackages } from "@bapm/core";
+import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createFakePorts,
   createTempProject,
   expectRejectsMatching,
+  findPackageTreeRoot,
   getRunInstall,
   readLockBytes,
   referenceCanonicalTreeSha256,
@@ -13,15 +16,12 @@ import {
   writeManifest,
   writeText,
   type TempProject,
-} from "./helpers.ts";
-import { downloadPackages } from "@bapm/core";
-import { join } from "node:path";
-import { findPackageTreeRoot } from "./helpers.ts";
+} from "../lockfile/tree-sha256-helpers.ts";
 
 const COMMIT = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 const BAD_TREE = `sha256:${"f".repeat(64)}`;
 
-describe("p1-lk-015 frozen install tree_sha256 verify", () => {
+describe("lk-015 frozen install tree_sha256 verify", () => {
   let project: TempProject;
 
   afterEach(() => {
