@@ -1,5 +1,5 @@
 /**
- * M8 governance/policy acceptance helpers — pickExport for TDD RED APIs.
+ * Policy suite helpers — pickExport for governance/policy APIs (M8 + P4).
  */
 import * as core from "@bapm/core";
 import {
@@ -20,14 +20,25 @@ export const suiteDir = dirname(fileURLToPath(import.meta.url));
 export const coreRoot = resolve(suiteDir, "../..");
 export const repoRoot = resolve(coreRoot, "../..");
 
+/** Vendored OpenAPM §12.4 seed tree (Mode B policy fixtures). */
+export const fixtureRoot = join(repoRoot, "tests/fixtures/spec-conformance");
+
 export type TempProject = { cwd: string; cleanup: () => void };
 
-export function createTempProject(prefix = "bapm-m8-core-"): TempProject {
+export function createTempProject(prefix = "bapm-policy-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
   };
+}
+
+export function fixturePath(...parts: string[]): string {
+  return join(fixtureRoot, ...parts);
+}
+
+export function readText(path: string): string {
+  return readFileSync(path, "utf8");
 }
 
 export function ensureDir(path: string): void {
@@ -41,7 +52,7 @@ export function writeText(path: string, contents: string): void {
 
 export function writePolicy(
   cwd: string,
-  filename: "apm-policy.yml" | "bapm-policy.yml",
+  filename: "apm-policy.yml" | "bapm-policy.yml" | string,
   contents: string,
 ): string {
   const path = join(cwd, filename);
@@ -157,10 +168,61 @@ export function getDefaultPolicyProviders(): unknown {
   );
 }
 
+export function getResolvePolicyChain(): (options: Record<string, unknown>) => unknown {
+  return pickExport(
+    ["resolvePolicyChain", "resolveExtends", "resolvePolicyExtends", "mergePolicyChain"],
+    "P4 extends resolve",
+  ) as (options: Record<string, unknown>) => unknown;
+}
+
+export function getMergePolicies(): (parent: unknown, child: unknown) => unknown {
+  return pickExport(["mergePolicies", "mergePolicyDocuments", "mergePolicy"], "P4 §6.4 merge") as (
+    parent: unknown,
+    child: unknown,
+  ) => unknown;
+}
+
+export function getHostClassOf(): (input: unknown) => unknown {
+  return pickExport(
+    ["hostClassOf", "policyHostClass", "hostClassForPolicy", "resolveHostClass"],
+    "P4 host-class pin",
+  ) as (input: unknown) => unknown;
+}
+
+export function getSelectProjectRemote(): (options: Record<string, unknown>) => unknown {
+  return pickExport(
+    ["selectProjectRemote", "selectGitRemoteForPolicy", "resolveProjectRemote"],
+    "P4 pl-012 remote selection",
+  ) as (options: Record<string, unknown>) => unknown;
+}
+
+export function getDiscoverPolicyProviders(): (options: Record<string, unknown>) => unknown {
+  return pickExport(
+    ["discoverPolicyWithProviders", "runPolicyDiscovery", "discoverPolicyProviders"],
+    "P4 ordered discovery providers",
+  ) as (options: Record<string, unknown>) => unknown;
+}
+
+export function getRunPolicyGate(): (options: Record<string, unknown>) => unknown {
+  return pickExport(["runPolicyGate", "assertPolicyGateAllows"], "P4 policy gate") as (
+    options: Record<string, unknown>,
+  ) => unknown;
+}
+
 export function getRunInstall(): (options: Record<string, unknown>) => Promise<unknown> {
   return pickExport(["runInstall", "installProject"], "M8 install gate") as (
     options: Record<string, unknown>,
   ) => Promise<unknown>;
+}
+
+export function providersList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  if (value && typeof value === "object") {
+    const o = value as Record<string, unknown>;
+    if (Array.isArray(o.providers)) return o.providers.map(String);
+    if (Array.isArray(o.default)) return o.default.map(String);
+  }
+  throw new TypeError(`expected provider list, got ${typeof value}`);
 }
 
 export function modulesDir(cwd: string): string {
@@ -246,15 +308,18 @@ export async function expectRejectsMatching(
   return thrown;
 }
 
-/** Pull policy document from parse/load result regardless of bag shape. */
+/** Pull policy document from parse/load/resolve/merge result regardless of bag shape. */
 export function policyOf(result: unknown): Record<string, unknown> {
   if (result === null || typeof result !== "object") {
-    throw new TypeError("expected policy parse/load result object");
+    throw new TypeError("expected policy parse/load/resolve result object");
   }
   const r = result as Record<string, unknown>;
-  const doc = (r.document ?? r.policy ?? r) as Record<string, unknown>;
+  const doc = (r.document ?? r.policy ?? r.effective ?? r.effectivePolicy ?? r) as Record<
+    string,
+    unknown
+  >;
   if (doc === null || typeof doc !== "object") {
-    throw new TypeError("expected document/policy object on load result");
+    throw new TypeError("expected document/policy/effective object on result");
   }
   return doc;
 }

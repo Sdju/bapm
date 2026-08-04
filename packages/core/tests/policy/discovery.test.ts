@@ -15,6 +15,7 @@ import {
   isAbsentDiscovery,
   discoveredPathOf,
   MINIMAL_WARN_POLICY,
+  providersList,
   writePolicy,
   type TempProject,
 } from "./helpers.ts";
@@ -113,5 +114,14 @@ describe("M8 discovery — providers include local + remote", () => {
     const text = JSON.stringify(providers);
     expect(text).toMatch(/local/i);
     expect(text).toMatch(/github-owner-dotgithub/i);
+  });
+
+  test("default order is local then github-owner-dotgithub (P4 D2)", () => {
+    const providers = providersList(getDefaultPolicyProviders());
+    expect(providers).toContain("local");
+    expect(providers).toContain("github-owner-dotgithub");
+    expect(providers.indexOf("local")).toBeLessThan(
+      providers.indexOf("github-owner-dotgithub"),
+    );
   });
 });

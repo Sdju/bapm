@@ -124,3 +124,31 @@ describe("M8 parse — dependencies fields for evaluate", () => {
     expect(deps.require).toEqual(["org/base"]);
   });
 });
+
+describe("P4 parse — extends + discovery fields", () => {
+  test("extends string preserved without unknown-key warning", () => {
+    const result = getParsePolicy()({
+      name: "contoso-baseline",
+      extends: "contoso-enterprise/policy",
+      enforcement: "block",
+    });
+    const doc = policyOf(result);
+    expect(String(doc.extends)).toBe("contoso-enterprise/policy");
+    const warnText = JSON.stringify(warningsOf(result));
+    expect(warnText).not.toMatch(/extends/i);
+  });
+
+  test("discovery.providers parses without unknown-key warning", () => {
+    const result = getParsePolicy()({
+      name: "local-only",
+      enforcement: "warn",
+      discovery: { providers: ["local"] },
+    });
+    const doc = policyOf(result);
+    const discovery = doc.discovery as Record<string, unknown> | undefined;
+    expect(discovery).toBeTruthy();
+    expect(JSON.stringify(discovery)).toMatch(/local/);
+    const warnText = JSON.stringify(warningsOf(result));
+    expect(warnText).not.toMatch(/discovery/i);
+  });
+});
