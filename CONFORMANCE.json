@@ -1,0 +1,1046 @@
+{
+  "generator": "scripts/gen-conformance-statement.mjs v1",
+  "spec_version": "v0.1",
+  "openapm_version": "v0.1",
+  "classes": {
+    "consumer": "claimed",
+    "producer": "claimed",
+    "governance": "floor",
+    "registry": "n/a"
+  },
+  "claim_posture": {
+    "consumer": "claimed",
+    "producer": "claimed",
+    "governance": "floor",
+    "registry": "n/a"
+  },
+  "optional_features": [],
+  "limitations": [
+    "Multi-target adapters beyond cursor are out of scope",
+    "Marketplace / plugin surfaces are out of scope",
+    "Governance remote providers and policy extends deferred to P4",
+    "Registry host / rg-001 not claimed (N/A)",
+    "Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names",
+    "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes"
+  ],
+  "scope_out": [
+    "multi-target",
+    "marketplace/plugin",
+    "registry host",
+    "P4 remote/extends",
+    "full Python Mode B port"
+  ],
+  "requirements": [
+    {
+      "id": "req-cf-001",
+      "keyword": "MUST",
+      "section": "12.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/valid-minimal.yml",
+        "tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml",
+        "tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml",
+        "tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts"
+    },
+    {
+      "id": "req-cf-002",
+      "keyword": "MUST",
+      "section": "12.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/acceptance/p3-openapm-mode-b-conformance/conformance-statement.test.ts; CONFORMANCE.md; CONFORMANCE.json"
+    },
+    {
+      "id": "req-ext-001",
+      "keyword": "MUST",
+      "section": "4.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml",
+        "tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts"
+    },
+    {
+      "id": "req-ext-002",
+      "keyword": "MUST",
+      "section": "4.1",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts"
+    },
+    {
+      "id": "req-lk-001",
+      "keyword": "MUST",
+      "section": "5.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml"
+      ],
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-lk-002",
+      "keyword": "MUST",
+      "section": "5.4",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-003",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-004",
+      "keyword": "MUST",
+      "section": "5.4",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/lockfile/v1-git-only.yml"
+      ],
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-lk-005",
+      "keyword": "MUST",
+      "section": "5.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-006",
+      "keyword": "MUST",
+      "section": "5.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-007",
+      "keyword": "SHOULD",
+      "section": "5.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-008",
+      "keyword": "MUST",
+      "section": "5.6",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-009",
+      "keyword": "MUST",
+      "section": "5.6",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-010",
+      "keyword": "MUST",
+      "section": "5.6",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-011",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts"
+    },
+    {
+      "id": "req-lk-012",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-013",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-014",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts"
+    },
+    {
+      "id": "req-lk-015",
+      "keyword": "MUST",
+      "section": "5.6.4",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/tree-sha256.test.ts; packages/core/tests/resolve/record-tree-sha256.test.ts"
+    },
+    {
+      "id": "req-lk-016",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-017",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-018",
+      "keyword": "SHOULD",
+      "section": "5.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/install/ci-frozen.test.ts; packages/core/tests/acceptance/p2-lk-018-ci-default-frozen/resolve-frozen.test.ts"
+    },
+    {
+      "id": "req-lk-019",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-020",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-021",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-lk-022",
+      "keyword": "MUST",
+      "section": "5.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts"
+    },
+    {
+      "id": "req-mf-001",
+      "keyword": "MUST",
+      "section": "4.1",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-002",
+      "keyword": "MUST",
+      "section": "4.1",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-003",
+      "keyword": "MUST",
+      "section": "4.1",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-004",
+      "keyword": "SHOULD",
+      "section": "4.1",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-005",
+      "keyword": "MUST",
+      "section": "4.2.1",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-006",
+      "keyword": "MUST",
+      "section": "4.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/valid-minimal.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-mf-007",
+      "keyword": "MUST",
+      "section": "4.3.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-008",
+      "keyword": "MUST",
+      "section": "4.3.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-009",
+      "keyword": "MUST",
+      "section": "4.3.4",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-010",
+      "keyword": "MUST",
+      "section": "4.3.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-011",
+      "keyword": "MUST",
+      "section": "4.3.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-012",
+      "keyword": "MUST",
+      "section": "4.3.6",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-013",
+      "keyword": "MUST",
+      "section": "4.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-014",
+      "keyword": "MUST",
+      "section": "4.2.3",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-015",
+      "keyword": "MUST",
+      "section": "4.2.3",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-016",
+      "keyword": "MUST",
+      "section": "4.3.5",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Soft limitation: mf-016 not claimed active in P3 floor"
+    },
+    {
+      "id": "req-mf-017",
+      "keyword": "MUST",
+      "section": "4.7",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-018",
+      "keyword": "MUST",
+      "section": "4.6.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-019",
+      "keyword": "MUST",
+      "section": "4.2.4",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-mf-020",
+      "keyword": "MUST",
+      "section": "4.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-yaml-anchor-alias.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-021",
+      "keyword": "MUST",
+      "section": "4.8",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-022",
+      "keyword": "MUST",
+      "section": "4.3.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-023",
+      "keyword": "MUST",
+      "section": "4.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
+        "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
+      ],
+      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-pl-001",
+      "keyword": "MUST",
+      "section": "6.1",
+      "conformance_class": "governance",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
+      ],
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-pl-002",
+      "keyword": "MUST",
+      "section": "6.2",
+      "conformance_class": "governance",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
+      ],
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-pl-003",
+      "keyword": "MUST",
+      "section": "6.4",
+      "conformance_class": "governance",
+      "status": "skipped",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/policy/valid-extends.yml",
+        "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
+      ],
+      "rationale": "P4 deferred: remote policy providers / extends not claimed in Governance floor"
+    },
+    {
+      "id": "req-pl-004",
+      "keyword": "MUST",
+      "section": "6.4",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-005",
+      "keyword": "MUST",
+      "section": "6.5",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-006",
+      "keyword": "MUST",
+      "section": "6.4",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-007",
+      "keyword": "MUST",
+      "section": "6.3.1",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-008",
+      "keyword": "MUST",
+      "section": "6.3.1",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-009",
+      "keyword": "MUST",
+      "section": "6.6",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-010",
+      "keyword": "MUST",
+      "section": "6.2",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-011",
+      "keyword": "MUST",
+      "section": "6.1.1",
+      "conformance_class": "governance",
+      "status": "skipped",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/policy/valid-extends.yml",
+        "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
+      ],
+      "rationale": "P4 deferred: remote policy providers / extends not claimed in Governance floor"
+    },
+    {
+      "id": "req-pl-012",
+      "keyword": "MUST",
+      "section": "6.1.1",
+      "conformance_class": "governance",
+      "status": "skipped",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/policy/valid-extends.yml",
+        "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
+      ],
+      "rationale": "P4 deferred: remote policy providers / extends not claimed in Governance floor"
+    },
+    {
+      "id": "req-pl-013",
+      "keyword": "MUST",
+      "section": "6.8",
+      "conformance_class": "governance",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
+      ],
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-pl-014",
+      "keyword": "MUST",
+      "section": "6.8",
+      "conformance_class": "governance",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
+      ],
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
+    },
+    {
+      "id": "req-pl-015",
+      "keyword": "MUST",
+      "section": "6.3.5",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pl-016",
+      "keyword": "MUST",
+      "section": "6.8",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
+    },
+    {
+      "id": "req-pr-001",
+      "keyword": "MUST",
+      "section": "8.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts"
+    },
+    {
+      "id": "req-pr-002",
+      "keyword": "MUST",
+      "section": "8.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts"
+    },
+    {
+      "id": "req-pr-003",
+      "keyword": "MUST",
+      "section": "8.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts"
+    },
+    {
+      "id": "req-pr-004",
+      "keyword": "MUST",
+      "section": "7.8",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/pack/pack-archive.test.ts; packages/core/tests/pack/release-gate.test.ts"
+    },
+    {
+      "id": "req-pr-005",
+      "keyword": "SHOULD",
+      "section": "7.8",
+      "conformance_class": "producer",
+      "status": "active",
+      "citation": "packages/core/tests/pack/release-gate.test.ts"
+    },
+    {
+      "id": "req-rg-001",
+      "keyword": "MUST",
+      "section": "11.3.3",
+      "conformance_class": "registry",
+      "status": "n/a",
+      "rationale": "Registry host not shipped; class N/A (no rg-001 claim)"
+    },
+    {
+      "id": "req-rs-001",
+      "keyword": "MUST",
+      "section": "7.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/intersection-pick.test.ts"
+    },
+    {
+      "id": "req-rs-002",
+      "keyword": "MUST",
+      "section": "7.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-003",
+      "keyword": "MUST",
+      "section": "7.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-004",
+      "keyword": "MUST",
+      "section": "7.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-005",
+      "keyword": "MUST",
+      "section": "7.6",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-006",
+      "keyword": "MUST",
+      "section": "7.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-007",
+      "keyword": "MUST",
+      "section": "7.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/resolution/semver-dialect.json"
+      ],
+      "citation": "packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts"
+    },
+    {
+      "id": "req-rs-008",
+      "keyword": "MUST",
+      "section": "7.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-009",
+      "keyword": "MUST",
+      "section": "7.5.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/registry/resolve-install.test.ts; packages/core/tests/registry/registry-client.test.ts"
+    },
+    {
+      "id": "req-rs-010",
+      "keyword": "MUST",
+      "section": "7.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/intersection-pick.test.ts"
+    },
+    {
+      "id": "req-rs-011",
+      "keyword": "MUST",
+      "section": "7.7",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-012",
+      "keyword": "MUST",
+      "section": "7.7",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-013",
+      "keyword": "MUST",
+      "section": "7.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-014",
+      "keyword": "MUST",
+      "section": "7.3.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "fixtures": [
+        "tests/fixtures/spec-conformance/resolution/semver-dialect.json"
+      ],
+      "citation": "packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts"
+    },
+    {
+      "id": "req-rs-015",
+      "keyword": "MUST",
+      "section": "7.5",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-rs-016",
+      "keyword": "MUST",
+      "section": "7.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+    },
+    {
+      "id": "req-sc-001",
+      "keyword": "MUST",
+      "section": "10.4",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/extras/public-api.test.ts"
+    },
+    {
+      "id": "req-sc-002",
+      "keyword": "MUST",
+      "section": "10.9",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-003",
+      "keyword": "MUST",
+      "section": "10.3",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-004",
+      "keyword": "MUST",
+      "section": "10.5",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-005",
+      "keyword": "MUST",
+      "section": "10.3",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-006",
+      "keyword": "MUST",
+      "section": "4.2.3",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-007",
+      "keyword": "MUST",
+      "section": "10.3",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/pack/pack-archive.test.ts"
+    },
+    {
+      "id": "req-sc-008",
+      "keyword": "SHOULD",
+      "section": "10.3",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-009",
+      "keyword": "MUST",
+      "section": "10.13",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/extras/public-api.test.ts"
+    },
+    {
+      "id": "req-sc-010",
+      "keyword": "MUST",
+      "section": "10.13",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-011",
+      "keyword": "MUST",
+      "section": "10.14",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-012",
+      "keyword": "MUST",
+      "section": "10.14",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-sc-013",
+      "keyword": "MUST",
+      "section": "10.3",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+    },
+    {
+      "id": "req-tg-001",
+      "keyword": "MUST",
+      "section": "8.4",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts"
+    },
+    {
+      "id": "req-tg-002",
+      "keyword": "MUST",
+      "section": "8.5",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    },
+    {
+      "id": "req-tg-003",
+      "keyword": "MUST",
+      "section": "8.5",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    },
+    {
+      "id": "req-tg-004",
+      "keyword": "MUST",
+      "section": "4.2.1",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-tg-005",
+      "keyword": "MUST",
+      "section": "8.5",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    },
+    {
+      "id": "req-tg-006",
+      "keyword": "MUST",
+      "section": "8.5",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    },
+    {
+      "id": "req-tg-007",
+      "keyword": "MUST",
+      "section": "8.5",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    },
+    {
+      "id": "req-tg-008",
+      "keyword": "MUST",
+      "section": "8.5.3",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    },
+    {
+      "id": "req-tg-009",
+      "keyword": "MUST",
+      "section": "8.5.1",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    },
+    {
+      "id": "req-tg-010",
+      "keyword": "MUST",
+      "section": "8.5.4",
+      "conformance_class": "consumer",
+      "status": "skipped",
+      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+    }
+  ]
+}
