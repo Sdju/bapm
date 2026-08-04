@@ -14,6 +14,13 @@ Commands:
   version    Print version
   lock       Resolve dependencies and write the lockfile (no host deploy)
   install    Install agentic dependencies from ${deps.manifestFile}
+  update     Re-resolve pins (rs-011/rs-012); --dry-run / -y
+  outdated   Compare lock pins to remote tips (exit 0 when outdated)
+  uninstall  Remove packages from manifest, modules, deploy, lock
+  prune      Remove orphan modules not in the resolved graph
+  deps       Inspect lock deps (list | tree | why)
+  audit      Integrity checks (--ci gate)
+  doctor     Environment and project sanity checks
 
 Install flags (see also: bapm help install):
   --frozen       Fail closed on lock drift; re-verify deployed hashes when present

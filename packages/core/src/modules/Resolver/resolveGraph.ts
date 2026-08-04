@@ -39,6 +39,8 @@ type QueueItem = {
   /** Absolute path of the declaring package (for resolving relative local paths). */
   fromDir: string;
   parentName: string;
+  /** When updateRefs: whether this edge should ignore warm pins (rs-012 scope). */
+  shouldUpdate: boolean;
 };
 
 type EdgeRecord = {
@@ -63,7 +65,43 @@ type WarmPin = {
   resolved_tag?: string;
   resolved_at?: string;
   repo_url: string;
+  name?: string;
 };
+
+function normalizeScope(scope: string[] | undefined): Set<string> {
+  if (!scope || scope.length === 0) return new Set();
+  return new Set(scope.map((s) => s.trim()).filter(Boolean));
+}
+
+function entryMatchesScope(
+  entry: DependencyEntry,
+  scope: Set<string>,
+  warmByIdentity: Map<string, WarmPin>,
+): boolean {
+  if (scope.size === 0) return true;
+  const n = normalizeEntry(entry);
+  if (typeof n === "string") {
+    return [...scope].some((s) => n === s || n.includes(s) || s.includes(n));
+  }
+  const obj = n as ObjectDependency;
+  if (obj.alias && scope.has(String(obj.alias))) return true;
+  if (obj.git) {
+    const identity = normalizeRepoIdentity(obj.git);
+    const base = identity.split("/").pop() ?? identity;
+    if (scope.has(base) || scope.has(identity)) return true;
+    const warm = warmByIdentity.get(identity);
+    if (warm?.name && scope.has(warm.name)) return true;
+    return [...scope].some((s) => identity.includes(s) || base.includes(s));
+  }
+  if (obj.path) {
+    const pathKey = String(obj.path).replace(/^\.\//, "").replace(/\/+$/, "");
+    const base = pathKey.split("/").filter(Boolean).pop() ?? pathKey;
+    if (scope.has(base) || scope.has(pathKey)) return true;
+    return [...scope].some((s) => pathKey.includes(s) || base.includes(s));
+  }
+  if (obj.id && scope.has(String(obj.id))) return true;
+  return false;
+}
 
 /**
  * BFS transitive resolve with OpenAPM intersection-pick diamonds (not APM first-wins).
@@ -74,6 +112,7 @@ export async function resolveDependencyGraph(
   const cwd = resolve(options.cwd ?? process.cwd());
   const maxDepth = options.maxDepth ?? MAX_RESOLVE_DEPTH;
   const updateRefs = options.updateRefs === true;
+  const scopeSet = normalizeScope(options.scope ?? options.updatePackageNames);
 
   const gitRemote: GitRemote = options.gitRemote ?? createDefaultGitRemote();
   const tagLister: TagLister = options.tagLister ?? createDefaultTagLister();
@@ -107,6 +146,8 @@ export async function resolveDependencyGraph(
 
   const rootDeps = listApmDeps(manifest.dependencies);
   for (const entry of rootDeps) {
+    const shouldUpdate =
+      updateRefs && (scopeSet.size === 0 || entryMatchesScope(entry, scopeSet, warmByIdentity));
     queue.push({
       entry,
       depth: 1,
@@ -114,6 +155,7 @@ export async function resolveDependencyGraph(
       ancestorIdentities: [],
       fromDir: cwd,
       parentName: rootName,
+      shouldUpdate,
     });
   }
 
@@ -162,6 +204,7 @@ export async function resolveDependencyGraph(
       visitOrder,
       queue,
       expanded,
+      shouldUpdate: item.shouldUpdate,
     });
   }
 
@@ -211,13 +254,16 @@ function indexWarmPins(
     const repoRaw = d.repo_url;
     const repo = typeof repoRaw === "string" ? repoRaw : "";
     if (!repo) continue;
-    const identity = normalizeRepoIdentity(repo.includes("://") ? repo : `https://${repo}`);
+    const identity = repo.startsWith("local:")
+      ? repo
+      : normalizeRepoIdentity(repo.includes("://") ? repo : `https://${repo}`);
     map.set(identity, {
       repo_url: repo,
       resolved_commit: typeof d.resolved_commit === "string" ? d.resolved_commit : undefined,
       constraint: typeof d.constraint === "string" ? d.constraint : undefined,
       resolved_tag: typeof d.resolved_tag === "string" ? d.resolved_tag : undefined,
       resolved_at: typeof d.resolved_at === "string" ? d.resolved_at : undefined,
+      name: typeof d.name === "string" ? d.name : undefined,
     });
   }
   return map;
@@ -295,6 +341,7 @@ async function resolveLocal(
       ancestorIdentities: nextAncestors,
       fromDir: abs,
       parentName: name,
+      shouldUpdate: item.shouldUpdate,
     });
   }
 }
@@ -313,12 +360,14 @@ async function resolveGit(
     visitOrder: string[];
     queue: QueueItem[];
     expanded: Set<string>;
+    shouldUpdate: boolean;
   },
 ): Promise<void> {
   const gitUrl = classified.git!;
   const identity = normalizeRepoIdentity(gitUrl);
   const lockUrl = toLockRepoUrl(gitUrl);
   const warm = ctx.warmByIdentity.get(identity);
+  const reResolve = ctx.updateRefs && ctx.shouldUpdate;
 
   let resolved_commit: string | undefined;
   let resolved_tag: string | undefined;
@@ -336,7 +385,7 @@ async function resolveGit(
   if (classified.kind === "git-semver") {
     constraint = classified.ref!;
     const warmOk =
-      !ctx.updateRefs &&
+      !reResolve &&
       warm?.resolved_commit &&
       warm.constraint !== undefined &&
       warm.constraint === constraint;
@@ -366,7 +415,7 @@ async function resolveGit(
     // git-literal
     const ref = classified.ref ?? "HEAD";
     const warmOk =
-      !ctx.updateRefs && Boolean(warm?.resolved_commit) && warmConstraintMatchesLiteral(warm, ref);
+      !reResolve && Boolean(warm?.resolved_commit) && warmConstraintMatchesLiteral(warm, ref);
 
     if (warmOk) {
       resolved_commit = warm!.resolved_commit;
@@ -384,11 +433,11 @@ async function resolveGit(
     identity,
   });
 
-  let childName = nameHint;
+  let childName = warm?.name ?? nameHint;
   let childDeps: DependencyEntry[] = [];
   try {
     const child = loadManifest({ cwd: dest });
-    childName = child.document.name;
+    childName = child.document.name || childName;
     childDeps = listApmDeps(child.document.dependencies);
   } catch {
     // Fake downloads may leave a minimal manifest — already written by fake port
@@ -431,6 +480,7 @@ async function resolveGit(
       ancestorIdentities: nextAncestors,
       fromDir: dest,
       parentName: childName,
+      shouldUpdate: ctx.shouldUpdate,
     });
   }
 }

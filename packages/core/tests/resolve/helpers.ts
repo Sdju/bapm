@@ -153,9 +153,18 @@ export function createFakePorts(options?: {
         cpSync(args.path, args.dest, { recursive: true });
         return;
       }
+      const pkgName =
+        (typeof args.identity === "string" && args.identity.split("/").pop()) ||
+        (typeof args.repoUrl === "string" &&
+          args.repoUrl
+            .replace(/\.git$/i, "")
+            .split("/")
+            .filter(Boolean)
+            .pop()) ||
+        "fake";
       writeText(
         join(args.dest, "apm.yml"),
-        `name: fake\nversion: 0.0.0\ndependencies:\n  apm: []\n`,
+        `name: ${pkgName}\nversion: 0.0.0\ndependencies:\n  apm: []\n`,
       );
       if (args.commit) {
         writeText(join(args.dest, ".bapm-resolved-commit"), args.commit);

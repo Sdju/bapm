@@ -5,6 +5,7 @@
  *
  * - `runInstall` / `installProject` — primary install entry
  * - `enforceFrozen` — basic lk-006 gate
+ * - Deployed inventory helpers (hash verify / orphan cleanup) for Audit / Uninstall
  * - Types / `InstallError`
  *
  * Target interaction is only via `bapm-target-api` (no concrete host imports).
@@ -24,4 +25,15 @@ export { InstallError } from "./errors.ts";
 export { enforceFrozen } from "./frozen.ts";
 export { runInstall, installProject } from "./runInstall.ts";
 export { declaredTargetIds } from "./targets.ts";
-export { DEPLOYED_HASH_ALGO, hashFileBytes } from "./deployedInventory.ts";
+export {
+  DEPLOYED_HASH_ALGO,
+  hashFileBytes,
+  hashFileAt,
+  safeResolveUnderCwd,
+  cleanupOrphanDeployedFiles,
+  verifyDeployedFileHashes,
+  collectDeployedHashViolations,
+  collectDeployedHashes,
+  applyDeployedHashesToLock,
+} from "./deployedInventory.ts";
+export type { DeployedHashViolation, ResolvedDeployedFile } from "./deployedInventory.ts";

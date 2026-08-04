@@ -1,6 +1,6 @@
 /**
  * Package public API assembly for @bapm/core.
- * Re-exports Manifest + Lockfile + Resolver module surfaces and package-level constants.
+ * Re-exports Manifest + Lockfile + Resolver + Install + lifecycle module surfaces.
  */
 
 export type {
@@ -17,6 +17,7 @@ export type {
   RegistryEntry,
   ManifestErrorCode,
   ManifestWarning,
+  WriteManifestOptions,
 } from "@/modules/Manifest";
 
 export {
@@ -28,6 +29,8 @@ export {
   parseManifest,
   parseManifestDocument,
   loadYamlDocument,
+  serializeManifest,
+  writeManifest,
 } from "@/modules/Manifest";
 
 export type {
@@ -74,6 +77,7 @@ export type {
   ResolvedNode,
   TagLister,
   ResolverErrorCode,
+  PurgeInstallPathArgs,
 } from "@/modules/Resolver";
 
 export {
@@ -85,8 +89,13 @@ export {
   resolveDependencyGraph,
   downloadPackages,
   resolveAndLock,
+  purgeModulesInstallPaths,
   normalizeRepoIdentity,
   toLockRepoUrl,
+  identityToCacheDir,
+  pickHighestSatisfyingTag,
+  pickHighestInIntersection,
+  pickTightestRange,
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
@@ -116,6 +125,8 @@ export type {
   InstallResult,
   RunInstallOptions,
   InstallErrorCode,
+  DeployedHashViolation,
+  ResolvedDeployedFile,
 } from "@/modules/Install";
 
 export {
@@ -124,7 +135,57 @@ export {
   runInstall,
   installProject,
   declaredTargetIds,
+  DEPLOYED_HASH_ALGO,
+  hashFileBytes,
+  hashFileAt,
+  safeResolveUnderCwd,
+  cleanupOrphanDeployedFiles,
+  verifyDeployedFileHashes,
+  collectDeployedHashViolations,
+  collectDeployedHashes,
+  applyDeployedHashesToLock,
 } from "@/modules/Install";
+
+export type {
+  RunUpdateOptions,
+  UpdatePlanEntry,
+  UpdateResult,
+  UpdateErrorCode,
+} from "@/modules/Update";
+export { UpdateError, runUpdate, updateProject } from "@/modules/Update";
+
+export type {
+  OutdatedRow,
+  OutdatedResult,
+  RunOutdatedOptions,
+  OutdatedErrorCode,
+} from "@/modules/Outdated";
+export { OutdatedError, runOutdated, checkOutdated, outdated } from "@/modules/Outdated";
+
+export type { RunUninstallOptions, UninstallResult, UninstallErrorCode } from "@/modules/Uninstall";
+export { UninstallError, runUninstall, uninstallPackages, uninstall } from "@/modules/Uninstall";
+
+export type { RunPruneOptions, PruneResult, PruneErrorCode } from "@/modules/Prune";
+export { PruneError, runPrune, pruneModules, prune } from "@/modules/Prune";
+
+export type { DepsListResult, DepsTreeResult, DepsWhyResult, RunDepsOptions } from "@/modules/Deps";
+export {
+  listDeps,
+  depsList,
+  runDepsList,
+  treeDeps,
+  depsTree,
+  runDepsTree,
+  whyDeps,
+  depsWhy,
+  runDepsWhy,
+} from "@/modules/Deps";
+
+export type { AuditCiResult, RunAuditCiOptions } from "@/modules/Audit";
+export { runAuditCi, auditCi, runAudit } from "@/modules/Audit";
+
+export type { DoctorResult, RunDoctorOptions, DoctorCheck } from "@/modules/Doctor";
+export { runDoctor, doctor, checkDoctor } from "@/modules/Doctor";
 
 export const BAPM_NAME = "bapm";
 

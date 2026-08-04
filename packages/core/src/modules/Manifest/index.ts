@@ -40,3 +40,5 @@ export { APM_MANIFEST_FILE, BAPM_MANIFEST_FILE, discoverManifestPath } from "./d
 export { loadManifest } from "./load.ts";
 export { parseManifest, parseManifestDocument } from "./parse.ts";
 export { loadYamlDocument } from "./yaml-load.ts";
+export { serializeManifest, writeManifest } from "./write.ts";
+export type { WriteManifestOptions } from "./write.ts";

@@ -25,7 +25,13 @@ export { classifyDependencyRef } from "./classify.ts";
 export { resolveDependencyGraph } from "./resolveGraph.ts";
 export { downloadPackages } from "./download.ts";
 export { resolveAndLock } from "./resolveAndLock.ts";
-export { normalizeRepoIdentity, toLockRepoUrl } from "./identity.ts";
+export { purgeModulesInstallPaths } from "./purge.ts";
+export { normalizeRepoIdentity, toLockRepoUrl, identityToCacheDir } from "./identity.ts";
+export {
+  pickHighestSatisfyingTag,
+  pickHighestInIntersection,
+  pickTightestRange,
+} from "./semver.ts";
 export {
   createDefaultDownloader,
   createDefaultGitRemote,
@@ -49,3 +55,4 @@ export type {
   ResolvedNode,
   TagLister,
 } from "./types.ts";
+export type { PurgeInstallPathArgs } from "./purge.ts";

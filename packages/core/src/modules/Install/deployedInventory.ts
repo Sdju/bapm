@@ -68,14 +68,18 @@ export function cleanupOrphanDeployedFiles(args: {
   return removed;
 }
 
-/**
- * Re-verify on-disk content against lock deployed_file_hashes (lk-017 lite).
- * No-op when no inventory present.
- */
-export function verifyDeployedFileHashes(args: { cwd: string; document: LockfileDocument }): void {
+export type DeployedHashViolation = {
+  path: string;
+  kind: "missing" | "mismatch";
+  expected?: string;
+  actual?: string;
+  message: string;
+};
+
+function collectHashChecks(document: LockfileDocument): Array<{ path: string; expected: string }> {
   const checks: Array<{ path: string; expected: string }> = [];
 
-  for (const dep of args.document.dependencies ?? []) {
+  for (const dep of document.dependencies ?? []) {
     const hashes = dep.deployed_file_hashes;
     if (!hashes || typeof hashes !== "object") continue;
     for (const [path, expected] of Object.entries(hashes)) {
@@ -83,31 +87,78 @@ export function verifyDeployedFileHashes(args: { cwd: string; document: Lockfile
     }
   }
 
-  const local = args.document.local_deployed_file_hashes;
+  const local = document.local_deployed_file_hashes;
   if (local && typeof local === "object") {
     for (const [path, expected] of Object.entries(local)) {
       if (typeof expected === "string") checks.push({ path, expected });
     }
   }
+  return checks;
+}
 
-  for (const { path, expected } of checks) {
+function normalizeHashValue(value: string): string {
+  // Accept both raw hex and `sha256:<hex>` / `sha-256:<hex>` wire forms
+  const m = value.trim().match(/^(?:sha-?256:)?([0-9a-fA-F]{64})$/i);
+  return m ? m[1]!.toLowerCase() : value.trim().toLowerCase();
+}
+
+/**
+ * Collect deployed hash / presence violations without throwing (for audit --ci).
+ * No-op (empty) when no inventory present. Does not fail on missing tree_sha256.
+ */
+export function collectDeployedHashViolations(args: {
+  cwd: string;
+  document: LockfileDocument;
+}): DeployedHashViolation[] {
+  const violations: DeployedHashViolation[] = [];
+  for (const { path, expected } of collectHashChecks(args.document)) {
     const abs = safeResolveUnderCwd(args.cwd, path);
+    const expectedNorm = normalizeHashValue(expected);
     if (!abs || !existsSync(abs)) {
-      throw new InstallError(
-        "INSTALL_FROZEN_HASH_MISMATCH",
-        `Frozen deployed file integrity failed: missing harness path ${path}`,
-        { details: { path } },
-      );
+      violations.push({
+        path,
+        kind: "missing",
+        expected: expectedNorm,
+        message: `Missing deployed file (absent on disk): ${path}; expected hash ${expectedNorm}`,
+      });
+      continue;
     }
     const actual = hashFileAt(abs);
-    if (actual !== expected) {
-      throw new InstallError(
-        "INSTALL_FROZEN_HASH_MISMATCH",
-        `Frozen deployed file hash mismatch (integrity): ${path}`,
-        { details: { path, expected, actual } },
-      );
+    if (actual !== expectedNorm) {
+      violations.push({
+        path,
+        kind: "mismatch",
+        expected: expectedNorm,
+        actual,
+        message: `Hash mismatch for ${path}: expected ${expectedNorm}, observed ${actual}`,
+      });
     }
   }
+  return violations;
+}
+
+/**
+ * Re-verify on-disk content against lock deployed_file_hashes (lk-017 lite).
+ * No-op when no inventory present.
+ */
+export function verifyDeployedFileHashes(args: { cwd: string; document: LockfileDocument }): void {
+  const violations = collectDeployedHashViolations(args);
+  if (violations.length === 0) return;
+  const first = violations[0]!;
+  throw new InstallError(
+    "INSTALL_FROZEN_HASH_MISMATCH",
+    first.kind === "missing"
+      ? `Frozen deployed file integrity failed: missing harness path ${first.path}`
+      : `Frozen deployed file hash mismatch (integrity): ${first.path}`,
+    {
+      details: {
+        path: first.path,
+        expected: first.expected,
+        actual: first.actual,
+        kind: first.kind,
+      },
+    },
+  );
 }
 
 export type ResolvedDeployedFile = { path: string; hash: string };

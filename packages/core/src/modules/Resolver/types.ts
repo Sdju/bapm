@@ -74,6 +74,14 @@ export type ResolvePorts = {
 export type ResolveDependencyGraphOptions = ResolvePorts & {
   cwd?: string;
   updateRefs?: boolean;
+  /**
+   * When set with `updateRefs`, only these package names (+ their subtrees)
+   * re-resolve; other direct pins stay identical (OpenAPM rs-012).
+   * Empty / omitted with updateRefs → full update (rs-011).
+   */
+  scope?: string[];
+  /** Alias for `scope` (CLI / update API). */
+  updatePackageNames?: string[];
   maxDepth?: number;
   /** When set, used for warm replay instead of loading from disk. */
   existingLock?: { dependencies?: Array<Record<string, unknown>> } | null;
@@ -96,6 +104,14 @@ export type DownloadPackagesOptions = ResolvePorts & {
 export type ResolveAndLockOptions = ResolvePorts & {
   cwd?: string;
   updateRefs?: boolean;
+  /** Package scope for update (rs-012); see ResolveDependencyGraphOptions.scope. */
+  scope?: string[];
+  updatePackageNames?: string[];
+  /**
+   * When true (default on updateRefs), purge git-semver modules install paths
+   * for scoped/full update targets before re-download (lk-010).
+   */
+  purgeInstallPaths?: boolean;
   parallelDownloads?: number;
   maxDepth?: number;
   verbose?: boolean;
