@@ -30,6 +30,7 @@ Commands:
 
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present
+  --no-frozen              Opt out of frozen (including when CI defaults to frozen)
   --target <id>            Force a registered host target (e.g. cursor)
   --trust-transitive-mcp   Deploy dependency MCP (default: direct dependencies.mcp only)
 
@@ -47,8 +48,9 @@ Usage:
 
 Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
+  --no-frozen              Opt out of frozen mode (including CI-default frozen)
   --target <id>            Force activation of a registered host target (e.g. cursor)
-  --update                 Re-resolve mutable refs (rejected with --frozen)
+  --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
   --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
@@ -60,7 +62,10 @@ MCP / Cursor:
   (or an executables.allow / allowExecutables grant for that package — sc-009).
   Auto-detect without .cursor/ does not mkdir solely for MCP.
 
-Unknown flags are rejected. --frozen cannot be combined with --update.
+Unknown flags are rejected. --frozen and --no-frozen cannot be combined.
+Frozen (explicit or when CI is truthy) cannot be combined with --update.
+When the CI environment variable is truthy (not "", "0", or "false"), install
+defaults to frozen unless --no-frozen is passed (OpenAPM req-lk-018).
 A local .zip path is detected as a pack archive (install-from-archive round-trip).
 `;
 }

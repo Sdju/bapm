@@ -5,6 +5,7 @@
  *
  * - `runInstall` / `installProject` — primary install entry
  * - `enforceFrozen` — basic lk-006 gate
+ * - `isCiEnvTruthy` / `resolveEffectiveFrozen` — OpenAPM lk-018 CI-default frozen
  * - Deployed inventory helpers (hash verify / orphan cleanup) for Audit / Uninstall
  * - Types / `InstallError`
  *
@@ -23,6 +24,11 @@ export type { InstallErrorCode } from "./errors.ts";
 export { InstallError } from "./errors.ts";
 
 export { enforceFrozen } from "./frozen.ts";
+export {
+  isCiEnvTruthy,
+  resolveEffectiveFrozen,
+  type ResolveEffectiveFrozenOptions,
+} from "./ciFrozen.ts";
 export { runInstall, installProject } from "./runInstall.ts";
 export { declaredTargetIds } from "./targets.ts";
 export {

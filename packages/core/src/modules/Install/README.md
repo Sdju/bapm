@@ -8,6 +8,7 @@ orphan cleanup → primitives discover/conflict → invoke registered targets vi
 
 - `runInstall` / `installProject`
 - `enforceFrozen`
+- `isCiEnvTruthy` / `resolveEffectiveFrozen` — OpenAPM req-lk-018 CI-default frozen
 - `declaredTargetIds`
 - `InstallError`
 - `DEPLOYED_HASH_ALGO` / `hashFileBytes` — SHA-256 hex of file bytes for harness inventory
@@ -19,6 +20,16 @@ orphan cleanup → primitives discover/conflict → invoke registered targets vi
 - `archivePath` — local pack `.zip` path; extract into project root via Pack helper, then dual-read parse landed manifest and continue install orchestration (M7 install-from-archive)
 - `policyPath` / `policy` — explicit policy file (wins over dual-read `apm-policy.yml` | `bapm-policy.yml`)
 - `noPolicy` — skip policy gate (`--no-policy` / `BAPM_POLICY_DISABLE=1`)
+
+## CI-default frozen (lk-018)
+
+OpenAPM SHOULD: when `CI` is truthy (present and not `""` / `"0"` / `"false"`,
+case-insensitive), consumers default install to frozen unless an explicit
+non-frozen opt-out applies. Use `isCiEnvTruthy(env)` and
+`resolveEffectiveFrozen({ frozen?, noFrozen?, env })` at the call boundary
+(CLI does this before `runInstall`). Passing `frozen: false` into
+`runInstall` remains an explicit opt-out for tests/tools. Does not reopen P1
+lk-015 (`tree_sha256` re-verify stays unchanged).
 
 ## Policy gate (M8)
 

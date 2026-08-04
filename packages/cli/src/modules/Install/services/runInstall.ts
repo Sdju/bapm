@@ -4,6 +4,7 @@ import {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
+  resolveEffectiveFrozen,
   runInstall as coreRunInstall,
 } from "@bapm/core";
 import { createTargetRegistry } from "bapm-target-api";
@@ -19,22 +20,35 @@ Usage:
 
 Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
+  --no-frozen              Opt out of frozen mode (including CI-default frozen)
   --target <id>            Force activation of a registered host target (e.g. cursor)
-  --update                 Re-resolve mutable refs (rejected with --frozen)
+  --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
   --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
   --help, -h               Show this help
 
 Notes:
-  Unknown flags are rejected. Combining --frozen with --update is an error.
+  Unknown flags are rejected. Combining --frozen with --no-frozen is an error.
+  Combining frozen (explicit or CI-default) with --update is an error.
+  When the CI environment variable is truthy (not "", "0", or "false"), install
+  defaults to frozen unless --no-frozen is passed (OpenAPM req-lk-018).
   A local .zip path is consumed as a pack archive (install-from-archive).
   When cursor is active, eligible MCP servers write .cursor/mcp.json (direct mcp by default).
 `;
 }
 
-export function parseInstallArgs(argv: string[]): {
+export type ParseInstallArgsOptions = {
+  /** Env overlay for CI-default frozen (defaults to `process.env`). */
+  env?: Record<string, string | undefined>;
+};
+
+export function parseInstallArgs(
+  argv: string[],
+  options: ParseInstallArgsOptions = {},
+): {
   frozen: boolean;
+  noFrozen: boolean;
   update: boolean;
   target?: string;
   archivePath?: string;
@@ -44,7 +58,8 @@ export function parseInstallArgs(argv: string[]): {
   help?: boolean;
   error?: string;
 } {
-  let frozen = false;
+  let frozenFlag = false;
+  let noFrozen = false;
   let update = false;
   let target: string | undefined;
   let archivePath: string | undefined;
@@ -53,6 +68,17 @@ export function parseInstallArgs(argv: string[]): {
   let trustTransitiveMcp = false;
   let help = false;
 
+  const partial = () => ({
+    frozen: frozenFlag,
+    noFrozen,
+    update,
+    target,
+    archivePath,
+    policyPath,
+    noPolicy,
+    trustTransitiveMcp,
+  });
+
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") {
@@ -60,7 +86,11 @@ export function parseInstallArgs(argv: string[]): {
       continue;
     }
     if (arg === "--frozen") {
-      frozen = true;
+      frozenFlag = true;
+      continue;
+    }
+    if (arg === "--no-frozen") {
+      noFrozen = true;
       continue;
     }
     if (arg === "--update") {
@@ -79,10 +109,7 @@ export function parseInstallArgs(argv: string[]): {
       const next = argv[i + 1];
       if (!next || next.startsWith("-")) {
         return {
-          frozen,
-          update,
-          noPolicy,
-          trustTransitiveMcp,
+          ...partial(),
           error: "Missing value for --policy <path>",
         };
       }
@@ -94,10 +121,7 @@ export function parseInstallArgs(argv: string[]): {
       policyPath = arg.slice("--policy=".length);
       if (!policyPath) {
         return {
-          frozen,
-          update,
-          noPolicy,
-          trustTransitiveMcp,
+          ...partial(),
           error: "Missing value for --policy=<path>",
         };
       }
@@ -107,10 +131,7 @@ export function parseInstallArgs(argv: string[]): {
       const next = argv[i + 1];
       if (!next || next.startsWith("-")) {
         return {
-          frozen,
-          update,
-          noPolicy,
-          trustTransitiveMcp,
+          ...partial(),
           error: "Missing value for --target <id>",
         };
       }
@@ -122,10 +143,7 @@ export function parseInstallArgs(argv: string[]): {
       target = arg.slice("--target=".length);
       if (!target) {
         return {
-          frozen,
-          update,
-          noPolicy,
-          trustTransitiveMcp,
+          ...partial(),
           error: "Missing value for --target=<id>",
         };
       }
@@ -133,45 +151,55 @@ export function parseInstallArgs(argv: string[]): {
     }
     if (arg.startsWith("-")) {
       return {
-        frozen,
-        update,
-        target,
-        noPolicy,
-        trustTransitiveMcp,
-        policyPath,
+        ...partial(),
         error: `Unknown install flag: ${arg}`,
       };
     }
     // Positional: local .zip pack archive wins over package-ref parse
     if (archivePath !== undefined) {
       return {
-        frozen,
-        update,
-        target,
-        archivePath,
-        noPolicy,
-        trustTransitiveMcp,
-        policyPath,
+        ...partial(),
         error: `Unexpected argument: ${arg}`,
       };
     }
     archivePath = arg;
   }
 
+  if (frozenFlag && noFrozen) {
+    return {
+      ...partial(),
+      error: "Cannot combine --frozen and --no-frozen (mutually exclusive flags conflict)",
+    };
+  }
+
+  const env = options.env ?? (process.env as Record<string, string | undefined>);
+  let frozen: boolean;
+  try {
+    frozen = resolveEffectiveFrozen({ frozen: frozenFlag, noFrozen, env });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { ...partial(), error: message };
+  }
+
   if (frozen && update) {
     return {
+      ...partial(),
       frozen,
-      update,
-      target,
-      archivePath,
-      noPolicy,
-      trustTransitiveMcp,
-      policyPath,
       error: "Frozen mode rejects --update (frozen+update mutation rejected)",
     };
   }
 
-  return { frozen, update, target, archivePath, policyPath, noPolicy, trustTransitiveMcp, help };
+  return {
+    frozen,
+    noFrozen,
+    update,
+    target,
+    archivePath,
+    policyPath,
+    noPolicy,
+    trustTransitiveMcp,
+    help,
+  };
 }
 
 function resolveLocalZipArchive(
@@ -194,7 +222,7 @@ export async function runInstall(
   deps: InstallDeps,
   options: InstallOptions,
 ): Promise<InstallResult> {
-  const parsed = parseInstallArgs(options.args ?? []);
+  const parsed = parseInstallArgs(options.args ?? [], { env: options.env });
   if (parsed.help) {
     console.log(formatInstallHelp(deps));
     return { ok: true };

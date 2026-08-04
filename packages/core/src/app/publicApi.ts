@@ -152,6 +152,8 @@ export type {
 export {
   InstallError,
   enforceFrozen,
+  isCiEnvTruthy,
+  resolveEffectiveFrozen,
   runInstall,
   installProject,
   declaredTargetIds,
@@ -165,6 +167,8 @@ export {
   collectDeployedHashes,
   applyDeployedHashesToLock,
 } from "@/modules/Install";
+
+export type { ResolveEffectiveFrozenOptions } from "@/modules/Install";
 
 export type {
   RunUpdateOptions,
