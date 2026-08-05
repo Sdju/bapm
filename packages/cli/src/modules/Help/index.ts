@@ -1,6 +1,7 @@
 import { formatHelp, formatInstallTopicHelp, type HelpContentDeps } from "./services/formatHelp.ts";
 import { formatPublishHelp } from "@/modules/Publish";
 import { formatSelfUpdateHelp } from "@/modules/SelfUpdate";
+import { formatLockHelp } from "@/modules/Lock";
 
 export type { HelpContentDeps };
 
@@ -10,6 +11,7 @@ export function createHelp(deps: HelpDeps) {
   return {
     format(topic?: string): string {
       if (topic === "install") return formatInstallTopicHelp(deps);
+      if (topic === "lock") return formatLockHelp();
       if (topic === "publish") {
         return formatPublishHelp({
           name: deps.name,

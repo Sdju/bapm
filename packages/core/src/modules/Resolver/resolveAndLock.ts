@@ -374,7 +374,7 @@ function buildLockDocument(
   const lockfile_version: "1" | "2" =
     hasRegistry || deps.some((d) => d.constraint || d.resolved_tag) ? "2" : version;
 
-  return {
+  const document: LockfileDocument = {
     lockfile_version,
     dependencies: deps,
     generated_at: new Date().toISOString(),
@@ -382,4 +382,23 @@ function buildLockDocument(
       ? { local_deployed_file_hashes: existing.local_deployed_file_hashes }
       : {}),
   };
+
+  // Opaque carry of inventory bags (mcp_*, lsp_*, deployments, x-*, unknowns).
+  // Do not invent bags; do not overwrite freshly built core fields.
+  if (existing) {
+    const reserved = new Set([
+      "lockfile_version",
+      "dependencies",
+      "generated_at",
+      "local_deployed_file_hashes",
+    ]);
+    for (const [key, value] of Object.entries(existing)) {
+      if (reserved.has(key)) continue;
+      if (value === undefined || value === null) continue;
+      if (key in document) continue;
+      (document as Record<string, unknown>)[key] = value;
+    }
+  }
+
+  return document;
 }

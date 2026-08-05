@@ -13,6 +13,10 @@ export type LockResult = {
   lockPath?: string;
 };
 
+export type LockExportSbomResult =
+  | { ok: true; json: string; format: string }
+  | { ok: false; error: string };
+
 export type LockDeps = {
   resolveAndLock: (options: {
     cwd?: string;
@@ -23,4 +27,9 @@ export type LockDeps = {
     policy?: string;
     noPolicy?: boolean;
   }) => Promise<{ lockPath: string }>;
+  exportSbom?: (options: {
+    cwd?: string;
+    format?: string;
+    timestamp?: string;
+  }) => Promise<LockExportSbomResult>;
 };

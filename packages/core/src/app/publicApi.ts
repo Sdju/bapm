@@ -208,6 +208,37 @@ export {
 export type { AuditCiResult, RunAuditCiOptions } from "@/modules/Audit";
 export { runAuditCi, auditCi, runAudit } from "@/modules/Audit";
 
+export type {
+  ExportSbomFailure,
+  ExportSbomOptions,
+  ExportSbomResult,
+  ExportSbomSuccess,
+  InventoryDep,
+  LicenseClass,
+  LicenseKind,
+  SbomFormat,
+} from "@/modules/Export";
+export {
+  CYCLONEDX_SPEC_VERSION,
+  FIXED_EPOCH_TIMESTAMP,
+  FORMAT_CYCLONEDX,
+  FORMAT_SPDX,
+  SPDX_VERSION,
+  SUPPORTED_FORMATS,
+  buildPurl,
+  scrubUrl,
+  componentName,
+  componentVersion,
+  classifyDeclaredLicense,
+  KIND_EXPRESSION,
+  KIND_ID,
+  KIND_NAMED,
+  formatUnsupportedMessage,
+  normalizeFormat,
+  serializeSbom,
+  exportSbom,
+} from "@/modules/Export";
+
 export type { DoctorResult, RunDoctorOptions, DoctorCheck } from "@/modules/Doctor";
 export { runDoctor, doctor, checkDoctor } from "@/modules/Doctor";
 
