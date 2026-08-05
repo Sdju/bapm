@@ -7,11 +7,21 @@ import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { runCli } from "../../src/index.ts";
 import {
+  formatOutdatedHelp,
+  parseOutdatedArgs,
+} from "../../src/modules/Outdated/services/runOutdated.ts";
+import {
   formatUpdateHelp,
   parseUpdateArgs,
 } from "../../src/modules/Update/services/runUpdate.ts";
 
-export { formatUpdateHelp, parseUpdateArgs, runCli };
+export {
+  formatOutdatedHelp,
+  formatUpdateHelp,
+  parseOutdatedArgs,
+  parseUpdateArgs,
+  runCli,
+};
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
@@ -131,6 +141,31 @@ export function expectKnownUpdateFlag(combined: string, flag: string): void {
     new RegExp(`unknown (?:flag|option):\\s*${escaped}`, "i").test(combined)
   ) {
     throw new Error(`CLI rejected "${flag}" as unknown flag:\n${combined}`);
+  }
+}
+
+export function expectKnownOutdatedFlag(combined: string, flag: string): void {
+  const escaped = flag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (
+    new RegExp(`unknown outdated flag:\\s*${escaped}`, "i").test(combined) ||
+    new RegExp(`unknown (?:flag|option):\\s*${escaped}`, "i").test(combined)
+  ) {
+    throw new Error(`CLI rejected "${flag}" as unknown flag:\n${combined}`);
+  }
+}
+
+export function stdoutText(stdout: string[]): string {
+  return stdout.join("\n");
+}
+
+export function parseJsonStdout(stdout: string[]): unknown {
+  const text = stdoutText(stdout).trim();
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(
+      `expected parseable JSON on stdout, got:\n${text}\n${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 

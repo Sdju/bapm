@@ -1,5 +1,5 @@
 /**
- * p7b — core parallelChecks: 0 serial, bound real concurrency, lock order (MUST).
+ * Core outdated parallelChecks: 0 serial, bound real concurrency, lock order (MUST).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -13,7 +13,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7b core outdated parallelChecks", () => {
+describe("core outdated parallelChecks", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

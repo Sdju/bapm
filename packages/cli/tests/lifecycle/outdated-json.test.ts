@@ -1,5 +1,5 @@
 /**
- * p7b — CLI outdated --json shape { dependencies: OutdatedRow[] } (SHOULD).
+ * CLI outdated --json shape { dependencies: OutdatedRow[] } (SHOULD).
  * Suppress human table; no invented APM source; -v includes tip_ref/detail when present.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -25,7 +25,7 @@ const OUTDATED_ROW_KEYS = new Set([
   "detail",
 ]);
 
-describe("p7b CLI outdated --json", () => {
+describe("CLI outdated --json", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

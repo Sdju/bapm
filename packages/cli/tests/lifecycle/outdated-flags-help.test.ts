@@ -1,5 +1,5 @@
 /**
- * p7b — CLI outdated -j/--parallel-checks + help + fail-closed (cli-runtime-surface).
+ * CLI outdated -j/--parallel-checks + help + fail-closed (cli-runtime-surface).
  * MUST: parse forms, default 4, 0=serial, invalid fail-closed, help, -j ≠ JSON.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -18,7 +18,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7b CLI outdated parallel-checks + help", () => {
+describe("CLI outdated parallel-checks + help", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

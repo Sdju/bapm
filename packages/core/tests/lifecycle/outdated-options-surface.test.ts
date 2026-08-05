@@ -1,10 +1,10 @@
 /**
- * p7b — RunOutdatedOptions.parallelChecks surface (default 4 / 0 = serial).
+ * RunOutdatedOptions.parallelChecks surface (default 4 / 0 = serial).
  */
 import { describe, expect, test } from "vite-plus/test";
 import { readOutdatedRunSource, readOutdatedTypesSource } from "./helpers.ts";
 
-describe("p7b outdated options surface", () => {
+describe("outdated options surface", () => {
   test("RunOutdatedOptions includes parallelChecks; default unresolved → 4", () => {
     const types = readOutdatedTypesSource();
     expect(types).toMatch(/\bparallelChecks\??\s*:/);
