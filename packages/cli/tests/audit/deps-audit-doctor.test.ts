@@ -104,4 +104,20 @@ describe("CLI deps + audit + doctor", () => {
     expect(result).toBe(0);
     expect(combined).toMatch(/git/i);
   });
+
+  test("doctor -v accepted; unknown flag fail-closed", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "cli-doctor-verbose");
+    writeLock(project.cwd, `lockfile_version: "1"\ndependencies: []\n`);
+
+    const ok = await runInProject(project.cwd, ["doctor", "-v"]);
+    expectKnownCommand(ok.combined, "doctor");
+    expect(ok.result).toBe(0);
+    expect(ok.combined).toMatch(/git|manifest|lockfile|modules/i);
+    expect(ok.combined).toMatch(/\tnetwork\t/);
+
+    const bad = await runInProject(project.cwd, ["doctor", "--not-a-flag"]);
+    expect(bad.result).not.toBe(0);
+    expect(bad.combined).toMatch(/Unknown doctor flag:\s*--not-a-flag/);
+  });
 });
