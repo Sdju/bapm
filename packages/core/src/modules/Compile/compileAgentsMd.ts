@@ -6,7 +6,11 @@ import {
   type AttributedPrimitive,
 } from "@/modules/Primitives";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
-import type { CompileAgentsMdOptions, CompileAgentsMdResult } from "./types.ts";
+import type {
+  CompileAgentsMdOptions,
+  CompileAgentsMdResult,
+  CompileAttributionEntry,
+} from "./types.ts";
 
 /**
  * Discover primitives and emit deterministic `AGENTS.md` (cursor host only).
@@ -15,6 +19,7 @@ import type { CompileAgentsMdOptions, CompileAgentsMdResult } from "./types.ts";
 export function compileAgentsMd(options: CompileAgentsMdOptions = {}): CompileAgentsMdResult {
   const cwd = resolve(options.cwd ?? process.cwd());
   const validate = options.validate === true;
+  const dryRun = options.dryRun === true;
   const outputFile = options.outputFile ?? "AGENTS.md";
   const modulesDir = options.modulesDir ?? join(cwd, APM_MODULES_DIR);
 
@@ -22,10 +27,12 @@ export function compileAgentsMd(options: CompileAgentsMdOptions = {}): CompileAg
   const { primitives } = resolvePrimitiveConflicts({ primitives: raw });
   const sorted = sortPrimitives(primitives);
   const content = renderAgentsMd(sorted, cwd);
+  const attribution = toAttribution(sorted);
 
   const outPath = join(cwd, outputFile);
   let wrote = false;
-  if (!validate) {
+  // validate wins over dryRun: never write when either is set
+  if (!validate && !dryRun) {
     const parent = dirname(outPath);
     if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
     writeFileSync(outPath, content, "utf8");
@@ -38,12 +45,25 @@ export function compileAgentsMd(options: CompileAgentsMdOptions = {}): CompileAg
     content,
     wrote,
     primitivesCount: sorted.length,
+    attribution,
   };
 }
 
 export const compileProject = compileAgentsMd;
 export const runCompile = compileAgentsMd;
 export const emitAgentsMd = compileAgentsMd;
+
+function toAttribution(primitives: AttributedPrimitive[]): CompileAttributionEntry[] {
+  return primitives.map((p) => {
+    const entry: CompileAttributionEntry = {
+      name: String(p.name ?? "unnamed"),
+      type: String(p.type ?? "primitive"),
+    };
+    const path = typeof p.path === "string" ? p.path.trim() : "";
+    if (path) entry.path = path;
+    return entry;
+  });
+}
 
 function sortPrimitives(primitives: AttributedPrimitive[]): AttributedPrimitive[] {
   return [...primitives].sort((a, b) => {

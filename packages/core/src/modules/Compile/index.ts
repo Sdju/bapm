@@ -4,15 +4,19 @@
  * ## Public API
  *
  * - `compileAgentsMd` / `compileProject` / `runCompile` / `emitAgentsMd`
- * - `--validate` skips durable write
+ * - `validate` / `dryRun` skip durable write; `verbose` yields thin attribution
  *
  * ## Example
  *
  * ```ts
  * import { compileAgentsMd } from "@/modules/Compile";
- * await compileAgentsMd({ cwd });
+ * compileAgentsMd({ cwd, dryRun: true, verbose: true });
  * ```
  */
 
-export type { CompileAgentsMdOptions, CompileAgentsMdResult } from "./types.ts";
+export type {
+  CompileAgentsMdOptions,
+  CompileAgentsMdResult,
+  CompileAttributionEntry,
+} from "./types.ts";
 export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "./compileAgentsMd.ts";

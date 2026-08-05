@@ -60,7 +60,7 @@ describe("CLI M9 thin compile → AGENTS.md", () => {
     expect(existsSync(join(project.cwd, ".claude"))).toBe(false);
   });
 
-  test.skip("SHOULD: --validate leaves AGENTS.md untouched", async () => {
+  test("--validate leaves AGENTS.md untouched", async () => {
     project = createTempProject();
     writeCompileProject(project.cwd);
     const { result } = await runInProject(project.cwd, ["compile", "--validate"]);

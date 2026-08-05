@@ -393,7 +393,11 @@ export type {
 
 export { collectMcpServers, applyMcpInventoryToLock } from "@/modules/Mcp";
 
-export type { CompileAgentsMdOptions, CompileAgentsMdResult } from "@/modules/Compile";
+export type {
+  CompileAgentsMdOptions,
+  CompileAgentsMdResult,
+  CompileAttributionEntry,
+} from "@/modules/Compile";
 
 export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "@/modules/Compile";
 
