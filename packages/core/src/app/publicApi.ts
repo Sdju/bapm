@@ -184,7 +184,13 @@ export type {
   RunOutdatedOptions,
   OutdatedErrorCode,
 } from "@/modules/Outdated";
-export { OutdatedError, runOutdated, checkOutdated, outdated } from "@/modules/Outdated";
+export {
+  DEFAULT_PARALLEL_CHECKS,
+  OutdatedError,
+  runOutdated,
+  checkOutdated,
+  outdated,
+} from "@/modules/Outdated";
 
 export type { RunUninstallOptions, UninstallResult, UninstallErrorCode } from "@/modules/Uninstall";
 export { UninstallError, runUninstall, uninstallPackages, uninstall } from "@/modules/Uninstall";

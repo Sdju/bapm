@@ -10,9 +10,16 @@ import {
   normalizeRepoIdentity,
   pickHighestSatisfyingTag,
   toLockRepoUrl,
+  type GitRemote,
+  type TagLister,
 } from "@/modules/Resolver";
 import { OutdatedError } from "./errors.ts";
-import type { OutdatedResult, OutdatedRow, RunOutdatedOptions } from "./types.ts";
+import {
+  DEFAULT_PARALLEL_CHECKS,
+  type OutdatedResult,
+  type OutdatedRow,
+  type RunOutdatedOptions,
+} from "./types.ts";
 
 /**
  * Compare lock pins to remote tips / latest matching semver tags.
@@ -33,87 +40,12 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
   const tagLister = options.tagLister ?? createDefaultTagLister();
   const gitRemote = options.gitRemote ?? createDefaultGitRemote();
   const verbose = options.verbose === true;
-  const rows: OutdatedRow[] = [];
+  const parallelChecks = options.parallelChecks ?? DEFAULT_PARALLEL_CHECKS;
+  const deps = loaded.document.dependencies ?? [];
 
-  for (const dep of loaded.document.dependencies ?? []) {
-    const name = String(dep.name ?? dep.repo_url ?? "unknown");
-    const repo = String(dep.repo_url ?? "");
-    const current =
-      typeof dep.resolved_commit === "string"
-        ? dep.resolved_commit
-        : typeof dep.resolved_tag === "string"
-          ? dep.resolved_tag
-          : typeof dep.version === "string"
-            ? dep.version
-            : "";
-
-    if (!repo || repo.startsWith("local:")) {
-      rows.push({
-        name,
-        status: "up-to-date",
-        current: current || "local",
-        latest: current || "local",
-        repo_url: repo,
-        detail: verbose ? "skip: local (no network)" : undefined,
-      });
-      continue;
-    }
-
-    const gitUrl = repo.includes("://") ? repo : `https://${repo}`;
-    const constraint = typeof dep.constraint === "string" ? dep.constraint : undefined;
-
-    try {
-      if (constraint) {
-        const tags = await tagLister.listTags(gitUrl);
-        const picked = pickHighestSatisfyingTag(
-          tags.map((t) => t.tag),
-          constraint,
-        );
-        if (!picked) {
-          rows.push({
-            name,
-            status: "unknown",
-            current,
-            repo_url: repo,
-            detail: verbose ? `constraint=${constraint}; no satisfying tag` : undefined,
-          });
-          continue;
-        }
-        const hit = tags.find((t) => t.tag === picked)!;
-        const latestCommit = hit.commit;
-        const latestTag = picked;
-        const isOutdated =
-          (current && latestCommit && current !== latestCommit) ||
-          (typeof dep.resolved_tag === "string" && dep.resolved_tag !== latestTag);
-        rows.push({
-          name,
-          status: isOutdated ? "outdated" : "up-to-date",
-          current: typeof dep.resolved_tag === "string" ? dep.resolved_tag : current,
-          latest: latestTag,
-          repo_url: repo,
-          tip_ref: latestTag,
-          detail: verbose
-            ? `constraint=${constraint}; candidates=${tags.map((t) => t.tag).join(",")}`
-            : undefined,
-        });
-      } else {
-        const tipRef = resolveTipRef(dep, manifestPins);
-        const tip = await gitRemote.resolveRef(gitUrl, tipRef);
-        const isOutdated = Boolean(current && tip && current !== tip);
-        rows.push({
-          name,
-          status: isOutdated ? "outdated" : "up-to-date",
-          current,
-          latest: tip,
-          repo_url: repo,
-          tip_ref: tipRef,
-          detail: verbose ? `tip_ref=${tipRef}` : undefined,
-        });
-      }
-    } catch {
-      rows.push({ name, status: "unknown", current, repo_url: repo });
-    }
-  }
+  const rows = await mapPool(deps, parallelChecks, (dep) =>
+    checkOneDep(dep, { manifestPins, tagLister, gitRemote, verbose }),
+  );
 
   const hasOutdated = rows.some((r) => r.status === "outdated");
   const text = hasOutdated
@@ -129,6 +61,115 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
 
 export const checkOutdated = runOutdated;
 export const outdated = runOutdated;
+
+type CheckCtx = {
+  manifestPins: Map<string, string>;
+  tagLister: TagLister;
+  gitRemote: GitRemote;
+  verbose: boolean;
+};
+
+/** Per-dep check worker — tip/constraint/exit semantics unchanged; only scheduling differs. */
+async function checkOneDep(dep: LockedDependency, ctx: CheckCtx): Promise<OutdatedRow> {
+  const name = String(dep.name ?? dep.repo_url ?? "unknown");
+  const repo = String(dep.repo_url ?? "");
+  const current =
+    typeof dep.resolved_commit === "string"
+      ? dep.resolved_commit
+      : typeof dep.resolved_tag === "string"
+        ? dep.resolved_tag
+        : typeof dep.version === "string"
+          ? dep.version
+          : "";
+
+  if (!repo || repo.startsWith("local:")) {
+    return {
+      name,
+      status: "up-to-date",
+      current: current || "local",
+      latest: current || "local",
+      repo_url: repo,
+      detail: ctx.verbose ? "skip: local (no network)" : undefined,
+    };
+  }
+
+  const gitUrl = repo.includes("://") ? repo : `https://${repo}`;
+  const constraint = typeof dep.constraint === "string" ? dep.constraint : undefined;
+
+  try {
+    if (constraint) {
+      const tags = await ctx.tagLister.listTags(gitUrl);
+      const picked = pickHighestSatisfyingTag(
+        tags.map((t) => t.tag),
+        constraint,
+      );
+      if (!picked) {
+        return {
+          name,
+          status: "unknown",
+          current,
+          repo_url: repo,
+          detail: ctx.verbose ? `constraint=${constraint}; no satisfying tag` : undefined,
+        };
+      }
+      const hit = tags.find((t) => t.tag === picked)!;
+      const latestCommit = hit.commit;
+      const latestTag = picked;
+      const isOutdated =
+        (current && latestCommit && current !== latestCommit) ||
+        (typeof dep.resolved_tag === "string" && dep.resolved_tag !== latestTag);
+      return {
+        name,
+        status: isOutdated ? "outdated" : "up-to-date",
+        current: typeof dep.resolved_tag === "string" ? dep.resolved_tag : current,
+        latest: latestTag,
+        repo_url: repo,
+        tip_ref: latestTag,
+        detail: ctx.verbose
+          ? `constraint=${constraint}; candidates=${tags.map((t) => t.tag).join(",")}`
+          : undefined,
+      };
+    }
+
+    const tipRef = resolveTipRef(dep, ctx.manifestPins);
+    const tip = await ctx.gitRemote.resolveRef(gitUrl, tipRef);
+    const isOutdated = Boolean(current && tip && current !== tip);
+    return {
+      name,
+      status: isOutdated ? "outdated" : "up-to-date",
+      current,
+      latest: tip,
+      repo_url: repo,
+      tip_ref: tipRef,
+      detail: ctx.verbose ? `tip_ref=${tipRef}` : undefined,
+    };
+  } catch {
+    return { name, status: "unknown", current, repo_url: repo };
+  }
+}
+
+/**
+ * Bounded pool (Resolver `runPool`-style). `concurrency` 0 → serial (1 worker).
+ * Results assembled by input index order, not completion time.
+ */
+async function mapPool<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+  const results: R[] = new Array(items.length);
+  const n = Math.max(1, concurrency);
+  let next = 0;
+  const runners = Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (next < items.length) {
+      const idx = next++;
+      results[idx] = await worker(items[idx]!, idx);
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
 
 /**
  * Tip identity: lock `resolved_ref` → literal manifest pin → `HEAD`.

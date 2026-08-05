@@ -14,12 +14,20 @@ export type OutdatedRow = {
   detail?: string;
 };
 
+/** APM-aligned default for remote outdated checks. */
+export const DEFAULT_PARALLEL_CHECKS = 4;
+
 export type RunOutdatedOptions = {
   cwd?: string;
   gitRemote?: GitRemote;
   tagLister?: TagLister;
   /** Richer human-readable detail (chosen tip, skip reasons, candidates). */
   verbose?: boolean;
+  /**
+   * Max concurrent remote checks (default 4). `0` = serial.
+   * Unresolved/`undefined` resolves to {@link DEFAULT_PARALLEL_CHECKS}.
+   */
+  parallelChecks?: number;
 };
 
 export type OutdatedResult = {
