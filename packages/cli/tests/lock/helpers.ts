@@ -138,3 +138,21 @@ export function listFilesRecursive(root: string): string[] {
 }
 
 export { runCli };
+
+/** Fail if CLI treated lock as an unknown command. */
+export function expectKnownCommand(combined: string): void {
+  if (/unknown command|not a (?:valid )?command|unrecognized command/i.test(combined)) {
+    throw new Error(`CLI treated "lock" as unknown command:\n${combined}`);
+  }
+}
+
+/** Fail if a known P6c lock flag was rejected as unknown. */
+export function expectKnownLockFlag(combined: string, flag: string): void {
+  const escaped = flag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (
+    new RegExp(`unknown lock flag:\\s*${escaped}`, "i").test(combined) ||
+    new RegExp(`unknown (?:flag|option):\\s*${escaped}`, "i").test(combined)
+  ) {
+    throw new Error(`CLI rejected "${flag}" as unknown flag:\n${combined}`);
+  }
+}
