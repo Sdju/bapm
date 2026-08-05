@@ -174,7 +174,10 @@ export async function resolveDependencyGraph(
   /** Expand keys whose children have already been enqueued (avoid re-expand). */
   const expanded = new Set<string>();
 
-  const rootDeps = listApmDeps(manifest.dependencies);
+  const rootDeps = [
+    ...listApmDeps(manifest.dependencies),
+    ...listApmDeps(manifest.devDependencies),
+  ];
   for (const entry of rootDeps) {
     const shouldUpdate =
       updateRefs && (scopeSet.size === 0 || entryMatchesScope(entry, scopeSet, warmByIdentity));

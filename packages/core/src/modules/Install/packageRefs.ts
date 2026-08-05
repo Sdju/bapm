@@ -87,7 +87,23 @@ function entryMatchesRef(entry: DependencyEntry, ref: string, asEntry: Dependenc
 export function appendPackageRefsToManifest(
   document: BapmManifest,
   refs: string[],
+  options?: { dev?: boolean },
 ): { document: BapmManifest; added: string[] } {
+  const useDev = options?.dev === true;
+  if (useDev) {
+    const devDeps = { ...(document.devDependencies ?? {}) };
+    const apm = Array.isArray(devDeps.apm) ? [...devDeps.apm] : [];
+    const added: string[] = [];
+    for (const ref of refs) {
+      const entry = packageRefToEntry(ref);
+      if (apm.some((existing) => entryMatchesRef(existing, ref, entry))) continue;
+      apm.push(entry);
+      added.push(ref);
+    }
+    devDeps.apm = apm;
+    return { document: { ...document, devDependencies: devDeps }, added };
+  }
+
   const deps = { ...(document.dependencies ?? {}) };
   const apm = Array.isArray(deps.apm) ? [...deps.apm] : [];
   const added: string[] = [];
@@ -131,8 +147,12 @@ export function writeManifestWithPackageRefs(args: {
   sourcePath?: string;
   sourceFilename?: string;
   refs: string[];
+  /** When true, write under `devDependencies.apm`. */
+  dev?: boolean;
 }): { document: BapmManifest; added: string[]; sourcePath: string; sourceFilename: string } {
-  const { document, added } = appendPackageRefsToManifest(args.document, args.refs);
+  const { document, added } = appendPackageRefsToManifest(args.document, args.refs, {
+    dev: args.dev,
+  });
   const written = writeProducerManifest(document, {
     cwd: args.cwd,
     sourcePath: args.sourcePath,

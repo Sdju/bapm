@@ -45,11 +45,18 @@ export function formatInstallTopicHelp(deps: HelpContentDeps): string {
 
 Usage:
   bapm install [options]
+  bapm install <package-ref...>   Add package ref(s), then install
   bapm install <archive.zip>   Install from a pack-produced plain zip archive
 
 Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
+  --force                  Accept force. Does not refresh refs and does not bypass frozen or policy
+  --allow-insecure         Dual-consent half for direct http:// dependencies
+  --allow-insecure-host <hostname>
+                           Allow transitive http:// from this FQDN (repeatable)
+  --dev                    Write package-ref add under devDependencies.apm
+  --only <apm|mcp>         Only APM packages or only MCP configure
   --target <id>            Force activation of a registered host target (e.g. cursor)
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)

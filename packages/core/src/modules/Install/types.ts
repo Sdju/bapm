@@ -1,6 +1,8 @@
 import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
 import type { TargetRegistry } from "bapm-target-api";
 
+export type InstallOnlyMode = "apm" | "mcp";
+
 export type RunInstallOptions = {
   cwd?: string;
   frozen?: boolean;
@@ -12,6 +14,25 @@ export type RunInstallOptions = {
    * no target materialize / configureMcp. Never forwarded to targets.
    */
   dryRun?: boolean;
+  /**
+   * Accept overwrite / future security-gate bypass. MUST NOT refresh refs,
+   * bypass frozen, or disable policy. Distinct from `forcedTarget`.
+   */
+  force?: boolean;
+  /** Dual-consent CLI half for direct `http://` dependencies. */
+  allowInsecure?: boolean;
+  /** Repeatable host allowlist for transitive `http://` dependencies (FQDN). */
+  allowInsecureHosts?: string[];
+  /**
+   * When set with `packageRefs`, write under `devDependencies.apm` instead of
+   * `dependencies.apm`. Without positional refs, no-op.
+   */
+  dev?: boolean;
+  /**
+   * Install mode: `apm` skips MCP configure; `mcp` skips APM package
+   * download/materialize. Omit = both sides.
+   */
+  only?: InstallOnlyMode;
   /**
    * Positional package refs to add under `dependencies.apm` before install
    * (non-zip). Mutually exclusive with `archivePath`.

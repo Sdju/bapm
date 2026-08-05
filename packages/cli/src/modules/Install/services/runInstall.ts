@@ -16,13 +16,19 @@ export function formatInstallHelp(deps: InstallDeps): string {
 
 Usage:
   bapm install [options]
-  bapm install <package-ref...>   Add package ref(s) to dependencies.apm, then install
+  bapm install <package-ref...>   Add package ref(s) to dependencies.apm (or --dev → devDependencies.apm), then install
   bapm install <archive.zip>      Install from a pack-produced plain zip archive
 
 Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
   --dry-run                Preview direct deps / would-add; no durable project writes
+  --force                  Accept force (overwrite / future security gates). Does not refresh refs and does not bypass frozen or policy
+  --allow-insecure         Allow direct http:// deps that also set allow_insecure: true (dual consent)
+  --allow-insecure-host <hostname>
+                           Allow transitive http:// deps from this FQDN (repeatable)
+  --dev                    With package-ref add: write under devDependencies.apm (no-op without positional)
+  --only <apm|mcp>         Install only APM packages (skip MCP) or only MCP configure (skip APM materialize)
   --target <id>            Force activation of a registered host target (e.g. cursor)
   --exclude <id>           Skip MCP configure for runtime id (e.g. cursor); does not skip install
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
@@ -43,6 +49,7 @@ Notes:
   Non-zip positionals are package refs added to dependencies.apm (auto-creates
   a minimal manifest when missing). Frozen rejects positional package-ref add.
   --exclude filters MCP/runtime configure only — not a full skip-install.
+  --force is distinct from --target (forced-target activation).
   When cursor is active, eligible MCP servers write .cursor/mcp.json (direct mcp by default).
 `;
 }
@@ -58,6 +65,11 @@ export type ParsedInstallArgs = {
   update: boolean;
   dryRun: boolean;
   verbose: boolean;
+  force: boolean;
+  allowInsecure: boolean;
+  allowInsecureHosts?: string[];
+  dev: boolean;
+  only?: "apm" | "mcp";
   target?: string;
   archivePath?: string;
   packageRefs?: string[];
@@ -79,6 +91,11 @@ export function parseInstallArgs(
   let update = false;
   let dryRun = false;
   let verbose = false;
+  let force = false;
+  let allowInsecure = false;
+  const allowInsecureHosts: string[] = [];
+  let dev = false;
+  let only: "apm" | "mcp" | undefined;
   let target: string | undefined;
   let archivePath: string | undefined;
   const packageRefs: string[] = [];
@@ -95,6 +112,11 @@ export function parseInstallArgs(
     update,
     dryRun,
     verbose,
+    force,
+    allowInsecure,
+    allowInsecureHosts: allowInsecureHosts.length > 0 ? [...allowInsecureHosts] : undefined,
+    dev,
+    only,
     target,
     archivePath,
     packageRefs: packageRefs.length > 0 ? [...packageRefs] : undefined,
@@ -127,6 +149,18 @@ export function parseInstallArgs(
       verbose = true;
       continue;
     }
+    if (arg === "--force") {
+      force = true;
+      continue;
+    }
+    if (arg === "--allow-insecure") {
+      allowInsecure = true;
+      continue;
+    }
+    if (arg === "--dev") {
+      dev = true;
+      continue;
+    }
     if (arg === "--update") {
       update = true;
       continue;
@@ -137,6 +171,60 @@ export function parseInstallArgs(
     }
     if (arg === "--trust-transitive-mcp") {
       trustTransitiveMcp = true;
+      continue;
+    }
+    if (arg === "--allow-insecure-host") {
+      const next = argv[i + 1];
+      if (!next || next.startsWith("-")) {
+        return {
+          ...partial(),
+          error: "Missing value for --allow-insecure-host <hostname>",
+        };
+      }
+      const hostErr = validateInsecureHost(next);
+      if (hostErr) return { ...partial(), error: hostErr };
+      allowInsecureHosts.push(next.trim().toLowerCase());
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--allow-insecure-host=")) {
+      const host = arg.slice("--allow-insecure-host=".length);
+      if (!host) {
+        return {
+          ...partial(),
+          error: "Missing value for --allow-insecure-host=<hostname>",
+        };
+      }
+      const hostErr = validateInsecureHost(host);
+      if (hostErr) return { ...partial(), error: hostErr };
+      allowInsecureHosts.push(host.trim().toLowerCase());
+      continue;
+    }
+    if (arg === "--only") {
+      const next = argv[i + 1];
+      if (!next || next.startsWith("-")) {
+        return {
+          ...partial(),
+          error: "Missing value for --only <apm|mcp>",
+        };
+      }
+      const onlyErr = validateOnlyValue(next);
+      if (onlyErr) return { ...partial(), error: onlyErr };
+      only = next as "apm" | "mcp";
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--only=")) {
+      const value = arg.slice("--only=".length);
+      if (!value) {
+        return {
+          ...partial(),
+          error: "Missing value for --only=<apm|mcp>",
+        };
+      }
+      const onlyErr = validateOnlyValue(value);
+      if (onlyErr) return { ...partial(), error: onlyErr };
+      only = value as "apm" | "mcp";
       continue;
     }
     if (arg === "--policy") {
@@ -299,6 +387,11 @@ export function parseInstallArgs(
     update,
     dryRun,
     verbose,
+    force,
+    allowInsecure,
+    allowInsecureHosts: allowInsecureHosts.length > 0 ? allowInsecureHosts : undefined,
+    dev,
+    only,
     target,
     archivePath,
     packageRefs: packageRefs.length > 0 ? packageRefs : undefined,
@@ -309,6 +402,22 @@ export function parseInstallArgs(
     trustTransitiveMcp,
     help,
   };
+}
+
+const FQDN_RE =
+  /^[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/;
+
+function validateInsecureHost(hostname: string): string | undefined {
+  const cleaned = hostname.trim().toLowerCase();
+  if (!cleaned || !FQDN_RE.test(cleaned.split("/")[0]!)) {
+    return `Invalid hostname '${hostname}'. Use a bare hostname like 'mirror.example.com'.`;
+  }
+  return undefined;
+}
+
+function validateOnlyValue(value: string): string | undefined {
+  if (value === "apm" || value === "mcp") return undefined;
+  return `Invalid --only value: ${value} (expected one of: apm, mcp)`;
 }
 
 function looksLikeZipPositional(candidate: string): boolean {
@@ -384,6 +493,11 @@ async function runCoreInstall(
       frozen: parsed.frozen,
       updateRefs: parsed.update,
       update: parsed.update,
+      force: parsed.force,
+      allowInsecure: parsed.allowInsecure,
+      allowInsecureHosts: parsed.allowInsecureHosts,
+      dev: parsed.dev,
+      only: parsed.only,
       forcedTarget: parsed.target,
       forceTarget: parsed.target,
       targetRegistry: registry,

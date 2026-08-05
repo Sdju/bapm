@@ -10,6 +10,8 @@ export type InstallErrorCode =
   | "INSTALL_ARCHIVE"
   | "INSTALL_PACKAGE_REF"
   | "INSTALL_MCP_TRUST"
+  | "INSTALL_INSECURE"
+  | "INSTALL_INVALID_HOST"
   | "INSTALL_FAILED";
 
 export class InstallError extends Error {

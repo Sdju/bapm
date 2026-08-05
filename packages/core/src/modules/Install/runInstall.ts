@@ -45,6 +45,7 @@ import {
 } from "./deployedInventory.ts";
 import { InstallError } from "./errors.ts";
 import { enforceFrozen } from "./frozen.ts";
+import { gateInsecureBeforeFetch, normalizeAllowInsecureHosts } from "./insecurePolicy.ts";
 import {
   assertKnownExcludeIds,
   autoCreateMinimalManifest,
@@ -55,7 +56,7 @@ import {
   writeManifestWithPackageRefs,
 } from "./packageRefs.ts";
 import { declaredTargetIds } from "./targets.ts";
-import type { InstallResult, RunInstallOptions } from "./types.ts";
+import type { InstallOnlyMode, InstallResult, RunInstallOptions } from "./types.ts";
 
 /**
  * Run install: optional archive extract → frozen gate → plan → policy gate →
@@ -78,6 +79,14 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const excludeIds = normalizeExcludeIds(options);
   assertKnownExcludeIds(excludeIds);
   const excludeSet = new Set(excludeIds);
+  const only = normalizeOnlyMode(options.only);
+  const skipApmMaterialize = only === "mcp";
+  const skipMcpConfigure = only === "apm";
+  // Accepted for CLI parity; must not refresh refs / bypass frozen / disable policy.
+  void options.force;
+  const allowInsecure = options.allowInsecure === true;
+  const allowInsecureHosts = options.allowInsecureHosts;
+  const dev = options.dev === true;
 
   const policyPorts = {
     policyProviders: options.policyProviders ?? options.providers,
@@ -131,6 +140,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       sourcePath: loaded.sourcePath,
       sourceFilename: loaded.sourceFilename,
       refs: packageRefs,
+      dev,
     });
   }
 
@@ -138,6 +148,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     return runDryRunPreview({
       cwd,
       packageRefs,
+      dev,
+      allowInsecure,
+      allowInsecureHosts,
       policyPath,
       noPolicy,
       policyPorts,
@@ -149,6 +162,18 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
   const { document: rootManifest } = loadManifest({ cwd });
   const previousLock = loadLockfileOrNull({ cwd });
+
+  const insecureGate = gateInsecureBeforeFetch({
+    cwd,
+    document: rootManifest,
+    allowInsecure,
+    allowInsecureHosts,
+  });
+  const insecureDiagnostics = insecureGate.warnings.map((message) => ({
+    code: "INSECURE_HTTP",
+    message,
+    warn: true,
+  }));
 
   const registry = (options.targetRegistry ?? options.registry) as TargetRegistry | undefined;
   assertForcedTargetRegistered(forcedTargetId, registry);
@@ -167,79 +192,99 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     mirrorUrl: options.mirrorUrl,
   };
 
-  if (frozen) {
-    const loaded = previousLock;
-    const graph = await resolveDependencyGraph({
-      cwd,
-      updateRefs: false,
-      maxDepth: options.maxDepth,
-      existingLock: loaded?.document ?? null,
-      skipDownload: true,
-      ...ports,
-    });
-    nodes = graph.nodes;
+  if (!skipApmMaterialize) {
+    if (frozen) {
+      const loaded = previousLock;
+      const graph = await resolveDependencyGraph({
+        cwd,
+        updateRefs: false,
+        maxDepth: options.maxDepth,
+        existingLock: loaded?.document ?? null,
+        skipDownload: true,
+        ...ports,
+      });
+      nodes = graph.nodes;
+      policyDiagnostics = applyPolicyGate({
+        cwd,
+        policyPath,
+        noPolicy,
+        nodes,
+        ...policyPorts,
+      });
+      const packages = nodes
+        .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
+        .map((n) => ({
+          repoUrl: n.kind === "local" ? undefined : restoreGitUrl(n.repo_url),
+          path: n.path,
+          commit: n.resolved_commit,
+          identity: n.identity,
+          name: n.name,
+        }));
+      await downloadPackages({
+        cwd,
+        packages,
+        parallelDownloads: options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS,
+        downloader: options.downloader,
+      });
+      await materializeRegistryNodes(nodes, {
+        cwd,
+        mirrorUrl: options.mirrorUrl,
+        registryBaseUrl: options.registryBaseUrl,
+      });
+      lockPath = loaded?.sourcePath;
+      lockDocument = loaded?.document;
+
+      // lk-017 lite: re-verify deployed_file_hashes when present (before harness mutation)
+      if (lockDocument) {
+        verifyDeployedFileHashes({ cwd, document: lockDocument });
+        // lk-015: re-verify git tree_sha256 fail-closed
+        verifyTreeSha256OrThrow({ cwd, document: lockDocument });
+      }
+    } else {
+      const result = await resolveAndLock({
+        cwd,
+        updateRefs,
+        parallelDownloads: options.parallelDownloads,
+        maxDepth: options.maxDepth,
+        verbose: options.verbose,
+        policyPath,
+        policy: policyPath,
+        noPolicy,
+        ...ports,
+        ...policyPorts,
+      });
+      lockPath = result.lockPath;
+      nodes = result.nodes;
+      policyDiagnostics = result.policyDiagnostics ?? [];
+      const reloaded = loadLockfileOrNull({ cwd });
+      lockDocument = reloaded?.document;
+      if (reloaded) {
+        lockPath = reloaded.sourcePath;
+      }
+    }
+  } else {
+    // only=mcp: skip APM download/materialize; still apply policy on declared names when possible
     policyDiagnostics = applyPolicyGate({
       cwd,
       policyPath,
       noPolicy,
-      nodes,
+      nodes: [],
+      candidatesOverride: extractDeclarationOrder(rootManifest).map((name) => ({
+        id: name,
+        name,
+        ref: name,
+        direct: true,
+        depth: 1,
+      })),
       ...policyPorts,
     });
-    const packages = nodes
-      .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
-      .map((n) => ({
-        repoUrl: n.kind === "local" ? undefined : restoreGitUrl(n.repo_url),
-        path: n.path,
-        commit: n.resolved_commit,
-        identity: n.identity,
-        name: n.name,
-      }));
-    await downloadPackages({
-      cwd,
-      packages,
-      parallelDownloads: options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS,
-      downloader: options.downloader,
-    });
-    await materializeRegistryNodes(nodes, {
-      cwd,
-      mirrorUrl: options.mirrorUrl,
-      registryBaseUrl: options.registryBaseUrl,
-    });
-    lockPath = loaded?.sourcePath;
-    lockDocument = loaded?.document;
-
-    // lk-017 lite: re-verify deployed_file_hashes when present (before harness mutation)
-    if (lockDocument) {
-      verifyDeployedFileHashes({ cwd, document: lockDocument });
-      // lk-015: re-verify git tree_sha256 fail-closed
-      verifyTreeSha256OrThrow({ cwd, document: lockDocument });
-    }
-  } else {
-    const result = await resolveAndLock({
-      cwd,
-      updateRefs,
-      parallelDownloads: options.parallelDownloads,
-      maxDepth: options.maxDepth,
-      verbose: options.verbose,
-      policyPath,
-      policy: policyPath,
-      noPolicy,
-      ...ports,
-      ...policyPorts,
-    });
-    lockPath = result.lockPath;
-    nodes = result.nodes;
-    policyDiagnostics = result.policyDiagnostics ?? [];
-    const reloaded = loadLockfileOrNull({ cwd });
-    lockDocument = reloaded?.document;
-    if (reloaded) {
-      lockPath = reloaded.sourcePath;
-    }
+    lockPath = previousLock?.sourcePath;
+    lockDocument = previousLock?.document;
   }
 
   const currentDepNames = new Set(nodes.map((n) => n.name).filter(Boolean));
 
-  if (!frozen) {
+  if (!frozen && !skipApmMaterialize) {
     cleanupOrphanDeployedFiles({
       cwd,
       previous: previousLock?.document,
@@ -252,15 +297,19 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ? uniqueNames(nodes.filter((n) => n.depth === 1).map((n) => n.name))
       : extractDeclarationOrder(rootManifest);
 
-  const raw = discoverPrimitives({
-    cwd,
-    modulesDir: join(cwd, APM_MODULES_DIR),
-    declarationOrder,
-  });
-  const resolved = resolvePrimitiveConflicts({
-    primitives: raw,
-    declarationOrder,
-  });
+  const raw = skipApmMaterialize
+    ? []
+    : discoverPrimitives({
+        cwd,
+        modulesDir: join(cwd, APM_MODULES_DIR),
+        declarationOrder,
+      });
+  const resolved = skipApmMaterialize
+    ? { primitives: [] as AttributedPrimitive[], diagnostics: [] as unknown[] }
+    : resolvePrimitiveConflicts({
+        primitives: raw,
+        declarationOrder,
+      });
 
   const activeTargets = await resolveActiveTargets({
     cwd,
@@ -273,7 +322,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
 
-  if (registry && activeTargets.length > 0) {
+  if (!skipApmMaterialize && registry && activeTargets.length > 0) {
     const packageTargets = collectPackageDeclaredTargets(nodes, raw);
     for (const targetId of activeTargets) {
       const target = findTarget(registry, targetId);
@@ -299,7 +348,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     }
   }
 
-  if (!frozen && lockDocument && allDeployed.length > 0) {
+  if (!frozen && !skipApmMaterialize && lockDocument && allDeployed.length > 0) {
     const wrote = applyDeployedHashesToLock({
       document: lockDocument,
       deployed: allDeployed,
@@ -315,31 +364,33 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   }
 
   const mcpDiagnostics: unknown[] = [];
-  const mcpResult = await deployMcpAfterPolicy({
-    cwd,
-    rootManifest,
-    nodes,
-    registry,
-    activeTargets,
-    forcedTargetId,
-    trustTransitiveMcp,
-    frozen,
-    excludeSet,
-    lockDocument,
-    lockPath,
-    previousLockFilename: previousLock?.sourceFilename,
-    diagnostics: mcpDiagnostics,
-  });
-  if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
-  if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
+  if (!skipMcpConfigure) {
+    const mcpResult = await deployMcpAfterPolicy({
+      cwd,
+      rootManifest,
+      nodes,
+      registry,
+      activeTargets,
+      forcedTargetId,
+      trustTransitiveMcp,
+      frozen,
+      excludeSet,
+      lockDocument,
+      lockPath,
+      previousLockFilename: previousLock?.sourceFilename,
+      diagnostics: mcpDiagnostics,
+    });
+    if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
+    if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
 
-  if (mcpResult.withholdFatal) {
-    throw new InstallError(
-      "INSTALL_MCP_TRUST",
-      mcpResult.withholdMessage ??
-        "MCP withheld: unapproved dependency executables (sc-009 fail-closed)",
-      { details: { withheld: mcpResult.withheldPackages } },
-    );
+    if (mcpResult.withholdFatal) {
+      throw new InstallError(
+        "INSTALL_MCP_TRUST",
+        mcpResult.withholdMessage ??
+          "MCP withheld: unapproved dependency executables (sc-009 fail-closed)",
+        { details: { withheld: mcpResult.withheldPackages } },
+      );
+    }
   }
 
   return {
@@ -348,14 +399,32 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     modulesDir: join(cwd, APM_MODULES_DIR),
     activeTargets,
     primitivesCount: resolved.primitives.length,
-    diagnostics: [...policyDiagnostics, ...resolved.diagnostics, ...mcpDiagnostics],
+    diagnostics: [
+      ...insecureDiagnostics,
+      ...policyDiagnostics,
+      ...resolved.diagnostics,
+      ...mcpDiagnostics,
+    ],
     policyDiagnostics,
   };
+}
+
+function normalizeOnlyMode(only: InstallOnlyMode | undefined): InstallOnlyMode | undefined {
+  if (only === undefined || only === null) return undefined;
+  if (only === "apm" || only === "mcp") return only;
+  throw new InstallError(
+    "INSTALL_FAILED",
+    `Invalid only mode: ${String(only)} (expected "apm" or "mcp")`,
+    { details: { only } },
+  );
 }
 
 async function runDryRunPreview(args: {
   cwd: string;
   packageRefs: string[];
+  dev?: boolean;
+  allowInsecure?: boolean;
+  allowInsecureHosts?: string[];
   policyPath?: string;
   noPolicy: boolean;
   policyPorts: {
@@ -373,6 +442,11 @@ async function runDryRunPreview(args: {
   registry?: TargetRegistry;
   activeTargetsOverride?: string[];
 }): Promise<InstallResult> {
+  // Validate host tokens even on dry-run (fail-closed).
+  if (args.allowInsecureHosts && args.allowInsecureHosts.length > 0) {
+    normalizeAllowInsecureHosts(args.allowInsecureHosts);
+  }
+
   const diagnostics: unknown[] = [
     {
       code: "DRY_RUN",
@@ -391,16 +465,21 @@ async function runDryRunPreview(args: {
   }
 
   if (args.packageRefs.length > 0) {
+    const section = args.dev ? "devDependencies.apm" : "dependencies.apm";
     diagnostics.push({
       code: "DRY_RUN_WOULD_ADD",
-      message: `would add package refs: ${args.packageRefs.join(", ")}`,
+      message: `would add package refs under ${section}: ${args.packageRefs.join(", ")}`,
       wouldAdd: args.packageRefs,
+      wouldAddSection: section,
       preview: true,
       dryRun: true,
     });
   }
 
-  const directApm = rootManifest?.dependencies?.apm ?? [];
+  const directApm = [
+    ...(rootManifest?.dependencies?.apm ?? []),
+    ...(rootManifest?.devDependencies?.apm ?? []),
+  ];
   const directPreview = directApm.map((entry) => summarizeDirectEntry(entry));
   for (const ref of args.packageRefs) {
     if (!directPreview.includes(ref)) directPreview.push(ref);
@@ -918,8 +997,10 @@ function filterByIntersection(
 }
 
 function extractDeclarationOrder(manifest: BapmManifest): string[] {
-  const apm = manifest.dependencies?.apm;
-  if (!Array.isArray(apm)) return [];
+  const apm = [
+    ...(Array.isArray(manifest.dependencies?.apm) ? manifest.dependencies!.apm! : []),
+    ...(Array.isArray(manifest.devDependencies?.apm) ? manifest.devDependencies!.apm! : []),
+  ];
   const names: string[] = [];
   for (const entry of apm) {
     const n = entryNameHint(entry);

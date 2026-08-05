@@ -15,6 +15,7 @@
 
 export type {
   EnforceFrozenOptions,
+  InstallOnlyMode,
   InstallOptions,
   InstallResult,
   RunInstallOptions,
