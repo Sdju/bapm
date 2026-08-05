@@ -192,7 +192,16 @@ export { UninstallError, runUninstall, uninstallPackages, uninstall } from "@/mo
 export type { RunPruneOptions, PruneResult, PruneErrorCode } from "@/modules/Prune";
 export { PruneError, runPrune, pruneModules, prune } from "@/modules/Prune";
 
-export type { DepsListResult, DepsTreeResult, DepsWhyResult, RunDepsOptions } from "@/modules/Deps";
+export type {
+  DepsListResult,
+  DepsTreeResult,
+  DepsWhyError,
+  DepsWhyPackage,
+  DepsWhyPath,
+  DepsWhyPathNode,
+  DepsWhyResult,
+  RunDepsOptions,
+} from "@/modules/Deps";
 export {
   listDeps,
   depsList,
