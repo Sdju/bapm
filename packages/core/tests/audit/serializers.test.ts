@@ -1,5 +1,5 @@
 /**
- * p6b — core JSON / SARIF serializers (public API, no CLI).
+ * Core JSON / SARIF serializers via public API (p6b).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {

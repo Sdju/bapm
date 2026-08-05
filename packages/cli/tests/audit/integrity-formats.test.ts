@@ -1,5 +1,5 @@
 /**
- * p6b — structured formats MUST NOT soften lk-015 / lk-017 exit contract.
+ * Structured formats MUST NOT soften lk-015 / lk-017 exit contract (p6b).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {

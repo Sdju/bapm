@@ -1,5 +1,5 @@
 /**
- * p6b — CLI --format / --output flags and help.
+ * CLI --format / --output flags and help (p6b).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {

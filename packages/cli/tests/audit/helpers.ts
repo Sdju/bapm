@@ -1,5 +1,5 @@
 /**
- * p6b-audit-output-formats acceptance helpers (CLI).
+ * CLI audit format / integrity test helpers (p6b).
  */
 import { createHash } from "node:crypto";
 import {
@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 

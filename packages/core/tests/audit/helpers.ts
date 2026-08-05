@@ -1,5 +1,5 @@
 /**
- * p6b-audit-output-formats acceptance helpers (core).
+ * Core audit structured-format test helpers (p6b).
  */
 import * as core from "@bapm/core";
 import { createHash } from "node:crypto";

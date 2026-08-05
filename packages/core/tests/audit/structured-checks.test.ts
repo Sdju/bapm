@@ -1,5 +1,5 @@
 /**
- * p6b — structured CI check taxonomy (lockfile-exists → content-integrity → tree-sha256).
+ * Structured CI check taxonomy (lockfile-exists → content-integrity → tree-sha256).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { join } from "node:path";
