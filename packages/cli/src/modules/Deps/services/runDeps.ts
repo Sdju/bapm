@@ -11,6 +11,7 @@ export function parseDepsArgs(argv: string[]): {
   help?: boolean;
   json?: boolean;
   yes?: boolean;
+  dryRun?: boolean;
   error?: string;
 } {
   if (argv.length === 0) return { sub: "list" };
@@ -23,6 +24,7 @@ export function parseDepsArgs(argv: string[]): {
 
   let json = false;
   let yes = false;
+  let dryRun = false;
   const positionals: string[] = [];
 
   for (const arg of rest) {
@@ -32,6 +34,13 @@ export function parseDepsArgs(argv: string[]): {
         return { sub, error: `Unsupported deps flag on ${sub}: --json` };
       }
       json = true;
+      continue;
+    }
+    if (arg === "--dry-run") {
+      if (sub !== "clean") {
+        return { sub, error: `Unsupported deps flag on ${sub}: --dry-run` };
+      }
+      dryRun = true;
       continue;
     }
     if (arg === "-y" || arg === "--yes") {
@@ -50,6 +59,7 @@ export function parseDepsArgs(argv: string[]): {
     packageName: positionals[0],
     json,
     yes,
+    dryRun,
   };
 }
 
@@ -59,12 +69,18 @@ export function formatDepsHelp(deps: LifecycleCliDeps): string {
 Usage:
   bapm deps list
   bapm deps tree
-  bapm deps why <package> [--json]
-  bapm deps clean [-y|--yes]
+  bapm deps why <package|owner/repo|basename> [--json]
+  bapm deps clean [-y|--yes] [--dry-run]
+
+Examples:
+  bapm deps why shared-utils
+  bapm deps why acme-org/shared-utils
+  bapm deps clean --dry-run
 
 Options:
   --json       Machine-readable why output (success on stdout, errors on stderr)
   -y, --yes    Confirm deps clean (modules wipe)
+  --dry-run    Preview deps clean without deleting (no -y required)
   --help, -h   Show this help
 
 deps clean performs the same project modules wipe as \`cache clean\`
@@ -87,7 +103,11 @@ export async function runDepsCli(
   }
   try {
     if (parsed.sub === "clean") {
-      const result = cacheClean({ cwd: options.cwd, yes: parsed.yes === true });
+      const result = cacheClean({
+        cwd: options.cwd,
+        yes: parsed.yes === true,
+        dryRun: parsed.dryRun === true,
+      });
       if (result.refused) {
         const message = result.message.replace(/^cache clean/, "deps clean");
         console.error(`${deps.name}: ${message}`);

@@ -47,12 +47,37 @@ export const modulesCacheInfo = cacheInfo;
 
 /**
  * Remove modules-cache content. Without `yes`/`-y`, refuses (non-silent).
+ * With `dryRun`, previews would-remove count/names and never deletes.
  */
 export function cacheClean(options: CacheCleanOptions = {}): CacheCleanResult {
   const cwd = resolve(options.cwd ?? process.cwd());
   const cacheRoot = resolve(options.cacheRoot ?? join(cwd, APM_MODULES_DIR));
   const yes = options.yes === true || options.y === true;
   const requireYes = options.requireYes !== false;
+  const dryRun = options.dryRun === true;
+
+  if (dryRun) {
+    if (!existsSync(cacheRoot)) {
+      return {
+        ok: true,
+        cleaned: false,
+        cacheRoot,
+        removedEntries: 0,
+        message: `cache clean dry-run: ${cacheRoot} absent (already empty, would remove 0)`,
+      };
+    }
+    const names = readdirSync(cacheRoot).filter((n) => n !== "." && n !== "..");
+    return {
+      ok: true,
+      cleaned: false,
+      cacheRoot,
+      removedEntries: names.length,
+      message:
+        names.length === 0
+          ? `cache clean dry-run: ${cacheRoot} empty (would remove 0)`
+          : `cache clean dry-run: would remove ${names.length} entries from ${cacheRoot} (${names.join(", ")})`,
+    };
+  }
 
   if (!yes && requireYes) {
     return {

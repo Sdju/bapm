@@ -1,5 +1,5 @@
 /**
- * Unit: whyDeps name/repo_url match, exits, transitive chain, offline-only.
+ * Unit: whyDeps name/repo_url match, short-form resolve, exits, transitive chain.
  */
 import { whyDeps } from "@bapm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -21,6 +21,50 @@ dependencies:
     resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
     resolved_by:
       - org/parent
+`;
+
+const UNIQUE_SHARED = `lockfile_version: "1"
+dependencies:
+  - name: org/parent
+    repo_url: https://example.com/org/parent.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: acme/shared-utils
+    repo_url: https://example.com/acme-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    resolved_by:
+      - org/parent
+`;
+
+const AMBIGUOUS_BASE = `lockfile_version: "1"
+dependencies:
+  - name: acme/shared-utils
+    repo_url: https://example.com/acme-org/shared-utils.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: other/shared-utils
+    repo_url: https://example.com/other-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+`;
+
+const EXACT_WINS = `lockfile_version: "1"
+dependencies:
+  - name: shared-utils
+    repo_url: https://example.com/named/exact-pkg.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: other/shared-utils
+    repo_url: https://example.com/other-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
 `;
 
 describe("whyDeps unit", () => {
@@ -55,6 +99,50 @@ describe("whyDeps unit", () => {
     expect(r.exitCode).toBe(0);
     expect(r.package?.name).toBe("org/child");
     expect(r.package?.repo_url).toBe("https://example.com/org/child.git");
+  });
+
+  test("unique basename resolves", () => {
+    project(UNIQUE_SHARED);
+    const r = whyDeps({ cwd, package: "shared-utils" });
+    expect(r.ok).toBe(true);
+    expect(r.exitCode).toBe(0);
+    expect(r.package?.name).toBe("acme/shared-utils");
+    expect(r.package?.repo_url).toBe("https://example.com/acme-org/shared-utils.git");
+  });
+
+  test("unique owner/repo resolves", () => {
+    project(UNIQUE_SHARED);
+    const r = whyDeps({ cwd, package: "acme-org/shared-utils" });
+    expect(r.ok).toBe(true);
+    expect(r.exitCode).toBe(0);
+    expect(r.package?.name).toBe("acme/shared-utils");
+  });
+
+  test(".git stripped for short-form queries", () => {
+    project(UNIQUE_SHARED);
+    expect(whyDeps({ cwd, package: "shared-utils" }).ok).toBe(true);
+    expect(whyDeps({ cwd, package: "acme-org/shared-utils" }).ok).toBe(true);
+  });
+
+  test("ambiguous basename → exit 1 + matches", () => {
+    project(AMBIGUOUS_BASE);
+    const r = whyDeps({ cwd, package: "shared-utils" });
+    expect(r.ok).toBe(false);
+    expect(r.exitCode).toBe(1);
+    expect(r.error).toBe("ambiguous");
+    expect(r.matches?.length).toBeGreaterThanOrEqual(2);
+    const urls = (r.matches ?? []).map((m) => String(m.repo_url ?? ""));
+    expect(urls.some((u) => u.includes("acme-org/shared-utils"))).toBe(true);
+    expect(urls.some((u) => u.includes("other-org/shared-utils"))).toBe(true);
+  });
+
+  test("exact name wins over basename collision", () => {
+    project(EXACT_WINS);
+    const r = whyDeps({ cwd, package: "shared-utils" });
+    expect(r.ok).toBe(true);
+    expect(r.exitCode).toBe(0);
+    expect(r.package?.name).toBe("shared-utils");
+    expect(r.package?.repo_url).toBe("https://example.com/named/exact-pkg.git");
   });
 
   test("missing package → not_installed exit 1", () => {

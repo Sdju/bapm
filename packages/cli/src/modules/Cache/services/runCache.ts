@@ -6,37 +6,49 @@ export type CacheOptions = { args?: string[]; cwd?: string };
 export function parseCacheArgs(argv: string[]): {
   subcommand?: "info" | "clean";
   yes: boolean;
+  dryRun: boolean;
   help?: boolean;
   error?: string;
 } {
   let subcommand: "info" | "clean" | undefined;
   let yes = false;
+  let dryRun = false;
 
   for (const arg of argv) {
     if (arg === "--help" || arg === "-h") {
-      return { subcommand, yes, help: true };
+      return { subcommand, yes, dryRun, help: true };
     }
     if (arg === "-y" || arg === "--yes") {
       yes = true;
       continue;
     }
+    if (arg === "--dry-run") {
+      if (subcommand && subcommand !== "clean") {
+        return { subcommand, yes, dryRun, error: `Unsupported cache flag on ${subcommand}: --dry-run` };
+      }
+      dryRun = true;
+      continue;
+    }
     if (arg.startsWith("-")) {
-      return { subcommand, yes, error: `Unknown cache flag: ${arg}` };
+      return { subcommand, yes, dryRun, error: `Unknown cache flag: ${arg}` };
     }
     if (arg === "info" || arg === "clean") {
       if (subcommand) {
-        return { subcommand, yes, error: `Unexpected cache argument: ${arg}` };
+        return { subcommand, yes, dryRun, error: `Unexpected cache argument: ${arg}` };
       }
       subcommand = arg;
       continue;
     }
-    return { subcommand, yes, error: `Unknown cache subcommand: ${arg}` };
+    return { subcommand, yes, dryRun, error: `Unknown cache subcommand: ${arg}` };
   }
 
   if (!subcommand) {
-    return { yes, error: "Usage: bapm cache <info|clean> [-y]" };
+    return { yes, dryRun, error: "Usage: bapm cache <info|clean> [-y] [--dry-run]" };
   }
-  return { subcommand, yes };
+  if (dryRun && subcommand !== "clean") {
+    return { subcommand, yes, dryRun, error: `Unsupported cache flag on ${subcommand}: --dry-run` };
+  }
+  return { subcommand, yes, dryRun };
 }
 
 export function formatCacheHelp(deps: LifecycleCliDeps): string {
@@ -44,10 +56,11 @@ export function formatCacheHelp(deps: LifecycleCliDeps): string {
 
 Usage:
   bapm cache info
-  bapm cache clean [-y|--yes]
+  bapm cache clean [-y|--yes] [--dry-run]
 
 Options:
   -y, --yes    Confirm clean without interactive prompt
+  --dry-run    Preview clean without deleting (no -y required)
   --help, -h   Show this help
 
 Operates on the project modules-cache root (apm_modules). Does not use a shared
@@ -76,7 +89,11 @@ export async function runCacheCli(
       return { ok: true, exitCode: 0 };
     }
 
-    const result = cacheClean({ cwd: options.cwd, yes: parsed.yes });
+    const result = cacheClean({
+      cwd: options.cwd,
+      yes: parsed.yes,
+      dryRun: parsed.dryRun,
+    });
     if (result.refused) {
       console.error(`${deps.name}: ${result.message}`);
       return { ok: false, exitCode: 1, message: result.message };

@@ -25,6 +25,11 @@ export type CacheCleanOptions = {
    * Default true — callers must pass yes or confirm.
    */
   requireYes?: boolean;
+  /**
+   * Preview wipe: list would-remove entries, never delete, skip yes-refuse.
+   * `removedEntries` is the would-remove count; `cleaned` stays false.
+   */
+  dryRun?: boolean;
 };
 
 export type CacheCleanResult = {
