@@ -27,6 +27,16 @@ openspec/                            спецификации и изменен�
 
 Таргеты: см. `openspec/specs/target-package-architecture/` — без паритета с in-tree APM `adapters/client/`.
 
+## Conformance & parity
+
+bapm целится в **OpenAPM v0.1** wire (форматы и семантика), а не в полный product surface microsoft/apm. Это **not a drop-in** замена всей **APM CLI** / каждого адаптера.
+
+- Statement: [`CONFORMANCE.md`](CONFORMANCE.md) (+ [`CONFORMANCE.json`](CONFORMANCE.json))
+- Claimed classes: **Consumer**, **Producer**, **Governance**; **Registry N/A** (host не ship'им)
+- Intentional diffs vs APM: **∩-pick** (не APM **first-wins**), **cursor-only** deploy matrix, **dual-read** branding (`apm.yml`\|`bapm.yml`)
+
+Подробности и Limitations — в CONFORMANCE; на сайте docs — [Conformance & boundary](apps/docs/guide/conformance.md).
+
 ## Команды
 
 ```bash
