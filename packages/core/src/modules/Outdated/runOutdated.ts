@@ -1,10 +1,15 @@
 import { resolve } from "node:path";
+import type { LockedDependency } from "@/modules/Lockfile";
 import { loadLockfileOrNull } from "@/modules/Lockfile";
 import { loadManifest } from "@/modules/Manifest";
+import type { DependencyEntry } from "@/modules/Manifest";
 import {
   createDefaultGitRemote,
   createDefaultTagLister,
+  isSemverRangeToken,
+  normalizeRepoIdentity,
   pickHighestSatisfyingTag,
+  toLockRepoUrl,
 } from "@/modules/Resolver";
 import { OutdatedError } from "./errors.ts";
 import type { OutdatedResult, OutdatedRow, RunOutdatedOptions } from "./types.ts";
@@ -12,6 +17,7 @@ import type { OutdatedResult, OutdatedRow, RunOutdatedOptions } from "./types.ts
 /**
  * Compare lock pins to remote tips / latest matching semver tags.
  * Exit 0 even when outdated rows exist; no lock → throw / non-success.
+ * Read-only: never writes project artifacts.
  */
 export async function runOutdated(options: RunOutdatedOptions = {}): Promise<OutdatedResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
@@ -23,14 +29,10 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
     );
   }
 
-  try {
-    loadManifest({ cwd });
-  } catch {
-    /* optional for local-only locks */
-  }
-
+  const manifestPins = loadManifestPinRefs(cwd);
   const tagLister = options.tagLister ?? createDefaultTagLister();
   const gitRemote = options.gitRemote ?? createDefaultGitRemote();
+  const verbose = options.verbose === true;
   const rows: OutdatedRow[] = [];
 
   for (const dep of loaded.document.dependencies ?? []) {
@@ -52,17 +54,13 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
         current: current || "local",
         latest: current || "local",
         repo_url: repo,
+        detail: verbose ? "skip: local (no network)" : undefined,
       });
       continue;
     }
 
     const gitUrl = repo.includes("://") ? repo : `https://${repo}`;
-    const constraint =
-      typeof dep.constraint === "string"
-        ? dep.constraint
-        : typeof dep.resolved_tag === "string"
-          ? inferConstraintFromTag(dep.resolved_tag)
-          : undefined;
+    const constraint = typeof dep.constraint === "string" ? dep.constraint : undefined;
 
     try {
       if (constraint) {
@@ -72,7 +70,13 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
           constraint,
         );
         if (!picked) {
-          rows.push({ name, status: "unknown", current, repo_url: repo });
+          rows.push({
+            name,
+            status: "unknown",
+            current,
+            repo_url: repo,
+            detail: verbose ? `constraint=${constraint}; no satisfying tag` : undefined,
+          });
           continue;
         }
         const hit = tags.find((t) => t.tag === picked)!;
@@ -87,9 +91,14 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
           current: typeof dep.resolved_tag === "string" ? dep.resolved_tag : current,
           latest: latestTag,
           repo_url: repo,
+          tip_ref: latestTag,
+          detail: verbose
+            ? `constraint=${constraint}; candidates=${tags.map((t) => t.tag).join(",")}`
+            : undefined,
         });
       } else {
-        const tip = await gitRemote.resolveRef(gitUrl, "HEAD");
+        const tipRef = resolveTipRef(dep, manifestPins);
+        const tip = await gitRemote.resolveRef(gitUrl, tipRef);
         const isOutdated = Boolean(current && tip && current !== tip);
         rows.push({
           name,
@@ -97,6 +106,8 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
           current,
           latest: tip,
           repo_url: repo,
+          tip_ref: tipRef,
+          detail: verbose ? `tip_ref=${tipRef}` : undefined,
         });
       }
     } catch {
@@ -106,10 +117,12 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
 
   const hasOutdated = rows.some((r) => r.status === "outdated");
   const text = hasOutdated
-    ? formatRows(rows)
+    ? formatRows(rows, verbose)
     : rows.every((r) => r.status === "up-to-date")
-      ? "All dependencies are up-to-date"
-      : formatRows(rows);
+      ? verbose
+        ? `All dependencies are up-to-date\n${formatVerboseExtras(rows)}`
+        : "All dependencies are up-to-date"
+      : formatRows(rows, verbose);
 
   return { ok: true, exitCode: 0, rows, text, message: text };
 }
@@ -117,17 +130,91 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
 export const checkOutdated = runOutdated;
 export const outdated = runOutdated;
 
-function inferConstraintFromTag(tag: string): string {
-  const v = tag.replace(/^v/, "");
-  const parts = v.split(".");
-  if (parts.length >= 1 && /^\d+$/.test(parts[0]!)) {
-    return `^${parts[0]}.0.0`;
+/**
+ * Tip identity: lock `resolved_ref` → literal manifest pin → `HEAD`.
+ * Semver-range manifest pins are not used as tip refs.
+ */
+function resolveTipRef(dep: LockedDependency, manifestPins: Map<string, string>): string {
+  if (typeof dep.resolved_ref === "string" && dep.resolved_ref.trim()) {
+    return dep.resolved_ref.trim();
   }
-  return `^${v}`;
+  const identity = lockIdentity(dep);
+  if (identity) {
+    const pin = manifestPins.get(identity);
+    if (pin && !isSemverRangeToken(pin)) return pin;
+  }
+  return "HEAD";
 }
 
-function formatRows(rows: OutdatedRow[]): string {
+function lockIdentity(dep: LockedDependency): string | undefined {
+  const repo = String(dep.repo_url ?? "");
+  if (!repo || repo.startsWith("local:")) return undefined;
+  return normalizeRepoIdentity(repo.includes("://") ? repo : `https://${repo}`);
+}
+
+function loadManifestPinRefs(cwd: string): Map<string, string> {
+  const map = new Map<string, string>();
+  try {
+    const { document } = loadManifest({ cwd });
+    for (const entry of listApmDeps(document.dependencies)) {
+      const pin = pinRefFromEntry(entry);
+      if (pin) map.set(pin.identity, pin.ref);
+    }
+  } catch {
+    /* optional for lock-only / local-only */
+  }
+  return map;
+}
+
+function listApmDeps(
+  deps: { apm?: DependencyEntry[]; [k: string]: unknown } | undefined,
+): DependencyEntry[] {
+  if (!deps || !Array.isArray(deps.apm)) return [];
+  return deps.apm;
+}
+
+function pinRefFromEntry(entry: DependencyEntry): { identity: string; ref: string } | undefined {
+  if (typeof entry === "string") {
+    const hashIdx = entry.indexOf("#");
+    if (hashIdx > 0) {
+      const repo = entry.slice(0, hashIdx);
+      const ref = entry.slice(hashIdx + 1);
+      if (repo && ref) {
+        return { identity: toLockRepoUrl(repo), ref };
+      }
+    }
+    return undefined;
+  }
+  if (!entry || typeof entry !== "object") return undefined;
+  const obj = entry as Record<string, unknown>;
+  if (typeof obj.spec === "string" && !("git" in obj) && !("path" in obj)) {
+    return pinRefFromEntry(obj.spec);
+  }
+  const git = typeof obj.git === "string" ? obj.git : undefined;
+  if (!git) return undefined;
+  const ref = typeof obj.ref === "string" && obj.ref.trim() ? obj.ref.trim() : "HEAD";
+  return { identity: toLockRepoUrl(git), ref };
+}
+
+function formatRows(rows: OutdatedRow[], verbose: boolean): string {
+  const lines = rows.map(
+    (r) => `${r.name}\t${r.status}\tcurrent=${r.current ?? "-"}\tlatest=${r.latest ?? "-"}`,
+  );
+  if (verbose) {
+    const extras = formatVerboseExtras(rows);
+    if (extras) lines.push(extras);
+  }
+  return lines.join("\n");
+}
+
+function formatVerboseExtras(rows: OutdatedRow[]): string {
   return rows
-    .map((r) => `${r.name}\t${r.status}\tcurrent=${r.current ?? "-"}\tlatest=${r.latest ?? "-"}`)
+    .filter((r) => r.detail || r.tip_ref)
+    .map((r) => {
+      const parts = [`# ${r.name}`];
+      if (r.tip_ref) parts.push(`tip_ref=${r.tip_ref}`);
+      if (r.detail) parts.push(r.detail);
+      return parts.join(" ");
+    })
     .join("\n");
 }

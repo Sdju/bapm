@@ -21,7 +21,7 @@
 export { APM_MODULES_DIR, MAX_RESOLVE_DEPTH, DEFAULT_PARALLEL_DOWNLOADS } from "./constants.ts";
 export { ResolverError } from "./errors.ts";
 export type { ResolverErrorCode } from "./errors.ts";
-export { classifyDependencyRef } from "./classify.ts";
+export { classifyDependencyRef, isSemverRangeToken } from "./classify.ts";
 export { resolveDependencyGraph } from "./resolveGraph.ts";
 export { downloadPackages } from "./download.ts";
 export { resolveAndLock, materializeRegistryNodes } from "./resolveAndLock.ts";

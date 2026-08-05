@@ -51,6 +51,8 @@ export type ResolvedNode = {
   repo_url?: string;
   path?: string;
   resolved_commit?: string;
+  /** Pin identity for lock emit / outdated tip (literal ref or picked tag). */
+  resolved_ref?: string;
   constraint?: string;
   resolved_tag?: string;
   resolved_at?: string;

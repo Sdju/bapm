@@ -3,19 +3,37 @@ import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle
 
 export type OutdatedOptions = { args?: string[]; cwd?: string };
 
-export function parseOutdatedArgs(argv: string[]): { help?: boolean; error?: string } {
+export type ParsedOutdatedArgs = {
+  help?: boolean;
+  verbose?: boolean;
+  error?: string;
+};
+
+export function parseOutdatedArgs(argv: string[]): ParsedOutdatedArgs {
+  let verbose = false;
   for (const arg of argv) {
-    if (arg === "--help" || arg === "-h") return { help: true };
-    if (arg.startsWith("-")) return { error: `Unknown outdated flag: ${arg}` };
+    if (arg === "--help" || arg === "-h") return { help: true, verbose };
+    if (arg === "--verbose" || arg === "-v") {
+      verbose = true;
+      continue;
+    }
+    if (arg.startsWith("-")) return { error: `Unknown outdated flag: ${arg}`, verbose };
   }
-  return {};
+  return { verbose };
 }
 
 export function formatOutdatedHelp(deps: LifecycleCliDeps): string {
   return `${deps.name} outdated — Report lock pins vs remote tips
 
 Usage:
-  bapm outdated
+  bapm outdated [options]
+
+Options:
+  -v, --verbose            Richer detail (chosen tip ref, skip reasons, candidates)
+  -h, --help               Show this help
+
+Report-only: does not modify the lockfile, modules cache, or project files.
+Use \`bapm update\` to re-resolve and write refreshed pins.
 
 Exit 0 even when outdated rows exist. Missing lock → non-zero.
 `;
@@ -35,7 +53,10 @@ export async function runOutdatedCli(
     return { ok: false, exitCode: 1, message: parsed.error };
   }
   try {
-    const result = await coreRunOutdated({ cwd: options.cwd });
+    const result = await coreRunOutdated({
+      cwd: options.cwd,
+      verbose: parsed.verbose === true,
+    });
     if (result.text) console.log(result.text);
     return { ok: result.ok, exitCode: result.exitCode };
   } catch (error) {

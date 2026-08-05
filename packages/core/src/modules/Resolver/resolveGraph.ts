@@ -451,6 +451,16 @@ async function resolveRegistry(
   // Registry packages do not expand transitive deps in M10 MVP (flat zip may lack nested graph).
 }
 
+function resolvedRefForEdge(e: EdgeRecord): string | undefined {
+  if (e.kind === "git-semver") {
+    return e.resolved_tag;
+  }
+  if (e.kind === "git-literal") {
+    return e.classified.ref ?? "HEAD";
+  }
+  return undefined;
+}
+
 function edgeToNode(e: EdgeRecord): ResolvedNode {
   return {
     name: e.name,
@@ -461,6 +471,7 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     repo_url: e.repo_url,
     path: e.path,
     resolved_commit: e.resolved_commit,
+    resolved_ref: resolvedRefForEdge(e),
     constraint: e.constraint,
     resolved_tag: e.resolved_tag,
     resolved_at: e.resolved_at,
@@ -772,6 +783,7 @@ async function applyIntersectionPick(
           resolved_by: tightEdge.chain.join("->"),
           repo_url: tightEdge.repo_url,
           resolved_commit: hit.commit,
+          resolved_ref: winnerTag,
           constraint: tightest,
           resolved_tag: winnerTag,
           resolved_at: winnerTag,

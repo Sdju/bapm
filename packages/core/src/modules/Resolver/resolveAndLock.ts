@@ -332,6 +332,14 @@ function buildLockDocument(
     if (n.resolved_tag) entry.resolved_tag = n.resolved_tag;
     if (n.resolved_at) entry.resolved_at = n.resolved_at;
     if (n.version) entry.version = n.version;
+    // APM pin identity: literal classified ref / HEAD, or picked semver tag.
+    if (n.resolved_ref) {
+      entry.resolved_ref = n.resolved_ref;
+    } else if (n.kind === "git-semver" && n.resolved_tag) {
+      entry.resolved_ref = n.resolved_tag;
+    } else if (n.kind === "git-literal") {
+      entry.resolved_ref = "HEAD";
+    }
     const prev = existingByIdentity.get(n.repo_url ?? n.identity);
     if (prev?.deployed_file_hashes) entry.deployed_file_hashes = prev.deployed_file_hashes;
     // Extra diagnostic fields accepted by M2 (unknown keys retained)

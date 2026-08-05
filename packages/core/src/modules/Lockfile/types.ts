@@ -6,6 +6,8 @@ export type LockedDependency = {
   version?: string;
   source?: string;
   resolved_commit?: string;
+  /** Pin identity used for resolve / outdated tip (branch, tag, SHA, or HEAD). */
+  resolved_ref?: string;
   resolved_url?: string;
   resolved_hash?: string;
   virtual_path?: string;
