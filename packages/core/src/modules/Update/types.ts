@@ -28,6 +28,11 @@ export type RunUpdateOptions = {
   downloader?: Downloader;
   parallelDownloads?: number;
   maxDepth?: number;
+  /**
+   * When true, plan text includes `keep` / `[=]` rows.
+   * Default quiet: keep rows are omitted from printed text (plan array stays full).
+   */
+  verbose?: boolean;
   /** Injected confirm for TTY tests; return true to apply. */
   confirm?: () => boolean | Promise<boolean>;
   /** Whether stdin is a TTY (default: process.stdin.isTTY). */

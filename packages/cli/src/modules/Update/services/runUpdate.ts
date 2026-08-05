@@ -9,21 +9,37 @@ import { createInterface } from "node:readline";
 
 export type UpdateOptions = { args?: string[]; cwd?: string };
 
-export function parseUpdateArgs(argv: string[]): {
+export type ParsedUpdateArgs = {
   yes: boolean;
   dryRun: boolean;
+  verbose: boolean;
   packages: string[];
+  parallelDownloads?: number;
   policyPath?: string;
   noPolicy: boolean;
   help?: boolean;
   error?: string;
-} {
+};
+
+export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
   let yes = false;
   let dryRun = false;
+  let verbose = false;
   let help = false;
   let policyPath: string | undefined;
   let noPolicy = false;
+  let parallelDownloads: number | undefined;
   const packages: string[] = [];
+
+  const partial = (): ParsedUpdateArgs => ({
+    yes,
+    dryRun,
+    verbose,
+    packages,
+    parallelDownloads,
+    policyPath,
+    noPolicy,
+  });
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
@@ -39,6 +55,10 @@ export function parseUpdateArgs(argv: string[]): {
       dryRun = true;
       continue;
     }
+    if (arg === "--verbose" || arg === "-v") {
+      verbose = true;
+      continue;
+    }
     if (arg === "--no-policy") {
       noPolicy = true;
       continue;
@@ -46,7 +66,7 @@ export function parseUpdateArgs(argv: string[]): {
     if (arg === "--policy") {
       const next = argv[i + 1];
       if (!next || next.startsWith("-")) {
-        return { yes, dryRun, packages, noPolicy, error: "Missing value for --policy <path>" };
+        return { ...partial(), error: "Missing value for --policy <path>" };
       }
       policyPath = next;
       i += 1;
@@ -55,16 +75,38 @@ export function parseUpdateArgs(argv: string[]): {
     if (arg.startsWith("--policy=")) {
       policyPath = arg.slice("--policy=".length);
       if (!policyPath) {
-        return { yes, dryRun, packages, noPolicy, error: "Missing value for --policy=<path>" };
+        return { ...partial(), error: "Missing value for --policy=<path>" };
       }
       continue;
     }
+    if (arg === "--parallel-downloads") {
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith("-")) {
+        return { ...partial(), error: "Missing value for --parallel-downloads <n>" };
+      }
+      const n = Number(next);
+      if (!Number.isFinite(n) || n < 0) {
+        return { ...partial(), error: `Invalid --parallel-downloads value: ${next}` };
+      }
+      parallelDownloads = Math.floor(n);
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--parallel-downloads=")) {
+      const raw = arg.slice("--parallel-downloads=".length);
+      const n = Number(raw);
+      if (!Number.isFinite(n) || n < 0) {
+        return { ...partial(), error: `Invalid --parallel-downloads value: ${raw}` };
+      }
+      parallelDownloads = Math.floor(n);
+      continue;
+    }
     if (arg.startsWith("-")) {
-      return { yes, dryRun, packages, noPolicy, policyPath, error: `Unknown update flag: ${arg}` };
+      return { ...partial(), error: `Unknown update flag: ${arg}` };
     }
     packages.push(arg);
   }
-  return { yes, dryRun, packages, policyPath, noPolicy, help };
+  return { yes, dryRun, verbose, packages, parallelDownloads, policyPath, noPolicy, help };
 }
 
 export function formatUpdateHelp(deps: LifecycleCliDeps): string {
@@ -74,11 +116,13 @@ Usage:
   bapm update [packages...] [options]
 
 Options:
-  -y, --yes       Apply without interactive confirm
-  --dry-run       Print plan only; do not mutate lock/modules
-  --policy <path> Use explicit policy file
-  --no-policy     Skip policy discovery and checks
-  --help, -h      Show this help
+  -y, --yes                Apply without interactive confirm
+  --dry-run                Print plan only; do not mutate lock/modules
+  -v, --verbose            Include keep/[=] rows in plan text
+  --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
+  --policy <path>          Use explicit policy file
+  --no-policy              Skip policy discovery and checks
+  --help, -h               Show this help
 `;
 }
 
@@ -114,6 +158,8 @@ export async function runUpdateCli(
       cwd: options.cwd,
       yes: parsed.yes,
       dryRun: parsed.dryRun,
+      verbose: parsed.verbose,
+      parallelDownloads: parsed.parallelDownloads,
       packages: parsed.packages.length ? parsed.packages : undefined,
       scope: parsed.packages.length ? parsed.packages : undefined,
       policyPath: parsed.policyPath,

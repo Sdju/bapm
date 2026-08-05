@@ -39,9 +39,11 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
     downloader: options.downloader,
   };
 
+  const verbose = options.verbose === true;
+
   if (dryRun) {
     const plan = await planWithoutMutation(cwd, before?.document?.dependencies, scope, ports);
-    const text = formatPlan(plan);
+    const text = formatPlan(plan, { verbose });
     return { ok: true, exitCode: 0, dryRun: true, plan, text };
   }
 
@@ -95,7 +97,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
 
   const after = loadLockfileOrNull({ cwd });
   const plan = buildPlan(beforePins, nodesFromLock(after?.document?.dependencies));
-  const text = formatPlan(plan);
+  const text = formatPlan(plan, { verbose });
 
   return {
     ok: true,
@@ -224,9 +226,11 @@ function buildPlan(
   return plan;
 }
 
-function formatPlan(plan: UpdatePlanEntry[]): string {
-  if (plan.length === 0) return "No dependency changes planned";
-  return plan
+function formatPlan(plan: UpdatePlanEntry[], options: { verbose?: boolean } = {}): string {
+  const verbose = options.verbose === true;
+  const printable = verbose ? plan : plan.filter((p) => p.action !== "keep");
+  if (printable.length === 0) return "No dependency changes planned";
+  return printable
     .map((p) => {
       if (p.action === "update") return `[~] ${p.name}: ${p.from} → ${p.to}`;
       if (p.action === "add") return `[+] ${p.name}: ${p.to}`;
