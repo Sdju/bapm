@@ -1,6 +1,5 @@
 /**
- * p6a CLI: positional package refs vs zip; frozen×positional reject.
- * Spec: cli-runtime-surface, install-pipeline.
+ * CLI install UX: positional package refs vs zip; frozen×positional reject.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -17,7 +16,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("CLI p6a positional package refs", () => {
+describe("CLI install positional package refs", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -34,7 +33,7 @@ describe("CLI p6a positional package refs", () => {
 
   test("positional package ref via CLI adds to dependencies.apm", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "cli-pos-add");
+    writeLeafProject(project.cwd, "cli-pos-add", { withCursor: true });
     mkdirSync(join(project.cwd, "extra"), { recursive: true });
     writeFileSync(
       join(project.cwd, "extra", "apm.yml"),
@@ -53,7 +52,7 @@ describe("CLI p6a positional package refs", () => {
 
   test("frozen positional rejected at CLI without mutation", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "cli-frozen-pos");
+    writeLeafProject(project.cwd, "cli-frozen-pos", { withCursor: true });
     const seed = await runInProject(project.cwd, ["install"]);
     expect(seed.result).toBe(0);
     const before = fingerprintProject(project.cwd);
@@ -76,7 +75,7 @@ describe("CLI p6a positional package refs", () => {
 
   test("positional zip still uses archive semantics (corrupt zip fails closed)", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "cli-zip");
+    writeLeafProject(project.cwd, "cli-zip", { withCursor: true });
     const zip = join(project.cwd, "bogus.zip");
     writeFileSync(zip, "not-a-pack", "utf8");
     const manifestBefore = readManifestText(project.cwd);

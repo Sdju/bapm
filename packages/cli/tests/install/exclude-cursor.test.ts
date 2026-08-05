@@ -1,6 +1,5 @@
 /**
- * p6a CLI: --exclude cursor skips .cursor/mcp.json writes.
- * Spec: cli-runtime-surface, cursor-mcp-deploy.
+ * CLI install UX: --exclude cursor skips .cursor/mcp.json writes.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -14,7 +13,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("CLI p6a --exclude cursor", () => {
+describe("CLI install --exclude cursor", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

@@ -1,10 +1,23 @@
 /**
  * Shared CLI install test helpers (temp project, env-isolated runCli).
  */
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { runCli } from "../../src/index.ts";
+import { parseInstallArgs, formatInstallHelp } from "../../src/modules/Install/services/runInstall.ts";
+
+export { parseInstallArgs, formatInstallHelp };
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
@@ -92,8 +105,21 @@ export function expectKnownCommand(combined: string, command: string): void {
   }
 }
 
-export function writeLeafProject(cwd: string, name: string): void {
+export function expectKnownFlags(combined: string): void {
+  if (/unknown (?:install )?(?:flag|option)|unrecognized/i.test(combined)) {
+    throw new Error(`CLI rejected argv as unknown flag:\n${combined}`);
+  }
+}
+
+export function writeLeafProject(
+  cwd: string,
+  name: string,
+  options?: { withCursor?: boolean },
+): void {
   mkdirSync(join(cwd, "leaf"), { recursive: true });
+  if (options?.withCursor) {
+    mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  }
   writeFileSync(
     join(cwd, "bapm.yml"),
     `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
@@ -106,6 +132,25 @@ export function writeLeafProject(cwd: string, name: string): void {
   );
 }
 
+export function writeMcpProject(cwd: string, name: string): void {
+  mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  writeFileSync(
+    join(cwd, "bapm.yml"),
+    `name: ${name}
+version: 0.0.1
+dependencies:
+  apm: []
+  mcp:
+    - name: test-stdio-server
+      registry: false
+      transport: stdio
+      command: echo
+      args: ["--greeting", "hello"]
+`,
+    "utf8",
+  );
+}
+
 export function hasLockfile(cwd: string): boolean {
   return existsSync(join(cwd, "bapm.lock.yaml")) || existsSync(join(cwd, "apm.lock.yaml"));
 }
@@ -114,8 +159,67 @@ export function hasModules(cwd: string): boolean {
   return existsSync(join(cwd, "apm_modules")) || existsSync(join(cwd, "bapm_modules"));
 }
 
+export function readManifestText(cwd: string): string {
+  const path = existsSync(join(cwd, "bapm.yml"))
+    ? join(cwd, "bapm.yml")
+    : join(cwd, "apm.yml");
+  return readFileSync(path, "utf8");
+}
+
+export function mcpJsonPath(cwd: string): string {
+  return join(cwd, ".cursor", "mcp.json");
+}
+
 export function writeText(cwd: string, relative: string, contents: string): void {
   const path = join(cwd, relative);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, contents, "utf8");
+}
+
+/** Content fingerprint of durable project paths (atime ignored). */
+export function fingerprintProject(cwd: string): string {
+  const roots = [
+    "bapm.yml",
+    "apm.yml",
+    "bapm.lock.yaml",
+    "apm.lock.yaml",
+    "apm_modules",
+    "bapm_modules",
+    ".cursor",
+    ".agents",
+  ];
+  const entries: string[] = [];
+  for (const root of roots) {
+    const abs = join(cwd, root);
+    if (!existsSync(abs)) continue;
+    const st = statSync(abs);
+    if (st.isFile()) {
+      entries.push(`${root}:${hash(readFileSync(abs))}`);
+      continue;
+    }
+    for (const rel of listFilesRecursive(abs)) {
+      entries.push(`${root}/${rel}:${hash(readFileSync(join(abs, rel)))}`);
+    }
+  }
+  entries.sort();
+  return createHash("sha256").update(entries.join("\n"), "utf8").digest("hex");
+}
+
+function hash(buf: Buffer): string {
+  return createHash("sha256").update(buf).digest("hex");
+}
+
+function listFilesRecursive(root: string): string[] {
+  if (!existsSync(root)) return [];
+  const out: string[] = [];
+  const walk = (dir: string, prefix: string) => {
+    for (const name of readdirSync(dir)) {
+      const abs = join(dir, name);
+      const rel = prefix ? `${prefix}/${name}` : name;
+      if (statSync(abs).isDirectory()) walk(abs, rel);
+      else out.push(rel.replaceAll("\\", "/"));
+    }
+  };
+  walk(root, "");
+  return out.sort();
 }

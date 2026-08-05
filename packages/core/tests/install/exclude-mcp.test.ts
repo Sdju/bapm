@@ -1,6 +1,5 @@
 /**
- * p6a: --exclude cursor skips configureMcp; unknown exclude fail-closed.
- * Spec: install-pipeline, cursor-mcp-deploy.
+ * --exclude cursor skips configureMcp; unknown exclude fail-closed.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -17,9 +16,9 @@ import {
   writeLeafProject,
   writeMcpLeafProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("core p6a exclude cursor skips MCP configure", () => {
+describe("install exclude cursor skips MCP configure", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

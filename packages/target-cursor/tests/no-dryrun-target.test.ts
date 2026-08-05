@@ -1,13 +1,12 @@
 /**
- * p6a: cursor target stays free of dry-run branches.
- * Spec: target-api-contracts.
+ * cursor target stays free of dry-run branches.
  */
 import { expect, test, describe } from "vite-plus/test";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const srcRoot = join(pkgRoot, "src");
 
 function listTs(dir: string): string[] {
@@ -20,7 +19,7 @@ function listTs(dir: string): string[] {
   return out;
 }
 
-describe("target-cursor p6a no dryRun knowledge", () => {
+describe("target-cursor no dryRun knowledge", () => {
   test("createCursorTarget / src has no dryRun parameter or branch", () => {
     const files = listTs(srcRoot);
     expect(files.length).toBeGreaterThan(0);

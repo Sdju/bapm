@@ -1,5 +1,5 @@
 /**
- * Core p6a-install-ux-parity acceptance helpers.
+ * Install UX helpers (dry-run, exclude, positional package-refs).
  */
 import { createHash } from "node:crypto";
 import {
@@ -13,15 +13,16 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import {
   createFakePorts,
   getCreateRegistry,
   getRegisterTarget,
   getRunInstall,
   importTargetApi,
-} from "../../install/helpers.ts";
+  coreRoot,
+  writeText as writeTextAbs,
+} from "./helpers.ts";
 
 export {
   createFakePorts,
@@ -29,15 +30,12 @@ export {
   getRegisterTarget,
   getRunInstall,
   importTargetApi,
+  coreRoot,
 };
-
-export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
-export const repoRoot = resolve(coreRoot, "../..");
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
-export function createTempProject(prefix = "bapm-p6a-core-"): TempProject {
+export function createTempProject(prefix = "bapm-install-ux-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
@@ -46,9 +44,7 @@ export function createTempProject(prefix = "bapm-p6a-core-"): TempProject {
 }
 
 export function writeText(cwd: string, relative: string, contents: string): void {
-  const path = join(cwd, relative);
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, contents, "utf8");
+  writeTextAbs(join(cwd, relative), contents);
 }
 
 /** Minimal path-dep project with optional .cursor and skill for materialize. */

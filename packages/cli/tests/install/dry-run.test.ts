@@ -1,6 +1,5 @@
 /**
- * p6a CLI: --dry-run previews without durable writes.
- * Spec: cli-runtime-surface, install-pipeline.
+ * CLI install UX: --dry-run previews without durable writes.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -16,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("CLI p6a install --dry-run", () => {
+describe("CLI install --dry-run", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -26,7 +25,7 @@ describe("CLI p6a install --dry-run", () => {
 
   test("bapm install --dry-run previews without writes", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "cli-dry-run");
+    writeLeafProject(project.cwd, "cli-dry-run", { withCursor: true });
     const before = fingerprintProject(project.cwd);
 
     const { result, combined } = await runInProject(project.cwd, ["install", "--dry-run"]);
@@ -42,7 +41,7 @@ describe("CLI p6a install --dry-run", () => {
 
   test("dry-run positional previews without writing manifest", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "cli-dry-pos");
+    writeLeafProject(project.cwd, "cli-dry-pos", { withCursor: true });
     const before = fingerprintProject(project.cwd);
     const manifestBefore = readManifestText(project.cwd);
 

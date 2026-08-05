@@ -1,15 +1,14 @@
 /**
- * p6a: target-api contracts must not grow dryRun on write ports.
- * Spec: target-api-contracts.
+ * target-api contracts must not grow dryRun on write ports.
  */
 import { expect, test, describe } from "vite-plus/test";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-describe("target-api p6a no dryRun on target contracts", () => {
+describe("target-api no dryRun on target contracts", () => {
   test("MaterializeContext / ConfigureMcpContext / BapmTarget omit dryRun", () => {
     const typesSrc = readFileSync(join(pkgRoot, "src/types.ts"), "utf8");
 

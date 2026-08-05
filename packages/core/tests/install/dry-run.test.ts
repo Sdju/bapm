@@ -1,6 +1,5 @@
 /**
- * p6a: install dry-run — zero durable project writes; skip write ports.
- * Spec: install-pipeline (dry-run), target-api-contracts (no target dryRun).
+ * Install dry-run — zero durable project writes; skip write ports.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -15,9 +14,9 @@ import {
   writeLeafProject,
   writeMcpLeafProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("core p6a dry-run zero-write install", () => {
+describe("install dry-run zero-write", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

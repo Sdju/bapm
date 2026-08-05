@@ -1,6 +1,5 @@
 /**
- * p6a CLI: --parallel-downloads, -v/--verbose, --exclude; help surface.
- * Spec: cli-runtime-surface.
+ * CLI install UX: --parallel-downloads, -v/--verbose, --exclude; help surface.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -14,7 +13,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("CLI p6a install UX flags and help", () => {
+describe("CLI install UX flags and help", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -57,7 +56,7 @@ describe("CLI p6a install UX flags and help", () => {
 
   test("parallel-downloads flag accepted on install", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "cli-parallel");
+    writeLeafProject(project.cwd, "cli-parallel", { withCursor: true });
 
     const { result, combined } = await runInProject(project.cwd, [
       "install",
@@ -73,7 +72,7 @@ describe("CLI p6a install UX flags and help", () => {
 
   test("verbose short flag accepted", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "cli-verbose");
+    writeLeafProject(project.cwd, "cli-verbose", { withCursor: true });
 
     const { result, combined } = await runInProject(project.cwd, ["install", "-v"]);
 

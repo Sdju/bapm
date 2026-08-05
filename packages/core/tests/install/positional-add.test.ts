@@ -1,9 +1,8 @@
 /**
- * p6a: positional package-ref add, auto-create, frozen×positional, dry-run preview.
- * Spec: install-pipeline.
+ * Positional package-ref add, auto-create, frozen×positional, dry-run preview.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   createFakePorts,
@@ -18,9 +17,9 @@ import {
   readManifestText,
   writeLeafProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("core p6a positional package-ref add", () => {
+describe("install positional package-ref add", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

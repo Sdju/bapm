@@ -1,6 +1,5 @@
 /**
- * p6a: parallelDownloads / verbose / MCP frozen sync default-off.
- * Spec: install-pipeline.
+ * Install options: parallelDownloads / verbose / MCP frozen sync default-off.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { writeFileSync } from "node:fs";
@@ -12,9 +11,9 @@ import {
   writeLeafProject,
   writeMcpLeafProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("core p6a install options surface", () => {
+describe("install options surface", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
