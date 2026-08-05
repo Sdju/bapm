@@ -1,5 +1,5 @@
 /**
- * p6f-deps-polish acceptance helpers (core whyDeps).
+ * core deps why helpers.
  */
 import * as core from "@bapm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
