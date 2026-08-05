@@ -103,6 +103,10 @@ Options:
                            ({ "dependencies": [...] }); suppresses human table
   -h, --help               Show this help
 
+Pin checks: branch/tag/abbreviated SHA use tip-of-ref; semver constraints use
+highest satisfying tag; full 40-hex SHA pins compare against the latest
+annotated semver tag (outdated reporting only — does not rewrite the manifest).
+
 Report-only: does not modify the lockfile, modules cache, or project files.
 Use \`bapm update\` to re-resolve and write refreshed pins.
 

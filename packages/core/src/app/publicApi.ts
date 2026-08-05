@@ -118,6 +118,7 @@ export {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
+  createPeelAwareTagLister,
   materializeRegistryNodes,
 } from "@/modules/Resolver";
 
@@ -190,7 +191,12 @@ export {
   runOutdated,
   checkOutdated,
   outdated,
+  abbreviateSha,
+  findLatestAnnotatedTag,
+  isFullRevisionPin,
+  packageBasenameFromRepo,
 } from "@/modules/Outdated";
+export type { AnnotatedTagCandidate } from "@/modules/Outdated";
 
 export type { RunUninstallOptions, UninstallResult, UninstallErrorCode } from "@/modules/Uninstall";
 export { UninstallError, runUninstall, uninstallPackages, uninstall } from "@/modules/Uninstall";

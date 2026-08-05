@@ -5,7 +5,10 @@ import type { Downloader, GitRemote, TagLister } from "./types.ts";
 import { identityToCacheDir, normalizeRepoIdentity } from "./identity.ts";
 import { APM_MODULES_DIR } from "./constants.ts";
 
-/** Default TagLister via `git ls-remote --tags`. */
+/**
+ * Default TagLister via `git ls-remote --tags --refs`.
+ * Omits peeled `^{}` lines — used by resolve / constraint paths (stable).
+ */
 export function createDefaultTagLister(): TagLister {
   return {
     async listTags(repoUrl: string) {
@@ -18,6 +21,54 @@ export function createDefaultTagLister(): TagLister {
       return tags;
     },
   };
+}
+
+/**
+ * Peel-aware TagLister for Outdated full-SHA revision-pin path.
+ * `git ls-remote --tags` (no `--refs`); pairs `refs/tags/X^{}` → annotated.
+ */
+export function createPeelAwareTagLister(): TagLister {
+  return {
+    async listTags(repoUrl: string) {
+      const out = await runGit(["ls-remote", "--tags", repoUrl]);
+      return parseLsRemoteTagsWithPeel(out);
+    },
+  };
+}
+
+/**
+ * Parse `git ls-remote --tags` output; annotated = presence of peeled `^{}` line.
+ * Commit for annotated tags is the peeled SHA (APM fence).
+ */
+export function parseLsRemoteTagsWithPeel(output: string): Array<{
+  tag: string;
+  commit: string;
+  annotated: boolean;
+}> {
+  const tags = new Map<string, string>();
+  const annotated = new Set<string>();
+
+  for (const line of output.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const m = trimmed.match(/^([0-9a-f]{40})\s+refs\/tags\/(.+)$/i);
+    if (!m) continue;
+    const sha = m[1]!.toLowerCase();
+    let name = m[2]!;
+    if (name.endsWith("^{}")) {
+      name = name.slice(0, -3);
+      tags.set(name, sha);
+      annotated.add(name);
+    } else if (!tags.has(name)) {
+      tags.set(name, sha);
+    }
+  }
+
+  return [...tags.entries()].map(([tag, commit]) => ({
+    tag,
+    commit,
+    annotated: annotated.has(tag),
+  }));
 }
 
 /** Default GitRemote via `git ls-remote`. */

@@ -88,7 +88,7 @@ export function fakeCommit(seed: string): string {
   return hex;
 }
 
-export type FakeTag = { tag: string; commit: string };
+export type FakeTag = { tag: string; commit: string; annotated?: boolean };
 
 /**
  * Fake TagLister / GitRemote / Downloader ports for deterministic acceptance.

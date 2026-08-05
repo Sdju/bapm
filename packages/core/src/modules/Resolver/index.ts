@@ -36,6 +36,8 @@ export {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
+  createPeelAwareTagLister,
+  parseLsRemoteTagsWithPeel,
 } from "./defaults.ts";
 
 export type {

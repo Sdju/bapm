@@ -6,6 +6,7 @@ import type { DependencyEntry } from "@/modules/Manifest";
 import {
   createDefaultGitRemote,
   createDefaultTagLister,
+  createPeelAwareTagLister,
   isSemverRangeToken,
   normalizeRepoIdentity,
   pickHighestSatisfyingTag,
@@ -14,6 +15,12 @@ import {
   type TagLister,
 } from "@/modules/Resolver";
 import { OutdatedError } from "./errors.ts";
+import {
+  abbreviateSha,
+  findLatestAnnotatedTag,
+  isFullRevisionPin,
+  packageBasenameFromRepo,
+} from "./revisionPin.ts";
 import {
   DEFAULT_PARALLEL_CHECKS,
   type OutdatedResult,
@@ -37,14 +44,17 @@ export async function runOutdated(options: RunOutdatedOptions = {}): Promise<Out
   }
 
   const manifestPins = loadManifestPinRefs(cwd);
-  const tagLister = options.tagLister ?? createDefaultTagLister();
+  const injectedTagLister = options.tagLister;
+  const tagLister = injectedTagLister ?? createDefaultTagLister();
+  // Revision-pin needs peel/`annotated` evidence; keep constraint on --refs default.
+  const revisionTagLister = injectedTagLister ?? createPeelAwareTagLister();
   const gitRemote = options.gitRemote ?? createDefaultGitRemote();
   const verbose = options.verbose === true;
   const parallelChecks = options.parallelChecks ?? DEFAULT_PARALLEL_CHECKS;
   const deps = loaded.document.dependencies ?? [];
 
   const rows = await mapPool(deps, parallelChecks, (dep) =>
-    checkOneDep(dep, { manifestPins, tagLister, gitRemote, verbose }),
+    checkOneDep(dep, { manifestPins, tagLister, revisionTagLister, gitRemote, verbose }),
   );
 
   const hasOutdated = rows.some((r) => r.status === "outdated");
@@ -65,6 +75,7 @@ export const outdated = runOutdated;
 type CheckCtx = {
   manifestPins: Map<string, string>;
   tagLister: TagLister;
+  revisionTagLister: TagLister;
   gitRemote: GitRemote;
   verbose: boolean;
 };
@@ -131,6 +142,14 @@ async function checkOneDep(dep: LockedDependency, ctx: CheckCtx): Promise<Outdat
       };
     }
 
+    const lockRef =
+      typeof dep.resolved_ref === "string" && dep.resolved_ref.trim()
+        ? dep.resolved_ref.trim()
+        : "";
+    if (isFullRevisionPin(lockRef)) {
+      return checkRevisionPin(ctx, { name, repo, gitUrl, pinSha: lockRef });
+    }
+
     const tipRef = resolveTipRef(dep, ctx.manifestPins);
     const tip = await ctx.gitRemote.resolveRef(gitUrl, tipRef);
     const isOutdated = Boolean(current && tip && current !== tip);
@@ -146,6 +165,38 @@ async function checkOneDep(dep: LockedDependency, ctx: CheckCtx): Promise<Outdat
   } catch {
     return { name, status: "unknown", current, repo_url: repo };
   }
+}
+
+async function checkRevisionPin(
+  ctx: CheckCtx,
+  args: { name: string; repo: string; gitUrl: string; pinSha: string },
+): Promise<OutdatedRow> {
+  const { name, repo, gitUrl, pinSha } = args;
+  const currentDisplay = abbreviateSha(pinSha);
+  const tags = await ctx.revisionTagLister.listTags(gitUrl);
+  const packageName = packageBasenameFromRepo(repo);
+  const latest = findLatestAnnotatedTag(tags, packageName);
+  if (!latest) {
+    return {
+      name,
+      status: "unknown",
+      current: currentDisplay,
+      latest: "-",
+      repo_url: repo,
+      detail: ctx.verbose ? "revision-pin; no annotated semver candidate" : undefined,
+    };
+  }
+  const pinEq = pinSha.toLowerCase() === latest.commit.toLowerCase();
+  const short = abbreviateSha(latest.commit);
+  return {
+    name,
+    status: pinEq ? "up-to-date" : "outdated",
+    current: currentDisplay,
+    latest: `${latest.tag} (${short})`,
+    repo_url: repo,
+    tip_ref: latest.tag,
+    detail: ctx.verbose ? `revision-pin; tag=${latest.tag}` : undefined,
+  };
 }
 
 /**

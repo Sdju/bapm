@@ -2,7 +2,15 @@
  * Injectable ports for git remote / tag listing / download (fake-friendly for tests).
  */
 
-export type FakeTag = { tag: string; commit: string };
+export type FakeTag = {
+  tag: string;
+  commit: string;
+  /**
+   * Positive annotated peel evidence (`refs/tags/…^{}` or injectable stub).
+   * Missing/false = lightweight / unknown — revision-pin path fail-closes.
+   */
+  annotated?: boolean;
+};
 
 export type TagLister = {
   listTags(repoUrl: string): Promise<FakeTag[]>;
