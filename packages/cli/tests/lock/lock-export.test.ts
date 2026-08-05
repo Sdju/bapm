@@ -1,5 +1,5 @@
 /**
- * p6c-lock-parity — lock-command: `bapm lock export` SBOM IO.
+ * CLI `bapm lock export` SBOM IO.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
@@ -17,7 +17,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6c CLI lock export", () => {
+describe("CLI lock export", () => {
   let project: TempProject;
 
   afterEach(() => {

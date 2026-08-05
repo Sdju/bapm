@@ -1,11 +1,15 @@
 /**
- * p6c-lock-parity — core-feod-architecture: Export module + package entry.
+ * FEOD Export module layout and package entry surface.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test, describe } from "vite-plus/test";
 import * as core from "@bapm/core";
-import { getExportSbom, srcRoot } from "./helpers.ts";
+import { getExportSbom } from "../export/helpers.ts";
+
+const coreRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const srcRoot = join(coreRoot, "src");
 
 function listTsFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
@@ -18,7 +22,7 @@ function listTsFiles(dir: string): string[] {
   return out;
 }
 
-describe("p6c Export FEOD module", () => {
+describe("Export FEOD module", () => {
   test("modules/Export is a directory module with index.ts (not a single-file module)", () => {
     const exportDir = join(srcRoot, "modules", "Export");
     expect(existsSync(exportDir), "missing src/modules/Export").toBe(true);

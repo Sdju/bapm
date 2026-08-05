@@ -1,22 +1,10 @@
 /**
- * p6c-lock-parity acceptance helpers (core).
+ * Helpers for Export / SBOM suite.
  */
 import * as core from "@bapm/core";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
-export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
-export const srcRoot = join(coreRoot, "src");
+import { dirname, join } from "node:path";
 
 type AnyFn = (...args: never[]) => unknown;
 
@@ -32,7 +20,7 @@ export function pickExport(names: string[], label: string): AnyFn {
 export function getExportSbom(): (options: Record<string, unknown>) => unknown {
   return pickExport(
     ["exportSbom", "exportLockSbom", "exportLockfileSbom"],
-    "p6c lock SBOM export",
+    "lock SBOM export",
   ) as (options: Record<string, unknown>) => unknown;
 }
 
@@ -63,7 +51,7 @@ export function isExportFailure(result: unknown): boolean {
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
-export function createTempProject(prefix = "bapm-p6c-core-"): TempProject {
+export function createTempProject(prefix = "bapm-export-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
@@ -74,17 +62,6 @@ export function createTempProject(prefix = "bapm-p6c-core-"): TempProject {
 export function writeText(path: string, contents: string): void {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, contents, "utf8");
-}
-
-export function writeLeafProject(cwd: string, name: string): void {
-  writeText(
-    join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
-  );
-  writeText(
-    join(cwd, "leaf", "apm.yml"),
-    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
 }
 
 export function sampleLockDocument(overrides?: Record<string, unknown>): Record<string, unknown> {
@@ -107,12 +84,4 @@ export function sampleLockDocument(overrides?: Record<string, unknown>): Record<
     ],
     ...overrides,
   };
-}
-
-export function readLockYaml(cwd: string): string {
-  for (const name of ["bapm.lock.yaml", "apm.lock.yaml"] as const) {
-    const p = join(cwd, name);
-    if (existsSync(p)) return readFileSync(p, "utf8");
-  }
-  throw new Error(`no lockfile in ${cwd}`);
 }

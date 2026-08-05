@@ -1,7 +1,8 @@
 /**
- * p6c-lock-parity — lock-sbom-export: CycloneDX 1.5 / SPDX 2.3 inventory.
+ * Export SBOM IO: CycloneDX 1.5 / SPDX 2.3 inventory from lock fields.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
+import { join } from "node:path";
 import {
   createTempProject,
   getExportSbom,
@@ -11,9 +12,8 @@ import {
   writeText,
   type TempProject,
 } from "./helpers.ts";
-import { join } from "node:path";
 
-describe("p6c core exportSbom", () => {
+describe("core exportSbom", () => {
   let project: TempProject;
 
   afterEach(() => {

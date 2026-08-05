@@ -1,5 +1,5 @@
 /**
- * p6c-lock-parity — lock-command / dependency-resolve CLI: parallel 0 + MCP carry.
+ * CLI lock: parallel-downloads 0 + MCP inventory carry.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { mkdirSync } from "node:fs";
@@ -16,7 +16,7 @@ import {
 
 const MCP_MARKER = "p6c-cli-carry-server";
 
-describe("p6c CLI bare lock flags and MCP carry", () => {
+describe("CLI bare lock flags and MCP carry", () => {
   let project: TempProject;
 
   afterEach(() => {

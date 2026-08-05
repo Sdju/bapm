@@ -1,20 +1,38 @@
 /**
- * p6c-lock-parity — dependency-resolve: inventory bag carry on lock rewrite.
+ * dependency-resolve: inventory bag carry on lock rewrite.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadLockfile, resolveAndLock, serializeLockfile } from "@bapm/core";
 import {
   createTempProject,
-  readLockYaml,
-  writeLeafProject,
   writeText,
   type TempProject,
 } from "./helpers.ts";
 
-const MCP_MARKER = "p6c-carry-server";
+const MCP_MARKER = "carry-server";
 
-describe("p6c lock rewrite inventory carry-forward", () => {
+function writeLeafProject(cwd: string, name: string): void {
+  writeText(
+    join(cwd, "bapm.yml"),
+    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+  );
+  writeText(
+    join(cwd, "leaf", "apm.yml"),
+    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+  );
+}
+
+function readLockYaml(cwd: string): string {
+  for (const name of ["bapm.lock.yaml", "apm.lock.yaml"] as const) {
+    const p = join(cwd, name);
+    if (existsSync(p)) return readFileSync(p, "utf8");
+  }
+  throw new Error(`no lockfile in ${cwd}`);
+}
+
+describe("lock rewrite inventory carry-forward", () => {
   let project: TempProject;
 
   afterEach(() => {

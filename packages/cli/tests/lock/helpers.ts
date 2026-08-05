@@ -1,5 +1,5 @@
 /**
- * p6c-lock-parity acceptance helpers (CLI).
+ * CLI lock command test helpers.
  */
 import {
   existsSync,
@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
