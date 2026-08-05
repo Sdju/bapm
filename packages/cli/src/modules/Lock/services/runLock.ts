@@ -114,7 +114,24 @@ export function parseLockArgs(argv: string[]): {
       parallelDownloads = Math.floor(n);
       continue;
     }
-    // Unknown flags: ignore soft for now (APM subset); do not fail as "unknown command"
+    if (arg.startsWith("-")) {
+      return {
+        updateRefs,
+        verbose,
+        parallelDownloads,
+        policyPath,
+        noPolicy,
+        error: `Unknown lock flag: ${arg}`,
+      };
+    }
+    return {
+      updateRefs,
+      verbose,
+      parallelDownloads,
+      policyPath,
+      noPolicy,
+      error: `Unexpected lock argument: ${arg}`,
+    };
   }
 
   return { updateRefs, verbose, parallelDownloads, policyPath, noPolicy, help };
@@ -244,6 +261,7 @@ export async function runLock(deps: LockDeps, options: LockOptions): Promise<Loc
     return { ok: true, exitCode: 0 };
   }
   if (parsed.error) {
+    console.error(parsed.error);
     return { ok: false, exitCode: 1, message: parsed.error };
   }
 
