@@ -1,5 +1,5 @@
 /**
- * P6e — branch/literal pins use tip of resolved_ref (not unconditional HEAD).
+ * Outdated — branch/literal pins use tip of resolved_ref (not unconditional HEAD).
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -15,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6e acceptance — branch / literal tip via resolved_ref", () => {
+describe("core outdated — branch / literal tip via resolved_ref", () => {
   let project: TempProject;
 
   afterEach(() => {

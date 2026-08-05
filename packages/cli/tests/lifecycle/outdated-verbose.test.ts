@@ -1,5 +1,5 @@
 /**
- * P6e CLI — -v / --verbose, unknown flags, help surface.
+ * CLI outdated — -v / --verbose, unknown flags, help surface.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -14,9 +14,9 @@ import {
   writeLeafProject,
   writeLock,
   type TempProject,
-} from "../../lifecycle/helpers.ts";
+} from "./helpers.ts";
 
-describe("p6e acceptance — CLI outdated verbose surface", () => {
+describe("CLI outdated — verbose surface", () => {
   let project: TempProject;
 
   afterEach(() => {

@@ -4,7 +4,7 @@
 import * as core from "@bapm/core";
 import { loadLockfile } from "@bapm/core";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import {
   createFakePorts,
@@ -121,6 +121,10 @@ export function sha256Hex(content: string | Buffer): string {
   return createHash("sha256").update(content).digest("hex");
 }
 
+export function statusOf(row: Record<string, unknown>): string {
+  return String(row.status ?? row.state ?? row.result ?? "").toLowerCase();
+}
+
 export function exitCodeOf(result: unknown): number {
   if (typeof result === "number") return result;
   if (result && typeof result === "object") {
@@ -131,6 +135,51 @@ export function exitCodeOf(result: unknown): number {
     }
   }
   throw new TypeError("expected numeric exit code or { exitCode | code | status | ok }");
+}
+
+function fingerprintTree(root: string): string {
+  const parts: string[] = [];
+  const walk = (dir: string, rel: string) => {
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      const childRel = rel ? `${rel}/${name}` : name;
+      const st = statSync(full);
+      if (st.isDirectory()) walk(full, childRel);
+      else {
+        const body = readFileSync(full);
+        parts.push(`${childRel}:${st.size}:${createHash("sha256").update(body).digest("hex")}`);
+      }
+    }
+  };
+  if (existsSync(root)) walk(root, "");
+  return createHash("sha256").update(parts.join("\n")).digest("hex");
+}
+
+/** Bit-identical contract over lock / modules / manifest / common target roots. */
+export function projectFingerprint(cwd: string): string {
+  const keys = [
+    "bapm.yml",
+    "apm.yml",
+    "bapm.lock.yaml",
+    "apm.lock.yaml",
+    "apm_modules",
+    "bapm_modules",
+    ".agents",
+    ".cursor",
+    ".github",
+  ];
+  const parts: string[] = [];
+  for (const key of keys) {
+    const full = join(cwd, key);
+    if (!existsSync(full)) continue;
+    const st = statSync(full);
+    if (st.isDirectory()) parts.push(`${key}:dir:${fingerprintTree(full)}`);
+    else {
+      const body = readFileSync(full);
+      parts.push(`${key}:file:${createHash("sha256").update(body).digest("hex")}`);
+    }
+  }
+  return createHash("sha256").update(parts.join("\n")).digest("hex");
 }
 
 export function rowsOf(result: unknown): Record<string, unknown>[] {

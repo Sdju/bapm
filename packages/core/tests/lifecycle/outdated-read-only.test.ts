@@ -1,5 +1,5 @@
 /**
- * P6e — exit policy + read-only project tree.
+ * Outdated — exit policy + read-only project tree.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -19,7 +19,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6e acceptance — exit + read-only", () => {
+describe("core outdated — exit + read-only", () => {
   let project: TempProject;
 
   afterEach(() => {

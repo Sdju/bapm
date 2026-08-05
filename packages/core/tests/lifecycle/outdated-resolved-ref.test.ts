@@ -1,5 +1,5 @@
 /**
- * P6e — resolveAndLock emits resolved_ref; load→serialize round-trips it.
+ * Outdated / lock parity — resolveAndLock emits resolved_ref; load→serialize round-trips it.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -18,7 +18,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6e acceptance — resolved_ref emit + round-trip", () => {
+describe("core outdated — resolved_ref emit + round-trip", () => {
   let project: TempProject;
 
   afterEach(() => {

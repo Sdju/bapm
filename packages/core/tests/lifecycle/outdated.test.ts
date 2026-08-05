@@ -10,15 +10,12 @@ import {
   fakeCommit,
   getRunOutdated,
   rowsOf,
+  statusOf,
   textOf,
   writeLock,
   writeManifest,
   type TempProject,
 } from "./helpers.ts";
-
-function statusOf(row: Record<string, unknown>): string {
-  return String(row.status ?? row.state ?? row.result ?? "").toLowerCase();
-}
 
 describe("core outdated", () => {
   let project: TempProject;

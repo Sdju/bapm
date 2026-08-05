@@ -1,5 +1,5 @@
 /**
- * P6e — no invented ^ from resolved_tag; explicit constraint still works.
+ * Outdated — no invented ^ from resolved_tag; explicit constraint still works.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
@@ -15,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6e acceptance — semver constraint vs tag-only literal", () => {
+describe("core outdated — semver constraint vs tag-only literal", () => {
   let project: TempProject;
 
   afterEach(() => {
