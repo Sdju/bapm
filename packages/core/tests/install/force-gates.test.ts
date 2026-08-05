@@ -1,5 +1,5 @@
 /**
- * p7a — --force accepted; MUST NOT bypass frozen or policy.
+ * Install --force accepted; MUST NOT bypass frozen or policy.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -14,9 +14,9 @@ import {
   writeLeafProject,
   writePolicy,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("p7a force does not bypass frozen/policy", () => {
+describe("install force does not bypass frozen/policy", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

@@ -17,7 +17,7 @@ import { dirname, join } from "node:path";
 import { runCli } from "../../src/index.ts";
 import { parseInstallArgs, formatInstallHelp } from "../../src/modules/Install/services/runInstall.ts";
 
-export { parseInstallArgs, formatInstallHelp };
+export { parseInstallArgs, formatInstallHelp, runCli };
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
@@ -134,12 +134,14 @@ export function writeLeafProject(
 
 export function writeMcpProject(cwd: string, name: string): void {
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  mkdirSync(join(cwd, "leaf"), { recursive: true });
   writeFileSync(
     join(cwd, "bapm.yml"),
     `name: ${name}
 version: 0.0.1
 dependencies:
-  apm: []
+  apm:
+    - path: ./leaf
   mcp:
     - name: test-stdio-server
       registry: false
@@ -149,14 +151,42 @@ dependencies:
 `,
     "utf8",
   );
+  writeFileSync(
+    join(cwd, "leaf", "apm.yml"),
+    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    "utf8",
+  );
+  writeText(
+    cwd,
+    "leaf/.apm/skills/hello/SKILL.md",
+    "---\nname: hello\n---\n# Hello\n",
+  );
 }
+
+export function writePolicy(cwd: string, contents: string): string {
+  const path = join(cwd, "bapm-policy.yml");
+  writeFileSync(path, contents, "utf8");
+  return path;
+}
+
+export const BLOCK_DENY_LEAF = `name: deny-leaf
+enforcement: block
+dependencies:
+  deny:
+    - leaf
+`;
 
 export function hasLockfile(cwd: string): boolean {
   return existsSync(join(cwd, "bapm.lock.yaml")) || existsSync(join(cwd, "apm.lock.yaml"));
 }
 
 export function hasModules(cwd: string): boolean {
-  return existsSync(join(cwd, "apm_modules")) || existsSync(join(cwd, "bapm_modules"));
+  for (const name of ["apm_modules", "bapm_modules"] as const) {
+    const abs = join(cwd, name);
+    if (!existsSync(abs)) continue;
+    if (listFilesRecursive(abs).length > 0) return true;
+  }
+  return false;
 }
 
 export function readManifestText(cwd: string): string {

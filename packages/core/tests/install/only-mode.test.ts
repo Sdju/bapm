@@ -1,5 +1,5 @@
 /**
- * p7a — --only apm|mcp skip sides (install-pipeline / cursor-mcp-deploy).
+ * Install --only apm|mcp skip sides (install-pipeline / cursor-mcp-deploy).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -10,9 +10,9 @@ import {
   installWithSpy,
   writeMcpLeafProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("p7a install only-mode", () => {
+describe("install only-mode", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

@@ -1,5 +1,5 @@
 /**
- * p7a — CLI --dev write target + --only skip sides.
+ * CLI install --dev write target + --only skip sides.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -17,7 +17,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7a CLI --dev and --only", () => {
+describe("CLI install --dev and --only", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

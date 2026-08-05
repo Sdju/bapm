@@ -1,5 +1,5 @@
 /**
- * Install options: parallelDownloads / verbose / MCP frozen sync default-off.
+ * Install options: parallelDownloads / verbose / MCP frozen sync + p7a project flags.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { writeFileSync } from "node:fs";
@@ -28,6 +28,18 @@ describe("install options surface", () => {
     expect(src).toMatch(/\bpackageRefs\??\s*:/);
     expect(src).toMatch(/\bexcludeTargets\??\s*:|\bexclude\??\s*:/);
     expect(src).toMatch(/\bdryRun\??\s*:/);
+  });
+
+  test("RunInstallOptions includes force, allowInsecure, hosts, dev, only; no refresh", () => {
+    const src = readInstallTypesSource();
+    // Bare `force` option — must not confuse with forceTarget / forcedTarget.
+    expect(src).toMatch(/^\s*force\??\s*:/m);
+    expect(src).toMatch(/^\s*allowInsecure\??\s*:/m);
+    expect(src).toMatch(/^\s*allowInsecureHosts\??\s*:/m);
+    expect(src).toMatch(/^\s*dev\??\s*:/m);
+    expect(src).toMatch(/^\s*only\??\s*:/m);
+    expect(src).toMatch(/\bforcedTarget\??\s*:|\bforceTarget\??\s*:/);
+    expect(src).not.toMatch(/^\s*refresh\??\s*:/m);
   });
 
   test("verbose does not weaken frozen failure (missing lock)", async () => {

@@ -16,21 +16,25 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
   createFakePorts,
+  expectRejectsMatching,
   getCreateRegistry,
   getRegisterTarget,
   getRunInstall,
   importTargetApi,
   coreRoot,
+  modulesDir,
   writeText as writeTextAbs,
 } from "./helpers.ts";
 
 export {
   createFakePorts,
+  expectRejectsMatching,
   getCreateRegistry,
   getRegisterTarget,
   getRunInstall,
   importTargetApi,
   coreRoot,
+  modulesDir,
 };
 
 export type TempProject = { cwd: string; cleanup: () => void };
@@ -114,6 +118,85 @@ export function hasLockfile(cwd: string): boolean {
 
 export function hasModules(cwd: string): boolean {
   return existsSync(join(cwd, "apm_modules")) || existsSync(join(cwd, "bapm_modules"));
+}
+
+export function hasModulesContent(cwd: string): boolean {
+  const abs = modulesDir(cwd);
+  if (!existsSync(abs)) return false;
+  return listFilesRecursive(abs).length > 0;
+}
+
+export function writePolicy(cwd: string, contents: string): string {
+  const path = join(cwd, "bapm-policy.yml");
+  writeFileSync(path, contents, "utf8");
+  return path;
+}
+
+export const BLOCK_DENY_LEAF_POLICY = `name: deny-leaf
+enforcement: block
+dependencies:
+  deny:
+    - leaf
+`;
+
+/** Direct HTTP dep fixture (scheme http://). */
+export function writeDirectHttpProject(
+  cwd: string,
+  options: { allowInsecure?: boolean; url?: string },
+): string {
+  const url = options.url ?? "http://mirror.example.com/direct-pkg.git";
+  const allow =
+    options.allowInsecure === true
+      ? "\n      allow_insecure: true"
+      : options.allowInsecure === false
+        ? "\n      allow_insecure: false"
+        : "";
+  writeFileSync(
+    join(cwd, "bapm.yml"),
+    `name: p7a-http-direct
+version: 0.0.1
+dependencies:
+  apm:
+    - git: ${url}
+      ref: main${allow}
+`,
+    "utf8",
+  );
+  return url;
+}
+
+/**
+ * Parent path-dep introduces transitive HTTP child.
+ * Gate must see child as transitive (host allowlist applies).
+ */
+export function writeTransitiveHttpProject(
+  cwd: string,
+  options?: { childUrl?: string },
+): { childUrl: string } {
+  const childUrl = options?.childUrl ?? "http://evil.example.com/child.git";
+  mkdirSync(join(cwd, "parent"), { recursive: true });
+  writeFileSync(
+    join(cwd, "bapm.yml"),
+    `name: p7a-http-transitive
+version: 0.0.1
+dependencies:
+  apm:
+    - path: ./parent
+`,
+    "utf8",
+  );
+  writeFileSync(
+    join(cwd, "parent", "apm.yml"),
+    `name: parent
+version: 0.0.1
+dependencies:
+  apm:
+    - git: ${childUrl}
+      ref: main
+`,
+    "utf8",
+  );
+  return { childUrl };
 }
 
 export function readManifestText(cwd: string): string {

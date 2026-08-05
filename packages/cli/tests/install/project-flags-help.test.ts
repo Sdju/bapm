@@ -1,5 +1,5 @@
 /**
- * p7a — CLI install flags + help (cli-runtime-surface).
+ * CLI install project-scope flags + help (force / insecure / dev / only).
  * MUST: accept/help --force, --allow-insecure, --allow-insecure-host, --dev, --only;
  * omit --refresh; force ≠ refresh/frozen/policy bypass.
  */
@@ -19,7 +19,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7a CLI install flags + help", () => {
+describe("CLI install project-scope flags + help", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

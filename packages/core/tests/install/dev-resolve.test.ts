@@ -1,5 +1,5 @@
 /**
- * p7a — --dev write target + root resolve includes devDependencies.apm.
+ * Install --dev write target + root resolve includes devDependencies.apm.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -13,9 +13,9 @@ import {
   readManifestText,
   writeLeafProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("p7a dev write + root resolve union", () => {
+describe("install dev write + root resolve union", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

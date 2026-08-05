@@ -1,5 +1,5 @@
 /**
- * p7a — dual-consent HTTP + transitive --allow-insecure-host (install-pipeline).
+ * Dual-consent HTTP + transitive --allow-insecure-host (install-pipeline).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -10,9 +10,9 @@ import {
   writeDirectHttpProject,
   writeTransitiveHttpProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./ux-helpers.ts";
 
-describe("p7a insecure dual-gate + host allowlist", () => {
+describe("install insecure dual-gate + host allowlist", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
