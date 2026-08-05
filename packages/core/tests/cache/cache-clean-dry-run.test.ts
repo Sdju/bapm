@@ -11,7 +11,7 @@ import {
   populateModules,
   writeManifest,
   type TempProject,
-} from "./helpers.ts";
+} from "../deps/helpers.ts";
 
 describe("p7c core cacheClean dryRun", () => {
   let project: TempProject;

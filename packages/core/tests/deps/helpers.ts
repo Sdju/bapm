@@ -1,8 +1,15 @@
 /**
- * core deps why helpers.
+ * core deps why / cache-clean helpers.
  */
 import * as core from "@bapm/core";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
@@ -21,6 +28,12 @@ export function pickExport(names: string[], label: string): AnyFn {
 
 export function getWhyDeps(): (options?: Record<string, unknown>) => unknown {
   return pickExport(["whyDeps", "depsWhy", "runDepsWhy"], "deps why") as (
+    options?: Record<string, unknown>,
+  ) => unknown;
+}
+
+export function getCacheClean(): (options?: Record<string, unknown>) => unknown {
+  return pickExport(["cacheClean", "cleanModulesCache"], "cache clean") as (
     options?: Record<string, unknown>,
   ) => unknown;
 }
@@ -45,6 +58,54 @@ export function writeManifest(cwd: string, name: string): void {
   );
 }
 
+export function writeLock(cwd: string, contents: string): void {
+  writeText(join(cwd, "bapm.lock.yaml"), contents);
+}
+
+export const UNIQUE_SHARED_UTILS_LOCK = `lockfile_version: "1"
+dependencies:
+  - name: org/parent
+    repo_url: https://example.com/org/parent.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: acme/shared-utils
+    repo_url: https://example.com/acme-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    resolved_by:
+      - org/parent
+`;
+
+export const AMBIGUOUS_BASENAME_LOCK = `lockfile_version: "1"
+dependencies:
+  - name: acme/shared-utils
+    repo_url: https://example.com/acme-org/shared-utils.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: other/shared-utils
+    repo_url: https://example.com/other-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+`;
+
+export const EXACT_WINS_BASENAME_LOCK = `lockfile_version: "1"
+dependencies:
+  - name: shared-utils
+    repo_url: https://example.com/named/exact-pkg.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: other/shared-utils
+    repo_url: https://example.com/other-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+`;
+
 export const TRANSITIVE_LOCK = `lockfile_version: "1"
 dependencies:
   - name: org/parent
@@ -61,8 +122,32 @@ dependencies:
       - org/parent
 `;
 
+export function writeUniqueSharedUtilsLock(cwd: string): void {
+  writeLock(cwd, UNIQUE_SHARED_UTILS_LOCK);
+}
+
+export function writeAmbiguousBasenameLock(cwd: string): void {
+  writeLock(cwd, AMBIGUOUS_BASENAME_LOCK);
+}
+
+export function writeExactWinsBasenameLock(cwd: string): void {
+  writeLock(cwd, EXACT_WINS_BASENAME_LOCK);
+}
+
 export function writeTransitiveLock(cwd: string): void {
-  writeText(join(cwd, "bapm.lock.yaml"), TRANSITIVE_LOCK);
+  writeLock(cwd, TRANSITIVE_LOCK);
+}
+
+export function populateModules(cwd: string, entries: string[] = ["pkg-a", "pkg-b"]): void {
+  for (const name of entries) {
+    writeText(join(cwd, "apm_modules", name, "marker.txt"), `${name}\n`);
+  }
+}
+
+export function modulesEntryCount(cwd: string): number {
+  const root = join(cwd, "apm_modules");
+  if (!existsSync(root)) return 0;
+  return readdirSync(root).filter((n) => n !== "." && n !== "..").length;
 }
 
 export function exitCodeOf(result: unknown): number {

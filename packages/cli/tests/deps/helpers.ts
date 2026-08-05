@@ -88,6 +88,60 @@ export function writeManifest(cwd: string, name: string): void {
   );
 }
 
+export function writeLock(cwd: string, contents: string): void {
+  writeText(join(cwd, "bapm.lock.yaml"), contents);
+}
+
+/** Unique shared-utils under acme-org (basename + owner/repo short forms). */
+export const UNIQUE_SHARED_UTILS_LOCK = `lockfile_version: "1"
+dependencies:
+  - name: org/parent
+    repo_url: https://example.com/org/parent.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: acme/shared-utils
+    repo_url: https://example.com/acme-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    resolved_by:
+      - org/parent
+`;
+
+/** Two packages sharing basename shared-utils (ambiguous short form). */
+export const AMBIGUOUS_BASENAME_LOCK = `lockfile_version: "1"
+dependencies:
+  - name: acme/shared-utils
+    repo_url: https://example.com/acme-org/shared-utils.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: other/shared-utils
+    repo_url: https://example.com/other-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+`;
+
+/**
+ * Exact name `shared-utils` (package A) vs different package B whose basename is also shared-utils.
+ * Exact form MUST win.
+ */
+export const EXACT_WINS_BASENAME_LOCK = `lockfile_version: "1"
+dependencies:
+  - name: shared-utils
+    repo_url: https://example.com/named/exact-pkg.git
+    source: git
+    resolved_tag: v1.0.0
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: other/shared-utils
+    repo_url: https://example.com/other-org/shared-utils.git
+    source: git
+    resolved_tag: v2.0.0
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+`;
+
 /** Direct parent + transitive child with name + repo_url identity. */
 export const TRANSITIVE_LOCK = `lockfile_version: "1"
 dependencies:
@@ -105,12 +159,24 @@ dependencies:
       - org/parent
 `;
 
+export function writeUniqueSharedUtilsLock(cwd: string): void {
+  writeLock(cwd, UNIQUE_SHARED_UTILS_LOCK);
+}
+
+export function writeAmbiguousBasenameLock(cwd: string): void {
+  writeLock(cwd, AMBIGUOUS_BASENAME_LOCK);
+}
+
+export function writeExactWinsBasenameLock(cwd: string): void {
+  writeLock(cwd, EXACT_WINS_BASENAME_LOCK);
+}
+
 export function writeTransitiveLock(cwd: string): void {
-  writeText(join(cwd, "bapm.lock.yaml"), TRANSITIVE_LOCK);
+  writeLock(cwd, TRANSITIVE_LOCK);
 }
 
 export function writeEmptyLock(cwd: string): void {
-  writeText(join(cwd, "bapm.lock.yaml"), `lockfile_version: "1"\ndependencies: []\n`);
+  writeLock(cwd, `lockfile_version: "1"\ndependencies: []\n`);
 }
 
 export function populateModules(cwd: string, entries: string[] = ["pkg-a", "pkg-b"]): void {
