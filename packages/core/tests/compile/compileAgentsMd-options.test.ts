@@ -53,6 +53,15 @@ describe("compileAgentsMd dryRun / validate / attribution", () => {
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });
 
+  test("validate wins over dryRun (no write)", () => {
+    project = createTempProject();
+    writeCompileProject(project.cwd);
+    const result = compileAgentsMd({ cwd: project.cwd, validate: true, dryRun: true });
+    expect(result.ok).toBe(true);
+    expect(result.wrote).toBe(false);
+    expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
+  });
+
   test("custom outputFile writes that path", () => {
     project = createTempProject();
     writeCompileProject(project.cwd);

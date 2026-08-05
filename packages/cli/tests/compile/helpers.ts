@@ -1,14 +1,14 @@
 /**
- * p7d-compile-cursor-polish acceptance helpers (CLI).
+ * CLI compile polish helpers (-o/--dry-run/-v/--validate).
  */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 import {
   formatCompileHelp,
   parseCompileArgs,
-} from "../../../src/modules/Compile/services/runCompile.ts";
+} from "../../src/modules/Compile/services/runCompile.ts";
 
 export { formatCompileHelp, parseCompileArgs, runCli };
 
