@@ -205,8 +205,24 @@ export {
   runDepsWhy,
 } from "@/modules/Deps";
 
-export type { AuditCiResult, RunAuditCiOptions } from "@/modules/Audit";
-export { runAuditCi, auditCi, runAudit } from "@/modules/Audit";
+export type {
+  AuditCiCheck,
+  AuditCiCheckName,
+  AuditCiFormat,
+  AuditCiResult,
+  AuditCiStructuredReport,
+  AuditCiSummary,
+  RunAuditCiOptions,
+} from "@/modules/Audit";
+export {
+  runAuditCi,
+  auditCi,
+  runAudit,
+  formatAuditCiJson,
+  formatAuditCiSarif,
+  summarizeChecks,
+  toStructuredReport,
+} from "@/modules/Audit";
 
 export type {
   ExportSbomFailure,

@@ -1,8 +1,20 @@
-import { formatAuditHelp, parseAuditArgs, runAuditCli } from "./services/runAudit.ts";
+import {
+  detectFormatFromExtension,
+  formatAuditHelp,
+  parseAuditArgs,
+  resolveAuditFormat,
+  runAuditCli,
+} from "./services/runAudit.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };
-export { formatAuditHelp, parseAuditArgs };
+export {
+  detectFormatFromExtension,
+  formatAuditHelp,
+  parseAuditArgs,
+  resolveAuditFormat,
+};
+
 
 export function createAudit(deps?: LifecycleCliDeps) {
   const resolved: LifecycleCliDeps = deps ?? {
