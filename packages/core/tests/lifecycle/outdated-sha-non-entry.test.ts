@@ -1,5 +1,5 @@
 /**
- * p7g — non–full-SHA pins stay on tip / constraint paths (MUST regressions).
+ * Core outdated — non–full-SHA pins stay on tip / constraint paths (regressions).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -16,7 +16,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7g core outdated — abbreviated / constraint non-entry", () => {
+describe("core outdated — abbreviated / constraint non-entry", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

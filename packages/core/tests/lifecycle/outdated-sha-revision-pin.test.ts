@@ -1,6 +1,5 @@
 /**
- * p7g — full-SHA resolved_ref uses annotated-tag revision pin (MUST).
- * Current tip-of-SHA path must fail these until apply wires revision-pin.
+ * Core outdated — full-SHA resolved_ref uses annotated-tag revision pin.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -19,7 +18,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7g core outdated — SHA revision-pin (annotated tag)", () => {
+describe("core outdated — SHA revision-pin (annotated tag)", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
