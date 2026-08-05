@@ -1,5 +1,5 @@
 /**
- * p6g — CLI update plan verbosity: hide keep unless -v (lifecycle-update).
+ * CLI update plan verbosity: hide keep unless -v (lifecycle-update).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -16,7 +16,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6g CLI update plan verbosity (keep gate)", () => {
+describe("CLI update plan verbosity (keep gate)", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -25,7 +25,7 @@ describe("p6g CLI update plan verbosity (keep gate)", () => {
 
   test("dry-run without -v hides keep/[=] rows (all-keep stays honest)", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "p6g-cli-quiet");
+    writeLeafProject(project.cwd, "cli-update-quiet");
     writeLeafLock(project.cwd);
     const lockPath = existingLockPath(project.cwd)!;
     const before = readBytes(lockPath);
@@ -45,7 +45,7 @@ describe("p6g CLI update plan verbosity (keep gate)", () => {
 
   test("dry-run with -v prints keep/[=] rows", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "p6g-cli-verbose-plan");
+    writeLeafProject(project.cwd, "cli-update-verbose-plan");
     writeLeafLock(project.cwd);
     const lockPath = existingLockPath(project.cwd)!;
     const before = readBytes(lockPath);

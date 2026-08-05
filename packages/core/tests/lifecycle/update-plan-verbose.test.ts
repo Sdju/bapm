@@ -1,5 +1,5 @@
 /**
- * p6g — core update plan verbosity gates keep rows (lifecycle-update).
+ * Core update plan verbosity gates keep rows (lifecycle-update).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -15,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6g core update plan verbosity", () => {
+describe("core update plan verbosity", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -66,7 +66,7 @@ describe("p6g core update plan verbosity", () => {
 
   test("all-keep dry-run without verbose stays honest", async () => {
     project = createTempProject();
-    writeLeafFixture(project.cwd, "p6g-all-keep");
+    writeLeafFixture(project.cwd, "update-all-keep");
     const runUpdate = getRunUpdate();
 
     const result = await runUpdate({

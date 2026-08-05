@@ -6,6 +6,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import { runCli } from "../../src/index.ts";
+import {
+  formatUpdateHelp,
+  parseUpdateArgs,
+} from "../../src/modules/Update/services/runUpdate.ts";
+
+export { formatUpdateHelp, parseUpdateArgs, runCli };
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
@@ -95,6 +101,13 @@ export function writeLock(cwd: string, contents: string): void {
   writeFileSync(join(cwd, "bapm.lock.yaml"), contents, "utf8");
 }
 
+export function writeLeafLock(cwd: string): void {
+  writeLock(
+    cwd,
+    `lockfile_version: "1"\ndependencies:\n  - repo_url: local:leaf\n    name: leaf\n    source: local\n    path: leaf\n`,
+  );
+}
+
 export function sha256Hex(content: string | Buffer): string {
   return createHash("sha256").update(content).digest("hex");
 }
@@ -111,4 +124,20 @@ export function readBytes(path: string): Buffer {
   return readFileSync(path);
 }
 
-export { runCli };
+export function expectKnownUpdateFlag(combined: string, flag: string): void {
+  const escaped = flag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (
+    new RegExp(`unknown update flag:\\s*${escaped}`, "i").test(combined) ||
+    new RegExp(`unknown (?:flag|option):\\s*${escaped}`, "i").test(combined)
+  ) {
+    throw new Error(`CLI rejected "${flag}" as unknown flag:\n${combined}`);
+  }
+}
+
+export function keepPlanPattern(): RegExp {
+  return /\[=\].*\bkeep\b|\baction:\s*["']?keep["']?/i;
+}
+
+export function honestEmptyChangePattern(): RegExp {
+  return /no dependency changes|nothing to (?:update|change)|up to date|no updates?/i;
+}

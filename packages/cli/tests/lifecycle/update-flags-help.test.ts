@@ -1,5 +1,5 @@
 /**
- * p6g — CLI update flags + help (cli-runtime-surface).
+ * CLI update flags + help (cli-runtime-surface).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -16,7 +16,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6g CLI update flags + help", () => {
+describe("CLI update flags + help", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -53,7 +53,7 @@ describe("p6g CLI update flags + help", () => {
 
   test("verbose short flag accepted on update dry-run", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "p6g-cli-v");
+    writeLeafProject(project.cwd, "cli-update-v");
     writeLeafLock(project.cwd);
 
     const { result, combined } = await runInProject(project.cwd, [
@@ -69,7 +69,7 @@ describe("p6g CLI update flags + help", () => {
 
   test("parallel-downloads 0 accepted (not unknown; serial)", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "p6g-cli-pd0");
+    writeLeafProject(project.cwd, "cli-update-pd0");
     writeLeafLock(project.cwd);
 
     const { result, combined } = await runInProject(project.cwd, [
@@ -87,7 +87,7 @@ describe("p6g CLI update flags + help", () => {
 
   test("invalid parallel-downloads fails closed naming the value", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "p6g-cli-pd-bad");
+    writeLeafProject(project.cwd, "cli-update-pd-bad");
     writeLeafLock(project.cwd);
 
     const { result, stderr, combined } = await runInProject(project.cwd, [
@@ -102,7 +102,7 @@ describe("p6g CLI update flags + help", () => {
 
   test("unknown update flag still fails closed", async () => {
     project = createTempProject();
-    writeLeafProject(project.cwd, "p6g-cli-badflag");
+    writeLeafProject(project.cwd, "cli-update-badflag");
     writeLeafLock(project.cwd);
 
     const { result, stderr, combined } = await runInProject(project.cwd, [

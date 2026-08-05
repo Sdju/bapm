@@ -1,5 +1,5 @@
 /**
- * p6g — core update parallelDownloads default 4 / 0 = serial (lifecycle-update).
+ * Core update parallelDownloads default 4 / 0 = serial (lifecycle-update).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { DEFAULT_PARALLEL_DOWNLOADS } from "@bapm/core";
@@ -15,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p6g core update parallelDownloads", () => {
+describe("core update parallelDownloads", () => {
   let project: TempProject;
 
   afterEach(() => {
@@ -30,7 +30,7 @@ describe("p6g core update parallelDownloads", () => {
 
   test("parallelDownloads 0 is accepted on mutating update (serial)", async () => {
     project = createTempProject();
-    const commit = fakeCommit("p6g-pd0");
+    const commit = fakeCommit("update-pd0");
     const ports = createFakePorts({
       tagsByRepo: {
         "example/pkg-a": [{ tag: "v1.0.0", commit }],
@@ -40,7 +40,7 @@ describe("p6g core update parallelDownloads", () => {
     writeManifest(
       project.cwd,
       "bapm.yml",
-      `name: p6g-pd0\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/pkg-a.git\n      ref: "^1.0.0"\n`,
+      `name: update-pd0\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/pkg-a.git\n      ref: "^1.0.0"\n`,
     );
     writeLock(
       project.cwd,

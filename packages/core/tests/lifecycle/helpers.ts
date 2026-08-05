@@ -5,7 +5,8 @@ import * as core from "@bapm/core";
 import { loadLockfile } from "@bapm/core";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createFakePorts,
   createTempProject,
@@ -41,6 +42,10 @@ export {
   writeText,
   type TempProject,
 };
+
+export const lifecycleSuiteDir = dirname(fileURLToPath(import.meta.url));
+export const coreRoot = resolve(lifecycleSuiteDir, "../..");
+
 type AnyFn = (...args: never[]) => unknown;
 
 function pickExport(names: string[]): AnyFn {
@@ -246,4 +251,93 @@ export function readManifestText(cwd: string): string {
 export function loadLockDeps(cwd: string): Record<string, unknown>[] {
   if (!existingLockPath(cwd)) throw new Error("expected lockfile");
   return depsOf(lockOf(loadLockfile({ cwd })));
+}
+
+export function planOf(result: unknown): Array<Record<string, unknown>> {
+  if (result && typeof result === "object") {
+    const r = result as Record<string, unknown>;
+    if (Array.isArray(r.plan)) return r.plan as Array<Record<string, unknown>>;
+  }
+  return [];
+}
+
+export function keepPlanPattern(): RegExp {
+  return /\[=\].*\bkeep\b/i;
+}
+
+export function honestEmptyChangePattern(): RegExp {
+  return /no dependency changes|nothing to (?:update|change)|up to date|no updates?/i;
+}
+
+export function readUpdateTypesSource(): string {
+  return readFileSync(join(coreRoot, "src/modules/Update/types.ts"), "utf8");
+}
+
+export function readUpdateRunSource(): string {
+  return readFileSync(join(coreRoot, "src/modules/Update/runUpdate.ts"), "utf8");
+}
+
+/** Leaf path project — dry-run plan is all-keep. */
+export function writeLeafFixture(cwd: string, name: string): void {
+  writeManifest(
+    cwd,
+    "bapm.yml",
+    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+  );
+  writeText(
+    join(cwd, "leaf", "apm.yml"),
+    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+  );
+  writeLock(
+    cwd,
+    "bapm.lock.yaml",
+    `lockfile_version: "1"\ndependencies:\n  - repo_url: local:leaf\n    name: leaf\n    source: local\n    path: leaf\n`,
+  );
+}
+
+/**
+ * Mixed plan fixture: git pkg that can bump + local keep (via fake tagLister).
+ */
+export function writeMixedPlanFixture(cwd: string): {
+  ports: ReturnType<typeof createFakePorts>;
+  oldCommit: string;
+  newCommit: string;
+} {
+  const oldCommit = fakeCommit("p6g-old");
+  const newCommit = fakeCommit("p6g-new");
+  const ports = createFakePorts({
+    tagsByRepo: {
+      "example/pkg-a": [
+        { tag: "v1.0.0", commit: oldCommit },
+        { tag: "v1.1.0", commit: newCommit },
+      ],
+    },
+  });
+
+  writeManifest(
+    cwd,
+    "bapm.yml",
+    `name: p6g-mixed\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/pkg-a.git\n      ref: "^1.0.0"\n    - path: ./leaf\n`,
+  );
+  writeText(
+    join(cwd, "leaf", "apm.yml"),
+    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+  );
+  writeLock(
+    cwd,
+    "bapm.lock.yaml",
+    `lockfile_version: "1"
+dependencies:
+  - repo_url: github.com/example/pkg-a
+    name: pkg-a
+    resolved_commit: "${oldCommit}"
+    resolved_tag: v1.0.0
+  - repo_url: local:leaf
+    name: leaf
+    source: local
+    path: leaf
+`,
+  );
+
+  return { ports, oldCommit, newCommit };
 }
