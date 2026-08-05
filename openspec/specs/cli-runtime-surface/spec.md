@@ -123,6 +123,13 @@ Invoking `lock` MUST be recognized by CLI dispatch and MUST invoke the lock comm
 - **WHEN** `runCli(["lock"])` is called
 - **THEN** the CLI MUST NOT treat `lock` as an unknown command
 
+### Requirement: Lock unknown flags hard-error
+The `lock` command MUST reject unrecognized flags on the bare resolve+write path with a non-zero exit code and a clear error message naming the unknown flag. Soft-ignoring unknown flags MUST NOT occur. Behavior details and known allowlist follow the `lock-command` capability.
+
+#### Scenario: Unknown lock flag rejected at CLI
+- **WHEN** `runCli(["lock", "--not-a-real-flag"])` is invoked
+- **THEN** the return code MUST be non-zero and stderr MUST mention the unknown flag
+
 ### Requirement: Lifecycle integrity commands are registered
 Invoking `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, and `doctor` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@bapm/core` lifecycle/integrity API. Unknown flags on these commands MUST hard-error with non-zero exit.
 
