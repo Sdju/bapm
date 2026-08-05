@@ -263,7 +263,7 @@ describe("p6d core runPolicyStatus — stable fields", () => {
     expect(blob).not.toMatch(/s3cr3t/);
     expect(blob).not.toMatch(/private-signature/);
     expect(blob).not.toMatch(/alice:/);
-    expect(String(report.source ?? blob)).toMatch(/policy\.example\.com|redact|\*\*\*/i);
+    expect(blob).toMatch(/policy\.example\.com|redact|\*\*\*/i);
   });
 });
 

@@ -10,6 +10,7 @@ import {
   COMMAND_LOCK,
   COMMAND_OUTDATED,
   COMMAND_PACK,
+  COMMAND_POLICY,
   COMMAND_PRUNE,
   COMMAND_PUBLISH,
   COMMAND_SELF_UPDATE,
@@ -28,6 +29,7 @@ import { installCommand } from "@/commands/install.ts";
 import { lockCommand } from "@/commands/lock.ts";
 import { outdatedCommand } from "@/commands/outdated.ts";
 import { packCommand } from "@/commands/pack.ts";
+import { policyCommand } from "@/commands/policy.ts";
 import { pruneCommand } from "@/commands/prune.ts";
 import { publishCommand } from "@/commands/publish.ts";
 import { selfUpdateCommand } from "@/commands/self-update.ts";
@@ -45,6 +47,7 @@ import { install } from "./init/install.ts";
 import { lock } from "./init/lock.ts";
 import { outdated } from "./init/outdated.ts";
 import { pack } from "./init/pack.ts";
+import { policy } from "./init/policy.ts";
 import { prune } from "./init/prune.ts";
 import { publish } from "./init/publish.ts";
 import { selfUpdate } from "./init/selfUpdate.ts";
@@ -72,6 +75,7 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_DOCTOR]: (argv) => doctorCommand(argv, doctor),
   [COMMAND_COMPILE]: (argv) => compileCommand(argv, compile),
   [COMMAND_CACHE]: (argv) => cacheCommand(argv, cache),
+  [COMMAND_POLICY]: (argv) => policyCommand(argv, policy),
   "-h": (argv) => helpCommand(argv, help),
   "--help": (argv) => helpCommand(argv, help),
   "-V": (argv) => versionCommand(argv, version),

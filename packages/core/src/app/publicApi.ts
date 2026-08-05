@@ -301,6 +301,10 @@ export type {
   PolicyViolation,
   PolicyErrorCode,
   PolicyWarning,
+  PolicyStatusOptions,
+  PolicyStatusOutcome,
+  PolicyStatusReport,
+  PolicyStatusRuleCounts,
 } from "@/modules/Policy";
 
 export {
@@ -343,6 +347,8 @@ export {
   isPolicyDisabled,
   runPolicyGate,
   assertPolicyGateAllows,
+  runPolicyStatus,
+  redactPolicyRef,
 } from "@/modules/Policy";
 
 export type {

@@ -10,6 +10,7 @@
  * - Extends: `resolvePolicyChain`, `mergePolicies`, `hostClassOf`
  * - Evaluate: `evaluateInstallPolicy` / `evaluatePolicy` / `evaluatePolicyRules`
  * - Gate: `runPolicyGate`, `assertPolicyGateAllows`, `isPolicyDisabled`
+ * - Status: `runPolicyStatus` (read-only posture report)
  * - Errors: `PolicyError`
  *
  * ## Discovery providers (P4)
@@ -45,6 +46,13 @@ export type {
   PolicyGateResult,
   PolicyViolation,
 } from "./types.ts";
+
+export type {
+  PolicyStatusOptions,
+  PolicyStatusOutcome,
+  PolicyStatusReport,
+  PolicyStatusRuleCounts,
+} from "./status.ts";
 
 export type { PolicyErrorCode, PolicyWarning } from "./errors.ts";
 export { PolicyError } from "./errors.ts";
@@ -92,4 +100,6 @@ export {
 export { evaluateInstallPolicy, evaluatePolicy, evaluatePolicyRules } from "./evaluate.ts";
 export { isPolicyDisabled } from "./escape.ts";
 export { runPolicyGate, assertPolicyGateAllows } from "./gate.ts";
+export { runPolicyStatus } from "./status.ts";
+export { redactPolicyRef } from "./redact.ts";
 export { identityMatchesPattern, isPinnedConstraint } from "./match.ts";

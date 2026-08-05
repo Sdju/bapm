@@ -27,6 +27,7 @@ Commands:
   doctor       Environment and project sanity checks
   compile      Emit AGENTS.md from discovered primitives (cursor)
   cache        Modules-cache info | clean (apm_modules)
+  policy       Policy status (read-only governance posture)
 
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present
