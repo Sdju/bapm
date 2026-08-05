@@ -1,12 +1,12 @@
 /**
- * P5 docs-openapm-boundary — path helpers for docs/link presence acceptance.
+ * Docs boundary — path helpers for README / VitePress presence checks.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(here, "../../..");
+export const coreRoot = resolve(here, "../..");
 export const repoRoot = resolve(coreRoot, "../..");
 
 export const readmePath = join(repoRoot, "README.md");

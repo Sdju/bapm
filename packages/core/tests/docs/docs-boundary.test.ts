@@ -1,6 +1,5 @@
 /**
- * P5 docs-openapm-boundary acceptance (docs/link presence only).
- * Spec: openspec/changes/p5-docs-openapm-boundary/specs/docs-openapm-boundary/spec.md
+ * Docs OpenAPM boundary — docs/link presence (promoted from p5-docs-openapm-boundary).
  */
 import { expect, test } from "vite-plus/test";
 import {
