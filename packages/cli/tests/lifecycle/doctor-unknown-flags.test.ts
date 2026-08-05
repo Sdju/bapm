@@ -1,18 +1,18 @@
 /**
- * p7f — unknown doctor flags remain fail-closed (cli-runtime-surface).
+ * CLI doctor unknown flags remain fail-closed (cli-runtime-surface).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createTempProject,
   expectKnownCommand,
   parseDoctorArgs,
-  projectFingerprint,
+  projectFingerprintAll,
   runInProject,
   writeDoctorProject,
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7f CLI doctor unknown flags fail-closed", () => {
+describe("CLI doctor unknown flags fail-closed", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -23,17 +23,17 @@ describe("p7f CLI doctor unknown flags fail-closed", () => {
   test("doctor --not-a-flag hard-errors naming the token", async () => {
     project = createTempProject();
     writeDoctorProject(project.cwd, "p7f-unknown");
-    const before = projectFingerprint(project.cwd);
+    const before = projectFingerprintAll(project.cwd);
 
     const { result, stderr, combined } = await runInProject(project.cwd, [
       "doctor",
       "--not-a-flag",
     ]);
 
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expect(result).not.toBe(0);
     expect(stderr.join("\n")).toMatch(/Unknown doctor flag:\s*--not-a-flag/);
-    expect(projectFingerprint(project.cwd)).toBe(before);
+    expect(projectFingerprintAll(project.cwd)).toBe(before);
   });
 
   test("doctor --global remains unknown (no multi-target doctor)", async () => {
@@ -44,7 +44,7 @@ describe("p7f CLI doctor unknown flags fail-closed", () => {
       "doctor",
       "--global",
     ]);
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expect(result).not.toBe(0);
     expect(stderr.join("\n")).toMatch(/Unknown doctor flag:\s*--global/);
   });
@@ -54,7 +54,6 @@ describe("p7f CLI doctor unknown flags fail-closed", () => {
       "Unknown doctor flag: --not-a-flag",
     );
     expect(parseDoctorArgs(["--global"]).error).toBe("Unknown doctor flag: --global");
-    // Verbose must be allowlisted (RED until parse accepts it).
     expect(parseDoctorArgs(["-v"]).error).toBeUndefined();
     expect(parseDoctorArgs(["--verbose"]).error).toBeUndefined();
   });

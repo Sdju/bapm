@@ -1,11 +1,24 @@
 /**
  * CLI lifecycle test helpers — capture IO, temp projects, assert known commands.
  */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { runCli } from "../../src/index.ts";
+import {
+  formatDoctorHelp,
+  parseDoctorArgs,
+} from "../../src/modules/Doctor/services/runDoctor.ts";
 import {
   formatOutdatedHelp,
   parseOutdatedArgs,
@@ -16,8 +29,10 @@ import {
 } from "../../src/modules/Update/services/runUpdate.ts";
 
 export {
+  formatDoctorHelp,
   formatOutdatedHelp,
   formatUpdateHelp,
+  parseDoctorArgs,
   parseOutdatedArgs,
   parseUpdateArgs,
   runCli,
@@ -154,9 +169,72 @@ export function expectKnownOutdatedFlag(combined: string, flag: string): void {
   }
 }
 
+/** Fail if CLI rejected a doctor verbose flag as unknown (prevents false-green). */
+export function expectKnownDoctorFlag(combined: string, flag: string): void {
+  const escaped = flag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (
+    new RegExp(`unknown doctor flag:\\s*${escaped}`, "i").test(combined) ||
+    new RegExp(`unknown (?:flag|option):\\s*${escaped}`, "i").test(combined)
+  ) {
+    throw new Error(`CLI rejected "${flag}" as unknown flag:\n${combined}`);
+  }
+}
+
 export function stdoutText(stdout: string[]): string {
   return stdout.join("\n");
 }
+
+export function writeText(path: string, contents: string): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, contents, "utf8");
+}
+
+/** Sane project: manifest + lock, no modules dir (absent ok). */
+export function writeDoctorProject(cwd: string, name: string): void {
+  writeText(
+    join(cwd, "bapm.yml"),
+    `name: ${name}\nversion: 1.2.3\ndependencies:\n  apm: []\n`,
+  );
+  writeText(
+    join(cwd, "bapm.lock.yaml"),
+    `lockfile_version: "1"
+dependencies:
+  - name: leaf
+    repo_url: local:leaf
+    source: local
+    version: "0.0.1"
+`,
+  );
+}
+
+export function lineForCheck(text: string, name: string): string | undefined {
+  return text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .find((l) => new RegExp(`^(PASS|FAIL)\\t${name}\\t`).test(l));
+}
+
+export function projectFingerprintAll(cwd: string): string {
+  const parts: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      const st = statSync(full);
+      if (st.isDirectory()) walk(full);
+      else {
+        const rel = full.slice(cwd.length + 1);
+        const bytes = readFileSync(full);
+        parts.push(`${rel}:${createHash("sha256").update(bytes).digest("hex")}`);
+      }
+    }
+  };
+  if (existsSync(cwd)) walk(cwd);
+  parts.sort();
+  return createHash("sha256").update(parts.join("\n")).digest("hex");
+}
+
+export const MARKETPLACE_ROW_PATTERN =
+  /marketplace|format.?coverage|duplicate.?name|version.?alignment|executable.?trust/i;
 
 export function parseJsonStdout(stdout: string[]): unknown {
   const text = stdoutText(stdout).trim();

@@ -1,5 +1,5 @@
 /**
- * p7f — core doctor verbose enriches git/manifest/lockfile/modules; default critical-safe;
+ * Core doctor verbose enrichment — git/manifest/lockfile/modules; default critical-safe;
  * no marketplace rows; SHOULD network (verbose-only) + auth-env informational.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -17,7 +17,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7f core doctor verbose enrichment", () => {
+describe("core doctor verbose enrichment", () => {
   let project: TempProject | undefined;
   const prevGithub = process.env.GITHUB_TOKEN;
   const prevGh = process.env.GH_TOKEN;

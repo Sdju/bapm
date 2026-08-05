@@ -1,5 +1,5 @@
 /**
- * p7f — doctor -v/--verbose accepted; richer domain detail; help documents verbose;
+ * CLI doctor -v/--verbose accepted; richer domain detail; help documents verbose;
  * SHOULD thin network (verbose) + auth-env informational.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -11,7 +11,7 @@ import {
   lineForCheck,
   MARKETPLACE_ROW_PATTERN,
   parseDoctorArgs,
-  projectFingerprint,
+  projectFingerprintAll,
   runCli,
   runInProject,
   stdoutText,
@@ -20,7 +20,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7f CLI doctor verbose + help", () => {
+describe("CLI doctor verbose + help", () => {
   let project: TempProject | undefined;
   const prevGithub = process.env.GITHUB_TOKEN;
   const prevGh = process.env.GH_TOKEN;
@@ -51,17 +51,17 @@ describe("p7f CLI doctor verbose + help", () => {
   test("doctor -v accepted with richer domain detail than default", async () => {
     project = createTempProject();
     writeDoctorProject(project.cwd, "p7f-verbose-short");
-    const before = projectFingerprint(project.cwd);
+    const before = projectFingerprintAll(project.cwd);
 
     const def = await runInProject(project.cwd, ["doctor"]);
     expect(def.result).toBe(0);
     const defaultText = stdoutText(def.stdout);
 
     const { result, stdout, combined } = await runInProject(project.cwd, ["doctor", "-v"]);
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expectKnownDoctorFlag(combined, "-v");
     expect(result).toBe(0);
-    expect(projectFingerprint(project.cwd)).toBe(before);
+    expect(projectFingerprintAll(project.cwd)).toBe(before);
 
     const text = stdoutText(stdout);
     expect(text).not.toMatch(MARKETPLACE_ROW_PATTERN);
@@ -103,7 +103,7 @@ describe("p7f CLI doctor verbose + help", () => {
       "doctor",
       "--verbose",
     ]);
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expectKnownDoctorFlag(combined, "--verbose");
     expect(result).toBe(0);
 
@@ -134,7 +134,7 @@ describe("p7f CLI doctor verbose + help", () => {
     writeDoctorProject(project.cwd, "p7f-network");
 
     const { result, stdout, combined } = await runInProject(project.cwd, ["doctor", "-v"]);
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expectKnownDoctorFlag(combined, "-v");
     expect(result).toBe(0);
 
@@ -153,7 +153,7 @@ describe("p7f CLI doctor verbose + help", () => {
     writeDoctorProject(project.cwd, "p7f-auth");
 
     const { result, stdout, combined } = await runInProject(project.cwd, ["doctor"]);
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expect(result).toBe(0);
 
     const text = stdoutText(stdout);

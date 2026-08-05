@@ -122,6 +122,59 @@ export function getRunDoctor(): (options: Record<string, unknown>) => Promise<un
   ) => Promise<unknown>;
 }
 
+export function writeDoctorProject(cwd: string, name: string): void {
+  writeText(
+    join(cwd, "bapm.yml"),
+    `name: ${name}\nversion: 9.9.9\ndependencies:\n  apm: []\n`,
+  );
+  writeText(
+    join(cwd, "bapm.lock.yaml"),
+    `lockfile_version: "1"
+dependencies:
+  - name: leaf
+    repo_url: local:leaf
+    source: local
+    version: "0.0.1"
+  - name: other
+    repo_url: github.com/example/other
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+`,
+  );
+}
+
+export function ensureModulesDir(cwd: string, entries: string[] = ["pkg-a"]): void {
+  const root = modulesDir(cwd);
+  ensureDir(root);
+  for (const name of entries) {
+    ensureDir(join(root, name));
+  }
+}
+
+export function checksOf(result: unknown): Array<Record<string, unknown>> {
+  if (result && typeof result === "object") {
+    const r = result as Record<string, unknown>;
+    if (Array.isArray(r.checks)) return r.checks as Array<Record<string, unknown>>;
+  }
+  return [];
+}
+
+export function lineForCheck(text: string, name: string): string | undefined {
+  return text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .find((l) => new RegExp(`^(PASS|FAIL)\\t${name}\\t`).test(l));
+}
+
+export function messageOf(result: unknown, name: string): string {
+  const fromChecks = checksOf(result).find((c) => String(c.name) === name);
+  if (fromChecks && typeof fromChecks.message === "string") return fromChecks.message;
+  const line = lineForCheck(textOf(result), name);
+  return line?.split("\t")[2] ?? "";
+}
+
+export const MARKETPLACE_NAME_PATTERN =
+  /marketplace|format|duplicate|version-alignment|executable-trust|executable.?trust/i;
+
 export function sha256Hex(content: string | Buffer): string {
   return createHash("sha256").update(content).digest("hex");
 }

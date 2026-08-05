@@ -1,5 +1,5 @@
 /**
- * p7f — default (non-verbose) doctor remains compact + critical-safe; no marketplace rows;
+ * CLI doctor default (non-verbose) — compact + critical-safe; no marketplace rows;
  * doctor MUST NOT perform harness deploy.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -10,14 +10,14 @@ import {
   expectKnownCommand,
   lineForCheck,
   MARKETPLACE_ROW_PATTERN,
-  projectFingerprint,
+  projectFingerprintAll,
   runInProject,
   stdoutText,
   writeDoctorProject,
   type TempProject,
 } from "./helpers.ts";
 
-describe("p7f CLI doctor default path", () => {
+describe("CLI doctor default path", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -30,7 +30,7 @@ describe("p7f CLI doctor default path", () => {
     writeDoctorProject(project.cwd, "p7f-default");
 
     const { result, stdout, combined } = await runInProject(project.cwd, ["doctor"]);
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expect(result).toBe(0);
 
     const text = stdoutText(stdout);
@@ -45,12 +45,12 @@ describe("p7f CLI doctor default path", () => {
   test("default doctor does not deploy harness / mutate project files", async () => {
     project = createTempProject();
     writeDoctorProject(project.cwd, "p7f-no-deploy");
-    const before = projectFingerprint(project.cwd);
+    const before = projectFingerprintAll(project.cwd);
 
     const { result, combined } = await runInProject(project.cwd, ["doctor"]);
-    expectKnownCommand(combined);
+    expectKnownCommand(combined, "doctor");
     expect(result).toBe(0);
-    expect(projectFingerprint(project.cwd)).toBe(before);
+    expect(projectFingerprintAll(project.cwd)).toBe(before);
     expect(existsSync(join(project.cwd, "apm_modules"))).toBe(false);
     expect(existsSync(join(project.cwd, ".agents"))).toBe(false);
   });
