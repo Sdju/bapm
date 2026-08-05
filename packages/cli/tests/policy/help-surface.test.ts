@@ -1,5 +1,5 @@
 /**
- * p6d — CLI help / flag surface for `bapm policy status`.
+ * CLI help / flag surface for `bapm policy status` (P6d).
  * Spec: cli-runtime-surface.
  */
 import { describe, expect, test } from "vite-plus/test";

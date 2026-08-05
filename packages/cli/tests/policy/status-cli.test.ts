@@ -1,5 +1,5 @@
 /**
- * p6d — CLI `bapm policy status` exit contract, JSON, redaction, read-only.
+ * CLI `bapm policy status` exit contract, JSON, redaction, read-only (P6d).
  * Specs: cli-runtime-surface, policy-status.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";

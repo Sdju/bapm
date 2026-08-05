@@ -1,7 +1,8 @@
 /**
- * Policy suite helpers — pickExport for governance/policy APIs (M8 + P4).
+ * Policy suite helpers — pickExport for governance/policy APIs (M8 + P4 + P6d status).
  */
 import * as core from "@bapm/core";
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -103,6 +104,23 @@ dependencies:
 
 export const MINIMAL_WARN_POLICY = `name: org
 enforcement: warn
+`;
+
+/** Alias used by status-report suite. */
+export const MINIMAL_WARN = MINIMAL_WARN_POLICY;
+
+export const RICH_LOCAL = `name: rich-local
+enforcement: block
+dependencies:
+  allow:
+    - safe/*
+  deny:
+    - evil/*
+    - bad/actor
+  require:
+    - org/baseline
+  max_depth: 3
+  require_pinned_constraint: true
 `;
 
 type AnyFn = (...args: never[]) => unknown;
@@ -207,6 +225,83 @@ export function getRunPolicyGate(): (options: Record<string, unknown>) => unknow
   return pickExport(["runPolicyGate", "assertPolicyGateAllows"], "P4 policy gate") as (
     options: Record<string, unknown>,
   ) => unknown;
+}
+
+/** Core status helper — design: `runPolicyStatus`. */
+export function getRunPolicyStatus(): (options?: Record<string, unknown>) => unknown {
+  return pickExport(
+    ["runPolicyStatus", "getPolicyStatus", "policyStatus"],
+    "policy status report",
+  ) as (options?: Record<string, unknown>) => unknown;
+}
+
+export function asReport(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new TypeError("expected PolicyStatusReport object");
+  }
+  return value as Record<string, unknown>;
+}
+
+/** Resolve a dependencies.* family count from flexible report shapes. */
+export function ruleCountOf(report: Record<string, unknown>, family: string): number {
+  const rc = report.rule_counts;
+  if (!rc || typeof rc !== "object" || Array.isArray(rc)) {
+    throw new TypeError("expected rule_counts object on PolicyStatusReport");
+  }
+  const bag = rc as Record<string, unknown>;
+  const deps =
+    bag.dependencies && typeof bag.dependencies === "object" && !Array.isArray(bag.dependencies)
+      ? (bag.dependencies as Record<string, unknown>)
+      : undefined;
+
+  const candidates: unknown[] = [
+    bag[family],
+    bag[`dependencies_${family}`],
+    bag[`dependencies.${family}`],
+    deps?.[family],
+  ];
+
+  for (const c of candidates) {
+    if (typeof c === "number" && Number.isFinite(c)) return c;
+    if (typeof c === "boolean") return c ? 1 : 0;
+  }
+  throw new TypeError(`rule_counts missing family "${family}"`);
+}
+
+function fingerprintTree(root: string): string {
+  const parts: string[] = [];
+  const walk = (dir: string, rel = ""): void => {
+    for (const name of readdirSync(dir).sort()) {
+      const full = join(dir, name);
+      const childRel = rel ? `${rel}/${name}` : name;
+      const st = statSync(full);
+      if (st.isDirectory()) walk(full, childRel);
+      else {
+        const body = readFileSync(full);
+        parts.push(
+          `${childRel}:${st.size}:${createHash("sha256").update(body).digest("hex")}`,
+        );
+      }
+    }
+  };
+  if (existsSync(root)) walk(root);
+  return createHash("sha256").update(parts.join("\n")).digest("hex");
+}
+
+export function projectFingerprint(cwd: string): string {
+  const keys = ["bapm.yml", "apm.yml", "bapm.lock.yaml", "apm.lock.yaml", "apm_modules", "bapm_modules"];
+  const parts: string[] = [];
+  for (const key of keys) {
+    const full = join(cwd, key);
+    if (!existsSync(full)) continue;
+    const st = statSync(full);
+    if (st.isDirectory()) parts.push(`${key}:dir:${fingerprintTree(full)}`);
+    else {
+      const body = readFileSync(full);
+      parts.push(`${key}:file:${createHash("sha256").update(body).digest("hex")}`);
+    }
+  }
+  return createHash("sha256").update(parts.join("\n")).digest("hex");
 }
 
 export function getRunInstall(): (options: Record<string, unknown>) => Promise<unknown> {
@@ -385,3 +480,5 @@ export function isAbsentDiscovery(result: unknown): boolean {
   }
   return false;
 }
+
+export { join };

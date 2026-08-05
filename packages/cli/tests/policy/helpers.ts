@@ -1,14 +1,24 @@
 /**
- * CLI M8 governance acceptance helpers.
+ * CLI policy suite helpers (install gate + policy status).
  */
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
-export function createTempProject(prefix = "bapm-m8-cli-"): TempProject {
+export function createTempProject(prefix = "bapm-policy-cli-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
@@ -61,6 +71,15 @@ export async function runInProject(
   };
 }
 
+export function stdoutText(stdout: string[]): string {
+  return stdout.join("\n");
+}
+
+export function writeText(path: string, contents: string): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, contents, "utf8");
+}
+
 export function writeLeafProject(cwd: string, name: string): void {
   mkdirSync(join(cwd, "leaf"), { recursive: true });
   writeFileSync(
@@ -77,7 +96,7 @@ export function writeLeafProject(cwd: string, name: string): void {
 
 export function writePolicy(
   cwd: string,
-  filename: "apm-policy.yml" | "bapm-policy.yml",
+  filename: "apm-policy.yml" | "bapm-policy.yml" | string,
   contents: string,
 ): string {
   const path = join(cwd, filename);
@@ -103,6 +122,20 @@ export const MINIMAL_WARN = `name: org
 enforcement: warn
 `;
 
+export const RICH_LOCAL = `name: rich-local
+enforcement: block
+dependencies:
+  allow:
+    - safe/*
+  deny:
+    - evil/*
+    - bad/actor
+  require:
+    - org/baseline
+  max_depth: 3
+  require_pinned_constraint: true
+`;
+
 export function hasModules(cwd: string): boolean {
   const dir = join(cwd, "apm_modules");
   return existsSync(dir);
@@ -118,3 +151,58 @@ export function expectKnownInstallFlags(combined: string): void {
     throw new Error(`CLI rejected install argv as unknown flag:\n${combined}`);
   }
 }
+
+/** Fail loudly if CLI rejected the command group as unknown. */
+export function expectKnownCommand(combined: string, command: string): void {
+  if (/unknown command|not a (?:valid )?command|unrecognized command/i.test(combined)) {
+    throw new Error(`CLI treated "${command}" as unknown command:\n${combined}`);
+  }
+}
+
+export function parseJsonStdout(stdout: string[]): Record<string, unknown> {
+  const body = stdoutText(stdout).trim();
+  const start = body.indexOf("{");
+  const end = body.lastIndexOf("}");
+  if (start < 0 || end < start) {
+    throw new Error(`expected JSON object on stdout:\n${body}`);
+  }
+  return JSON.parse(body.slice(start, end + 1)) as Record<string, unknown>;
+}
+
+function fingerprintTree(root: string): string {
+  const parts: string[] = [];
+  const walk = (dir: string, rel = ""): void => {
+    for (const name of readdirSync(dir).sort()) {
+      const full = join(dir, name);
+      const childRel = rel ? `${rel}/${name}` : name;
+      const st = statSync(full);
+      if (st.isDirectory()) walk(full, childRel);
+      else {
+        const body = readFileSync(full);
+        parts.push(
+          `${childRel}:${st.size}:${createHash("sha256").update(body).digest("hex")}`,
+        );
+      }
+    }
+  };
+  if (existsSync(root)) walk(root);
+  return createHash("sha256").update(parts.join("\n")).digest("hex");
+}
+
+export function projectFingerprint(cwd: string): string {
+  const keys = ["bapm.yml", "apm.yml", "bapm.lock.yaml", "apm.lock.yaml", "apm_modules", "bapm_modules"];
+  const parts: string[] = [];
+  for (const key of keys) {
+    const full = join(cwd, key);
+    if (!existsSync(full)) continue;
+    const st = statSync(full);
+    if (st.isDirectory()) parts.push(`${key}:dir:${fingerprintTree(full)}`);
+    else {
+      const body = readFileSync(full);
+      parts.push(`${key}:file:${createHash("sha256").update(body).digest("hex")}`);
+    }
+  }
+  return createHash("sha256").update(parts.join("\n")).digest("hex");
+}
+
+export { join, runCli };

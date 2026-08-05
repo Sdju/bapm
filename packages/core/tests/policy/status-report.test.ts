@@ -1,5 +1,5 @@
 /**
- * p6d — core `runPolicyStatus` outcomes, fields, redaction, read-only.
+ * Core `runPolicyStatus` outcomes, fields, redaction, read-only (P6d).
  * Specs: policy-status. Criteria: p6d-policy-status-criteria DoD.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
