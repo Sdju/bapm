@@ -22,7 +22,8 @@
     "Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names",
     "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
     "ADO / multi-candidate policy cascades and marketplace/plugin governance UX are out of scope",
-    "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)"
+    "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)",
+    "P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install"
   ],
   "scope_out": [
     "multi-target",

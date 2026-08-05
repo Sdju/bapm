@@ -8,6 +8,23 @@ export type RunInstallOptions = {
   update?: boolean;
   updateRefs?: boolean;
   /**
+   * Preview-only install: no durable project writes (manifest/lock/modules/harness),
+   * no target materialize / configureMcp. Never forwarded to targets.
+   */
+  dryRun?: boolean;
+  /**
+   * Positional package refs to add under `dependencies.apm` before install
+   * (non-zip). Mutually exclusive with `archivePath`.
+   */
+  packageRefs?: string[];
+  /**
+   * Skip MCP configure for listed target/runtime ids (e.g. `cursor`).
+   * Does not skip package materialize. Alias: `exclude`.
+   */
+  excludeTargets?: string[];
+  /** Alias for `excludeTargets`. */
+  exclude?: string[];
+  /**
    * Force activation of a registered target id even when `detect` is false
    * (e.g. CLI `--target cursor`). Alias: `forceTarget`.
    */
@@ -20,6 +37,9 @@ export type RunInstallOptions = {
   registry?: TargetRegistry;
   /** Override active target ids (else from manifest / detection / forced). */
   activeTargets?: string[];
+  /**
+   * Download concurrency (default aligned with APM = 4). `0` = serial.
+   */
   parallelDownloads?: number;
   maxDepth?: number;
   verbose?: boolean;
@@ -89,6 +109,8 @@ export type InstallResult = {
   diagnostics: unknown[];
   /** Policy gate warnings / findings (M8). */
   policyDiagnostics?: unknown[];
+  /** True when install returned after dry-run preview (no durable writes). */
+  dryRun?: boolean;
 };
 
 export type EnforceFrozenOptions = {

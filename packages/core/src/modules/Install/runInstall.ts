@@ -45,6 +45,15 @@ import {
 } from "./deployedInventory.ts";
 import { InstallError } from "./errors.ts";
 import { enforceFrozen } from "./frozen.ts";
+import {
+  assertKnownExcludeIds,
+  autoCreateMinimalManifest,
+  manifestExistsAt,
+  normalizeExcludeIds,
+  normalizePackageRefs,
+  packageRefToEntry,
+  writeManifestWithPackageRefs,
+} from "./packageRefs.ts";
 import { declaredTargetIds } from "./targets.ts";
 import type { InstallResult, RunInstallOptions } from "./types.ts";
 
@@ -52,15 +61,24 @@ import type { InstallResult, RunInstallOptions } from "./types.ts";
  * Run install: optional archive extract → frozen gate → plan → policy gate →
  * download → orphan cleanup → primitives → targets → MCP trust/configure →
  * write deployed_file_hashes / mcp_* lock fields.
+ *
+ * With `dryRun: true`, returns after direct-deps (+ MCP view) preview and optional
+ * policy preflight — no durable project writes and no target write ports.
  */
 export async function runInstall(options: RunInstallOptions = {}): Promise<InstallResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
   const frozen = options.frozen === true;
+  const dryRun = options.dryRun === true;
   const updateRefs = options.updateRefs === true || options.update === true;
   const forcedTargetId = options.forcedTarget ?? options.forceTarget;
   const policyPath = options.policyPath ?? options.policy;
   const noPolicy = options.noPolicy === true;
   const trustTransitiveMcp = options.trustTransitiveMcp === true;
+  const packageRefs = normalizePackageRefs(options.packageRefs);
+  const excludeIds = normalizeExcludeIds(options);
+  assertKnownExcludeIds(excludeIds);
+  const excludeSet = new Set(excludeIds);
+
   const policyPorts = {
     policyProviders: options.policyProviders ?? options.providers,
     providers: options.providers ?? options.policyProviders,
@@ -73,12 +91,60 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     implementationDefaultHost: options.implementationDefaultHost,
   };
 
-  if (options.archivePath) {
+  if (options.archivePath && packageRefs.length > 0) {
+    throw new InstallError(
+      "INSTALL_PACKAGE_REF",
+      "Cannot combine archive zip install with positional package refs",
+      { details: { archivePath: options.archivePath, packageRefs } },
+    );
+  }
+
+  if (packageRefs.length > 0 && frozen && !dryRun) {
+    throw new InstallError(
+      "INSTALL_FROZEN_POSITIONAL",
+      "Frozen mode rejects positional package-ref add (manifest mutation)",
+      { details: { frozen: true, packageRefs } },
+    );
+  }
+
+  // Validate package refs early (also for dry-run preview)
+  for (const ref of packageRefs) {
+    packageRefToEntry(ref);
+  }
+
+  if (options.archivePath && !dryRun) {
     await extractArchiveIntoProject(options.archivePath, cwd);
   }
 
-  if (frozen) {
+  if (frozen && !dryRun) {
     enforceFrozen({ cwd, updateRefs, update: options.update });
+  }
+
+  if (packageRefs.length > 0 && !dryRun) {
+    if (!manifestExistsAt(cwd)) {
+      autoCreateMinimalManifest(cwd);
+    }
+    const loaded = loadManifest({ cwd });
+    writeManifestWithPackageRefs({
+      cwd,
+      document: loaded.document,
+      sourcePath: loaded.sourcePath,
+      sourceFilename: loaded.sourceFilename,
+      refs: packageRefs,
+    });
+  }
+
+  if (dryRun) {
+    return runDryRunPreview({
+      cwd,
+      packageRefs,
+      policyPath,
+      noPolicy,
+      policyPorts,
+      forcedTargetId,
+      registry: (options.targetRegistry ?? options.registry) as TargetRegistry | undefined,
+      activeTargetsOverride: options.activeTargets,
+    });
   }
 
   const { document: rootManifest } = loadManifest({ cwd });
@@ -258,6 +324,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     forcedTargetId,
     trustTransitiveMcp,
     frozen,
+    excludeSet,
     lockDocument,
     lockPath,
     previousLockFilename: previousLock?.sourceFilename,
@@ -286,6 +353,151 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   };
 }
 
+async function runDryRunPreview(args: {
+  cwd: string;
+  packageRefs: string[];
+  policyPath?: string;
+  noPolicy: boolean;
+  policyPorts: {
+    policyProviders?: string[];
+    providers?: string[];
+    listGitRemotes?: RunInstallOptions["listGitRemotes"];
+    remotes?: RunInstallOptions["remotes"];
+    fetchPolicyUrl?: RunInstallOptions["fetchPolicyUrl"];
+    httpGet?: RunInstallOptions["httpGet"];
+    fetchAncestor?: RunInstallOptions["fetchAncestor"];
+    defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
+    implementationDefaultHost?: string;
+  };
+  forcedTargetId?: string;
+  registry?: TargetRegistry;
+  activeTargetsOverride?: string[];
+}): Promise<InstallResult> {
+  const diagnostics: unknown[] = [
+    {
+      code: "DRY_RUN",
+      message: "dry-run preview; no changes made",
+      dryRun: true,
+      preview: true,
+    },
+  ];
+
+  let rootManifest: BapmManifest | undefined;
+  if (manifestExistsAt(args.cwd)) {
+    rootManifest = loadManifest({ cwd: args.cwd }).document;
+  } else if (args.packageRefs.length === 0) {
+    // Preserve bare-install fail-closed (no auto-create without positional).
+    loadManifest({ cwd: args.cwd });
+  }
+
+  if (args.packageRefs.length > 0) {
+    diagnostics.push({
+      code: "DRY_RUN_WOULD_ADD",
+      message: `would add package refs: ${args.packageRefs.join(", ")}`,
+      wouldAdd: args.packageRefs,
+      preview: true,
+      dryRun: true,
+    });
+  }
+
+  const directApm = rootManifest?.dependencies?.apm ?? [];
+  const directPreview = directApm.map((entry) => summarizeDirectEntry(entry));
+  for (const ref of args.packageRefs) {
+    if (!directPreview.includes(ref)) directPreview.push(ref);
+  }
+  diagnostics.push({
+    code: "DRY_RUN_DIRECT_DEPS",
+    message: `would install direct dependencies: ${directPreview.join(", ") || "(none)"}`,
+    directDependencies: directPreview,
+    preview: true,
+    dryRun: true,
+  });
+
+  const mcpDeps = rootManifest?.dependencies?.mcp;
+  if (Array.isArray(mcpDeps) && mcpDeps.length > 0) {
+    diagnostics.push({
+      code: "DRY_RUN_MCP_VIEW",
+      message: `MCP deps view: ${mcpDeps.length} direct server(s)`,
+      mcpCount: mcpDeps.length,
+      preview: true,
+      dryRun: true,
+    });
+  }
+
+  // Optional policy preflight on direct set only (no full resolve/download).
+  let policyDiagnostics: unknown[] = [];
+  if (!args.noPolicy) {
+    const candidates: PolicyCandidate[] = [];
+    for (const entry of directApm) {
+      const hint = entryNameHint(entry) ?? summarizeDirectEntry(entry);
+      candidates.push({
+        id: hint,
+        name: hint,
+        ref: summarizeDirectEntry(entry),
+        direct: true,
+        depth: 1,
+        path:
+          typeof entry === "object" && entry && "path" in entry
+            ? String((entry as ObjectDependency).path)
+            : undefined,
+        source:
+          typeof entry === "object" && entry && "path" in entry ? "local" : undefined,
+      });
+    }
+    for (const ref of args.packageRefs) {
+      candidates.push({
+        id: ref,
+        name: ref,
+        ref,
+        direct: true,
+        depth: 1,
+      });
+    }
+    if (candidates.length > 0 || args.policyPath) {
+      policyDiagnostics = applyPolicyGate({
+        cwd: args.cwd,
+        policyPath: args.policyPath,
+        noPolicy: args.noPolicy,
+        nodes: [],
+        candidatesOverride: candidates,
+        ...args.policyPorts,
+      });
+    }
+  }
+
+  const activeTargets = rootManifest
+    ? await resolveActiveTargets({
+        cwd: args.cwd,
+        rootManifest,
+        registry: args.registry,
+        override: args.activeTargetsOverride,
+        forcedTargetId: args.forcedTargetId,
+      })
+    : args.forcedTargetId
+      ? [args.forcedTargetId]
+      : [];
+
+  return {
+    ok: true,
+    modulesDir: join(args.cwd, APM_MODULES_DIR),
+    activeTargets,
+    primitivesCount: 0,
+    diagnostics: [...policyDiagnostics, ...diagnostics],
+    policyDiagnostics,
+    dryRun: true,
+  };
+}
+
+function summarizeDirectEntry(entry: DependencyEntry): string {
+  if (typeof entry === "string") return entry;
+  const o = entry as ObjectDependency;
+  if (o.path) return String(o.path);
+  if (o.git) return String(o.git);
+  if (o.id) return String(o.id);
+  if (o.alias) return String(o.alias);
+  return entryNameHint(entry) ?? "(dep)";
+}
+
 async function deployMcpAfterPolicy(args: {
   cwd: string;
   rootManifest: BapmManifest;
@@ -295,6 +507,7 @@ async function deployMcpAfterPolicy(args: {
   forcedTargetId?: string;
   trustTransitiveMcp: boolean;
   frozen: boolean;
+  excludeSet: Set<string>;
   lockDocument?: LockfileDocument;
   lockPath?: string;
   previousLockFilename?: string;
@@ -402,6 +615,16 @@ async function deployMcpAfterPolicy(args: {
     const configureMcp = getConfigureMcp(target);
     if (!configureMcp) continue;
 
+    if (args.excludeSet.has(targetId)) {
+      args.diagnostics.push({
+        code: "EXCLUDE_SKIP_MCP",
+        message: `Skipping configureMcp for excluded target "${targetId}" (MCP filter; install continues)`,
+        exclude: targetId,
+        warn: true,
+      });
+      continue;
+    }
+
     const report = (await configureMcp(configuredServers, {
       cwd: args.cwd,
       targetId,
@@ -467,6 +690,8 @@ function applyPolicyGate(args: {
   policyPath?: string;
   noPolicy: boolean;
   nodes: ResolvedNode[];
+  /** When set (dry-run), use these candidates instead of deriving from nodes. */
+  candidatesOverride?: PolicyCandidate[];
   policyProviders?: string[];
   providers?: string[];
   listGitRemotes?: RunInstallOptions["listGitRemotes"];
@@ -477,7 +702,7 @@ function applyPolicyGate(args: {
   defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
   implementationDefaultHost?: string;
 }): unknown[] {
-  const candidates = nodesToCandidates(args.nodes);
+  const candidates = args.candidatesOverride ?? nodesToCandidates(args.nodes);
   const gate = assertPolicyGateAllows({
     cwd: args.cwd,
     policyPath: args.policyPath,

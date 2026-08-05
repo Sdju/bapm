@@ -16,13 +16,18 @@ export function formatInstallHelp(deps: InstallDeps): string {
 
 Usage:
   bapm install [options]
-  bapm install <archive.zip>   Install from a pack-produced plain zip archive
+  bapm install <package-ref...>   Add package ref(s) to dependencies.apm, then install
+  bapm install <archive.zip>      Install from a pack-produced plain zip archive
 
 Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
+  --dry-run                Preview direct deps / would-add; no durable project writes
   --target <id>            Force activation of a registered host target (e.g. cursor)
+  --exclude <id>           Skip MCP configure for runtime id (e.g. cursor); does not skip install
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
+  --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
+  -v, --verbose            Richer progress / diagnostics (does not weaken frozen/policy)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
   --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
@@ -31,9 +36,13 @@ Options:
 Notes:
   Unknown flags are rejected. Combining --frozen with --no-frozen is an error.
   Combining frozen (explicit or CI-default) with --update is an error.
+  Frozen integrity (lk-015/017/018) is kept; MCP config sync vs pins is optional/default-off.
   When the CI environment variable is truthy (not "", "0", or "false"), install
   defaults to frozen unless --no-frozen is passed (OpenAPM req-lk-018).
   A local .zip path is consumed as a pack archive (install-from-archive).
+  Non-zip positionals are package refs added to dependencies.apm (auto-creates
+  a minimal manifest when missing). Frozen rejects positional package-ref add.
+  --exclude filters MCP/runtime configure only — not a full skip-install.
   When cursor is active, eligible MCP servers write .cursor/mcp.json (direct mcp by default).
 `;
 }
@@ -43,37 +52,54 @@ export type ParseInstallArgsOptions = {
   env?: Record<string, string | undefined>;
 };
 
-export function parseInstallArgs(
-  argv: string[],
-  options: ParseInstallArgsOptions = {},
-): {
+export type ParsedInstallArgs = {
   frozen: boolean;
   noFrozen: boolean;
   update: boolean;
+  dryRun: boolean;
+  verbose: boolean;
   target?: string;
   archivePath?: string;
+  packageRefs?: string[];
+  exclude?: string[];
+  parallelDownloads?: number;
   policyPath?: string;
   noPolicy: boolean;
   trustTransitiveMcp: boolean;
   help?: boolean;
   error?: string;
-} {
+};
+
+export function parseInstallArgs(
+  argv: string[],
+  options: ParseInstallArgsOptions = {},
+): ParsedInstallArgs {
   let frozenFlag = false;
   let noFrozen = false;
   let update = false;
+  let dryRun = false;
+  let verbose = false;
   let target: string | undefined;
   let archivePath: string | undefined;
+  const packageRefs: string[] = [];
+  const exclude: string[] = [];
+  let parallelDownloads: number | undefined;
   let policyPath: string | undefined;
   let noPolicy = false;
   let trustTransitiveMcp = false;
   let help = false;
 
-  const partial = () => ({
+  const partial = (): ParsedInstallArgs => ({
     frozen: frozenFlag,
     noFrozen,
     update,
+    dryRun,
+    verbose,
     target,
     archivePath,
+    packageRefs: packageRefs.length > 0 ? [...packageRefs] : undefined,
+    exclude: exclude.length > 0 ? [...exclude] : undefined,
+    parallelDownloads,
     policyPath,
     noPolicy,
     trustTransitiveMcp,
@@ -91,6 +117,14 @@ export function parseInstallArgs(
     }
     if (arg === "--no-frozen") {
       noFrozen = true;
+      continue;
+    }
+    if (arg === "--dry-run") {
+      dryRun = true;
+      continue;
+    }
+    if (arg === "--verbose" || arg === "-v") {
+      verbose = true;
       continue;
     }
     if (arg === "--update") {
@@ -149,20 +183,90 @@ export function parseInstallArgs(
       }
       continue;
     }
+    if (arg === "--exclude") {
+      const next = argv[i + 1];
+      if (!next || next.startsWith("-")) {
+        return {
+          ...partial(),
+          error: "Missing value for --exclude <id>",
+        };
+      }
+      exclude.push(next);
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--exclude=")) {
+      const id = arg.slice("--exclude=".length);
+      if (!id) {
+        return {
+          ...partial(),
+          error: "Missing value for --exclude=<id>",
+        };
+      }
+      exclude.push(id);
+      continue;
+    }
+    if (arg === "--parallel-downloads") {
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith("-")) {
+        return {
+          ...partial(),
+          error: "Missing value for --parallel-downloads <n>",
+        };
+      }
+      const n = Number(next);
+      if (!Number.isFinite(n) || n < 0) {
+        return {
+          ...partial(),
+          error: `Invalid --parallel-downloads value: ${next}`,
+        };
+      }
+      parallelDownloads = Math.floor(n);
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--parallel-downloads=")) {
+      const raw = arg.slice("--parallel-downloads=".length);
+      const n = Number(raw);
+      if (!Number.isFinite(n) || n < 0) {
+        return {
+          ...partial(),
+          error: `Invalid --parallel-downloads value: ${raw}`,
+        };
+      }
+      parallelDownloads = Math.floor(n);
+      continue;
+    }
     if (arg.startsWith("-")) {
       return {
         ...partial(),
         error: `Unknown install flag: ${arg}`,
       };
     }
-    // Positional: local .zip pack archive wins over package-ref parse
+    // Positional: .zip → archive; otherwise package-ref. Mixing modes fails closed.
+    if (looksLikeZipPositional(arg)) {
+      if (packageRefs.length > 0) {
+        return {
+          ...partial(),
+          error: "Cannot combine archive .zip with positional package refs",
+        };
+      }
+      if (archivePath !== undefined) {
+        return {
+          ...partial(),
+          error: `Unexpected argument: ${arg}`,
+        };
+      }
+      archivePath = arg;
+      continue;
+    }
     if (archivePath !== undefined) {
       return {
         ...partial(),
-        error: `Unexpected argument: ${arg}`,
+        error: "Cannot combine archive .zip with positional package refs",
       };
     }
-    archivePath = arg;
+    packageRefs.push(arg);
   }
 
   if (frozenFlag && noFrozen) {
@@ -193,13 +297,22 @@ export function parseInstallArgs(
     frozen,
     noFrozen,
     update,
+    dryRun,
+    verbose,
     target,
     archivePath,
+    packageRefs: packageRefs.length > 0 ? packageRefs : undefined,
+    exclude: exclude.length > 0 ? exclude : undefined,
+    parallelDownloads,
     policyPath,
     noPolicy,
     trustTransitiveMcp,
     help,
   };
+}
+
+function looksLikeZipPositional(candidate: string): boolean {
+  return candidate.toLowerCase().endsWith(".zip");
 }
 
 function resolveLocalZipArchive(
@@ -252,14 +365,7 @@ export async function runInstall(
 async function runCoreInstall(
   deps: InstallDeps,
   options: InstallOptions,
-  parsed: {
-    frozen: boolean;
-    update: boolean;
-    target?: string;
-    policyPath?: string;
-    noPolicy: boolean;
-    trustTransitiveMcp: boolean;
-  },
+  parsed: ParsedInstallArgs,
   archivePath: string | undefined,
 ): Promise<InstallResult> {
   const registry = createTargetRegistry();
@@ -269,6 +375,12 @@ async function runCoreInstall(
     const result = await coreRunInstall({
       cwd: options.cwd,
       archivePath,
+      dryRun: parsed.dryRun,
+      packageRefs: parsed.packageRefs,
+      exclude: parsed.exclude,
+      excludeTargets: parsed.exclude,
+      parallelDownloads: parsed.parallelDownloads,
+      verbose: parsed.verbose,
       frozen: parsed.frozen,
       updateRefs: parsed.update,
       update: parsed.update,
@@ -285,6 +397,10 @@ async function runCoreInstall(
     });
     emitPolicyDiagnostics(deps.name, result.policyDiagnostics ?? result.diagnostics);
     emitTrustDiagnostics(deps.name, result.diagnostics);
+    if (parsed.dryRun || result.dryRun) {
+      emitDryRunPreview(deps.name, result.diagnostics);
+      console.log(`${deps.name}: dry-run preview complete; no changes made`);
+    }
     return { ok: true };
   } catch (error) {
     const message =
@@ -295,6 +411,18 @@ async function runCoreInstall(
           : String(error);
     console.error(`${deps.name}: ${message}`);
     return { ok: false, message };
+  }
+}
+
+function emitDryRunPreview(name: string, diagnostics: unknown[]): void {
+  for (const d of diagnostics) {
+    if (!d || typeof d !== "object") continue;
+    const rec = d as Record<string, unknown>;
+    const code = typeof rec.code === "string" ? rec.code : "";
+    const message = typeof rec.message === "string" ? rec.message : "";
+    if (!/dry.?run|would|preview/i.test(`${code}\n${message}`)) continue;
+    if (code === "DRY_RUN") continue;
+    console.log(`${name}: ${message || code}`);
   }
 }
 
