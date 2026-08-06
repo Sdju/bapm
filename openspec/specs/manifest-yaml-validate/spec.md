@@ -113,7 +113,7 @@ An object dependency MUST have exactly one of `git` | `id` | `path` | `registry`
 - **THEN** the system MUST accept and retain `alias` (not treat it as an unknown source kind)
 
 ### Requirement: Registries parse-time validation
-When a `registries` block is present, the system MUST validate registry entries for http(s) URL scheme and MUST reject unknown keys inside registry entries and tokens embedded in YAML when APM/OpenAPM rules require it (req-mf-014, req-mf-015). The key `registries.default` is a special-case name pointer: it MUST NOT be validated as a registry URL; when present it MUST be a non-empty string naming a declared registry entry.
+When a `registries` block is present, the system MUST validate registry entries for http(s) URL scheme and MUST reject unknown keys inside registry entries and tokens embedded in YAML when APM/OpenAPM rules require it (req-mf-014, req-mf-015). Allowed object keys are `url`, `aliases`, `insecure`, and `x-*` vendor extensions; other keys MUST fail (mf-015). The boolean `insecure` MAY be set on a registry object (req-sc-006). For any registry URL using the `http://` scheme, parse MUST fail closed unless `insecure: true` is set on that object entry **or** the URL host is loopback (`127.0.0.0/8`, `localhost`), IPv6 loopback (`::1`), or an RFC1918 private address; string-form registry entries (URL only) have no `insecure` flag and therefore MUST satisfy the host exemption to use `http://`. Diagnostics for http-gate failures MUST name the registry. The key `registries.default` is a special-case name pointer: it MUST NOT be validated as a registry URL; when present it MUST be a non-empty string naming a declared registry entry.
 
 #### Scenario: Valid https registry accepted
 - **WHEN** a registry entry provides an https URL with allowed keys only
@@ -134,6 +134,22 @@ When a `registries` block is present, the system MUST validate registry entries 
 #### Scenario: Non-http(s) scheme rejected
 - **WHEN** a registry URL uses a non-http(s) scheme (for example `ftp:`)
 - **THEN** the system MUST reject it (req-mf-014)
+
+#### Scenario: insecure true allows remote http registry
+- **WHEN** a named registry object sets `url: http://example.com/...` and `insecure: true`
+- **THEN** the system MUST accept the registries block
+
+#### Scenario: remote http without insecure rejected with registry name
+- **WHEN** a named registry object sets a non-exempt `http://` URL without `insecure: true`
+- **THEN** the system MUST reject the manifest with a diagnostic that names that registry
+
+#### Scenario: loopback http allowed without insecure
+- **WHEN** a registry URL uses `http://127.0.0.1/...`, `http://localhost/...`, `http://[::1]/...`, or an RFC1918 host
+- **THEN** the system MUST accept the entry without requiring `insecure: true`
+
+#### Scenario: string-form remote http rejected
+- **WHEN** a registry entry is a bare string `http://example.com/...` (no object, no insecure flag) and the host is not exempt
+- **THEN** the system MUST reject the manifest naming that registry
 
 ### Requirement: Unknown top-level keys and x-* extensions
 On read, the system MUST accept unknown top-level keys and `x-*` extension keys without failing validation. The in-memory document model MUST retain them for a future rewrite path (req-ext-001, req-ext-002 policy: bapm MUST NOT define normative `x-*` keys). Rewrite preserve (req-mf-006) is deferred past M1.
