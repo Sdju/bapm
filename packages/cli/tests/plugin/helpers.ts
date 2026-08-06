@@ -1,5 +1,5 @@
 /**
- * CLI helpers for mp-plugin-init acceptance.
+ * CLI helpers for plugin init suite.
  */
 import {
   existsSync,
@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { expect } from "vite-plus/test";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; root: string; cleanup: () => void };
 

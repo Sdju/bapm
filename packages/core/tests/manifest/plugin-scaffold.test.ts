@@ -2,9 +2,17 @@
  * Unit tests — plugin name validation, plugin.json, plugin-mode minimal manifest.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
 import {
   createMinimalManifest,
@@ -14,6 +22,20 @@ import {
   validateProjectName,
   writePluginJson,
 } from "../../src/index.ts";
+
+const coreRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+const srcRoot = join(coreRoot, "src");
+
+function listFilesRecursive(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) out.push(...listFilesRecursive(full));
+    else out.push(full);
+  }
+  return out;
+}
 
 describe("Manifest plugin name validation", () => {
   test("accepts kebab-case ids", () => {
@@ -106,5 +128,33 @@ describe("Manifest plugin-mode createMinimalManifest", () => {
     const parsed = parseYaml(serializeManifest(doc)) as Record<string, unknown>;
     expect(parsed.name).toBe("demo-plugin");
     expect(parsed).toHaveProperty("devDependencies");
+  });
+});
+
+describe("Manifest plugin scaffold public surface", () => {
+  test("publicApi re-exports plugin scaffold helpers", () => {
+    const publicApi = readFileSync(join(srcRoot, "app/publicApi.ts"), "utf8");
+    expect(publicApi).toMatch(/validatePluginName/);
+    expect(publicApi).toMatch(/createPluginJson|writePluginJson/);
+  });
+
+  test("plugin helper sources stay offline (no network clients)", () => {
+    const manifestDir = join(srcRoot, "modules", "Manifest");
+    expect(existsSync(manifestDir)).toBe(true);
+
+    const files = listFilesRecursive(manifestDir).filter((f) => f.endsWith(".ts"));
+    const pluginFiles = files.filter((f) => /plugin/i.test(f));
+    expect(
+      pluginFiles.length,
+      "expected Manifest plugin helper source file(s) under modules/Manifest",
+    ).toBeGreaterThan(0);
+
+    for (const file of pluginFiles) {
+      const body = readFileSync(file, "utf8");
+      expect(body, file).not.toMatch(/\bfetch\s*\(/);
+      expect(body, file).not.toMatch(/from\s+["']node:http["']/);
+      expect(body, file).not.toMatch(/from\s+["']undici["']/);
+      expect(body, file).not.toMatch(/fetchMarketplace|RegistryClient/);
+    }
   });
 });
