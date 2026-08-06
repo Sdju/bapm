@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { cpSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
 import type { Downloader, GitRemote, TagLister } from "./types.ts";
 import { identityToCacheDir, normalizeRepoIdentity } from "./identity.ts";
 import { APM_MODULES_DIR } from "./constants.ts";
@@ -127,10 +128,30 @@ export function ensureModulesRoot(cwd: string): string {
   return root;
 }
 
+function gitUrlFromArgs(args: string[]): string | undefined {
+  // Prefer last https?/git URL-like arg (clone / ls-remote).
+  for (let i = args.length - 1; i >= 0; i -= 1) {
+    const a = args[i]!;
+    if (/^(https?:|git@)/i.test(a) || /^[^@\s]+\/[^@\s]+$/.test(a)) return a;
+  }
+  return undefined;
+}
+
 async function runGit(args: string[], options?: { allowFail?: boolean }): Promise<string> {
+  const url = gitUrlFromArgs(args);
+  const host = url ? hostnameFromUrlOrHost(url) : undefined;
+  const env =
+    host && url
+      ? buildGitChildEnv({ host, url, env: process.env })
+      : buildGitChildEnv({
+          host: "localhost",
+          url: url ?? "https://localhost/",
+          env: process.env,
+        });
   return new Promise((resolve, reject) => {
     const child = spawn("git", args, {
       stdio: ["ignore", "pipe", "pipe"],
+      env,
     });
     let stdout = "";
     let stderr = "";

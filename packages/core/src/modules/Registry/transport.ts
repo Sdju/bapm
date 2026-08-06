@@ -1,20 +1,22 @@
 import { RegistryError } from "./errors.ts";
 import type { RegistryHttpRequest, RegistryHttpResponse, RegistryHttpTransport } from "./types.ts";
+import { fetchWithRedirectAuthDrop } from "@/modules/Auth";
 
-/** Default real-fetch transport. */
+/** Default real-fetch transport — redirect-safe for Authed requests (sc-003). */
 export function createFetchTransport(): RegistryHttpTransport {
   return {
     async fetch(request: RegistryHttpRequest): Promise<RegistryHttpResponse> {
       const init: RequestInit = {
         method: request.method,
         headers: request.headers,
+        redirect: "manual",
       };
       if (request.body !== undefined) {
         init.body = Buffer.from(request.body);
       }
       let response: Response;
       try {
-        response = await fetch(request.url, init);
+        response = await fetchWithRedirectAuthDrop(request.url, init);
       } catch (cause) {
         throw new RegistryError(
           "REGISTRY_HTTP",

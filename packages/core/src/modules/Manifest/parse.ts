@@ -374,11 +374,35 @@ function validateRegistries(value: unknown): Record<string, RegistryEntry | stri
       insecure = obj.insecure;
     }
 
+    let aliases: string[] | undefined;
+    if ("aliases" in obj) {
+      if (!Array.isArray(obj.aliases)) {
+        throw new ManifestError(
+          "MANIFEST_VALIDATION",
+          `Registry entry ${path}.aliases must be an array of hostname strings`,
+          { path: `${path}.aliases` },
+        );
+      }
+      aliases = [];
+      for (let i = 0; i < obj.aliases.length; i += 1) {
+        const alias = obj.aliases[i];
+        if (typeof alias !== "string" || !alias.trim()) {
+          throw new ManifestError(
+            "MANIFEST_VALIDATION",
+            `Registry entry ${path}.aliases[${i}] must be a non-empty hostname string`,
+            { path: `${path}.aliases` },
+          );
+        }
+        aliases.push(alias.trim().toLowerCase());
+      }
+    }
+
     assertRegistryHttpUrl(obj.url, path, { registryName: name, insecure });
     out[name] = {
       ...obj,
       url: obj.url,
       ...(insecure !== undefined ? { insecure } : {}),
+      ...(aliases !== undefined ? { aliases } : {}),
     } as RegistryEntry;
   }
 

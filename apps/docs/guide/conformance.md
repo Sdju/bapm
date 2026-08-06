@@ -22,6 +22,6 @@ Do not treat “OpenAPM claimed” as “every APM CLI feature shipped.”
 - **multi-target** adapters beyond cursor (later track)
 - **registry host** (rg-001 N/A; client-only)
 - Interactive **user-local approve/deny** (sc-010), org **executables.deny/deny_all** deny-wins + install≡audit (sc-011), and lockfile **require** vs withheld (sc-012) are **claimed** — not absolute OOS; full APM approve UX extras and hooks/bin/canvas gates remain soft (MCP-only)
-- Residual OpenAPM **§10 security-depth** gaps (host-class credential scoping / AuthResolver; OpenAPM tar.gz-only container stays soft while zip + size/entry caps ship) — marketplace floor exists and does not by itself satisfy deferred host-class `sc-*` reqs
+- OpenAPM **§10.3 host-class floor is claimed** (PSL eTLD+1 / credential host-class, redirect Auth drop, ambient suppress, https-only git-HTTP attach refuse); **residual Auth depth** (gh CLI / az bearer / credential-helper / try_with_fallback) and soft **tar.gz-only** container (sc-004; zip + size/entry caps ship) remain limitations — not a blanket deferred host-class framing
 
 Also intentional (not bugs): ∩-pick vs APM first-wins, dual-read branding, OpenAPM-strict YAML anchors.

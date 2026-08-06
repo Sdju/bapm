@@ -7,7 +7,13 @@ import {
 
 describe("Marketplace hostClassify", () => {
   afterEach(() => {
-    for (const k of ["GITHUB_HOST", "GITLAB_HOST", "APM_GITLAB_HOSTS"]) {
+    for (const k of [
+      "GITHUB_HOST",
+      "GITLAB_HOST",
+      "APM_GITLAB_HOSTS",
+      "ADO_HOST",
+      "APM_ADO_HOSTS",
+    ]) {
       delete process.env[k];
     }
   });
@@ -33,6 +39,12 @@ describe("Marketplace hostClassify", () => {
     process.env.GITHUB_HOST = "overlap.example.com";
     process.env.GITLAB_HOST = "overlap.example.com";
     expect(() => classifyMarketplaceHost("overlap.example.com")).toThrow(/overlap|conflict/i);
+  });
+
+  test("ADO_HOST wins over GITHUB_HOST on same FQDN", () => {
+    process.env.ADO_HOST = "corp.example.com";
+    process.env.GITHUB_HOST = "corp.example.com";
+    expect(classifyMarketplaceHost("corp.example.com")).toBe("ado");
   });
 
   test("api base for github vs GHE", () => {

@@ -1,53 +1,25 @@
 /**
- * Marketplace host classification (thin; not full OpenAPM §10.3 AuthResolver).
+ * Marketplace host classification — delegates operator overlap to Auth (sc-013).
  */
+import {
+  collectGitlabHosts,
+  selectProviderClassForHost,
+  type ProviderHostClass,
+} from "@/modules/Auth";
 import type { MarketplaceSourceKind } from "./types.ts";
 
 /** Fine-grained marketplace host class for auth/API base selection. */
-export type MarketplaceHostClass = "github" | "ghe_cloud" | "ghes" | "gitlab" | "ado" | "generic";
-
-function collectGitlabHosts(env: NodeJS.ProcessEnv): Set<string> {
-  const set = new Set<string>();
-  const single = (env.GITLAB_HOST ?? "").toLowerCase().trim();
-  if (single) set.add(single);
-  const multi = (env.APM_GITLAB_HOSTS ?? "")
-    .split(/[,;\s]+/)
-    .map((s) => s.toLowerCase().trim())
-    .filter(Boolean);
-  for (const h of multi) set.add(h);
-  return set;
-}
+export type MarketplaceHostClass = ProviderHostClass;
 
 /**
  * Classify a marketplace hostname using env allowlists.
- * Throws on GHES↔GitLab overlap for the same hostname.
+ * Throws on GHES↔GitLab overlap; ADO_HOST wins over GITHUB_HOST on same FQDN.
  */
 export function classifyMarketplaceHost(
   host: string,
   env: NodeJS.ProcessEnv = process.env,
 ): MarketplaceHostClass {
-  const h = host.toLowerCase().trim();
-  if (!h) return "generic";
-
-  const githubHost = (env.GITHUB_HOST ?? "").toLowerCase().trim();
-  const gitlabHosts = collectGitlabHosts(env);
-  const isGhes = Boolean(githubHost && h === githubHost);
-  const isGitlabAllowlisted = gitlabHosts.has(h);
-
-  if (isGhes && isGitlabAllowlisted) {
-    throw new Error(
-      `Host '${h}' is ambiguous: GITHUB_HOST and GitLab allowlist overlap / conflict`,
-    );
-  }
-
-  if (h === "github.com") return "github";
-  if (h === "ghe.com" || h.endsWith(".ghe.com")) return "ghe_cloud";
-  if (isGhes) return "ghes";
-  if (h === "gitlab.com" || h.endsWith(".gitlab.com") || isGitlabAllowlisted) {
-    return "gitlab";
-  }
-  if (h === "dev.azure.com" || h.endsWith(".visualstudio.com")) return "ado";
-  return "generic";
+  return selectProviderClassForHost(host, env);
 }
 
 /** Map fine-grained class → MarketplaceSource.kind. */
@@ -81,7 +53,6 @@ export function githubApiBaseForHost(host: string, env: NodeJS.ProcessEnv = proc
   if (cls === "ghe_cloud" || cls === "ghes") {
     return `https://${host.toLowerCase().trim()}/api/v3`;
   }
-  // Fallback for callers that already know it's github-kind enterprise
   const h = host.toLowerCase().trim();
   if (h === "github.com") return "https://api.github.com";
   return `https://${h}/api/v3`;

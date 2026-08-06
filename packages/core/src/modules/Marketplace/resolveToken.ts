@@ -1,8 +1,9 @@
 /**
  * Thin env-scoped token resolve by marketplace host class.
- * MUST NOT consult cross-class env names. Diagnostic source id only (never log secrets).
+ * Routes class selection through Auth; MUST NOT consult cross-class env names.
  */
-import { classifyMarketplaceHost, type MarketplaceHostClass } from "./hostClassify.ts";
+import { selectProviderClassForHost, type ProviderHostClass } from "@/modules/Auth";
+import type { MarketplaceHostClass } from "./hostClassify.ts";
 
 export type ResolvedMarketplaceToken = {
   /** Secret value — never log. */
@@ -29,7 +30,7 @@ const GITLAB_ENV = ["GITLAB_APM_PAT", "GITLAB_TOKEN"] as const;
 const ADO_ENV = ["ADO_APM_PAT"] as const;
 
 function resolveForClass(
-  cls: MarketplaceHostClass,
+  cls: MarketplaceHostClass  ,
   env: NodeJS.ProcessEnv,
 ): ResolvedMarketplaceToken | null {
   switch (cls) {
@@ -54,7 +55,7 @@ export function resolveTokenForHost(
   host: string,
   env: NodeJS.ProcessEnv = process.env,
 ): ResolvedMarketplaceToken | null {
-  const cls = classifyMarketplaceHost(host, env);
+  const cls = selectProviderClassForHost(host, env);
   return resolveForClass(cls, env);
 }
 
@@ -67,7 +68,7 @@ export function authHeadersForHost(
   host: string,
   env: NodeJS.ProcessEnv = process.env,
 ): Record<string, string> {
-  const cls = classifyMarketplaceHost(host, env);
+  const cls = selectProviderClassForHost(host, env);
   const resolved = resolveForClass(cls, env);
   if (!resolved) return {};
 
@@ -79,7 +80,6 @@ export function authHeadersForHost(
     case "gitlab":
       return { "PRIVATE-TOKEN": resolved.token };
     case "ado": {
-      // ADO PAT: Basic with empty username (APM parity).
       const basic = Buffer.from(`:${resolved.token}`, "utf8").toString("base64");
       return { Authorization: `Basic ${basic}` };
     }

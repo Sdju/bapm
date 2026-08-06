@@ -25,6 +25,7 @@
     "bapm-target-api": "workspace:*",
     "fflate": "catalog:",
     "semver": "catalog:",
+    "tldts": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
+import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
 import { classifyMarketplaceHost } from "../../hostClassify.ts";
 import {
   githubHttpsUrlFromOwnerRepo,
@@ -18,6 +19,11 @@ import type {
   ResolveMarketplacePackagesResult,
   ResolvedPackage,
 } from "./types.ts";
+
+function gitEnvForUrl(repoUrl: string): NodeJS.ProcessEnv {
+  const host = hostnameFromUrlOrHost(repoUrl) ?? "localhost";
+  return buildGitChildEnv({ host, url: repoUrl, env: process.env });
+}
 
 function globToRegExp(pattern: string): RegExp {
   // Simple glob: * → [^/]*, ? → [^/], escape rest. Anchored full match.
@@ -95,8 +101,9 @@ function satisfiesSimpleRange(version: string, range: string): boolean {
 
 async function defaultLsRemote(repoUrl: string, ref?: string): Promise<LsRemoteResult> {
   const args = ref ? ["ls-remote", repoUrl, ref] : ["ls-remote", repoUrl, "HEAD"];
+  const env = gitEnvForUrl(repoUrl);
   return new Promise((resolvePromise, reject) => {
-    const child = spawn("git", args, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn("git", args, { stdio: ["ignore", "pipe", "pipe"], env });
     let stderr = "";
     let stdout = "";
     child.stdout?.on("data", (c: Buffer) => {
@@ -143,6 +150,7 @@ async function listRemoteTags(lsRemote: LsRemoteFn, repoUrl: string): Promise<Ma
   return new Promise((resolvePromise, reject) => {
     const child = spawn("git", ["ls-remote", "--tags", repoUrl], {
       stdio: ["ignore", "pipe", "pipe"],
+      env: gitEnvForUrl(repoUrl),
     });
     let stderr = "";
     let stdout = "";

@@ -27,7 +27,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | Class | Active | Skipped | N/A |
 |-------|-------:|--------:|----:|
 | Producer | 12 | 0 | 0 |
-| Consumer | 67 | 14 | 0 |
+| Consumer | 71 | 10 | 0 |
 | Governance | 16 | 0 | 0 |
 | Registry | 0 | 0 | 1 |
 
@@ -39,7 +39,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
 - ADO / multi-candidate policy cascades are out of scope
 - Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) and hooks/bin/canvas executable gates remain soft (MCP-only trust surface)
-- Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
+- Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
 - Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)
 - P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install
 
@@ -48,7 +48,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - multi-target
 - registry host
 - full ADO cascade
-- host-class AuthResolver
+- residual Auth depth (gh CLI / az bearer / credential-helper / try_with_fallback)
 - soft §10 tar.gz-only container (zip + caps shipped)
 - hooks/bin/canvas executable gates (MCP-only)
 - full Python Mode B port
@@ -146,17 +146,17 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-rs-016 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-sc-001 | MUST | 10.4 | consumer | active | packages/core/tests/extras/public-api.test.ts |
 | req-sc-002 | MUST | 10.9 | consumer | active | packages/core/tests/pack/safe-extract-pack.test.ts; packages/core/tests/registry/safe-extract-registry.test.ts |
-| req-sc-003 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed |
+| req-sc-003 | MUST | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/redirect-auth-drop.test.ts; packages/core/tests/acceptance/sc-host-class/resolve-per-class.test.ts |
 | req-sc-004 | MUST | 10.5 | consumer | skipped |  — Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed) |
-| req-sc-005 | MUST | 10.3 | consumer | skipped |  — Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed |
+| req-sc-005 | MUST | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/credential-host-class.test.ts |
 | req-sc-006 | MUST | 4.2.3 | consumer | active | packages/core/tests/manifest/registries-insecure.test.ts |
 | req-sc-007 | MUST | 10.3 | consumer | active | packages/core/tests/pack/pack-archive.test.ts |
-| req-sc-008 | SHOULD | 10.3 | consumer | skipped |  — Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed |
+| req-sc-008 | SHOULD | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/git-https-refuse.test.ts |
 | req-sc-009 | MUST | 10.13 | consumer | active | packages/core/tests/extras/public-api.test.ts |
 | req-sc-010 | MUST | 10.13 | consumer | active | packages/core/tests/executable-trust/user-store.test.ts; packages/cli/tests/mcp/approve-deny.test.ts |
 | req-sc-011 | MUST | 10.14 | consumer | active | packages/core/tests/executable-trust/resolve-deny-wins.test.ts; packages/core/tests/policy/executables-parse-merge.test.ts; packages/core/tests/executable-trust/install-audit-twin.test.ts |
 | req-sc-012 | MUST | 10.14 | consumer | active | packages/core/tests/executable-trust/require-presence-withheld.test.ts |
-| req-sc-013 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed |
+| req-sc-013 | MUST | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/overlap-ambient.test.ts |
 | req-tg-001 | MUST | 8.4 | consumer | active | packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts |
 | req-tg-002 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
 | req-tg-003 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
@@ -172,11 +172,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 
 - **req-mf-016** (skipped): Soft limitation: mf-016 not claimed active in P3 floor
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
-- **req-sc-003** (skipped): Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed
 - **req-sc-004** (skipped): Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)
-- **req-sc-005** (skipped): Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed
-- **req-sc-008** (skipped): Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed
-- **req-sc-013** (skipped): Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed
 - **req-tg-002** (skipped): Out of scope for P3: multi-target adapters beyond cursor
 - **req-tg-003** (skipped): Out of scope for P3: multi-target adapters beyond cursor
 - **req-tg-005** (skipped): Out of scope for P3: multi-target adapters beyond cursor

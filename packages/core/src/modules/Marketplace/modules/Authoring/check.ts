@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
+import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
 import { classifyMarketplaceHost, isUnlockedMarketplaceHost } from "../../hostClassify.ts";
 import { resolveTokenForHost } from "../../resolveToken.ts";
 import { MarketplaceAuthoringError } from "./errors.ts";
@@ -15,8 +16,10 @@ import type { CheckMarketplaceAuthoringOptions, CheckMarketplaceAuthoringResult 
 
 async function defaultLsRemote(repoUrl: string, ref?: string): Promise<void> {
   const args = ref ? ["ls-remote", repoUrl, ref] : ["ls-remote", repoUrl, "HEAD"];
+  const host = hostnameFromUrlOrHost(repoUrl) ?? "localhost";
+  const env = buildGitChildEnv({ host, url: repoUrl, env: process.env });
   await new Promise<void>((resolvePromise, reject) => {
-    const child = spawn("git", args, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn("git", args, { stdio: ["ignore", "pipe", "pipe"], env });
     let stderr = "";
     let stdout = "";
     child.stdout?.on("data", (c: Buffer) => {

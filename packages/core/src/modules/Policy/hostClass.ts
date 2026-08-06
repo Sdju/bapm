@@ -1,7 +1,8 @@
 /**
- * Host-class pin (pl-004 / OpenAPM §10.3 spirit): registrable domain (eTLD+1)
- * of the fetch host, or synthetic `local` for filesystem-only leaves.
+ * Host-class pin (pl-004 / OpenAPM §10.3): PSL eTLD+1 via shared Auth classifier,
+ * or synthetic `local` for filesystem-only leaves.
  */
+import { credentialHostClassOf } from "@/modules/Auth";
 
 export type HostClassInput =
   | string
@@ -15,20 +16,16 @@ export type HostClassInput =
 export const IMPLEMENTATION_DEFAULT_HOST = "github.com";
 
 /**
- * Derive host class from a URL / hostname.
- * Common public suffixes: last two labels (github.com, gitlab.com).
- * Multi-part suffixes like `github.io` / `co.uk` are treated as last two labels
- * for P4 pin tests (github.com ≠ gitlab.com).
+ * Derive host class from a URL / hostname using PSL eTLD+1 (unified with Auth).
  */
 export function hostClassOf(input: HostClassInput): string {
   const host = extractHostname(input);
   if (!host) return "local";
   const lower = host.toLowerCase().replace(/\.$/, "");
-  if (!lower || lower === "localhost" || lower === "127.0.0.1") return "local";
-  const parts = lower.split(".").filter(Boolean);
-  if (parts.length <= 1) return lower;
-  // eTLD+1 approximation: last two labels
-  return parts.slice(-2).join(".");
+  if (!lower || lower === "localhost" || lower === "127.0.0.1" || lower === "::1") {
+    return "local";
+  }
+  return credentialHostClassOf(lower);
 }
 
 /** Alias accepted by acceptance helpers. */

@@ -396,6 +396,47 @@ export {
 } from "@/modules/Policy";
 
 export type {
+  ProviderHostClass,
+  RegistryAliasEntry,
+  RegistryAliasMap,
+  ResolvedCredentials,
+  ResolveCredentialsOptions,
+  SameCredentialHostClassOptions,
+  BuildGitChildEnvOptions,
+  FetchWithRedirectAuthDropInit,
+} from "@/modules/Auth";
+
+export {
+  credentialHostClassOf,
+  credentialHostClass,
+  authHostClassOf,
+  hostClassForCredentials,
+  credentialHostClassForHost,
+  sameCredentialHostClass,
+  credentialHostClassesEqual,
+  hostsShareCredentialClass,
+  buildAliasCredentialClassMap,
+  selectProviderClassForHost,
+  effectiveProviderClassForHost,
+  classifyProviderHostClass,
+  resolveCredentialsForHost,
+  resolveAuthCredentialsForHost,
+  resolveHostCredentials,
+  authHeadersForResolved,
+  fetchWithRedirectAuthDrop,
+  fetchRedirectAuthDrop,
+  redirectSafeFetch,
+  fetchWithCredentialHostClassRedirects,
+  buildGitChildEnv,
+  buildHardenedGitEnv,
+  createGitChildEnv,
+  gitChildEnvForHost,
+  mayAttachGitCredential,
+  PLATFORM_TOKEN_ENV_NAMES,
+  collectAdoHosts,
+} from "@/modules/Auth";
+
+export type {
   ExecutableGrantEntry,
   ExecutableGrantSurface,
   ExecutableTrustDecision,

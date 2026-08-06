@@ -14,14 +14,14 @@ limitations:
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
 - ADO / multi-candidate policy cascades are out of scope
 - Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) and hooks/bin/canvas executable gates remain soft (MCP-only trust surface)
-- Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
+- Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
 - 'Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)'
 - 'P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install'
 scope_out:
 - multi-target
 - registry host
 - full ADO cascade
-- host-class AuthResolver
+- residual Auth depth (gh CLI / az bearer / credential-helper / try_with_fallback)
 - soft §10 tar.gz-only container (zip + caps shipped)
 - hooks/bin/canvas executable gates (MCP-only)
 - full Python Mode B port
@@ -722,10 +722,10 @@ requirements:
   class: consumer
   keyword: MUST
   section: '10.3'
-  status: skipped
-  rationale: >-
-    Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3
-    cross-host-class credential scoping / redirect Auth drop not claimed
+  status: active
+  citation: >-
+    packages/core/tests/acceptance/sc-host-class/redirect-auth-drop.test.ts;
+    packages/core/tests/acceptance/sc-host-class/resolve-per-class.test.ts
 - id: req-sc-004
   class: consumer
   keyword: MUST
@@ -739,10 +739,9 @@ requirements:
   class: consumer
   keyword: MUST
   section: '10.3'
-  status: skipped
-  rationale: >-
-    Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not
-    wired on all fetch/git paths — full §10.3 not claimed
+  status: active
+  citation: >-
+    packages/core/tests/acceptance/sc-host-class/credential-host-class.test.ts
 - id: req-sc-006
   class: consumer
   keyword: MUST
@@ -759,10 +758,9 @@ requirements:
   class: consumer
   keyword: SHOULD
   section: '10.3'
-  status: skipped
-  rationale: >-
-    Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse
-    not claimed
+  status: active
+  citation: >-
+    packages/core/tests/acceptance/sc-host-class/git-https-refuse.test.ts
 - id: req-sc-009
   class: consumer
   keyword: MUST
@@ -797,10 +795,9 @@ requirements:
   class: consumer
   keyword: MUST
   section: '10.3'
-  status: skipped
-  rationale: >-
-    Thin marketplace env host unlock shipped; full operator host-class overlap +
-    ambient credential suppress across child processes not claimed
+  status: active
+  citation: >-
+    packages/core/tests/acceptance/sc-host-class/overlap-ambient.test.ts
   notes: configured authority overlap selects one documented host class before credential resolution; only that class's credentials
     reach requests and child processes; explicit non-default ports remain scoped
 - id: req-rg-001

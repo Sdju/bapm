@@ -41,7 +41,8 @@ export type RegistryEntry = {
   url: string;
   /** Allow remote `http://` registry URL (OpenAPM §4.2.3 / sc-006). */
   insecure?: boolean;
-  aliases?: unknown;
+  /** Explicit hostnames that share this registry URL's credential host-class (sc-005). */
+  aliases?: string[];
   [key: string]: unknown;
 };
 
