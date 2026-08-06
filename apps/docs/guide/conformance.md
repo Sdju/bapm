@@ -20,7 +20,8 @@ Do not treat “OpenAPM claimed” as “every APM CLI feature shipped.”
 ## Out of scope (aligned with Limitations)
 
 - **multi-target** adapters beyond cursor (later track)
-- **marketplace** / **plugin** surfaces
 - **registry host** (rg-001 N/A; client-only)
+- **approve/deny** interactive UX and org executable deny-wins fidelity
+- Residual OpenAPM **§10 security-depth** gaps (host-class credential scoping / AuthResolver, soft archive zip vs tar.gz + size/entry caps) — marketplace floor exists and does not by itself satisfy these `sc-*` reqs
 
 Also intentional (not bugs): ∩-pick vs APM first-wins, dual-read branding, OpenAPM-strict YAML anchors.

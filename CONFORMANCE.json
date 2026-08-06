@@ -17,20 +17,22 @@
   "optional_features": [],
   "limitations": [
     "Multi-target adapters beyond cursor are out of scope",
-    "Marketplace / plugin surfaces are out of scope",
     "Registry host / rg-001 not claimed (N/A)",
     "Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names",
     "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
-    "ADO / multi-candidate policy cascades and marketplace/plugin governance UX are out of scope",
+    "ADO / multi-candidate policy cascades are out of scope",
+    "Approve/deny interactive UX and org executable deny-wins fidelity are out of scope",
+    "Residual OpenAPM §10 security-depth gaps (host-class credential scoping / AuthResolver follow-up, soft archive zip vs tar.gz + size/entry caps) remain skipped — marketplace floor exists and does not satisfy these reqs",
     "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)",
     "P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install"
   ],
   "scope_out": [
     "multi-target",
-    "marketplace/plugin",
     "registry host",
     "full ADO cascade",
     "approve/deny UX",
+    "host-class AuthResolver",
+    "soft §10 archive caps",
     "full Python Mode B port"
   ],
   "requirements": [
@@ -875,7 +877,7 @@
       "section": "10.9",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Soft: archive path-escape reject partial (zip extract); full zip-slip + symlink/hardlink + sc-004 caps not claimed"
     },
     {
       "id": "req-sc-003",
@@ -883,7 +885,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Deferred: cross-host-class credential scoping / redirect Auth drop — not shipped (mp-hosts-auth / security follow-up)"
     },
     {
       "id": "req-sc-004",
@@ -891,7 +893,7 @@
       "section": "10.5",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Soft: registry archives are zip; OpenAPM v0.1 tar.gz-only + size/entry caps not claimed"
     },
     {
       "id": "req-sc-005",
@@ -899,7 +901,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Deferred: credential host-class = PSL eTLD+1 / aliases not wired on fetch path"
     },
     {
       "id": "req-sc-006",
@@ -907,7 +909,7 @@
       "section": "4.2.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Deferred: registries.*.insecure + http parse gate not implemented (key currently rejected)"
     },
     {
       "id": "req-sc-007",
@@ -923,7 +925,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "SHOULD deferred: non-https git-HTTP credential refuse not claimed"
     },
     {
       "id": "req-sc-009",
@@ -939,7 +941,7 @@
       "section": "10.13",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Deferred: no interactive approve / user-local grant store (approve UX)"
     },
     {
       "id": "req-sc-011",
@@ -947,7 +949,7 @@
       "section": "10.14",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Deferred: org-policy executable deny-wins + install/audit identical outcome not claimed"
     },
     {
       "id": "req-sc-012",
@@ -955,7 +957,7 @@
       "section": "10.14",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Deferred: required-package vs withheld-executable audit fidelity not claimed"
     },
     {
       "id": "req-sc-013",
@@ -963,7 +965,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: marketplace / plugin / soft extras deferred"
+      "rationale": "Deferred: operator host-class overlap + ambient credential suppress not claimed"
     },
     {
       "id": "req-tg-001",
