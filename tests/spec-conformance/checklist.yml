@@ -13,7 +13,7 @@ limitations:
 - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
 - ADO / multi-candidate policy cascades are out of scope
-- Approve/deny interactive UX and org executable deny-wins fidelity are out of scope
+- Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) and hooks/bin/canvas executable gates remain soft (MCP-only trust surface)
 - Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
 - 'Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)'
 - 'P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install'
@@ -21,9 +21,9 @@ scope_out:
 - multi-target
 - registry host
 - full ADO cascade
-- approve/deny UX
 - host-class AuthResolver
 - soft §10 tar.gz-only container (zip + caps shipped)
+- hooks/bin/canvas executable gates (MCP-only)
 - full Python Mode B port
 requirements:
 - id: req-mf-001
@@ -773,24 +773,26 @@ requirements:
   class: consumer
   keyword: MUST
   section: '10.13'
-  status: skipped
-  rationale: >-
-    Deferred: no interactive approve / user-local grant store (approve UX)
+  status: active
+  citation: >-
+    packages/core/tests/acceptance/sc-executable-governance/user-store.test.ts;
+    packages/cli/tests/acceptance/sc-executable-governance/approve-deny.test.ts
 - id: req-sc-011
   class: consumer
   keyword: MUST
   section: '10.14'
-  status: skipped
-  rationale: >-
-    Deferred: org-policy executable deny-wins + install/audit identical outcome
-    not claimed
+  status: active
+  citation: >-
+    packages/core/tests/acceptance/sc-executable-governance/resolve-deny-wins.test.ts;
+    packages/core/tests/acceptance/sc-executable-governance/policy-executables.test.ts;
+    packages/core/tests/acceptance/sc-executable-governance/install-audit-twin.test.ts
 - id: req-sc-012
   class: consumer
   keyword: MUST
   section: '10.14'
-  status: skipped
-  rationale: >-
-    Deferred: required-package vs withheld-executable audit fidelity not claimed
+  status: active
+  citation: >-
+    packages/core/tests/acceptance/sc-executable-governance/require-presence-withheld.test.ts
 - id: req-sc-013
   class: consumer
   keyword: MUST

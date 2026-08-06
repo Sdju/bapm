@@ -13,11 +13,18 @@ export type PolicyDependencies = {
   require_pinned_constraint?: boolean;
 };
 
+/** Org-policy executables floor (sc-011): deny_all + deny list only for claim. */
+export type PolicyExecutables = {
+  deny_all?: boolean;
+  deny?: string[];
+};
+
 export type PolicyDocument = {
   name: string;
   enforcement: PolicyEnforcement;
   fetch_failure: PolicyEnforcement;
   dependencies?: PolicyDependencies;
+  executables?: PolicyExecutables;
   /** Extension keys `x-*` and other retained top-level fields. */
   [key: string]: unknown;
 };

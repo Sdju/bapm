@@ -26,16 +26,36 @@ export type ExecutableTrustDecision = {
   unapproved?: boolean;
 };
 
+export type GrantSurfaceInput =
+  | ExecutableGrantSurface
+  | { allow?: Record<string, unknown>; deny?: Record<string, unknown>; present?: boolean }
+  | null
+  | undefined;
+
+export type OrgExecutables = {
+  deny_all?: boolean;
+  deny?: string[];
+};
+
 export type EvaluateExecutableTrustOptions = {
   /** Parsed surface or raw `{ allow }` bag accepted by acceptance helpers. */
-  grantSurface?:
-    | ExecutableGrantSurface
-    | { allow?: Record<string, unknown>; deny?: Record<string, unknown>; present?: boolean }
-    | null;
+  grantSurface?: GrantSurfaceInput;
   packageName: string;
   executableType?: string;
   /** Alias for executableType. */
   type?: string;
+};
+
+/** Layered deny-wins options (sc-011): org + project + user. */
+export type ResolveExecutableTrustOptions = {
+  packageName: string;
+  executableType?: string;
+  type?: string;
+  orgExecutables?: OrgExecutables | null;
+  projectSurface?: GrantSurfaceInput;
+  userSurface?: GrantSurfaceInput;
+  /** Back-compat alias → projectSurface. */
+  grantSurface?: GrantSurfaceInput;
 };
 
 export type ParseExecutableGrantsOptions = {
@@ -44,4 +64,32 @@ export type ParseExecutableGrantsOptions = {
   /** Direct grant bag when manifest is not passed. */
   executables?: unknown;
   allowExecutables?: unknown;
+};
+
+/** Lockfile-presence require evaluation (sc-012). */
+export type RequiredPackageTrustOutcome = {
+  outcome?: string;
+  allowed?: boolean;
+  withhold?: boolean;
+  [key: string]: unknown;
+};
+
+export type EvaluateRequiredPackagePresenceOptions = {
+  require?: string[];
+  lockPackageIds?: string[];
+  trustByPackage?: Record<string, RequiredPackageTrustOutcome>;
+};
+
+export type RequiredPackagePresenceDiagnostic = {
+  code: string;
+  message: string;
+  identity?: string;
+};
+
+export type EvaluateRequiredPackagePresenceResult = {
+  ok: boolean;
+  satisfied: boolean;
+  diagnostics: RequiredPackagePresenceDiagnostic[];
+  violations: RequiredPackagePresenceDiagnostic[];
+  codes: string[];
 };

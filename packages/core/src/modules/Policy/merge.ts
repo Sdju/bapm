@@ -5,7 +5,12 @@
  */
 
 import { identityMatchesPattern } from "./match.ts";
-import type { PolicyDependencies, PolicyDocument, PolicyEnforcement } from "./types.ts";
+import type {
+  PolicyDependencies,
+  PolicyDocument,
+  PolicyEnforcement,
+  PolicyExecutables,
+} from "./types.ts";
 
 const ENFORCEMENT_RANK: Record<PolicyEnforcement, number> = {
   off: 0,
@@ -42,6 +47,7 @@ export function mergeDocuments(parent: PolicyDocument, child: PolicyDocument): P
       : (parent.fetch_failure ?? "warn");
 
   const dependencies = mergeDependencies(parent.dependencies, child.dependencies);
+  const executables = mergeExecutables(parent.executables, child.executables);
 
   const document: PolicyDocument = {
     ...parent,
@@ -57,10 +63,37 @@ export function mergeDocuments(parent: PolicyDocument, child: PolicyDocument): P
     delete document.dependencies;
   }
 
+  if (executables) {
+    document.executables = executables;
+  } else {
+    delete document.executables;
+  }
+
   // Leaf name wins; drop extends from effective (resolved).
   delete document.extends;
 
   return document;
+}
+
+/** deny_all OR; deny ∪ (parent order, then child additions). */
+function mergeExecutables(
+  parent?: PolicyExecutables,
+  child?: PolicyExecutables,
+): PolicyExecutables | undefined {
+  if (!parent && !child) return undefined;
+  const out: PolicyExecutables = {};
+
+  const denyAll = parent?.deny_all === true || child?.deny_all === true;
+  if (denyAll || parent?.deny_all === false || child?.deny_all === false) {
+    out.deny_all = denyAll;
+  }
+
+  const deny = mergeUnion(parent?.deny ?? undefined, child?.deny ?? undefined);
+  if (deny !== undefined && deny !== null) {
+    out.deny = deny;
+  }
+
+  return Object.keys(out).length ? out : undefined;
 }
 
 function mergeDependencies(
@@ -169,8 +202,7 @@ function asDoc(value: unknown, label: string): PolicyDocument {
   const raw = value as Record<string, unknown>;
   const name = typeof raw.name === "string" ? raw.name : label;
   const enforcement = coerceEnforcement(raw.enforcement);
-  const fetch_failure =
-    "fetch_failure" in raw ? coerceEnforcement(raw.fetch_failure) : undefined;
+  const fetch_failure = "fetch_failure" in raw ? coerceEnforcement(raw.fetch_failure) : undefined;
   const doc: PolicyDocument = {
     ...raw,
     name,
@@ -179,6 +211,15 @@ function asDoc(value: unknown, label: string): PolicyDocument {
   };
   if (raw.dependencies && typeof raw.dependencies === "object") {
     doc.dependencies = raw.dependencies as PolicyDependencies;
+  }
+  if (raw.executables && typeof raw.executables === "object" && !Array.isArray(raw.executables)) {
+    const ex = raw.executables as Record<string, unknown>;
+    doc.executables = {
+      deny_all: ex.deny_all === true ? true : ex.deny_all === false ? false : undefined,
+      deny: Array.isArray(ex.deny)
+        ? ex.deny.filter((x): x is string => typeof x === "string")
+        : undefined,
+    };
   }
   if (fetch_failure === undefined) {
     // Preserve "unset" for child-override semantics when merging raw objects.

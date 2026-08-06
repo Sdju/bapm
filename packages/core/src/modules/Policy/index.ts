@@ -42,6 +42,7 @@ export type {
   PolicyDependencyInput,
   PolicyDocument,
   PolicyEnforcement,
+  PolicyExecutables,
   PolicyGateOptions,
   PolicyGateResult,
   PolicyViolation,

@@ -3,7 +3,10 @@ import type {
   ExecutableGrantEntry,
   ExecutableGrantSurface,
   ExecutableTrustDecision,
+  GrantSurfaceInput,
+  OrgExecutables,
   ParseExecutableGrantsOptions,
+  ResolveExecutableTrustOptions,
 } from "./types.ts";
 
 /**
@@ -61,28 +64,48 @@ export function parseExecutableGrants(
 }
 
 /**
- * Evaluate whether a package may deploy an executable type (default: mcp).
- * When grant surface is absent → skip (caller decides direct-only / trust-transitive).
- * When present + unapproved → withhold / deny (fail-closed).
+ * Layered deny-wins resolver (sc-011):
+ * org deny_all / org deny → project|user deny → project allow → user allow →
+ * withhold if any grant surface present else skip.
  */
-export function evaluateExecutableTrust(
-  options: EvaluateExecutableTrustOptions,
+export function resolveExecutableTrust(
+  options: ResolveExecutableTrustOptions,
 ): ExecutableTrustDecision {
   const packageName = String(options.packageName ?? "").trim();
   const executableType = String(options.executableType ?? options.type ?? "mcp").toLowerCase();
-  const surface = normalizeSurface(options.grantSurface);
+  const org = normalizeOrg(options.orgExecutables);
+  const project = normalizeSurface(options.projectSurface ?? options.grantSurface);
+  const user = normalizeSurface(options.userSurface);
+  const anySurface = project.present || user.present;
 
-  if (!surface.present) {
+  if (org.deny_all) {
     return {
-      allowed: true,
-      outcome: "skip",
+      allowed: false,
+      outcome: "deny",
       packageName,
       executableType,
-      reason: "no grant surface",
+      reason: `org policy deny_all blocks ${executableType} for "${packageName}"`,
+      withhold: true,
+      unapproved: true,
     };
   }
 
-  if (isDenied(surface.deny[packageName], executableType)) {
+  if (org.deny.includes(packageName)) {
+    return {
+      allowed: false,
+      outcome: "deny",
+      packageName,
+      executableType,
+      reason: `org policy executables.deny blocks "${packageName}" for ${executableType}`,
+      withhold: true,
+      unapproved: true,
+    };
+  }
+
+  if (
+    isDenied(project.deny[packageName], executableType) ||
+    isDenied(user.deny[packageName], executableType)
+  ) {
     return {
       allowed: false,
       outcome: "deny",
@@ -94,13 +117,33 @@ export function evaluateExecutableTrust(
     };
   }
 
-  if (isApproved(surface.allow[packageName], executableType)) {
+  if (isApproved(project.allow[packageName], executableType)) {
     return {
       allowed: true,
       outcome: "allow",
       packageName,
       executableType,
-      reason: `package "${packageName}" approved for ${executableType}`,
+      reason: `package "${packageName}" approved for ${executableType} (project)`,
+    };
+  }
+
+  if (isApproved(user.allow[packageName], executableType)) {
+    return {
+      allowed: true,
+      outcome: "allow",
+      packageName,
+      executableType,
+      reason: `package "${packageName}" approved for ${executableType} (user)`,
+    };
+  }
+
+  if (!anySurface) {
+    return {
+      allowed: true,
+      outcome: "skip",
+      packageName,
+      executableType,
+      reason: "no grant surface",
     };
   }
 
@@ -115,6 +158,25 @@ export function evaluateExecutableTrust(
   };
 }
 
+/** Audit/trust classifier twin — identical to resolveExecutableTrust (sc-011). */
+export const classifyExecutableTrust = resolveExecutableTrust;
+
+/**
+ * Evaluate whether a package may deploy an executable type (default: mcp).
+ * Project-grant-only thin wrapper over `resolveExecutableTrust` (sc-009).
+ */
+export function evaluateExecutableTrust(
+  options: EvaluateExecutableTrustOptions,
+): ExecutableTrustDecision {
+  return resolveExecutableTrust({
+    packageName: options.packageName,
+    executableType: options.executableType ?? options.type,
+    projectSurface: options.grantSurface,
+    userSurface: { present: false, allow: {}, deny: {} },
+    orgExecutables: { deny_all: false, deny: [] },
+  });
+}
+
 /** Alias preferred by acceptance helpers. */
 export const evaluateMcpExecutableTrust = evaluateExecutableTrust;
 /** Alias preferred by design docs. */
@@ -122,9 +184,7 @@ export const gateExecutableMcp = evaluateExecutableTrust;
 /** Alias preferred by acceptance helpers. */
 export const checkExecutableTrust = evaluateExecutableTrust;
 
-function normalizeSurface(
-  raw: EvaluateExecutableTrustOptions["grantSurface"],
-): ExecutableGrantSurface {
+export function normalizeSurface(raw: GrantSurfaceInput): ExecutableGrantSurface {
   if (!raw) return { present: false, allow: {}, deny: {} };
   if ("present" in raw && typeof raw.present === "boolean") {
     return {
@@ -142,6 +202,17 @@ function normalizeSurface(
     };
   }
   return { present: false, allow: {}, deny: {} };
+}
+
+function normalizeOrg(raw: OrgExecutables | null | undefined): {
+  deny_all: boolean;
+  deny: string[];
+} {
+  if (!raw || typeof raw !== "object") return { deny_all: false, deny: [] };
+  const deny = Array.isArray(raw.deny)
+    ? raw.deny.filter((x): x is string => typeof x === "string")
+    : [];
+  return { deny_all: raw.deny_all === true, deny };
 }
 
 function normalizeGrantMap(value: unknown): Record<string, ExecutableGrantEntry> {
@@ -168,7 +239,6 @@ function isApproved(entry: ExecutableGrantEntry | undefined, type: string): bool
   if (!entry) return false;
   if (type in entry) return Boolean(entry[type]);
   if (type === "mcp" && "mcp" in entry) return Boolean(entry.mcp);
-  // Bare `{ mcp: true }` or truthy type key
   return false;
 }
 

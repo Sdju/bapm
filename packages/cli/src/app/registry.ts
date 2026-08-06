@@ -1,7 +1,9 @@
 import {
+  COMMAND_APPROVE,
   COMMAND_AUDIT,
   COMMAND_CACHE,
   COMMAND_COMPILE,
+  COMMAND_DENY,
   COMMAND_DEPS,
   COMMAND_DOCTOR,
   COMMAND_HELP,
@@ -22,9 +24,11 @@ import {
   COMMAND_UPDATE,
   COMMAND_VERSION,
 } from "@/common/constants/commands.ts";
+import { approveCommand } from "@/commands/approve.ts";
 import { auditCommand } from "@/commands/audit.ts";
 import { cacheCommand } from "@/commands/cache.ts";
 import { compileCommand } from "@/commands/compile.ts";
+import { denyCommand } from "@/commands/deny.ts";
 import { depsCommand } from "@/commands/deps.ts";
 import { doctorCommand } from "@/commands/doctor.ts";
 import { findCommand } from "@/commands/find.ts";
@@ -44,9 +48,11 @@ import { selfUpdateCommand } from "@/commands/self-update.ts";
 import { uninstallCommand } from "@/commands/uninstall.ts";
 import { updateCommand } from "@/commands/update.ts";
 import { versionCommand } from "@/commands/version.ts";
+import { approve } from "./init/approve.ts";
 import { audit } from "./init/audit.ts";
 import { cache } from "./init/cache.ts";
 import { compile } from "./init/compile.ts";
+import { deny } from "./init/deny.ts";
 import { deps } from "./init/deps.ts";
 import { doctor } from "./init/doctor.ts";
 import { find } from "./init/find.ts";
@@ -89,6 +95,8 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_COMPILE]: (argv) => compileCommand(argv, compile),
   [COMMAND_CACHE]: (argv) => cacheCommand(argv, cache),
   [COMMAND_POLICY]: (argv) => policyCommand(argv, policy),
+  [COMMAND_APPROVE]: (argv) => approveCommand(argv, approve),
+  [COMMAND_DENY]: (argv) => denyCommand(argv, deny),
   [COMMAND_MARKETPLACE]: (argv) => marketplaceCommand(argv, marketplace),
   [COMMAND_SEARCH]: (argv) => searchCommand(argv, search),
   [COMMAND_FIND]: (argv) => findCommand(argv, find),

@@ -27,7 +27,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | Class | Active | Skipped | N/A |
 |-------|-------:|--------:|----:|
 | Producer | 12 | 0 | 0 |
-| Consumer | 64 | 17 | 0 |
+| Consumer | 67 | 14 | 0 |
 | Governance | 16 | 0 | 0 |
 | Registry | 0 | 0 | 1 |
 
@@ -38,7 +38,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
 - ADO / multi-candidate policy cascades are out of scope
-- Approve/deny interactive UX and org executable deny-wins fidelity are out of scope
+- Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) and hooks/bin/canvas executable gates remain soft (MCP-only trust surface)
 - Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
 - Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)
 - P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install
@@ -48,9 +48,9 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - multi-target
 - registry host
 - full ADO cascade
-- approve/deny UX
 - host-class AuthResolver
 - soft §10 tar.gz-only container (zip + caps shipped)
+- hooks/bin/canvas executable gates (MCP-only)
 - full Python Mode B port
 
 ## Per-requirement coverage
@@ -153,9 +153,9 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-sc-007 | MUST | 10.3 | consumer | active | packages/core/tests/pack/pack-archive.test.ts |
 | req-sc-008 | SHOULD | 10.3 | consumer | skipped |  — Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed |
 | req-sc-009 | MUST | 10.13 | consumer | active | packages/core/tests/extras/public-api.test.ts |
-| req-sc-010 | MUST | 10.13 | consumer | skipped |  — Deferred: no interactive approve / user-local grant store (approve UX) |
-| req-sc-011 | MUST | 10.14 | consumer | skipped |  — Deferred: org-policy executable deny-wins + install/audit identical outcome not claimed |
-| req-sc-012 | MUST | 10.14 | consumer | skipped |  — Deferred: required-package vs withheld-executable audit fidelity not claimed |
+| req-sc-010 | MUST | 10.13 | consumer | active | packages/core/tests/acceptance/sc-executable-governance/user-store.test.ts; packages/cli/tests/acceptance/sc-executable-governance/approve-deny.test.ts |
+| req-sc-011 | MUST | 10.14 | consumer | active | packages/core/tests/acceptance/sc-executable-governance/resolve-deny-wins.test.ts; packages/core/tests/acceptance/sc-executable-governance/policy-executables.test.ts; packages/core/tests/acceptance/sc-executable-governance/install-audit-twin.test.ts |
+| req-sc-012 | MUST | 10.14 | consumer | active | packages/core/tests/acceptance/sc-executable-governance/require-presence-withheld.test.ts |
 | req-sc-013 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed |
 | req-tg-001 | MUST | 8.4 | consumer | active | packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts |
 | req-tg-002 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
@@ -176,9 +176,6 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - **req-sc-004** (skipped): Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)
 - **req-sc-005** (skipped): Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed
 - **req-sc-008** (skipped): Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed
-- **req-sc-010** (skipped): Deferred: no interactive approve / user-local grant store (approve UX)
-- **req-sc-011** (skipped): Deferred: org-policy executable deny-wins + install/audit identical outcome not claimed
-- **req-sc-012** (skipped): Deferred: required-package vs withheld-executable audit fidelity not claimed
 - **req-sc-013** (skipped): Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed
 - **req-tg-002** (skipped): Out of scope for P3: multi-target adapters beyond cursor
 - **req-tg-003** (skipped): Out of scope for P3: multi-target adapters beyond cursor

@@ -5,6 +5,7 @@ import type {
   PolicyDependencies,
   PolicyDocument,
   PolicyEnforcement,
+  PolicyExecutables,
 } from "./types.ts";
 
 const KNOWN_TOP_LEVEL = new Set([
@@ -12,6 +13,7 @@ const KNOWN_TOP_LEVEL = new Set([
   "enforcement",
   "fetch_failure",
   "dependencies",
+  "executables",
   "extends",
   "discovery",
   "mcp",
@@ -69,6 +71,10 @@ export function parsePolicyDocument(input: unknown): ParsePolicyResult {
     document.dependencies = parseDependencies(raw.dependencies);
   }
 
+  if ("executables" in raw && raw.executables !== undefined && raw.executables !== null) {
+    document.executables = parseExecutables(raw.executables);
+  }
+
   return { document, policy: document, warnings };
 }
 
@@ -111,6 +117,44 @@ function coerceEnforcement(
     `Policy "${field}" must be off|warn|block (got ${typeof value})`,
     { path: field },
   );
+}
+
+/**
+ * Parse typed org executables floor. Ignores recommend/enforce/require extras
+ * (retained on raw via spread if present on document; not typed for claim).
+ */
+function parseExecutables(value: unknown): PolicyExecutables {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new PolicyError("POLICY_VALIDATION", 'Policy "executables" must be a mapping/object', {
+      path: "executables",
+    });
+  }
+  const raw = value as Record<string, unknown>;
+  const out: PolicyExecutables = {};
+  if ("deny_all" in raw && raw.deny_all !== undefined && raw.deny_all !== null) {
+    out.deny_all = Boolean(raw.deny_all);
+  }
+  if ("deny" in raw && raw.deny !== undefined && raw.deny !== null) {
+    if (!Array.isArray(raw.deny)) {
+      throw new PolicyError("POLICY_VALIDATION", 'Policy "executables.deny" must be a list', {
+        path: "executables.deny",
+      });
+    }
+    const deny: string[] = [];
+    for (let i = 0; i < raw.deny.length; i++) {
+      const item = raw.deny[i];
+      if (typeof item !== "string") {
+        throw new PolicyError(
+          "POLICY_VALIDATION",
+          `Policy "executables.deny[${i}]" must be a string`,
+          { path: `executables.deny[${i}]` },
+        );
+      }
+      deny.push(item);
+    }
+    out.deny = deny;
+  }
+  return out;
 }
 
 function parseDependencies(value: unknown): PolicyDependencies {

@@ -28,14 +28,24 @@ import {
   resolveDependencyGraph,
   type ResolvedNode,
 } from "@/modules/Resolver";
-import { assertPolicyGateAllows, type PolicyCandidate } from "@/modules/Policy";
+import {
+  assertPolicyGateAllows,
+  runPolicyGate,
+  type PolicyCandidate,
+  type PolicyExecutables,
+} from "@/modules/Policy";
 import {
   discoverPrimitives,
   resolvePrimitiveConflicts,
   type AttributedPrimitive,
 } from "@/modules/Primitives";
 import { extractPackArchive } from "@/modules/Pack";
-import { evaluateExecutableTrust, parseExecutableGrants } from "@/modules/ExecutableTrust";
+import {
+  loadUserExecutableGrants,
+  parseExecutableGrants,
+  resolveExecutableTrust,
+  userGrantsToSurface,
+} from "@/modules/ExecutableTrust";
 import { applyMcpInventoryToLock, collectMcpServers } from "@/modules/Mcp";
 import {
   applyDeployedHashesToLock,
@@ -392,6 +402,10 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       lockPath,
       previousLockFilename: previousLock?.sourceFilename,
       diagnostics: mcpDiagnostics,
+      configDir: options.configDir ?? options.marketplaceConfigDir,
+      policyPath,
+      noPolicy,
+      policyPorts,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
     if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
@@ -532,8 +546,7 @@ async function runDryRunPreview(args: {
           typeof entry === "object" && entry && "path" in entry
             ? String((entry as ObjectDependency).path)
             : undefined,
-        source:
-          typeof entry === "object" && entry && "path" in entry ? "local" : undefined,
+        source: typeof entry === "object" && entry && "path" in entry ? "local" : undefined,
       });
     }
     for (const ref of args.packageRefs) {
@@ -604,6 +617,20 @@ async function deployMcpAfterPolicy(args: {
   lockPath?: string;
   previousLockFilename?: string;
   diagnostics: unknown[];
+  configDir?: string;
+  policyPath?: string;
+  noPolicy?: boolean;
+  policyPorts?: {
+    policyProviders?: string[];
+    providers?: string[];
+    listGitRemotes?: RunInstallOptions["listGitRemotes"];
+    remotes?: RunInstallOptions["remotes"];
+    fetchPolicyUrl?: RunInstallOptions["fetchPolicyUrl"];
+    httpGet?: RunInstallOptions["httpGet"];
+    fetchAncestor?: RunInstallOptions["fetchAncestor"];
+    defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
+    implementationDefaultHost?: string;
+  };
 }): Promise<{
   lockPath?: string;
   lockDocument?: LockfileDocument;
@@ -611,15 +638,32 @@ async function deployMcpAfterPolicy(args: {
   withholdMessage?: string;
   withheldPackages: string[];
 }> {
-  const grantSurface = parseExecutableGrants({
+  const projectSurface = parseExecutableGrants({
     manifest: args.rootManifest as Record<string, unknown>,
   });
+  const userLoaded = loadUserExecutableGrants({
+    configDir: args.configDir,
+    configRoot: args.configDir,
+  });
+  const userSurface = userGrantsToSurface(userLoaded);
+  const combinedSurface = {
+    present: projectSurface.present || userSurface.present,
+    allow: { ...projectSurface.allow, ...userSurface.allow },
+    deny: { ...projectSurface.deny, ...userSurface.deny },
+  };
+  const orgExecutables = loadOrgExecutablesForTrust({
+    cwd: args.cwd,
+    policyPath: args.policyPath,
+    noPolicy: args.noPolicy === true,
+    policyPorts: args.policyPorts,
+  });
+
   const collected = collectMcpServers({
     cwd: args.cwd,
     rootManifest: args.rootManifest,
     nodes: args.nodes,
     trustTransitiveMcp: args.trustTransitiveMcp,
-    grantSurface,
+    grantSurface: combinedSurface,
   });
 
   if (collected.servers.length === 0) {
@@ -640,10 +684,12 @@ async function deployMcpAfterPolicy(args: {
       approved.push(server);
       continue;
     }
-    const decision = evaluateExecutableTrust({
-      grantSurface,
+    const decision = resolveExecutableTrust({
       packageName: server.packageName,
       executableType: "mcp",
+      orgExecutables,
+      projectSurface,
+      userSurface,
     });
     if (decision.outcome === "skip") {
       // No grant surface: only reach here for dep MCP when trust-transitive is on.
@@ -662,11 +708,13 @@ async function deployMcpAfterPolicy(args: {
       server: server.name,
       withhold: true,
       unapproved: true,
+      outcome: decision.outcome,
     });
   }
 
   const uniqueWithheld = [...new Set(withheldPackages)];
-  const withholdFatal = grantSurface.present && uniqueWithheld.length > 0;
+  const orgDenyActive = orgExecutables.deny_all === true || (orgExecutables.deny?.length ?? 0) > 0;
+  const withholdFatal = uniqueWithheld.length > 0 && (combinedSurface.present || orgDenyActive);
   const withholdMessage = withholdFatal
     ? `MCP withheld: unapproved dependency executables (${uniqueWithheld.join(", ")}). Add to executables.allow / allowExecutables or remove MCP.`
     : undefined;
@@ -756,6 +804,54 @@ async function deployMcpAfterPolicy(args: {
     withholdMessage,
     withheldPackages: uniqueWithheld,
   };
+}
+
+/** Load effective org `executables` for MCP trust (best-effort; absent → empty). */
+function loadOrgExecutablesForTrust(args: {
+  cwd: string;
+  policyPath?: string;
+  noPolicy: boolean;
+  policyPorts?: {
+    policyProviders?: string[];
+    providers?: string[];
+    listGitRemotes?: RunInstallOptions["listGitRemotes"];
+    remotes?: RunInstallOptions["remotes"];
+    fetchPolicyUrl?: RunInstallOptions["fetchPolicyUrl"];
+    httpGet?: RunInstallOptions["httpGet"];
+    fetchAncestor?: RunInstallOptions["fetchAncestor"];
+    defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
+    implementationDefaultHost?: string;
+  };
+}): PolicyExecutables {
+  if (args.noPolicy) return { deny_all: false, deny: [] };
+  try {
+    const gate = runPolicyGate({
+      cwd: args.cwd,
+      policyPath: args.policyPath,
+      policy: args.policyPath,
+      noPolicy: args.noPolicy,
+      providers: args.policyPorts?.providers ?? args.policyPorts?.policyProviders,
+      policyProviders: args.policyPorts?.policyProviders ?? args.policyPorts?.providers,
+      listGitRemotes: args.policyPorts?.listGitRemotes,
+      remotes: args.policyPorts?.remotes,
+      fetchPolicyUrl: args.policyPorts?.fetchPolicyUrl,
+      httpGet: args.policyPorts?.httpGet,
+      fetchAncestor: args.policyPorts?.fetchAncestor as never,
+      defaultFetchFailure: args.policyPorts?.defaultFetchFailure,
+      implementationDefaultHost: args.policyPorts?.implementationDefaultHost,
+      candidates: [],
+    });
+    if (gate.skipped || !gate.document?.executables) {
+      return { deny_all: false, deny: [] };
+    }
+    return {
+      deny_all: gate.document.executables.deny_all === true,
+      deny: Array.isArray(gate.document.executables.deny) ? gate.document.executables.deny : [],
+    };
+  } catch {
+    // Policy gate failures are handled on the install policy path; trust floor soft-falls back.
+    return { deny_all: false, deny: [] };
+  }
 }
 
 /** Alias preferred by design docs. */
