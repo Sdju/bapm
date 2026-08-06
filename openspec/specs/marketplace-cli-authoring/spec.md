@@ -40,7 +40,7 @@ emit or multi-host AuthResolver.
 - **THEN** exit code MUST be non-zero and the package MUST remain
 
 ### Requirement: marketplace check with offline mode
-`bapm marketplace check` MUST load the authoring config and validate schema. With `--offline`, check MUST NOT perform network reachability probes (schema-only, or schema plus cached refs if a cache exists). Without `--offline`, check MUST attempt online reachability for default-host github `owner/repo` entries via thin ambient `git ls-remote`. Local `./` entries MUST be schema-only. For non-github remote forms (`host.tld/…`, gitlab HTTPS, etc.) without hosts-auth support, check MUST NOT hard-require AuthResolver; it MUST either emit a clear unsupported-online-check warning and continue schema validation, or treat those entries as schema-only with an explicit message — and MUST document the chosen behavior in help or error text. Any schema or failed required probe MUST yield non-zero exit (exit semantics SHOULD mirror APM-like missing=1 / validation=2 when practical).
+`bapm marketplace check` MUST load the authoring config and validate schema. With `--offline`, check MUST NOT perform network reachability probes (schema-only, or schema plus cached refs if a cache exists). Without `--offline`, check MUST attempt online reachability for default-host github `owner/repo` entries via thin ambient `git ls-remote`. Local `./` entries MUST be schema-only. For unlocked non-github remotes (GitHub enterprise, gitlab, ado) when a matching thin env token is available or ambient git can reach the host, check MUST attempt a thin online probe using that class’s credentials or ambient git — MUST NOT hard-require a full AuthResolver. When no token is available and ambient reachability fails or is unsupported, check MUST fail-soft: emit a clear warning (or schema-only message) and continue schema validation without requiring AuthResolver — documented in help or error text. Any schema or failed **required** probe MUST yield non-zero exit (exit semantics SHOULD mirror APM-like missing=1 / validation=2 when practical).
 
 #### Scenario: check --offline passes valid config
 - **WHEN** `runCli(["marketplace", "check", "--offline"])` runs against a valid `marketplace:` with a local or unverified remote entry
@@ -53,6 +53,10 @@ emit or multi-host AuthResolver.
 #### Scenario: online check probes github shorthand
 - **WHEN** check runs without `--offline` against a package with source `owner/repo` on the default github host
 - **THEN** the command MUST attempt `git ls-remote` (or equivalent thin probe) for that entry before reporting success
+
+#### Scenario: online check uses thin auth for unlocked gitlab when token present
+- **WHEN** check runs without `--offline` against a gitlab HTTPS package source and a GitLab-class env token is set
+- **THEN** the command MUST attempt an online probe that can use that token (or ambient git with token-backed env) and MUST NOT refuse solely for “hosts-auth unsupported”
 
 ### Requirement: Authoring help section
 Marketplace group help and related help text MUST list Authoring subcommands (`init`, `package`, `check`, and `migrate` when shipped) separately from Consumer subcommands. Help MUST NOT claim that pack host marketplace.json emit is unavailable when pack marketplace outputs are shipped. Help MAY direct authors to `bapm pack` for Claude/Codex host artifact emission. Help MUST NOT advertise a restored `marketplace build` verb.

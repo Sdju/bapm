@@ -29,7 +29,7 @@ The CLI MUST register a top-level `marketplace` command that accepts consumer su
 - **THEN** the command MUST still run the existing consumer validate workflow (not authoring schema check of cwd `bapm.yml`)
 
 ### Requirement: marketplace add SOURCE
-`bapm marketplace add SOURCE` MUST accept SOURCE forms: `OWNER/REPO` shorthand (default host github.com), HTTPS github repository URL, HTTPS URL ending in `/marketplace.json`, and local path or `file://` URI. Flags `--name`, `--ref`, and `--host` (host for shorthand) MUST be accepted; alias/`--name` MUST match `[a-zA-Z0-9._-]+`. Before persisting, add MUST probe-fetch the marketplace (force refresh) and MUST refuse unsupported kinds (non-github remotes that are not direct url/local). On success it MUST write the source into `~/.bapm/marketplaces.json` (replace same name case-insensitively). Combining URL `#ref` with `--ref` MUST fail closed.
+`bapm marketplace add SOURCE` MUST accept SOURCE forms: `OWNER/REPO` shorthand (default host github.com), HTTPS github / GitHub-enterprise / gitlab / ado repository URLs for unlocked kinds, HTTPS URL ending in `/marketplace.json`, and local path or `file://` URI. Flags `--name`, `--ref`, and `--host` (host for shorthand) MUST be accepted; `--host` MUST accept unlocked hosts including `github.com`, `*.ghe.com`, `GITHUB_HOST` GHES hostnames, gitlab.com / GitLab allowlist hosts, and ADO hostnames. Alias/`--name` MUST match `[a-zA-Z0-9._-]+`. Before persisting, add MUST probe-fetch the marketplace (force refresh) and MUST refuse generic `git` kind and GHES↔GitLab overlap with a clear error. On success it MUST write the source into `~/.bapm/marketplaces.json` (replace same name case-insensitively). Combining URL `#ref` with `--ref` MUST fail closed. Help and error text MUST NOT claim that only github.com remotes are supported.
 
 #### Scenario: Add local marketplace.json succeeds
 - **WHEN** `runCli(["marketplace", "add", "<path-to-dir-or-file>", "--name", "local-mp"])` runs against a valid local fixture
@@ -39,9 +39,17 @@ The CLI MUST register a top-level `marketplace` command that accepts consumer su
 - **WHEN** add is invoked with `--name` containing characters outside `[a-zA-Z0-9._-]+`
 - **THEN** exit code MUST be non-zero and the registry MUST be unchanged
 
-#### Scenario: Unsupported remote host refused at add
-- **WHEN** add is given a gitlab.com HTTPS git URL (or other non-v1 host kind)
+#### Scenario: Generic git host refused at add
+- **WHEN** add is given an HTTPS git URL whose host classifies as generic `git` (not github/gitlab/ado/enterprise allowlists)
 - **THEN** exit code MUST be non-zero with a clear unsupported-host/kind message and no registry write
+
+#### Scenario: Gitlab marketplace add accepted for probe
+- **WHEN** add is given a gitlab.com HTTPS repository URL (or shorthand with gitlab `--host`) and the probe transport can return a valid marketplace.json
+- **THEN** exit code MUST be `0` on successful probe and the registry MUST contain the new entry
+
+#### Scenario: Enterprise --host accepted
+- **WHEN** add is invoked with `OWNER/REPO` and `--host` set to a `*.ghe.com` host or configured `GITHUB_HOST`
+- **THEN** the CLI MUST NOT reject solely because the host is not github.com (probe/fetch rules still apply)
 
 ### Requirement: marketplace list browse update remove
 `list` MUST print registered marketplaces from the local registry (empty registry → clear empty/hint message, exit 0). `browse NAME` MUST fetch the named marketplace (may force refresh) and list its plugins (name and short description at minimum). `update [NAME]` MUST clear cache and refetch; when NAME is omitted it MUST refresh all registered marketplaces. `remove NAME` MUST require confirmation or `-y`/`--yes`; non-interactive sessions without `-y` MUST fail closed; on success it MUST remove the registry entry and clear that source's cache.

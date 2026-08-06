@@ -7,7 +7,7 @@ Defines the core producer that turns project `marketplace:` authoring config int
 ## Requirements
 
 ### Requirement: Resolve authoring packages to concrete refs
-When emitting marketplace outputs, the system MUST load the project authoring config (same detect/load rules as authoring) and resolve each package entry to a concrete resolved form before mapping. Local sources beginning with `./` MUST pass through as path strings without network access. Remote default-host GitHub `owner/repo` entries MUST resolve via thin ambient `git ls-remote` (or equivalent) to a concrete `ref` and `sha`, respecting explicit `ref`, or `version` ranges with `build.tagPattern` / per-entry `tag_pattern`. Non-github remotes without hosts-auth support MUST fail closed with an actionable error (or an explicit documented skip policy that still fails the build when no concrete ref/sha can be produced). Resolve MUST NOT silently emit an empty `plugins` list when packages were configured.
+When emitting marketplace outputs, the system MUST load the project authoring config (same detect/load rules as authoring) and resolve each package entry to a concrete resolved form before mapping. Local sources beginning with `./` MUST pass through as path strings without network access. Remote default-host GitHub `owner/repo` entries MUST resolve via thin ambient `git ls-remote` (or equivalent) to a concrete `ref` and `sha`, respecting explicit `ref`, or `version` ranges with `build.tagPattern` / per-entry `tag_pattern`. Unlocked non-github remotes (GitHub enterprise, gitlab, ado) MUST resolve using thin env tokens and/or ambient git when available. When a remote cannot produce a concrete ref/sha (no token, unreachable host, or generic `git` kind still refused), resolve MUST fail closed with an actionable error. Resolve MUST NOT silently emit an empty `plugins` list when packages were configured.
 
 #### Scenario: Local package skips network
 - **WHEN** pack marketplace emit runs for a package with `source: ./plugins/demo`
@@ -20,6 +20,10 @@ When emitting marketplace outputs, the system MUST load the project authoring co
 #### Scenario: Unresolvable remote fails closed
 - **WHEN** resolve cannot obtain a concrete ref/sha for a configured remote package (including offline without usable cache)
 - **THEN** the pack marketplace path MUST exit non-zero with an actionable error and MUST NOT write a host marketplace.json that omits that package silently
+
+#### Scenario: Unlocked gitlab remote resolves with thin token
+- **WHEN** pack marketplace emit runs for a gitlab remote package and a GitLab-class env token enables `git ls-remote` (or equivalent) to succeed
+- **THEN** resolve MUST produce a concrete ref/sha and MUST NOT fail solely because hosts-auth was previously out of scope
 
 ### Requirement: Output profiles and path jail
 The system MUST support at least Claude and Codex output profiles. Default write paths MUST be Claude → `.claude-plugin/marketplace.json` and Codex → `.agents/plugins/marketplace.json` relative to the project root. When `marketplace.outputs.<format>.path` is set, or when CLI `--marketplace-path FORMAT=PATH` overrides are supplied, the effective path MUST be used. Effective paths MUST be confined under the project root (path jail); escapes MUST fail closed. Boolean or map-shaped `outputs` entries that disable a format MUST exclude that format from the emit set unless an explicit CLI filter re-enables only allowed formats.
