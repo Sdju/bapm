@@ -10,7 +10,7 @@ import {
   runInProject,
   type TempProject,
   writeClaudeLocalAuthoring,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs CLI --marketplace filter", () => {
   let project: TempProject | undefined;

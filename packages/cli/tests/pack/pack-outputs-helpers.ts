@@ -1,5 +1,5 @@
 /**
- * CLI helpers for mp-pack-outputs acceptance (RED).
+ * CLI helpers for pack marketplace outputs suite.
  */
 import {
   existsSync,
@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { expect } from "vite-plus/test";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; root: string; cleanup: () => void };
 

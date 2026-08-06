@@ -12,7 +12,7 @@ import {
   validLocalAuthoringYml,
   writeBapmYml,
   writeText,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs unit dry-run / filter", () => {
   let project: TempProject | undefined;

@@ -12,7 +12,7 @@ import {
   writeClaudeLocalAuthoring,
   writeRemoteGithubAuthoring,
   writeText,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs CLI fail-closed resolve / path jail", () => {
   let project: TempProject | undefined;

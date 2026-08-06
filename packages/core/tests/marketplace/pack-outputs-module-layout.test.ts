@@ -10,7 +10,7 @@ import {
   marketplaceSrc,
   readSrc,
   srcRoot,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs core Marketplace builder layout", () => {
   test("Marketplace module directory exists", () => {

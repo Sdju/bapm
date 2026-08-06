@@ -11,7 +11,7 @@ import {
   validLocalAuthoringYml,
   writeBapmYml,
   writeText,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs unit profiles / path jail", () => {
   let project: TempProject | undefined;

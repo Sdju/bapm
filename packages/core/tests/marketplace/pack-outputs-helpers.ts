@@ -1,5 +1,5 @@
 /**
- * Core helpers for mp-pack-outputs acceptance (RED).
+ * Core helpers for marketplace pack-outputs suite.
  * Soft-resolve Marketplace builder / pack-outputs APIs from @bapm/core.
  */
 import * as core from "@bapm/core";
@@ -18,7 +18,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const srcRoot = join(coreRoot, "src");
 export const marketplaceSrc = join(srcRoot, "modules", "Marketplace");
 

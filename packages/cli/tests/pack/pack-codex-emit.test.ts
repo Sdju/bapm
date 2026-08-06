@@ -13,7 +13,7 @@ import {
   runInProject,
   type TempProject,
   writeCodexLocalAuthoring,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs CLI Codex emit", () => {
   let project: TempProject | undefined;

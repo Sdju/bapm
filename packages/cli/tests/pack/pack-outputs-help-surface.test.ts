@@ -9,7 +9,7 @@ import {
   type TempProject,
   withCapturedIo,
   runCli,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs CLI help surface", () => {
   let project: TempProject | undefined;

@@ -9,7 +9,7 @@ import {
   writeBapmYml,
   writeText,
   join,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
 describe("mp-pack-outputs unit resolve", () => {
   let project: TempProject | undefined;

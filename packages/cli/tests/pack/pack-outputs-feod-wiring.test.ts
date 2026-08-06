@@ -10,9 +10,9 @@ import {
   expectKnownCommand,
   runInProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./pack-outputs-helpers.ts";
 
-const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const srcRoot = join(cliRoot, "src");
 
 function readSrc(rel: string): string {
