@@ -24,11 +24,15 @@ The system MUST represent a registered marketplace as an immutable source with a
 - **THEN** derived kind MUST be `local`
 
 ### Requirement: MarketplacePlugin and MarketplaceManifest
-The system MUST represent each plugin with `name`, `source` (string or structured object), optional `description`, `version`, `tags`, optional `registry` string, and optional `tag_pattern`. A manifest MUST hold marketplace `name`, ordered plugins, and optional metadata fields (`owner_name`, `description`, `plugin_root`). Manifest MUST support exact case-insensitive plugin lookup by name. Search-by-query helpers MAY exist but MUST NOT be required by consumer CLI in this change.
+The system MUST represent each plugin with `name`, `source` (string or structured object), optional `description`, `version`, `tags`, optional `registry` string, and optional `tag_pattern`. A manifest MUST hold marketplace `name`, ordered plugins, and optional metadata fields (`owner_name`, `description`, `plugin_root`). Manifest MUST support exact case-insensitive plugin lookup by name. Manifest MUST expose search-by-query helpers that match against plugin `name`, `description`, and `tags` (case-insensitive substring), used by top-level search and resolve wiring.
 
 #### Scenario: Find plugin by name case-insensitive
 - **WHEN** a manifest contains a plugin named `Foo` and a caller looks up `foo`
 - **THEN** the lookup MUST return that plugin entry
+
+#### Scenario: Search matches description and tags
+- **WHEN** a manifest plugin has description or tags containing query text
+- **THEN** manifest search MUST include that plugin in the result set
 
 ### Requirement: Parse Copilot and Claude marketplace.json
 Parsing MUST accept Copilot-style plugin entries (`repository` as `owner/repo`, optional `ref`) and Claude-style entries (`source` as relative string or typed object). Entries with npm source type MUST be skipped. Plugins lacking both `source` and `repository` MUST be skipped. A non-empty `registry` field MUST be parsed as a string; malformed `registry` (non-string / empty when present) MUST fail closed for that parse. When `registry` is set, a missing version selector MUST fail closed. Parsed `registry` MUST be retained on the plugin model even though install routing is out of scope for this change.

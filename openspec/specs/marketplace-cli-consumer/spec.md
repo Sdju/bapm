@@ -4,12 +4,12 @@
 
 Defines the consumer-facing `bapm marketplace` CLI surface for registering,
 listing, browsing, updating, removing, and thinly validating marketplaces
-without search, install, or authoring commands.
+without authoring commands. Top-level `search` is owned by `cli-search`.
 
 ## Requirements
 
 ### Requirement: Consumer marketplace command group
-The CLI MUST register a top-level `marketplace` command that accepts subcommands `add`, `list`, `browse`, `update`, `remove`, and `validate`. Help for the group and top-level help MUST list `marketplace` as a consumer command. Unknown marketplace subcommands and unknown flags MUST fail closed with non-zero exit and a clear error. Authoring subcommands (`init`, `migrate`, `check`, `outdated`, `audit`, `package`, `build`) and `search` MUST NOT be registered in this change.
+The CLI MUST register a top-level `marketplace` command that accepts subcommands `add`, `list`, `browse`, `update`, `remove`, and `validate`. Help for the group and top-level help MUST list `marketplace` as a consumer command. Unknown marketplace subcommands and unknown flags MUST fail closed with non-zero exit and a clear error. Authoring subcommands (`init`, `migrate`, `check`, `outdated`, `audit`, `package`, `build`) MUST NOT be registered. Nested `marketplace search` MAY remain unregistered in this change; top-level `search` is owned by the `cli-search` capability.
 
 #### Scenario: Top-level help mentions marketplace
 - **WHEN** `runCli(["help"])` is invoked
@@ -18,6 +18,10 @@ The CLI MUST register a top-level `marketplace` command that accepts subcommands
 #### Scenario: Unknown marketplace subcommand fails closed
 - **WHEN** `runCli(["marketplace", "init"])` (or any unregistered subcommand) is invoked
 - **THEN** the exit code MUST be non-zero and no registry mutation MUST occur
+
+#### Scenario: Authoring subcommands remain absent
+- **WHEN** `runCli(["marketplace", "package"])` (or another authoring token) is invoked
+- **THEN** the exit code MUST be non-zero and no authoring workflow MUST run
 
 ### Requirement: marketplace add SOURCE
 `bapm marketplace add SOURCE` MUST accept SOURCE forms: `OWNER/REPO` shorthand (default host github.com), HTTPS github repository URL, HTTPS URL ending in `/marketplace.json`, and local path or `file://` URI. Flags `--name`, `--ref`, and `--host` (host for shorthand) MUST be accepted; alias/`--name` MUST match `[a-zA-Z0-9._-]+`. Before persisting, add MUST probe-fetch the marketplace (force refresh) and MUST refuse unsupported kinds (non-github remotes that are not direct url/local). On success it MUST write the source into `~/.bapm/marketplaces.json` (replace same name case-insensitively). Combining URL `#ref` with `--ref` MUST fail closed.

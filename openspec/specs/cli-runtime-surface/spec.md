@@ -533,7 +533,7 @@ The `doctor` command MUST accept `-v` and `--verbose` without treating them as u
 - **THEN** the exit code MUST be `0` and help text MUST mention `-v` / `--verbose`
 
 ### Requirement: Marketplace command is registered in CLI dispatch
-Invoking `marketplace` MUST be recognized by CLI dispatch and MUST route through the FEOD marketplace command → module path. The command MUST NOT be treated as an unknown top-level command. Top-level help (`help` / default) MUST list `marketplace` among available commands. Resolver/install of `NAME@MARKETPLACE` and top-level `search` MUST remain unavailable in this change.
+Invoking `marketplace` MUST be recognized by CLI dispatch and MUST route through the FEOD marketplace command → module path. The command MUST NOT be treated as an unknown top-level command. Top-level help (`help` / default) MUST list `marketplace` among available commands. Top-level `search` and marketplace-ref install are specified by `cli-search` and `install-pipeline` for this change.
 
 #### Scenario: marketplace is not an unknown command
 - **WHEN** `runCli(["marketplace", "list"])` is called
@@ -543,6 +543,13 @@ Invoking `marketplace` MUST be recognized by CLI dispatch and MUST route through
 - **WHEN** `runCli(["help"])` is called
 - **THEN** stdout MUST mention `marketplace` and the return code MUST be `0`
 
-#### Scenario: search remains unregistered
-- **WHEN** `runCli(["search", "foo"])` is called
-- **THEN** the CLI MUST treat `search` as an unknown command (non-zero exit) in this change
+### Requirement: Search command is registered in CLI dispatch
+Invoking `search` MUST be recognized by CLI dispatch and MUST route through the FEOD search command → module path. The command MUST NOT be treated as an unknown top-level command. Top-level help (`help` / default) MUST list `search` among available commands.
+
+#### Scenario: search is not an unknown command
+- **WHEN** `runCli(["search", "--help"])` is called
+- **THEN** the CLI MUST NOT treat `search` as an unknown command and exit MUST be `0`
+
+#### Scenario: help lists search
+- **WHEN** `runCli(["help"])` is called
+- **THEN** stdout MUST mention `search` and the return code MUST be `0`
