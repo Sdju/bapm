@@ -1,14 +1,20 @@
 import {
   addMarketplace,
+  addMarketplacePackage,
   autoDetectMarketplacePath,
+  checkMarketplaceAuthoring,
   clearMarketplaceCache,
   createMarketplaceSource,
   fetchMarketplace,
   getMarketplace,
+  initMarketplaceAuthoring,
   listMarketplaces,
   MarketplaceFetchError,
   MarketplaceNotFoundError,
+  migrateMarketplaceYml,
   removeMarketplace,
+  removeMarketplacePackage,
+  setMarketplacePackage,
   urlNamesRemoteManifest,
   validateMarketplace,
   type MarketplaceSource,
@@ -19,7 +25,19 @@ import { createInterface } from "node:readline";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 const ALIAS_RE = /^[a-zA-Z0-9._-]+$/;
-const SUPPORTED_SUBCOMMANDS = new Set(["add", "list", "browse", "update", "remove", "validate"]);
+const SUPPORTED_SUBCOMMANDS = new Set([
+  "add",
+  "list",
+  "browse",
+  "update",
+  "remove",
+  "validate",
+  "init",
+  "package",
+  "check",
+  "migrate",
+]);
+const PACKAGE_ACTIONS = new Set(["add", "set", "remove"]);
 
 export type MarketplaceCliDeps = LifecycleCliDeps;
 
@@ -213,26 +231,41 @@ function parseMarketplaceSource(source: string, hostFlag: string | null): Parsed
 }
 
 export function formatMarketplaceHelp(deps: MarketplaceCliDeps): string {
-  return `${deps.name} marketplace — Register and browse consumer marketplaces
+  return `${deps.name} marketplace — Consumer registry and authoring for ${deps.manifestFile}
 
 Usage:
   bapm marketplace <subcommand> [options]
 
-Subcommands:
+Consumer:
   add SOURCE       Register a marketplace (probe-fetch before persist)
   list             List registered marketplaces
   browse NAME      List plugins in a registered marketplace
   update [NAME]    Clear cache and refetch (all if NAME omitted)
   remove NAME      Remove a registered marketplace (-y required non-interactive)
-  validate NAME    Thin schema + duplicate-name checks
+  validate NAME    Thin schema + duplicate-name checks (consumer marketplace.json)
 
-Options (add):
+Authoring:
+  init             Scaffold marketplace: block in ${deps.manifestFile}
+  package add|set|remove
+                   Edit package entries in marketplace:
+  check            Validate authoring schema (+ online github ls-remote)
+  migrate          Fold legacy marketplace.yml into ${deps.manifestFile}
+
+Authoring options:
+  init:    --force  --owner <name>  --name <project>
+  package: --name  --version  --ref  --subdir  --tag-pattern  --tags
+           --include-prerelease  --no-verify  (-y for remove)
+  check:   --offline
+  migrate: --dry-run  --force / -y
+
+Consumer add options:
   --name, -n <alias>   Display name (pattern [a-zA-Z0-9._-]+)
   --ref, -r <ref>      Git ref (default: main)
   --host <fqdn>        Host for OWNER/REPO shorthand (github.com only in v1)
   -h, --help           Show this help
 
-Hosts beyond github/url/local and ref-checking are out of scope for this release.
+Not shipped in this release: pack host outputs, outdated, audit.
+Use check --offline for schema-only validation.
 `;
 }
 
@@ -578,6 +611,289 @@ async function runValidate(deps: MarketplaceCliDeps, argv: string[]): Promise<Li
   }
 }
 
+async function runInit(
+  deps: MarketplaceCliDeps,
+  argv: string[],
+  cwd: string,
+): Promise<LifecycleResult> {
+  let force = false;
+  let owner: string | undefined;
+  let name: string | undefined;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if (arg === "--help" || arg === "-h") {
+      console.log(`Usage: bapm marketplace init [--force] [--owner NAME] [--name PROJECT]
+
+Scaffold a marketplace: block in ${deps.manifestFile}. Creates a stub manifest
+when missing. Does not emit host marketplace.json artifacts.
+`);
+      return { ok: true, exitCode: 0 };
+    }
+    if (arg === "--force") {
+      force = true;
+      continue;
+    }
+    if (arg === "--owner") {
+      owner = argv[++i];
+      if (!owner) return fail(deps, "Missing value for --owner");
+      continue;
+    }
+    if (arg === "--name") {
+      name = argv[++i];
+      if (!name) return fail(deps, "Missing value for --name");
+      continue;
+    }
+    if (arg.startsWith("-")) return fail(deps, `Unknown marketplace init flag: ${arg}`);
+    return fail(deps, `Unexpected argument for marketplace init: ${arg}`);
+  }
+
+  const result = initMarketplaceAuthoring({ cwd, owner, name, force });
+  if (!result.ok) return fail(deps, result.error);
+  console.log(
+    result.createdManifest
+      ? `Created ${deps.manifestFile} with marketplace: block (owner=${owner ?? "acme-org"}).`
+      : `Wrote marketplace: block to ${deps.manifestFile} (owner=${owner ?? "acme-org"}).`,
+  );
+  console.log(
+    "Tip: generated host marketplace.json paths (future pack) often should not be gitignored.",
+  );
+  return { ok: true, exitCode: 0 };
+}
+
+async function runPackage(
+  deps: MarketplaceCliDeps,
+  argv: string[],
+  cwd: string,
+): Promise<LifecycleResult> {
+  if (argv.length === 0 || argv[0] === "--help" || argv[0] === "-h") {
+    console.log(`Usage:
+  bapm marketplace package add SOURCE [--name NAME] [--version V | --ref REF] [options]
+  bapm marketplace package set NAME [--source S] [--version V | --ref REF] [options]
+  bapm marketplace package remove NAME -y
+
+Options: --subdir --tag-pattern --tags --include-prerelease --no-verify
+`);
+    return { ok: true, exitCode: 0 };
+  }
+  const action = argv[0]!;
+  if (!PACKAGE_ACTIONS.has(action)) {
+    return fail(
+      deps,
+      `Unknown marketplace package action '${action}' (expected add|set|remove)`,
+    );
+  }
+  const rest = argv.slice(1);
+
+  if (action === "remove") {
+    let yes = false;
+    const positional: string[] = [];
+    for (let i = 0; i < rest.length; i++) {
+      const arg = rest[i]!;
+      if (arg === "-y" || arg === "--yes") {
+        yes = true;
+        continue;
+      }
+      if (arg.startsWith("-")) return fail(deps, `Unknown package remove flag: ${arg}`);
+      positional.push(arg);
+    }
+    if (positional.length !== 1) {
+      return fail(deps, "Usage: bapm marketplace package remove NAME -y");
+    }
+    if (!yes && !process.stdin.isTTY) {
+      return fail(deps, "Non-interactive package remove requires -y / --yes");
+    }
+    if (!yes) {
+      const ok = await promptConfirm(`Remove package '${positional[0]}'? [y/N] `);
+      if (!ok) return fail(deps, "Aborted.");
+    }
+    const result = removeMarketplacePackage({ cwd, name: positional[0]! });
+    if (!result.ok) return fail(deps, result.error);
+    console.log(`Removed package '${positional[0]}'.`);
+    return { ok: true, exitCode: 0 };
+  }
+
+  let pkgName: string | undefined;
+  let version: string | undefined;
+  let ref: string | undefined;
+  let subdir: string | undefined;
+  let tagPattern: string | undefined;
+  let tags: string | undefined;
+  let includePrerelease = false;
+  let noVerify = false;
+  let source: string | undefined;
+  const positional: string[] = [];
+
+  for (let i = 0; i < rest.length; i++) {
+    const arg = rest[i]!;
+    if (arg === "--name" || arg === "-n") {
+      pkgName = rest[++i];
+      if (!pkgName) return fail(deps, "Missing value for --name");
+      continue;
+    }
+    if (arg === "--version") {
+      version = rest[++i];
+      if (!version) return fail(deps, "Missing value for --version");
+      continue;
+    }
+    if (arg === "--ref" || arg === "-r") {
+      ref = rest[++i];
+      if (!ref) return fail(deps, "Missing value for --ref");
+      continue;
+    }
+    if (arg === "--source") {
+      source = rest[++i];
+      if (!source) return fail(deps, "Missing value for --source");
+      continue;
+    }
+    if (arg === "--subdir") {
+      subdir = rest[++i];
+      if (!subdir) return fail(deps, "Missing value for --subdir");
+      continue;
+    }
+    if (arg === "--tag-pattern") {
+      tagPattern = rest[++i];
+      if (!tagPattern) return fail(deps, "Missing value for --tag-pattern");
+      continue;
+    }
+    if (arg === "--tags") {
+      tags = rest[++i];
+      if (!tags) return fail(deps, "Missing value for --tags");
+      continue;
+    }
+    if (arg === "--include-prerelease") {
+      includePrerelease = true;
+      continue;
+    }
+    if (arg === "--no-verify") {
+      noVerify = true;
+      continue;
+    }
+    if (arg.startsWith("-")) return fail(deps, `Unknown package ${action} flag: ${arg}`);
+    positional.push(arg);
+  }
+
+  if (version !== undefined && ref !== undefined) {
+    return fail(deps, "Do not set both --version and --ref (mutually exclusive)");
+  }
+
+  if (action === "add") {
+    const src = source ?? positional[0];
+    if (!src) return fail(deps, "Usage: bapm marketplace package add SOURCE [--name NAME] …");
+    const name =
+      pkgName ??
+      src
+        .replace(/\.git$/, "")
+        .split("/")
+        .filter(Boolean)
+        .at(-1);
+    if (!name) return fail(deps, "Could not derive package name; pass --name");
+    const result = addMarketplacePackage({
+      cwd,
+      name,
+      source: src,
+      version,
+      ref,
+      subdir,
+      tagPattern,
+      tags,
+      includePrerelease,
+      noVerify,
+    });
+    if (!result.ok) return fail(deps, result.error);
+    console.log(`Added package '${name}' (${src}).`);
+    return { ok: true, exitCode: 0 };
+  }
+
+  // set
+  const setName = pkgName ?? positional[0];
+  if (!setName) return fail(deps, "Usage: bapm marketplace package set NAME [options]");
+  const result = setMarketplacePackage({
+    cwd,
+    name: setName,
+    source,
+    version,
+    ref,
+    subdir,
+    tagPattern,
+    tags,
+    includePrerelease,
+  });
+  if (!result.ok) return fail(deps, result.error);
+  console.log(`Updated package '${setName}'.`);
+  return { ok: true, exitCode: 0 };
+}
+
+async function runCheck(
+  deps: MarketplaceCliDeps,
+  argv: string[],
+  cwd: string,
+): Promise<LifecycleResult> {
+  let offline = false;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if (arg === "--help" || arg === "-h") {
+      console.log(`Usage: bapm marketplace check [--offline]
+
+Validate marketplace: authoring schema. Without --offline, probes github
+owner/repo reachability via ambient git ls-remote. Non-github hosts warn
+(schema-only). Local ./ sources skip network.
+`);
+      return { ok: true, exitCode: 0 };
+    }
+    if (arg === "--offline") {
+      offline = true;
+      continue;
+    }
+    if (arg.startsWith("-")) return fail(deps, `Unknown marketplace check flag: ${arg}`);
+    return fail(deps, `Unexpected argument for marketplace check: ${arg}`);
+  }
+
+  const result = await checkMarketplaceAuthoring({ cwd, offline });
+  for (const w of result.warnings) {
+    console.log(`Warning: ${w}`);
+  }
+  for (const e of result.errors) console.error(`Error: ${e}`);
+  if (!result.ok) {
+    return fail(deps, `Marketplace check failed (${result.errors.length} error(s)).`);
+  }
+  console.log(offline ? "Marketplace check passed (offline / schema-only)." : "Marketplace check passed.");
+  return { ok: true, exitCode: 0 };
+}
+
+async function runMigrate(
+  deps: MarketplaceCliDeps,
+  argv: string[],
+  cwd: string,
+): Promise<LifecycleResult> {
+  let dryRun = false;
+  let force = false;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]!;
+    if (arg === "--help" || arg === "-h") {
+      console.log(`Usage: bapm marketplace migrate [--dry-run] [--force|-y]
+
+Fold legacy marketplace.yml into ${deps.manifestFile} marketplace: block.
+`);
+      return { ok: true, exitCode: 0 };
+    }
+    if (arg === "--dry-run") {
+      dryRun = true;
+      continue;
+    }
+    if (arg === "--force" || arg === "-y" || arg === "--yes") {
+      force = true;
+      continue;
+    }
+    if (arg.startsWith("-")) return fail(deps, `Unknown marketplace migrate flag: ${arg}`);
+    return fail(deps, `Unexpected argument for marketplace migrate: ${arg}`);
+  }
+
+  const result = migrateMarketplaceYml({ cwd, dryRun, force });
+  if (!result.ok) return fail(deps, result.error ?? "migrate failed");
+  console.log(result.message ?? (dryRun ? "Dry-run OK." : "Migrated."));
+  return { ok: true, exitCode: 0 };
+}
+
 export async function runMarketplaceCli(
   deps: MarketplaceCliDeps,
   options: MarketplaceOptions,
@@ -604,6 +920,14 @@ export async function runMarketplaceCli(
       return runRemove(deps, parsed.rest ?? []);
     case "validate":
       return runValidate(deps, parsed.rest ?? []);
+    case "init":
+      return runInit(deps, parsed.rest ?? [], cwd);
+    case "package":
+      return runPackage(deps, parsed.rest ?? [], cwd);
+    case "check":
+      return runCheck(deps, parsed.rest ?? [], cwd);
+    case "migrate":
+      return runMigrate(deps, parsed.rest ?? [], cwd);
     default:
       return fail(deps, `Unknown marketplace subcommand '${parsed.sub}'`);
   }

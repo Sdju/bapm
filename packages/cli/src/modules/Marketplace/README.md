@@ -1,10 +1,14 @@
 # Marketplace (CLI)
 
-Consumer `bapm marketplace` command group: add / list / browse / update / remove / validate.
+Consumer registry (`add|list|browse|update|remove|validate`) and authoring
+(`init|package|check|migrate`) over `@bapm/core` Marketplace APIs.
 
 ## Public API
 
 - `createMarketplace(deps?)` → `{ run, formatHelp }`
 - `formatMarketplaceHelp`, `parseMarketplaceArgs`
 
-Thin handler: `commands/marketplace.ts`. Soft IoC: `app/init/marketplace.ts`.
+## Notes
+
+- Thin `commands/marketplace.ts` only; domain logic in this module + core.
+- Authoring does **not** emit host marketplace.json (pack deferred).

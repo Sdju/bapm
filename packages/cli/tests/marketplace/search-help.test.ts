@@ -34,13 +34,17 @@ describe("mp-search-install G7 help + consumer boundary", () => {
     expect(combined).toMatch(/QUERY@MARKETPLACE|@MARKETPLACE|marketplace/i);
   });
 
-  test("marketplace group still rejects authoring subcommands", async () => {
+  test("marketplace group rejects deferred pack/find; init is registered", async () => {
     env = createIsolatedEnv();
-    for (const sub of ["init", "pack", "find"] as const) {
+    for (const sub of ["pack", "find"] as const) {
       const { result, combined } = await runInEnv(env, ["marketplace", sub]);
       expectKnownCommand(combined, "marketplace");
       expect(result).not.toBe(0);
-      expect(combined).toMatch(/unknown|invalid|unrecognized|not supported|authoring/i);
+      expect(combined).toMatch(/unknown|invalid|unrecognized|not supported/i);
     }
+    const init = await runInEnv(env, ["marketplace", "init", "--help"]);
+    expectKnownCommand(init.combined, "marketplace");
+    expect(init.result).toBe(0);
+    expect(init.combined).not.toMatch(/unknown marketplace subcommand ['"]?init/i);
   });
 });

@@ -524,6 +524,14 @@ export type {
   MarketplaceConcreteDep,
   MarketplacePluginResolution,
   ResolveMarketplacePluginOptions,
+  PackageEntry,
+  MarketplaceAuthoringConfig,
+  LoadMarketplaceResult,
+  DetectAuthoringConfigSourceResult,
+  CheckMarketplaceAuthoringResult,
+  MigrateMarketplaceYmlResult,
+  EditorResult,
+  SourceValidationResult,
 } from "@/modules/Marketplace";
 
 export {
@@ -532,6 +540,7 @@ export {
   MarketplaceFetchError,
   MarketplacePluginNotFoundError,
   MarketplaceUnsupportedSourceError,
+  MarketplaceAuthoringError,
   MarketplaceSource,
   createMarketplaceSource,
   createMarketplacePlugin,
@@ -560,6 +569,25 @@ export {
   clearMarketplaceCache,
   autoDetectMarketplacePath,
   validateMarketplace,
+  validateMarketplaceAuthoringSource,
+  isValidMarketplaceAuthoringSource,
+  loadMarketplaceFromBapmYml,
+  loadMarketplaceFromLegacyYml,
+  detectAuthoringConfigSource,
+  loadMarketplaceAuthoringConfig,
+  renderMarketplaceBlock,
+  renderInitMarketplaceBlock,
+  createMarketplaceAuthoringTemplate,
+  initMarketplaceAuthoring,
+  addMarketplacePackage,
+  setMarketplacePackage,
+  removeMarketplacePackage,
+  checkMarketplaceAuthoring,
+  checkAuthoringMarketplace,
+  runMarketplaceAuthoringCheck,
+  migrateMarketplaceYml,
+  migrateLegacyMarketplaceYml,
+  runMarketplaceMigrate,
 } from "@/modules/Marketplace";
 
 export const BAPM_NAME = "bapm";

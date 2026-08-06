@@ -1,5 +1,6 @@
 /**
- * Marketplace — consumer registry models, local CRUD, fetch/cache, thin validate.
+ * Marketplace — consumer registry models, local CRUD, fetch/cache, thin validate,
+ * plus authoring (`bapm.yml` marketplace: block) via fractal Authoring submodule.
  *
  * Orthogonal to Registry HTTP (package registry). Config root: `~/.bapm`.
  */
@@ -11,6 +12,48 @@ export {
   MarketplacePluginNotFoundError,
   MarketplaceUnsupportedSourceError,
 } from "./errors.ts";
+
+export {
+  MarketplaceAuthoringError,
+  validateMarketplaceAuthoringSource,
+  isValidMarketplaceAuthoringSource,
+  isLocalAuthoringSource,
+  isGithubOwnerRepoShorthand,
+  splitHostFromAuthoringSource,
+  githubHttpsUrlFromOwnerRepo,
+  loadMarketplaceFromBapmYml,
+  loadMarketplaceFromLegacyYml,
+  detectAuthoringConfigSource,
+  loadMarketplaceAuthoringConfig,
+  DEPRECATION_MESSAGE,
+  renderMarketplaceBlock,
+  renderInitMarketplaceBlock,
+  createMarketplaceAuthoringTemplate,
+  initMarketplaceAuthoring,
+  addMarketplacePackage,
+  setMarketplacePackage,
+  removeMarketplacePackage,
+  addAuthoringPackage,
+  updateAuthoringPackage,
+  removeAuthoringPackage,
+  marketplacePackageAdd,
+  marketplacePackageSet,
+  marketplacePackageRemove,
+  checkMarketplaceAuthoring,
+  checkAuthoringMarketplace,
+  runMarketplaceAuthoringCheck,
+  migrateMarketplaceYml,
+  migrateLegacyMarketplaceYml,
+  runMarketplaceMigrate,
+  type PackageEntry,
+  type MarketplaceAuthoringConfig,
+  type LoadMarketplaceResult,
+  type DetectAuthoringConfigSourceResult,
+  type CheckMarketplaceAuthoringResult,
+  type MigrateMarketplaceYmlResult,
+  type EditorResult,
+  type SourceValidationResult,
+} from "./modules/Authoring";
 
 export type {
   MarketplaceConfigOptions,
