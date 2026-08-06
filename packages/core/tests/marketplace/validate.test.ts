@@ -1,6 +1,5 @@
 /**
- * Acceptance: thin validateMarketplace (schema + duplicate names).
- * Change: mp-consumer-registry (RED until apply).
+ * Thin validateMarketplace (schema + duplicate names).
  */
 import { describe, expect, test } from "vite-plus/test";
 import {

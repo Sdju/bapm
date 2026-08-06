@@ -1,6 +1,6 @@
 /**
- * Acceptance helpers for mp-consumer-registry (core).
- * Soft-resolve public @bapm/core Marketplace APIs so the suite stays RED until apply.
+ * Helpers for Marketplace consumer-registry suite (core).
+ * Soft-resolve public @bapm/core Marketplace APIs.
  */
 import * as core from "@bapm/core";
 import {
@@ -18,7 +18,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const srcRoot = join(coreRoot, "src");
 
 type AnyFn = (...args: never[]) => unknown;

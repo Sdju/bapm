@@ -1,6 +1,5 @@
 /**
- * Acceptance: core-feod Marketplace module boundary + public exports.
- * Change: mp-consumer-registry (RED until apply).
+ * core-feod Marketplace module boundary + public exports.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";

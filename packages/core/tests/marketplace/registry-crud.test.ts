@@ -1,6 +1,5 @@
 /**
- * Acceptance: marketplace-local-registry — ~/.bapm paths + CRUD.
- * Change: mp-consumer-registry (RED until apply).
+ * marketplace-local-registry — ~/.bapm paths + CRUD.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";

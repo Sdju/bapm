@@ -1,6 +1,5 @@
 /**
- * Acceptance: marketplace-models — Source kinds + parseMarketplaceJson.
- * Change: mp-consumer-registry (RED until apply).
+ * marketplace-models — Source kinds + parseMarketplaceJson.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {

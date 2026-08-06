@@ -1,6 +1,5 @@
 /**
- * Acceptance: marketplace-cli-consumer + cli-runtime-surface.
- * Change: mp-consumer-registry (RED until apply).
+ * marketplace-cli-consumer + cli-runtime-surface.
  */
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";

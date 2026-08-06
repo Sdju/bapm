@@ -1,5 +1,5 @@
 /**
- * CLI acceptance helpers for mp-consumer-registry.
+ * CLI helpers for Marketplace consumer-registry suite.
  * Isolates HOME so ~/.bapm never touches the real user config.
  */
 import {
@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type IsolatedHome = {
   home: string;

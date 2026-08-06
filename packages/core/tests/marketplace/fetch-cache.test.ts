@@ -1,6 +1,5 @@
 /**
- * Acceptance: marketplace-fetch-cache — local/url/github dispatch, TTL, security.
- * Change: mp-consumer-registry (RED until apply).
+ * marketplace-fetch-cache — local/url/github dispatch, TTL, security.
  */
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
