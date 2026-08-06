@@ -1,46 +1,17 @@
 /**
- * Helpers for sc-soft-security acceptance (RED until apply).
- * Soft-resolve Pack extract / Registry materialize / Manifest parse from @bapm/core.
+ * Shared zip fixtures for Pack/Registry safe-extract suites
+ * (promoted from sc-soft-security acceptance).
  */
-import * as core from "@bapm/core";
-import { createHash } from "node:crypto";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  readdirSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { crc32, deflateRawSync } from "node:zlib";
-import { parse as parseYaml } from "yaml";
 import { zipSync } from "fflate";
-
-export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
-export const repoRoot = resolve(coreRoot, "../..");
-export const checklistPath = join(repoRoot, "tests/spec-conformance/checklist.yml");
 
 export const MAX_SAFE_ENTRIES = 10_000;
 export const MAX_SAFE_UNCOMPRESSED_BYTES = 100 * 1024 * 1024;
 
 /** Symlink unix mode (S_IFLNK | 0777) — APM-compatible `0xA000` type bit. */
 export const ZIP_UNIX_SYMLINK_MODE = 0o120777;
-
-export type TempDir = { cwd: string; cleanup: () => void };
-
-export function createTempDir(prefix = "bapm-sc-soft-"): TempDir {
-  const cwd = mkdtempSync(join(tmpdir(), prefix));
-  return {
-    cwd,
-    cleanup: () => rmSync(cwd, { recursive: true, force: true }),
-  };
-}
 
 export function ensureDir(path: string): void {
   mkdirSync(path, { recursive: true });
@@ -56,58 +27,6 @@ export function utf8(s: string): Uint8Array {
   return new TextEncoder().encode(s);
 }
 
-export function sha256Hex(content: string | Uint8Array | Buffer): string {
-  return createHash("sha256").update(content).digest("hex");
-}
-
-export function sha256Digest(content: string | Uint8Array | Buffer): string {
-  return `sha256:${sha256Hex(content)}`;
-}
-
-type AnyFn = (...args: never[]) => unknown;
-
-export function pickExport(names: string[], label: string): AnyFn {
-  const c = core as Record<string, unknown>;
-  for (const name of names) {
-    const fn = c[name];
-    if (typeof fn === "function") return fn as AnyFn;
-  }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
-}
-
-export function getExtractPackArchive(): (
-  options: Record<string, unknown>,
-) => Promise<unknown> | unknown {
-  return pickExport(["extractPackArchive", "unpackArchive", "extractPack"], "Pack extract") as (
-    options: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
-}
-
-export function getMaterializeRegistryArchive(): (options: {
-  cwd: string;
-  dest: string;
-  bytes: Uint8Array;
-  expectedDigest: string;
-  label?: string;
-}) => void {
-  return pickExport(
-    ["materializeRegistryArchive", "materializeRegistryPackage"],
-    "Registry materialize",
-  ) as (options: {
-    cwd: string;
-    dest: string;
-    bytes: Uint8Array;
-    expectedDigest: string;
-    label?: string;
-  }) => void;
-}
-
-export function getParseManifest(): (input: unknown) => Record<string, unknown> {
-  return pickExport(["parseManifest"], "parseManifest") as (
-    input: unknown,
-  ) => Record<string, unknown>;
-}
-
 export function listRelativeFiles(root: string): string[] {
   if (!existsSync(root)) return [];
   const out: string[] = [];
@@ -121,46 +40,6 @@ export function listRelativeFiles(root: string): string[] {
   };
   walk(root);
   return out.sort();
-}
-
-export async function expectRejectsMatching(
-  fn: () => unknown | Promise<unknown>,
-  pattern: RegExp,
-): Promise<unknown> {
-  let thrown: unknown;
-  try {
-    await fn();
-  } catch (e) {
-    thrown = e;
-  }
-  expectThrown(thrown, pattern);
-  return thrown;
-}
-
-export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknown {
-  let thrown: unknown;
-  try {
-    fn();
-  } catch (e) {
-    thrown = e;
-  }
-  expectThrown(thrown, pattern);
-  return thrown;
-}
-
-function expectThrown(thrown: unknown, pattern: RegExp): void {
-  if (thrown === undefined) {
-    throw new Error(`expected throw matching ${pattern}`);
-  }
-  const msg =
-    thrown instanceof Error
-      ? thrown.message
-      : typeof thrown === "object" && thrown && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
-  if (!pattern.test(msg)) {
-    throw new Error(`expected message matching ${pattern}, got: ${msg}`);
-  }
 }
 
 export type ZipMember = {
@@ -351,24 +230,4 @@ export function buildSafeRegularZip(): Uint8Array {
     { name: "apm.yml", data: utf8('name: demo/pkg\nversion: "1.0.0"\n') },
     { name: ".apm/keep.txt", data: utf8("ok\n") },
   ]);
-}
-
-export type ChecklistRow = {
-  id: string;
-  status: string;
-  rationale?: string;
-  citations?: string[];
-};
-
-export function loadChecklistRows(): ChecklistRow[] {
-  const raw = parseYaml(readFileSync(checklistPath, "utf8")) as {
-    requirements?: ChecklistRow[];
-  };
-  return raw.requirements ?? [];
-}
-
-export function byId(rows: ChecklistRow[], id: string): ChecklistRow {
-  const row = rows.find((r) => r.id === id);
-  if (!row) throw new Error(`checklist missing ${id}`);
-  return row;
 }

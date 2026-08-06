@@ -717,7 +717,7 @@ requirements:
   keyword: MUST
   section: '10.9'
   status: active
-  citation: packages/core/tests/acceptance/sc-soft-security/safe-extract-pack.test.ts; packages/core/tests/acceptance/sc-soft-security/safe-extract-registry.test.ts
+  citation: packages/core/tests/pack/safe-extract-pack.test.ts; packages/core/tests/registry/safe-extract-registry.test.ts
 - id: req-sc-003
   class: consumer
   keyword: MUST
@@ -748,7 +748,7 @@ requirements:
   keyword: MUST
   section: 4.2.3
   status: active
-  citation: packages/core/tests/acceptance/sc-soft-security/registries-insecure.test.ts
+  citation: packages/core/tests/manifest/registries-insecure.test.ts
 - id: req-sc-007
   class: consumer
   keyword: MUST

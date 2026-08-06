@@ -145,11 +145,11 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-rs-015 | MUST | 7.5 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-rs-016 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-sc-001 | MUST | 10.4 | consumer | active | packages/core/tests/extras/public-api.test.ts |
-| req-sc-002 | MUST | 10.9 | consumer | active | packages/core/tests/acceptance/sc-soft-security/safe-extract-pack.test.ts; packages/core/tests/acceptance/sc-soft-security/safe-extract-registry.test.ts |
+| req-sc-002 | MUST | 10.9 | consumer | active | packages/core/tests/pack/safe-extract-pack.test.ts; packages/core/tests/registry/safe-extract-registry.test.ts |
 | req-sc-003 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed |
 | req-sc-004 | MUST | 10.5 | consumer | skipped |  — Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed) |
 | req-sc-005 | MUST | 10.3 | consumer | skipped |  — Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed |
-| req-sc-006 | MUST | 4.2.3 | consumer | active | packages/core/tests/acceptance/sc-soft-security/registries-insecure.test.ts |
+| req-sc-006 | MUST | 4.2.3 | consumer | active | packages/core/tests/manifest/registries-insecure.test.ts |
 | req-sc-007 | MUST | 10.3 | consumer | active | packages/core/tests/pack/pack-archive.test.ts |
 | req-sc-008 | SHOULD | 10.3 | consumer | skipped |  — Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed |
 | req-sc-009 | MUST | 10.13 | consumer | active | packages/core/tests/extras/public-api.test.ts |

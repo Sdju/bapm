@@ -1,8 +1,15 @@
 /**
- * sc-002 / G1–G6 — Pack extractPackArchive safe-extract acceptance (RED until apply).
+ * sc-002 / G1–G6 — Pack extractPackArchive safe-extract
+ * (promoted from sc-soft-security acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { join } from "node:path";
+import {
+  createTempProject,
+  expectRejectsMatching,
+  getExtractPackArchive,
+  type TempProject,
+} from "./helpers.ts";
 import {
   MAX_SAFE_ENTRIES,
   MAX_SAFE_UNCOMPRESSED_BYTES,
@@ -13,26 +20,22 @@ import {
   buildSafeRegularZip,
   buildSymlinkZip,
   buildZipWithPaths,
-  createTempDir,
-  expectRejectsMatching,
-  getExtractPackArchive,
   listRelativeFiles,
   writeBytes,
-  type TempDir,
-} from "./helpers.ts";
+} from "./safe-extract-fixtures.ts";
 
-describe("sc-soft-security Pack safe-extract", () => {
-  let tmp: TempDir | undefined;
+describe("Pack safe-extract (extractPackArchive)", () => {
+  let project: TempProject | undefined;
 
   afterEach(() => {
-    tmp?.cleanup();
-    tmp = undefined;
+    project?.cleanup();
+    project = undefined;
   });
 
   test("symlink zip member is rejected fail-closed (G1)", async () => {
-    tmp = createTempDir();
-    const archivePath = writeBytes(join(tmp.cwd, "symlink.zip"), buildSymlinkZip());
-    const outputDir = join(tmp.cwd, "out");
+    project = createTempProject("bapm-safe-extract-pack-");
+    const archivePath = writeBytes(join(project.cwd, "symlink.zip"), buildSymlinkZip());
+    const outputDir = join(project.cwd, "out");
 
     await expectRejectsMatching(
       () => getExtractPackArchive()({ archivePath, outputDir }),
@@ -43,12 +46,12 @@ describe("sc-soft-security Pack safe-extract", () => {
   });
 
   test("dot-dot path escape is rejected (G1 path)", async () => {
-    tmp = createTempDir();
+    project = createTempProject("bapm-safe-extract-pack-");
     const archivePath = writeBytes(
-      join(tmp.cwd, "escape.zip"),
+      join(project.cwd, "escape.zip"),
       buildZipWithPaths([{ name: "../../etc/passwd", contents: "x\n" }]),
     );
-    const outputDir = join(tmp.cwd, "out");
+    const outputDir = join(project.cwd, "out");
 
     await expectRejectsMatching(
       () => getExtractPackArchive()({ archivePath, outputDir }),
@@ -57,12 +60,12 @@ describe("sc-soft-security Pack safe-extract", () => {
   });
 
   test("absolute archive entry is rejected", async () => {
-    tmp = createTempDir();
+    project = createTempProject("bapm-safe-extract-pack-");
     const archivePath = writeBytes(
-      join(tmp.cwd, "abs.zip"),
+      join(project.cwd, "abs.zip"),
       buildZipWithPaths([{ name: "/tmp/abs.txt", contents: "x\n" }]),
     );
-    const outputDir = join(tmp.cwd, "out");
+    const outputDir = join(project.cwd, "out");
 
     await expectRejectsMatching(
       () => getExtractPackArchive()({ archivePath, outputDir }),
@@ -71,29 +74,28 @@ describe("sc-soft-security Pack safe-extract", () => {
   });
 
   test("partial write then bad entry cleans destination (G3)", async () => {
-    tmp = createTempDir();
+    project = createTempProject("bapm-safe-extract-pack-");
     const archivePath = writeBytes(
-      join(tmp.cwd, "partial-escape.zip"),
+      join(project.cwd, "partial-escape.zip"),
       buildPartialThenEscapeZip(),
     );
-    const outputDir = join(tmp.cwd, "out");
+    const outputDir = join(project.cwd, "out");
 
     await expectRejectsMatching(
       () => getExtractPackArchive()({ archivePath, outputDir }),
       /unsafe|path.?escape|refusing|\.\./i,
     );
 
-    // Fail-closed: no dangling half-write under dest
     expect(listRelativeFiles(outputDir)).toEqual([]);
   });
 
   test("partial write then symlink cleans destination (G1+G3)", async () => {
-    tmp = createTempDir();
+    project = createTempProject("bapm-safe-extract-pack-");
     const archivePath = writeBytes(
-      join(tmp.cwd, "partial-link.zip"),
+      join(project.cwd, "partial-link.zip"),
       buildPartialThenSymlinkZip(),
     );
-    const outputDir = join(tmp.cwd, "out");
+    const outputDir = join(project.cwd, "out");
 
     await expectRejectsMatching(
       () => getExtractPackArchive()({ archivePath, outputDir }),
@@ -104,9 +106,9 @@ describe("sc-soft-security Pack safe-extract", () => {
   });
 
   test(`entry count over ${MAX_SAFE_ENTRIES} fails closed (G4)`, async () => {
-    tmp = createTempDir();
-    const archivePath = writeBytes(join(tmp.cwd, "entries.zip"), buildOverEntryCapZip());
-    const outputDir = join(tmp.cwd, "out");
+    project = createTempProject("bapm-safe-extract-pack-");
+    const archivePath = writeBytes(join(project.cwd, "entries.zip"), buildOverEntryCapZip());
+    const outputDir = join(project.cwd, "out");
 
     await expectRejectsMatching(
       () => getExtractPackArchive()({ archivePath, outputDir }),
@@ -117,9 +119,9 @@ describe("sc-soft-security Pack safe-extract", () => {
   });
 
   test(`uncompressed size over ${MAX_SAFE_UNCOMPRESSED_BYTES} fails closed (G5)`, async () => {
-    tmp = createTempDir();
-    const archivePath = writeBytes(join(tmp.cwd, "huge.zip"), buildOverSizeCapZip());
-    const outputDir = join(tmp.cwd, "out");
+    project = createTempProject("bapm-safe-extract-pack-");
+    const archivePath = writeBytes(join(project.cwd, "huge.zip"), buildOverSizeCapZip());
+    const outputDir = join(project.cwd, "out");
 
     await expectRejectsMatching(
       () => getExtractPackArchive()({ archivePath, outputDir }),
@@ -130,9 +132,9 @@ describe("sc-soft-security Pack safe-extract", () => {
   });
 
   test("regular safe zip still extracts under caps", async () => {
-    tmp = createTempDir();
-    const archivePath = writeBytes(join(tmp.cwd, "safe.zip"), buildSafeRegularZip());
-    const outputDir = join(tmp.cwd, "out");
+    project = createTempProject("bapm-safe-extract-pack-");
+    const archivePath = writeBytes(join(project.cwd, "safe.zip"), buildSafeRegularZip());
+    const outputDir = join(project.cwd, "out");
 
     await getExtractPackArchive()({ archivePath, outputDir });
     const files = listRelativeFiles(outputDir);

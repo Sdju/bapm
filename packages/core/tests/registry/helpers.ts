@@ -307,6 +307,59 @@ export function getBuildPublishArchive(): (
   ) as (options: Record<string, unknown>) => unknown | Promise<unknown>;
 }
 
+/** Registry package materialize (digest → safe-extract). */
+export function getMaterializeRegistryArchive(): (options: {
+  cwd: string;
+  dest: string;
+  bytes: Uint8Array;
+  expectedDigest: string;
+  label?: string;
+}) => void {
+  return pickExport(
+    ["materializeRegistryArchive", "materializeRegistryPackage"],
+    "Registry materialize",
+  ) as (options: {
+    cwd: string;
+    dest: string;
+    bytes: Uint8Array;
+    expectedDigest: string;
+    label?: string;
+  }) => void;
+}
+
+export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknown {
+  let thrown: unknown;
+  try {
+    fn();
+  } catch (e) {
+    thrown = e;
+  }
+  if (thrown === undefined) {
+    throw new Error(`expected throw matching ${pattern}`);
+  }
+  if (
+    thrown instanceof TypeError &&
+    /is not a function|expected @bapm\/core/i.test(thrown.message)
+  ) {
+    throw thrown;
+  }
+  const message =
+    thrown instanceof Error
+      ? thrown.message
+      : typeof thrown === "object" && thrown !== null && "message" in thrown
+        ? String((thrown as { message: unknown }).message)
+        : String(thrown);
+  const code =
+    typeof thrown === "object" && thrown !== null && "code" in thrown
+      ? String((thrown as { code: unknown }).code)
+      : "";
+  const haystack = `${message}\n${code}`;
+  if (!pattern.test(haystack)) {
+    throw new Error(`expected error matching ${pattern}, got: ${haystack}`);
+  }
+  return thrown;
+}
+
 export function getCheckSelfUpdate(): (
   options: Record<string, unknown>,
 ) => unknown | Promise<unknown> {
