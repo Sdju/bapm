@@ -153,9 +153,9 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-sc-007 | MUST | 10.3 | consumer | active | packages/core/tests/pack/pack-archive.test.ts |
 | req-sc-008 | SHOULD | 10.3 | consumer | skipped |  — Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed |
 | req-sc-009 | MUST | 10.13 | consumer | active | packages/core/tests/extras/public-api.test.ts |
-| req-sc-010 | MUST | 10.13 | consumer | active | packages/core/tests/acceptance/sc-executable-governance/user-store.test.ts; packages/cli/tests/acceptance/sc-executable-governance/approve-deny.test.ts |
-| req-sc-011 | MUST | 10.14 | consumer | active | packages/core/tests/acceptance/sc-executable-governance/resolve-deny-wins.test.ts; packages/core/tests/acceptance/sc-executable-governance/policy-executables.test.ts; packages/core/tests/acceptance/sc-executable-governance/install-audit-twin.test.ts |
-| req-sc-012 | MUST | 10.14 | consumer | active | packages/core/tests/acceptance/sc-executable-governance/require-presence-withheld.test.ts |
+| req-sc-010 | MUST | 10.13 | consumer | active | packages/core/tests/executable-trust/user-store.test.ts; packages/cli/tests/mcp/approve-deny.test.ts |
+| req-sc-011 | MUST | 10.14 | consumer | active | packages/core/tests/executable-trust/resolve-deny-wins.test.ts; packages/core/tests/policy/executables-parse-merge.test.ts; packages/core/tests/executable-trust/install-audit-twin.test.ts |
+| req-sc-012 | MUST | 10.14 | consumer | active | packages/core/tests/executable-trust/require-presence-withheld.test.ts |
 | req-sc-013 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed |
 | req-tg-001 | MUST | 8.4 | consumer | active | packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts |
 | req-tg-002 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |

@@ -1,5 +1,6 @@
 /**
- * G1 — user-local executables store under injectable config root (sc-010).
+ * User-local executables store under injectable config root (sc-010).
+ * Promoted from sc-executable-governance acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -12,7 +13,7 @@ import {
   type TempDir,
 } from "./helpers.ts";
 
-describe("sc-executable-governance user store (G1)", () => {
+describe("ExecutableTrust user store (sc-010)", () => {
   let tmp: TempDir | undefined;
 
   afterEach(() => {

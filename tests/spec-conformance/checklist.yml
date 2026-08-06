@@ -775,24 +775,24 @@ requirements:
   section: '10.13'
   status: active
   citation: >-
-    packages/core/tests/acceptance/sc-executable-governance/user-store.test.ts;
-    packages/cli/tests/acceptance/sc-executable-governance/approve-deny.test.ts
+    packages/core/tests/executable-trust/user-store.test.ts;
+    packages/cli/tests/mcp/approve-deny.test.ts
 - id: req-sc-011
   class: consumer
   keyword: MUST
   section: '10.14'
   status: active
   citation: >-
-    packages/core/tests/acceptance/sc-executable-governance/resolve-deny-wins.test.ts;
-    packages/core/tests/acceptance/sc-executable-governance/policy-executables.test.ts;
-    packages/core/tests/acceptance/sc-executable-governance/install-audit-twin.test.ts
+    packages/core/tests/executable-trust/resolve-deny-wins.test.ts;
+    packages/core/tests/policy/executables-parse-merge.test.ts;
+    packages/core/tests/executable-trust/install-audit-twin.test.ts
 - id: req-sc-012
   class: consumer
   keyword: MUST
   section: '10.14'
   status: active
   citation: >-
-    packages/core/tests/acceptance/sc-executable-governance/require-presence-withheld.test.ts
+    packages/core/tests/executable-trust/require-presence-withheld.test.ts
 - id: req-sc-013
   class: consumer
   keyword: MUST

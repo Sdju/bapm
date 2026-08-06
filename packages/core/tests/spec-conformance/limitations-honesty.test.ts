@@ -51,10 +51,10 @@ describe("Limitations / Scope-out honesty", () => {
       `expected residual host-auth / approve / soft §10 wording in:\n${blob}`,
     ).toBe(true);
 
-    // Approve/deny UX remains a legitimate residual scope-out.
+    // Soft approve UX / ungated hooks residual still named after sc-010 claim.
     expect(
-      /approve|deny/i.test(blob),
-      `expected approve/deny residual in limitations/scope_out:\n${blob}`,
+      /approve|deny|hooks|bin|canvas/i.test(blob),
+      `expected soft approve UX or ungated hooks residual in limitations/scope_out:\n${blob}`,
     ).toBe(true);
   });
 

@@ -1,15 +1,17 @@
 /**
- * G3 — typed policy executables.deny_all / deny parse + merge OR/∪ (sc-011).
+ * Typed policy executables.deny_all / deny parse + merge OR/∪ (sc-011).
+ * Promoted from sc-executable-governance acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  getMergePolicies,
-  getParsePolicy,
-  policyOf,
-  warningsOf,
-} from "./helpers.ts";
+import { getMergePolicies, getParsePolicy, policyOf, warningsOf } from "./helpers.ts";
 
-describe("sc-executable-governance policy executables parse/merge (G3)", () => {
+type PolicyWarning = { code?: string; message?: string; path?: string };
+
+function asWarnings(result: unknown): PolicyWarning[] {
+  return warningsOf(result) as PolicyWarning[];
+}
+
+describe("policy executables parse/merge (sc-011)", () => {
   test("deny_all and deny parse without pl-009 on executables", () => {
     const parse = getParsePolicy();
     const result = parse({
@@ -23,10 +25,10 @@ describe("sc-executable-governance policy executables parse/merge (G3)", () => {
     expect(ex?.deny_all).toBe(false);
     expect(ex?.deny).toEqual(expect.arrayContaining(["org/blocked"]));
 
-    const warnText = JSON.stringify(warningsOf(result));
+    const warnText = JSON.stringify(asWarnings(result));
     expect(warnText).not.toMatch(/PL_009_UNKNOWN_KEY.*"executables"|Unknown top-level policy key "executables"/i);
     expect(
-      warningsOf(result).some(
+      asWarnings(result).some(
         (w) =>
           /PL_009|unknown/i.test(String(w.code ?? "")) &&
           String(w.path ?? w.message ?? "").includes("executables"),
@@ -53,10 +55,10 @@ describe("sc-executable-governance policy executables parse/merge (G3)", () => {
       executables: { deny_all: false, deny: ["org/a"] },
       future_key: 1,
     });
-    expect(warningsOf(result).some((w) => /PL_009|unknown/i.test(String(w.code ?? w.message)))).toBe(
+    expect(asWarnings(result).some((w) => /PL_009|unknown/i.test(String(w.code ?? w.message)))).toBe(
       true,
     );
-    expect(JSON.stringify(warningsOf(result))).toMatch(/future_key/);
+    expect(JSON.stringify(asWarnings(result))).toMatch(/future_key/);
   });
 
   test("deny_all OR across extends (parent true wins over child false)", () => {

@@ -1,5 +1,6 @@
 /**
- * G7/G8 — dependencies.require from lockfile presence + distinct withheld (sc-012).
+ * dependencies.require from lockfile presence + distinct withheld (sc-012).
+ * Promoted from sc-executable-governance acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
 import {
@@ -7,7 +8,7 @@ import {
   getEvaluateRequiredPackagePresence,
 } from "./helpers.ts";
 
-describe("sc-executable-governance require lock presence + withheld (G7/G8)", () => {
+describe("require lock presence + withheld (sc-012)", () => {
   test("present in lock + MCP withheld → presence OK, not POLICY_REQUIRE", () => {
     const evaluate = getEvaluateRequiredPackagePresence();
     const result = evaluate({

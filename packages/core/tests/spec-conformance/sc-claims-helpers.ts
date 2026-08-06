@@ -27,24 +27,24 @@ export const docsConformanceGuidePath = join(
   "apps/docs/guide/conformance.md",
 );
 
-/** Active sc-* — must stay active with citations (sc-002/006 claimed by sc-soft-security). */
+/** Active sc-* — must stay active with citations (010–012 claimed by sc-executable-governance). */
 export const ACTIVE_SC_IDS = [
   "req-sc-001",
   "req-sc-002",
   "req-sc-006",
   "req-sc-007",
   "req-sc-009",
+  "req-sc-010",
+  "req-sc-011",
+  "req-sc-012",
 ] as const;
 
-/** Residual honesty floor — remain skipped after sc-soft-security. */
+/** Residual honesty floor — remain skipped after sc-executable-governance. */
 export const SKIPPED_SC_IDS = [
   "req-sc-003",
   "req-sc-004",
   "req-sc-005",
   "req-sc-008",
-  "req-sc-010",
-  "req-sc-011",
-  "req-sc-012",
   "req-sc-013",
 ] as const;
 
@@ -111,15 +111,13 @@ export const SKIPPED_RATIONALE_THEMES: Record<
     /eTLD|PSL|aliases?|credential host.?class/i,
   "req-sc-008":
     /git.?HTTP|non-https|credential refuse/i,
-  "req-sc-010":
-    /approve|user.?local grant|grant store/i,
-  "req-sc-011":
-    /deny.?wins|org.?polic|install\/audit|audit parity/i,
-  "req-sc-012":
-    /required.?package|withheld.?executable|audit fidelity/i,
   "req-sc-013":
     /ambient|suppress|host.?class overlap|operator host.?class/i,
 };
+
+/** Absolute OOS blanket for interactive approve (forbidden after sc-010 claim). */
+export const ABSOLUTE_APPROVE_OOS =
+  /Approve\/deny interactive UX.*out of scope|interactive approve\/deny.*wholly out of scope|approve\/deny UX\s*$/im;
 
 export function limitationsBlob(doc: ChecklistDoc): string {
   return (doc.limitations ?? []).join("\n");

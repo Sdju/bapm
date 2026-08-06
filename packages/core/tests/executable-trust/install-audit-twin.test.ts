@@ -1,5 +1,6 @@
 /**
- * G5 — install gate ≡ audit/trust classifier via shared resolver (sc-011).
+ * Install gate ≡ audit/trust classifier via shared resolver (sc-011).
+ * Promoted from sc-executable-governance acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
 import {
@@ -16,7 +17,7 @@ const SHARED_INPUTS = {
   userSurface: grantSurface({ "mcp-dep": { mcp: true } }),
 };
 
-describe("sc-executable-governance install≡audit twin (G5)", () => {
+describe("install≡audit ExecutableTrust twin (sc-011)", () => {
   test("resolve and classify agree on org deny over project+user allow", () => {
     const resolve = getResolveExecutableTrust();
     const classify = getClassifyExecutableTrust();

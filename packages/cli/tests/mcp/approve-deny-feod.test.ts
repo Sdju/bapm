@@ -1,19 +1,20 @@
 /**
  * cli-feod-architecture — Approve / Deny directory modules + thin commands.
+ * Promoted from sc-executable-governance acceptance.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
 
-const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const srcRoot = join(cliRoot, "src");
 
 function readSrc(rel: string): string {
   return readFileSync(join(srcRoot, rel), "utf8");
 }
 
-describe("sc-executable-governance CLI FEOD Approve/Deny wiring", () => {
+describe("CLI FEOD Approve/Deny wiring", () => {
   test("Approve is a directory module with index.ts public entry", () => {
     const modDir = join(srcRoot, "modules", "Approve");
     expect(existsSync(modDir), "modules/Approve must exist").toBe(true);

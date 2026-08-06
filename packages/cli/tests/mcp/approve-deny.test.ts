@@ -1,5 +1,6 @@
 /**
- * G2 — interactive bapm approve / deny → user store only; MUST NOT write project yml (sc-010).
+ * Interactive bapm approve / deny → user store only; MUST NOT write project yml (sc-010).
+ * Promoted from sc-executable-governance acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -11,9 +12,9 @@ import {
   userConfigPath,
   writeMinimalProject,
   type IsolatedHome,
-} from "./helpers.ts";
+} from "./approve-deny-helpers.ts";
 
-describe("sc-executable-governance CLI approve/deny user-local (G2)", () => {
+describe("CLI approve/deny user-local (sc-010)", () => {
   let env: IsolatedHome | undefined;
 
   afterEach(() => {

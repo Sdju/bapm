@@ -1,5 +1,6 @@
 /**
- * G10 — Limitations honesty after executable governance claims.
+ * Limitations honesty after executable governance claims
+ * (promoted from sc-executable-governance).
  */
 import { describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -11,9 +12,9 @@ import {
   loadChecklist,
   readText,
   scopeOutBlob,
-} from "./helpers.ts";
+} from "./sc-claims-helpers.ts";
 
-describe("sc-executable-governance Limitations honesty (G10)", () => {
+describe("sc-executable-governance Limitations honesty", () => {
   test("interactive approve/deny is not absolute OOS for claimed sc-010 surface", () => {
     const doc = loadChecklist();
     const blob = `${limitationsBlob(doc)}\n${scopeOutBlob(doc)}`;

@@ -941,7 +941,7 @@
       "section": "10.13",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/acceptance/sc-executable-governance/user-store.test.ts; packages/cli/tests/acceptance/sc-executable-governance/approve-deny.test.ts"
+      "citation": "packages/core/tests/executable-trust/user-store.test.ts; packages/cli/tests/mcp/approve-deny.test.ts"
     },
     {
       "id": "req-sc-011",
@@ -949,7 +949,7 @@
       "section": "10.14",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/acceptance/sc-executable-governance/resolve-deny-wins.test.ts; packages/core/tests/acceptance/sc-executable-governance/policy-executables.test.ts; packages/core/tests/acceptance/sc-executable-governance/install-audit-twin.test.ts"
+      "citation": "packages/core/tests/executable-trust/resolve-deny-wins.test.ts; packages/core/tests/policy/executables-parse-merge.test.ts; packages/core/tests/executable-trust/install-audit-twin.test.ts"
     },
     {
       "id": "req-sc-012",
@@ -957,7 +957,7 @@
       "section": "10.14",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/acceptance/sc-executable-governance/require-presence-withheld.test.ts"
+      "citation": "packages/core/tests/executable-trust/require-presence-withheld.test.ts"
     },
     {
       "id": "req-sc-013",

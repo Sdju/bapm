@@ -1,5 +1,5 @@
 /**
- * CLI helpers for sc-executable-governance acceptance (RED).
+ * CLI helpers for approve/deny user-local grants (promoted from sc-executable-governance).
  */
 import {
   existsSync,
@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type IsolatedHome = {
   home: string;
@@ -122,7 +122,6 @@ version: 0.0.1
 
 export function expectKnownCommand(combined: string, name: string): void {
   if (/unknown command|not a (?:valid )?command|unrecognized command/i.test(combined)) {
-    // Only fail early when the *target* command is unknown — unknown is expected RED until apply.
     if (new RegExp(`unknown command.*\\b${name}\\b|\\b${name}\\b.*unknown`, "i").test(combined)) {
       return;
     }

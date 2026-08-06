@@ -1,5 +1,6 @@
 /**
- * G4/G6 — layered deny-wins resolveExecutableTrust (sc-011).
+ * Layered deny-wins resolveExecutableTrust (sc-011).
+ * Promoted from sc-executable-governance acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
 import {
@@ -7,7 +8,7 @@ import {
   grantSurface,
 } from "./helpers.ts";
 
-describe("sc-executable-governance resolveExecutableTrust deny-wins (G4/G6)", () => {
+describe("resolveExecutableTrust deny-wins (sc-011)", () => {
   test("org deny shadows project allow for MCP", () => {
     const resolve = getResolveExecutableTrust();
     const decision = resolve({

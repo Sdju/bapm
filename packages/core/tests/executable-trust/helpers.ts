@@ -1,10 +1,8 @@
 /**
- * Helpers for sc-executable-governance acceptance (RED until apply).
- * Soft-resolve new ExecutableTrust / Policy / presence APIs from @bapm/core.
+ * Helpers for ExecutableTrust suites (promoted from sc-executable-governance).
  */
 import * as core from "@bapm/core";
 import {
-  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -14,14 +12,10 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parse as parseYaml } from "yaml";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const repoRoot = resolve(coreRoot, "../..");
-export const checklistPath = join(repoRoot, "tests/spec-conformance/checklist.yml");
-export const conformanceMdPath = join(repoRoot, "CONFORMANCE.md");
-export const conformanceJsonPath = join(repoRoot, "CONFORMANCE.json");
 
 export type TempDir = { cwd: string; cleanup: () => void };
 
@@ -129,30 +123,6 @@ export function getSaveUserExecutableGrants(): (options: {
   ) as ReturnType<typeof getSaveUserExecutableGrants>;
 }
 
-export function getParsePolicy(): (input: unknown) => {
-  document?: Record<string, unknown>;
-  policy?: Record<string, unknown>;
-  warnings?: Array<{ code?: string; message?: string; path?: string }>;
-} {
-  return pickExport(["parsePolicy", "parsePolicyDocument"], "parsePolicy") as ReturnType<
-    typeof getParsePolicy
-  >;
-}
-
-export function getMergePolicies(): (
-  parent: unknown,
-  child: unknown,
-) => {
-  document?: Record<string, unknown>;
-  policy?: Record<string, unknown>;
-  effective?: Record<string, unknown>;
-} {
-  return pickExport(
-    ["mergePolicies", "mergePolicyDocuments", "mergePolicy"],
-    "mergePolicies",
-  ) as ReturnType<typeof getMergePolicies>;
-}
-
 /** Lockfile-presence require + withheld diagnostic (sc-012). */
 export function getEvaluateRequiredPackagePresence(): (options: Record<string, unknown>) => {
   ok?: boolean;
@@ -173,20 +143,6 @@ export function getEvaluateRequiredPackagePresence(): (options: Record<string, u
   ) as ReturnType<typeof getEvaluateRequiredPackagePresence>;
 }
 
-export function policyOf(result: {
-  document?: Record<string, unknown>;
-  policy?: Record<string, unknown>;
-  effective?: Record<string, unknown>;
-}): Record<string, unknown> {
-  return (result.document ?? result.policy ?? result.effective ?? {}) as Record<string, unknown>;
-}
-
-export function warningsOf(result: {
-  warnings?: Array<{ code?: string; message?: string; path?: string }>;
-}): Array<{ code?: string; message?: string; path?: string }> {
-  return result.warnings ?? [];
-}
-
 export function diagnosticsOf(result: {
   diagnostics?: Array<{ code?: string; message?: string; identity?: string }>;
   violations?: Array<{ code?: string; message?: string; identity?: string }>;
@@ -199,59 +155,6 @@ export function diagnosticsOf(result: {
   }
   return [];
 }
-
-export type ChecklistRow = {
-  id: string;
-  status?: string;
-  citation?: string;
-  rationale?: string;
-  [key: string]: unknown;
-};
-
-export type ChecklistDoc = {
-  limitations?: string[];
-  scope_out?: string[];
-  requirements?: ChecklistRow[];
-  [key: string]: unknown;
-};
-
-export function loadChecklist(): ChecklistDoc {
-  return parseYaml(readFileSync(checklistPath, "utf8")) as ChecklistDoc;
-}
-
-export function loadChecklistRows(): ChecklistRow[] {
-  return loadChecklist().requirements ?? [];
-}
-
-export function byId(rows: ChecklistRow[], id: string): ChecklistRow {
-  const row = rows.find((r) => r.id === id);
-  if (!row) throw new Error(`checklist missing ${id}`);
-  return row;
-}
-
-export function citationPaths(citation: string | undefined): string[] {
-  if (!citation) return [];
-  return citation
-    .split(";")
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0 && !/^CONFORMANCE\.(md|json)$/i.test(p));
-}
-
-export function pathExistsInRepo(rel: string): boolean {
-  return existsSync(join(repoRoot, rel));
-}
-
-export function limitationsBlob(doc: ChecklistDoc = loadChecklist()): string {
-  return (doc.limitations ?? []).join("\n");
-}
-
-export function scopeOutBlob(doc: ChecklistDoc = loadChecklist()): string {
-  return (doc.scope_out ?? []).join("\n");
-}
-
-/** Absolute OOS blanket for interactive approve (forbidden after claim). */
-export const ABSOLUTE_APPROVE_OOS =
-  /Approve\/deny interactive UX.*out of scope|interactive approve\/deny.*wholly out of scope|approve\/deny UX\s*$/im;
 
 export function userConfigJsonPath(configRoot: string): string {
   return join(configRoot, "config.json");
