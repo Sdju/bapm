@@ -1,8 +1,7 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { unzipSync } from "fflate";
+import { resolve } from "node:path";
 import semver from "semver";
 import type { RegistryEntry } from "@/modules/Manifest";
+import { SafeExtractError, safeExtractZip } from "@/modules/Pack";
 import { RegistryError } from "./errors.ts";
 import { createRegistryClient, verifyArchiveDigest } from "./createClient.ts";
 import type { RegistryClient, RegistryVersionInfo } from "./types.ts";
@@ -121,21 +120,17 @@ export type MaterializeRegistryPackageOptions = {
 };
 
 /**
- * lk-013: verify digest then extract zip into dest. On mismatch, dest is untouched.
+ * lk-013: verify digest then shared safe-extract into dest. On mismatch, dest is untouched.
  */
 export function materializeRegistryArchive(options: MaterializeRegistryPackageOptions): void {
   verifyArchiveDigest(options.bytes, options.expectedDigest, { label: options.label });
-  const files = unzipSync(options.bytes);
-  mkdirSync(options.dest, { recursive: true });
-  for (const [name, data] of Object.entries(files)) {
-    if (!name || name.endsWith("/")) continue;
-    const normalized = name.replace(/\\/g, "/");
-    if (normalized.startsWith("/") || normalized.split("/").includes("..")) {
-      throw new RegistryError("REGISTRY_PUBLISH", `Refusing unsafe archive entry: ${name}`);
+  try {
+    safeExtractZip(options.bytes, options.dest);
+  } catch (cause) {
+    if (cause instanceof SafeExtractError) {
+      throw new RegistryError("REGISTRY_PUBLISH", cause.message, { cause });
     }
-    const out = join(options.dest, normalized);
-    mkdirSync(dirname(out), { recursive: true });
-    writeFileSync(out, data);
+    throw new RegistryError("REGISTRY_PUBLISH", "Failed to extract registry archive", { cause });
   }
 }
 

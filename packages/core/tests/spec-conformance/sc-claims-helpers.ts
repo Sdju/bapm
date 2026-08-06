@@ -27,20 +27,20 @@ export const docsConformanceGuidePath = join(
   "apps/docs/guide/conformance.md",
 );
 
-/** Already-active sc-* — must stay active with citations. */
+/** Active sc-* — must stay active with citations (sc-002/006 claimed by sc-soft-security). */
 export const ACTIVE_SC_IDS = [
   "req-sc-001",
+  "req-sc-002",
+  "req-sc-006",
   "req-sc-007",
   "req-sc-009",
 ] as const;
 
-/** Honesty floor: claim list empty — these stay skipped. */
+/** Residual honesty floor — remain skipped after sc-soft-security. */
 export const SKIPPED_SC_IDS = [
-  "req-sc-002",
   "req-sc-003",
   "req-sc-004",
   "req-sc-005",
-  "req-sc-006",
   "req-sc-008",
   "req-sc-010",
   "req-sc-011",
@@ -103,16 +103,12 @@ export const SKIPPED_RATIONALE_THEMES: Record<
   (typeof SKIPPED_SC_IDS)[number],
   RegExp
 > = {
-  "req-sc-002":
-    /zip.?slip|symlink|hardlink|path.?escape|(partial.+extract|extract.+partial)/i,
   "req-sc-003":
     /host.?class|mp-hosts-auth|redirect.+Auth|Auth.+drop|credential scop/i,
   "req-sc-004":
-    /tar\.?gz|size.?\/?\s*entry|entry caps?|100\s*MB|10\s*k/i,
+    /tar\.?gz|size.?\/?\s*entry|entry caps?|100\s*MB|10\s*k|zip|caps?/i,
   "req-sc-005":
     /eTLD|PSL|aliases?|credential host.?class/i,
-  "req-sc-006":
-    /insecure|http parse|http(s)?:\/\/.*gate|registries\.\*\.insecure/i,
   "req-sc-008":
     /git.?HTTP|non-https|credential refuse/i,
   "req-sc-010":

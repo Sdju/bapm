@@ -1,5 +1,6 @@
 import type { ManifestWarning } from "./errors.ts";
 import { ManifestError } from "./errors.ts";
+import { isExemptInsecureHost } from "./registryUrl.ts";
 import { isValidTargetToken } from "./targets.ts";
 import type {
   BapmManifest,
@@ -319,7 +320,7 @@ function validateRegistries(value: unknown): Record<string, RegistryEntry | stri
     const path = `registries.${name}`;
 
     if (typeof entry === "string") {
-      assertHttpUrl(entry, path);
+      assertRegistryHttpUrl(entry, path, { registryName: name });
       out[name] = entry;
       continue;
     }
@@ -343,7 +344,9 @@ function validateRegistries(value: unknown): Record<string, RegistryEntry | stri
     }
 
     for (const key of Object.keys(obj)) {
-      if (key === "url" || key === "aliases" || key.startsWith("x-")) continue;
+      if (key === "url" || key === "aliases" || key === "insecure" || key.startsWith("x-")) {
+        continue;
+      }
       throw new ManifestError(
         "MANIFEST_VALIDATION",
         `Registry entry ${path} has unknown key "${key}"`,
@@ -359,8 +362,24 @@ function validateRegistries(value: unknown): Record<string, RegistryEntry | stri
       );
     }
 
-    assertHttpUrl(obj.url, `${path}.url`);
-    out[name] = { ...obj, url: obj.url } as RegistryEntry;
+    let insecure: boolean | undefined;
+    if ("insecure" in obj) {
+      if (typeof obj.insecure !== "boolean") {
+        throw new ManifestError(
+          "MANIFEST_VALIDATION",
+          `Registry entry ${path}.insecure must be a boolean`,
+          { path: `${path}.insecure` },
+        );
+      }
+      insecure = obj.insecure;
+    }
+
+    assertRegistryHttpUrl(obj.url, path, { registryName: name, insecure });
+    out[name] = {
+      ...obj,
+      url: obj.url,
+      ...(insecure !== undefined ? { insecure } : {}),
+    } as RegistryEntry;
   }
 
   if ("default" in raw) {
@@ -396,7 +415,11 @@ function assertValidTargetToken(token: string, path: string): void {
   );
 }
 
-function assertHttpUrl(url: string, path: string): void {
+function assertRegistryHttpUrl(
+  url: string,
+  path: string,
+  options: { registryName: string; insecure?: boolean },
+): void {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -414,4 +437,15 @@ function assertHttpUrl(url: string, path: string): void {
       { path },
     );
   }
+  if (parsed.protocol === "https:") return;
+
+  // http:// — require insecure: true or exempt host (loopback / ::1 / RFC1918)
+  if (options.insecure === true) return;
+  if (isExemptInsecureHost(parsed.hostname)) return;
+
+  throw new ManifestError(
+    "MANIFEST_VALIDATION",
+    `Registry "${options.registryName}" uses http:// without insecure: true (set registries.${options.registryName}.insecure: true or use an exempt loopback/RFC1918 host)`,
+    { path, details: { registry: options.registryName, url } },
+  );
 }

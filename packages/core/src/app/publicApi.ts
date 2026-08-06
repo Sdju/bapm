@@ -58,6 +58,7 @@ export {
   TARGET_ALIAS_TOKENS,
   VENDOR_TARGET_RE,
   isValidTargetToken,
+  isExemptInsecureHost,
 } from "@/modules/Manifest";
 
 export type {
@@ -312,6 +313,12 @@ export {
   extractPackArchive,
   unpackArchive,
   extractPack,
+  MAX_SAFE_ENTRIES,
+  MAX_SAFE_UNCOMPRESSED_BYTES,
+  SafeExtractError,
+  assertSafeZipCentralDirectory,
+  parseZipCentralDirectory,
+  safeExtractZip,
   checkReleaseTag,
   checkRelease,
   runCheckRelease,

@@ -27,7 +27,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | Class | Active | Skipped | N/A |
 |-------|-------:|--------:|----:|
 | Producer | 12 | 0 | 0 |
-| Consumer | 62 | 19 | 0 |
+| Consumer | 64 | 17 | 0 |
 | Governance | 16 | 0 | 0 |
 | Registry | 0 | 0 | 1 |
 
@@ -39,7 +39,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
 - ADO / multi-candidate policy cascades are out of scope
 - Approve/deny interactive UX and org executable deny-wins fidelity are out of scope
-- Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); soft archive zip vs tar.gz + size/entry caps also deferred
+- Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
 - Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)
 - P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install
 
@@ -50,7 +50,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - full ADO cascade
 - approve/deny UX
 - host-class AuthResolver
-- soft §10 archive caps
+- soft §10 tar.gz-only container (zip + caps shipped)
 - full Python Mode B port
 
 ## Per-requirement coverage
@@ -145,11 +145,11 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-rs-015 | MUST | 7.5 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-rs-016 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-sc-001 | MUST | 10.4 | consumer | active | packages/core/tests/extras/public-api.test.ts |
-| req-sc-002 | MUST | 10.9 | consumer | skipped |  — Soft: archive path-escape reject partial (zip extract); full zip-slip + symlink/hardlink + sc-004 caps not claimed |
+| req-sc-002 | MUST | 10.9 | consumer | active | packages/core/tests/acceptance/sc-soft-security/safe-extract-pack.test.ts; packages/core/tests/acceptance/sc-soft-security/safe-extract-registry.test.ts |
 | req-sc-003 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed |
-| req-sc-004 | MUST | 10.5 | consumer | skipped |  — Soft: registry archives are zip; OpenAPM v0.1 tar.gz-only + size/entry caps not claimed |
+| req-sc-004 | MUST | 10.5 | consumer | skipped |  — Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed) |
 | req-sc-005 | MUST | 10.3 | consumer | skipped |  — Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed |
-| req-sc-006 | MUST | 4.2.3 | consumer | skipped |  — Deferred: registries.*.insecure + http parse gate not implemented (key currently rejected) |
+| req-sc-006 | MUST | 4.2.3 | consumer | active | packages/core/tests/acceptance/sc-soft-security/registries-insecure.test.ts |
 | req-sc-007 | MUST | 10.3 | consumer | active | packages/core/tests/pack/pack-archive.test.ts |
 | req-sc-008 | SHOULD | 10.3 | consumer | skipped |  — Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed |
 | req-sc-009 | MUST | 10.13 | consumer | active | packages/core/tests/extras/public-api.test.ts |
@@ -172,11 +172,9 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 
 - **req-mf-016** (skipped): Soft limitation: mf-016 not claimed active in P3 floor
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
-- **req-sc-002** (skipped): Soft: archive path-escape reject partial (zip extract); full zip-slip + symlink/hardlink + sc-004 caps not claimed
 - **req-sc-003** (skipped): Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed
-- **req-sc-004** (skipped): Soft: registry archives are zip; OpenAPM v0.1 tar.gz-only + size/entry caps not claimed
+- **req-sc-004** (skipped): Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)
 - **req-sc-005** (skipped): Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed
-- **req-sc-006** (skipped): Deferred: registries.*.insecure + http parse gate not implemented (key currently rejected)
 - **req-sc-008** (skipped): Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed
 - **req-sc-010** (skipped): Deferred: no interactive approve / user-local grant store (approve UX)
 - **req-sc-011** (skipped): Deferred: org-policy executable deny-wins + install/audit identical outcome not claimed

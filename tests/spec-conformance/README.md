@@ -40,4 +40,4 @@ Regenerates the statement, then fails on `git diff` against the committed
 - **Governance** — floor (local dual-read + gate; remote/`extends` skipped)
 - **Registry** — N/A (no host / no rg-001 claim)
 
-Scope out: multi-target beyond cursor, registry host, approve/deny UX, host-class AuthResolver, soft §10 archive caps, full ADO cascade, full Python Mode B port. Residual `sc-*` skips are security-depth gaps (marketplace floor exists).
+Scope out: multi-target beyond cursor, registry host, approve/deny UX, host-class AuthResolver, soft §10 tar.gz-only container (zip + caps shipped), full ADO cascade, full Python Mode B port. Residual `sc-*` skips are security-depth / soft-format gaps (marketplace floor + sc-002/sc-006 claimed).

@@ -86,3 +86,4 @@ export {
   VENDOR_TARGET_RE,
   isValidTargetToken,
 } from "./targets.ts";
+export { isExemptInsecureHost } from "./registryUrl.ts";

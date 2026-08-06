@@ -39,6 +39,9 @@ export type DependencyLists = {
 
 export type RegistryEntry = {
   url: string;
+  /** Allow remote `http://` registry URL (OpenAPM §4.2.3 / sc-006). */
+  insecure?: boolean;
+  aliases?: unknown;
   [key: string]: unknown;
 };
 

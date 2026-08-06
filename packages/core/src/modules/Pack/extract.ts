@@ -1,12 +1,13 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { PackError } from "./errors.ts";
+import { SafeExtractError, safeExtractZip } from "./safeExtract.ts";
 import type { ExtractPackArchiveOptions, ExtractPackArchiveResult } from "./types.ts";
-import { readZipArchive } from "./zip.ts";
 
 /**
  * Extract a pack-produced plain zip into an output directory.
  * Expects dual-read manifest at archive root after extract.
+ * Uses shared safe-extract (symlink / path-escape / caps / fail-closed cleanup).
  */
 export async function extractPackArchive(
   options: ExtractPackArchiveOptions = {},
@@ -34,30 +35,21 @@ export async function extractPackArchive(
     });
   }
 
-  const files = readZipArchive(bytes);
-  let count = 0;
-
-  for (const [name, data] of Object.entries(files)) {
-    if (!name || name.endsWith("/")) continue;
-    const normalized = name.replace(/\\/g, "/");
-    if (normalized.startsWith("/") || normalized.split("/").includes("..")) {
-      throw new PackError("PACK_EXTRACT", `Refusing unsafe archive entry: ${name}`, {
-        path: name,
+  try {
+    const result = safeExtractZip(bytes, outputDir);
+    return { ok: true, outputDir: result.dest, filesExtracted: result.filesExtracted };
+  } catch (cause) {
+    if (cause instanceof SafeExtractError) {
+      throw new PackError("PACK_EXTRACT", cause.message, {
+        path: cause.path ?? archivePath,
+        cause,
       });
     }
-    const dest = resolve(outputDir, normalized);
-    const rel = relative(outputDir, dest);
-    if (rel.startsWith("..") || rel === "..") {
-      throw new PackError("PACK_EXTRACT", `Refusing path escape for archive entry: ${name}`, {
-        path: name,
-      });
-    }
-    mkdirSync(dirname(dest), { recursive: true });
-    writeFileSync(dest, data);
-    count += 1;
+    throw new PackError("PACK_EXTRACT", `Failed to extract zip archive: ${archivePath}`, {
+      path: archivePath,
+      cause,
+    });
   }
-
-  return { ok: true, outputDir, filesExtracted: count };
 }
 
 /** Aliases for acceptance helpers. */

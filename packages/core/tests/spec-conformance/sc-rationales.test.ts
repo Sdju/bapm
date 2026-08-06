@@ -13,7 +13,7 @@ import {
 } from "./sc-claims-helpers.ts";
 
 describe("skipped sc rationales (security-depth honesty)", () => {
-  test("ten skipped sc-* rationales must not use marketplace/plugin catch-all", () => {
+  test("residual skipped sc-* rationales must not use marketplace/plugin catch-all", () => {
     const rows = checklistRows(loadChecklist());
 
     for (const id of SKIPPED_SC_IDS) {
@@ -29,7 +29,7 @@ describe("skipped sc rationales (security-depth honesty)", () => {
     }
   });
 
-  test("ten skipped sc-* rationales match Soft/Deferred security-depth themes", () => {
+  test("residual skipped sc-* rationales match Soft/Deferred security-depth themes", () => {
     const rows = checklistRows(loadChecklist());
 
     for (const id of SKIPPED_SC_IDS) {

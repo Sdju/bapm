@@ -1,6 +1,6 @@
 /**
- * sc-* status honesty (promoted from mp-sc-claims): already-active stay active
- * with resolvable citations; claim list empty — ten IDs remain skipped.
+ * sc-* status honesty: active sc-* keep resolvable citations; residual skipped
+ * after sc-soft-security claim flip (sc-002 / sc-006).
  */
 import { expect, test, describe } from "vite-plus/test";
 import {
@@ -15,12 +15,12 @@ import {
 } from "./sc-claims-helpers.ts";
 import { existsSync } from "node:fs";
 
-describe("sc-* status honesty (empty claim list)", () => {
+describe("sc-* status honesty", () => {
   test("Mode B checklist.yml is present", () => {
     expect(existsSync(checklistPath), `expected ${checklistPath}`).toBe(true);
   });
 
-  test("req-sc-001 / 007 / 009 remain active with non-empty citations that resolve", () => {
+  test("active sc-* remain active with non-empty citations that resolve", () => {
     const rows = checklistRows(loadChecklist());
 
     for (const id of ACTIVE_SC_IDS) {
@@ -43,19 +43,17 @@ describe("sc-* status honesty (empty claim list)", () => {
     }
   });
 
-  test("ten honesty-floor sc-* stay skipped (claim list empty — no false actives)", () => {
+  test("residual honesty-floor sc-* stay skipped (no false actives)", () => {
     const rows = checklistRows(loadChecklist());
 
     for (const id of SKIPPED_SC_IDS) {
       const row = byId(rows, id);
-      expect(row.status, `${id} must remain skipped (empty claim list)`).toBe(
-        "skipped",
-      );
+      expect(row.status, `${id} must remain skipped`).toBe("skipped");
       expect(row.status).not.toBe("active");
     }
   });
 
-  test("no unexpected active among the ten claim-list candidates", () => {
+  test("no unexpected active among residual claim-list candidates", () => {
     const rows = checklistRows(loadChecklist());
     const falseActives = SKIPPED_SC_IDS.filter(
       (id) => byId(rows, id).status === "active",

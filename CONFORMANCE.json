@@ -22,7 +22,7 @@
     "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
     "ADO / multi-candidate policy cascades are out of scope",
     "Approve/deny interactive UX and org executable deny-wins fidelity are out of scope",
-    "Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); soft archive zip vs tar.gz + size/entry caps also deferred",
+    "Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft",
     "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)",
     "P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install"
   ],
@@ -32,7 +32,7 @@
     "full ADO cascade",
     "approve/deny UX",
     "host-class AuthResolver",
-    "soft §10 archive caps",
+    "soft §10 tar.gz-only container (zip + caps shipped)",
     "full Python Mode B port"
   ],
   "requirements": [
@@ -876,8 +876,8 @@
       "keyword": "MUST",
       "section": "10.9",
       "conformance_class": "consumer",
-      "status": "skipped",
-      "rationale": "Soft: archive path-escape reject partial (zip extract); full zip-slip + symlink/hardlink + sc-004 caps not claimed"
+      "status": "active",
+      "citation": "packages/core/tests/acceptance/sc-soft-security/safe-extract-pack.test.ts; packages/core/tests/acceptance/sc-soft-security/safe-extract-registry.test.ts"
     },
     {
       "id": "req-sc-003",
@@ -893,7 +893,7 @@
       "section": "10.5",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Soft: registry archives are zip; OpenAPM v0.1 tar.gz-only + size/entry caps not claimed"
+      "rationale": "Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)"
     },
     {
       "id": "req-sc-005",
@@ -908,8 +908,8 @@
       "keyword": "MUST",
       "section": "4.2.3",
       "conformance_class": "consumer",
-      "status": "skipped",
-      "rationale": "Deferred: registries.*.insecure + http parse gate not implemented (key currently rejected)"
+      "status": "active",
+      "citation": "packages/core/tests/acceptance/sc-soft-security/registries-insecure.test.ts"
     },
     {
       "id": "req-sc-007",

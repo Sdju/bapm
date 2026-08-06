@@ -5,6 +5,7 @@
  *
  * - `runPack` / `packProject` / `packArchive` — create plain zip
  * - `extractPackArchive` / `unpackArchive` / `extractPack` — extract for install round-trip
+ * - `safeExtractZip` / `parseZipCentralDirectory` — shared archive-safe extract (sc-002)
  * - `checkReleaseTag` / `checkRelease` / `runCheckRelease` — pr-004 tag↔version gate
  * - `isSecretPackPath` — sc-007 matcher
  * - Types / `PackError`
@@ -35,5 +36,14 @@ export { PackError } from "./errors.ts";
 
 export { runPack, packProject, packArchive } from "./runPack.ts";
 export { extractPackArchive, unpackArchive, extractPack } from "./extract.ts";
+export {
+  MAX_SAFE_ENTRIES,
+  MAX_SAFE_UNCOMPRESSED_BYTES,
+  SafeExtractError,
+  assertSafeZipCentralDirectory,
+  parseZipCentralDirectory,
+  safeExtractZip,
+} from "./safeExtract.ts";
+export type { SafeExtractZipResult, ZipCdEntry } from "./safeExtract.ts";
 export { checkReleaseTag, checkRelease, runCheckRelease } from "./checkRelease.ts";
 export { isSecretPackPath, describeSecretRefuse } from "./secrets.ts";
