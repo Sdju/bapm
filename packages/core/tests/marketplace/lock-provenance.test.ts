@@ -8,7 +8,7 @@ import {
   getLockApis,
   lockDepsOf,
   writeText,
-} from "./helpers.ts";
+} from "./search-install-helpers.ts";
 import { join } from "node:path";
 
 describe("mp-search-install G6 lock provenance round-trip", () => {

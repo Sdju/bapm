@@ -16,7 +16,7 @@ import {
   writeRegistryOnlyMarketplace,
   writeUnsupportedHostMarketplace,
   type TempConfig,
-} from "./helpers.ts";
+} from "./search-install-helpers.ts";
 
 describe("mp-search-install G2/G8/G10 resolveMarketplacePlugin", () => {
   let tmp: TempConfig | undefined;

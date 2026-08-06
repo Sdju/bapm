@@ -1,5 +1,5 @@
 /**
- * Helpers for mp-search-install acceptance (core). Soft-resolve @bapm/core APIs.
+ * Helpers for marketplace search/install suite (core). Soft-resolve @bapm/core APIs.
  */
 import * as core from "@bapm/core";
 import {
@@ -15,7 +15,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 
 type AnyFn = (...args: never[]) => unknown;
 

@@ -7,7 +7,7 @@ import {
   expectKnownCommand,
   runInEnv,
   type IsolatedEnv,
-} from "./helpers.ts";
+} from "./search-install-helpers.ts";
 
 describe("mp-search-install G7 help + consumer boundary", () => {
   let env: IsolatedEnv | undefined;

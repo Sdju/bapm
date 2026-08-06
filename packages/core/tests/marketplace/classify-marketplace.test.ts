@@ -2,7 +2,7 @@
  * G3 — Classifier: string NAME@MARKETPLACE[#ref] + object { name, marketplace, version? }
  */
 import { describe, expect, test } from "vite-plus/test";
-import { getClassifyDependencyRef } from "./helpers.ts";
+import { getClassifyDependencyRef } from "./search-install-helpers.ts";
 
 describe("mp-search-install G3 classify marketplace forms", () => {
   test("string tools@acme classifies as marketplace", () => {

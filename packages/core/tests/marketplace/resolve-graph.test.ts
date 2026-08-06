@@ -16,7 +16,7 @@ import {
   writeManifest,
   writeText,
   type TempConfig,
-} from "./helpers.ts";
+} from "./search-install-helpers.ts";
 
 async function withHome<T>(home: string, fn: () => Promise<T>): Promise<T> {
   const prev = process.env.HOME;

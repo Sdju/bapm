@@ -14,7 +14,7 @@ import {
   writeEmptyProject,
   writeLocalMarketplace,
   type IsolatedEnv,
-} from "./helpers.ts";
+} from "./search-install-helpers.ts";
 
 describe("mp-search-install G5/G6 install positional + lock provenance", () => {
   let env: IsolatedEnv | undefined;

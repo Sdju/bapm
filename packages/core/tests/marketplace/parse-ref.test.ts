@@ -6,7 +6,7 @@ import {
   expectAsyncThrowMatching,
   getParseMarketplaceRef,
   parsedRefOf,
-} from "./helpers.ts";
+} from "./search-install-helpers.ts";
 
 describe("mp-search-install G1 parseMarketplaceRef", () => {
   afterEach(() => {

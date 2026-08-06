@@ -1,5 +1,5 @@
 /**
- * CLI helpers for mp-search-install acceptance.
+ * CLI helpers for marketplace search/install suite.
  * Isolates HOME so ~/.bapm never touches the real user config.
  */
 import {
@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type IsolatedEnv = {
   home: string;

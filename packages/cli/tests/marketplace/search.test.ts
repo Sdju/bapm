@@ -9,7 +9,7 @@ import {
   runInEnv,
   writeLocalMarketplace,
   type IsolatedEnv,
-} from "./helpers.ts";
+} from "./search-install-helpers.ts";
 
 describe("mp-search-install G7 top-level search CLI", () => {
   let env: IsolatedEnv | undefined;
