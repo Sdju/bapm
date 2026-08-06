@@ -1,5 +1,5 @@
 /**
- * CLI helpers for mp-authoring-yml acceptance.
+ * CLI helpers for marketplace authoring (bapm.yml) suite.
  */
 import {
   existsSync,
@@ -13,7 +13,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; root: string; cleanup: () => void };
 

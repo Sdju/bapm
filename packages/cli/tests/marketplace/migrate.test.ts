@@ -9,7 +9,7 @@ import {
   runInProject,
   type TempProject,
   writeText,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml CLI marketplace migrate", () => {
   let project: TempProject | undefined;

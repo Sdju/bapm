@@ -9,7 +9,7 @@ import {
   readText,
   runInProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml CLI lifecycle", () => {
   let project: TempProject | undefined;

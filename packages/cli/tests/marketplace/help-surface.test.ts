@@ -11,7 +11,7 @@ import {
   type TempProject,
   withCapturedIo,
   runCli,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml CLI help + consumer boundary", () => {
   let project: TempProject | undefined;

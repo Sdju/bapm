@@ -7,7 +7,7 @@ import {
   getRenderInitMarketplaceBlock,
   hasHostMarketplaceJsonEmit,
   type TempProject,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml init template", () => {
   let project: TempProject | undefined;

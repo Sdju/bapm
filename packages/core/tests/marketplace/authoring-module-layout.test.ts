@@ -4,7 +4,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
-import { core, listFilesRecursive, marketplaceSrc, readSrc, srcRoot } from "./helpers.ts";
+import { core, listFilesRecursive, marketplaceSrc, readSrc, srcRoot } from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml core Marketplace authoring layout", () => {
   test("Marketplace module directory exists (authoring stays inside it)", () => {

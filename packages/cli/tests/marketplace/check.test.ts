@@ -9,7 +9,7 @@ import {
   type TempProject,
   validAuthoringStub,
   writeText,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml CLI marketplace check", () => {
   let project: TempProject | undefined;

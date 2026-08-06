@@ -6,7 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
 
-const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const cliRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const srcRoot = join(cliRoot, "src");
 
 function readSrc(rel: string): string {

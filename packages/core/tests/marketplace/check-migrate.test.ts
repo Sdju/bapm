@@ -13,7 +13,7 @@ import {
   validAuthoringBapmYml,
   writeBapmYml,
   writeText,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 function checkOk(result: unknown): boolean {
   if (typeof result === "boolean") return result;

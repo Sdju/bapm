@@ -1,6 +1,6 @@
 /**
- * Core helpers for mp-authoring-yml acceptance.
- * Soft-resolve authoring Marketplace APIs from @bapm/core (RED until apply).
+ * Core helpers for marketplace authoring (bapm.yml) suite.
+ * Soft-resolve authoring Marketplace APIs from @bapm/core.
  */
 import * as core from "@bapm/core";
 import {
@@ -18,7 +18,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const srcRoot = join(coreRoot, "src");
 export const marketplaceSrc = join(srcRoot, "modules", "Marketplace");
 

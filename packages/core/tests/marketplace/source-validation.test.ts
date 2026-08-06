@@ -2,7 +2,7 @@
  * marketplace-authoring-schema — req-mf-017 / APM SOURCE_RE accept & reject.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { acceptsSource, getValidateAuthoringSource } from "./helpers.ts";
+import { acceptsSource, getValidateAuthoringSource } from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml source validation", () => {
   test("accepts github owner/repo shorthand", () => {

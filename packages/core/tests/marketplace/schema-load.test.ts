@@ -15,7 +15,7 @@ import {
   validAuthoringBapmYml,
   writeBapmYml,
   writeText,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml schema load", () => {
   let project: TempProject | undefined;

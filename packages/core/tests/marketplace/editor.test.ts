@@ -13,7 +13,7 @@ import {
   type TempProject,
   validAuthoringBapmYml,
   writeBapmYml,
-} from "./helpers.ts";
+} from "./authoring-helpers.ts";
 
 describe("mp-authoring-yml YAML package editor", () => {
   let project: TempProject | undefined;
