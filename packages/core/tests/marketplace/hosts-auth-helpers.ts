@@ -1,18 +1,14 @@
 /**
- * Helpers for mp-hosts-auth acceptance (RED until apply).
+ * Helpers for marketplace hosts-auth suite (promoted from mp-hosts-auth).
  * Soft-resolve thin host-classify / token APIs from @bapm/core.
  */
 import * as core from "@bapm/core";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parse as parseYaml } from "yaml";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
-export const repoRoot = resolve(coreRoot, "../..");
-export const checklistPath = join(repoRoot, "tests/spec-conformance/checklist.yml");
 
 type AnyFn = (...args: never[]) => unknown;
 
@@ -175,38 +171,5 @@ export function hasUsableToken(resolved: unknown): boolean {
   const { token } = tokenPayload(resolved);
   return Boolean(token && token.length > 0);
 }
-
-export type ChecklistRow = { id: string; status: string; [key: string]: unknown };
-
-export function loadChecklistRows(): ChecklistRow[] {
-  if (!existsSync(checklistPath)) {
-    throw new Error(`checklist missing: ${checklistPath}`);
-  }
-  const doc = parseYaml(readFileSync(checklistPath, "utf8")) as {
-    requirements?: Record<string, unknown>[];
-  };
-  if (!Array.isArray(doc.requirements)) {
-    throw new TypeError("checklist.yml must have requirements[]");
-  }
-  return doc.requirements.map((r) => ({
-    ...r,
-    id: String(r.id ?? ""),
-    status: String(r.status ?? "").toLowerCase(),
-  }));
-}
-
-export function byId(rows: ChecklistRow[], id: string): ChecklistRow {
-  const row = rows.find((r) => r.id === id);
-  if (!row) throw new Error(`checklist missing ${id}`);
-  return row;
-}
-
-/** Host-auth §10.3 IDs that MUST stay skipped (Strategy A). */
-export const HOSTS_AUTH_SKIPPED_SC = [
-  "req-sc-003",
-  "req-sc-005",
-  "req-sc-008",
-  "req-sc-013",
-] as const;
 
 export { core, join };

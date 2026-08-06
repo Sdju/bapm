@@ -1,5 +1,6 @@
 /**
  * G7 — CLI unlock: gitlab / enterprise --host / help rewrite; generic git refuse.
+ * Promoted from mp-hosts-auth acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {

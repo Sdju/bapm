@@ -6,7 +6,7 @@ import {
   getClassifyMarketplaceHost,
   getCreateMarketplaceSource,
   withEnv,
-} from "./helpers.ts";
+} from "./hosts-auth-helpers.ts";
 
 describe("mp-hosts-auth host classification", () => {
   afterEach(async () => {

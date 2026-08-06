@@ -12,7 +12,7 @@ import {
   type TempDir,
   writeText,
   join,
-} from "./helpers.ts";
+} from "./hosts-auth-helpers.ts";
 
 type Captured = { url: string; headers: Record<string, string> };
 

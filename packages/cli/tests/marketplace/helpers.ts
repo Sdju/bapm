@@ -141,3 +141,34 @@ export function expectMarketplaceKnown(combined: string): void {
     throw new Error(`CLI treated "marketplace" as unknown command:\n${combined}`);
   }
 }
+
+/** Snapshot + restore selected env keys around a test body. */
+export async function withEnv<T>(
+  patch: Record<string, string | undefined>,
+  fn: () => Promise<T> | T,
+): Promise<T> {
+  const prev: Record<string, string | undefined> = {};
+  for (const key of Object.keys(patch)) {
+    prev[key] = process.env[key];
+    const next = patch[key];
+    if (next === undefined) delete process.env[key];
+    else process.env[key] = next;
+  }
+  try {
+    return await fn();
+  } finally {
+    for (const key of Object.keys(patch)) {
+      const v = prev[key];
+      if (v === undefined) delete process.env[key];
+      else process.env[key] = v;
+    }
+  }
+}
+
+/** Minimal marketplace.json for hosts-auth CLI unlock probes. */
+export const FIXTURE_MP = `{
+  "name": "hosts-auth-cli-mp",
+  "plugins": [
+    { "name": "demo-plugin", "description": "Demo", "source": "./plugins/demo", "version": "1.0.0" }
+  ]
+}`;

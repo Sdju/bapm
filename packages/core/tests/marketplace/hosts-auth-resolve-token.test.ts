@@ -7,7 +7,7 @@ import {
   hasUsableToken,
   tokenPayload,
   withEnv,
-} from "./helpers.ts";
+} from "./hosts-auth-helpers.ts";
 
 const SECRET_GH = "ghp_ACCEPTANCE_GITHUB_SECRET_DO_NOT_LEAK";
 const SECRET_GL = "glpat-ACCEPTANCE_GITLAB_SECRET_DO_NOT_LEAK";

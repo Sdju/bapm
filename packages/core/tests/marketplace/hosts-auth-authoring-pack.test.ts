@@ -10,7 +10,7 @@ import {
   writeText,
   join,
   type TempDir,
-} from "./helpers.ts";
+} from "./hosts-auth-helpers.ts";
 
 describe("mp-hosts-auth authoring check + pack resolve", () => {
   let tmp: TempDir | undefined;
