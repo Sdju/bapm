@@ -9,7 +9,7 @@ import {
   withCapturedIo,
   type TempProject,
 } from "./helpers.ts";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 describe("mp-find CLI runtime surface", () => {
   let project: TempProject | undefined;

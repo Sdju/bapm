@@ -1,5 +1,5 @@
 /**
- * CLI helpers for mp-find acceptance.
+ * CLI helpers for Find suite.
  */
 import {
   mkdirSync,
@@ -9,7 +9,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 

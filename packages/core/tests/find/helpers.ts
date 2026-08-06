@@ -1,5 +1,5 @@
 /**
- * Helpers for mp-find acceptance (core). Soft-resolve @bapm/core Find APIs.
+ * Helpers for Find suite (core). Soft-resolve @bapm/core Find APIs.
  */
 import * as core from "@bapm/core";
 import {
@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import type { LockedDependency, LockfileDocument } from "@bapm/core";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const srcRoot = join(coreRoot, "src");
 
 type AnyFn = (...args: never[]) => unknown;
