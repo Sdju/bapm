@@ -6,7 +6,11 @@ export interface PackDeps {
     dryRun?: boolean;
     checkRelease?: boolean;
     tag?: string;
-  }) => Promise<{ archivePath?: string; ok?: boolean }>;
+    marketplace?: string | string[] | "all" | "none";
+    marketplacePaths?: Record<string, string> | string[];
+    offline?: boolean;
+    includePrerelease?: boolean;
+  }) => Promise<{ archivePath?: string; ok?: boolean; marketplaceWritten?: boolean }>;
   checkReleaseTag: (options: {
     cwd?: string;
     tag?: string;
@@ -22,4 +26,5 @@ export interface PackResult {
   ok: boolean;
   message?: string;
   archivePath?: string;
+  marketplaceWritten?: boolean;
 }

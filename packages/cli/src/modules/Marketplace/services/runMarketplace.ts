@@ -264,8 +264,9 @@ Consumer add options:
   --host <fqdn>        Host for OWNER/REPO shorthand (github.com only in v1)
   -h, --help           Show this help
 
-Not shipped in this release: pack host outputs, outdated, audit.
+Not shipped in this release: outdated, audit.
 Use check --offline for schema-only validation.
+Host marketplace outputs are written by \`bapm pack\` (see \`bapm pack --help\`).
 `;
 }
 

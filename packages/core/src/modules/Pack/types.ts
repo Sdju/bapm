@@ -12,6 +12,22 @@ export type RunPackOptions = {
   checkRelease?: boolean;
   /** Tag override for `--check-release`. */
   tag?: string;
+  /**
+   * CLI `--marketplace` filter: `all` | `none` | comma list / string[].
+   * When omitted, emit all formats enabled in authoring `outputs`.
+   */
+  marketplace?: string | string[] | "all" | "none";
+  /** CLI `--marketplace-path FORMAT=PATH` overrides. */
+  marketplacePaths?: Record<string, string> | string[];
+  /** Fail-closed remote resolve without network. */
+  offline?: boolean;
+  /** Include prerelease tags when resolving version ranges. */
+  includePrerelease?: boolean;
+  /** Injectable ls-remote for tests (forwarded to marketplace builder). */
+  lsRemote?: (repoUrl: string, ref?: string) => Promise<{ sha: string; ref: string }> | {
+    sha: string;
+    ref: string;
+  };
 };
 
 export type RunPackResult = {
@@ -19,6 +35,7 @@ export type RunPackResult = {
   dryRun: boolean;
   archivePath?: string;
   filesPacked: number;
+  marketplaceWritten?: boolean;
 };
 
 export type ExtractPackArchiveOptions = {
