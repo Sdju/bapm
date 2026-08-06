@@ -116,6 +116,9 @@ export type RunInstallOptions = {
   experimentalRegistries?: boolean;
   registryBaseUrl?: string;
   mirrorUrl?: string;
+  /** Override `~/.bapm` for marketplace registry during install resolve. */
+  marketplaceConfigDir?: string;
+  configDir?: string;
 };
 
 /** Alias for design naming flexibility. */

@@ -9,14 +9,17 @@ export type BapmDependency = {
 
 /**
  * Object-form APM dependency. Source discriminators `git` | `id` | `path` |
- * `registry` are mutually exclusive, except `path` may accompany `git` as a
- * virtual_path companion (`git: parent` requires `path`).
+ * `registry` | `marketplace` are mutually exclusive, except `path` may accompany
+ * `git` as a virtual_path companion (`git: parent` requires `path`).
  */
 export type ObjectDependency = {
   git?: string;
   id?: string;
   path?: string;
   registry?: string;
+  /** Marketplace alias for `{ name, marketplace, version? }` form. */
+  marketplace?: string;
+  name?: string;
   version?: string;
   ref?: string;
   alias?: string;

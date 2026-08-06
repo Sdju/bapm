@@ -8,6 +8,7 @@ import {
   type DependencyEntry,
   type ObjectDependency,
 } from "@/modules/Manifest";
+import { parseMarketplaceRef, resolveMarketplacePlugin } from "@/modules/Marketplace";
 import { classifyDependencyRef } from "@/modules/Resolver";
 import { InstallError } from "./errors.ts";
 
@@ -49,7 +50,7 @@ export function normalizePackageRefs(refs: string[] | undefined): string[] {
 
 /**
  * Convert a CLI/API package-ref string into a manifest `dependencies.apm` entry.
- * Path-like refs become `{ path }`; git/registry shorthands stay as strings.
+ * Path-like refs become `{ path }`; marketplace/git/registry shorthands stay as strings.
  */
 export function packageRefToEntry(ref: string): DependencyEntry {
   let classified;
@@ -66,7 +67,42 @@ export function packageRefToEntry(ref: string): DependencyEntry {
   if (classified.kind === "local" && classified.path) {
     return { path: classified.path };
   }
+  // Marketplace refs stay as NAME@MARKETPLACE[#ref] strings for graph resolve.
   return ref;
+}
+
+/**
+ * Pre-resolve marketplace positionals so miss/fetch/unsupported fails before
+ * mutating the project manifest (G5 fail-closed).
+ */
+export async function assertMarketplacePackageRefsResolvable(
+  refs: string[],
+  opts?: { configDir?: string; marketplaceConfigDir?: string },
+): Promise<void> {
+  for (const ref of refs) {
+    let parsed;
+    try {
+      parsed = parseMarketplaceRef(ref);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      throw new InstallError("INSTALL_PACKAGE_REF", message, { cause, details: { ref } });
+    }
+    if (!parsed) continue;
+    try {
+      await resolveMarketplacePlugin(
+        parsed.pluginName,
+        parsed.marketplaceName,
+        parsed.ref,
+        {
+          configDir: opts?.configDir ?? opts?.marketplaceConfigDir,
+          marketplaceConfigDir: opts?.marketplaceConfigDir ?? opts?.configDir,
+        },
+      );
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      throw new InstallError("INSTALL_PACKAGE_REF", message, { cause, details: { ref } });
+    }
+  }
 }
 
 function entryMatchesRef(entry: DependencyEntry, ref: string, asEntry: DependencyEntry): boolean {

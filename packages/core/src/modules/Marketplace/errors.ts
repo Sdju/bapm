@@ -37,3 +37,30 @@ export class MarketplaceFetchError extends MarketplaceError {
     this.reason = reason;
   }
 }
+
+export class MarketplacePluginNotFoundError extends MarketplaceError {
+  readonly pluginName: string;
+  readonly marketplaceName: string;
+
+  constructor(pluginName: string, marketplaceName: string) {
+    super(
+      `Plugin '${pluginName}' was not found in marketplace '${marketplaceName}'. ` +
+        `Run 'bapm marketplace browse ${marketplaceName}' or 'bapm search QUERY@${marketplaceName}' to list plugins.`,
+    );
+    this.name = "MarketplacePluginNotFoundError";
+    this.pluginName = pluginName;
+    this.marketplaceName = marketplaceName;
+  }
+}
+
+export class MarketplaceUnsupportedSourceError extends MarketplaceError {
+  readonly pluginName: string;
+  readonly reason: string;
+
+  constructor(pluginName: string, reason: string) {
+    super(`Plugin '${pluginName}' has an unsupported source: ${reason}`);
+    this.name = "MarketplaceUnsupportedSourceError";
+    this.pluginName = pluginName;
+    this.reason = reason;
+  }
+}

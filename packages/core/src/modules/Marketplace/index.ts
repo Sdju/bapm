@@ -4,7 +4,13 @@
  * Orthogonal to Registry HTTP (package registry). Config root: `~/.bapm`.
  */
 
-export { MarketplaceError, MarketplaceNotFoundError, MarketplaceFetchError } from "./errors.ts";
+export {
+  MarketplaceError,
+  MarketplaceNotFoundError,
+  MarketplaceFetchError,
+  MarketplacePluginNotFoundError,
+  MarketplaceUnsupportedSourceError,
+} from "./errors.ts";
 
 export type {
   MarketplaceConfigOptions,
@@ -53,3 +59,13 @@ export {
 } from "./fetch.ts";
 
 export { validateMarketplace } from "./validate.ts";
+
+export {
+  parseMarketplaceRef,
+  resolveMarketplacePlugin,
+  type ParsedMarketplaceRef,
+  type MarketplaceProvenance,
+  type MarketplaceConcreteDep,
+  type MarketplacePluginResolution,
+  type ResolveMarketplacePluginOptions,
+} from "./resolver.ts";

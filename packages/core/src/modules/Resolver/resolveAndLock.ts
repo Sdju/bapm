@@ -75,6 +75,8 @@ export async function resolveAndLock(
     experimentalRegistries: options.experimentalRegistries,
     registryBaseUrl: options.registryBaseUrl,
     mirrorUrl: options.mirrorUrl,
+    marketplaceConfigDir: options.marketplaceConfigDir ?? options.configDir,
+    configDir: options.configDir ?? options.marketplaceConfigDir,
   });
 
   const candidates = nodesToPolicyCandidates(graph.nodes);
@@ -303,6 +305,7 @@ function buildLockDocument(
       } else if (n.path) {
         (entry as Record<string, unknown>).path = n.path;
       }
+      applyMarketplaceProvenance(entry, n);
       deps.push(entry);
       continue;
     }
@@ -319,6 +322,7 @@ function buildLockDocument(
       if (n.constraint) entry.constraint = n.constraint;
       (entry as Record<string, unknown>).resolved_by = n.resolved_by;
       (entry as Record<string, unknown>).depth = n.depth;
+      applyMarketplaceProvenance(entry, n);
       deps.push(entry);
       continue;
     }
@@ -345,6 +349,7 @@ function buildLockDocument(
     // Extra diagnostic fields accepted by M2 (unknown keys retained)
     (entry as Record<string, unknown>).resolved_by = n.resolved_by;
     (entry as Record<string, unknown>).depth = n.depth;
+    applyMarketplaceProvenance(entry, n);
 
     // lk-015: record canonical tree_sha256 for git-literal / git-semver
     const treeRoot = n.packageRoot;
@@ -409,4 +414,14 @@ function buildLockDocument(
   }
 
   return document;
+}
+
+function applyMarketplaceProvenance(
+  entry: LockedDependency,
+  n: ResolvedNode,
+): void {
+  if (n.discovered_via) entry.discovered_via = n.discovered_via;
+  if (n.marketplace_plugin_name) entry.marketplace_plugin_name = n.marketplace_plugin_name;
+  if (n.source_url) entry.source_url = n.source_url;
+  if (n.source_digest) entry.source_digest = n.source_digest;
 }

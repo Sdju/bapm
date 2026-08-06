@@ -14,6 +14,7 @@ import {
   COMMAND_POLICY,
   COMMAND_PRUNE,
   COMMAND_PUBLISH,
+  COMMAND_SEARCH,
   COMMAND_SELF_UPDATE,
   COMMAND_UNINSTALL,
   COMMAND_UPDATE,
@@ -34,6 +35,7 @@ import { packCommand } from "@/commands/pack.ts";
 import { policyCommand } from "@/commands/policy.ts";
 import { pruneCommand } from "@/commands/prune.ts";
 import { publishCommand } from "@/commands/publish.ts";
+import { searchCommand } from "@/commands/search.ts";
 import { selfUpdateCommand } from "@/commands/self-update.ts";
 import { uninstallCommand } from "@/commands/uninstall.ts";
 import { updateCommand } from "@/commands/update.ts";
@@ -53,6 +55,7 @@ import { pack } from "./init/pack.ts";
 import { policy } from "./init/policy.ts";
 import { prune } from "./init/prune.ts";
 import { publish } from "./init/publish.ts";
+import { search } from "./init/search.ts";
 import { selfUpdate } from "./init/selfUpdate.ts";
 import { uninstall } from "./init/uninstall.ts";
 import { update } from "./init/update.ts";
@@ -80,6 +83,7 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_CACHE]: (argv) => cacheCommand(argv, cache),
   [COMMAND_POLICY]: (argv) => policyCommand(argv, policy),
   [COMMAND_MARKETPLACE]: (argv) => marketplaceCommand(argv, marketplace),
+  [COMMAND_SEARCH]: (argv) => searchCommand(argv, search),
   "-h": (argv) => helpCommand(argv, help),
   "--help": (argv) => helpCommand(argv, help),
   "-V": (argv) => versionCommand(argv, version),

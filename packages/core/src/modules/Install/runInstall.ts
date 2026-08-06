@@ -48,6 +48,7 @@ import { enforceFrozen } from "./frozen.ts";
 import { gateInsecureBeforeFetch, normalizeAllowInsecureHosts } from "./insecurePolicy.ts";
 import {
   assertKnownExcludeIds,
+  assertMarketplacePackageRefsResolvable,
   autoCreateMinimalManifest,
   manifestExistsAt,
   normalizeExcludeIds,
@@ -119,6 +120,13 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   // Validate package refs early (also for dry-run preview)
   for (const ref of packageRefs) {
     packageRefToEntry(ref);
+  }
+  // G5: marketplace positional miss must fail before manifest mutation
+  if (packageRefs.length > 0) {
+    await assertMarketplacePackageRefsResolvable(packageRefs, {
+      configDir: options.configDir ?? options.marketplaceConfigDir,
+      marketplaceConfigDir: options.marketplaceConfigDir ?? options.configDir,
+    });
   }
 
   if (options.archivePath && !dryRun) {
@@ -250,6 +258,11 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         policyPath,
         policy: policyPath,
         noPolicy,
+        marketplaceConfigDir: options.marketplaceConfigDir ?? options.configDir,
+        configDir: options.configDir ?? options.marketplaceConfigDir,
+        experimentalRegistries: options.experimentalRegistries,
+        registryBaseUrl: options.registryBaseUrl,
+        mirrorUrl: options.mirrorUrl,
         ...ports,
         ...policyPorts,
       });

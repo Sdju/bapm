@@ -135,6 +135,10 @@ function dependencyToPlain(dep: LockedDependency): Record<string, unknown> {
     "package_type",
     "deployed_files",
     "deployed_file_hashes",
+    "discovered_via",
+    "marketplace_plugin_name",
+    "source_url",
+    "source_digest",
   ];
 
   const seen = new Set<string>();

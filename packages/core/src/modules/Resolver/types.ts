@@ -47,6 +47,17 @@ export type ClassifiedDependency = {
   alias?: string;
   /** Manifest-level prerelease opt-in for git-semver. */
   prerelease?: boolean;
+  /** Marketplace object/string form fields. */
+  pluginName?: string;
+  marketplaceName?: string;
+  versionSpec?: string;
+};
+
+export type MarketplaceLockProvenance = {
+  discovered_via: string;
+  marketplace_plugin_name: string;
+  source_url?: string;
+  source_digest?: string;
 };
 
 export type ResolvedNode = {
@@ -74,12 +85,23 @@ export type ResolvedNode = {
   registry_base_url?: string;
   registry_owner?: string;
   registry_repo?: string;
+  /** Marketplace-origin provenance (concrete source retained). */
+  discovered_via?: string;
+  marketplace_plugin_name?: string;
+  source_url?: string;
+  source_digest?: string;
 };
 
 export type ResolveGraphResult = {
   nodes: ResolvedNode[];
   /** Depth-1 visit order (declaration order among siblings). */
   visitOrder: string[];
+  /**
+   * Lock-shaped dependency view (includes marketplace provenance).
+   * Convenience for callers / acceptance that inspect graph outcomes as lock rows.
+   */
+  lockfile?: { dependencies: Array<Record<string, unknown>> };
+  document?: { dependencies: Array<Record<string, unknown>> };
 };
 
 export type ResolvePorts = {
@@ -116,6 +138,10 @@ export type ResolveDependencyGraphOptions = ResolvePorts & {
   registryBaseUrl?: string;
   /** Mirror base URL for rs-009 replay (tests / install). */
   mirrorUrl?: string;
+  /** Override `~/.bapm` config root for marketplace registry/cache. */
+  marketplaceConfigDir?: string;
+  /** Alias for marketplaceConfigDir. */
+  configDir?: string;
 };
 
 export type DownloadPackageSpec = {
@@ -180,6 +206,8 @@ export type ResolveAndLockOptions = ResolvePorts & {
   experimentalRegistries?: boolean;
   registryBaseUrl?: string;
   mirrorUrl?: string;
+  marketplaceConfigDir?: string;
+  configDir?: string;
 };
 
 export type ResolveAndLockResult = {

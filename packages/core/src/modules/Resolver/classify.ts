@@ -1,5 +1,6 @@
 import { ResolverError } from "./errors.ts";
 import type { ClassifiedDependency, DependencyKind } from "./types.ts";
+import { parseMarketplaceRef } from "@/modules/Marketplace";
 
 /**
  * Classify a dependency declaration (OpenAPM kind precedence:
@@ -65,9 +66,23 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
       };
     }
 
-    // path alone already handled; marketplace-ish marketplace: key
+    // Object marketplace form: { name, marketplace, version? }
     if (typeof obj.marketplace === "string") {
-      return { kind: "marketplace", raw: input, alias };
+      const pluginName = typeof obj.name === "string" ? obj.name : undefined;
+      const versionSpec =
+        typeof obj.version === "string"
+          ? obj.version
+          : typeof obj.ref === "string"
+            ? obj.ref
+            : undefined;
+      return {
+        kind: "marketplace",
+        raw: input,
+        alias,
+        pluginName,
+        marketplaceName: obj.marketplace,
+        versionSpec,
+      };
     }
   }
 
@@ -94,6 +109,24 @@ function classifyString(spec: string): ClassifiedDependency {
   ) {
     const path = trimmed.startsWith("path:") ? trimmed.slice("path:".length).trim() : trimmed;
     return { kind: "local", raw: spec, path };
+  }
+
+  // Marketplace NAME@MARKETPLACE[#ref] before owner/repo / @-bearing fallbacks
+  try {
+    const mp = parseMarketplaceRef(trimmed);
+    if (mp) {
+      return {
+        kind: "marketplace",
+        raw: spec,
+        pluginName: mp.pluginName,
+        marketplaceName: mp.marketplaceName,
+        versionSpec: mp.ref ?? undefined,
+      };
+    }
+  } catch (cause) {
+    // Semver-range reject must surface (G1)
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new ResolverError("CLASSIFY_INVALID", message, { cause });
   }
 
   // registry:id or bare id-like with registry scheme

@@ -4,6 +4,10 @@ import { loadManifest } from "@/modules/Manifest";
 import { loadLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
 import {
+  resolveMarketplacePlugin,
+  type MarketplaceProvenance,
+} from "@/modules/Marketplace";
+import {
   createRegistryClient,
   downloadUrl,
   experimentalRegistriesRemediation,
@@ -35,6 +39,7 @@ import type {
   ClassifiedDependency,
   Downloader,
   GitRemote,
+  MarketplaceLockProvenance,
   ResolveDependencyGraphOptions,
   ResolveGraphResult,
   ResolvedNode,
@@ -53,6 +58,8 @@ type QueueItem = {
   parentName: string;
   /** When updateRefs: whether this edge should ignore warm pins (rs-012 scope). */
   shouldUpdate: boolean;
+  /** Marketplace provenance to attach once the concrete edge materializes. */
+  marketplaceProvenance?: MarketplaceLockProvenance;
 };
 
 type EdgeRecord = {
@@ -76,6 +83,7 @@ type EdgeRecord = {
   registry_base_url?: string;
   registry_owner?: string;
   registry_repo?: string;
+  marketplaceProvenance?: MarketplaceLockProvenance;
 };
 
 type WarmPin = {
@@ -144,6 +152,7 @@ export async function resolveDependencyGraph(
   const experimentalRegistries = isExperimentalRegistriesEnabled({
     experimentalRegistries: options.experimentalRegistries,
   });
+  const marketplaceConfigDir = options.marketplaceConfigDir ?? options.configDir;
 
   const { document: manifest } = loadManifest({ cwd });
   const rootName = manifest.name;
@@ -206,10 +215,11 @@ export async function resolveDependencyGraph(
     const classified = classifyDependencyRef(normalizeEntry(item.entry));
 
     if (classified.kind === "marketplace") {
-      throw new ResolverError(
-        "RESOLVE_REGISTRY_DEFERRED",
-        `Marketplace dependency is deferred/unsupported (marketplace=${String((classified.raw as { marketplace?: string })?.marketplace ?? "?")}); not falling back to registry or git`,
-      );
+      const concrete = await resolveMarketplaceEdge(item, classified, {
+        marketplaceConfigDir,
+      });
+      queue.unshift(concrete);
+      continue;
     }
 
     if (classified.kind === "registry") {
@@ -264,8 +274,79 @@ export async function resolveDependencyGraph(
 
   // Intersection-pick per identity
   const nodes = await applyIntersectionPick(edgesByIdentity, tagLister);
+  const dependencies = nodes.map(nodeToLockRow);
+  const lockfile = { dependencies };
 
-  return { nodes, visitOrder };
+  return { nodes, visitOrder, lockfile, document: lockfile };
+}
+
+async function resolveMarketplaceEdge(
+  item: QueueItem,
+  classified: ClassifiedDependency,
+  ctx: { marketplaceConfigDir?: string },
+): Promise<QueueItem> {
+  const marketplaceName = classified.marketplaceName;
+  const pluginName = classified.pluginName;
+  if (!marketplaceName || !pluginName) {
+    throw new ResolverError(
+      "RESOLVE_FAILED",
+      `Marketplace dependency missing name/marketplace (marketplace=${marketplaceName ?? "?"}, name=${pluginName ?? "?"})`,
+    );
+  }
+
+  let resolution;
+  try {
+    resolution = await resolveMarketplacePlugin(
+      pluginName,
+      marketplaceName,
+      classified.versionSpec ?? null,
+      {
+        configDir: ctx.marketplaceConfigDir,
+        marketplaceConfigDir: ctx.marketplaceConfigDir,
+      },
+    );
+  } catch (cause) {
+    const message = cause instanceof Error ? cause.message : String(cause);
+    throw new ResolverError("RESOLVE_FAILED", message, { cause });
+  }
+
+  const provenance: MarketplaceProvenance = resolution.provenance(
+    marketplaceName,
+    pluginName,
+  );
+  const dep = resolution.dependency;
+  const entry: DependencyEntry =
+    typeof dep === "string"
+      ? dep
+      : (("path" in dep ? { path: dep.path } : { git: dep.git, ref: dep.ref }) as ObjectDependency);
+
+  return {
+    ...item,
+    entry,
+    marketplaceProvenance: provenance,
+  };
+}
+
+function nodeToLockRow(n: ResolvedNode): Record<string, unknown> {
+  const row: Record<string, unknown> = {
+    name: n.name,
+    repo_url: n.repo_url ?? n.identity,
+  };
+  if (n.kind === "local") row.source = "local";
+  else if (n.kind === "registry") row.source = "registry";
+  else row.source = n.source ?? "git";
+  if (n.resolved_commit) row.resolved_commit = n.resolved_commit;
+  if (n.version) row.version = n.version;
+  if (n.path) row.path = n.path;
+  if (n.constraint) row.constraint = n.constraint;
+  if (n.resolved_tag) row.resolved_tag = n.resolved_tag;
+  if (n.resolved_url) row.resolved_url = n.resolved_url;
+  if (n.resolved_hash) row.resolved_hash = n.resolved_hash;
+  if (n.discovered_via) row.discovered_via = n.discovered_via;
+  if (n.marketplace_plugin_name) row.marketplace_plugin_name = n.marketplace_plugin_name;
+  if (n.source_url) row.source_url = n.source_url;
+  if (n.source_digest) row.source_digest = n.source_digest;
+  return row;
 }
 
 function listApmDeps(
@@ -486,6 +567,7 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     registry_base_url: e.registry_base_url,
     registry_owner: e.registry_owner,
     registry_repo: e.registry_repo,
+    ...(e.marketplaceProvenance ?? {}),
   };
 }
 
@@ -546,6 +628,7 @@ async function resolveLocal(
     path: abs,
     packageRoot: !ctx.skipDownload && existsSync(dest) ? dest : abs,
     repo_url: identity,
+    marketplaceProvenance: item.marketplaceProvenance,
   };
   pushEdge(ctx.edgesByIdentity, record);
 
@@ -688,6 +771,7 @@ async function resolveGit(
     name: childName,
     packageRoot: dest,
     repo_url: lockUrl,
+    marketplaceProvenance: item.marketplaceProvenance,
   };
   pushEdge(ctx.edgesByIdentity, record);
 

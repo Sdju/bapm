@@ -10,8 +10,9 @@ import type {
 } from "./types.ts";
 
 /** Mutually exclusive source discriminators (path may accompany git as virtual_path;
- * `registry` name may accompany `id` as named-registry pointer). */
-const SOURCE_KEYS = ["git", "id", "path", "registry"] as const;
+ * `registry` name may accompany `id` as named-registry pointer).
+ * `marketplace` is non-normative OpenAPM form `{ name, marketplace, version? }`. */
+const SOURCE_KEYS = ["git", "id", "path", "registry", "marketplace"] as const;
 /** Allowlisted object-dep meta keys (APM depEntry / reject_unknown_git_fields). */
 const DEP_META_KEYS = new Set([
   "version",
@@ -24,6 +25,8 @@ const DEP_META_KEYS = new Set([
   "prerelease",
   /** Named registry pointer companion to `id:` (M10). */
   "registry",
+  /** Plugin name for marketplace object form. */
+  "name",
 ]);
 
 const SEMVER_RE =
@@ -190,6 +193,7 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   const hasId = "id" in obj;
   const hasPath = "path" in obj;
   const hasRegistry = "registry" in obj;
+  const hasMarketplace = "marketplace" in obj;
 
   // `path` with `git` is a virtual_path companion, not a second source kind (APM parse_from_dict).
   // `registry` with `id` is a named-registry pointer companion (M10), not a second source.
@@ -199,6 +203,7 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   if (hasPath && !hasGit) sourceKinds.push("path");
   // Bare `registry:` without `id` counts as registry source; with `id` it is meta only.
   if (hasRegistry && !hasId) sourceKinds.push("registry");
+  if (hasMarketplace) sourceKinds.push("marketplace");
 
   const unknownKeys = Object.keys(obj).filter(
     (k) =>
@@ -211,13 +216,13 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
     if (unknownKeys.length > 0) {
       throw new ManifestError(
         "MANIFEST_VALIDATION",
-        `Dependency at ${path} has unknown source kind "${unknownKeys[0]}"; expected one of git|id|path|registry`,
+        `Dependency at ${path} has unknown source kind "${unknownKeys[0]}"; expected one of git|id|path|registry|marketplace`,
         { path },
       );
     }
     throw new ManifestError(
       "MANIFEST_VALIDATION",
-      `Dependency at ${path} has no source key; expected one of git|id|path|registry`,
+      `Dependency at ${path} has no source key; expected one of git|id|path|registry|marketplace`,
       { path },
     );
   }
@@ -233,9 +238,28 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   if (sourceKinds.length > 1) {
     throw new ManifestError(
       "MANIFEST_VALIDATION",
-      `Dependency at ${path} must have exactly one source kind (git|id|path|registry); found ${sourceKinds.join(", ")}`,
+      `Dependency at ${path} must have exactly one source kind (git|id|path|registry|marketplace); found ${sourceKinds.join(", ")}`,
       { path },
     );
+  }
+
+  if (hasMarketplace) {
+    const mp = obj.marketplace;
+    if (typeof mp !== "string" || !mp.trim()) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Dependency at ${path}: "marketplace" field must be a non-empty string`,
+        { path },
+      );
+    }
+    const name = obj.name;
+    if (typeof name !== "string" || !name.trim()) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Dependency at ${path}: marketplace form requires a non-empty "name"`,
+        { path },
+      );
+    }
   }
 
   if (hasGit) {

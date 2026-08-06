@@ -478,12 +478,19 @@ export type {
   ValidationResult,
   MarketplacePlugin,
   MarketplaceManifest,
+  ParsedMarketplaceRef,
+  MarketplaceProvenance,
+  MarketplaceConcreteDep,
+  MarketplacePluginResolution,
+  ResolveMarketplacePluginOptions,
 } from "@/modules/Marketplace";
 
 export {
   MarketplaceError,
   MarketplaceNotFoundError,
   MarketplaceFetchError,
+  MarketplacePluginNotFoundError,
+  MarketplaceUnsupportedSourceError,
   MarketplaceSource,
   createMarketplaceSource,
   createMarketplacePlugin,
@@ -491,6 +498,8 @@ export {
   urlNamesRemoteManifest,
   resolveLocalFilesystemPath,
   parseMarketplaceJson,
+  parseMarketplaceRef,
+  resolveMarketplacePlugin,
   getBapmConfigDir,
   marketplacesJsonPath,
   marketplaceCacheDir,

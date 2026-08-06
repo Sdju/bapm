@@ -29,6 +29,7 @@ Commands:
   cache        Modules-cache info | clean (apm_modules)
   policy       Policy status (read-only governance posture)
   marketplace  Register / list / browse consumer marketplaces
+  search       Search plugins in a registered marketplace (QUERY@MARKETPLACE)
 
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present

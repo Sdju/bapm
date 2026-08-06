@@ -47,8 +47,6 @@ function parsePluginEntry(
     } else {
       return null;
     }
-  } else {
-    return null;
   }
 
   let registryName = "";
@@ -59,6 +57,11 @@ function parsePluginEntry(
     } else {
       throw new Error(`Plugin '${name}' has invalid 'registry' field; expected a non-empty string`);
     }
+  }
+
+  // Registry-only plugins (no concrete source) are retained so resolve can fail closed (G10).
+  if (source === null && !registryName) {
+    return null;
   }
 
   if (registryName) {
@@ -143,7 +146,13 @@ export function parseMarketplaceJson(
     ownerName,
     description,
     pluginRoot,
-    sourceUrl: opts?.sourceUrl ?? "",
-    sourceDigest: opts?.sourceDigest ?? "",
+    sourceUrl:
+      opts?.sourceUrl ||
+      (typeof obj.source_url === "string" ? obj.source_url : "") ||
+      "",
+    sourceDigest:
+      opts?.sourceDigest ||
+      (typeof obj.source_digest === "string" ? obj.source_digest : "") ||
+      "",
   });
 }
