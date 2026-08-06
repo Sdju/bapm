@@ -13,7 +13,8 @@
  * - Functions: `discoverManifestPath`, `loadManifest`, `parseManifest`,
  *   `parseManifestDocument`, `loadYamlDocument`, `serializeManifest`,
  *   `writeManifest`, `writeProducerManifest`, `createMinimalManifest`,
- *   `isValidTargetToken`
+ *   `validatePluginName`, `validateProjectName`, `createPluginJson`,
+ *   `writePluginJson`, `isValidTargetToken`
  *
  * ## Example
  *
@@ -58,6 +59,27 @@ export type {
 } from "./write.ts";
 export { createMinimalManifest, createMinimalManifestDocument } from "./createMinimal.ts";
 export type { CreateMinimalManifestOptions } from "./createMinimal.ts";
+export {
+  validatePluginName,
+  validateProjectName,
+  isValidPluginName,
+  isValidProjectName,
+} from "./pluginNames.ts";
+export {
+  createPluginJson,
+  createPluginJsonDocument,
+  buildPluginJson,
+  serializePluginJson,
+  writePluginJson,
+  writePluginJsonFile,
+  emitPluginJson,
+} from "./pluginJson.ts";
+export type {
+  CreatePluginJsonOptions,
+  PluginJsonAuthor,
+  PluginJsonDocument,
+  WritePluginJsonOptions,
+} from "./pluginJson.ts";
 export {
   CANONICAL_TARGET_TOKENS,
   TARGET_ALIAS_TOKENS,

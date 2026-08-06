@@ -13,6 +13,7 @@ Commands:
   help         Show this help
   version      Print version
   init         Scaffold a new ${deps.manifestFile} (producer)
+  plugin       Scaffold a thin plugin project (plugin init)
   lock         Resolve dependencies and write the lockfile (no host deploy)
   install      Install agentic dependencies from ${deps.manifestFile} (or a pack .zip)
   pack         Build a plain-zip producer archive (--archive / --check-release)

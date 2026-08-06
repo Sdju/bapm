@@ -21,6 +21,10 @@ export type {
   WriteProducerManifestOptions,
   WriteProducerManifestResult,
   CreateMinimalManifestOptions,
+  CreatePluginJsonOptions,
+  PluginJsonAuthor,
+  PluginJsonDocument,
+  WritePluginJsonOptions,
 } from "@/modules/Manifest";
 
 export {
@@ -39,6 +43,17 @@ export {
   writeManifestValidated,
   createMinimalManifest,
   createMinimalManifestDocument,
+  validatePluginName,
+  validateProjectName,
+  isValidPluginName,
+  isValidProjectName,
+  createPluginJson,
+  createPluginJsonDocument,
+  buildPluginJson,
+  serializePluginJson,
+  writePluginJson,
+  writePluginJsonFile,
+  emitPluginJson,
   CANONICAL_TARGET_TOKENS,
   TARGET_ALIAS_TOKENS,
   VENDOR_TARGET_RE,

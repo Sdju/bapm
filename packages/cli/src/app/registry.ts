@@ -11,6 +11,7 @@ import {
   COMMAND_MARKETPLACE,
   COMMAND_OUTDATED,
   COMMAND_PACK,
+  COMMAND_PLUGIN,
   COMMAND_POLICY,
   COMMAND_PRUNE,
   COMMAND_PUBLISH,
@@ -34,6 +35,7 @@ import { lockCommand } from "@/commands/lock.ts";
 import { marketplaceCommand } from "@/commands/marketplace.ts";
 import { outdatedCommand } from "@/commands/outdated.ts";
 import { packCommand } from "@/commands/pack.ts";
+import { pluginCommand } from "@/commands/plugin.ts";
 import { policyCommand } from "@/commands/policy.ts";
 import { pruneCommand } from "@/commands/prune.ts";
 import { publishCommand } from "@/commands/publish.ts";
@@ -55,6 +57,7 @@ import { lock } from "./init/lock.ts";
 import { marketplace } from "./init/marketplace.ts";
 import { outdated } from "./init/outdated.ts";
 import { pack } from "./init/pack.ts";
+import { plugin } from "./init/plugin.ts";
 import { policy } from "./init/policy.ts";
 import { prune } from "./init/prune.ts";
 import { publish } from "./init/publish.ts";
@@ -70,6 +73,7 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_HELP]: (argv) => helpCommand(argv, help),
   [COMMAND_VERSION]: (argv) => versionCommand(argv, version),
   [COMMAND_INIT]: (argv) => initCommand(argv, init),
+  [COMMAND_PLUGIN]: (argv) => pluginCommand(argv, plugin),
   [COMMAND_INSTALL]: (argv) => installCommand(argv, install),
   [COMMAND_PACK]: (argv) => packCommand(argv, pack),
   [COMMAND_PUBLISH]: (argv) => publishCommand(argv, publish),

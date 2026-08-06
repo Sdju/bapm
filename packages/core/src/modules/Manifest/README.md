@@ -10,6 +10,8 @@ Discover, load, and validate OpenAPM/APM project manifests (`apm.yml` / `bapm.ym
 | `ManifestError`, `ManifestErrorCode`, `ManifestWarning`                                              | errors    |
 | `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`                                                            | constants |
 | `discoverManifestPath`, `loadManifest`, `parseManifest`, `parseManifestDocument`, `loadYamlDocument` | functions |
+| `createMinimalManifest` (+ `pluginMode`), `writeProducerManifest`, `serializeManifest`               | emit      |
+| `validatePluginName`, `validateProjectName`, `createPluginJson`, `writePluginJson`                   | plugin    |
 
 `loadYamlDocument` preserves ManifestError codes for public consumers; shared YAML parsing lives in `@/common/yaml/`.
 

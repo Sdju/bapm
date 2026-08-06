@@ -13,6 +13,12 @@ export type CreateMinimalManifestOptions = {
   targets?: string[];
   description?: string;
   author?: string;
+  /**
+   * When true, emit plugin-mode scaffold fields:
+   * `devDependencies.apm`, `includes: auto`, `scripts: {}`.
+   * Consumer / default path remains unchanged when omitted/false.
+   */
+  pluginMode?: boolean;
 };
 
 /**
@@ -41,6 +47,12 @@ export function createMinimalManifest(options: CreateMinimalManifestOptions): Ba
 
   if (options.description !== undefined) doc.description = options.description;
   if (options.author !== undefined) doc.author = options.author;
+
+  if (options.pluginMode) {
+    doc.devDependencies = { apm: [] };
+    doc.includes = "auto";
+    doc.scripts = {};
+  }
 
   if (options.target !== undefined && options.targets !== undefined) {
     throw new ManifestError(
