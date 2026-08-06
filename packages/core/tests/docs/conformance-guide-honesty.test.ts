@@ -1,25 +1,22 @@
 /**
- * mp-sc-claims: /guide/conformance out-of-scope aligned with Limitations —
- * marketplace floor exists; residual §10 security deferrals disclosed.
+ * /guide/conformance honesty (promoted from mp-sc-claims): marketplace floor
+ * exists; residual §10 security deferrals disclosed.
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync } from "node:fs";
-import {
-  docsConformanceGuidePath,
-  limitationsNameResidualSecurity,
-  readText,
-} from "./helpers.ts";
+import { conformanceGuidePath, readText } from "./helpers.ts";
+import { limitationsNameResidualSecurity } from "../spec-conformance/sc-claims-helpers.ts";
 
-describe("mp-sc-claims — docs conformance guide honesty", () => {
+describe("docs conformance guide honesty", () => {
   test("apps/docs/guide/conformance.md exists", () => {
     expect(
-      existsSync(docsConformanceGuidePath),
-      `expected ${docsConformanceGuidePath}`,
+      existsSync(conformanceGuidePath),
+      `expected ${conformanceGuidePath}`,
     ).toBe(true);
   });
 
   test("guide must not list marketplace/plugin as absolute OOS blanket", () => {
-    const md = readText(docsConformanceGuidePath);
+    const md = readText(conformanceGuidePath);
 
     expect(
       /\*\*marketplace\*\*\s*\/\s*\*\*plugin\*\*\s*surfaces/i.test(md) ||
@@ -29,7 +26,7 @@ describe("mp-sc-claims — docs conformance guide honesty", () => {
   });
 
   test("guide discloses residual §10 security-depth deferrals", () => {
-    const md = readText(docsConformanceGuidePath);
+    const md = readText(conformanceGuidePath);
 
     expect(
       limitationsNameResidualSecurity(md) ||
@@ -39,7 +36,7 @@ describe("mp-sc-claims — docs conformance guide honesty", () => {
   });
 
   test("guide still lists multi-target and registry host as out of scope", () => {
-    const md = readText(docsConformanceGuidePath);
+    const md = readText(conformanceGuidePath);
     expect(md, "multi-target still OOS").toMatch(/multi-target/i);
     expect(md, "registry host still OOS").toMatch(/registry host/i);
   });

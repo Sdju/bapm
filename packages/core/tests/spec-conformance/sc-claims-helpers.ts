@@ -1,18 +1,27 @@
 /**
- * Helpers for mp-sc-claims acceptance (Mode B honesty floor — RED until apply).
+ * Helpers for sc-* honesty floor (promoted from mp-sc-claims acceptance).
  */
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { parse as parseYaml } from "yaml";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import {
+  checklistCandidates,
+  checklistRows as parseChecklistRows,
+  conformanceJsonPath,
+  conformanceMdPath,
+  findExistingPath,
+  loadYamlFile,
+  readText,
+  repoRoot,
+  type ChecklistRow,
+} from "./helpers.ts";
 
-export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
-export const repoRoot = resolve(coreRoot, "../..");
+export { conformanceJsonPath, conformanceMdPath, readText, repoRoot };
+export type { ChecklistRow };
 
-export const checklistPath = join(repoRoot, "tests/spec-conformance/checklist.yml");
-export const conformanceMdPath = join(repoRoot, "CONFORMANCE.md");
-export const conformanceJsonPath = join(repoRoot, "CONFORMANCE.json");
+export const checklistPath =
+  findExistingPath(checklistCandidates) ??
+  join(repoRoot, "tests/spec-conformance/checklist.yml");
+
 export const docsConformanceGuidePath = join(
   repoRoot,
   "apps/docs/guide/conformance.md",
@@ -47,15 +56,6 @@ export const STALE_MARKETPLACE_CATCHALL =
 export const ABSOLUTE_MARKETPLACE_OOS =
   /Marketplace\s*\/\s*plugin surfaces are out of scope|^\s*[-*]\s*\*?\*?marketplace\*?\*?\s*\/\s*\*?\*?plugin\*?\*?/im;
 
-export type ChecklistRow = {
-  id: string;
-  status: string;
-  citation?: string;
-  rationale?: string;
-  fixture?: string | string[];
-  [key: string]: unknown;
-};
-
 export type ChecklistDoc = {
   limitations?: string[];
   scope_out?: string[];
@@ -63,29 +63,12 @@ export type ChecklistDoc = {
   [key: string]: unknown;
 };
 
-export function readText(path: string): string {
-  return readFileSync(path, "utf8");
-}
-
 export function loadChecklist(): ChecklistDoc {
-  return parseYaml(readText(checklistPath)) as ChecklistDoc;
+  return loadYamlFile(checklistPath) as ChecklistDoc;
 }
 
 export function checklistRows(doc: ChecklistDoc = loadChecklist()): ChecklistRow[] {
-  const list = doc.requirements;
-  if (!Array.isArray(list)) {
-    throw new TypeError("checklist.yml must have requirements[]");
-  }
-  return list.map((raw) => {
-    const r = raw as Record<string, unknown>;
-    return {
-      ...r,
-      id: String(r.id ?? ""),
-      status: String(r.status ?? "").toLowerCase(),
-      citation: r.citation != null ? String(r.citation) : undefined,
-      rationale: r.rationale != null ? String(r.rationale) : undefined,
-    };
-  });
+  return parseChecklistRows(doc);
 }
 
 export function byId(rows: ChecklistRow[], id: string): ChecklistRow {

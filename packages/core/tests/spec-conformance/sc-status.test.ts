@@ -1,6 +1,6 @@
 /**
- * mp-sc-claims: already-active sc-* stay active with resolvable citations;
- * claim list empty — ten IDs remain skipped (no false actives).
+ * sc-* status honesty (promoted from mp-sc-claims): already-active stay active
+ * with resolvable citations; claim list empty — ten IDs remain skipped.
  */
 import { expect, test, describe } from "vite-plus/test";
 import {
@@ -12,10 +12,10 @@ import {
   citationPaths,
   loadChecklist,
   pathExistsInRepo,
-} from "./helpers.ts";
+} from "./sc-claims-helpers.ts";
 import { existsSync } from "node:fs";
 
-describe("mp-sc-claims — sc status honesty (empty claim list)", () => {
+describe("sc-* status honesty (empty claim list)", () => {
   test("Mode B checklist.yml is present", () => {
     expect(existsSync(checklistPath), `expected ${checklistPath}`).toBe(true);
   });

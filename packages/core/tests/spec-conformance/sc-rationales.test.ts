@@ -1,6 +1,6 @@
 /**
- * mp-sc-claims: skipped sc-* rationales must drop P3 marketplace catch-all
- * and name Soft/Deferred security-depth themes.
+ * sc-* skipped rationales (promoted from mp-sc-claims): drop P3 marketplace
+ * catch-all and name Soft/Deferred security-depth themes.
  */
 import { expect, test, describe } from "vite-plus/test";
 import {
@@ -10,9 +10,9 @@ import {
   byId,
   checklistRows,
   loadChecklist,
-} from "./helpers.ts";
+} from "./sc-claims-helpers.ts";
 
-describe("mp-sc-claims — skipped sc rationales (security-depth honesty)", () => {
+describe("skipped sc rationales (security-depth honesty)", () => {
   test("ten skipped sc-* rationales must not use marketplace/plugin catch-all", () => {
     const rows = checklistRows(loadChecklist());
 

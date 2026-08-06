@@ -1,6 +1,6 @@
 /**
- * mp-sc-claims: Limitations / scope_out acknowledge marketplace floor;
- * residual gaps are security-depth / approve / hosts-auth — not marketplace OOS.
+ * Limitations / scope_out honesty (promoted from mp-sc-claims): marketplace
+ * floor acknowledged; residual gaps are security-depth — not marketplace OOS.
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -15,9 +15,9 @@ import {
   readText,
   scopeOutBlob,
   scopeOutHasAbsoluteMarketplace,
-} from "./helpers.ts";
+} from "./sc-claims-helpers.ts";
 
-describe("mp-sc-claims — Limitations / Scope-out honesty", () => {
+describe("Limitations / Scope-out honesty", () => {
   test("checklist limitations must not list marketplace/plugin as absolute OOS", () => {
     const doc = loadChecklist();
     const blob = limitationsBlob(doc);
