@@ -470,6 +470,32 @@ export {
   modulesRegistryDest,
 } from "@/modules/Registry";
 
+export type { FindPathOptions, FindPathResult, ReverseIndex } from "@/modules/Find";
+export {
+  WORKSPACE_OWNER_KEY,
+  buildReverseIndex,
+  build_reverse_index,
+  buildFindReverseIndex,
+  packageOwnerKey,
+  lookupInIndex,
+  lookup,
+  lookupFindPath,
+  lookupReverseIndex,
+  normalizeFindPath,
+  formatFindOwnerLabel,
+  ownerLabel,
+  formatOwnerLabel,
+  findOwnerLabel,
+  formatFindOrigin,
+  formatOrigin,
+  formatSourceOrigin,
+  _formatOrigin,
+  findPath,
+  runFind,
+  findDeployedPath,
+  runFindPath,
+} from "@/modules/Find";
+
 export type {
   MarketplaceConfigOptions,
   MarketplaceFetchOptions,

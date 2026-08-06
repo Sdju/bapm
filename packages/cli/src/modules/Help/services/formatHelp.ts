@@ -30,6 +30,7 @@ Commands:
   policy       Policy status (read-only governance posture)
   marketplace  Register / list / browse consumer marketplaces
   search       Search plugins in a registered marketplace (QUERY@MARKETPLACE)
+  find         Trace a deployed path to locked package(s) (--source / --path)
 
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present

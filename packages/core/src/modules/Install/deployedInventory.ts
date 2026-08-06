@@ -240,6 +240,7 @@ export function applyDeployedHashesToLock(args: {
 
     if (dep) {
       dep.deployed_file_hashes = { ...dep.deployed_file_hashes, [path]: hash };
+      dep.deployed_files = unionPathList(dep.deployed_files, path);
       wrote = true;
       continue;
     }
@@ -248,6 +249,7 @@ export function applyDeployedHashesToLock(args: {
     if (deps.length === 1) {
       const only = deps[0]!;
       only.deployed_file_hashes = { ...only.deployed_file_hashes, [path]: hash };
+      only.deployed_files = unionPathList(only.deployed_files, path);
       wrote = true;
       continue;
     }
@@ -256,8 +258,15 @@ export function applyDeployedHashesToLock(args: {
       ...args.document.local_deployed_file_hashes,
       [path]: hash,
     };
+    args.document.local_deployed_files = unionPathList(args.document.local_deployed_files, path);
     wrote = true;
   }
 
   return wrote;
+}
+
+/** Keep parallel deployed_files / local_deployed_files in sync with hash keys (S1). */
+function unionPathList(list: string[] | undefined, path: string): string[] {
+  if (!Array.isArray(list) || list.length === 0) return [path];
+  return list.includes(path) ? list : [...list, path];
 }
