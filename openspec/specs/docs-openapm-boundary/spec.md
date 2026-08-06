@@ -27,7 +27,7 @@ The repository root README MUST include a short section titled Conformance & par
 
 ### Requirement: Dedicated docs-site conformance boundary page
 
-The VitePress docs site (`apps/docs`) MUST publish a dedicated guide page (not only an architecture subsection) that is reachable from site navigation and that documents three axes: OpenAPM v0.1 wire conformance (claimed classes), microsoft/apm product CLI (not full parity), and host targets (cursor-only today; multi-target later). The page MUST link to root `CONFORMANCE.md` and MUST list out-of-scope items aligned with CONFORMANCE Limitations (at least multi-target later, marketplace/plugin, registry host).
+The VitePress docs site (`apps/docs`) MUST publish a dedicated guide page (not only an architecture subsection) that is reachable from site navigation and that documents three axes: OpenAPM v0.1 wire conformance (claimed classes), microsoft/apm product CLI (not full parity), and host targets (cursor-only today; multi-target later). The page MUST link to root `CONFORMANCE.md` and MUST list out-of-scope items aligned with CONFORMANCE Limitations. After the marketplace floor ships, the page MUST NOT list marketplace/plugin as an absolute out-of-scope blanket; residual OpenAPM §10 security deferrals (host-class/auth, approve/deny UX, soft archive gaps) MUST be framed as security-depth limitations, not as marketplace OOS.
 
 #### Scenario: Dedicated page is navigable
 
@@ -41,8 +41,13 @@ The VitePress docs site (`apps/docs`) MUST publish a dedicated guide page (not o
 
 #### Scenario: Page lists out-of-scope aligned with Limitations
 
-- **WHEN** a reader reads the out-of-scope portion of that page
-- **THEN** multi-target (later), marketplace/plugin, and registry host MUST appear as out of scope
+- **WHEN** a reader reads the out-of-scope portion of that page after marketplace floor honesty
+- **THEN** multi-target (later) and registry host MUST appear as out of scope, and marketplace/plugin MUST NOT appear as an absolute out-of-scope blanket for residual `sc-*` skips
+
+#### Scenario: Residual security gaps disclosed on guide page
+
+- **WHEN** a reader reads the out-of-scope or limitations-aligned portion of that page
+- **THEN** residual §10 security-depth deferrals (host-class/auth and/or approve/deny UX, or equivalent accurate wording) MUST be disclosed
 
 ### Requirement: Docs site must not market multi-client adapters as shipped
 
