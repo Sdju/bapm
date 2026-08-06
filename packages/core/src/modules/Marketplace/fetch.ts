@@ -8,12 +8,14 @@ import {
   writeMarketplaceCache,
 } from "./cache.ts";
 import { MarketplaceFetchError } from "./errors.ts";
+import { githubApiBaseForHost } from "./hostClassify.ts";
 import {
   MarketplaceSource,
   resolveLocalFilesystemPath,
   type MarketplaceManifest,
 } from "./models.ts";
 import { parseMarketplaceJson } from "./parse.ts";
+import { authHeadersForHost } from "./resolveToken.ts";
 import type { MarketplaceConfigOptions, MarketplaceFetchOptions } from "./types.ts";
 
 export const MAX_MARKETPLACE_JSON_BYTES = 10 * 1024 * 1024;
@@ -231,16 +233,17 @@ async function fetchGithubAtPath(
   }
   assertNoTraversalSegments(filePath, source.name);
   const encodedRef = encodeURIComponent(source.ref || "main");
+  const host = (source.host || "github.com").toLowerCase();
+  const apiBase = githubApiBaseForHost(host);
   const apiUrl =
-    `https://api.github.com/repos/${source.owner}/${source.repo}/contents/` +
+    `${apiBase}/repos/${source.owner}/${source.repo}/contents/` +
     `${filePath.split("/").map(encodeURIComponent).join("/")}?ref=${encodedRef}`;
 
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.raw",
     "User-Agent": "bapm",
+    ...authHeadersForHost(host),
   };
-  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-  if (token) headers.Authorization = `Bearer ${token}`;
 
   const transport = resolveTransport(opts);
   const response = await transport(apiUrl, { headers });
@@ -278,6 +281,145 @@ async function fetchGithubAtPath(
   return parseJsonObject(raw, source.name);
 }
 
+async function fetchGitlabAtPath(
+  source: MarketplaceSource,
+  filePath: string,
+  opts?: MarketplaceFetchOptions,
+): Promise<Record<string, unknown> | null> {
+  validateRef(source.ref || "main", source.name);
+  if (!source.owner || !source.repo) {
+    throw new MarketplaceFetchError(source.name, "gitlab source requires owner/repo");
+  }
+  assertNoTraversalSegments(filePath, source.name);
+  const host = (source.host || "gitlab.com").toLowerCase();
+  const projectId = encodeURIComponent(`${source.owner}/${source.repo}`);
+  const encodedPath = encodeURIComponent(filePath);
+  const encodedRef = encodeURIComponent(source.ref || "main");
+  const apiUrl =
+    `https://${host}/api/v4/projects/${projectId}/repository/files/` +
+    `${encodedPath}/raw?ref=${encodedRef}`;
+
+  const headers: Record<string, string> = {
+    "User-Agent": "bapm",
+    ...authHeadersForHost(host),
+  };
+
+  const transport = resolveTransport(opts);
+  const response = await transport(apiUrl, { headers });
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new MarketplaceFetchError(source.name, `GitLab API HTTP ${response.status}`);
+  }
+  const raw = await readBoundedBody(response, source.name, MAX_MARKETPLACE_JSON_BYTES);
+  return parseJsonObject(raw, source.name);
+}
+
+type AdoParts = { org: string; project: string; repo: string; host: string };
+
+function decomposeAdoUrl(url: string, hostHint: string): AdoParts | null {
+  let hostname = hostHint.toLowerCase();
+  let pathname = "";
+  try {
+    const u = new URL(url);
+    hostname = (u.hostname || hostname).toLowerCase();
+    pathname = u.pathname;
+  } catch {
+    return null;
+  }
+  const segments = pathname.split("/").filter(Boolean);
+  // https://dev.azure.com/{org}/{project}/_git/{repo}
+  if (hostname === "dev.azure.com" || hostname.endsWith(".dev.azure.com")) {
+    const gitIdx = segments.indexOf("_git");
+    if (gitIdx >= 2 && gitIdx + 1 < segments.length) {
+      return {
+        org: segments[0]!,
+        project: decodeURIComponent(segments[1]!),
+        repo: decodeURIComponent(segments[gitIdx + 1]!.replace(/\.git$/, "")),
+        host: hostname,
+      };
+    }
+    return null;
+  }
+  // https://{org}.visualstudio.com/[DefaultCollection/]{project}/_git/{repo}
+  if (hostname.endsWith(".visualstudio.com")) {
+    const org = hostname.split(".")[0]!;
+    const gitIdx = segments.indexOf("_git");
+    if (gitIdx >= 1 && gitIdx + 1 < segments.length) {
+      let projectIdx = gitIdx - 1;
+      if (segments[0]?.toLowerCase() === "defaultcollection" && gitIdx >= 2) {
+        projectIdx = gitIdx - 1;
+      }
+      return {
+        org,
+        project: decodeURIComponent(segments[projectIdx]!),
+        repo: decodeURIComponent(segments[gitIdx + 1]!.replace(/\.git$/, "")),
+        host: hostname,
+      };
+    }
+  }
+  return null;
+}
+
+async function fetchAdoAtPath(
+  source: MarketplaceSource,
+  filePath: string,
+  opts?: MarketplaceFetchOptions,
+): Promise<Record<string, unknown> | null> {
+  validateRef(source.ref || "main", source.name);
+  assertNoTraversalSegments(filePath, source.name);
+  const host = (source.host || "dev.azure.com").toLowerCase();
+  const parts = decomposeAdoUrl(source.url, host);
+  if (!parts) {
+    throw new MarketplaceFetchError(
+      source.name,
+      "ADO URL does not decompose to org/project/repo for Items REST " +
+        "(unsupported URL shape; git-sparse not in scope)",
+    );
+  }
+  const encodedPath = encodeURIComponent(filePath.startsWith("/") ? filePath : `/${filePath}`);
+  const encodedVersion = encodeURIComponent(source.ref || "main");
+  const apiUrl =
+    `https://${parts.host}/${encodeURIComponent(parts.org)}/` +
+    `${encodeURIComponent(parts.project)}/_apis/git/repositories/` +
+    `${encodeURIComponent(parts.repo)}/items` +
+    `?path=${encodedPath}&versionDescriptor.version=${encodedVersion}` +
+    `&api-version=7.0`;
+
+  const headers: Record<string, string> = {
+    "User-Agent": "bapm",
+    Accept: "application/json",
+    ...authHeadersForHost(parts.host),
+  };
+
+  const transport = resolveTransport(opts);
+  const response = await transport(apiUrl, { headers });
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new MarketplaceFetchError(source.name, `ADO Items API HTTP ${response.status}`);
+  }
+  const raw = await readBoundedBody(response, source.name, MAX_MARKETPLACE_JSON_BYTES);
+  return parseJsonObject(raw, source.name);
+}
+
+async function fetchRemoteAtPath(
+  source: MarketplaceSource,
+  filePath: string,
+  opts?: MarketplaceFetchOptions,
+): Promise<Record<string, unknown> | null> {
+  switch (source.kind) {
+    case "github":
+      return fetchGithubAtPath(source, filePath, opts);
+    case "gitlab":
+      return fetchGitlabAtPath(source, filePath, opts);
+    case "ado":
+      return fetchAdoAtPath(source, filePath, opts);
+    case "local":
+      return fetchLocalAtPath(source, filePath);
+    default:
+      return null;
+  }
+}
+
 async function autoDetectPath(
   source: MarketplaceSource,
   opts?: MarketplaceFetchOptions,
@@ -286,7 +428,7 @@ async function autoDetectPath(
     const data =
       source.kind === "local"
         ? fetchLocalAtPath(source, candidate)
-        : await fetchGithubAtPath(source, candidate, opts);
+        : await fetchRemoteAtPath(source, candidate, opts);
     if (data) return { path: candidate, data };
   }
   throw new MarketplaceFetchError(
@@ -295,17 +437,16 @@ async function autoDetectPath(
   );
 }
 
-function refuseUnsupported(source: MarketplaceSource): never {
-  const kind = source.kind;
+function refuseGenericGit(source: MarketplaceSource): never {
   throw new MarketplaceFetchError(
     source.name,
-    `Unsupported marketplace source kind '${kind}' is not supported / out of scope ` +
-      `(gitlab/ado/git hosts require mp-hosts-auth). Use github, url, or local.`,
+    `Unsupported marketplace source kind 'git' is not supported / out of scope ` +
+      `(generic git hosts require a future unlock). Use github, gitlab, ado, url, or local.`,
   );
 }
 
 /**
- * Fetch and parse a marketplace manifest (github | url | local).
+ * Fetch and parse a marketplace manifest (github | gitlab | ado | url | local).
  */
 export async function fetchMarketplace(
   source: MarketplaceSource | Record<string, unknown>,
@@ -325,11 +466,11 @@ export async function fetchMarketplace(
   }
 
   const kind = src.kind;
-  if (kind === "gitlab" || kind === "ado" || kind === "git") {
-    refuseUnsupported(src);
+  if (kind === "git") {
+    refuseGenericGit(src);
   }
 
-  const useCache = kind === "github" || kind === "url";
+  const useCache = kind === "github" || kind === "gitlab" || kind === "ado" || kind === "url";
   const cacheName = cacheKeyForSource(src);
 
   if (useCache && !opts?.forceRefresh) {
@@ -379,14 +520,14 @@ export async function fetchMarketplace(
     return parseMarketplaceJson(data, src.name);
   }
 
-  // github
+  // github | gitlab | ado
   validateRef(src.ref || "main", src.name);
   let data: Record<string, unknown> | null = null;
   if (!src.path || src.path === "") {
     const detected = await autoDetectPath(src, opts);
     data = detected.data;
   } else {
-    data = await fetchGithubAtPath(src, src.path, opts);
+    data = await fetchRemoteAtPath(src, src.path, opts);
     if (!data && src.path === "marketplace.json") {
       const detected = await autoDetectPath(src, opts);
       data = detected.data;

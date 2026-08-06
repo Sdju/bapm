@@ -3,6 +3,7 @@ import {
   addMarketplacePackage,
   autoDetectMarketplacePath,
   checkMarketplaceAuthoring,
+  classifyMarketplaceHostKind,
   clearMarketplaceCache,
   createMarketplaceSource,
   fetchMarketplace,
@@ -105,6 +106,14 @@ type ParsedSource = {
   isLocal: boolean;
 };
 
+function kindHintForHost(host: string): string {
+  try {
+    return classifyMarketplaceHostKind(host);
+  } catch (err) {
+    throw err instanceof Error ? err : new Error(String(err));
+  }
+}
+
 function parseMarketplaceSource(source: string, hostFlag: string | null): ParsedSource {
   const raw = (source || "").trim();
   if (!raw) throw new Error("Empty source argument");
@@ -162,15 +171,7 @@ function parseMarketplaceSource(source: string, hostFlag: string | null): Parsed
     const isDirect =
       urlNamesRemoteManifest(raw) ||
       parsed.pathname.replace(/\/$/, "").endsWith("/marketplace.json");
-    let kindHint = "git";
-    if (isDirect) kindHint = "url";
-    else if (embeddedHost === "github.com" || embeddedHost.endsWith(".ghe.com"))
-      kindHint = "github";
-    else if (embeddedHost === "gitlab.com" || embeddedHost.endsWith(".gitlab.com")) {
-      kindHint = "gitlab";
-    } else if (embeddedHost === "dev.azure.com" || embeddedHost.endsWith(".visualstudio.com")) {
-      kindHint = "ado";
-    }
+    const kindHint = isDirect ? "url" : kindHintForHost(embeddedHost);
     if ((kindHint === "github" || kindHint === "gitlab") && pathSegments.length < 2) {
       throw new Error(`Invalid format: '${raw}'. Expected 'OWNER/REPO' in the URL path.`);
     }
@@ -214,13 +215,7 @@ function parseMarketplaceSource(source: string, hostFlag: string | null): Parsed
       `Conflicting host: --host '${hostFlag}' does not match '${embeddedHost}' in '${raw}'.`,
     );
   }
-  let kindHint = "git";
-  if (resolvedHost === "github.com" || resolvedHost.endsWith(".ghe.com")) kindHint = "github";
-  else if (resolvedHost === "gitlab.com" || resolvedHost.endsWith(".gitlab.com")) {
-    kindHint = "gitlab";
-  } else if (resolvedHost === "dev.azure.com" || resolvedHost.endsWith(".visualstudio.com")) {
-    kindHint = "ado";
-  }
+  const kindHint = kindHintForHost(resolvedHost);
   return {
     url: `https://${resolvedHost}/${ownerPath}/${repoName}`,
     kindHint,
@@ -261,7 +256,7 @@ Authoring options:
 Consumer add options:
   --name, -n <alias>   Display name (pattern [a-zA-Z0-9._-]+)
   --ref, -r <ref>      Git ref (default: main)
-  --host <fqdn>        Host for OWNER/REPO shorthand (github.com only in v1)
+  --host <fqdn>        Host for OWNER/REPO shorthand (github.com, *.ghe.com, GITHUB_HOST GHES, gitlab, ado)
   -h, --help           Show this help
 
 Not shipped in this release: outdated, audit.
@@ -376,26 +371,12 @@ async function runAdd(
     return fail(deps, err instanceof Error ? err.message : String(err));
   }
 
-  if (host && !parsed.isLocal && !parsed.isDirectUrl) {
-    const h = host.trim().toLowerCase();
-    if (h !== "github.com" && !h.endsWith(".ghe.com")) {
-      // v1 only github.com for --host shorthand; also refuse non-github resolved hosts below
-    }
-  }
-
-  if (parsed.kindHint === "gitlab" || parsed.kindHint === "ado" || parsed.kindHint === "git") {
+  if (parsed.kindHint === "git") {
     return fail(
       deps,
-      `Unsupported marketplace host/kind '${parsed.kindHint}' ` +
-        `(gitlab/ado/generic-git not supported in this release). Use github.com, HTTPS marketplace.json, or local.`,
+      `Unsupported marketplace host/kind 'git' ` +
+        `(generic git not supported / out of scope). Use github, gitlab, ado, HTTPS marketplace.json, or local.`,
     );
-  }
-
-  if (parsed.host && parsed.kindHint === "github") {
-    const h = parsed.host.toLowerCase();
-    if (h !== "github.com" && !h.endsWith(".ghe.com")) {
-      return fail(deps, `Unsupported marketplace host '${parsed.host}' (only github.com in v1).`);
-    }
   }
 
   const provisional =
@@ -678,10 +659,7 @@ Options: --subdir --tag-pattern --tags --include-prerelease --no-verify
   }
   const action = argv[0]!;
   if (!PACKAGE_ACTIONS.has(action)) {
-    return fail(
-      deps,
-      `Unknown marketplace package action '${action}' (expected add|set|remove)`,
-    );
+    return fail(deps, `Unknown marketplace package action '${action}' (expected add|set|remove)`);
   }
   const rest = argv.slice(1);
 
@@ -857,7 +835,9 @@ owner/repo reachability via ambient git ls-remote. Non-github hosts warn
   if (!result.ok) {
     return fail(deps, `Marketplace check failed (${result.errors.length} error(s)).`);
   }
-  console.log(offline ? "Marketplace check passed (offline / schema-only)." : "Marketplace check passed.");
+  console.log(
+    offline ? "Marketplace check passed (offline / schema-only)." : "Marketplace check passed.",
+  );
   return { ok: true, exitCode: 0 };
 }
 

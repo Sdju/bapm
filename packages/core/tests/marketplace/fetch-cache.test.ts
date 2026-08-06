@@ -42,16 +42,16 @@ describe("mp-consumer-registry fetch + cache", () => {
     expect(pluginNames(manifest)).toContain("hello-skill");
   });
 
-  test("unsupported gitlab/ado/git kinds are refused without network", async () => {
+  test("unsupported generic git kind is refused without network", async () => {
     const create = getCreateMarketplaceSource();
     const { fetch } = getFetchApi();
-    const gitlab = create({
-      name: "gl",
-      url: "https://gitlab.com/acme/tools.git",
+    const generic = create({
+      name: "generic",
+      url: "https://git.example.invalid/acme/tools.git",
     });
-    await expect(callFetch(fetch, gitlab, { fetch: async () => {
+    await expect(callFetch(fetch, generic, { fetch: async () => {
       throw new Error("network must not be called for unsupported kinds");
-    } })).rejects.toThrow(/gitlab|unsupported|not supported|out of scope/i);
+    } })).rejects.toThrow(/git|unsupported|not supported|out of scope/i);
   });
 
   test("HTTP marketplace.json URL is rejected before body download", async () => {

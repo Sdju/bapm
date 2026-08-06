@@ -25,7 +25,7 @@ describe("Marketplace fetch + validate", () => {
     configDir = undefined;
   });
 
-  test("local dir auto-detect; url cache; refuse gitlab; validate dups", async () => {
+  test("local dir auto-detect; url cache; refuse generic git; validate dups", async () => {
     configDir = mkdtempSync(join(tmpdir(), "bapm-mp-fetch-"));
     const root = join(configDir, "repo");
     const file = join(root, ".claude-plugin", "marketplace.json");
@@ -36,17 +36,17 @@ describe("Marketplace fetch + validate", () => {
     const manifest = await fetchMarketplace(local, { configDir });
     expect(manifest.plugins.map((p) => p.name)).toContain("hello-skill");
 
-    const gitlab = createMarketplaceSource({
-      name: "gl",
-      url: "https://gitlab.com/acme/tools.git",
+    const generic = createMarketplaceSource({
+      name: "generic-git",
+      url: "https://git.example.invalid/acme/tools.git",
     });
     await expect(
-      fetchMarketplace(gitlab, {
+      fetchMarketplace(generic, {
         fetch: async () => {
           throw new Error("network must not be called");
         },
       }),
-    ).rejects.toThrow(/gitlab|unsupported|not supported/i);
+    ).rejects.toThrow(/git|unsupported|not supported|out of scope/i);
 
     let hits = 0;
     const urlSource = createMarketplaceSource({

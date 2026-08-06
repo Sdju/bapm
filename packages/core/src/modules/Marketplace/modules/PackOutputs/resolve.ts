@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
+import { classifyMarketplaceHost } from "../../hostClassify.ts";
 import {
   githubHttpsUrlFromOwnerRepo,
   isGithubOwnerRepoShorthand,
@@ -32,7 +33,9 @@ function globToRegExp(pattern: string): RegExp {
   return new RegExp(out);
 }
 
-function parseSemverFromTag(tag: string): { major: number; minor: number; patch: number; prerelease: string } | null {
+function parseSemverFromTag(
+  tag: string,
+): { major: number; minor: number; patch: number; prerelease: string } | null {
   const t = tag.replace(/^v/i, "");
   const m = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z.-]+))?$/.exec(t);
   if (!m) return null;
@@ -61,7 +64,12 @@ function satisfiesSimpleRange(version: string, range: string): boolean {
   if (!v) return false;
   const r = range.trim();
   // Exact
-  if (/^(v)?\d+\.\d+\.\d+/.test(r) && !r.startsWith("^") && !r.startsWith("~") && !r.startsWith(">=")) {
+  if (
+    /^(v)?\d+\.\d+\.\d+/.test(r) &&
+    !r.startsWith("^") &&
+    !r.startsWith("~") &&
+    !r.startsWith(">=")
+  ) {
     const exact = parseSemverFromTag(r.replace(/^v/, ""));
     return exact !== null && compareSemver(v, exact) === 0 && !v.prerelease;
   }
@@ -190,22 +198,6 @@ async function resolveRemotePackage(
     );
   }
 
-  if (!isGithubOwnerRepoShorthand(pkg.source)) {
-    const { host } = splitHostFromAuthoringSource(pkg.source);
-    if (host && host !== "github.com" && !host.endsWith(".ghe.com")) {
-      throw new MarketplacePackOutputsError(
-        `Package '${pkg.name}' source '${pkg.source}': remote host '${host}' is unsupported for pack emit without hosts-auth (gitlab / non-github remotes not supported)`,
-      );
-    }
-    if (host === "github.com" || host?.endsWith(".ghe.com")) {
-      // Allowed github FQDN form — resolve via https URL
-    } else if (!isGithubOwnerRepoShorthand(pkg.source)) {
-      throw new MarketplacePackOutputsError(
-        `Package '${pkg.name}' source '${pkg.source}': unsupported remote for pack emit (auth / host not supported)`,
-      );
-    }
-  }
-
   let repoUrl: string;
   let sourceRepo: string;
   let host: string | undefined;
@@ -217,6 +209,25 @@ async function resolveRemotePackage(
   } else {
     const split = splitHostFromAuthoringSource(pkg.source);
     host = split.host ?? undefined;
+    if (!host) {
+      throw new MarketplacePackOutputsError(
+        `Package '${pkg.name}' source '${pkg.source}': unsupported remote for pack emit (auth / host not supported)`,
+      );
+    }
+    try {
+      const cls = classifyMarketplaceHost(host);
+      if (cls === "generic") {
+        throw new MarketplacePackOutputsError(
+          `Package '${pkg.name}' source '${pkg.source}': remote host '${host}' is unsupported for pack emit ` +
+            `(generic git kind still refused / out of scope)`,
+        );
+      }
+    } catch (err) {
+      if (err instanceof MarketplacePackOutputsError) throw err;
+      throw new MarketplacePackOutputsError(
+        `Package '${pkg.name}' source '${pkg.source}': ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
     sourceRepo = split.repoPath.replace(/\.git$/, "");
     repoUrl = `https://${host}/${sourceRepo}.git`;
     sourceUrl = `https://${host}/${sourceRepo}`;
@@ -249,8 +260,11 @@ async function resolveRemotePackage(
   if (pkg.version) {
     const tags = await listRemoteTags(options.lsRemote, repoUrl);
     const re = globToRegExp(tagPattern);
-    const candidates: { tag: string; sha: string; semver: NonNullable<ReturnType<typeof parseSemverFromTag>> }[] =
-      [];
+    const candidates: {
+      tag: string;
+      sha: string;
+      semver: NonNullable<ReturnType<typeof parseSemverFromTag>>;
+    }[] = [];
     for (const [tag, sha] of tags) {
       if (!re.test(tag)) continue;
       const semver = parseSemverFromTag(tag);

@@ -1,5 +1,6 @@
 import { homedir } from "node:os";
 import { resolve as pathResolve } from "node:path";
+import { classifyMarketplaceHostKind } from "./hostClassify.ts";
 import type { MarketplaceSourceInit, MarketplaceSourceKind } from "./types.ts";
 
 function looksLikeLocalPath(value: string): boolean {
@@ -103,12 +104,7 @@ function looksLikeRemoteManifestUrl(url: string): boolean {
 }
 
 function classifyHost(host: string): MarketplaceSourceKind {
-  const h = host.toLowerCase();
-  if (!h) return "git";
-  if (h === "github.com" || h === "ghe.com" || h.endsWith(".ghe.com")) return "github";
-  if (h === "gitlab.com" || h.endsWith(".gitlab.com")) return "gitlab";
-  if (h === "dev.azure.com" || h.endsWith(".visualstudio.com")) return "ado";
-  return "git";
+  return classifyMarketplaceHostKind(host);
 }
 
 export type MarketplacePlugin = {
@@ -223,14 +219,22 @@ export class MarketplaceSource {
       path = looksLikeRemoteManifestUrl(url) ? "" : "marketplace.json";
     }
 
-    if (url && path !== "" && !owner && !repo) {
+    const isRemoteManifest = path === "" && looksLikeRemoteManifestUrl(url);
+    if (url && !looksLikeLocalPath(url) && !isRemoteManifest && !owner && !repo) {
       const extracted = extractOwnerRepoFromUrl(url);
       owner = extracted.owner;
       repo = extracted.repo;
     }
-    if (url && path !== "" && host === "github.com") {
+    if (url && !looksLikeLocalPath(url) && !isRemoteManifest) {
       const h = extractHostFromUrl(url);
       if (h) host = h;
+      else if (host === "github.com" && init.host) host = init.host;
+    }
+
+    // Fail-closed GHES↔GitLab overlap before freeze (kind getter also classifies).
+    if (url && !looksLikeLocalPath(url) && !looksLikeRemoteManifestUrl(url)) {
+      const remoteHost = extractHostFromUrl(url) || host;
+      if (remoteHost) classifyHost(remoteHost);
     }
 
     this.name = name;

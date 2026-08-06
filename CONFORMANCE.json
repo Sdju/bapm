@@ -22,7 +22,7 @@
     "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
     "ADO / multi-candidate policy cascades are out of scope",
     "Approve/deny interactive UX and org executable deny-wins fidelity are out of scope",
-    "Residual OpenAPM §10 security-depth gaps (host-class credential scoping / AuthResolver follow-up, soft archive zip vs tar.gz + size/entry caps) remain skipped — marketplace floor exists and does not satisfy these reqs",
+    "Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); soft archive zip vs tar.gz + size/entry caps also deferred",
     "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)",
     "P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install"
   ],
@@ -885,7 +885,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Deferred: cross-host-class credential scoping / redirect Auth drop — not shipped (mp-hosts-auth / security follow-up)"
+      "rationale": "Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed"
     },
     {
       "id": "req-sc-004",
@@ -901,7 +901,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Deferred: credential host-class = PSL eTLD+1 / aliases not wired on fetch path"
+      "rationale": "Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed"
     },
     {
       "id": "req-sc-006",
@@ -925,7 +925,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "SHOULD deferred: non-https git-HTTP credential refuse not claimed"
+      "rationale": "Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed"
     },
     {
       "id": "req-sc-009",
@@ -965,7 +965,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Deferred: operator host-class overlap + ambient credential suppress not claimed"
+      "rationale": "Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed"
     },
     {
       "id": "req-tg-001",

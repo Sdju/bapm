@@ -39,7 +39,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
 - ADO / multi-candidate policy cascades are out of scope
 - Approve/deny interactive UX and org executable deny-wins fidelity are out of scope
-- Residual OpenAPM §10 security-depth gaps (host-class credential scoping / AuthResolver follow-up, soft archive zip vs tar.gz + size/entry caps) remain skipped — marketplace floor exists and does not satisfy these reqs
+- Residual OpenAPM §10 security-depth gaps remain skipped — thin marketplace env host unlock (mp-hosts-auth) shipped but is not full OpenAPM §10.3 / AuthResolver parity (PSL classifier, redirect Auth drop, ambient suppress); soft archive zip vs tar.gz + size/entry caps also deferred
 - Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)
 - P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install
 
@@ -146,17 +146,17 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-rs-016 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-sc-001 | MUST | 10.4 | consumer | active | packages/core/tests/extras/public-api.test.ts |
 | req-sc-002 | MUST | 10.9 | consumer | skipped |  — Soft: archive path-escape reject partial (zip extract); full zip-slip + symlink/hardlink + sc-004 caps not claimed |
-| req-sc-003 | MUST | 10.3 | consumer | skipped |  — Deferred: cross-host-class credential scoping / redirect Auth drop — not shipped (mp-hosts-auth / security follow-up) |
+| req-sc-003 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed |
 | req-sc-004 | MUST | 10.5 | consumer | skipped |  — Soft: registry archives are zip; OpenAPM v0.1 tar.gz-only + size/entry caps not claimed |
-| req-sc-005 | MUST | 10.3 | consumer | skipped |  — Deferred: credential host-class = PSL eTLD+1 / aliases not wired on fetch path |
+| req-sc-005 | MUST | 10.3 | consumer | skipped |  — Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed |
 | req-sc-006 | MUST | 4.2.3 | consumer | skipped |  — Deferred: registries.*.insecure + http parse gate not implemented (key currently rejected) |
 | req-sc-007 | MUST | 10.3 | consumer | active | packages/core/tests/pack/pack-archive.test.ts |
-| req-sc-008 | SHOULD | 10.3 | consumer | skipped |  — SHOULD deferred: non-https git-HTTP credential refuse not claimed |
+| req-sc-008 | SHOULD | 10.3 | consumer | skipped |  — Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed |
 | req-sc-009 | MUST | 10.13 | consumer | active | packages/core/tests/extras/public-api.test.ts |
 | req-sc-010 | MUST | 10.13 | consumer | skipped |  — Deferred: no interactive approve / user-local grant store (approve UX) |
 | req-sc-011 | MUST | 10.14 | consumer | skipped |  — Deferred: org-policy executable deny-wins + install/audit identical outcome not claimed |
 | req-sc-012 | MUST | 10.14 | consumer | skipped |  — Deferred: required-package vs withheld-executable audit fidelity not claimed |
-| req-sc-013 | MUST | 10.3 | consumer | skipped |  — Deferred: operator host-class overlap + ambient credential suppress not claimed |
+| req-sc-013 | MUST | 10.3 | consumer | skipped |  — Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed |
 | req-tg-001 | MUST | 8.4 | consumer | active | packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts |
 | req-tg-002 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
 | req-tg-003 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
@@ -173,15 +173,15 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - **req-mf-016** (skipped): Soft limitation: mf-016 not claimed active in P3 floor
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
 - **req-sc-002** (skipped): Soft: archive path-escape reject partial (zip extract); full zip-slip + symlink/hardlink + sc-004 caps not claimed
-- **req-sc-003** (skipped): Deferred: cross-host-class credential scoping / redirect Auth drop — not shipped (mp-hosts-auth / security follow-up)
+- **req-sc-003** (skipped): Thin marketplace env host unlock shipped (mp-hosts-auth); full OpenAPM §10.3 cross-host-class credential scoping / redirect Auth drop not claimed
 - **req-sc-004** (skipped): Soft: registry archives are zip; OpenAPM v0.1 tar.gz-only + size/entry caps not claimed
-- **req-sc-005** (skipped): Deferred: credential host-class = PSL eTLD+1 / aliases not wired on fetch path
+- **req-sc-005** (skipped): Thin env hosts shipped; credential host-class = PSL eTLD+1 / aliases not wired on all fetch/git paths — full §10.3 not claimed
 - **req-sc-006** (skipped): Deferred: registries.*.insecure + http parse gate not implemented (key currently rejected)
-- **req-sc-008** (skipped): SHOULD deferred: non-https git-HTTP credential refuse not claimed
+- **req-sc-008** (skipped): Thin env hosts shipped; SHOULD deferred: non-https git-HTTP credential refuse not claimed
 - **req-sc-010** (skipped): Deferred: no interactive approve / user-local grant store (approve UX)
 - **req-sc-011** (skipped): Deferred: org-policy executable deny-wins + install/audit identical outcome not claimed
 - **req-sc-012** (skipped): Deferred: required-package vs withheld-executable audit fidelity not claimed
-- **req-sc-013** (skipped): Deferred: operator host-class overlap + ambient credential suppress not claimed
+- **req-sc-013** (skipped): Thin marketplace env host unlock shipped; full operator host-class overlap + ambient credential suppress across child processes not claimed
 - **req-tg-002** (skipped): Out of scope for P3: multi-target adapters beyond cursor
 - **req-tg-003** (skipped): Out of scope for P3: multi-target adapters beyond cursor
 - **req-tg-005** (skipped): Out of scope for P3: multi-target adapters beyond cursor

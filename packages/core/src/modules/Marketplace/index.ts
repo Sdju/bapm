@@ -81,6 +81,23 @@ export {
   type MarketplaceManifest,
 } from "./models.ts";
 
+export {
+  classifyMarketplaceHost,
+  classifyMarketplaceHostKind,
+  marketplaceKindFromHostClass,
+  githubApiBaseForHost,
+  isUnlockedMarketplaceHost,
+  type MarketplaceHostClass,
+} from "./hostClassify.ts";
+
+export {
+  resolveTokenForHost,
+  resolveMarketplaceTokenForHost,
+  resolveAuthTokenForHost,
+  authHeadersForHost,
+  type ResolvedMarketplaceToken,
+} from "./resolveToken.ts";
+
 export { parseMarketplaceJson } from "./parse.ts";
 
 export { listMarketplaces, getMarketplace, addMarketplace, removeMarketplace } from "./registry.ts";

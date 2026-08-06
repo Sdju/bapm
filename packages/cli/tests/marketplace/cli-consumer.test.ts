@@ -43,18 +43,18 @@ describe("mp-consumer-registry CLI consumer surface", () => {
   test("unknown marketplace subcommand fails closed without mutating registry", async () => {
     env = createIsolatedHome();
     const before = readMarketplaces(env.home);
-    const { result, combined } = await runMarketplace(env, ["marketplace", "init"]);
+    const { result, combined } = await runMarketplace(env, ["marketplace", "xyzzy-unknown"]);
     expectMarketplaceKnown(combined);
     expect(result).not.toBe(0);
     expect(combined).toMatch(/unknown|invalid|unrecognized|not supported/i);
     expect(readMarketplaces(env.home)).toEqual(before);
   });
 
-  test("search remains an unknown top-level command", async () => {
+  test("deferred consumer verbs remain unregistered at marketplace level", async () => {
     env = createIsolatedHome();
-    const { result, combined } = await runMarketplace(env, ["search", "foo"]);
+    const { result, combined } = await runMarketplace(env, ["marketplace", "outdated"]);
     expect(result).not.toBe(0);
-    expect(combined).toMatch(/unknown command|not a (?:valid )?command|unrecognized command/i);
+    expect(combined).toMatch(/unknown|invalid|unrecognized|not supported/i);
   });
 
   test("add local marketplace.json succeeds and list shows it", async () => {
@@ -95,19 +95,19 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     expect(JSON.stringify(readMarketplaces(env.home))).toBe(before);
   });
 
-  test("unsupported gitlab remote host is refused at add", async () => {
+  test("generic git remote host is refused at add", async () => {
     env = createIsolatedHome();
     const before = JSON.stringify(readMarketplaces(env.home));
     const { result, combined } = await runMarketplace(env, [
       "marketplace",
       "add",
-      "https://gitlab.com/acme/tools.git",
+      "https://git.example.invalid/acme/tools.git",
       "--name",
-      "gl-mp",
+      "generic-mp",
     ]);
     expectMarketplaceKnown(combined);
     expect(result).not.toBe(0);
-    expect(combined).toMatch(/gitlab|unsupported|host|kind|not supported/i);
+    expect(combined).toMatch(/git|unsupported|host|kind|not supported|out of scope/i);
     expect(JSON.stringify(readMarketplaces(env.home))).toBe(before);
   });
 
@@ -215,7 +215,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     expect(validate.result).toBe(0);
   });
 
-  test("marketplace help lists consumer subcommands only", async () => {
+  test("marketplace help lists consumer and authoring subcommands", async () => {
     env = createIsolatedHome();
     const { result, combined } = await runMarketplace(env, ["marketplace", "--help"]);
     expectMarketplaceKnown(combined);
@@ -223,7 +223,8 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     for (const sub of ["add", "list", "browse", "update", "remove", "validate"]) {
       expect(combined).toMatch(new RegExp(`\\b${sub}\\b`, "i"));
     }
-    expect(combined).not.toMatch(/\b(search|package|migrate|outdated)\b/i);
+    expect(combined).toMatch(/\b(init|check|package|migrate)\b/i);
+    expect(combined).toMatch(/Not shipped in this release:\s*outdated,\s*audit/i);
   });
 
   test("config root used by CLI is ~/.bapm under HOME", async () => {
