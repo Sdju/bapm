@@ -470,6 +470,48 @@ export {
   modulesRegistryDest,
 } from "@/modules/Registry";
 
+export type {
+  MarketplaceConfigOptions,
+  MarketplaceFetchOptions,
+  MarketplaceSourceInit,
+  MarketplaceSourceKind,
+  ValidationResult,
+  MarketplacePlugin,
+  MarketplaceManifest,
+} from "@/modules/Marketplace";
+
+export {
+  MarketplaceError,
+  MarketplaceNotFoundError,
+  MarketplaceFetchError,
+  MarketplaceSource,
+  createMarketplaceSource,
+  createMarketplacePlugin,
+  createMarketplaceManifest,
+  urlNamesRemoteManifest,
+  resolveLocalFilesystemPath,
+  parseMarketplaceJson,
+  getBapmConfigDir,
+  marketplacesJsonPath,
+  marketplaceCacheDir,
+  ensureBapmConfigDir,
+  listMarketplaces,
+  getMarketplace,
+  addMarketplace,
+  removeMarketplace,
+  CACHE_TTL_SECONDS,
+  sanitizeCacheName,
+  cacheKeyForSource,
+  readMarketplaceCache,
+  writeMarketplaceCache,
+  MAX_MARKETPLACE_JSON_BYTES,
+  MARKETPLACE_PATHS,
+  fetchMarketplace,
+  clearMarketplaceCache,
+  autoDetectMarketplacePath,
+  validateMarketplace,
+} from "@/modules/Marketplace";
+
 export const BAPM_NAME = "bapm";
 
 export function getVersion(): string {
