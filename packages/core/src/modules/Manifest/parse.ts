@@ -12,8 +12,10 @@ import type {
 
 /** Mutually exclusive source discriminators (path may accompany git as virtual_path;
  * `registry` name may accompany `id` as named-registry pointer).
- * `marketplace` is non-normative OpenAPM form `{ name, marketplace, version? }`. */
-const SOURCE_KEYS = ["git", "id", "path", "registry", "marketplace"] as const;
+ * `marketplace` is non-normative OpenAPM form `{ name, marketplace, version? }`.
+ * `local` is a bapm-only extension (not an OpenAPM wire discriminator). */
+const SOURCE_KEYS = ["git", "id", "path", "registry", "marketplace", "local"] as const;
+const SOURCE_KEYS_DISPLAY = "git|id|path|registry|marketplace|local";
 /** Allowlisted object-dep meta keys (APM depEntry / reject_unknown_git_fields). */
 const DEP_META_KEYS = new Set([
   "version",
@@ -195,9 +197,11 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   const hasPath = "path" in obj;
   const hasRegistry = "registry" in obj;
   const hasMarketplace = "marketplace" in obj;
+  const hasLocal = "local" in obj;
 
   // `path` with `git` is a virtual_path companion, not a second source kind (APM parse_from_dict).
   // `registry` with `id` is a named-registry pointer companion (M10), not a second source.
+  // `local` is never a companion — it is always its own source kind (bapm extension).
   const sourceKinds: string[] = [];
   if (hasGit) sourceKinds.push("git");
   if (hasId) sourceKinds.push("id");
@@ -205,6 +209,7 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   // Bare `registry:` without `id` counts as registry source; with `id` it is meta only.
   if (hasRegistry && !hasId) sourceKinds.push("registry");
   if (hasMarketplace) sourceKinds.push("marketplace");
+  if (hasLocal) sourceKinds.push("local");
 
   const unknownKeys = Object.keys(obj).filter(
     (k) =>
@@ -217,13 +222,13 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
     if (unknownKeys.length > 0) {
       throw new ManifestError(
         "MANIFEST_VALIDATION",
-        `Dependency at ${path} has unknown source kind "${unknownKeys[0]}"; expected one of git|id|path|registry|marketplace`,
+        `Dependency at ${path} has unknown source kind "${unknownKeys[0]}"; expected one of ${SOURCE_KEYS_DISPLAY}`,
         { path },
       );
     }
     throw new ManifestError(
       "MANIFEST_VALIDATION",
-      `Dependency at ${path} has no source key; expected one of git|id|path|registry|marketplace`,
+      `Dependency at ${path} has no source key; expected one of ${SOURCE_KEYS_DISPLAY}`,
       { path },
     );
   }
@@ -239,9 +244,31 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   if (sourceKinds.length > 1) {
     throw new ManifestError(
       "MANIFEST_VALIDATION",
-      `Dependency at ${path} must have exactly one source kind (git|id|path|registry|marketplace); found ${sourceKinds.join(", ")}`,
+      `Dependency at ${path} must have exactly one source kind (${SOURCE_KEYS_DISPLAY}); found ${sourceKinds.join(", ")}`,
       { path },
     );
+  }
+
+  if (hasLocal) {
+    const localVal = obj.local;
+    if (localVal === false) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Dependency at ${path}: "local" must not be false (use true, null/empty, or a non-empty path string)`,
+        { path },
+      );
+    }
+    if (
+      localVal !== true &&
+      localVal !== null &&
+      !(typeof localVal === "string")
+    ) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Dependency at ${path}: "local" must be true, null/empty, or a non-empty string path`,
+        { path },
+      );
+    }
   }
 
   if (hasMarketplace) {

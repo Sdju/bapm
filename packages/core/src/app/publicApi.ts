@@ -136,6 +136,12 @@ export {
   createDefaultTagLister,
   createPeelAwareTagLister,
   materializeRegistryNodes,
+  DEFAULT_LOCAL_ROOT,
+  effectiveLocalPath,
+  localRootGitignorePattern,
+  collectLocalSourcePaths,
+  ensureLocalRootUntracked,
+  ensureLocalSourcesUntracked,
 } from "@/modules/Resolver";
 
 export type {

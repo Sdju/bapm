@@ -23,6 +23,7 @@ import {
   APM_MODULES_DIR,
   DEFAULT_PARALLEL_DOWNLOADS,
   downloadPackages,
+  ensureLocalSourcesUntracked,
   materializeRegistryNodes,
   resolveAndLock,
   resolveDependencyGraph,
@@ -224,6 +225,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         ...ports,
       });
       nodes = graph.nodes;
+      ensureLocalSourcesUntracked({ projectRoot: cwd, manifest: rootManifest });
       policyDiagnostics = applyPolicyGate({
         cwd,
         policyPath,

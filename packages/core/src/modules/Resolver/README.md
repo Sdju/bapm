@@ -7,6 +7,7 @@ Transitive dependency classify, BFS resolve, modules-cache download, and lock po
 | Export                                                                                        | Kind             |
 | --------------------------------------------------------------------------------------------- | ---------------- |
 | `classifyDependencyRef`, `resolveDependencyGraph`, `downloadPackages`, `resolveAndLock`       | functions        |
+| `ensureLocalSourcesUntracked`, `effectiveLocalPath`, `DEFAULT_LOCAL_ROOT`                     | local source     |
 | `APM_MODULES_DIR` (`apm_modules`), `MAX_RESOLVE_DEPTH` (50), `DEFAULT_PARALLEL_DOWNLOADS` (4) | constants        |
 | `ResolverError`                                                                               | errors           |
 | `TagLister`, `GitRemote`, `Downloader`                                                        | injectable ports |

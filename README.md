@@ -34,7 +34,7 @@ bapm целится в **OpenAPM v0.1** wire (форматы и семантик
 
 - Statement: [`CONFORMANCE.md`](CONFORMANCE.md) (+ [`CONFORMANCE.json`](CONFORMANCE.json))
 - Claimed classes: **Consumer**, **Producer**, **Governance**; **Registry N/A** (host не ship'им)
-- Intentional diffs vs APM: **∩-pick** (не APM **first-wins**), **cursor-only** deploy matrix, **dual-read** branding (`apm.yml`\|`bapm.yml`)
+- Intentional diffs vs APM: **∩-pick** (не APM **first-wins**), **cursor-only** deploy matrix, **dual-read** branding (`apm.yml`\|`bapm.yml`), bapm-only **`local`** source (vs OpenAPM `path:`)
 
 Подробности и Limitations — в CONFORMANCE; на сайте docs — [Conformance & boundary](apps/docs/guide/conformance.md).
 

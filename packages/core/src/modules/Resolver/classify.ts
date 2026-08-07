@@ -1,10 +1,12 @@
 import { ResolverError } from "./errors.ts";
 import type { ClassifiedDependency, DependencyKind } from "./types.ts";
 import { parseMarketplaceRef } from "@/modules/Marketplace";
+import { effectiveLocalPath } from "./localSource.ts";
 
 /**
  * Classify a dependency declaration (OpenAPM kind precedence:
  * local → registry → git-semver → git-literal; marketplace non-normative).
+ * Bapm `local` discriminator expands to the effective path before kind: local.
  */
 export function classifyDependencyRef(input: unknown): ClassifiedDependency {
   if (input === null || input === undefined) {
@@ -30,6 +32,16 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
     const ref = typeof obj.ref === "string" ? obj.ref : undefined;
     const alias = typeof obj.alias === "string" ? obj.alias : undefined;
     const prerelease = obj.prerelease === true;
+
+    // bapm `local` discriminator — expand default/custom before path-local form
+    if ("local" in obj) {
+      return {
+        kind: "local",
+        raw: input,
+        path: effectiveLocalPath(obj.local),
+        alias,
+      };
+    }
 
     // local: path without git / id (path may accompany git as virtual_path — then git wins)
     if (path !== undefined && git === undefined && id === undefined && registry === undefined) {
@@ -93,7 +105,14 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
 }
 
 function hasSourceKey(obj: Record<string, unknown>): boolean {
-  return "git" in obj || "id" in obj || "path" in obj || "registry" in obj;
+  return (
+    "git" in obj ||
+    "id" in obj ||
+    "path" in obj ||
+    "registry" in obj ||
+    "marketplace" in obj ||
+    "local" in obj
+  );
 }
 
 function classifyString(spec: string): ClassifiedDependency {

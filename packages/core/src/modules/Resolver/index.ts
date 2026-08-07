@@ -28,6 +28,16 @@ export { resolveAndLock, materializeRegistryNodes } from "./resolveAndLock.ts";
 export { purgeModulesInstallPaths } from "./purge.ts";
 export { normalizeRepoIdentity, toLockRepoUrl, identityToCacheDir } from "./identity.ts";
 export {
+  DEFAULT_LOCAL_ROOT,
+  effectiveLocalPath,
+  localRootGitignorePattern,
+} from "./localSource.ts";
+export {
+  collectLocalSourcePaths,
+  ensureLocalRootUntracked,
+  ensureLocalSourcesUntracked,
+} from "./ensureLocalUntracked.ts";
+export {
   pickHighestSatisfyingTag,
   pickHighestInIntersection,
   pickTightestRange,

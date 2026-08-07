@@ -28,6 +28,7 @@ import {
 import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity, toLockRepoUrl } from "./identity.ts";
 import { resolveLocalPath } from "./localPath.ts";
+import { effectiveLocalPath } from "./localSource.ts";
 import {
   pickHighestInIntersection,
   pickHighestSatisfyingTag,
@@ -128,6 +129,14 @@ function entryMatchesScope(
   }
   if (obj.path) {
     const pathKey = String(obj.path).replace(/^\.\//, "").replace(/\/+$/, "");
+    const base = pathKey.split("/").filter(Boolean).pop() ?? pathKey;
+    if (scope.has(base) || scope.has(pathKey)) return true;
+    return [...scope].some((s) => pathKey.includes(s) || base.includes(s));
+  }
+  if ("local" in obj) {
+    const pathKey = effectiveLocalPath(obj.local)
+      .replace(/^\.\//, "")
+      .replace(/\/+$/, "");
     const base = pathKey.split("/").filter(Boolean).pop() ?? pathKey;
     if (scope.has(base) || scope.has(pathKey)) return true;
     return [...scope].some((s) => pathKey.includes(s) || base.includes(s));
@@ -365,7 +374,8 @@ function normalizeEntry(entry: DependencyEntry): unknown {
     typeof entry === "object" &&
     "spec" in entry &&
     !("git" in entry) &&
-    !("path" in entry)
+    !("path" in entry) &&
+    !("local" in entry)
   ) {
     return (entry as { spec: string }).spec;
   }
@@ -377,6 +387,9 @@ function summarizeEntry(entry: DependencyEntry): string {
   if (typeof n === "string") return n;
   const o = n as ObjectDependency;
   if (o.git) return `${toLockRepoUrl(o.git)}${o.ref ? `@${o.ref}` : ""}`;
+  if ("local" in o) {
+    return effectiveLocalPath(o.local);
+  }
   if (o.path) return o.path;
   if (o.id) return o.id;
   return "dep";

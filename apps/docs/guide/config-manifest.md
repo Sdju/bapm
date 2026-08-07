@@ -76,12 +76,24 @@ Discovery ищет файл **только в текущем каталоге** 
 Два вида:
 
 1. **Строка** (shorthand), например `org/repo`, `org/repo/path`, `org/repo#v1.0.0`.
-2. **Объект** ровно с **одним** source kind среди: `git` | `id` | `path` | `registry` | `marketplace`.
+2. **Объект** ровно с **одним** source kind среди: `git` | `id` | `path` | `registry` | `marketplace` | `local`.
 
 Особые пары (не считаются вторым source kind):
 
 - `git` + `path` — `path` как companion (virtual_path); для `git: parent` поле `path` обязательно.
 - `id` + `registry` — `registry` как указатель на именованный registry, не отдельный source.
+
+`local` — **bapm-расширение** (не vocabulary OpenAPM v0.1): взаимоисключающий source kind, **не** companion к `git`. Портативная OpenAPM-форма по-прежнему `path:`.
+
+Значения `local`:
+
+| Форма | Эффективный путь |
+| --- | --- |
+| `local: true`, `local:` / `null`, `local: ""` | `.agents/local` |
+| `local: ./alt` (непустая строка) | указанный путь |
+| `local: false` / не-скаляр | отказ |
+
+При resolve/install, если в графе есть хотя бы один `local`, bapm **ensure**: дописывает покрывающее правило в `.gitignore` проекта (если его нет) и **fail-closed**, если git уже индексирует файлы под этим корнем. Обычный OpenAPM `path:` этот gate **не** включает.
 
 Допустимые meta-ключи объекта (allowlist): `version`, `ref`, `alias`, `skills`, `targets`, `allow_insecure`, `type`, `prerelease`, `name` (для marketplace-формы), плюс companions `path` / `registry` выше. Ключи `x-*` на записи зависимости допускаются; прочие неизвестные ключи — отказ.
 
@@ -94,6 +106,8 @@ dependencies:
   apm:
     - org/example-skill#v1.0.0
     - path: ./packages/hello-skill
+    - local: true
+    - local: ./vendor/wip-skill
     - git: https://github.com/org/repo.git
       ref: main
       path: packages/skill

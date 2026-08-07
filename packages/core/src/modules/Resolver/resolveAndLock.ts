@@ -27,6 +27,7 @@ import { classifyDependencyRef } from "./classify.ts";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
 import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity } from "./identity.ts";
+import { ensureLocalSourcesUntracked } from "./ensureLocalUntracked.ts";
 
 /**
  * Orchestrate: load manifest → resolve plan → policy gate → download → write lock.
@@ -66,6 +67,10 @@ export async function resolveAndLock(
     marketplaceConfigDir: options.marketplaceConfigDir ?? options.configDir,
     configDir: options.configDir ?? options.marketplaceConfigDir,
   });
+
+  // Bapm `local` sources: append covering .gitignore / fail if already tracked.
+  // Plain OpenAPM `path:` does not trigger this gate.
+  ensureLocalSourcesUntracked({ projectRoot: cwd, manifest });
 
   const candidates = nodesToPolicyCandidates(graph.nodes);
   const gate = assertPolicyGateAllows({
@@ -256,6 +261,10 @@ function collectPurgeNames(
     }
     if (obj.path) {
       const pathKey = String(obj.path).replace(/^\.\//, "");
+      consider(pathKey.split("/").filter(Boolean).pop());
+    }
+    if ("local" in obj) {
+      const pathKey = effectiveLocalPath(obj.local).replace(/^\.\//, "");
       consider(pathKey.split("/").filter(Boolean).pop());
     }
   }

@@ -27,4 +27,4 @@ bapm разделяет три оси, которые легко спутать:
 - Interactive **user-local approve/deny**, org **executables.deny/deny_all** и lockfile **require** vs withheld — заявлены; полный APM approve UX, hooks/bin/canvas gates остаются soft (MCP-only)
 - OpenAPM **§10.3 host-class floor** заявлен; остаточная Auth-глубина и soft **tar.gz-only** container остаются limitations
 
-Также намеренно (не баги): ∩-pick vs APM first-wins, dual-read branding, OpenAPM-strict YAML anchors.
+Также намеренно (не баги): ∩-pick vs APM first-wins, dual-read branding, OpenAPM-strict YAML anchors, bapm-only source discriminator `local` (default `.agents/local` / custom path + gitignore ensure; portable OpenAPM form remains `path:`).

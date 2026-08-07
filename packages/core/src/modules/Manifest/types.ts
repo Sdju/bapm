@@ -9,8 +9,10 @@ export type BapmDependency = {
 
 /**
  * Object-form APM dependency. Source discriminators `git` | `id` | `path` |
- * `registry` | `marketplace` are mutually exclusive, except `path` may accompany
- * `git` as a virtual_path companion (`git: parent` requires `path`).
+ * `registry` | `marketplace` | `local` are mutually exclusive, except `path` may
+ * accompany `git` as a virtual_path companion (`git: parent` requires `path`).
+ * `local` is a bapm extension (default `.agents/local`); it MUST NOT replace the
+ * git virtual_path companion role.
  */
 export type ObjectDependency = {
   git?: string;
@@ -19,6 +21,11 @@ export type ObjectDependency = {
   registry?: string;
   /** Marketplace alias for `{ name, marketplace, version? }` form. */
   marketplace?: string;
+  /**
+   * Bapm-only local source: `true` | `null` | `""` → default `.agents/local`;
+   * non-empty string → custom path. Rejected: `false` and non-scalars.
+   */
+  local?: boolean | string | null;
   name?: string;
   version?: string;
   ref?: string;
