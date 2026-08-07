@@ -6,14 +6,14 @@ Defines the minimal `bapm-integration-cursor` package at `packages/integration-c
 
 ## Requirements
 
-### Requirement: Package bapm-integration-cursor exists and depends only on target-api
+### Requirement: Package bapm-integration-cursor exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-cursor` with package name `bapm-integration-cursor`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `bapm-integration-api` for types/contracts and MUST NOT require `@bapm/core` as a hard dependency for materialize logic.
+The monorepo MUST include package directory `packages/integration-cursor` with package name `bapm-integration-cursor`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `bapm-integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation.
 
 #### Scenario: Package identity and dependency edge
 
-- **WHEN** inspecting `bapm-integration-cursor` package dependencies after implementation
-- **THEN** it MUST depend on `bapm-integration-api` and MUST NOT reverse-depend on `@bapm/core` for its host materialize implementation
+- **WHEN** inspecting the Cursor package dependencies after migration
+- **THEN** `bapm-integration-cursor` depends on `bapm-integration-api` and does not reverse-depend on `@bapm/core` for its host behavior
 
 ### Requirement: Minimal detect and skills materialize under registered roots
 
@@ -81,7 +81,7 @@ When the cursor target is activated by an explicit forced-target request (for ex
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `bapm-integration-cursor`. Registration for CLI/e2e MAY occur in the CLI or test harness via the target-api registry.
+`@bapm/core` MUST NOT hard-depend on or statically import `bapm-integration-cursor`. Registration for CLI or e2e MUST occur in a composition root or test harness through the integration API registry.
 
 #### Scenario: Core package graph excludes cursor
 
@@ -101,3 +101,12 @@ When install invokes Cursor MCP configure with an eligible server set, `bapm-int
 
 - **WHEN** cursor MCP configure runs
 - **THEN** no file outside registered deploy roots MUST be written for MCP config
+
+### Requirement: Cursor behavior survives package migration
+
+The Cursor integration MUST preserve the existing documented detection, primitive deployment, MCP configuration, compile-emission, path-safety, and inventory-report behavior through the integration capability contracts.
+
+#### Scenario: Cursor runtime capabilities are migrated
+
+- **WHEN** install or compile selects registered Cursor behavior after migration
+- **THEN** the observable files, registered-root safety, and reports are equivalent to the pre-migration behavior while all resolved package identifiers use the integration namespace

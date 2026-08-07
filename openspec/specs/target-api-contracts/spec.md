@@ -31,11 +31,11 @@ The monorepo MUST include package directory `packages/integration-api` with pack
 
 ### Requirement: Boundary-only dependency for core
 
-`@bapm/core` MUST depend on `bapm-integration-api` for speaking to targets and MUST NOT import concrete `bapm-target-*` package internals through this boundary.
+`@bapm/core` MUST depend on `bapm-integration-api` for speaking to integrations and MUST NOT import concrete `bapm-integration-*` package internals through this boundary.
 
 #### Scenario: Core speaks only through api package
 
-- **WHEN** `@bapm/core` needs to describe or invoke target materialization
+- **WHEN** `@bapm/core` needs to describe or invoke a host capability
 - **THEN** it MUST do so via `bapm-integration-api` contracts/registration only
 
 ### Requirement: Materialize may report deployed paths
@@ -125,3 +125,21 @@ Materialize and optional MCP configure reports exposed by `bapm-integration-api`
 
 - **WHEN** a registered target materializes primitives or configures MCP and returns deployment inventory
 - **THEN** core MUST be able to record the reported target-owned paths and hashes using only `bapm-integration-api` contracts
+
+### Requirement: Integration API exposes generic optional capabilities
+
+`bapm-integration-api` MUST expose capability contracts for runtime deployment, MCP configuration, compile emission, and marketplace-output emission without encoding a fixed host catalog. Capability discovery and invocation MUST permit an integration to implement any supported subset.
+
+#### Scenario: Marketplace-only integration is usable
+
+- **WHEN** a registered Claude or Codex integration exposes marketplace-output emission but no runtime deployment capability
+- **THEN** core can select its marketplace output capability without inferring or requiring runtime behavior
+
+### Requirement: Integration API has no legacy package compatibility surface
+
+The public API and workspace resolution graph MUST NOT expose legacy target package names, legacy module specifiers, or deprecated aliases.
+
+#### Scenario: Legacy import is rejected
+
+- **WHEN** a consumer or workspace source attempts to resolve a retired target package specifier
+- **THEN** resolution fails because no alias or compatibility package is provided
