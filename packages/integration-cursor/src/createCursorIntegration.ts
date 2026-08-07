@@ -11,7 +11,7 @@ import {
 import { dirname, join, relative, resolve } from "node:path";
 import type {
   AttributedPrimitive,
-  BapmTarget,
+  BapmIntegration,
   CompileContext,
   CompileReport,
   ConfigureMcpContext,
@@ -38,7 +38,10 @@ const MCP_JSON_REL = ".cursor/mcp.json";
  * agents → `.cursor/agents/<name>.md`.
  * MCP: optional `configureMcp` writes `.cursor/mcp.json` (not via materialize).
  */
-export function createCursorTarget(options?: { id?: string; deployRoots?: string[] }): BapmTarget {
+export function createCursorIntegration(options?: {
+  id?: string;
+  deployRoots?: string[];
+}): BapmIntegration {
   const id = options?.id ?? "cursor";
   const deployRoots = [...(options?.deployRoots ?? DEFAULT_DEPLOY_ROOTS)];
 

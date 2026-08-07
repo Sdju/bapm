@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCursorTarget } from "../../src/index.ts";
+import { createCursorIntegration } from "../../src/index.ts";
 
 function listFilesRecursive(root: string): string[] {
   if (!existsSync(root)) return [];
@@ -45,7 +45,7 @@ describe("cursor materialize polish", () => {
     const body = "---\nname: hello\n---\n# Hello skill\n";
     writeFileSync(src, body, "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     const primitives = [{ name: "hello", type: "skill", source: "local" as const, path: src }];
     const ctx = { cwd, targetId: "cursor", deployRoots: target.deployRoots };
 
@@ -69,7 +69,7 @@ describe("cursor materialize polish", () => {
     writeFileSync(join(skillDir, "scripts", "run.sh"), "#!/bin/sh\n", "utf8");
     writeFileSync(join(skillDir, "references", "guide.md"), "# Guide\n", "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     await target.materialize(
       [
         {
@@ -98,7 +98,7 @@ describe("cursor materialize polish", () => {
     mkdirSync(join(cwd, "src-instr"), { recursive: true });
     writeFileSync(src, "# Style rule\n", "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     expect(target.deployRoots).toEqual(expect.arrayContaining([".agents/skills", ".cursor"]));
 
     await target.materialize([{ name: "style", type: "instruction", source: "local", path: src }], {
@@ -120,7 +120,7 @@ describe("cursor materialize polish", () => {
     mkdirSync(join(cwd, "src-agent"), { recursive: true });
     writeFileSync(src, "# Reviewer agent\n", "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     await target.materialize([{ name: "reviewer", type: "agent", source: "local", path: src }], {
       cwd,
       targetId: "cursor",
@@ -141,7 +141,7 @@ describe("cursor materialize polish", () => {
     const instrSrc = join(cwd, "i.md");
     writeFileSync(instrSrc, "# I\n", "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     await target.materialize(
       [
         { name: "x", type: "skill", source: "local", path: skillSrc },
@@ -171,7 +171,7 @@ describe("cursor materialize polish", () => {
     mkdirSync(join(cwd, "src-skill"), { recursive: true });
     writeFileSync(src, "---\nname: reported\n---\n# Reported\n", "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     const result = await target.materialize(
       [{ name: "reported", type: "skill", source: "local", path: src }],
       { cwd, targetId: "cursor", deployRoots: target.deployRoots },

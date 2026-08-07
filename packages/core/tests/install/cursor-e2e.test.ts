@@ -8,10 +8,10 @@ import { join } from "node:path";
 import {
   createFakePorts,
   createTempProject,
-  getCreateRegistry,
-  getRegisterTarget,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   listFilesRecursive,
   writeText,
   type TempProject,
@@ -44,9 +44,9 @@ describe("install target materialize e2e (mock host)", () => {
     );
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     register({
       id: "cursor",
       deployRoots: [".agents/skills", ".cursor"],
@@ -96,7 +96,7 @@ describe("install target materialize e2e (mock host)", () => {
     await runInstall({
       cwd: project.cwd,
       frozen: false,
-      targetRegistry: registry,
+      integrationRegistry: registry,
       registry,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,

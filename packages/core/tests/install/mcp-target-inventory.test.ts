@@ -1,14 +1,14 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { TargetRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "bapm-integration-api";
 import { loadLockfile, runInstall } from "../../src/index.ts";
 import {
   createFakePorts,
   createTempProject,
-  getCreateRegistry,
-  getRegisterTarget,
-  importTargetApi,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
+  importIntegrationApi,
   writeMcpLeafProject,
   type TempProject,
 } from "./ux-helpers.ts";
@@ -37,9 +37,9 @@ mcp_configs:
     );
 
     const ports = createFakePorts();
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    getRegisterTarget(
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    getRegisterIntegration(
       api,
       registry,
     )({
@@ -64,8 +64,8 @@ mcp_configs:
         frozen: false,
         forcedTarget: "x-acme-editor",
         forceTarget: "x-acme-editor",
-        targetRegistry: registry as TargetRegistry,
-        registry: registry as TargetRegistry,
+        integrationRegistry: registry as IntegrationRegistry,
+        registry: registry as IntegrationRegistry,
         gitRemote: ports.gitRemote,
         tagLister: ports.tagLister,
         downloader: ports.downloader,

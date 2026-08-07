@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCursorTarget } from "../src/index.ts";
+import { createCursorIntegration } from "../src/index.ts";
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -25,7 +25,7 @@ describe("bapm-integration-cursor package", () => {
   });
 });
 
-describe("createCursorTarget", () => {
+describe("createCursorIntegration", () => {
   let cwd: string;
 
   afterEach(() => {
@@ -39,7 +39,7 @@ describe("createCursorTarget", () => {
     mkdirSync(join(cwd, "src-skill"), { recursive: true });
     writeFileSync(src, "---\nname: hello\n---\n# Hello\n", "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     expect(target.id).toBe("cursor");
     expect(target.deployRoots).toEqual(expect.arrayContaining([".agents/skills"]));
     expect(target.detect({ cwd })).toBe(true);
@@ -64,7 +64,7 @@ describe("createCursorTarget", () => {
 
   test("owns compile output rendering and honors core write intent", async () => {
     cwd = mkdtempSync(join(tmpdir(), "bapm-cursor-compile-"));
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     const compile = target.compile;
     if (!compile) throw new Error("cursor target must support compile");
 

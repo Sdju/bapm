@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runInstall } from "../../src/index.ts";
-import { createTargetRegistry } from "bapm-integration-api";
+import { createIntegrationRegistry } from "bapm-integration-api";
 
 type Project = { cwd: string; cleanup: () => void };
 
@@ -27,7 +27,7 @@ describe("install target selection", () => {
 
   test("rejects ambiguous detection before either detected target materializes", async () => {
     project = createProject();
-    const registry = createTargetRegistry();
+    const registry = createIntegrationRegistry();
     const materialized: string[] = [];
 
     for (const id of ["alpha", "beta"]) {
@@ -44,7 +44,7 @@ describe("install target selection", () => {
     await expect(
       runInstall({
         cwd: project.cwd,
-        targetRegistry: registry,
+        integrationRegistry: registry,
         noPolicy: true,
       }),
     ).rejects.toThrow(/--target\s+<id>/i);
@@ -53,7 +53,7 @@ describe("install target selection", () => {
 
   test("accepts a registered non-Cursor exclude without skipping materialization", async () => {
     project = createProject();
-    const registry = createTargetRegistry();
+    const registry = createIntegrationRegistry();
     let materialized = 0;
 
     registry.register({
@@ -68,7 +68,7 @@ describe("install target selection", () => {
     await expect(
       runInstall({
         cwd: project.cwd,
-        targetRegistry: registry,
+        integrationRegistry: registry,
         excludeTargets: ["x-acme-editor"],
         noPolicy: true,
       }),

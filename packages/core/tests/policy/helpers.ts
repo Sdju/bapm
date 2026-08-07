@@ -315,8 +315,8 @@ export function getRunInstall(): (options: Record<string, unknown>) => Promise<u
   ) => Promise<unknown>;
   return (options) =>
     runInstall({
-      targetRegistry: legacyTargetRegistry,
-      registry: legacyTargetRegistry,
+      integrationRegistry: legacyIntegrationRegistry,
+      registry: legacyIntegrationRegistry,
       ...options,
     });
 }
@@ -328,7 +328,7 @@ const legacyTarget = {
   materialize: async () => ({ targetId: "legacy", deployedFiles: [] }),
 };
 
-const legacyTargetRegistry = {
+const legacyIntegrationRegistry = {
   register: () => {},
   list: () => [legacyTarget],
   get: (id: string) => (id === legacyTarget.id ? legacyTarget : undefined),

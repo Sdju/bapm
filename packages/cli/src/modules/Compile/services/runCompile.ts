@@ -1,8 +1,8 @@
 import { compileAgentsMd } from "@bapm/core";
-import type { TargetRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "bapm-integration-api";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
-export type CompileOptions = { args?: string[]; cwd?: string; targetRegistry?: TargetRegistry };
+export type CompileOptions = { args?: string[]; cwd?: string; integrationRegistry?: IntegrationRegistry };
 
 export type ParsedCompileArgs = {
   validate: boolean;
@@ -156,7 +156,7 @@ export async function runCompileCli(
       cwd: options.cwd,
       outputFile: parsed.outputFile,
       forcedTarget: parsed.target,
-      targetRegistry: options.targetRegistry,
+      integrationRegistry: options.integrationRegistry,
       validate: parsed.validate,
       dryRun: parsed.dryRun,
       verbose: parsed.verbose,

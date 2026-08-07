@@ -1,11 +1,11 @@
 /**
- * bapm-integration-api — contracts + registry between @bapm/core and host targets.
+ * bapm-integration-api — contracts + registry between @bapm/core and host integrations.
  */
 
 export type {
   AttributedPrimitive,
   AttributedPrimitiveSet,
-  BapmTarget,
+  BapmIntegration,
   CompileContext,
   CompileFn,
   CompileReport,
@@ -25,14 +25,10 @@ export type {
   TargetDetectionDiagnostic,
   DetectedTargetsResult,
   TargetId,
-  TargetRegistry,
+  IntegrationRegistry,
 } from "./types.ts";
 
-export {
-  createTargetRegistry,
-  createRegistry,
-  createMarketplaceOutputRegistry,
-} from "./registry.ts";
+export { createIntegrationRegistry, createMarketplaceOutputRegistry } from "./registry.ts";
 
 export {
   assertUnderDeployRoots,

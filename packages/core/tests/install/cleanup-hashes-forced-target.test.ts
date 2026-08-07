@@ -9,10 +9,10 @@ import {
   createFakePorts,
   createTempProject,
   expectRejectsMatching,
-  getCreateRegistry,
-  getRegisterTarget,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   modulesDir,
   readLockBytes,
   writeLock,
@@ -52,9 +52,9 @@ describe("core install — forced target / cleanup / hashes", () => {
     );
     // No .cursor/ and no .cursorrules
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     let materializeCalls = 0;
     register({
       id: "cursor",
@@ -77,7 +77,7 @@ describe("core install — forced target / cleanup / hashes", () => {
       frozen: false,
       forcedTarget: "cursor",
       forceTarget: "cursor",
-      targetRegistry: registry,
+      integrationRegistry: registry,
       registry,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
@@ -103,9 +103,9 @@ describe("core install — forced target / cleanup / hashes", () => {
       "utf8",
     );
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     register({
       id: "cursor",
       deployRoots: [".agents/skills", ".cursor"],
@@ -123,7 +123,7 @@ describe("core install — forced target / cleanup / hashes", () => {
           frozen: false,
           forcedTarget: "not-a-host",
           forceTarget: "not-a-host",
-          targetRegistry: registry,
+          integrationRegistry: registry,
           registry,
           gitRemote: ports.gitRemote,
           tagLister: ports.tagLister,
@@ -154,9 +154,9 @@ describe("core install — forced target / cleanup / hashes", () => {
       "---\nname: x\n---\n# X\n",
     );
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     register({
       id: "cursor",
       deployRoots: [".agents/skills", ".cursor"],
@@ -172,7 +172,7 @@ describe("core install — forced target / cleanup / hashes", () => {
       runInstall({
         cwd: project.cwd,
         frozen: false,
-        targetRegistry: registry,
+        integrationRegistry: registry,
         registry,
         gitRemote: ports.gitRemote,
         tagLister: ports.tagLister,
@@ -214,9 +214,9 @@ describe("core install — forced target / cleanup / hashes", () => {
       `lockfile_version: "1"\ndependencies:\n  - repo_url: local:gone-dep\n    name: gone-dep\n    source: local\n    path: ./gone-dep\n    deployed_file_hashes:\n      "${orphanRel}": "${goneHash}"\n  - repo_url: local:keep-dep\n    name: keep-dep\n    source: local\n    path: ./keep-dep\n`,
     );
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     register({
       id: "cursor",
       deployRoots: [".agents/skills", ".cursor"],
@@ -229,7 +229,7 @@ describe("core install — forced target / cleanup / hashes", () => {
     await runInstall({
       cwd: project.cwd,
       frozen: false,
-      targetRegistry: registry,
+      integrationRegistry: registry,
       registry,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
@@ -260,9 +260,9 @@ describe("core install — forced target / cleanup / hashes", () => {
     );
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     const deployedRel = ".agents/skills/hello/SKILL.md";
     register({
       id: "cursor",
@@ -282,7 +282,7 @@ describe("core install — forced target / cleanup / hashes", () => {
     await runInstall({
       cwd: project.cwd,
       frozen: false,
-      targetRegistry: registry,
+      integrationRegistry: registry,
       registry,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
@@ -325,9 +325,9 @@ describe("core install — forced target / cleanup / hashes", () => {
     writeFileSync(join(project.cwd, harnessRel), "---\nname: hello\n---\n# TAMPERED\n", "utf8");
     const before = readLockBytes(project.cwd);
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     register({
       id: "cursor",
       deployRoots: [".agents/skills", ".cursor"],
@@ -342,7 +342,7 @@ describe("core install — forced target / cleanup / hashes", () => {
         runInstall({
           cwd: project.cwd,
           frozen: true,
-          targetRegistry: registry,
+          integrationRegistry: registry,
           registry,
           gitRemote: ports.gitRemote,
           tagLister: ports.tagLister,

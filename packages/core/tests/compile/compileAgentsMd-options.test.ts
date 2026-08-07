@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { compileAgentsMd } from "@bapm/core";
-import { createTargetRegistry } from "bapm-integration-api";
+import { createIntegrationRegistry } from "bapm-integration-api";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
@@ -30,7 +30,7 @@ function writeCompileProject(cwd: string): void {
 }
 
 function compile(options: Parameters<typeof compileAgentsMd>[0]) {
-  const registry = createTargetRegistry();
+  const registry = createIntegrationRegistry();
   registry.register({
     id: "test-host",
     deployRoots: [],
@@ -43,7 +43,7 @@ function compile(options: Parameters<typeof compileAgentsMd>[0]) {
       return { path, content, wrote: context.write };
     },
   });
-  return compileAgentsMd({ ...options, targetRegistry: registry });
+  return compileAgentsMd({ ...options, integrationRegistry: registry });
 }
 
 describe("compileAgentsMd dryRun / validate / attribution", () => {

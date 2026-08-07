@@ -51,17 +51,17 @@ The VitePress docs site (`apps/docs`) MUST publish a dedicated guide page (not o
 
 ### Requirement: Docs site must not market multi-client adapters as shipped
 
-Landing, guide introduction, and architecture overview pages MUST NOT imply that Copilot, Claude, or other non-cursor client adapters are shipped in-tree. They MUST describe materialization via target packages with cursor-only as the current host matrix (multi-target later).
+Landing, guide introduction, and architecture overview pages MUST NOT imply that Copilot, Claude, or other non-cursor client adapters are shipped in-tree. They MUST describe materialization via integration packages with cursor-only as the current host matrix (multi-target later).
 
 #### Scenario: Landing no longer advertises multi-client adapters as present
 
 - **WHEN** a reader opens the docs landing page
 - **THEN** the page MUST NOT list Copilot/Claude (or equivalent multi-client) adapters as current shipped surfaces without qualifying them as out of scope or later
 
-#### Scenario: Architecture describes target packages not in-tree adapters
+#### Scenario: Architecture describes integration packages not in-tree adapters
 
 - **WHEN** a reader opens the architecture overview
-- **THEN** the page MUST describe host materialization via target packages (cursor-only today) and MUST NOT claim in-tree multi-client adapters inside `@bapm/core` as the current design
+- **THEN** the page MUST describe host materialization via integration packages (cursor-only today) and MUST NOT claim in-tree multi-client adapters inside `@bapm/core` as the current design
 
 ### Requirement: CONFORMANCE discoverability without coverage hand-edits
 

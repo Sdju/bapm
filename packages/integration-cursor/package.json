@@ -21,13 +21,13 @@
     "check": "vp check",
     "prepublishOnly": "vp run build"
   },
+  "dependencies": {
+    "bapm-integration-api": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
-  },
-  "dependencies": {
-    "bapm-integration-api": "workspace:*"
   }
 }

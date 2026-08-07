@@ -8,7 +8,7 @@ import {
   clientDownload,
   clientListVersions,
   clientPublish,
-  getCreateRegistryClient,
+  getCreateIntegrationRegistryClient,
   sha256Digest,
   startMockRegistry,
   type MockRegistry,
@@ -35,7 +35,7 @@ describe("M10 registry HTTP client (mock HTTP)", () => {
       ],
     });
 
-    const create = getCreateRegistryClient();
+    const create = getCreateIntegrationRegistryClient();
     const client = create({
       baseUrl: registry.baseUrl,
       url: registry.baseUrl,
@@ -60,7 +60,7 @@ describe("M10 registry HTTP client (mock HTTP)", () => {
       ],
     });
 
-    const client = getCreateRegistryClient()({
+    const client = getCreateIntegrationRegistryClient()({
       baseUrl: registry.baseUrl,
       url: registry.baseUrl,
     });
@@ -76,7 +76,7 @@ describe("M10 registry HTTP client (mock HTTP)", () => {
     const prev = process.env.BAPM_REGISTRY_TOKEN;
     process.env.BAPM_REGISTRY_TOKEN = "test-token";
     try {
-      const client = getCreateRegistryClient()({
+      const client = getCreateIntegrationRegistryClient()({
         baseUrl: registry.baseUrl,
         url: registry.baseUrl,
         token: "test-token",
@@ -95,7 +95,7 @@ describe("M10 registry HTTP client (mock HTTP)", () => {
     const bytes = buildFlatPackageZip({ version: "1.0.0" });
     registry = await startMockRegistry({ putStatus: 409 });
 
-    const client = getCreateRegistryClient()({
+    const client = getCreateIntegrationRegistryClient()({
       baseUrl: registry.baseUrl,
       url: registry.baseUrl,
     });
@@ -124,7 +124,7 @@ describe("M10 registry HTTP client (mock HTTP)", () => {
     const prev = process.env.BAPM_REGISTRY_TOKEN;
     delete process.env.BAPM_REGISTRY_TOKEN;
     try {
-      const client = getCreateRegistryClient()({
+      const client = getCreateIntegrationRegistryClient()({
         baseUrl: registry.baseUrl,
         url: registry.baseUrl,
       });
@@ -150,7 +150,7 @@ describe("M10 registry HTTP client (mock HTTP)", () => {
     const prev = process.env.BAPM_REGISTRY_TOKEN;
     delete process.env.BAPM_REGISTRY_TOKEN;
     try {
-      const client = getCreateRegistryClient()({
+      const client = getCreateIntegrationRegistryClient()({
         baseUrl: registry.baseUrl,
         url: registry.baseUrl,
       });

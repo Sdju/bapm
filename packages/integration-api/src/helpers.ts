@@ -7,7 +7,7 @@ import { join, relative, resolve, sep } from "node:path";
 import type {
   AttributedPrimitive,
   AttributedPrimitiveSet,
-  BapmTarget,
+  BapmIntegration,
   ConfigureMcpFn,
 } from "./types.ts";
 
@@ -72,7 +72,7 @@ const MCP_CONFIGURE_ALIASES = [
 ] as const;
 
 /** True when the target exposes an MCP configure hook (any documented alias). */
-export function hasConfigureMcp(target: BapmTarget | Record<string, unknown>): boolean {
+export function hasConfigureMcp(target: BapmIntegration | Record<string, unknown>): boolean {
   return getConfigureMcp(target) !== undefined;
 }
 
@@ -82,7 +82,7 @@ export function hasConfigureMcp(target: BapmTarget | Record<string, unknown>): b
  * use the same method name.
  */
 export function getConfigureMcp(
-  target: BapmTarget | Record<string, unknown>,
+  target: BapmIntegration | Record<string, unknown>,
 ): ConfigureMcpFn | undefined {
   const rec = target as Record<string, unknown>;
   for (const key of MCP_CONFIGURE_ALIASES) {

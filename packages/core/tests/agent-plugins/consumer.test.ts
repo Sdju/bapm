@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createTargetRegistry } from "bapm-integration-api";
-import { createCursorTarget } from "bapm-integration-cursor";
+import { createIntegrationRegistry } from "bapm-integration-api";
+import { createCursorIntegration } from "bapm-integration-cursor";
 import {
   AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
   AgentPluginsError,
@@ -233,10 +233,10 @@ describe("Agent Plugins v1 consumer foundation", () => {
         "name: consumer\nversion: 1.0.0\ntarget: cursor\ndependencies:\n  apm:\n    - path: ./plugin\n",
         "utf8",
       );
-      const registry = createTargetRegistry();
-      registry.register(createCursorTarget());
+      const registry = createIntegrationRegistry();
+      registry.register(createCursorIntegration());
 
-      await runInstall({ cwd: consumer, targetRegistry: registry, registry });
+      await runInstall({ cwd: consumer, integrationRegistry: registry, registry });
 
       expect(
         readFileSync(join(consumer, ".agents", "skills", "e2e-skill", "references.md"), "utf8"),

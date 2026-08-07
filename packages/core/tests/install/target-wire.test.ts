@@ -9,10 +9,10 @@ import { parseManifest } from "@bapm/core";
 import {
   createFakePorts,
   createTempProject,
-  getRegisterTarget,
-  getCreateRegistry,
+  getRegisterIntegration,
+  getCreateIntegrationRegistry,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   writeText,
   type TempProject,
 } from "./helpers.ts";
@@ -44,9 +44,9 @@ describe("target/targets wire (tg-008 / tg-004)", () => {
     );
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    const register = getRegisterTarget(api, registry);
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    const register = getRegisterIntegration(api, registry);
     const materializedNames: string[] = [];
     register({
       id: "cursor",
@@ -66,7 +66,7 @@ describe("target/targets wire (tg-008 / tg-004)", () => {
     await runInstall({
       cwd: project.cwd,
       frozen: false,
-      targetRegistry: registry,
+      integrationRegistry: registry,
       registry,
       activeTargets: ["cursor"],
       gitRemote: ports.gitRemote,

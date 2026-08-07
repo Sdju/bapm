@@ -20,7 +20,7 @@ function listTs(dir: string): string[] {
 }
 
 describe("target-cursor no dryRun knowledge", () => {
-  test("createCursorTarget / src has no dryRun parameter or branch", () => {
+  test("createCursorIntegration / src has no dryRun parameter or branch", () => {
     const files = listTs(srcRoot);
     expect(files.length).toBeGreaterThan(0);
     const combined = files.map((f) => readFileSync(f, "utf8")).join("\n");

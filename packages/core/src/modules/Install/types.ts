@@ -1,5 +1,5 @@
 import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
-import type { TargetRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "bapm-integration-api";
 
 export type InstallOnlyMode = "apm" | "mcp";
 
@@ -53,9 +53,9 @@ export type RunInstallOptions = {
   /** Alias for `forcedTarget`. */
   forceTarget?: string;
   /** Injected target registry (from bapm-integration-api). */
-  targetRegistry?: TargetRegistry;
+  integrationRegistry?: IntegrationRegistry;
   /** Alias accepted by acceptance helpers. */
-  registry?: TargetRegistry;
+  registry?: IntegrationRegistry;
   /** Override active target ids (else from manifest / detection / forced). */
   activeTargets?: string[];
   /**

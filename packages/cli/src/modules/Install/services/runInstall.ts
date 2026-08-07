@@ -8,7 +8,7 @@ import {
   runInstall as coreRunInstall,
 } from "@bapm/core";
 import type { InstallDeps, InstallOptions, InstallResult } from "../types/install.types.ts";
-import { createCliTargetRegistry } from "@/app/integrations/targets.ts";
+import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -476,7 +476,7 @@ async function runCoreInstall(
   parsed: ParsedInstallArgs,
   archivePath: string | undefined,
 ): Promise<InstallResult> {
-  const registry = createCliTargetRegistry();
+  const registry = createCliIntegrationRegistry();
 
   try {
     const result = await coreRunInstall({
@@ -498,7 +498,7 @@ async function runCoreInstall(
       only: parsed.only,
       forcedTarget: parsed.target,
       forceTarget: parsed.target,
-      targetRegistry: registry,
+      integrationRegistry: registry,
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,

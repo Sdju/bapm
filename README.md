@@ -2,7 +2,7 @@
 
 **Better Agent Package Manager** — аналог [microsoft/apm](https://github.com/microsoft/apm) на TypeScript с явной архитектурой.
 
-Менеджер зависимостей для конфигурации AI-агентов: манифест, lockfile, транзитивное разрешение. Материализация в хосты — отдельные пакеты таргетов (не in-tree адаптеры как у APM).
+Менеджер зависимостей для конфигурации AI-агентов: манифест, lockfile, транзитивное разрешение. Материализация в хосты — отдельные integration-пакеты (не in-tree адаптеры как у APM).
 
 ## Стек
 
@@ -18,14 +18,15 @@
 apps/docs          @bapm/docs        документация (VitePress)
 packages/core      @bapm/core        домен: manifest, lockfile, resolver, install
 packages/cli       bapm              CLI поверх @bapm/core
-# planned (не scaffold заранее):
-#   bapm-integration-api                  типы/утилиты; прослойка core ↔ targets
-#   bapm-target-<id>                 eg bapm-integration-cursor — materialize в хост
+packages/integration-api     bapm-integration-api     контракты/registry; прослойка core ↔ integrations
+packages/integration-cursor  bapm-integration-cursor  runtime Cursor
+packages/integration-claude  bapm-integration-claude  marketplace-only Claude output
+packages/integration-codex   bapm-integration-codex   marketplace-only Codex output
 openspec/                            спецификации и изменения
 .samples/                            внешние референсы (gitignore) — локальный клон microsoft/apm
 ```
 
-Таргеты: см. `openspec/specs/target-package-architecture/` — без паритета с in-tree APM `adapters/client/`.
+Integrations: см. `openspec/specs/integration-package-architecture/` — без паритета с in-tree APM `adapters/client/`.
 
 ## Conformance & parity
 

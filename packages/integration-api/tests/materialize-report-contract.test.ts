@@ -20,7 +20,7 @@ describe("target-api materialize report contract", () => {
     expect(combined).toMatch(/MaterializeReport|DeployedFile|deployedFiles/);
     expect(combined).toMatch(/deployed/i);
 
-    // Runtime: materialize return type must be part of BapmTarget contract text
+    // Runtime: materialize return type must be part of BapmIntegration contract text
     expect(typesSrc).toMatch(/materialize\s*:\s*\(/);
     expect(typesSrc).toMatch(
       /MaterializeReport|deployedFiles|Promise<\s*(void\s*\|\s*)?MaterializeReport|Promise<\s*MaterializeReport/,
@@ -38,8 +38,8 @@ describe("target-api materialize report contract", () => {
     expect(combined).toMatch(/ConfigureMcpFn|configureMcp|ConfigureMcpReport/);
 
     // Registry and MCP capability remain generic.
-    expect(typeof api.createTargetRegistry).toBe("function");
-    const registry = api.createTargetRegistry();
+    expect(typeof api.createIntegrationRegistry).toBe("function");
+    const registry = api.createIntegrationRegistry();
     expect(typeof registry.register).toBe("function");
   });
 });

@@ -4,11 +4,11 @@ import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createMarketplaceOutputRegistry,
-  createTargetRegistry,
+  createIntegrationRegistry,
   type MarketplaceOutputIntegration,
   type MarketplaceOutputRegistry,
 } from "bapm-integration-api";
-import { createCursorTarget } from "bapm-integration-cursor";
+import { createCursorIntegration } from "bapm-integration-cursor";
 import {
   buildMarketplaceOutputs,
   resolveEffectiveOutputPath,
@@ -52,8 +52,8 @@ describe("integration runtime and marketplace behavior", () => {
   test("preserves Cursor runtime behavior through the registered integration", async () => {
     const project = mkdtempSync(join(tmpdir(), "bapm-integration-cursor-"));
     cwd = project;
-    const cursor = createCursorTarget();
-    const registry = createTargetRegistry();
+    const cursor = createCursorIntegration();
+    const registry = createIntegrationRegistry();
     registry.register(cursor);
 
     expect((await registry.detect(project)).detectedIds).toEqual([]);

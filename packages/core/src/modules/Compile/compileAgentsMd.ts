@@ -1,5 +1,5 @@
 import { join, resolve } from "node:path";
-import type { BapmTarget, TargetRegistry } from "bapm-integration-api";
+import type { BapmIntegration, IntegrationRegistry } from "bapm-integration-api";
 import {
   discoverPrimitives,
   resolvePrimitiveConflicts,
@@ -26,7 +26,7 @@ export async function compileAgentsMd(
   const { primitives } = resolvePrimitiveConflicts({ primitives: raw });
   const sorted = sortPrimitives(primitives);
   const attribution = toAttribution(sorted);
-  const target = await selectCompileTarget(options.targetRegistry, options.forcedTarget, cwd);
+  const target = await selectCompileTarget(options.integrationRegistry, options.forcedTarget, cwd);
   if (typeof target.compile !== "function") {
     throw new Error(`Target "${target.id}" does not support compile`);
   }
@@ -75,10 +75,10 @@ function sortPrimitives(primitives: AttributedPrimitive[]): AttributedPrimitive[
 }
 
 async function selectCompileTarget(
-  registry: TargetRegistry | undefined,
+  registry: IntegrationRegistry | undefined,
   forcedTarget: string | undefined,
   cwd: string,
-): Promise<BapmTarget> {
+): Promise<BapmIntegration> {
   if (!registry) throw new Error("Compile requires a registered target; pass --target <id>");
 
   if (forcedTarget) {
@@ -90,7 +90,7 @@ async function selectCompileTarget(
   const detection = await detectRegisteredTargets(registry, cwd);
   const candidates = detection.detectedIds
     .map((id) => registry.get(id))
-    .filter((target): target is BapmTarget => Boolean(target?.compile));
+    .filter((target): target is BapmIntegration => Boolean(target?.compile));
   if (candidates.length !== 1) {
     throw new Error("Target detection is missing or ambiguous; pass --target <id>");
   }
@@ -98,7 +98,7 @@ async function selectCompileTarget(
 }
 
 async function detectRegisteredTargets(
-  registry: TargetRegistry,
+  registry: IntegrationRegistry,
   cwd: string,
 ): Promise<{ detectedIds: string[] }> {
   if (typeof registry.detect === "function") return registry.detect(cwd);

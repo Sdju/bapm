@@ -5,7 +5,7 @@ import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { APM_MODULES_DIR, loadLockfile } from "@bapm/core";
-import { createTargetRegistry } from "bapm-integration-api";
+import { createIntegrationRegistry } from "bapm-integration-api";
 import {
   createFakePorts,
   createTempProject,
@@ -25,8 +25,8 @@ import {
 
 const COMMIT = "ffffffffffffffffffffffffffffffffffffffff";
 
-function createDetectedTargetRegistry() {
-  const registry = createTargetRegistry();
+function createDetectedIntegrationRegistry() {
+  const registry = createIntegrationRegistry();
   registry.register({
     id: "test-target",
     deployRoots: [".test-target"],
@@ -64,7 +64,7 @@ describe("install pipeline — modules + lock", () => {
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,
-      targetRegistry: createDetectedTargetRegistry(),
+      integrationRegistry: createDetectedIntegrationRegistry(),
     });
 
     expect(existsSync(modulesDir(project.cwd))).toBe(true);
@@ -97,7 +97,7 @@ describe("install pipeline — modules + lock", () => {
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,
-      targetRegistry: createDetectedTargetRegistry(),
+      integrationRegistry: createDetectedIntegrationRegistry(),
     });
 
     expect(existsSync(modulesDir(project.cwd))).toBe(true);
@@ -147,7 +147,7 @@ describe("install pipeline — modules + lock", () => {
         cwd: project.cwd,
         frozen: false,
         // Empty / omitted registry cannot establish an active target.
-        targetRegistry: undefined,
+        integrationRegistry: undefined,
         gitRemote: ports.gitRemote,
         tagLister: ports.tagLister,
         downloader: ports.downloader,

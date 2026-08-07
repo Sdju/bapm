@@ -1,12 +1,12 @@
 /**
  * M9 MUST: bapm-integration-cursor writes .cursor/mcp.json under registered roots.
- * Specs: target-cursor-minimal, cursor-mcp-deploy. Checklist D §1, 5.
+ * Specs: integration-cursor-runtime, cursor-mcp-deploy. Checklist D §1, 5.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCursorTarget } from "../../src/index.ts";
+import { createCursorIntegration } from "../../src/index.ts";
 
 type TempDir = { cwd: string; cleanup: () => void };
 
@@ -22,7 +22,7 @@ function getConfigureMcp(
     target.configureMcp ?? target.writeMcpConfig ?? target.deployMcp ?? target.configureMcpServers;
   if (typeof fn !== "function") {
     throw new TypeError(
-      "expected createCursorTarget() to expose configureMcp (or writeMcpConfig/deployMcp)",
+      "expected createCursorIntegration() to expose configureMcp (or writeMcpConfig/deployMcp)",
     );
   }
   return fn.bind(target) as (
@@ -42,7 +42,7 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
     project = createTempDir();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
-    const target = createCursorTarget() as unknown as Record<string, unknown>;
+    const target = createCursorIntegration() as unknown as Record<string, unknown>;
     const configureMcp = getConfigureMcp(target);
 
     const report = (await configureMcp(
@@ -73,7 +73,7 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
     project = createTempDir();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
-    const target = createCursorTarget() as unknown as Record<string, unknown>;
+    const target = createCursorIntegration() as unknown as Record<string, unknown>;
     const configureMcp = getConfigureMcp(target);
 
     await configureMcp([{ name: "bounded", transport: "stdio", command: "true" }], {
@@ -89,7 +89,7 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
   test("adapts portable transports without copying portable metadata", async () => {
     project = createTempDir();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
-    const target = createCursorTarget() as unknown as Record<string, unknown>;
+    const target = createCursorIntegration() as unknown as Record<string, unknown>;
     const configureMcp = getConfigureMcp(target);
 
     await configureMcp(
@@ -137,7 +137,7 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
     mkdirSync(join(project.cwd, "src-skill"), { recursive: true });
     writeFileSync(src, "---\nname: hello\n---\n# Hello\n", "utf8");
 
-    const target = createCursorTarget();
+    const target = createCursorIntegration();
     await target.materialize([{ name: "hello", type: "skill", source: "local", path: src }], {
       cwd: project.cwd,
       targetId: "cursor",

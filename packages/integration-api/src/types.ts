@@ -160,7 +160,7 @@ export type ConfigureMcpFn = (
 ) => ConfigureMcpReport | Promise<ConfigureMcpReport>;
 
 /** Concrete target contract consumed by core only through `bapm-integration-api`. */
-export type BapmTarget = {
+export type BapmIntegration = {
   id: TargetId;
   /** Registered deploy root(s) relative to project cwd (tg-002). */
   deployRoots: string[];
@@ -177,11 +177,11 @@ export type BapmTarget = {
   [key: string]: unknown;
 };
 
-export type TargetRegistry = {
-  register(target: BapmTarget): void;
-  list(): BapmTarget[];
-  get(id: TargetId): BapmTarget | undefined;
-  getAll(): BapmTarget[];
+export type IntegrationRegistry = {
+  register(target: BapmIntegration): void;
+  list(): BapmIntegration[];
+  get(id: TargetId): BapmIntegration | undefined;
+  getAll(): BapmIntegration[];
   /** Evaluate each registered detector once, treating failures as non-matches. */
   detect(cwd: string): Promise<DetectedTargetsResult>;
 };

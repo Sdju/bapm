@@ -50,11 +50,11 @@ export function getRunInstall(): (options: Record<string, unknown>) => Promise<u
     );
   }
   return async (options) => {
-    const hasExplicitRegistry = "targetRegistry" in options || "registry" in options;
+    const hasExplicitRegistry = "integrationRegistry" in options || "registry" in options;
     return (fn as (options: Record<string, unknown>) => Promise<unknown>)({
       ...(hasExplicitRegistry
         ? {}
-        : { targetRegistry: legacyTargetRegistry, registry: legacyTargetRegistry }),
+        : { integrationRegistry: legacyIntegrationRegistry, registry: legacyIntegrationRegistry }),
       ...options,
     });
   };
@@ -67,7 +67,7 @@ const legacyTarget = {
   materialize: async () => ({ targetId: "legacy", deployedFiles: [] }),
 };
 
-const legacyTargetRegistry = {
+const legacyIntegrationRegistry = {
   register: () => {},
   list: () => [legacyTarget],
   get: (id: string) => (id === legacyTarget.id ? legacyTarget : undefined),
@@ -175,7 +175,7 @@ function listUnder(root: string): string[] {
 }
 
 /** Load bapm-integration-api. */
-export async function importTargetApi(): Promise<Record<string, unknown>> {
+export async function importIntegrationApi(): Promise<Record<string, unknown>> {
   try {
     return (await import("bapm-integration-api")) as Record<string, unknown>;
   } catch (e) {
@@ -187,17 +187,15 @@ export async function importTargetApi(): Promise<Record<string, unknown>> {
   }
 }
 
-export function getCreateRegistry(api: Record<string, unknown>): () => unknown {
-  const fn = api.createTargetRegistry ?? api.createRegistry ?? api.createTargetApiRegistry;
+export function getCreateIntegrationRegistry(api: Record<string, unknown>): () => unknown {
+  const fn = api.createIntegrationRegistry;
   if (typeof fn !== "function") {
-    throw new TypeError(
-      "expected bapm-integration-api to export createTargetRegistry (or createRegistry)",
-    );
+    throw new TypeError("expected bapm-integration-api to export createIntegrationRegistry");
   }
   return fn as () => unknown;
 }
 
-export function getRegisterTarget(
+export function getRegisterIntegration(
   api: Record<string, unknown>,
   registry?: unknown,
 ): (target: unknown) => unknown {

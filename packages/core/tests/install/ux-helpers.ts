@@ -17,10 +17,10 @@ import { dirname, join } from "node:path";
 import {
   createFakePorts,
   expectRejectsMatching,
-  getCreateRegistry,
-  getRegisterTarget,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   coreRoot,
   modulesDir,
   writeText as writeTextAbs,
@@ -29,10 +29,10 @@ import {
 export {
   createFakePorts,
   expectRejectsMatching,
-  getCreateRegistry,
-  getRegisterTarget,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   coreRoot,
   modulesDir,
 };
@@ -295,15 +295,15 @@ export async function installWithSpy(
   options: Record<string, unknown>,
 ): Promise<{ result: unknown; spy: SpyTarget; ports: ReturnType<typeof createFakePorts> }> {
   const ports = createFakePorts();
-  const api = await importTargetApi();
-  const registry = getCreateRegistry(api)();
+  const api = await importIntegrationApi();
+  const registry = getCreateIntegrationRegistry(api)();
   const spy = createSpyTarget();
-  getRegisterTarget(api, registry)(spy.target);
+  getRegisterIntegration(api, registry)(spy.target);
   const runInstall = getRunInstall();
   const result = await runInstall({
     cwd,
     frozen: false,
-    targetRegistry: registry,
+    integrationRegistry: registry,
     registry,
     gitRemote: ports.gitRemote,
     tagLister: ports.tagLister,

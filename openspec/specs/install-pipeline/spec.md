@@ -123,7 +123,7 @@ Install MUST accept an explicit forced target id (for example from CLI `--target
 - **WHEN** install is invoked with forced target id that is not registered
 - **THEN** install MUST fail with a clear error and MUST NOT write harness files for that id
 
-### Requirement: Deploy only via registered target-api contracts
+### Requirement: Deploy only via registered integration-api contracts
 
 Core install MUST invoke host materialization only through `bapm-integration-api` registration/contracts. Core MUST NOT hard-depend on `bapm-integration-cursor` or any concrete `bapm-target-*` package. With no target registered or none detected, install MUST still complete modules and lock work and MUST NOT write harness files (MAY warn).
 

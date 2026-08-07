@@ -1,4 +1,4 @@
-import type { TargetRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "bapm-integration-api";
 
 export type CompileAttributionEntry = {
   name: string;
@@ -18,7 +18,7 @@ export type CompileAgentsMdOptions = {
   outputFile?: string;
   modulesDir?: string;
   /** Registry of host target capabilities supplied by the application. */
-  targetRegistry?: TargetRegistry;
+  integrationRegistry?: IntegrationRegistry;
   /** Explicit registered target id, bypassing target detection. */
   forcedTarget?: string;
 };

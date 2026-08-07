@@ -7,10 +7,10 @@ import { join } from "node:path";
 import {
   createFakePorts,
   createTempProject,
-  getCreateRegistry,
-  getRegisterTarget,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   installWithSpy,
   writeLeafProject,
   writeMcpLeafProject,
@@ -49,9 +49,9 @@ describe("install exclude cursor skips MCP configure", () => {
 
     const runInstall = getRunInstall();
     const ports = createFakePorts();
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    getRegisterTarget(
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    getRegisterIntegration(
       api,
       registry,
     )({
@@ -66,7 +66,7 @@ describe("install exclude cursor skips MCP configure", () => {
         cwd: project.cwd,
         excludeTargets: ["not-a-runtime"],
         exclude: ["not-a-runtime"],
-        targetRegistry: registry,
+        integrationRegistry: registry,
         registry,
         gitRemote: ports.gitRemote,
         tagLister: ports.tagLister,

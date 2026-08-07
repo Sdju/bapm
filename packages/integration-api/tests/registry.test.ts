@@ -5,7 +5,7 @@ import { expect, test, describe } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createTargetRegistry, createRegistry } from "../src/index.ts";
+import { createIntegrationRegistry } from "../src/index.ts";
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -24,13 +24,9 @@ describe("bapm-integration-api package", () => {
   });
 });
 
-describe("target registry contracts", () => {
-  test("createTargetRegistry and createRegistry are aliases", () => {
-    expect(createRegistry).toBe(createTargetRegistry);
-  });
-
-  test("register target — list exposes id + deploy roots", () => {
-    const registry = createTargetRegistry();
+describe("integration registry contracts", () => {
+  test("register integration — list exposes id + deploy roots", () => {
+    const registry = createIntegrationRegistry();
     registry.register({
       id: "mock-editor",
       deployRoots: [".agents/skills", ".cursor"],
@@ -46,8 +42,8 @@ describe("target registry contracts", () => {
     expect(registry.getAll()).toHaveLength(1);
   });
 
-  test("register rejects incomplete target", () => {
-    const registry = createTargetRegistry();
+  test("register rejects incomplete integration", () => {
+    const registry = createIntegrationRegistry();
     expect(() =>
       registry.register({
         id: "",
@@ -58,8 +54,8 @@ describe("target registry contracts", () => {
     ).toThrow(/id/i);
   });
 
-  test("detect evaluates registered targets once and records non-match diagnostics", async () => {
-    const registry = createTargetRegistry();
+  test("detect evaluates registered integrations once and records non-match diagnostics", async () => {
+    const registry = createIntegrationRegistry();
     registry.register({
       id: "detected",
       deployRoots: [],

@@ -182,7 +182,7 @@ The system MUST accept and emit shapes for `constraint` / `resolved_tag` / `reso
 
 ### Requirement: M2 does not resolve download install or touch targets
 
-Successful lockfile parse/serialize/discovery MUST NOT download dependencies, run frozen install, materialize targets, or invoke target adapters. Lockfile M2 MUST NOT introduce in-tree target adapters or change `target-package-architecture` obligations.
+Successful lockfile parse/serialize/discovery MUST NOT download dependencies, run frozen install, materialize integrations, or invoke integration adapters. Lockfile M2 MUST NOT introduce in-tree integration adapters or change `integration-package-architecture` obligations.
 
 #### Scenario: Load does not install
 

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { compileAgentsMd } from "../../src/index.ts";
-import { createTargetRegistry } from "bapm-integration-api";
+import { createIntegrationRegistry } from "bapm-integration-api";
 
 type Project = { cwd: string; cleanup: () => void };
 
@@ -34,7 +34,7 @@ describe("target capability compilation", () => {
       "utf8",
     );
 
-    const registry = createTargetRegistry();
+    const registry = createIntegrationRegistry();
     const received: Array<{ override?: string; primitives: unknown }> = [];
     registry.register({
       id: "x-acme-editor",
@@ -52,7 +52,7 @@ describe("target capability compilation", () => {
     const result = await Promise.resolve(
       compileAgentsMd({
         cwd: project.cwd,
-        targetRegistry: registry,
+        integrationRegistry: registry,
         forcedTarget: "x-acme-editor",
       } as never),
     );

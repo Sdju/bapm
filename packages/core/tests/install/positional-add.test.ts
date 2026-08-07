@@ -8,10 +8,10 @@ import {
   createFakePorts,
   createTempProject,
   fingerprintProject,
-  getCreateRegistry,
-  getRegisterTarget,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   installWithSpy,
   manifestExists,
   readManifestText,
@@ -114,9 +114,9 @@ describe("install positional package-ref add", () => {
 
     const runInstall = getRunInstall();
     const ports = createFakePorts();
-    const api = await importTargetApi();
-    const registry = getCreateRegistry(api)();
-    getRegisterTarget(
+    const api = await importIntegrationApi();
+    const registry = getCreateIntegrationRegistry(api)();
+    getRegisterIntegration(
       api,
       registry,
     )({
@@ -132,7 +132,7 @@ describe("install positional package-ref add", () => {
         frozen: true,
         packageRefs: ["./extra"],
         forcedTarget: "not-a-host",
-        targetRegistry: registry,
+        integrationRegistry: registry,
         registry,
         gitRemote: ports.gitRemote,
         tagLister: ports.tagLister,

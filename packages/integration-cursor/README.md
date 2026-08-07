@@ -45,4 +45,4 @@ When install invokes `configureMcp` with eligible servers:
 
 Depends only on `bapm-integration-api` among bapm packages — not `@bapm/core`.
 Shared materialize helpers (`sanitizeName`, `assertUnderDeployRoots`, `readPrimitiveContent`, …) come from `bapm-integration-api`; this package keeps Cursor detect and path routing only.
-Register via `createTargetRegistry().register(createCursorTarget())` in CLI or tests.
+Register via `createIntegrationRegistry().register(createCursorIntegration())` in CLI or tests.

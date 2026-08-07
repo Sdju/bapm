@@ -22,7 +22,7 @@ On install, the system MUST collect MCP server definitions from the consuming pr
 
 ### Requirement: Write Cursor mcp.json under registered roots
 
-When the cursor target is active (positive detect or forced `--target cursor`) and eligible MCP servers exist after trust gating, install MUST write or update `.cursor/mcp.json` in Cursor `mcpServers` shape (stdio and/or http) via `bapm-integration-cursor` (or a thin target-api helper implemented by cursor). Writes MUST stay under the registered `.cursor/` root and MUST NEVER escape registered deploy roots.
+When the cursor target is active (positive detect or forced `--target cursor`) and eligible MCP servers exist after trust gating, install MUST write or update `.cursor/mcp.json` in Cursor `mcpServers` shape (stdio and/or http) via `bapm-integration-cursor` (or a thin integration-api helper implemented by cursor). Writes MUST stay under the registered `.cursor/` root and MUST NEVER escape registered deploy roots.
 
 #### Scenario: Direct MCP install writes mcp.json
 

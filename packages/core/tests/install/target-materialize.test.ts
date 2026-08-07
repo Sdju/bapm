@@ -9,10 +9,10 @@ import { join } from "node:path";
 import {
   createFakePorts,
   createTempProject,
-  getCreateRegistry,
-  getRegisterTarget,
+  getCreateIntegrationRegistry,
+  getRegisterIntegration,
   getRunInstall,
-  importTargetApi,
+  importIntegrationApi,
   writeText,
   type TempProject,
 } from "./helpers.ts";
@@ -48,10 +48,10 @@ describe("install target materialize integration", () => {
     );
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
-    const api = await importTargetApi();
-    const createRegistry = getCreateRegistry(api);
+    const api = await importIntegrationApi();
+    const createRegistry = getCreateIntegrationRegistry(api);
     const registry = createRegistry();
-    const register = getRegisterTarget(api, registry);
+    const register = getRegisterIntegration(api, registry);
 
     const calls: unknown[] = [];
     register({
@@ -67,7 +67,7 @@ describe("install target materialize integration", () => {
     await runInstall({
       cwd: project.cwd,
       frozen: false,
-      targetRegistry: registry,
+      integrationRegistry: registry,
       registry,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
@@ -110,10 +110,10 @@ describe("install target materialize integration", () => {
     );
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
 
-    const api = await importTargetApi();
-    const createRegistry = getCreateRegistry(api);
+    const api = await importIntegrationApi();
+    const createRegistry = getCreateIntegrationRegistry(api);
     const registry = createRegistry();
-    const register = getRegisterTarget(api, registry);
+    const register = getRegisterIntegration(api, registry);
 
     const mockWrites: string[] = [];
     const outsideProbe = join(project.cwd, ".agents", "skills", "s1", "SKILL.md");
@@ -136,7 +136,7 @@ describe("install target materialize integration", () => {
     await runInstall({
       cwd: project.cwd,
       frozen: false,
-      targetRegistry: registry,
+      integrationRegistry: registry,
       registry,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,

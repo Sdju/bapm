@@ -13,11 +13,11 @@ type Registry = {
 };
 
 type IntegrationApi = {
-  createTargetRegistry(): Registry;
+  createIntegrationRegistry(): Registry;
 };
 
 type CursorIntegration = {
-  createCursorTarget(): { id: string };
+  createCursorIntegration(): { id: string };
 };
 
 describe("published integration package behavior", () => {
@@ -25,13 +25,13 @@ describe("published integration package behavior", () => {
     const api = (await import("bapm-integration-api")) as IntegrationApi;
     const cursor = (await import("bapm-integration-cursor")) as CursorIntegration;
 
-    expect(typeof api.createTargetRegistry).toBe("function");
-    expect(cursor.createCursorTarget().id).toBe("cursor");
+    expect(typeof api.createIntegrationRegistry).toBe("function");
+    expect(cursor.createCursorIntegration().id).toBe("cursor");
   });
 
   test("injects a host-neutral registered integration through the generic registry", async () => {
     const api = (await import("bapm-integration-api")) as IntegrationApi;
-    const registry = api.createTargetRegistry();
+    const registry = api.createIntegrationRegistry();
     const integration = {
       id: "example-host",
       deployRoots: [".example"],

@@ -1,10 +1,10 @@
 import { join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
 import type {
-  BapmTarget,
+  BapmIntegration,
   ConfigureMcpReport,
   MaterializeReport,
-  TargetRegistry,
+  IntegrationRegistry,
 } from "bapm-integration-api";
 import { getConfigureMcp } from "bapm-integration-api";
 import {
@@ -97,7 +97,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const allowInsecure = options.allowInsecure === true;
   const allowInsecureHosts = options.allowInsecureHosts;
   const dev = options.dev === true;
-  const registry = (options.targetRegistry ?? options.registry) as TargetRegistry | undefined;
+  const registry = (options.integrationRegistry ?? options.registry) as
+    | IntegrationRegistry
+    | undefined;
 
   const policyPorts = {
     policyProviders: options.policyProviders ?? options.providers,
@@ -629,7 +631,7 @@ async function deployMcpAfterPolicy(args: {
   cwd: string;
   rootManifest: BapmManifest;
   nodes: ResolvedNode[];
-  registry?: TargetRegistry;
+  registry?: IntegrationRegistry;
   activeTargets: string[];
   forcedTargetId?: string;
   trustTransitiveMcp: boolean;
@@ -1028,7 +1030,7 @@ async function extractArchiveIntoProject(archivePath: string, cwd: string): Prom
 
 function assertForcedTargetRegistered(
   forcedTargetId: string | undefined,
-  registry: TargetRegistry | undefined,
+  registry: IntegrationRegistry | undefined,
 ): void {
   if (!forcedTargetId) return;
   if (!registry || !findTarget(registry, forcedTargetId)) {
@@ -1042,7 +1044,7 @@ function assertForcedTargetRegistered(
 
 async function resolveActiveTargets(args: {
   cwd: string;
-  registry?: TargetRegistry;
+  registry?: IntegrationRegistry;
   override?: string[];
   forcedTargetId?: string;
 }): Promise<string[]> {
@@ -1080,7 +1082,7 @@ async function resolveActiveTargets(args: {
 }
 
 async function detectRegisteredTargets(
-  registry: TargetRegistry,
+  registry: IntegrationRegistry,
   cwd: string,
 ): Promise<{ detectedIds: string[]; diagnostics: unknown[] }> {
   if (typeof registry.detect === "function") return registry.detect(cwd);
@@ -1102,7 +1104,7 @@ async function detectRegisteredTargets(
 
 function assertRegisteredExcludeIds(
   excludeIds: string[],
-  registry: TargetRegistry | undefined,
+  registry: IntegrationRegistry | undefined,
 ): void {
   for (const id of excludeIds) {
     if (!registry?.get(id)) {
@@ -1121,7 +1123,7 @@ function assertRegisteredExcludeIds(
  */
 function collectTargetDeployedHashes(
   cwd: string,
-  target: BapmTarget,
+  target: BapmIntegration,
   report: void | MaterializeReport,
 ): ReturnType<typeof collectDeployedHashes> {
   if (report === undefined) return [];
@@ -1166,13 +1168,13 @@ function isPathWithinTargetRoots(cwd: string, path: string, deployRoots: string[
   });
 }
 
-function listRegistry(registry: TargetRegistry): BapmTarget[] {
+function listRegistry(registry: IntegrationRegistry): BapmIntegration[] {
   if (typeof registry.list === "function") return registry.list();
   if (typeof registry.getAll === "function") return registry.getAll();
   return [];
 }
 
-function findTarget(registry: TargetRegistry, id: string): BapmTarget | undefined {
+function findTarget(registry: IntegrationRegistry, id: string): BapmIntegration | undefined {
   if (typeof registry.get === "function") {
     const t = registry.get(id);
     if (t) return t;
