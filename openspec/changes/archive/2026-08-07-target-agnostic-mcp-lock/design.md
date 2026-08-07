@@ -5,11 +5,13 @@ The target API already routes MCP configuration through registered target capabi
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Carry the target-reported MCP configuration path through install to lock inventory.
 - Associate MCP configuration inventory with the target that performed the configuration.
 - Preserve pre-existing lock inventory without automatic migration.
 
 **Non-Goals:**
+
 - Migrating legacy lockfile entries.
 - Adding another target package or changing Cursor's on-disk MCP format.
 - Generalizing compile, marketplace outputs, exclude validation, or deployed-file attribution.

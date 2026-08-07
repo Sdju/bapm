@@ -12,4 +12,4 @@
 
 - [x] 3.1 Add a non-Cursor mock-target install test that verifies target-keyed lock inventory and a distinct reported configuration path.
 - [x] 3.2 Add regression coverage that Cursor MCP install still records `.cursor/mcp.json` from the target report.
-- [ ] 3.3 Run focused package tests and static checks; validate the OpenSpec change.
+- [x] 3.3 Run focused package tests and static checks; validate the OpenSpec change.
