@@ -45,27 +45,27 @@ Alternative rejected: combine them with Cursor because marketplace outputs are i
 1. Rename API package and generic contract vocabulary, update core/CLI imports, package graph, and generic registry tests.
 2. Move Cursor code/tests/docs to the integration package and prove existing runtime deploy/MCP/compile behavior through the renamed API.
 3. Extract Claude/Codex mapping and host validation to their marketplace-only integration packages; register them for pack and remove core mapper exports.
-4. Remove legacy terminology from all live source, manifests, lockfiles, docs, tests, fixtures, and active OpenSpec specs; add repository-wide negative assertions.
+4. Remove retired package compatibility surfaces and stale user-facing terminology; add public package-graph assertions instead of repository source audits.
 
 Phases are not independently shippable because aliases are forbidden. Their checkpoints instead reduce review and diagnosis scope; the workspace must remain internally consistent after every commit.
 
-### D5 — Exhaustive legacy-name proof
+### D5 — Public package-graph proof
 
-Acceptance and final validation use a repository-wide `rg` denylist for `bapm-target-`, `packages/integration-api`, `packages/integration-cursor`, and selected retired import symbols where names change. The scan excludes `.git`, `node_modules`, and explicitly archived OpenSpec snapshots only; it includes source, manifests, lockfile, tests, docs, and live specs. Package discovery and TypeScript resolution checks separately prove the old npm specifiers cannot resolve.
+Acceptance and final validation prove the public package graph: required `bapm-integration-*` packages resolve to their declared identities, core exposes only the generic integration API dependency, and retired `bapm-target-*` specifiers fail resolution. No legacy package, resolver alias, re-export shim, or compatibility adapter may be added. This behavioral invariant deliberately permits necessary live references to the new integration package names and does not require acceptance tests to inspect repository source text.
 
 ## Risks / Trade-offs
 
 - [Lockfile churn obscures package moves] → regenerate only through the workspace package manager after manifest changes and review the package-name diff.
-- [A deep import or fixture survives the rename] → use the denylist scan plus targeted package-graph and test-suite assertions.
+- [A legacy resolver path survives the rename] → use negative package-resolution plus targeted package-graph assertions.
 - [Extracted marketplace mappers change output] → characterize existing Claude/Codex output, path jail, atomicity, and Codex category failure before extraction.
 - [Capability API becomes a host catalog] → accept only generic capability-shaped contracts; do not add Claude/Codex fields to core APIs.
-- [Historical OpenSpec records retain retired names] → preserve immutable archive history, but update all live main specs and exclude archives explicitly and narrowly from the final absence check.
+- [Historical OpenSpec records retain retired names] → preserve immutable archive history; acceptance remains independent of repository-text scans.
 
 ## Migration Plan
 
-1. Add failing acceptance suites for each phase, including negative package-resolution and denylist checks.
+1. Add failing behavioral acceptance suites for each phase, including negative package-resolution checks.
 2. Apply phases D4.1–D4.4 sequentially, keeping generic behavior and package graph green after each.
-3. Run workspace build, type/lint checks, targeted runtime and marketplace suites, and the final full denylist scan.
+3. Run workspace build, type/lint checks, targeted runtime and marketplace suites, and the public package-graph acceptance checks.
 4. Archive/sync the OpenSpec change only after live specs use integration terminology.
 
 Rollback consists of reverting the migration commits as a unit. Because no aliases or users exist, partial rollback is not supported and no persistent data migration is required.

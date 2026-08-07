@@ -15,12 +15,12 @@ Each host integration SHALL be published as `bapm-integration-<id>`. An integrat
 
 ### Requirement: No legacy target package compatibility
 
-The workspace SHALL contain no package, package alias, re-export shim, resolver alias, source import, documentation reference, OpenSpec requirement, fixture, test assertion, or generated artifact that identifies a package as `bapm-integration-api` or `bapm-target-*`. The migration MUST NOT provide compatibility adapters or aliases for these names.
+The public workspace package graph SHALL expose `bapm-integration-api` and concrete `bapm-integration-*` packages as the integration boundary. Retired `bapm-target-*` package specifiers MUST fail package resolution. The migration MUST NOT provide a legacy package, package alias, re-export shim, resolver alias, or compatibility adapter for retired specifiers.
 
-#### Scenario: Legacy namespace audit
+#### Scenario: Legacy package resolution is rejected
 
-- **WHEN** the repository is audited after migration, excluding immutable git history and explicitly archived historical OpenSpec snapshots
-- **THEN** no live workspace file or package-resolution result contains `bapm-target-`
+- **WHEN** a consumer resolves a retired `bapm-target-*` package specifier after migration
+- **THEN** resolution fails, while `bapm-integration-api` and the required concrete `bapm-integration-*` packages resolve to their published identities
 
 ### Requirement: Migration phases have independently verifiable completion
 

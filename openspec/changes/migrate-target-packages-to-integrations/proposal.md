@@ -4,11 +4,11 @@ The `bapm-target-*` vocabulary now conflates two independently useful concerns: 
 
 ## What Changes
 
-- **BREAKING** Rename `bapm-integration-api` and every concrete `bapm-target-*` workspace package to the `bapm-integration-*` namespace, with no compatibility packages, aliases, re-export shims, or legacy imports.
+- **BREAKING** Rename the shared API boundary and every concrete `bapm-target-*` workspace package to the `bapm-integration-*` namespace, with no compatibility packages, aliases, re-export shims, or legacy imports.
 - Define an integration package as the owner of both host runtime capabilities (detect, deploy, MCP, compile) and host marketplace-output capabilities; keep `@bapm/core` neutral and capability-driven.
 - Move the existing Cursor implementation and composition-root wiring to the integration namespace while preserving generic registration and injection.
 - Make Claude and Codex marketplace output ownership explicit: define whether they become dedicated integration packages or remain separately capability-provided, and remove core-owned host-specific output mapping accordingly.
-- Replace legacy terminology throughout workspace manifests, lockfiles, source, tests, documentation, and OpenSpec specifications; enforce an exhaustive absence check for `bapm-target-` and old package identifiers.
+- Replace stale user-facing legacy terminology and enforce the public package-graph invariant: required integration packages resolve while retired package specifiers have no resolution or compatibility path.
 - Sequence the migration into independently verifiable phases so that package/API rename, Cursor runtime migration, marketplace-output migration, and legacy eradication do not leave mixed namespaces.
 
 ## Capabilities
@@ -27,4 +27,4 @@ The `bapm-target-*` vocabulary now conflates two independently useful concerns: 
 
 ## Impact
 
-Affected systems include pnpm workspace package manifests and lockfile, TypeScript imports and public exports, CLI composition roots, core capability contracts and tests, Cursor deploy/MCP/compile behavior, producer marketplace output implementation, documentation, OpenSpec specs, and generated compatibility/conformance assertions. The change intentionally makes old package names unavailable at source and package-resolution boundaries.
+Affected systems include pnpm workspace package manifests and lockfile, TypeScript imports and public exports, CLI composition roots, core capability contracts and tests, Cursor deploy/MCP/compile behavior, producer marketplace output implementation, documentation, OpenSpec specs, and generated compatibility/conformance assertions. The change intentionally makes retired package names unavailable at package-resolution boundaries without requiring source-text audits.
