@@ -15,6 +15,11 @@ When an object APM dependency uses source discriminator `local` with no custom p
 - **WHEN** a root `dependencies.apm` (or `devDependencies.apm`) entry is an object whose sole source discriminator is `local` with no custom path
 - **THEN** resolve MUST use `.agents/local` under the project root as the local package path
 
+#### Scenario: String list item `- local` defaults
+
+- **WHEN** a root `dependencies.apm` (or `devDependencies.apm`) entry is the string `local` (YAML list item `- local`)
+- **THEN** parse/classify/resolve MUST treat it as the default local source and MUST use `.agents/local` (not a relative directory literally named `local`)
+
 #### Scenario: Boolean true local defaults
 
 - **WHEN** the entry is `{ local: true }` with no other source discriminators

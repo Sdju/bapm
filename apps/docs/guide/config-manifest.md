@@ -89,6 +89,7 @@ Discovery ищет файл **только в текущем каталоге** 
 
 | Форма | Эффективный путь |
 | --- | --- |
+| `- local` (строка в списке) | `.agents/local` |
 | `local: true`, `local:` / `null`, `local: ""` | `.agents/local` |
 | `local: ./alt` (непустая строка) | указанный путь |
 | `local: false` / не-скаляр | отказ |
@@ -106,6 +107,7 @@ dependencies:
   apm:
     - org/example-skill#v1.0.0
     - path: ./packages/hello-skill
+    - local
     - local: true
     - local: ./vendor/wip-skill
     - git: https://github.com/org/repo.git

@@ -23,6 +23,15 @@ function rejectApm(dep: Record<string, unknown>): string {
 }
 
 describe("Manifest local source parse", () => {
+  test("accepts string list item 'local' as { local: true }", () => {
+    const doc = parseManifestDocument({
+      name: "u",
+      version: "0.0.1",
+      dependencies: { apm: ["local"] },
+    }).document;
+    expect(doc.dependencies!.apm![0]).toEqual({ local: true });
+  });
+
   test("accepts true / null / empty / custom string", () => {
     expect(parseApm({ local: true }).local).toBe(true);
     expect(parseApm({ local: null }).local).toBeNull();

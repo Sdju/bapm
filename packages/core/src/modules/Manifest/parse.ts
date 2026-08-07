@@ -180,6 +180,10 @@ function validateDependencyBlock(value: unknown, field: string): DependencyLists
 
 function validateApmEntry(entry: unknown, path: string): DependencyEntry {
   if (typeof entry === "string") {
+    // Bare list item `- local` → bapm default local source (same as `{ local: true }`).
+    if (entry.trim() === "local") {
+      return { local: true };
+    }
     return entry;
   }
 

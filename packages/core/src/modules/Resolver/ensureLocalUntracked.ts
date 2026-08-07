@@ -36,6 +36,10 @@ export function collectLocalSourcePaths(manifest: BapmManifest): string[] {
 }
 
 function localPathFromEntry(entry: DependencyEntry): string | undefined {
+  // Bare string `- local` (if not yet normalized by parse) → default local root.
+  if (typeof entry === "string" && entry.trim() === "local") {
+    return effectiveLocalPath(true);
+  }
   if (entry === null || typeof entry !== "object" || Array.isArray(entry)) return undefined;
   if (!("local" in entry)) return undefined;
   return effectiveLocalPath((entry as ObjectDependency).local);

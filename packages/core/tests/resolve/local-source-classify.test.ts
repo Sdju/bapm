@@ -17,6 +17,13 @@ describe("Resolver local source classify", () => {
     }
   });
 
+  test("string shorthand 'local' expands to .agents/local not ./local", () => {
+    expect(classifyDependencyRef("local")).toMatchObject({
+      kind: "local",
+      path: DEFAULT_LOCAL_ROOT,
+    });
+  });
+
   test("custom string keeps declared path", () => {
     expect(classifyDependencyRef({ local: "./alt" })).toMatchObject({
       kind: "local",

@@ -108,6 +108,15 @@ describe("ensureLocalRootUntracked", () => {
     expect(collectLocalSourcePaths(document)).toEqual([".agents/local", "./alt"]);
   });
 
+  test("collectLocalSourcePaths includes YAML string list item local", () => {
+    const { document } = parseManifestDocument({
+      name: "r",
+      version: "0.0.1",
+      dependencies: { apm: ["local"] },
+    });
+    expect(collectLocalSourcePaths(document)).toEqual([".agents/local"]);
+  });
+
   test("ensureLocalSourcesUntracked no-ops for path-only manifest", () => {
     const project = tempProject();
     projects.push(project);
