@@ -155,7 +155,7 @@ dependencies:
 | `version` | Обязательно. Строка версии. |
 | `target` / `targets` | Предпочитаемый host; лучше дублировать явным `--target cursor` на install. |
 | `dependencies.apm` | Agent/APM-пакеты. |
-| `dependencies.mcp` | MCP-серверы; при активном Cursor по умолчанию в `.cursor/mcp.json` попадают **прямые** записи (transitive — только с `--trust-transitive-mcp`). |
+| `dependencies.mcp` | MCP-серверы; при активном Cursor по умолчанию в `.cursor/mcp.json` попадают **прямые** записи (transitive — только с `--trust-transitive-mcp`). В `env` / `headers` можно писать плейсхолдеры `${VAR}`, `${env:VAR}` или legacy `<VAR>` — при install bapm **запекает** их в литералы из окружения процесса (Cursor не подставляет `${…}` в runtime). Неразрешённый плейсхолдер → install падает до записи placeholders в `.cursor/mcp.json`. |
 | `devDependencies.apm` | Dev-зависимости; `bapm install <ref> --dev`. |
 
 `bapm init -y --target cursor` создаёт каркас с `name` (из имени каталога или аргумента), `version: 0.1.0`, пустыми `dependencies.apm` / `dependencies.mcp` и при необходимости `target`.
@@ -179,11 +179,31 @@ dependencies:
 
 Ручной edit уместен для структуры deps и метаданных. Повторно не создавайте манифест через `init`, если файл уже есть — команда не перезапишет.
 
+### MCP env placeholders (Cursor bake)
+
+В `dependencies.mcp[].env` (и `headers`, если заданы) поддерживаются те же формы, что у APM Cursor legacy:
+
+```yaml
+dependencies:
+  mcp:
+    - name: my-server
+      registry: false
+      transport: stdio
+      command: npx
+      args: ["-y", "my-mcp"]
+      env:
+        API_TOKEN: "${API_TOKEN}"
+        # или: "${env:API_TOKEN}" / "<API_TOKEN>"
+```
+
+Перед записью `.cursor/mcp.json` bapm подставляет значения из окружения (сначала явные overrides API, затем `process.env`). Пустая строка не считается значением. Если переменная не задана — install завершается с ошибкой и именем ключа (секрет в сообщение не попадает). Литералы без плейсхолдеров пишутся как есть.
+
 ## Типичные ошибки
 
 | Симптом | Что проверить |
 | --- | --- |
 | `No manifest found` / `MANIFEST_NOT_FOUND` | В cwd нет ни `apm.yml`, ни `bapm.yml`. Сделайте `init` или `install <ref>` (создаст минимальный `apm.yml`). |
+| `MCP env bake failed` / `unresolved placeholder` | Задайте недостающую переменную в окружении перед `bapm install --target cursor`. |
 | `Both apm.yml and bapm.yml are present` | Оставьте один файл. |
 | `Manifest requires "name"` / `"version"` | Добавьте оба поля; version — непустая строка. |
 | `must not declare both "target" and "targets"` | Оставьте либо `target`, либо `targets`. |

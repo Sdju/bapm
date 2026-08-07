@@ -519,9 +519,18 @@ export type {
   CollectMcpServersOptions,
   CollectMcpServersResult,
   ApplyMcpInventoryOptions,
+  BakeMcpStringMapOptions,
+  BakeableMcpServer,
 } from "@/modules/Mcp";
 
-export { collectMcpServers, applyMcpInventoryToLock } from "@/modules/Mcp";
+export {
+  collectMcpServers,
+  applyMcpInventoryToLock,
+  bakeMcpStringMap,
+  bakeMcpStringValue,
+  bakeMcpServerMaps,
+  McpEnvBakeError,
+} from "@/modules/Mcp";
 
 export type {
   CompileAgentsMdOptions,

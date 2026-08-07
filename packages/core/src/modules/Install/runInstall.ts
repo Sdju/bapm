@@ -47,7 +47,12 @@ import {
   resolveExecutableTrust,
   userGrantsToSurface,
 } from "@/modules/ExecutableTrust";
-import { applyMcpInventoryToLock, collectMcpServers } from "@/modules/Mcp";
+import {
+  applyMcpInventoryToLock,
+  bakeMcpServerMaps,
+  collectMcpServers,
+  McpEnvBakeError,
+} from "@/modules/Mcp";
 import {
   applyDeployedHashesToLock,
   cleanupOrphanDeployedFiles,
@@ -773,7 +778,20 @@ async function deployMcpAfterPolicy(args: {
   let wroteConfig = false;
   let configPath: string | undefined;
   let configuredTargetId: string | undefined;
-  const configuredServers = approved;
+
+  // Cursor legacy bake: resolve ${VAR} / ${env:VAR} / <VAR> before configureMcp write.
+  let configuredServers: typeof approved;
+  try {
+    configuredServers = approved.map((server) => bakeMcpServerMaps(server));
+  } catch (error) {
+    if (error instanceof McpEnvBakeError) {
+      throw new InstallError("INSTALL_MCP_ENV_BAKE", error.message, {
+        details: { missing: error.missing },
+        cause: error,
+      });
+    }
+    throw error;
+  }
 
   for (const targetId of args.activeTargets) {
     const target = findTarget(args.registry, targetId);
