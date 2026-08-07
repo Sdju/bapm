@@ -117,7 +117,7 @@ describe("install pipeline — modules + lock", () => {
     expect(deps["bapm-target-api"]).toBeTruthy();
   });
 
-  test("direct install without target selection fails before project mutations", async () => {
+  test("direct install without target selection fails before target harness writes", async () => {
     project = createTempProject();
     const ports = createFakePorts();
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
@@ -145,14 +145,15 @@ describe("install pipeline — modules + lock", () => {
         cwd: project.cwd,
         frozen: false,
         // Empty / omitted registry cannot establish an active target.
+        targetRegistry: undefined,
         gitRemote: ports.gitRemote,
         tagLister: ports.tagLister,
         downloader: ports.downloader,
       }),
     ).rejects.toThrow(/--target\s+<id>/i);
 
-    expect(existsSync(modulesDir(project.cwd))).toBe(false);
-    expect(existingLockPath(project.cwd)).toBeUndefined();
+    expect(existsSync(modulesDir(project.cwd))).toBe(true);
+    expect(existingLockPath(project.cwd)).toBeDefined();
     expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(beforeAgents);
     expect(hasHarnessWrites(project.cwd, [".agents", ".cursor", ".github/instructions"])).toBe(
       false,

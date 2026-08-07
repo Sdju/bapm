@@ -7,7 +7,6 @@ import { join } from "node:path";
 import {
   createFakePorts,
   createTempProject,
-  fingerprintProject,
   getCreateRegistry,
   getRegisterTarget,
   getRunInstall,
@@ -44,10 +43,9 @@ describe("install exclude cursor skips MCP configure", () => {
     expect(spy.materializeCalls).toBeGreaterThan(0);
   });
 
-  test("unknown exclude id rejected without mutation", async () => {
+  test("unknown exclude id is rejected before target harness writes", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "exclude-unknown");
-    const before = fingerprintProject(project.cwd);
 
     const runInstall = getRunInstall();
     const ports = createFakePorts();
@@ -73,6 +71,7 @@ describe("install exclude cursor skips MCP configure", () => {
       }),
     ).rejects.toThrow(/exclude|unknown|unrecognized|not-a-runtime/i);
 
-    expect(fingerprintProject(project.cwd)).toBe(before);
+    expect(existsSync(join(project.cwd, ".agents", "skills"))).toBe(false);
+    expect(existsSync(join(project.cwd, ".cursor", "mcp.json"))).toBe(false);
   });
 });

@@ -288,10 +288,31 @@ export function getResolveAndLock(): (options: Record<string, unknown>) => Promi
 }
 
 export function getRunInstall(): (options: Record<string, unknown>) => Promise<unknown> {
-  return pickExport(["runInstall", "installProject"], "M10 install") as (
+  const runInstall = pickExport(["runInstall", "installProject"], "M10 install") as (
     options: Record<string, unknown>,
   ) => Promise<unknown>;
+  return (options) =>
+    runInstall({
+      targetRegistry: legacyTargetRegistry,
+      registry: legacyTargetRegistry,
+      ...options,
+    });
 }
+
+const legacyTarget = {
+  id: "legacy",
+  deployRoots: [".agents", ".cursor"],
+  detect: () => true,
+  materialize: async () => ({ targetId: "legacy", deployedFiles: [] }),
+};
+
+const legacyTargetRegistry = {
+  register: () => {},
+  list: () => [legacyTarget],
+  get: (id: string) => (id === legacyTarget.id ? legacyTarget : undefined),
+  getAll: () => [legacyTarget],
+  detect: async () => ({ detectedIds: [legacyTarget.id], diagnostics: [] }),
+};
 
 export function getBuildPublishArchive(): (
   options: Record<string, unknown>,

@@ -282,11 +282,11 @@ export function createSpyTarget(id = "cursor"): SpyTarget {
     detect: () => true,
     materialize: async () => {
       state.materializeCalls += 1;
-      return { deployedFiles: [] as [] };
+      return { targetId: id, deployedFiles: [] as [] };
     },
     configureMcp: async () => {
       state.configureMcpCalls += 1;
-      return { configPath: ".cursor/mcp.json", servers: ["test-stdio-server"] };
+      return { targetId: id, configPath: ".cursor/mcp.json", servers: ["test-stdio-server"] };
     },
   };
   return {

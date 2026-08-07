@@ -49,8 +49,31 @@ export function getRunInstall(): (options: Record<string, unknown>) => Promise<u
       "expected @bapm/core to export runInstall or installProject (M4 Install public API)",
     );
   }
-  return fn as (options: Record<string, unknown>) => Promise<unknown>;
+  return async (options) => {
+    const hasExplicitRegistry = "targetRegistry" in options || "registry" in options;
+    return (fn as (options: Record<string, unknown>) => Promise<unknown>)({
+      ...(hasExplicitRegistry
+        ? {}
+        : { targetRegistry: legacyTargetRegistry, registry: legacyTargetRegistry }),
+      ...options,
+    });
+  };
 }
+
+const legacyTarget = {
+  id: "legacy",
+  deployRoots: [".agents", ".cursor"],
+  detect: () => true,
+  materialize: async () => ({ targetId: "legacy", deployedFiles: [] }),
+};
+
+const legacyTargetRegistry = {
+  register: () => {},
+  list: () => [legacyTarget],
+  get: (id: string) => (id === legacyTarget.id ? legacyTarget : undefined),
+  getAll: () => [legacyTarget],
+  detect: async () => ({ detectedIds: [legacyTarget.id], diagnostics: [] }),
+};
 
 export function getDiscoverPrimitives(): (options: Record<string, unknown>) => unknown {
   const fn = (core as Record<string, unknown>).discoverPrimitives;

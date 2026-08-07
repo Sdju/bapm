@@ -27,16 +27,17 @@ describe("target-api materialize report contract", () => {
     );
   });
 
-  test("api stays host-agnostic — no second-host catalog or MCP configure API", () => {
+  test("api stays host-agnostic while exposing the generic MCP configure contract", () => {
     const typesSrc = readFileSync(join(pkgRoot, "src", "types.ts"), "utf8");
     const indexSrc = readFileSync(join(pkgRoot, "src", "index.ts"), "utf8");
     const combined = `${typesSrc}\n${indexSrc}`;
 
     expect(combined).not.toMatch(/copilot|claude|vscode/i);
-    expect(combined).not.toMatch(/mcp\.json|configureMcp|McpClient/i);
+    expect(combined).not.toMatch(/McpClient/i);
     expect(combined).not.toMatch(/adapterCatalog|AdapterCatalog|hostCatalog/i);
+    expect(combined).toMatch(/ConfigureMcpFn|configureMcp|ConfigureMcpReport/);
 
-    // Registry remains generic
+    // Registry and MCP capability remain generic.
     expect(typeof api.createTargetRegistry).toBe("function");
     const registry = api.createTargetRegistry();
     expect(typeof registry.register).toBe("function");

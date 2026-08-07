@@ -112,7 +112,7 @@ export type CompileFn = (
 
 /**
  * Host-agnostic MCP server definition passed to optional `configureMcp`.
- * Concrete hosts map transport/command/url into their native config shape.
+ * Concrete targets map transport, command, or URL into their native config shape.
  */
 export type McpServerConfig = {
   name: string;
@@ -144,7 +144,7 @@ export type ConfigureMcpContext = {
 export type ConfigureMcpReport = {
   /** Registered target that owns the reported MCP deployment. */
   targetId?: TargetId;
-  /** Project-/cwd-relative path to the written MCP config (e.g. `.cursor/mcp.json`). */
+  /** Project-/cwd-relative path to the written target MCP config. */
   configPath: string;
   /** Server names written/updated. */
   servers?: string[];
@@ -159,10 +159,7 @@ export type ConfigureMcpFn = (
   ctx?: ConfigureMcpContext,
 ) => ConfigureMcpReport | Promise<ConfigureMcpReport>;
 
-/**
- * Host target contract. Concrete packages (e.g. bapm-target-cursor) implement this;
- * core only sees the shape via bapm-target-api.
- */
+/** Concrete target contract consumed by core only through `bapm-target-api`. */
 export type BapmTarget = {
   id: TargetId;
   /** Registered deploy root(s) relative to project cwd (tg-002). */
@@ -173,10 +170,7 @@ export type BapmTarget = {
     ctx?: MaterializeContext,
   ) => void | MaterializeReport | Promise<void | MaterializeReport>;
   getDeployRoots?: () => string[];
-  /**
-   * Optional host-agnostic MCP configure (M9). Cursor writes `.cursor/mcp.json`.
-   * Targets without this hook are skipped for MCP without failing non-MCP install.
-   */
+  /** Optional host-agnostic MCP configure; targets without it are skipped for MCP. */
   configureMcp?: ConfigureMcpFn;
   /** Optional host-owned compile rendering and output placement. */
   compile?: CompileFn;

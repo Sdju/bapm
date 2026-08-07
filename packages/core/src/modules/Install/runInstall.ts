@@ -111,17 +111,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     implementationDefaultHost: options.implementationDefaultHost,
   };
 
-  // Target selection is an install prerequisite. Resolve it before any archive,
-  // manifest, dependency, or target-harness mutation can occur.
-  assertForcedTargetRegistered(forcedTargetId, registry);
-  assertRegisteredExcludeIds(excludeIds, registry);
-  const activeTargets = await resolveActiveTargets({
-    cwd,
-    registry,
-    override: options.activeTargets,
-    forcedTargetId,
-  });
-
   if (options.archivePath && packageRefs.length > 0) {
     throw new InstallError(
       "INSTALL_PACKAGE_REF",
@@ -183,7 +172,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       policyPath,
       noPolicy,
       policyPorts,
-      activeTargets,
+      activeTargets: [],
     });
   }
 
@@ -342,6 +331,17 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         primitives: raw,
         declarationOrder,
       });
+
+  // Resolve target state only after independent preconditions (manifest,
+  // frozen, resolution, and policy) pass, but before target harness writes.
+  assertForcedTargetRegistered(forcedTargetId, registry);
+  assertRegisteredExcludeIds(excludeIds, registry);
+  const activeTargets = await resolveActiveTargets({
+    cwd,
+    registry,
+    override: options.activeTargets,
+    forcedTargetId,
+  });
 
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];

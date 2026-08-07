@@ -86,6 +86,24 @@ describe("install positional package-ref add", () => {
     expect(manifestExists(project.cwd)).toBe(false);
   });
 
+  test("missing manifest takes precedence over an invalid target selection", async () => {
+    project = createTempProject();
+    const runInstall = getRunInstall();
+    const ports = createFakePorts();
+
+    await expect(
+      runInstall({
+        cwd: project.cwd,
+        forcedTarget: "not-a-host",
+        gitRemote: ports.gitRemote,
+        tagLister: ports.tagLister,
+        downloader: ports.downloader,
+      }),
+    ).rejects.toThrow(/manifest|apm\.yml|bapm\.yml|not found|missing/i);
+
+    expect(manifestExists(project.cwd)).toBe(false);
+  });
+
   test("frozen plus positional rejected without mutation", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "frozen-pos");
@@ -110,6 +128,7 @@ describe("install positional package-ref add", () => {
         cwd: project.cwd,
         frozen: true,
         packageRefs: ["./extra"],
+        forcedTarget: "not-a-host",
         targetRegistry: registry,
         registry,
         gitRemote: ports.gitRemote,
