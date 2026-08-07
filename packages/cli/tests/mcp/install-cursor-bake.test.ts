@@ -1,6 +1,6 @@
 /**
- * Acceptance (RED): Cursor install bakes MCP env placeholders before mcp.json write.
- * OpenSpec change: mcp-env-bake-time
+ * Cursor install bakes MCP env placeholders before mcp.json write
+ * (promoted from mcp-env-bake-time).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -15,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("mcp-env-bake-time CLI Cursor install bake", () => {
+describe("CLI Cursor install MCP env bake", () => {
   let project: TempProject | undefined;
   const prevEnv: Record<string, string | undefined> = {};
 

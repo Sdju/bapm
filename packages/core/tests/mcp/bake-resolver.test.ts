@@ -1,11 +1,10 @@
 /**
- * Acceptance (RED): mcp-env-bake — bake-time MCP env/headers placeholders.
- * OpenSpec change: mcp-env-bake-time
+ * Public-API MCP env/headers bake-time placeholders (promoted from mcp-env-bake-time).
  */
 import { describe, expect, test } from "vite-plus/test";
-import { bakeMap, expectBakeFailure } from "./helpers.ts";
+import { bakeMap, expectBakeFailure } from "./bake-helpers.ts";
 
-describe("mcp-env-bake-time core bake resolver", () => {
+describe("mcp env bake resolver (public API)", () => {
   test("${VAR} bakes from process env / explicit env map", () => {
     const baked = bakeMap(
       { API_TOKEN: "${API_TOKEN}" },

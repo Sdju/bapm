@@ -79,6 +79,12 @@ export function readMcpServers(cwd: string): Record<string, unknown> {
   return raw.mcpServers ?? {};
 }
 
+export function readMcpJsonRaw(cwd: string): string | undefined {
+  const path = mcpJsonPath(cwd);
+  if (!existsSync(path)) return undefined;
+  return readFileSync(path, "utf8");
+}
+
 export function hasLock(cwd: string): boolean {
   return existsSync(join(cwd, "bapm.lock.yaml")) || existsSync(join(cwd, "apm.lock.yaml"));
 }
@@ -125,6 +131,41 @@ export function writeDirectMcpProject(
   writeFileSync(
     join(cwd, "bapm.yml"),
     `name: ${name}\nversion: 0.0.1\n${grants}dependencies:\n  apm: []\n  mcp:\n${STDIO_MCP}`,
+    "utf8",
+  );
+}
+
+/** Direct MCP stdio server with custom env YAML block (bake-time placeholders). */
+export function writeDirectMcpEnvProject(
+  cwd: string,
+  options: {
+    name?: string;
+    serverName?: string;
+    envYaml: string;
+    withCursorDir?: boolean;
+  },
+): void {
+  const name = options.name ?? "mcp-bake-direct";
+  const serverName = options.serverName ?? "bake-stdio-server";
+  if (options.withCursorDir !== false) {
+    mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  }
+
+  writeFileSync(
+    join(cwd, "bapm.yml"),
+    `name: ${name}
+version: 0.0.1
+dependencies:
+  apm: []
+  mcp:
+    - name: ${serverName}
+      registry: false
+      transport: stdio
+      command: echo
+      args: ["--ok"]
+      env:
+${options.envYaml}
+`,
     "utf8",
   );
 }

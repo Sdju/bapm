@@ -1,6 +1,5 @@
 /**
- * Acceptance helpers for mcp-env-bake-time (core bake resolver).
- * Behavioural contract only — no production source inspection.
+ * Helpers for public-API MCP env/headers bake tests.
  */
 import * as core from "@bapm/core";
 
@@ -16,8 +15,7 @@ export function pickExport(names: string[], label: string): AnyFn {
 }
 
 /**
- * Public bake-time resolver for MCP env/headers string maps
- * (names from change design / tasks).
+ * Public bake-time resolver for MCP env/headers string maps.
  */
 export function getBakeMcpStringMap(): (
   map: Record<string, string>,
