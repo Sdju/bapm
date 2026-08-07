@@ -271,9 +271,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         noPolicy,
         marketplaceConfigDir: options.marketplaceConfigDir ?? options.configDir,
         configDir: options.configDir ?? options.marketplaceConfigDir,
-        experimentalRegistries: options.experimentalRegistries,
-        registryBaseUrl: options.registryBaseUrl,
-        mirrorUrl: options.mirrorUrl,
         ...ports,
         ...policyPorts,
       });
