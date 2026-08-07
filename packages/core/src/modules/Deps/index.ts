@@ -18,3 +18,4 @@ export type {
 export { listDeps, depsList, runDepsList } from "./listDeps.ts";
 export { treeDeps, depsTree, runDepsTree } from "./treeDeps.ts";
 export { whyDeps, depsWhy, runDepsWhy } from "./whyDeps.ts";
+export { resolvePackageQuery, repoBasename, repoOwnerRepo } from "./resolvePackageQuery.ts";

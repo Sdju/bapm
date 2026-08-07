@@ -21,4 +21,5 @@ export const COMMAND_DENY = "deny";
 export const COMMAND_MARKETPLACE = "marketplace";
 export const COMMAND_SEARCH = "search";
 export const COMMAND_FIND = "find";
+export const COMMAND_VIEW = "view";
 export const COMMAND_PLUGIN = "plugin";

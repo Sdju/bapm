@@ -19,6 +19,7 @@ import {
   COMMAND_PUBLISH,
   COMMAND_SEARCH,
   COMMAND_FIND,
+  COMMAND_VIEW,
   COMMAND_SELF_UPDATE,
   COMMAND_UNINSTALL,
   COMMAND_UPDATE,
@@ -48,6 +49,7 @@ import { selfUpdateCommand } from "@/commands/self-update.ts";
 import { uninstallCommand } from "@/commands/uninstall.ts";
 import { updateCommand } from "@/commands/update.ts";
 import { versionCommand } from "@/commands/version.ts";
+import { viewCommand } from "@/commands/view.ts";
 import { approve } from "./init/approve.ts";
 import { audit } from "./init/audit.ts";
 import { cache } from "./init/cache.ts";
@@ -72,6 +74,7 @@ import { selfUpdate } from "./init/selfUpdate.ts";
 import { uninstall } from "./init/uninstall.ts";
 import { update } from "./init/update.ts";
 import { version } from "./init/version.ts";
+import { view } from "./init/view.ts";
 
 export type CommandHandler = (argv: string[]) => Promise<number>;
 
@@ -100,6 +103,7 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_MARKETPLACE]: (argv) => marketplaceCommand(argv, marketplace),
   [COMMAND_SEARCH]: (argv) => searchCommand(argv, search),
   [COMMAND_FIND]: (argv) => findCommand(argv, find),
+  [COMMAND_VIEW]: (argv) => viewCommand(argv, view),
   "-h": (argv) => helpCommand(argv, help),
   "--help": (argv) => helpCommand(argv, help),
   "-V": (argv) => versionCommand(argv, version),

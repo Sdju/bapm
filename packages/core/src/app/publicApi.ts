@@ -269,6 +269,9 @@ export {
   whyDeps,
   depsWhy,
   runDepsWhy,
+  resolvePackageQuery,
+  repoBasename,
+  repoOwnerRepo,
 } from "@/modules/Deps";
 
 export type {
@@ -616,6 +619,14 @@ export {
   findDeployedPath,
   runFindPath,
 } from "@/modules/Find";
+
+export type {
+  ViewError,
+  ViewIdentity,
+  ViewPackageOptions,
+  ViewPackageResult,
+} from "@/modules/View";
+export { viewPackage, runView, viewLocalPackage, localView } from "@/modules/View";
 
 export type {
   MarketplaceConfigOptions,
