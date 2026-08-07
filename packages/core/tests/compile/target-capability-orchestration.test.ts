@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compileAgentsMd, runInstall } from "../../../src/index.ts";
+import { compileAgentsMd } from "../../src/index.ts";
 import { createTargetRegistry } from "bapm-target-api";
 
 type Project = { cwd: string; cleanup: () => void };
@@ -17,7 +17,7 @@ function createProject(): Project {
   return { cwd, cleanup: () => rmSync(cwd, { recursive: true, force: true }) };
 }
 
-describe("target-capability-orchestration acceptance", () => {
+describe("target capability compilation", () => {
   let project: Project | undefined;
 
   afterEach(() => {
@@ -25,58 +25,7 @@ describe("target-capability-orchestration acceptance", () => {
     project = undefined;
   });
 
-  test("install rejects ambiguous detection before either detected target materializes", async () => {
-    project = createProject();
-    const registry = createTargetRegistry();
-    const materialized: string[] = [];
-
-    for (const id of ["alpha", "beta"]) {
-      registry.register({
-        id,
-        deployRoots: [`.${id}`],
-        detect: () => true,
-        materialize: async () => {
-          materialized.push(id);
-        },
-      });
-    }
-
-    await expect(
-      runInstall({
-        cwd: project.cwd,
-        targetRegistry: registry,
-        noPolicy: true,
-      }),
-    ).rejects.toThrow(/--target\s+<id>/i);
-    expect(materialized).toEqual([]);
-  });
-
-  test("install accepts a registered non-Cursor exclude without skipping materialization", async () => {
-    project = createProject();
-    const registry = createTargetRegistry();
-    let materialized = 0;
-
-    registry.register({
-      id: "x-acme-editor",
-      deployRoots: [".acme"],
-      detect: () => true,
-      materialize: async () => {
-        materialized += 1;
-      },
-    });
-
-    await expect(
-      runInstall({
-        cwd: project.cwd,
-        targetRegistry: registry,
-        excludeTargets: ["x-acme-editor"],
-        noPolicy: true,
-      }),
-    ).resolves.toMatchObject({ ok: true, activeTargets: ["x-acme-editor"] });
-    expect(materialized).toBe(1);
-  });
-
-  test("compile delegates default output and rendering to the forced target capability", async () => {
+  test("delegates default output and rendering to the forced target capability", async () => {
     project = createProject();
     mkdirSync(join(project.cwd, ".apm", "instructions"), { recursive: true });
     writeFileSync(join(project.cwd, ".apm", "instructions", "style.md"), "# Target-owned\n", "utf8");

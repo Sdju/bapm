@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 type Project = { cwd: string; cleanup: () => void };
 
@@ -36,7 +36,7 @@ async function runInProject(cwd: string, argv: string[]) {
   }
 }
 
-describe("compile target selection acceptance", () => {
+describe("compile target selection", () => {
   let project: Project | undefined;
 
   afterEach(() => {
