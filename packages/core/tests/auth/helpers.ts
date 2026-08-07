@@ -1,42 +1,15 @@
 /**
- * Acceptance helpers for sc-host-class (OpenAPM §10.3 credential host-class).
- * Soft-resolve Auth / Registry / Manifest APIs from @bapm/core — missing exports = RED.
+ * Auth / credential host-class helpers (promoted from sc-host-class acceptance).
+ * Soft-resolve Auth / Registry / Manifest APIs from @bapm/core — missing exports = fail.
  */
 import * as core from "@bapm/core";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parse as parseYaml } from "yaml";
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const suiteDir = here;
 export const coreRoot = resolve(here, "../../..");
 export const repoRoot = resolve(coreRoot, "../..");
-
-export const checklistPath = join(repoRoot, "tests/spec-conformance/checklist.yml");
-export const conformanceMdPath = join(repoRoot, "CONFORMANCE.md");
-export const conformanceJsonPath = join(repoRoot, "CONFORMANCE.json");
-
-/** Claim IDs this change must activate (sc-004 stays skipped). */
-export const CLAIM_ACTIVE_IDS = [
-  "req-sc-003",
-  "req-sc-005",
-  "req-sc-008",
-  "req-sc-013",
-] as const;
-
-export const KEEP_SKIPPED_IDS = ["req-sc-004"] as const;
-
-export const PRIOR_ACTIVE_SC_IDS = [
-  "req-sc-001",
-  "req-sc-002",
-  "req-sc-006",
-  "req-sc-007",
-  "req-sc-009",
-  "req-sc-010",
-  "req-sc-011",
-  "req-sc-012",
-] as const;
 
 type AnyFn = (...args: never[]) => unknown;
 
@@ -223,63 +196,4 @@ export async function withEnv<T>(
   }
 }
 
-export type ChecklistRow = {
-  id: string;
-  status?: string;
-  citation?: string;
-  rationale?: string;
-  [key: string]: unknown;
-};
-
-export type ChecklistDoc = {
-  limitations?: string[];
-  scope_out?: string[];
-  requirements?: ChecklistRow[];
-  [key: string]: unknown;
-};
-
-export function readText(path: string): string {
-  return readFileSync(path, "utf8");
-}
-
-export function loadChecklist(): ChecklistDoc {
-  return parseYaml(readText(checklistPath)) as ChecklistDoc;
-}
-
-export function checklistRows(doc: ChecklistDoc = loadChecklist()): ChecklistRow[] {
-  return Array.isArray(doc.requirements) ? doc.requirements : [];
-}
-
-export function byId(rows: ChecklistRow[], id: string): ChecklistRow {
-  const row = rows.find((r) => r.id === id);
-  if (!row) throw new Error(`checklist missing ${id}`);
-  return row;
-}
-
-export function citationPaths(citation: string | undefined): string[] {
-  if (!citation) return [];
-  return citation
-    .split(";")
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0 && !/^CONFORMANCE\.(md|json)$/i.test(p));
-}
-
-export function pathExistsInRepo(rel: string): boolean {
-  return existsSync(join(repoRoot, rel));
-}
-
-export function limitationsBlob(doc: ChecklistDoc): string {
-  return (doc.limitations ?? []).join("\n");
-}
-
-export function scopeOutBlob(doc: ChecklistDoc): string {
-  return (doc.scope_out ?? []).join("\n");
-}
-
-/** Citation path must live under this change's acceptance (or promoted) tree. */
-export function citationMentionsScHostClass(citation: string | undefined): boolean {
-  if (!citation) return false;
-  return /sc-host-class/i.test(citation);
-}
-
-export { core, join };
+export { core };

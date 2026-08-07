@@ -724,8 +724,8 @@ requirements:
   section: '10.3'
   status: active
   citation: >-
-    packages/core/tests/acceptance/sc-host-class/redirect-auth-drop.test.ts;
-    packages/core/tests/acceptance/sc-host-class/resolve-per-class.test.ts
+    packages/core/tests/auth/redirect-auth-drop.test.ts;
+    packages/core/tests/auth/resolve-per-class.test.ts
 - id: req-sc-004
   class: consumer
   keyword: MUST
@@ -741,7 +741,7 @@ requirements:
   section: '10.3'
   status: active
   citation: >-
-    packages/core/tests/acceptance/sc-host-class/credential-host-class.test.ts
+    packages/core/tests/auth/credential-host-class.test.ts
 - id: req-sc-006
   class: consumer
   keyword: MUST
@@ -760,7 +760,7 @@ requirements:
   section: '10.3'
   status: active
   citation: >-
-    packages/core/tests/acceptance/sc-host-class/git-https-refuse.test.ts
+    packages/core/tests/auth/git-https-refuse.test.ts
 - id: req-sc-009
   class: consumer
   keyword: MUST
@@ -797,7 +797,7 @@ requirements:
   section: '10.3'
   status: active
   citation: >-
-    packages/core/tests/acceptance/sc-host-class/overlap-ambient.test.ts
+    packages/core/tests/auth/overlap-ambient.test.ts
   notes: configured authority overlap selects one documented host class before credential resolution; only that class's credentials
     reach requests and child processes; explicit non-default ports remain scoped
 - id: req-rg-001

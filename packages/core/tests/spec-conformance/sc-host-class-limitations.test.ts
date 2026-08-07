@@ -1,5 +1,5 @@
 /**
- * Limitations honesty after sc-host-class claim flip:
+ * Limitations honesty after sc-host-class claim flip (promoted):
  * claimed §10.3 host-class floor acknowledged; soft zip + residual Auth depth named;
  * must NOT frame full host-class scoping as wholly deferred.
  */
@@ -12,7 +12,7 @@ import {
   loadChecklist,
   readText,
   scopeOutBlob,
-} from "./helpers.ts";
+} from "./sc-claims-helpers.ts";
 
 describe("sc-host-class Limitations honesty", () => {
   test("checklist Limitations acknowledge claimed §10.3 host-class floor", () => {

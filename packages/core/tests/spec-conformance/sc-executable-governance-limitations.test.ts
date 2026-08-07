@@ -34,16 +34,16 @@ describe("sc-executable-governance Limitations honesty", () => {
     ).toBe(false);
   });
 
-  test("host-class / soft zip residual still named; MCP-only soft honesty for hooks/bin/canvas", () => {
+  test("soft zip residual still named; MCP-only soft honesty for hooks/bin/canvas; §10.3 floor acknowledged", () => {
     const doc = loadChecklist();
     const blob = `${limitationsBlob(doc)}\n${scopeOutBlob(doc)}`;
 
-    expect(blob).toMatch(/host.?class|AuthResolver|§\s*10\.3/i);
+    expect(blob).toMatch(/host.?class|AuthResolver|§\s*10\.3|PSL|ambient|redirect Auth/i);
     expect(blob).toMatch(/tar\.?gz|zip|caps?|container/i);
     expect(blob).toMatch(/hooks|bin|canvas|MCP-only|mcp.?only|ungated/i);
   });
 
-  test("CONFORMANCE.md mirrors approve-not-absolute-OOS + host-class residual", () => {
+  test("CONFORMANCE.md mirrors approve-not-absolute-OOS + host-class / §10.3 honesty", () => {
     expect(existsSync(conformanceMdPath), conformanceMdPath).toBe(true);
     const md = readText(conformanceMdPath);
     expect(
@@ -52,7 +52,7 @@ describe("sc-executable-governance Limitations honesty", () => {
       ),
       "CONFORMANCE.md still lists approve interactive UX as absolute OOS",
     ).toBe(false);
-    expect(md).toMatch(/host.?class|AuthResolver|§\s*10\.3/i);
+    expect(md).toMatch(/host.?class|AuthResolver|§\s*10\.3|PSL|ambient|redirect Auth/i);
   });
 
   test("CONFORMANCE.json does not encode absolute approve OOS blanket", () => {

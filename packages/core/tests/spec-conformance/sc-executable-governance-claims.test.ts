@@ -13,13 +13,8 @@ import {
 } from "./sc-claims-helpers.ts";
 
 const CLAIM_ACTIVE = ["req-sc-010", "req-sc-011", "req-sc-012"] as const;
-const STAY_SKIPPED = [
-  "req-sc-003",
-  "req-sc-004",
-  "req-sc-005",
-  "req-sc-008",
-  "req-sc-013",
-] as const;
+/** Soft zip residual — still skipped after later sc-host-class claim flip. */
+const STAY_SKIPPED = ["req-sc-004"] as const;
 const STAY_ACTIVE = [
   "req-sc-001",
   "req-sc-002",
@@ -48,7 +43,7 @@ describe("sc-executable-governance Mode B claim set", () => {
     }
   });
 
-  test("host-class / soft skips stay skipped (003/004/005/008/013)", () => {
+  test("soft zip residual stays skipped (req-sc-004)", () => {
     const rows = checklistRows(loadChecklist());
     for (const id of STAY_SKIPPED) {
       expect(byId(rows, id).status, `${id} must remain skipped`).toBe("skipped");

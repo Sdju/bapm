@@ -27,26 +27,24 @@ export const docsConformanceGuidePath = join(
   "apps/docs/guide/conformance.md",
 );
 
-/** Active sc-* — must stay active with citations (010–012 claimed by sc-executable-governance). */
+/** Active sc-* — must stay active with citations (003/005/008/013 claimed by sc-host-class). */
 export const ACTIVE_SC_IDS = [
   "req-sc-001",
   "req-sc-002",
+  "req-sc-003",
+  "req-sc-005",
   "req-sc-006",
   "req-sc-007",
+  "req-sc-008",
   "req-sc-009",
   "req-sc-010",
   "req-sc-011",
   "req-sc-012",
-] as const;
-
-/** Residual honesty floor — remain skipped after sc-executable-governance. */
-export const SKIPPED_SC_IDS = [
-  "req-sc-003",
-  "req-sc-004",
-  "req-sc-005",
-  "req-sc-008",
   "req-sc-013",
 ] as const;
+
+/** Residual honesty floor — soft zip / tar.gz-only after sc-host-class. */
+export const SKIPPED_SC_IDS = ["req-sc-004"] as const;
 
 /** Stale P3 marketplace catch-all that MUST be removed from skipped rationales. */
 export const STALE_MARKETPLACE_CATCHALL =
@@ -103,16 +101,8 @@ export const SKIPPED_RATIONALE_THEMES: Record<
   (typeof SKIPPED_SC_IDS)[number],
   RegExp
 > = {
-  "req-sc-003":
-    /host.?class|mp-hosts-auth|redirect.+Auth|Auth.+drop|credential scop/i,
   "req-sc-004":
     /tar\.?gz|size.?\/?\s*entry|entry caps?|100\s*MB|10\s*k|zip|caps?/i,
-  "req-sc-005":
-    /eTLD|PSL|aliases?|credential host.?class/i,
-  "req-sc-008":
-    /git.?HTTP|non-https|credential refuse/i,
-  "req-sc-013":
-    /ambient|suppress|host.?class overlap|operator host.?class/i,
 };
 
 /** Absolute OOS blanket for interactive approve (forbidden after sc-010 claim). */

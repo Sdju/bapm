@@ -1,6 +1,6 @@
 /**
  * sc-* status honesty: active sc-* keep resolvable citations; residual skipped
- * after sc-executable-governance claim flip (sc-010 / sc-011 / sc-012).
+ * after sc-host-class claim flip (soft zip req-sc-004 only).
  */
 import { expect, test, describe } from "vite-plus/test";
 import {

@@ -146,17 +146,17 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-rs-016 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-sc-001 | MUST | 10.4 | consumer | active | packages/core/tests/extras/public-api.test.ts |
 | req-sc-002 | MUST | 10.9 | consumer | active | packages/core/tests/pack/safe-extract-pack.test.ts; packages/core/tests/registry/safe-extract-registry.test.ts |
-| req-sc-003 | MUST | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/redirect-auth-drop.test.ts; packages/core/tests/acceptance/sc-host-class/resolve-per-class.test.ts |
+| req-sc-003 | MUST | 10.3 | consumer | active | packages/core/tests/auth/redirect-auth-drop.test.ts; packages/core/tests/auth/resolve-per-class.test.ts |
 | req-sc-004 | MUST | 10.5 | consumer | skipped |  — Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed) |
-| req-sc-005 | MUST | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/credential-host-class.test.ts |
+| req-sc-005 | MUST | 10.3 | consumer | active | packages/core/tests/auth/credential-host-class.test.ts |
 | req-sc-006 | MUST | 4.2.3 | consumer | active | packages/core/tests/manifest/registries-insecure.test.ts |
 | req-sc-007 | MUST | 10.3 | consumer | active | packages/core/tests/pack/pack-archive.test.ts |
-| req-sc-008 | SHOULD | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/git-https-refuse.test.ts |
+| req-sc-008 | SHOULD | 10.3 | consumer | active | packages/core/tests/auth/git-https-refuse.test.ts |
 | req-sc-009 | MUST | 10.13 | consumer | active | packages/core/tests/extras/public-api.test.ts |
 | req-sc-010 | MUST | 10.13 | consumer | active | packages/core/tests/executable-trust/user-store.test.ts; packages/cli/tests/mcp/approve-deny.test.ts |
 | req-sc-011 | MUST | 10.14 | consumer | active | packages/core/tests/executable-trust/resolve-deny-wins.test.ts; packages/core/tests/policy/executables-parse-merge.test.ts; packages/core/tests/executable-trust/install-audit-twin.test.ts |
 | req-sc-012 | MUST | 10.14 | consumer | active | packages/core/tests/executable-trust/require-presence-withheld.test.ts |
-| req-sc-013 | MUST | 10.3 | consumer | active | packages/core/tests/acceptance/sc-host-class/overlap-ambient.test.ts |
+| req-sc-013 | MUST | 10.3 | consumer | active | packages/core/tests/auth/overlap-ambient.test.ts |
 | req-tg-001 | MUST | 8.4 | consumer | active | packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts |
 | req-tg-002 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
 | req-tg-003 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |

@@ -885,7 +885,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/acceptance/sc-host-class/redirect-auth-drop.test.ts; packages/core/tests/acceptance/sc-host-class/resolve-per-class.test.ts"
+      "citation": "packages/core/tests/auth/redirect-auth-drop.test.ts; packages/core/tests/auth/resolve-per-class.test.ts"
     },
     {
       "id": "req-sc-004",
@@ -901,7 +901,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/acceptance/sc-host-class/credential-host-class.test.ts"
+      "citation": "packages/core/tests/auth/credential-host-class.test.ts"
     },
     {
       "id": "req-sc-006",
@@ -925,7 +925,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/acceptance/sc-host-class/git-https-refuse.test.ts"
+      "citation": "packages/core/tests/auth/git-https-refuse.test.ts"
     },
     {
       "id": "req-sc-009",
@@ -965,7 +965,7 @@
       "section": "10.3",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/acceptance/sc-host-class/overlap-ambient.test.ts"
+      "citation": "packages/core/tests/auth/overlap-ambient.test.ts"
     },
     {
       "id": "req-tg-001",

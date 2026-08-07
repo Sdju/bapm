@@ -1,30 +1,52 @@
 /**
- * Mode B claims guard — req-sc-003/005/013/008 active with sc-host-class citations;
+ * Mode B claims guard for req-sc-003/005/013/008 (promoted from sc-host-class).
  * req-sc-004 stays skipped; prior soft-security / governance actives unchanged.
  */
 import { describe, expect, test } from "vite-plus/test";
 import {
   byId,
   checklistRows,
-  citationMentionsScHostClass,
   citationPaths,
-  CLAIM_ACTIVE_IDS,
-  KEEP_SKIPPED_IDS,
   loadChecklist,
   pathExistsInRepo,
-  PRIOR_ACTIVE_SC_IDS,
-} from "./helpers.ts";
+} from "./sc-claims-helpers.ts";
+
+const CLAIM_ACTIVE_IDS = [
+  "req-sc-003",
+  "req-sc-005",
+  "req-sc-008",
+  "req-sc-013",
+] as const;
+
+const KEEP_SKIPPED_IDS = ["req-sc-004"] as const;
+
+const PRIOR_ACTIVE_SC_IDS = [
+  "req-sc-001",
+  "req-sc-002",
+  "req-sc-006",
+  "req-sc-007",
+  "req-sc-009",
+  "req-sc-010",
+  "req-sc-011",
+  "req-sc-012",
+] as const;
+
+/** Citations must point at promoted Auth suite paths. */
+function citationMentionsHostClassSuite(citation: string | undefined): boolean {
+  if (!citation) return false;
+  return /packages\/core\/tests\/auth\//i.test(citation);
+}
 
 describe("sc-host-class Mode B claims guard", () => {
-  test("req-sc-003/005/008/013 are active with resolving sc-host-class citations", () => {
+  test("req-sc-003/005/008/013 are active with resolving auth suite citations", () => {
     const rows = checklistRows(loadChecklist());
     for (const id of CLAIM_ACTIVE_IDS) {
       const row = byId(rows, id);
       expect(row.status, `${id} must be active`).toBe("active");
       expect(row.citation, `${id} must have citations`).toBeTruthy();
       expect(
-        citationMentionsScHostClass(row.citation),
-        `${id} citation must reference sc-host-class suite: ${row.citation}`,
+        citationMentionsHostClassSuite(row.citation),
+        `${id} citation must reference packages/core/tests/auth/: ${row.citation}`,
       ).toBe(true);
       const paths = citationPaths(row.citation);
       expect(paths.length, `${id} needs at least one citation path`).toBeGreaterThan(0);
