@@ -17,7 +17,7 @@ function createTempDir(prefix = "bapm-m9-cursor-"): TempDir {
 
 function getConfigureMcp(
   target: Record<string, unknown>,
-): (servers: unknown, ctx: { cwd: string; deployRoots?: string[] }) => unknown | Promise<unknown> {
+): (servers: unknown, ctx: { cwd: string; deployRoots?: string[] }) => unknown {
   const fn =
     target.configureMcp ?? target.writeMcpConfig ?? target.deployMcp ?? target.configureMcpServers;
   if (typeof fn !== "function") {
@@ -28,7 +28,7 @@ function getConfigureMcp(
   return fn.bind(target) as (
     servers: unknown,
     ctx: { cwd: string; deployRoots?: string[] },
-  ) => unknown | Promise<unknown>;
+  ) => unknown;
 }
 
 describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
@@ -45,7 +45,7 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
     const target = createCursorTarget() as unknown as Record<string, unknown>;
     const configureMcp = getConfigureMcp(target);
 
-    await configureMcp(
+    const report = (await configureMcp(
       [
         {
           name: "test-stdio-server",
@@ -56,10 +56,11 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
         },
       ],
       { cwd: project.cwd, deployRoots: (target.deployRoots as string[]) ?? [".cursor"] },
-    );
+    )) as { configPath?: unknown };
 
     const path = join(project.cwd, ".cursor", "mcp.json");
     expect(existsSync(path)).toBe(true);
+    expect(report.configPath).toBe(".cursor/mcp.json");
     const doc = JSON.parse(readFileSync(path, "utf8")) as {
       mcpServers?: Record<string, Record<string, unknown>>;
     };

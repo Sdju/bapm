@@ -101,7 +101,7 @@ export type ConfigureMcpContext = {
  */
 export type ConfigureMcpReport = {
   /** Project-/cwd-relative path to the written MCP config (e.g. `.cursor/mcp.json`). */
-  configPath?: string;
+  configPath: string;
   /** Server names written/updated. */
   servers?: string[];
   deployedFiles?: DeployedFile[];
@@ -113,7 +113,7 @@ export type ConfigureMcpReport = {
 export type ConfigureMcpFn = (
   servers: McpServerConfig[] | Record<string, McpServerConfig>,
   ctx?: ConfigureMcpContext,
-) => void | ConfigureMcpReport | Promise<void | ConfigureMcpReport>;
+) => ConfigureMcpReport | Promise<ConfigureMcpReport>;
 
 /**
  * Host target contract. Concrete packages (e.g. bapm-target-cursor) implement this;

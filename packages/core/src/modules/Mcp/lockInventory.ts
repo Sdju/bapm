@@ -27,25 +27,23 @@ export function applyMcpInventoryToLock(options: ApplyMcpInventoryOptions): Lock
     ...(typeof doc.mcp_configs === "object" && doc.mcp_configs && !Array.isArray(doc.mcp_configs)
       ? (doc.mcp_configs as Record<string, unknown>)
       : {}),
-    cursor: {
-      path: options.configPath ?? ".cursor/mcp.json",
+    [options.targetId]: {
+      path: options.configPath,
       // Fresh array — shared refs cause YAML anchors rejected by safe-subset load.
       servers: [...names],
     },
   };
 
-  if (options.targetId) {
-    const prev =
-      typeof doc.mcp_target_servers === "object" &&
-      doc.mcp_target_servers &&
-      !Array.isArray(doc.mcp_target_servers)
-        ? (doc.mcp_target_servers as Record<string, unknown>)
-        : {};
-    doc.mcp_target_servers = {
-      ...prev,
-      [options.targetId]: [...names],
-    };
-  }
+  const prev =
+    typeof doc.mcp_target_servers === "object" &&
+    doc.mcp_target_servers &&
+    !Array.isArray(doc.mcp_target_servers)
+      ? (doc.mcp_target_servers as Record<string, unknown>)
+      : {};
+  doc.mcp_target_servers = {
+    ...prev,
+    [options.targetId]: [...names],
+  };
 
   const provenance: Record<string, unknown> = {
     ...(typeof doc.mcp_config_provenance === "object" &&
@@ -58,7 +56,7 @@ export function applyMcpInventoryToLock(options: ApplyMcpInventoryOptions): Lock
     if (!s.name) continue;
     provenance[s.name] = {
       package: s.packageName,
-      path: options.configPath ?? ".cursor/mcp.json",
+      path: options.configPath,
     };
   }
   doc.mcp_config_provenance = provenance;

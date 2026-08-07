@@ -31,6 +31,6 @@ export type CollectMcpServersResult = {
 export type ApplyMcpInventoryOptions = {
   document: LockfileDocument;
   servers: Array<{ name: string; packageName?: string; [key: string]: unknown }>;
-  configPath?: string;
-  targetId?: string;
+  configPath: string;
+  targetId: string;
 };

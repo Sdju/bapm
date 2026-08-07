@@ -823,25 +823,39 @@ async function deployMcpAfterPolicy(args: {
       cwd: args.cwd,
       targetId,
       deployRoots: [...target.deployRoots],
-    })) as void | ConfigureMcpReport;
+    })) as ConfigureMcpReport;
     const adapterDiagnostics = (
       report as (ConfigureMcpReport & { diagnostics?: unknown[] }) | undefined
     )?.diagnostics;
     if (adapterDiagnostics) args.diagnostics.push(...adapterDiagnostics);
 
+    const reportedConfigPath =
+      typeof report?.configPath === "string" ? report.configPath.trim() : "";
+    const resolvedConfigPath = reportedConfigPath ? resolve(args.cwd, reportedConfigPath) : "";
+    const configPathRelative = resolvedConfigPath ? relative(args.cwd, resolvedConfigPath) : "";
+    if (
+      !reportedConfigPath ||
+      !configPathRelative ||
+      configPathRelative === ".." ||
+      configPathRelative.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`)
+    ) {
+      throw new InstallError(
+        "INSTALL_FAILED",
+        `Target "${targetId}" configured MCP without a project-relative config path`,
+        { details: { targetId, configPath: report?.configPath } },
+      );
+    }
+
     wroteConfig = true;
     configuredTargetId = targetId;
-    configPath =
-      report && typeof report === "object" && typeof report.configPath === "string"
-        ? report.configPath
-        : ".cursor/mcp.json";
+    configPath = configPathRelative.replace(/\\/g, "/");
     break;
   }
 
   let lockDocument = args.lockDocument;
   let lockPath = args.lockPath;
 
-  if (wroteConfig && !args.frozen && lockDocument) {
+  if (wroteConfig && !args.frozen && lockDocument && configPath && configuredTargetId) {
     applyMcpInventoryToLock({
       document: lockDocument,
       servers: configuredServers,
