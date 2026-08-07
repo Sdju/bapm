@@ -1,59 +1,42 @@
 /**
- * Acceptance (RED): classify + resolve bapm `local` like path-local packages.
- * OpenSpec change: local-path-source
+ * Integration: resolve + lock for bapm `local` source (promoted from acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import {
-  captureResolverError,
-  classifyDependencyRef,
-  createTempProject,
   loadLockfile,
   resolveAndLock,
   resolveDependencyGraph,
-  writePackageAt,
-  writeRootManifest,
-  writeText,
-  type TempProject,
-} from "./helpers.ts";
+  type ResolverError,
+} from "@bapm/core";
+import { createTempProject, writeManifest, writeText, type TempProject } from "./helpers.ts";
 
-describe("local-path-source classify", () => {
-  test("default local classifies as kind local with path .agents/local", () => {
-    expect(classifyDependencyRef({ local: true })).toMatchObject({
-      kind: "local",
-      path: ".agents/local",
-    });
-    expect(classifyDependencyRef({ local: null })).toMatchObject({
-      kind: "local",
-      path: ".agents/local",
-    });
-    expect(classifyDependencyRef({ local: "" })).toMatchObject({
-      kind: "local",
-      path: ".agents/local",
-    });
-  });
+function writePackageAt(cwd: string, relDir: string, name: string): void {
+  writeText(
+    join(cwd, relDir, "apm.yml"),
+    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+  );
+}
 
-  test("custom local classifies as kind local with declared path", () => {
-    expect(classifyDependencyRef({ local: "./alt" })).toMatchObject({
-      kind: "local",
-      path: "./alt",
-    });
-  });
+function writeRootApm(cwd: string, apmEntriesYaml: string): void {
+  writeManifest(
+    cwd,
+    "apm.yml",
+    `name: root\nversion: 0.0.1\ndependencies:\n  apm:\n${apmEntriesYaml}`,
+  );
+}
 
-  test("OpenAPM path classification unchanged", () => {
-    expect(classifyDependencyRef({ path: "./pkgs/a" })).toMatchObject({
-      kind: "local",
-      path: "./pkgs/a",
-    });
-    expect(classifyDependencyRef("./pkgs/a")).toMatchObject({
-      kind: "local",
-      path: "./pkgs/a",
-    });
-  });
-});
+async function captureResolverError(fn: () => Promise<unknown>): Promise<ResolverError> {
+  try {
+    await fn();
+  } catch (error) {
+    return error as ResolverError;
+  }
+  throw new Error("Expected resolution to reject");
+}
 
-describe("local-path-source resolve", () => {
+describe("Resolver local source resolve", () => {
   const projects: TempProject[] = [];
 
   afterEach(() => {
@@ -64,7 +47,7 @@ describe("local-path-source resolve", () => {
     const project = createTempProject();
     projects.push(project);
     writePackageAt(project.cwd, ".agents/local", "local-pkg");
-    writeRootManifest(project.cwd, "    - local: true\n");
+    writeRootApm(project.cwd, "    - local: true\n");
 
     const result = await resolveDependencyGraph({ cwd: project.cwd });
     expect(result.nodes.map((n) => n.name)).toEqual(expect.arrayContaining(["local-pkg"]));
@@ -77,7 +60,7 @@ describe("local-path-source resolve", () => {
     const project = createTempProject();
     projects.push(project);
     writePackageAt(project.cwd, "pkgs/x", "pkg-x");
-    writeRootManifest(project.cwd, "    - local: ./pkgs/x\n");
+    writeRootApm(project.cwd, "    - local: ./pkgs/x\n");
 
     const result = await resolveDependencyGraph({ cwd: project.cwd });
     expect(result.nodes.map((n) => n.name)).toEqual(expect.arrayContaining(["pkg-x"]));
@@ -89,11 +72,11 @@ describe("local-path-source resolve", () => {
 
   test("custom local path escaping root fails like path:", async () => {
     const project = createTempProject();
-    const outside = createTempProject("bapm-local-outside-");
+    const outside = createTempProject();
     projects.push(project, outside);
     writePackageAt(outside.cwd, ".", "outside");
     const escapedPath = relative(project.cwd, outside.cwd);
-    writeRootManifest(project.cwd, `    - local: ${escapedPath}\n`);
+    writeRootApm(project.cwd, `    - local: ${escapedPath}\n`);
 
     const error = await captureResolverError(() =>
       resolveDependencyGraph({ cwd: project.cwd }),
@@ -112,8 +95,7 @@ describe("local-path-source resolve", () => {
     const project = createTempProject();
     projects.push(project);
     writePackageAt(project.cwd, "pkgs/a", "pkg-a");
-    // Pre-ignore so gitignore gate is satisfied once ensure is implemented.
-    writeRootManifest(project.cwd, "    - local: ./pkgs/a\n");
+    writeRootApm(project.cwd, "    - local: ./pkgs/a\n");
     writeText(join(project.cwd, ".gitignore"), "/pkgs/a/\n");
 
     await resolveAndLock({ cwd: project.cwd });
@@ -135,7 +117,7 @@ describe("local-path-source resolve", () => {
     const project = createTempProject();
     projects.push(project);
     writePackageAt(project.cwd, "pkgs/a", "pkg-a");
-    writeRootManifest(project.cwd, "    - path: ./pkgs/a\n");
+    writeRootApm(project.cwd, "    - path: ./pkgs/a\n");
 
     await resolveAndLock({ cwd: project.cwd });
 

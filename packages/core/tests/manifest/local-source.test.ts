@@ -48,4 +48,23 @@ describe("Manifest local source parse", () => {
       rejectApm({ local: "./a", git: "https://github.com/example/repo.git" }),
     ).toMatch(/local|git|source/i);
   });
+
+  test("rejects object with no source key", () => {
+    expect(rejectApm({ alias: "only-meta" })).toMatch(
+      /source|git|id|path|registry|marketplace|local/i,
+    );
+  });
+
+  test("accepts local under dependencies.apm and devDependencies.apm", () => {
+    const { document } = parseManifestDocument({
+      name: "both-lists",
+      version: "0.0.1",
+      dependencies: { apm: [{ local: true }] },
+      devDependencies: { apm: [{ local: "./dev-local" }] },
+    });
+    const prod = document.dependencies?.apm?.[0] as Record<string, unknown>;
+    const dev = document.devDependencies?.apm?.[0] as Record<string, unknown>;
+    expect(prod.local).toBe(true);
+    expect(dev.local).toBe("./dev-local");
+  });
 });
