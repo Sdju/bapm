@@ -1,11 +1,11 @@
 /**
- * Acceptance (RED): bapm-only `{bake:NAME}` / `{bake:env:NAME}` MCP bake directive.
- * OpenSpec change: mcp-bake-directive
+ * Public-API MCP `{bake:NAME}` / `{bake:env:NAME}` bake directive
+ * (promoted from mcp-bake-directive).
  */
 import { describe, expect, test } from "vite-plus/test";
-import { bakeMap, expectBakeFailure } from "./helpers.ts";
+import { bakeMap, expectBakeFailure } from "./bake-helpers.ts";
 
-describe("mcp-bake-directive core bake resolver", () => {
+describe("mcp bake directive resolver (public API)", () => {
   test("{bake:NAME} bakes from process env / explicit env map", () => {
     const baked = bakeMap(
       { API_TOKEN: "{bake:API_TOKEN}" },
