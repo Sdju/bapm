@@ -3,7 +3,7 @@
  * Mirrors APM marketplace/resolver.py (consumer floor subset).
  */
 
-import { isAbsolute, resolve as pathResolve } from "node:path";
+import { relative as pathRelative, resolve as pathResolve } from "node:path";
 import {
   MarketplaceNotFoundError,
   MarketplacePluginNotFoundError,
@@ -193,8 +193,16 @@ function resolveRelativeLocal(
     ? pathResolve(marketplacePath, "..")
     : marketplacePath;
   const abs = rel && rel !== "." ? pathResolve(root, rel) : root;
-  if (!isAbsolute(abs)) {
-    return { path: abs };
+  const relativeToRoot = pathRelative(root, abs);
+  if (
+    relativeToRoot === ".." ||
+    relativeToRoot.startsWith("../") ||
+    relativeToRoot.startsWith("..\\")
+  ) {
+    throw new MarketplaceUnsupportedSourceError(
+      marketplace.name,
+      `local plugin source escapes marketplace root: ${relative}`,
+    );
   }
   return { path: abs };
 }

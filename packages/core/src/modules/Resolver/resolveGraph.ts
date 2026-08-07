@@ -59,6 +59,8 @@ type QueueItem = {
   shouldUpdate: boolean;
   /** Marketplace provenance to attach once the concrete edge materializes. */
   marketplaceProvenance?: MarketplaceLockProvenance;
+  /** Marketplace-validated local paths may live outside the consumer project. */
+  allowExternalLocalPath?: boolean;
 };
 
 type EdgeRecord = {
@@ -323,6 +325,7 @@ async function resolveMarketplaceEdge(
     ...item,
     entry,
     marketplaceProvenance: provenance,
+    allowExternalLocalPath: typeof dep !== "string" && "path" in dep,
   };
 }
 
@@ -585,11 +588,13 @@ async function resolveLocal(
     localMaterializations: DownloadArgs[];
   },
 ): Promise<void> {
-  const abs = resolveLocalPath({
-    originalPath: classified.path!,
-    fromDir: item.fromDir,
-    projectRoot: ctx.cwd,
-  });
+  const abs = item.allowExternalLocalPath
+    ? resolve(item.fromDir, classified.path!.replaceAll("\\", "/"))
+    : resolveLocalPath({
+        originalPath: classified.path!,
+        fromDir: item.fromDir,
+        projectRoot: ctx.cwd,
+      });
   if (!existsSync(abs)) {
     throw new ResolverError("RESOLVE_FAILED", `Local dependency path not found: ${abs}`);
   }

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createTargetRegistry } from "bapm-integration-api";
-import { createCursorTarget } from "../../../target-cursor/src/createCursorTarget.ts";
+import { createCursorTarget } from "bapm-integration-cursor";
 import {
   AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
   AgentPluginsError,
