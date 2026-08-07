@@ -49,7 +49,7 @@ function expectRootEscape(error: ResolverError, originalPath: string): void {
   });
 }
 
-describe("acceptance: mf-local-path-root-boundary", () => {
+describe("local path root boundary", () => {
   const projects: TempProject[] = [];
 
   afterEach(() => {
