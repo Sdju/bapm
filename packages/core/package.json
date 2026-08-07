@@ -29,10 +29,10 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "^26.1.1",
+    "@types/node": "catalog:",
     "@types/semver": "catalog:",
-    "bumpp": "^11.1.0",
-    "typescript": "^7.0.2",
+    "bumpp": "catalog:",
+    "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
