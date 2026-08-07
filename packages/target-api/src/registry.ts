@@ -39,6 +39,24 @@ export function createTargetRegistry(): TargetRegistry {
     getAll(): BapmTarget[] {
       return [...byId.values()];
     },
+
+    async detect(cwd: string) {
+      const detectedIds: TargetId[] = [];
+      const diagnostics: Array<{ targetId: TargetId; message: string }> = [];
+
+      for (const target of byId.values()) {
+        try {
+          if (await target.detect({ cwd })) detectedIds.push(target.id);
+        } catch {
+          diagnostics.push({
+            targetId: target.id,
+            message: `Target "${target.id}" detection did not match`,
+          });
+        }
+      }
+
+      return { detectedIds, diagnostics };
+    },
   };
 }
 

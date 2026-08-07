@@ -61,4 +61,20 @@ describe("createCursorTarget", () => {
     expect(readFileSync(dest, "utf8")).toMatch(/Hello/);
     expect(existsSync(join(cwd, "hello", "SKILL.md"))).toBe(false);
   });
+
+  test("owns compile output rendering and honors core write intent", async () => {
+    cwd = mkdtempSync(join(tmpdir(), "bapm-cursor-compile-"));
+    const target = createCursorTarget();
+    const compile = target.compile;
+    if (!compile) throw new Error("cursor target must support compile");
+
+    const preview = await compile([], { cwd, write: false });
+    expect(preview.path).toBe("AGENTS.md");
+    expect(preview.wrote).toBe(false);
+    expect(existsSync(join(cwd, "AGENTS.md"))).toBe(false);
+
+    const emitted = await compile([], { cwd, outputFile: "nested/OUT.md", write: true });
+    expect(emitted.path).toBe("nested/OUT.md");
+    expect(existsSync(join(cwd, "nested", "OUT.md"))).toBe(true);
+  });
 });

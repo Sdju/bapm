@@ -57,4 +57,27 @@ describe("target registry contracts", () => {
       }),
     ).toThrow(/id/i);
   });
+
+  test("detect evaluates registered targets once and records non-match diagnostics", async () => {
+    const registry = createTargetRegistry();
+    registry.register({
+      id: "detected",
+      deployRoots: [],
+      detect: () => true,
+      materialize: async () => {},
+    });
+    registry.register({
+      id: "broken",
+      deployRoots: [],
+      detect: () => {
+        throw new Error("not available");
+      },
+      materialize: async () => {},
+    });
+
+    await expect(registry.detect("/project")).resolves.toEqual({
+      detectedIds: ["detected"],
+      diagnostics: [{ targetId: "broken", message: 'Target "broken" detection did not match' }],
+    });
+  });
 });

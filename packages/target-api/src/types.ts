@@ -62,11 +62,45 @@ export type DeployedFile = {
  * (`deployed_file_hashes`) without importing concrete host packages.
  */
 export type MaterializeReport = {
+  /** Registered target that owns these deployment entries. */
+  targetId?: TargetId;
   deployedFiles: DeployedFile[];
 };
 
 /** Detection predicate hook — true when this host should activate for the project. */
 export type TargetDetectFn = (ctx: { cwd: string }) => boolean | Promise<boolean>;
+
+/** A non-sensitive reason why a registered target was not detected. */
+export type TargetDetectionDiagnostic = {
+  targetId: TargetId;
+  message: string;
+};
+
+/** Result of evaluating every registered target exactly once. */
+export type DetectedTargetsResult = {
+  detectedIds: TargetId[];
+  diagnostics: TargetDetectionDiagnostic[];
+};
+
+/** Context owned by core while a target emits its compile output. */
+export type CompileContext = {
+  cwd: string;
+  outputFile?: string;
+  /** Core-owned write intent; false for validation and preview requests. */
+  write: boolean;
+};
+
+/** Target-owned compile emission result. Paths are project-relative. */
+export type CompileReport = {
+  path: string;
+  content: string;
+  wrote: boolean;
+};
+
+export type CompileFn = (
+  primitives: AttributedPrimitiveSet,
+  context: CompileContext,
+) => CompileReport | Promise<CompileReport>;
 
 /**
  * Host-agnostic MCP server definition passed to optional `configureMcp`.
@@ -100,6 +134,8 @@ export type ConfigureMcpContext = {
  * without importing concrete host packages.
  */
 export type ConfigureMcpReport = {
+  /** Registered target that owns the reported MCP deployment. */
+  targetId?: TargetId;
   /** Project-/cwd-relative path to the written MCP config (e.g. `.cursor/mcp.json`). */
   configPath: string;
   /** Server names written/updated. */
@@ -134,6 +170,8 @@ export type BapmTarget = {
    * Targets without this hook are skipped for MCP without failing non-MCP install.
    */
   configureMcp?: ConfigureMcpFn;
+  /** Optional host-owned compile rendering and output placement. */
+  compile?: CompileFn;
   [key: string]: unknown;
 };
 
@@ -142,4 +180,6 @@ export type TargetRegistry = {
   list(): BapmTarget[];
   get(id: TargetId): BapmTarget | undefined;
   getAll(): BapmTarget[];
+  /** Evaluate each registered detector once, treating failures as non-matches. */
+  detect(cwd: string): Promise<DetectedTargetsResult>;
 };

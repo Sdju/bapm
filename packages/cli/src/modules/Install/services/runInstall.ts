@@ -7,9 +7,8 @@ import {
   resolveEffectiveFrozen,
   runInstall as coreRunInstall,
 } from "@bapm/core";
-import { createTargetRegistry } from "bapm-target-api";
-import { createCursorTarget } from "bapm-target-cursor";
 import type { InstallDeps, InstallOptions, InstallResult } from "../types/install.types.ts";
+import { createCliTargetRegistry } from "@/app/integrations/targets.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -477,8 +476,7 @@ async function runCoreInstall(
   parsed: ParsedInstallArgs,
   archivePath: string | undefined,
 ): Promise<InstallResult> {
-  const registry = createTargetRegistry();
-  registry.register(createCursorTarget());
+  const registry = createCliTargetRegistry();
 
   try {
     const result = await coreRunInstall({

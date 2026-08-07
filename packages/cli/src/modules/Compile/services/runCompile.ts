@@ -1,13 +1,15 @@
 import { compileAgentsMd } from "@bapm/core";
+import type { TargetRegistry } from "bapm-target-api";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
-export type CompileOptions = { args?: string[]; cwd?: string };
+export type CompileOptions = { args?: string[]; cwd?: string; targetRegistry?: TargetRegistry };
 
 export type ParsedCompileArgs = {
   validate: boolean;
   dryRun: boolean;
   verbose: boolean;
   outputFile?: string;
+  target?: string;
   help?: boolean;
   error?: string;
 };
@@ -17,11 +19,12 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
   let dryRun = false;
   let verbose = false;
   let outputFile: string | undefined;
+  let target: string | undefined;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") {
-      return { validate, dryRun, verbose, outputFile, help: true };
+      return { validate, dryRun, verbose, outputFile, target, help: true };
     }
     if (arg === "--validate") {
       validate = true;
@@ -64,29 +67,47 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
       outputFile = value;
       continue;
     }
+    if (arg === "--target") {
+      const value = argv[i + 1];
+      if (!value || value.startsWith("-")) {
+        return { validate, dryRun, verbose, outputFile, target, error: "missing value for --target <id>" };
+      }
+      target = value;
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--target=")) {
+      target = arg.slice("--target=".length);
+      if (!target) {
+        return { validate, dryRun, verbose, outputFile, target, error: "missing value for --target=<id>" };
+      }
+      continue;
+    }
     if (arg.startsWith("-")) {
-      return { validate, dryRun, verbose, outputFile, error: `Unknown compile flag: ${arg}` };
+      return { validate, dryRun, verbose, outputFile, target, error: `Unknown compile flag: ${arg}` };
     }
     return {
       validate,
       dryRun,
       verbose,
       outputFile,
+      target,
       error: `Unexpected compile argument: ${arg}`,
     };
   }
 
-  return { validate, dryRun, verbose, outputFile };
+  return { validate, dryRun, verbose, outputFile, target };
 }
 
 export function formatCompileHelp(deps: LifecycleCliDeps): string {
   return `${deps.name} compile — Emit AGENTS.md from discovered primitives (cursor)
 
 Usage:
-  bapm compile [-o PATH] [--dry-run] [-v] [--validate]
+  bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
 
 Options:
   -o, --output PATH   Write compiled agents file to PATH (default: AGENTS.md)
+  --target <id>       Required when target detection is missing or ambiguous
   --dry-run           Preview would-write path; do not write
   -v, --verbose       Print thin source attribution (name, type, path)
   --validate          Discover/validate only; do not write
@@ -110,9 +131,11 @@ export async function runCompileCli(
     return { ok: false, exitCode: 1, message: parsed.error };
   }
   try {
-    const result = compileAgentsMd({
+    const result = await compileAgentsMd({
       cwd: options.cwd,
       outputFile: parsed.outputFile,
+      forcedTarget: parsed.target,
+      targetRegistry: options.targetRegistry,
       validate: parsed.validate,
       dryRun: parsed.dryRun,
       verbose: parsed.verbose,

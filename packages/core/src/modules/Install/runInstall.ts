@@ -58,7 +58,6 @@ import { InstallError } from "./errors.ts";
 import { enforceFrozen } from "./frozen.ts";
 import { gateInsecureBeforeFetch, normalizeAllowInsecureHosts } from "./insecurePolicy.ts";
 import {
-  assertKnownExcludeIds,
   assertMarketplacePackageRefsResolvable,
   autoCreateMinimalManifest,
   manifestExistsAt,
@@ -89,7 +88,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const trustTransitiveMcp = options.trustTransitiveMcp === true;
   const packageRefs = normalizePackageRefs(options.packageRefs);
   const excludeIds = normalizeExcludeIds(options);
-  assertKnownExcludeIds(excludeIds);
   const excludeSet = new Set(excludeIds);
   const only = normalizeOnlyMode(options.only);
   const skipApmMaterialize = only === "mcp";
@@ -196,6 +194,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
   const registry = (options.targetRegistry ?? options.registry) as TargetRegistry | undefined;
   assertForcedTargetRegistered(forcedTargetId, registry);
+  assertRegisteredExcludeIds(excludeIds, registry);
 
   let lockPath: string | undefined;
   let nodes: ResolvedNode[] = [];
@@ -355,10 +354,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       const target = findTarget(registry, targetId);
       if (!target) continue;
 
-      const isForced = Boolean(forcedTargetId && forcedTargetId === targetId);
-      const detected = isForced ? true : await target.detect({ cwd });
-      if (!detected) continue;
-
       const filtered = filterByIntersection(
         resolved.primitives,
         targetId,
@@ -398,7 +393,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       nodes,
       registry,
       activeTargets,
-      forcedTargetId,
       trustTransitiveMcp,
       frozen,
       excludeSet,
@@ -799,10 +793,6 @@ async function deployMcpAfterPolicy(args: {
     const target = findTarget(args.registry, targetId);
     if (!target) continue;
 
-    const isForced = Boolean(args.forcedTargetId && args.forcedTargetId === targetId);
-    const detected = isForced ? true : await target.detect({ cwd: args.cwd });
-    if (!detected) continue;
-
     const configureMcp = getConfigureMcp(target);
     if (!configureMcp) continue;
 
@@ -1066,26 +1056,64 @@ async function resolveActiveTargets(args: {
   override?: string[];
   forcedTargetId?: string;
 }): Promise<string[]> {
-  if (args.override && args.override.length > 0) return [...args.override];
+  if (args.override && args.override.length > 0) {
+    if (args.override.length !== 1) {
+      throw new InstallError(
+        "INSTALL_UNKNOWN_TARGET",
+        "Target selection is ambiguous; pass --target <id>",
+        { details: { targets: args.override } },
+      );
+    }
+    assertForcedTargetRegistered(args.override[0], args.registry);
+    return [...args.override];
+  }
 
   if (args.forcedTargetId) {
     return [args.forcedTargetId];
   }
 
-  const declared = declaredTargetIds(args.rootManifest);
-  if (declared.length > 0) return declared;
-
   if (!args.registry) return [];
 
-  const active: string[] = [];
-  for (const t of listRegistry(args.registry)) {
+  const detection = await detectRegisteredTargets(args.registry, args.cwd);
+  if (detection.detectedIds.length === 1) return detection.detectedIds;
+  throw new InstallError(
+    "INSTALL_UNKNOWN_TARGET",
+    "Target detection is missing or ambiguous; pass --target <id>",
+    { details: { detectedTargets: detection.detectedIds, diagnostics: detection.diagnostics } },
+  );
+}
+
+async function detectRegisteredTargets(
+  registry: TargetRegistry,
+  cwd: string,
+): Promise<{ detectedIds: string[]; diagnostics: unknown[] }> {
+  if (typeof registry.detect === "function") return registry.detect(cwd);
+
+  const detectedIds: string[] = [];
+  const diagnostics: unknown[] = [];
+  for (const target of listRegistry(registry)) {
     try {
-      if (await t.detect({ cwd: args.cwd })) active.push(String(t.id));
+      if (await target.detect({ cwd })) detectedIds.push(target.id);
     } catch {
-      /* ignore detect errors */
+      diagnostics.push({
+        targetId: target.id,
+        message: `Target "${target.id}" detection did not match`,
+      });
     }
   }
-  return active;
+  return { detectedIds, diagnostics };
+}
+
+function assertRegisteredExcludeIds(excludeIds: string[], registry: TargetRegistry | undefined): void {
+  for (const id of excludeIds) {
+    if (!registry?.get(id)) {
+      throw new InstallError(
+        "INSTALL_UNKNOWN_EXCLUDE",
+        `Unknown or unregistered exclude id: ${id}`,
+        { details: { exclude: id } },
+      );
+    }
+  }
 }
 
 function listRegistry(registry: TargetRegistry): BapmTarget[] {

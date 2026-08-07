@@ -6,6 +6,9 @@ export type {
   AttributedPrimitive,
   AttributedPrimitiveSet,
   BapmTarget,
+  CompileContext,
+  CompileFn,
+  CompileReport,
   ConfigureMcpContext,
   ConfigureMcpFn,
   ConfigureMcpReport,
@@ -16,6 +19,8 @@ export type {
   PrimitiveSource,
   PrimitiveType,
   TargetDetectFn,
+  TargetDetectionDiagnostic,
+  DetectedTargetsResult,
   TargetId,
   TargetRegistry,
 } from "./types.ts";

@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { compileAgentsMd } from "@bapm/core";
+import { createTargetRegistry } from "bapm-target-api";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
@@ -28,6 +29,23 @@ function writeCompileProject(cwd: string): void {
   writeText(join(cwd, ".apm", "instructions", "style.md"), "# Style\nPrefer concise answers.\n");
 }
 
+function compile(options: Parameters<typeof compileAgentsMd>[0]) {
+  const registry = createTargetRegistry();
+  registry.register({
+    id: "test-host",
+    deployRoots: [],
+    detect: () => true,
+    materialize: () => {},
+    compile: async (_primitives, context) => {
+      const path = context.outputFile ?? "AGENTS.md";
+      const content = "# AGENTS.md\n";
+      if (context.write) writeText(join(context.cwd, path), content);
+      return { path, content, wrote: context.write };
+    },
+  });
+  return compileAgentsMd({ ...options, targetRegistry: registry });
+}
+
 describe("compileAgentsMd dryRun / validate / attribution", () => {
   let project: TempProject | undefined;
 
@@ -36,46 +54,46 @@ describe("compileAgentsMd dryRun / validate / attribution", () => {
     project = undefined;
   });
 
-  test("dryRun does not write", () => {
+  test("dryRun does not write", async () => {
     project = createTempProject();
     writeCompileProject(project.cwd);
-    const result = compileAgentsMd({ cwd: project.cwd, dryRun: true });
+    const result = await compile({ cwd: project.cwd, dryRun: true });
     expect(result.ok).toBe(true);
     expect(result.wrote).toBe(false);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });
 
-  test("validate does not write", () => {
+  test("validate does not write", async () => {
     project = createTempProject();
     writeCompileProject(project.cwd);
-    const result = compileAgentsMd({ cwd: project.cwd, validate: true });
+    const result = await compile({ cwd: project.cwd, validate: true });
     expect(result.wrote).toBe(false);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });
 
-  test("validate wins over dryRun (no write)", () => {
+  test("validate wins over dryRun (no write)", async () => {
     project = createTempProject();
     writeCompileProject(project.cwd);
-    const result = compileAgentsMd({ cwd: project.cwd, validate: true, dryRun: true });
+    const result = await compile({ cwd: project.cwd, validate: true, dryRun: true });
     expect(result.ok).toBe(true);
     expect(result.wrote).toBe(false);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });
 
-  test("custom outputFile writes that path", () => {
+  test("custom outputFile writes that path", async () => {
     project = createTempProject();
     writeCompileProject(project.cwd);
     const outRel = join("nested", "OUT.md");
-    const result = compileAgentsMd({ cwd: project.cwd, outputFile: outRel });
+    const result = await compile({ cwd: project.cwd, outputFile: outRel });
     expect(result.wrote).toBe(true);
     expect(existsSync(join(project.cwd, outRel))).toBe(true);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });
 
-  test("attribution includes name, type, path", () => {
+  test("attribution includes name, type, path", async () => {
     project = createTempProject();
     writeCompileProject(project.cwd);
-    const result = compileAgentsMd({ cwd: project.cwd, dryRun: true, verbose: true });
+    const result = await compile({ cwd: project.cwd, dryRun: true, verbose: true });
     expect(result.attribution.length).toBeGreaterThan(0);
     const style = result.attribution.find(
       (e) => e.name.toLowerCase() === "style" || (e.path ?? "").includes("style.md"),
@@ -85,12 +103,12 @@ describe("compileAgentsMd dryRun / validate / attribution", () => {
     expect(style!.path ?? "").toMatch(/style\.md/);
   });
 
-  test("dryRun does not rewrite existing file", () => {
+  test("dryRun does not rewrite existing file", async () => {
     project = createTempProject();
     writeCompileProject(project.cwd);
     const agents = join(project.cwd, "AGENTS.md");
     writeText(agents, "# sentinel\n");
-    const result = compileAgentsMd({ cwd: project.cwd, dryRun: true });
+    const result = await compile({ cwd: project.cwd, dryRun: true });
     expect(result.wrote).toBe(false);
     expect(readFileSync(agents, "utf8")).toBe("# sentinel\n");
   });

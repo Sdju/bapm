@@ -1,3 +1,5 @@
+import type { TargetRegistry } from "bapm-target-api";
+
 export type CompileAttributionEntry = {
   name: string;
   type: string;
@@ -15,6 +17,10 @@ export type CompileAgentsMdOptions = {
   /** Output filename (default AGENTS.md). */
   outputFile?: string;
   modulesDir?: string;
+  /** Registry of host target capabilities supplied by the application. */
+  targetRegistry?: TargetRegistry;
+  /** Explicit registered target id, bypassing target detection. */
+  forcedTarget?: string;
 };
 
 export type CompileAgentsMdResult = {
