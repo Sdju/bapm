@@ -78,6 +78,8 @@ export type ResolvedNode = {
   version?: string;
   /** Absolute path to materialized package tree (local source or modules cache). */
   packageRoot?: string;
+  /** Artifact format is explicit; portable roots are never treated as apm.yml. */
+  artifactFormat?: "openapm" | "agent-plugin";
   /** Registry lock fields (M10). */
   source?: string;
   resolved_url?: string;
@@ -197,10 +199,7 @@ export type ResolveAndLockOptions = ResolvePorts & {
     status?: number;
     url?: string;
   };
-  fetchAncestor?: (
-    ref: string,
-    context: { leafHostClass: string; chain: string[] },
-  ) => unknown;
+  fetchAncestor?: (ref: string, context: { leafHostClass: string; chain: string[] }) => unknown;
   defaultFetchFailure?: "off" | "warn" | "block";
   implementationDefaultHost?: string;
   experimentalRegistries?: boolean;

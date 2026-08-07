@@ -1,5 +1,14 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { join, relative, resolve } from "node:path";
 import type {
   BapmTarget,
   ConfigureMcpContext,
@@ -63,7 +72,9 @@ export function createCursorTarget(options?: { id?: string; deployRoots?: string
           mkdirSync(destDir, { recursive: true });
 
           const src = p.path ? resolve(p.path) : undefined;
-          if (src && existsSync(src)) {
+          if (p.format === "agent-plugin" && typeof p.skillDirectory === "string") {
+            copyPortableSkillDirectory(p.skillDirectory, p.pluginRoot, destDir);
+          } else if (src && existsSync(src)) {
             const skillMd = src.endsWith("SKILL.md") ? src : join(src, "SKILL.md");
             if (existsSync(skillMd) && statSync(skillMd).isFile()) {
               cpSync(skillMd, destFile);
@@ -73,7 +84,9 @@ export function createCursorTarget(options?: { id?: string; deployRoots?: string
           } else {
             writeFileSync(destFile, readPrimitiveContent(p, "SKILL.md"), "utf8");
           }
-          deployedFiles.push({ path: toPosixRel(cwd, destFile) });
+          for (const path of listFiles(destDir)) {
+            deployedFiles.push({ path: toPosixRel(cwd, path) });
+          }
           continue;
         }
 
@@ -110,6 +123,51 @@ export function createCursorTarget(options?: { id?: string; deployRoots?: string
   };
 }
 
+/** Copy a validated portable skill directory without retaining symlinks. */
+function copyPortableSkillDirectory(sourceDir: string, pluginRoot: unknown, destDir: string): void {
+  const source = realpathSync(sourceDir);
+  const root = typeof pluginRoot === "string" ? realpathSync(pluginRoot) : undefined;
+  if (!root || !isWithin(root, source) || !statSync(source).isDirectory()) {
+    throw new Error("Agent Plugin skill directory is outside its plugin root");
+  }
+  const skillFile = realpathSync(join(source, "SKILL.md"));
+  if (
+    !isWithin(root, skillFile) ||
+    !statSync(skillFile).isFile() ||
+    !treeIsContained(source, root, new Set())
+  ) {
+    throw new Error("Agent Plugin skill contains a path outside its plugin root");
+  }
+  mkdirSync(destDir, { recursive: true });
+  cpSync(source, destDir, { recursive: true, dereference: true, force: true });
+}
+
+function treeIsContained(directory: string, root: string, visited: Set<string>): boolean {
+  if (visited.has(directory)) return true;
+  visited.add(directory);
+  for (const entry of readdirSync(directory)) {
+    const resolved = realpathSync(join(directory, entry));
+    if (!isWithin(root, resolved)) return false;
+    if (statSync(resolved).isDirectory() && !treeIsContained(resolved, root, visited)) return false;
+  }
+  return true;
+}
+
+function isWithin(root: string, candidate: string): boolean {
+  const rel = relative(root, candidate);
+  return rel === "" || (!rel.startsWith("..") && !rel.startsWith("/") && rel !== "..");
+}
+
+function listFiles(dir: string): string[] {
+  const files: string[] = [];
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) files.push(...listFiles(path));
+    else files.push(path);
+  }
+  return files;
+}
+
 function writeCursorMcpConfig(
   servers: McpServerConfig[] | Record<string, McpServerConfig>,
   ctx: ConfigureMcpContext & { cwd: string; deployRoots: string[] },
@@ -124,7 +182,7 @@ function writeCursorMcpConfig(
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
 
   const existing = readExistingMcpServers(destFile);
-  const incoming = normalizeServerEntries(servers);
+  const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
   const next: Record<string, Record<string, unknown>> = { ...existing };
 
   const writtenNames: string[] = [];
@@ -140,7 +198,8 @@ function writeCursorMcpConfig(
     configPath: MCP_JSON_REL,
     servers: writtenNames,
     deployedFiles: [{ path: MCP_JSON_REL }],
-  };
+    diagnostics,
+  } as ConfigureMcpReport;
 }
 
 function readExistingMcpServers(path: string): Record<string, Record<string, unknown>> {
@@ -155,10 +214,12 @@ function readExistingMcpServers(path: string): Record<string, Record<string, unk
   }
 }
 
-function normalizeServerEntries(
-  servers: McpServerConfig[] | Record<string, McpServerConfig>,
-): Record<string, Record<string, unknown>> {
+function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpServerConfig>): {
+  entries: Record<string, Record<string, unknown>>;
+  diagnostics: Array<{ code: string; message: string; server?: string }>;
+} {
   const out: Record<string, Record<string, unknown>> = {};
+  const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
   const list: McpServerConfig[] = Array.isArray(servers)
     ? servers
     : Object.entries(servers).map(([name, value]) => ({
@@ -169,14 +230,43 @@ function normalizeServerEntries(
   for (const server of list) {
     const name = String(server.name ?? "").trim();
     if (!name) continue;
-    out[name] = toCursorServerEntry(server);
+    const entry = toCursorServerEntry(server);
+    if (!entry) {
+      diagnostics.push({
+        code: "CURSOR_PORTABLE_MCP_UNSUPPORTED",
+        message: `Cursor cannot faithfully represent portable MCP server "${name}"`,
+        server: name,
+      });
+      continue;
+    }
+    out[name] = entry;
   }
-  return out;
+  return { entries: out, diagnostics };
 }
 
-function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> {
+function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> | undefined {
   const transport = String(server.transport ?? server.type ?? "").toLowerCase();
   const entry: Record<string, unknown> = {};
+  const portable = server.format === "agent-plugin";
+
+  if (portable) {
+    // Portable v1 is deliberately adapted field-by-field, never copied as Cursor JSON.
+    if (transport === "stdio") {
+      if (typeof server.command !== "string") return undefined;
+      entry.command = server.command;
+      if (Array.isArray(server.args)) entry.args = server.args;
+      if (typeof server.cwd === "string") entry.cwd = server.cwd;
+      entry.type = "stdio";
+    } else if (transport === "streamable-http" || transport === "sse") {
+      if (typeof server.url !== "string") return undefined;
+      entry.url = server.url;
+      entry.type = transport === "streamable-http" ? "http" : "sse";
+    } else {
+      return undefined;
+    }
+    if (server.env && typeof server.env === "object") entry.env = server.env;
+    return entry;
+  }
 
   if (transport === "http" || transport === "sse" || typeof server.url === "string") {
     if (server.url) entry.url = server.url;
@@ -192,7 +282,7 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> {
     entry.env = server.env;
   }
 
-  // Preserve extra keys that are useful for round-trip (except internal meta)
+  // Preserve native extra keys, but never portable adapter metadata.
   for (const [key, value] of Object.entries(server)) {
     if (
       [
@@ -205,6 +295,8 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> {
         "env",
         "packageName",
         "registry",
+        "format",
+        "cwd",
       ].includes(key)
     ) {
       continue;

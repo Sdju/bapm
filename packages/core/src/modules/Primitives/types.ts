@@ -9,6 +9,13 @@ export type AttributedPrimitive = {
   path: string;
   packageName?: string;
   content?: string;
+  /**
+   * Complete portable skill directory. Present only for Agent Plugins skills so
+   * targets can import auxiliary scripts, references, and assets as one unit.
+   */
+  skillDirectory?: string;
+  pluginRoot?: string;
+  format?: "agent-plugin";
   [key: string]: unknown;
 };
 

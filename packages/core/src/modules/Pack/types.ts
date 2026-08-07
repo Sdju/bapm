@@ -1,5 +1,7 @@
 export type RunPackOptions = {
   cwd?: string;
+  /** Pack an Agent Plugins v1 portable root (never a marketplace output). */
+  agentPlugins?: boolean;
   /** Produce a durable archive (MUST path for M7). */
   archive?: boolean;
   /** Archive format; only `zip` is supported in M7. */
@@ -24,10 +26,15 @@ export type RunPackOptions = {
   /** Include prerelease tags when resolving version ranges. */
   includePrerelease?: boolean;
   /** Injectable ls-remote for tests (forwarded to marketplace builder). */
-  lsRemote?: (repoUrl: string, ref?: string) => Promise<{ sha: string; ref: string }> | {
-    sha: string;
-    ref: string;
-  };
+  lsRemote?: (
+    repoUrl: string,
+    ref?: string,
+  ) =>
+    | Promise<{ sha: string; ref: string }>
+    | {
+        sha: string;
+        ref: string;
+      };
 };
 
 export type RunPackResult = {

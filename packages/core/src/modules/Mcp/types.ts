@@ -25,6 +25,7 @@ export type CollectMcpServersResult = {
   servers: CollectedMcpServer[];
   /** Dependency packages that contributed MCP candidates needing trust evaluation. */
   dependencyPackages: string[];
+  diagnostics: unknown[];
 };
 
 export type ApplyMcpInventoryOptions = {

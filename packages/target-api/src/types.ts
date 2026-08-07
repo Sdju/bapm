@@ -22,6 +22,12 @@ export type AttributedPrimitive = {
   packageName?: string;
   /** Optional raw content hint; hosts may re-read from path. */
   content?: string;
+  /** Complete portable Agent Plugin skill directory, when applicable. */
+  skillDirectory?: string;
+  /** Resolved portable plugin root for containment-aware targets. */
+  pluginRoot?: string;
+  /** Identifies the portable Agent Plugins skill format. */
+  format?: "agent-plugin";
   [key: string]: unknown;
 };
 
@@ -99,6 +105,8 @@ export type ConfigureMcpReport = {
   /** Server names written/updated. */
   servers?: string[];
   deployedFiles?: DeployedFile[];
+  /** Explicit adapter decisions or unsupported-server diagnostics. */
+  diagnostics?: Array<{ code: string; message: string; server?: string }>;
 };
 
 /** Optional MCP configure hook — targets that lack it are skipped for MCP. */

@@ -157,6 +157,35 @@ export {
 } from "@/modules/Primitives";
 
 export type {
+  AgentPluginAuthor,
+  AgentPluginDiagnostic,
+  AgentPluginManifest,
+  AgentPluginMcpServer,
+  AgentPluginSkill,
+  CreateAgentPluginManifestOptions,
+  DiscoverAgentPluginMcpOptions,
+  DiscoverAgentPluginMcpResult,
+  DiscoverAgentPluginSkillsOptions,
+  DiscoverAgentPluginSkillsResult,
+  LoadedAgentPluginManifest,
+  LoadAgentPluginManifestOptions,
+  AgentPluginsErrorCode,
+  WrittenAgentPluginManifest,
+  WriteAgentPluginManifestOptions,
+} from "@/modules/AgentPlugins";
+export {
+  AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+  AgentPluginsError,
+  loadAgentPluginManifest,
+  validateAgentPluginManifest,
+  discoverAgentPluginSkills,
+  discoverAgentPluginMcp,
+  createAgentPluginManifest,
+  serializeAgentPluginManifest,
+  writeAgentPluginManifest,
+} from "@/modules/AgentPlugins";
+
+export type {
   EnforceFrozenOptions,
   InstallOptions,
   InstallResult,

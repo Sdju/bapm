@@ -85,6 +85,50 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
     expect(existsSync(join(project.cwd, ".agents", "mcp.json"))).toBe(false);
   });
 
+  test("adapts portable transports without copying portable metadata", async () => {
+    project = createTempDir();
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    const target = createCursorTarget() as unknown as Record<string, unknown>;
+    const configureMcp = getConfigureMcp(target);
+
+    await configureMcp(
+      [
+        {
+          name: "portable-http",
+          format: "agent-plugin",
+          transport: "streamable-http",
+          url: "https://example.test/mcp",
+          packageName: "portable-plugin",
+        },
+        {
+          name: "portable-stdio",
+          format: "agent-plugin",
+          transport: "stdio",
+          command: "node",
+          args: ["server.mjs"],
+          cwd: "/plugin",
+          env: { PLUGIN_ROOT: "/plugin", PLUGIN_DATA: "/data" },
+        },
+      ],
+      { cwd: project.cwd, deployRoots: (target.deployRoots as string[]) ?? [".cursor"] },
+    );
+
+    const doc = JSON.parse(readFileSync(join(project.cwd, ".cursor", "mcp.json"), "utf8")) as {
+      mcpServers: Record<string, Record<string, unknown>>;
+    };
+    expect(doc.mcpServers["portable-http"]).toEqual({
+      type: "http",
+      url: "https://example.test/mcp",
+    });
+    expect(doc.mcpServers["portable-stdio"]).toEqual({
+      type: "stdio",
+      command: "node",
+      args: ["server.mjs"],
+      cwd: "/plugin",
+      env: { PLUGIN_ROOT: "/plugin", PLUGIN_DATA: "/data" },
+    });
+  });
+
   test("materialize still does not require writing mcp.json for skills/rules", async () => {
     project = createTempDir();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });

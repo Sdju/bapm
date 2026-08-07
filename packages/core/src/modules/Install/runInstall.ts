@@ -1,5 +1,5 @@
-import { join, resolve } from "node:path";
-import { existsSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync } from "node:fs";
 import type {
   BapmTarget,
   ConfigureMcpReport,
@@ -39,6 +39,7 @@ import {
   resolvePrimitiveConflicts,
   type AttributedPrimitive,
 } from "@/modules/Primitives";
+import { discoverAgentPluginSkills } from "@/modules/AgentPlugins";
 import { extractPackArchive } from "@/modules/Pack";
 import {
   loadUserExecutableGrants,
@@ -320,13 +321,19 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ? uniqueNames(nodes.filter((n) => n.depth === 1).map((n) => n.name))
       : extractDeclarationOrder(rootManifest);
 
-  const raw = skipApmMaterialize
+  const nativeRaw = skipApmMaterialize
     ? []
     : discoverPrimitives({
         cwd,
         modulesDir: join(cwd, APM_MODULES_DIR),
         declarationOrder,
       });
+  const raw = nativeRaw.filter(
+    (primitive) => !nodes.some((node) => isPortablePluginPrimitive(node, primitive.path)),
+  );
+  if (!skipApmMaterialize) {
+    raw.push(...discoverPortablePluginPrimitives(nodes));
+  }
   const resolved = skipApmMaterialize
     ? { primitives: [] as AttributedPrimitive[], diagnostics: [] as unknown[] }
     : resolvePrimitiveConflicts({
@@ -434,6 +441,46 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     ],
     policyDiagnostics,
   };
+}
+
+/**
+ * Portable plugins are discovered only from resolver-materialized package roots.
+ * The resolver remains the sole source of local/git/registry provenance.
+ */
+function discoverPortablePluginPrimitives(nodes: ResolvedNode[]): AttributedPrimitive[] {
+  const primitives: AttributedPrimitive[] = [];
+  for (const node of nodes) {
+    const root = portablePluginRoot(node);
+    if (!root) continue;
+    const discovered = discoverAgentPluginSkills({ root, packageName: node.name });
+    for (const skill of discovered.skills) {
+      primitives.push({
+        name: skill.name,
+        type: "skill",
+        source: `dependency:${node.name}`,
+        packageName: node.name,
+        path: skill.skillPath,
+        skillDirectory: skill.directory,
+        pluginRoot: discovered.root,
+        format: "agent-plugin",
+      });
+    }
+  }
+  return primitives;
+}
+
+function isPortablePluginPrimitive(node: ResolvedNode, primitivePath: string): boolean {
+  const root = portablePluginRoot(node);
+  if (!root) return false;
+  const rel = relative(resolve(root), resolve(primitivePath));
+  return rel === "" || (!rel.startsWith("..") && !rel.startsWith("/"));
+}
+
+function portablePluginRoot(node: ResolvedNode): string | undefined {
+  for (const candidate of [node.packageRoot, node.path]) {
+    if (candidate && existsSync(join(candidate, "plugin.json"))) return candidate;
+  }
+  return undefined;
 }
 
 function normalizeOnlyMode(only: InstallOnlyMode | undefined): InstallOnlyMode | undefined {
@@ -665,6 +712,7 @@ async function deployMcpAfterPolicy(args: {
     trustTransitiveMcp: args.trustTransitiveMcp,
     grantSurface: combinedSurface,
   });
+  args.diagnostics.push(...collected.diagnostics);
 
   if (collected.servers.length === 0) {
     return {
@@ -729,6 +777,12 @@ async function deployMcpAfterPolicy(args: {
     };
   }
 
+  // Bapm—not package config—creates and owns portable PLUGIN_DATA directories.
+  for (const server of approved) {
+    if (server.format !== "agent-plugin" || !server.env?.PLUGIN_DATA) continue;
+    mkdirSync(server.env.PLUGIN_DATA, { recursive: true, mode: 0o700 });
+  }
+
   if (!args.registry || args.activeTargets.length === 0) {
     return {
       lockPath: args.lockPath,
@@ -770,6 +824,10 @@ async function deployMcpAfterPolicy(args: {
       targetId,
       deployRoots: [...target.deployRoots],
     })) as void | ConfigureMcpReport;
+    const adapterDiagnostics = (
+      report as (ConfigureMcpReport & { diagnostics?: unknown[] }) | undefined
+    )?.diagnostics;
+    if (adapterDiagnostics) args.diagnostics.push(...adapterDiagnostics);
 
     wroteConfig = true;
     configuredTargetId = targetId;

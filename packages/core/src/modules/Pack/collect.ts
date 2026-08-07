@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { PackError } from "./errors.ts";
 import { describeSecretRefuse, isSecretPackPath } from "./secrets.ts";
@@ -47,11 +47,18 @@ function walk(root: string, dir: string, out: PackFileEntry[], secrets: string[]
     const abs = join(dir, name);
     let st;
     try {
-      st = statSync(abs);
+      st = lstatSync(abs);
     } catch {
       continue;
     }
 
+    if (st.isSymbolicLink()) {
+      throw new PackError(
+        "PACK_VALIDATION",
+        `Refusing unsafe symbolic-link pack entry: ${relative(root, abs)}`,
+        { path: relative(root, abs) },
+      );
+    }
     if (st.isDirectory()) {
       walk(root, abs, out, secrets);
       continue;
@@ -75,7 +82,17 @@ function walk(root: string, dir: string, out: PackFileEntry[], secrets: string[]
   }
 }
 
-export function assertProjectHasContent(entries: PackFileEntry[]): void {
+export function assertProjectHasContent(
+  entries: PackFileEntry[],
+  options?: { agentPlugins?: boolean },
+): void {
+  if (options?.agentPlugins === true) {
+    if (entries.some((entry) => entry.relativePath === "plugin.json")) return;
+    throw new PackError(
+      "PACK_VALIDATION",
+      "Agent Plugins portable pack must include plugin.json at archive root",
+    );
+  }
   const hasManifest = entries.some(
     (e) => e.relativePath === "bapm.yml" || e.relativePath === "apm.yml",
   );

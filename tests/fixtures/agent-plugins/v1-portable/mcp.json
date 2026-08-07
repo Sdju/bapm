@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "fixture-stdio": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${PLUGIN_ROOT}/bin/server.mjs"],
+      "cwd": "."
+    },
+    "fixture-http": {
+      "type": "streamable-http",
+      "url": "https://example.test/mcp"
+    },
+    "fixture-sse": {
+      "type": "sse",
+      "url": "https://example.test/sse"
+    }
+  }
+}

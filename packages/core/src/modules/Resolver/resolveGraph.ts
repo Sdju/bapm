@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { loadManifest } from "@/modules/Manifest";
+import { loadAgentPluginManifest } from "@/modules/AgentPlugins";
 import { loadLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
 import { resolveMarketplacePlugin, type MarketplaceProvenance } from "@/modules/Marketplace";
@@ -73,6 +74,7 @@ type EdgeRecord = {
   name: string;
   path?: string;
   packageRoot?: string;
+  artifactFormat?: "openapm" | "agent-plugin";
   repo_url?: string;
   source?: string;
   resolved_url?: string;
@@ -557,6 +559,7 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     resolved_tag: e.resolved_tag,
     resolved_at: e.resolved_at,
     packageRoot: e.packageRoot,
+    artifactFormat: e.artifactFormat,
     version: e.version,
     source: e.source,
     resolved_url: e.resolved_url,
@@ -592,15 +595,20 @@ async function resolveLocal(
   }
 
   let childManifest;
+  let portablePlugin;
   try {
     childManifest = loadManifest({ cwd: abs });
   } catch (cause) {
-    throw new ResolverError("RESOLVE_FAILED", `Failed to load local package manifest at ${abs}`, {
-      cause,
-    });
+    try {
+      portablePlugin = loadAgentPluginManifest({ root: abs });
+    } catch {
+      throw new ResolverError("RESOLVE_FAILED", `Failed to load local package manifest at ${abs}`, {
+        cause,
+      });
+    }
   }
 
-  const name = childManifest.document.name;
+  const name = childManifest?.document.name ?? portablePlugin!.manifest.name;
   const identity = `local:${normalizeLocalIdentity(abs, ctx.cwd)}`;
   const chainSeg = name;
   const chain = [...item.chain, chainSeg];
@@ -629,6 +637,7 @@ async function resolveLocal(
     name,
     path: abs,
     packageRoot: !ctx.skipDownload ? dest : abs,
+    artifactFormat: portablePlugin ? "agent-plugin" : "openapm",
     repo_url: identity,
     marketplaceProvenance: item.marketplaceProvenance,
   };
@@ -641,7 +650,7 @@ async function resolveLocal(
   if (ctx.expanded.has(identity)) return;
   ctx.expanded.add(identity);
   const nextAncestors = [...item.ancestorIdentities, identity];
-  for (const child of listApmDeps(childManifest.document.dependencies)) {
+  for (const child of childManifest ? listApmDeps(childManifest.document.dependencies) : []) {
     ctx.queue.push({
       entry: child,
       depth: item.depth + 1,
@@ -749,12 +758,19 @@ async function resolveGit(
 
   let childName = warm?.name ?? nameHint;
   let childDeps: DependencyEntry[] = [];
+  let artifactFormat: EdgeRecord["artifactFormat"] = "openapm";
   try {
     const child = loadManifest({ cwd: dest });
     childName = child.document.name || childName;
     childDeps = listApmDeps(child.document.dependencies);
   } catch {
-    // Fake downloads may leave a minimal manifest — already written by fake port
+    try {
+      const portable = loadAgentPluginManifest({ root: dest });
+      childName = portable.manifest.name;
+      artifactFormat = "agent-plugin";
+    } catch {
+      // Fake downloads may leave a minimal manifest — already written by fake port.
+    }
   }
 
   const finalChainSeg = constraint !== undefined ? `${childName}@${constraint}` : childName;
@@ -772,6 +788,7 @@ async function resolveGit(
     resolved_at,
     name: childName,
     packageRoot: dest,
+    artifactFormat,
     repo_url: lockUrl,
     marketplaceProvenance: item.marketplaceProvenance,
   };

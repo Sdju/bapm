@@ -1,5 +1,6 @@
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { discoverAgentPluginMcp, loadAgentPluginManifest } from "@/modules/AgentPlugins";
 import { loadManifest } from "@/modules/Manifest";
 import {
   buildMarketplaceOutputs,
@@ -37,6 +38,7 @@ function hasMarketplaceAuthoring(cwd: string): boolean {
 export async function runPack(options: RunPackOptions = {}): Promise<RunPackResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
   ensureCwdExists(cwd);
+  const agentPlugins = options.agentPlugins === true;
 
   if (options.checkRelease) {
     const gate = await checkReleaseTag({ cwd, tag: options.tag });
@@ -48,6 +50,46 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
   const format = options.format ?? "zip";
   if (format !== "zip") {
     throw new PackError("PACK_VALIDATION", `Unsupported pack format "${format}" (M7 supports zip)`);
+  }
+
+  if (agentPlugins) {
+    if (options.marketplace !== undefined) {
+      throw new PackError(
+        "PACK_VALIDATION",
+        "Agent Plugins portable pack cannot emit marketplace outputs",
+      );
+    }
+    if (options.archive === false) {
+      throw new PackError(
+        "PACK_VALIDATION",
+        "Agent Plugins portable pack requires archive mode (pass archive: true / --archive)",
+      );
+    }
+
+    let manifest;
+    try {
+      manifest = loadAgentPluginManifest({ root: cwd }).manifest;
+      const mcpPath = join(cwd, "mcp.json");
+      if (existsSync(mcpPath)) {
+        const mcp = discoverAgentPluginMcp({ root: cwd, dataRoot: join(cwd, ".bapm-data") });
+        const invalid = mcp.diagnostics.find((diagnostic) => diagnostic.severity === "error");
+        if (invalid) throw new Error(invalid.message);
+      }
+    } catch (cause) {
+      const message =
+        cause instanceof Error ? cause.message : "Agent Plugin portable root validation failed";
+      throw new PackError("PACK_VALIDATION", message, { cause });
+    }
+
+    const entries = collectPackFiles(cwd);
+    assertProjectHasContent(entries, { agentPlugins: true });
+    return writePackArchive({
+      options,
+      cwd,
+      entries,
+      name: manifest.name,
+      version: manifest.version ?? "0.0.0",
+    });
   }
 
   const dryRun = options.dryRun === true;
@@ -85,7 +127,9 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
         marketplaceWritten = !built.skipped && built.written.length > 0;
       } catch (cause) {
         if (cause instanceof MarketplacePackOutputsError) {
-          throw new PackError("PACK_VALIDATION", cause.message, { cause });
+          const message =
+            cause instanceof Error ? cause.message : "Marketplace pack output validation failed";
+          throw new PackError("PACK_VALIDATION", message, { cause });
         }
         throw cause;
       }
@@ -151,42 +195,43 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
     );
   }
 
-  if (dryRun) {
-    return {
-      ok: true,
-      dryRun: true,
-      filesPacked: entries.length,
-      marketplaceWritten,
-    };
+  const packed = writePackArchive({
+    options,
+    cwd,
+    entries,
+    name: document.name,
+    version: document.version,
+  });
+  return { ...packed, marketplaceWritten };
+}
+
+/** Alias accepted by acceptance helpers. */
+export const packProject = runPack;
+export const packArchive = runPack;
+
+function writePackArchive(input: {
+  options: RunPackOptions;
+  cwd: string;
+  entries: ReturnType<typeof collectPackFiles>;
+  name: string;
+  version: string;
+}): RunPackResult {
+  if (input.options.dryRun === true) {
+    return { ok: true, dryRun: true, filesPacked: input.entries.length };
   }
 
   const fileMap: Record<string, Uint8Array> = {};
-  for (const entry of entries) {
-    fileMap[entry.relativePath] = entry.bytes;
-  }
-
-  const zipBytes = createZipArchive(fileMap);
-  const outName = defaultArchiveName(document.name, document.version);
-  const archivePath = resolve(options.outputPath ?? resolve(cwd, outName));
-
+  for (const entry of input.entries) fileMap[entry.relativePath] = entry.bytes;
+  const archivePath = resolve(
+    input.options.outputPath ?? resolve(input.cwd, defaultArchiveName(input.name, input.version)),
+  );
   try {
-    writeFileSync(archivePath, zipBytes);
+    writeFileSync(archivePath, createZipArchive(fileMap));
   } catch (cause) {
     throw new PackError("PACK_IO", `Failed to write archive: ${archivePath}`, {
       path: archivePath,
       cause,
     });
   }
-
-  return {
-    ok: true,
-    dryRun: false,
-    archivePath,
-    filesPacked: entries.length,
-    marketplaceWritten,
-  };
+  return { ok: true, dryRun: false, archivePath, filesPacked: input.entries.length };
 }
-
-/** Alias accepted by acceptance helpers. */
-export const packProject = runPack;
-export const packArchive = runPack;

@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "reserved-env": {
+      "type": "stdio",
+      "command": "node",
+      "env": { "PLUGIN_DATA": "/tmp/not-owned" }
+    },
+    "secret-env": {
+      "type": "stdio",
+      "command": "node",
+      "env": { "API_TOKEN": "not-accepted" }
+    },
+    "cwd-escape": {
+      "type": "stdio",
+      "command": "node",
+      "cwd": "../outside"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "portable-fixture",
+  "version": "1.0.0",
+  "description": "Portable Agent Plugins v1 compatibility fixture"
+}

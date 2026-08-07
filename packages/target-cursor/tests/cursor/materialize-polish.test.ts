@@ -58,6 +58,39 @@ describe("cursor materialize polish", () => {
     expect(existsSync(join(cwd, "hello", "SKILL.md"))).toBe(false);
   });
 
+  test("portable Agent Plugin skills preserve their complete directory", async () => {
+    cwd = mkdtempSync(join(tmpdir(), "bapm-agent-plugin-skill-"));
+    mkdirSync(join(cwd, ".cursor"), { recursive: true });
+    const pluginRoot = join(cwd, "plugin");
+    const skillDir = join(pluginRoot, "skills", "portable");
+    mkdirSync(join(skillDir, "scripts"), { recursive: true });
+    mkdirSync(join(skillDir, "references"), { recursive: true });
+    writeFileSync(join(skillDir, "SKILL.md"), "---\nname: portable\n---\n# Portable\n", "utf8");
+    writeFileSync(join(skillDir, "scripts", "run.sh"), "#!/bin/sh\n", "utf8");
+    writeFileSync(join(skillDir, "references", "guide.md"), "# Guide\n", "utf8");
+
+    const target = createCursorTarget();
+    await target.materialize(
+      [
+        {
+          name: "portable",
+          type: "skill",
+          source: "dependency:portable-plugin",
+          path: join(skillDir, "SKILL.md"),
+          skillDirectory: skillDir,
+          pluginRoot,
+          format: "agent-plugin",
+        },
+      ],
+      { cwd, targetId: "cursor", deployRoots: target.deployRoots },
+    );
+
+    const dest = join(cwd, ".agents", "skills", "portable");
+    expect(readFileSync(join(dest, "SKILL.md"), "utf8")).toMatch(/Portable/);
+    expect(readFileSync(join(dest, "scripts", "run.sh"), "utf8")).toMatch(/bin\/sh/);
+    expect(readFileSync(join(dest, "references", "guide.md"), "utf8")).toMatch(/Guide/);
+  });
+
   test("instructions deploy to .cursor/rules/<name>.mdc", async () => {
     cwd = mkdtempSync(join(tmpdir(), "bapm-m5-instr-"));
     mkdirSync(join(cwd, ".cursor"), { recursive: true });
