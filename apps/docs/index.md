@@ -1,7 +1,19 @@
 # bapm
 
-**Better Agent Package Manager** — аналог [microsoft/apm](https://github.com/microsoft/apm) на TypeScript с явной архитектурой.
+**Better Agent Package Manager** — ставит и обновляет пакеты для AI-агентов так же предсказуемо, как обычный менеджер зависимостей ставит библиотеки кода.
 
-Менеджер зависимостей для конфигурации AI-агентов: манифест, lockfile, транзитивное разрешение. Материализация в хост выполняется через **integration packages**; runtime-матрица сегодня **cursor-only** (`bapm-integration-cursor`). Claude и Codex предоставляют marketplace-output integrations, но не runtime-адаптеры. Multi-client runtime adapters (Copilot, Claude, …) — **out of scope / later**, не shipped in-tree.
+Вы описываете, какие skills, инструкции, агенты и MCP-серверы нужны проекту. bapm разрешает зависимости, фиксирует версии в lock-файле и раскладывает их туда, где их подхватит редактор — сегодня это **Cursor**.
 
-См. [Conformance & OpenAPM boundary](/guide/conformance) и корневой [`CONFORMANCE.md`](../../CONFORMANCE.md).
+[Перейти к быстрому старту →](/guide/quick-start)
+
+## Зачем это
+
+Без менеджера зависимости агента обычно копируют руками, правят чужие файлы в `.cursor/` и надеются, что у коллеги получится так же. bapm даёт общий манифест, воспроизводимую установку и понятные команды обновления и проверки.
+
+## С чего начать
+
+1. [Быстрый старт](/guide/quick-start) — установить CLI, создать манифест, выполнить первый `install`
+2. [Что умеет bapm](/guide/) — коротко о возможностях и ограничениях
+3. [Сценарии](/guide/situations/) — типичные задачи: CI, обновления, политика, compile
+
+Когда понадобится точный список флагов — [справка по командам](/reference/).

@@ -1,0 +1,197 @@
+# Манифест bapm.yml
+
+Канонический конфиг проекта — **`bapm.yml`**: полный набор полей bapm. Файл **`apm.yml`** — подмножество ради обратной совместимости с OpenAPM/APM (dual-read того же parser), а не равноправный «второй бренд навсегда».
+
+Манифест — декларация проекта: имя, версия и зависимости агента. По нему CLI резолвит граф, пишет lock и (при активном host target) материализует runtime.
+
+Discovery ищет файл **только в текущем каталоге** (cwd). Подъёма по родителям нет.
+
+## Dual-read: bapm.yml и apm.yml
+
+Ровно один файл в cwd:
+
+| Ситуация | Поведение |
+| --- | --- |
+| Только `bapm.yml` | Используется он (предпочтительная запись) |
+| Только `apm.yml` | Используется он (backcompat / OpenAPM) |
+| Оба сразу | Отказ merge (`MANIFEST_DUAL_CONFLICT`) |
+| Ни одного | `MANIFEST_NOT_FOUND` (кроме package-ref add — см. ниже) |
+
+- `bapm init` всегда пишет **`bapm.yml`** и отказывается, если уже есть любой из двух файлов.
+- `bapm install <package-ref…>` без манифеста может создать минимальный **`apm.yml`** (parity с APM), затем дописать зависимость.
+- Новые проекты и ручная правка — целитесь в **`bapm.yml`**. `apm.yml` оставляйте, если уже живёте на OpenAPM-имени или CLI создал его при add без init.
+
+Не держите оба файла «на всякий случай» — CLI их не объединяет.
+
+## Схема bapm.yml (актуальная)
+
+Ниже — поля, которые parser и типы Manifest принимают **сегодня**. Это карта формы, не полный dump OpenSpec.
+
+### Обязательные
+
+| Поле | Тип | Правило |
+| --- | --- | --- |
+| `name` | строка | Непустая. |
+| `version` | строка | Непустая. Числоподобный YAML лучше в кавычках (`"0.1.0"`). Не-semver — предупреждение, не отказ. |
+
+### Известные опциональные (top-level)
+
+| Поле | Тип | Правило |
+| --- | --- | --- |
+| `dependencies` | mapping | Блоки списков зависимостей (см. ниже). |
+| `devDependencies` | mapping | То же для dev; `bapm install <ref> --dev` пишет сюда. |
+| `target` | строка | Один host id (например `cursor`). Нельзя вместе с `targets`. |
+| `targets` | список строк | Несколько host id. Нельзя вместе с `target`. |
+| `registries` | mapping | Именованные registry (см. ниже). |
+| `default_host` | строка | Есть в модели манифеста и **сохраняется** при разборе; отдельной специальной валидации в parser нет. |
+| `marketplace` | mapping | **Authoring-расширение bapm** (отдельный путь валидации). Не consumer day-to-day; см. ниже и [marketplace](/reference/marketplace). |
+
+Поле `target` / `targets` — заявление предпочтения. Для гарантированной активации Cursor на install надёжнее явно: `bapm install --target cursor`. Runtime-материализация сегодня **cursor-only**.
+
+### Отклонённые
+
+| Поле | Поведение |
+| --- | --- |
+| `workspaces` | Отказ валидации (`OpenAPM v0.1 rejects top-level "workspaces"`). |
+
+### Неизвестные и `x-*`
+
+Любые другие top-level ключи (включая `x-*`, а также поля вроде `description` / `author`, которые пишет scaffold) **сохраняются** в документе для будущего rewrite. Они не обязаны быть в таблице выше, чтобы манифест оставался валидным.
+
+### `dependencies` / `devDependencies`
+
+Оба блока — **mapping**, не список.
+
+| Ключ списка | Валидация |
+| --- | --- |
+| `apm` | Список; каждая запись **глубоко** проверяется (см. формы APM ниже). |
+| `mcp` | Должен быть список, если присутствует; содержимое без deep-resolve на этапе parse. |
+| `lsp` | То же: list shape сохраняется без deep-resolve. |
+| другие ключи | Если значение — список, форма списка сохраняется; не-list sibling keys тоже оставляются as-is. |
+
+`bapm init` / минимальный scaffold пишет пустые `dependencies.apm` и `dependencies.mcp`. В plugin-mode scaffold дополнительно возможны `devDependencies.apm`, `includes: auto`, `scripts: {}` (retained top-level).
+
+### Запись в `dependencies.apm`
+
+Два вида:
+
+1. **Строка** (shorthand), например `org/repo`, `org/repo/path`, `org/repo#v1.0.0`.
+2. **Объект** ровно с **одним** source kind среди: `git` | `id` | `path` | `registry` | `marketplace`.
+
+Особые пары (не считаются вторым source kind):
+
+- `git` + `path` — `path` как companion (virtual_path); для `git: parent` поле `path` обязательно.
+- `id` + `registry` — `registry` как указатель на именованный registry, не отдельный source.
+
+Допустимые meta-ключи объекта (allowlist): `version`, `ref`, `alias`, `skills`, `targets`, `allow_insecure`, `type`, `prerelease`, `name` (для marketplace-формы), плюс companions `path` / `registry` выше. Ключи `x-*` на записи зависимости допускаются; прочие неизвестные ключи — отказ.
+
+Marketplace-форма объекта: непустые `marketplace` и `name` (опционально `version`).
+
+Примеры:
+
+```yaml
+dependencies:
+  apm:
+    - org/example-skill#v1.0.0
+    - path: ./packages/hello-skill
+    - git: https://github.com/org/repo.git
+      ref: main
+      path: packages/skill
+    - id: my-pkg
+      registry: my-registry
+      version: "^1.0.0"
+    - name: plugin-name
+      marketplace: my-marketplace
+      version: "1.2.3"
+  mcp: []
+```
+
+### `registries`
+
+Именованный mapping. Ключ `default` — **не URL**, а имя уже объявленного registry.
+
+| Форма значения | Поля |
+| --- | --- |
+| строка | HTTP(S) URL registry |
+| объект | обязательный `url`; опционально `insecure` (bool), `aliases` (список hostname); `x-*` допускаются; **`token` в YAML запрещён** |
+
+`http://` без `insecure: true` допускается только для exempt-хостов (loopback / RFC1918); иначе нужен `insecure: true`.
+
+```yaml
+registries:
+  default: my-reg
+  my-reg:
+    url: https://registry.example.com
+    aliases:
+      - registry.example.com
+  local-http:
+    url: http://127.0.0.1:4873
+    insecure: true
+```
+
+### `marketplace:` (authoring, не day-to-day)
+
+Отдельный блок в **`bapm.yml`** для authoring marketplace (`bapm marketplace …`, `bapm pack`). Валидируется своим путём, не общим Manifest parse.
+
+Типичные ключи блока: `owner`, `build` (`tagPattern`), `outputs`, `packages` (записи с `name` + `source`, опционально version/ref/subdir/…). Имя/описание/версия marketplace по умолчанию наследуются с top-level манифеста. Подробности команд: [marketplace](/reference/marketplace), сценарий: [Marketplace pack](/guide/situations/marketplace-pack).
+
+## Поля день ото дня
+
+Типичный consumer-минимум:
+
+```yaml
+name: my-project
+version: 0.1.0
+target: cursor
+dependencies:
+  apm:
+    - path: ./packages/hello-skill
+  mcp: []
+```
+
+| Поле | Зачем пользователю |
+| --- | --- |
+| `name` | Обязательно. Имя проекта / пакета. |
+| `version` | Обязательно. Строка версии. |
+| `target` / `targets` | Предпочитаемый host; лучше дублировать явным `--target cursor` на install. |
+| `dependencies.apm` | Agent/APM-пакеты. |
+| `dependencies.mcp` | MCP-серверы; при активном Cursor по умолчанию в `.cursor/mcp.json` попадают **прямые** записи (transitive — только с `--trust-transitive-mcp`). |
+| `devDependencies.apm` | Dev-зависимости; `bapm install <ref> --dev`. |
+
+`bapm init -y --target cursor` создаёт каркас с `name` (из имени каталога или аргумента), `version: 0.1.0`, пустыми `dependencies.apm` / `dependencies.mcp` и при необходимости `target`.
+
+### Что обычно не правят вручную каждый день
+
+- `registries` — для registry/id-форм deps и insecure/aliases.
+- `marketplace:` — authoring, не consumer-минимум.
+- `default_host` — retained; отдельной UX-команды «обязательно выставить» нет.
+- Top-level `workspaces` — **нельзя**.
+
+## Когда править вручную, а когда через команды
+
+| Задача | Как |
+| --- | --- |
+| Новый проект с нуля | `bapm init -y --target cursor` → **`bapm.yml`** |
+| Добавить пакет | `bapm install <package-ref…>` (допишет в `dependencies.apm`) или `… --dev` → `devDependencies.apm` |
+| Убрать пакет из манифеста и deploy | `bapm uninstall …` |
+| Поменять path/git-запись, MCP, `name`/`version` | Правка YAML вручную, затем `bapm install` (или `bapm lock`, если нужен только lock) |
+| Только посмотреть бы add | `bapm install <ref> --dry-run` (без durable writes) |
+
+Ручной edit уместен для структуры deps и метаданных. Повторно не создавайте манифест через `init`, если файл уже есть — команда не перезапишет.
+
+## Типичные ошибки
+
+| Симптом | Что проверить |
+| --- | --- |
+| `No manifest found` / `MANIFEST_NOT_FOUND` | В cwd нет ни `apm.yml`, ни `bapm.yml`. Сделайте `init` или `install <ref>` (создаст минимальный `apm.yml`). |
+| `Both apm.yml and bapm.yml are present` | Оставьте один файл. |
+| `Manifest requires "name"` / `"version"` | Добавьте оба поля; version — непустая строка. |
+| `must not declare both "target" and "targets"` | Оставьте либо `target`, либо `targets`. |
+| `OpenAPM v0.1 rejects top-level "workspaces"` | Уберите `workspaces` с корня манифеста. |
+| `must have exactly one source kind` / `unknown source kind` | В object-dep — ровно один из `git`\|`id`\|`path`\|`registry`\|`marketplace` (с учётом companions). |
+| `Registry … uses http:// without insecure: true` | Выставьте `insecure: true` или используйте HTTPS / exempt host. |
+| `Target detection is missing or ambiguous; pass --target <id>` | Нет однозначного auto-detect (например нет `.cursor/`). Передайте `--target cursor`. |
+| `Unknown or unregistered target: …` | Id не зарегистрирован в CLI (сегодня runtime — `cursor`). |
+| `Refusing to init: … already exists` | Манифест уже есть; правьте существующий файл. |
+
+Дальше: [Быстрый старт](/guide/quick-start). Lock рядом: [Lockfile](/guide/lockfile). Init-флаги: [init](/reference/init).

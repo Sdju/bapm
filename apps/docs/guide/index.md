@@ -1,7 +1,30 @@
-# Introduction
+# Что умеет bapm
 
-bapm (Better APM) — dependency manager for AI agent configuration.
+bapm помогает собрать конфигурацию AI-агента из пакетов: объявить зависимости, поставить их в проект и держать одинаковый результат у себя, у коллег и в CI.
 
-Declare agentic dependencies once; install reproducibly into the **cursor-only** runtime matrix via integration packages (`bapm-integration-cursor`). Marketplace output integrations for Claude and Codex do not add runtime adapters. Multi-client runtime adapters are not shipped in-tree today.
+## Как это выглядит на практике
 
-OpenAPM wire claims vs APM product CLI: [Conformance & OpenAPM boundary](/guide/conformance).
+1. В корне проекта лежит манифест — канонический `bapm.yml` (или backcompat `apm.yml`).
+2. Вы запускаете `bapm install --target cursor`.
+3. bapm скачивает и связывает зависимости, пишет lock-файл и копирует нужные файлы в каталоги Cursor: skills, rules, agents, при необходимости MCP.
+
+Дальше можно обновлять пакеты, проверять «что устарело», собирать сводку в `AGENTS.md`, упаковывать marketplace-артефакты — всё через CLI.
+
+Подробный первый проход: [быстрый старт](/guide/quick-start).
+
+## Что стоит знать заранее
+
+- **Сейчас установка в редактор рассчитана на Cursor.** Укажите `--target cursor` (или поле `target` в манифесте). Runtime для Copilot, Claude или Codex в этом CLI пока нет.
+- **Claude и Codex** можно использовать при упаковке marketplace-выхода (`pack`), это не замена установки в Cursor.
+- bapm опирается на форматы OpenAPM, но **не является** полной копией CLI [microsoft/apm](https://github.com/microsoft/apm). Детали совместимости — в разделе [Совместимость](/guide/conformance).
+
+## Разделы документации
+
+| Если нужно… | Откройте |
+| --- | --- |
+| Поставить CLI и сделать первый install | [Быстрый старт](/guide/quick-start) |
+| Понять список команд | [Команды](/guide/commands) |
+| Узнать флаги конкретной команды | [Справка](/reference/) |
+| Разобраться с `bapm.yml` | [Манифест](/guide/config-manifest) |
+| Понять, зачем lock и что с ним делать | [Lock-файл](/guide/lockfile) |
+| Пройти типичную задачу по шагам | [Сценарии](/guide/situations/) |

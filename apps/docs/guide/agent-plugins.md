@@ -1,23 +1,23 @@
 # Portable Agent Plugins v1
 
-bapm supports a deliberately narrow, portable Agent Plugins v1 boundary: root `plugin.json`, immediate `skills/<name>/SKILL.md` directories, and root `mcp.json`.
+bapm поддерживает узкую portable-границу Agent Plugins v1: корневой `plugin.json`, каталоги `skills/<name>/SKILL.md` на одном уровне и корневой `mcp.json`.
 
-The generated [support matrix](../../../AGENT_PLUGINS_COMPATIBILITY.md) is backed by fixtures and regression tests. It is not an Agent Plugins certification and does not claim compatibility with every client.
+Сгенерированная [матрица поддержки](../../../AGENT_PLUGINS_COMPATIBILITY.md) опирается на fixtures и регрессионные тесты. Это не сертификация Agent Plugins и не заявление о совместимости со всеми клиентами.
 
-## Cursor behavior
+## Поведение в Cursor
 
-The Cursor integration adapts portable MCP entries to `.cursor/mcp.json`: `stdio` remains `stdio`, `streamable-http` becomes `http`, and `sse` remains `sse`. A portable MCP file is never copied verbatim as a Cursor configuration. Other hosts need their own explicit integration.
+Cursor-integration адаптирует portable MCP-записи в `.cursor/mcp.json`: `stdio` остаётся `stdio`, `streamable-http` становится `http`, `sse` остаётся `sse`. Portable MCP-файл никогда не копируется в Cursor как есть. Другим хостам нужна своя явная integration.
 
-## Boundary
+## Граница
 
-Portable plugins are distinct from bapm/OpenAPM manifests and from marketplace products:
+Portable-плагины отличаются и от манифестов bapm/OpenAPM, и от marketplace-продуктов:
 
-- `plugin.json` is not `bapm.yml` or `apm.yml`;
-- packing a portable plugin creates an archive, not a marketplace publication;
-- the OpenAPM claims in [CONFORMANCE.md](../../../CONFORMANCE.md) do not assert Agent Plugins conformance.
+- `plugin.json` — это не `bapm.yml` и не `apm.yml`;
+- упаковка portable-плагина создаёт архив, а не публикацию в marketplace;
+- заявления OpenAPM в [CONFORMANCE.md](../../../CONFORMANCE.md) не означают conformance Agent Plugins.
 
-Marketplace output integrations and portable plugin archives are supported independently of Cursor runtime materialization. They do not imply a client extension, marketplace publication, or runtime adapter for every host.
+Marketplace-output integrations и portable-архивы плагинов поддерживаются независимо от runtime-материализации в Cursor. Они не подразумевают расширение клиента, публикацию в marketplace или runtime-адаптер для каждого хоста.
 
-## Not supported
+## Что не поддерживается
 
-This surface does not implement sandboxing, OAuth or secret injection, hooks, agents, commands, client extensions, or vendor-specific extension behavior. Unsafe skill paths and reserved or secret-like MCP environment variables are rejected.
+На этой поверхности нет sandboxing, OAuth или инъекции секретов, hooks, agents, commands, client extensions и vendor-specific расширений. Небезопасные пути skills и зарезервированные / secret-подобные переменные окружения MCP отклоняются.

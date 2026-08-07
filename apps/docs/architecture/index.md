@@ -1,19 +1,34 @@
 # Architecture
 
+Короткий обзор для **контрибьюторов** monorepo. Как пользоваться CLI в своём проекте: [Guide](/guide/), [Быстрый старт](/guide/quick-start) — не этот раздел.
+
+## Пакеты
+
 ```
-packages/core         @bapm/core          domain: manifest, lockfile, resolver, install
-packages/cli          bapm                thin CLI over @bapm/core
-packages/integration-api    bapm-integration-api     generic capability contracts between core and integrations
-packages/integration-cursor bapm-integration-cursor  cursor-only runtime materialization
-packages/integration-claude bapm-integration-claude  Claude marketplace output
-packages/integration-codex  bapm-integration-codex   Codex marketplace output
-apps/docs             @bapm/docs          VitePress
+packages/core               @bapm/core                 domain: манифест, lockfile, resolver, install
+packages/cli                bapm                       thin CLI поверх @bapm/core
+packages/integration-api    bapm-integration-api       контракты capability между core и integrations
+packages/integration-cursor bapm-integration-cursor    runtime-материализация (только Cursor)
+packages/integration-claude bapm-integration-claude    Claude marketplace output
+packages/integration-codex  bapm-integration-codex     Codex marketplace output
+apps/docs                   @bapm/docs                 VitePress
 ```
 
-Host behavior is supplied by **integration packages**. Runtime materialization is **cursor-only** today and remains outside `@bapm/core`.
+Поведение хоста дают **integration-пакеты**. Runtime-материализация сегодня **только Cursor** и остаётся вне `@bapm/core`.
 
-Claude and Codex are marketplace-output-only integrations, not runtime adapters. Multi-target runtime support is a later track.
+Claude и Codex — только marketplace-output, не runtime-адаптеры. Multi-target runtime — отдельный трек.
 
-OpenAPM claim vs APM product CLI boundary: [Conformance & OpenAPM boundary](/guide/conformance).
+Граница OpenAPM claim vs APM product CLI: [Совместимость](/guide/conformance).
+
+## Сборка CLI из исходников
+
+Для разработки в клоне репозитория (не для пользователей продукта):
+
+```bash
+# в корне monorepo
+pnpm install
+pnpm run -r build
+node packages/cli/dist/cli.mjs --help
+```
 
 Референс-реализация (Python): `.samples/apm` → [microsoft/apm](https://github.com/microsoft/apm) (локально, вне git).
