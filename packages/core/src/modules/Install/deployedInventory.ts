@@ -162,7 +162,11 @@ export function verifyDeployedFileHashes(args: { cwd: string; document: Lockfile
   );
 }
 
-export type ResolvedDeployedFile = { path: string; hash: string };
+export type ResolvedDeployedFile = {
+  path: string;
+  hash: string;
+  primitive?: { name: string; packageName?: string };
+};
 
 /** Normalize materialize return / void into path+hash list (core hashes when omitted). */
 export function collectDeployedHashes(
@@ -179,12 +183,12 @@ export function collectDeployedHashes(
     const path = typeof f.path === "string" ? toPosix(f.path) : "";
     if (!path) continue;
     if (typeof f.hash === "string" && f.hash.length > 0) {
-      out.push({ path, hash: f.hash });
+      out.push({ path, hash: f.hash, primitive: f.primitive });
       continue;
     }
     const abs = safeResolveUnderCwd(cwd, path);
     if (!abs || !existsSync(abs)) continue;
-    out.push({ path, hash: hashFileAt(abs) });
+    out.push({ path, hash: hashFileAt(abs), primitive: f.primitive });
   }
   return out;
 }
@@ -194,20 +198,6 @@ function packageNameOf(p: AttributedPrimitive): string | undefined {
   if (typeof p.source === "string" && p.source.startsWith("dependency:")) {
     return p.source.slice("dependency:".length);
   }
-  return undefined;
-}
-
-function primitiveNameFromDeployPath(relPath: string): string | undefined {
-  const posix = toPosix(relPath);
-  // .agents/skills/<name>/SKILL.md
-  let m = posix.match(/\.agents\/skills\/([^/]+)\//);
-  if (m) return m[1];
-  // .cursor/rules/<name>.mdc
-  m = posix.match(/\.cursor\/rules\/([^/]+)\.mdc$/);
-  if (m) return m[1];
-  // .cursor/agents/<name>.md
-  m = posix.match(/\.cursor\/agents\/([^/]+)\.md$/);
-  if (m) return m[1];
   return undefined;
 }
 
@@ -229,10 +219,9 @@ export function applyDeployedHashesToLock(args: {
   }
 
   let wrote = false;
-  for (const { path, hash } of args.deployed) {
-    const primName = primitiveNameFromDeployPath(path);
-    const prim = primName ? byName.get(primName) : undefined;
-    const pkg = prim ? packageNameOf(prim) : undefined;
+  for (const { path, hash, primitive: reportedPrimitive } of args.deployed) {
+    const prim = reportedPrimitive?.name ? byName.get(reportedPrimitive.name) : undefined;
+    const pkg = reportedPrimitive?.packageName ?? (prim ? packageNameOf(prim) : undefined);
     const deps = args.document.dependencies ?? [];
     const dep: LockedDependency | undefined = pkg
       ? deps.find((d) => String(d.name ?? "") === pkg)

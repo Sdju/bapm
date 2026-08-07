@@ -54,12 +54,15 @@ describe("install target materialize e2e (mock host)", () => {
       materialize: async (
         primitives: unknown,
         ctx?: { cwd?: string },
-      ): Promise<{ deployedFiles: Array<{ path: string }> }> => {
+      ): Promise<{
+        targetId: string;
+        deployedFiles: Array<{ path: string; primitive: { name: string } }>;
+      }> => {
         const cwd = ctx?.cwd ?? project.cwd;
         const list = Array.isArray(primitives)
           ? primitives
           : ((primitives as { primitives?: unknown[] })?.primitives ?? []);
-        const deployedFiles: Array<{ path: string }> = [];
+        const deployedFiles: Array<{ path: string; primitive: { name: string } }> = [];
         for (const raw of list) {
           const p = raw as { name?: string; type?: string; path?: string };
           if (!/skill/i.test(String(p.type ?? "skill"))) continue;
@@ -80,9 +83,12 @@ describe("install target materialize e2e (mock host)", () => {
           } else {
             writeFileSync(dest, body!, "utf8");
           }
-          deployedFiles.push({ path: `.agents/skills/${name}/SKILL.md` });
+          deployedFiles.push({
+            path: `.agents/skills/${name}/SKILL.md`,
+            primitive: { name },
+          });
         }
-        return { deployedFiles };
+        return { targetId: "cursor", deployedFiles };
       },
     });
 

@@ -70,7 +70,14 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     if (arg === "--target") {
       const value = argv[i + 1];
       if (!value || value.startsWith("-")) {
-        return { validate, dryRun, verbose, outputFile, target, error: "missing value for --target <id>" };
+        return {
+          validate,
+          dryRun,
+          verbose,
+          outputFile,
+          target,
+          error: "missing value for --target <id>",
+        };
       }
       target = value;
       i += 1;
@@ -79,12 +86,26 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     if (arg.startsWith("--target=")) {
       target = arg.slice("--target=".length);
       if (!target) {
-        return { validate, dryRun, verbose, outputFile, target, error: "missing value for --target=<id>" };
+        return {
+          validate,
+          dryRun,
+          verbose,
+          outputFile,
+          target,
+          error: "missing value for --target=<id>",
+        };
       }
       continue;
     }
     if (arg.startsWith("-")) {
-      return { validate, dryRun, verbose, outputFile, target, error: `Unknown compile flag: ${arg}` };
+      return {
+        validate,
+        dryRun,
+        verbose,
+        outputFile,
+        target,
+        error: `Unknown compile flag: ${arg}`,
+      };
     }
     return {
       validate,
@@ -100,20 +121,20 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
 }
 
 export function formatCompileHelp(deps: LifecycleCliDeps): string {
-  return `${deps.name} compile — Emit AGENTS.md from discovered primitives (cursor)
+  return `${deps.name} compile — Emit target-owned output from discovered primitives
 
 Usage:
   bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
 
 Options:
-  -o, --output PATH   Write compiled agents file to PATH (default: AGENTS.md)
+  -o, --output PATH   Override the target's default output path
   --target <id>       Required when target detection is missing or ambiguous
   --dry-run           Preview would-write path; do not write
   -v, --verbose       Print thin source attribution (name, type, path)
   --validate          Discover/validate only; do not write
   --help, -h          Show this help
 
-Emits AGENTS.md only (no CLAUDE.md / GEMINI.md / copilot-instructions).
+The selected target determines the default output path and rendering.
 `;
 }
 
@@ -153,7 +174,7 @@ export async function runCompileCli(
     if (parsed.validate) {
       console.log(`compile --validate ok (${result.primitivesCount} primitives; no write)`);
     } else if (parsed.dryRun) {
-      const previewPath = parsed.outputFile ?? "AGENTS.md";
+      const previewPath = result.path ?? parsed.outputFile ?? "(target default)";
       console.log(
         `compile --dry-run: would write ${previewPath} (${result.primitivesCount} primitives)`,
       );

@@ -135,7 +135,7 @@ describe("core install — forced target / cleanup / hashes", () => {
     expect(existsSync(join(project.cwd, ".agents", "skills"))).toBe(false);
   });
 
-  test("without force and without detect — no harness writes under .cursor / .agents/skills", async () => {
+  test("without force and without detect — rejects before harness writes", async () => {
     project = createTempProject();
     const ports = createFakePorts();
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
@@ -168,15 +168,17 @@ describe("core install — forced target / cleanup / hashes", () => {
     });
 
     const runInstall = getRunInstall();
-    await runInstall({
-      cwd: project.cwd,
-      frozen: false,
-      targetRegistry: registry,
-      registry,
-      gitRemote: ports.gitRemote,
-      tagLister: ports.tagLister,
-      downloader: ports.downloader,
-    });
+    await expect(
+      runInstall({
+        cwd: project.cwd,
+        frozen: false,
+        targetRegistry: registry,
+        registry,
+        gitRemote: ports.gitRemote,
+        tagLister: ports.tagLister,
+        downloader: ports.downloader,
+      }),
+    ).rejects.toThrow(/--target\s+<id>/i);
 
     expect(existsSync(modulesDir(project.cwd))).toBe(true);
     expect(existsSync(join(project.cwd, ".agents", "skills", "x", "SKILL.md"))).toBe(false);
@@ -270,6 +272,7 @@ describe("core install — forced target / cleanup / hashes", () => {
         mkdirSync(join(project.cwd, ".agents", "skills", "hello"), { recursive: true });
         writeFileSync(join(project.cwd, deployedRel), "---\nname: hello\n---\n# Hello\n", "utf8");
         return {
+          targetId: "cursor",
           deployedFiles: [{ path: deployedRel }],
         };
       },

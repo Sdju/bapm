@@ -8,13 +8,13 @@ export type CompileAttributionEntry = {
 
 export type CompileAgentsMdOptions = {
   cwd?: string;
-  /** When true, discover/validate only — do not write AGENTS.md. */
+  /** When true, discover/validate only — do not write target output. */
   validate?: boolean;
   /** When true (and not validate), compute content but do not write. */
   dryRun?: boolean;
   /** When true, include thin attribution on the result for CLI printing. */
   verbose?: boolean;
-  /** Output filename (default AGENTS.md). */
+  /** Target-relative output override; the target owns its default. */
   outputFile?: string;
   modulesDir?: string;
   /** Registry of host target capabilities supplied by the application. */

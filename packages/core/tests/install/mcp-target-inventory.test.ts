@@ -50,7 +50,11 @@ mcp_configs:
       configureMcp: async () => {
         mkdirSync(join(project!.cwd, "config"), { recursive: true });
         writeFileSync(join(project!.cwd, "config", "mcp.json"), "{}\n", "utf8");
-        return { configPath: "config/mcp.json", servers: ["test-stdio-server"] };
+        return {
+          targetId: "x-acme-editor",
+          configPath: "config/mcp.json",
+          servers: ["test-stdio-server"],
+        };
       },
     });
 

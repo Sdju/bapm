@@ -366,7 +366,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         targetId,
         deployRoots: [...target.deployRoots],
       })) as void | MaterializeReport;
-      allDeployed.push(...collectDeployedHashes(cwd, report));
+      allDeployed.push(...collectTargetDeployedHashes(cwd, target, report));
     }
   }
 
@@ -811,6 +811,13 @@ async function deployMcpAfterPolicy(args: {
       targetId,
       deployRoots: [...target.deployRoots],
     })) as ConfigureMcpReport;
+    if (!report || report.targetId !== targetId) {
+      throw new InstallError(
+        "INSTALL_FAILED",
+        `Target "${targetId}" configured MCP without target-owned deployment attribution`,
+        { details: { targetId, reportTargetId: report?.targetId } },
+      );
+    }
     const adapterDiagnostics = (
       report as (ConfigureMcpReport & { diagnostics?: unknown[] }) | undefined
     )?.diagnostics;
@@ -1104,7 +1111,10 @@ async function detectRegisteredTargets(
   return { detectedIds, diagnostics };
 }
 
-function assertRegisteredExcludeIds(excludeIds: string[], registry: TargetRegistry | undefined): void {
+function assertRegisteredExcludeIds(
+  excludeIds: string[],
+  registry: TargetRegistry | undefined,
+): void {
   for (const id of excludeIds) {
     if (!registry?.get(id)) {
       throw new InstallError(
@@ -1114,6 +1124,57 @@ function assertRegisteredExcludeIds(excludeIds: string[], registry: TargetRegist
       );
     }
   }
+}
+
+/**
+ * Trust only deployment attribution returned by the selected target. Core
+ * verifies generic containment but never derives a target's paths or owners.
+ */
+function collectTargetDeployedHashes(
+  cwd: string,
+  target: BapmTarget,
+  report: void | MaterializeReport,
+): ReturnType<typeof collectDeployedHashes> {
+  if (report === undefined) return [];
+  if (!report || !Array.isArray(report.deployedFiles)) {
+    throw new InstallError(
+      "INSTALL_FAILED",
+      `Target "${target.id}" materialize report is missing target-owned deployment attribution`,
+      { details: { targetId: target.id, report } },
+    );
+  }
+  if (report.deployedFiles.length === 0) return [];
+  if (report.targetId !== target.id) {
+    throw new InstallError(
+      "INSTALL_FAILED",
+      `Target "${target.id}" materialize report has invalid target-owned deployment attribution`,
+      { details: { targetId: target.id, reportTargetId: report.targetId } },
+    );
+  }
+
+  for (const file of report.deployedFiles) {
+    const relPath = typeof file?.path === "string" ? file.path.trim() : "";
+    const absolutePath = relPath ? resolve(cwd, relPath) : "";
+    if (!relPath || !isPathWithinTargetRoots(cwd, absolutePath, target.deployRoots)) {
+      throw new InstallError(
+        "INSTALL_FAILED",
+        `Target "${target.id}" reported deployment outside its declared roots: ${relPath || "(missing path)"}`,
+        { details: { targetId: target.id, path: relPath, deployRoots: target.deployRoots } },
+      );
+    }
+  }
+  return collectDeployedHashes(cwd, report);
+}
+
+function isPathWithinTargetRoots(cwd: string, path: string, deployRoots: string[]): boolean {
+  return deployRoots.some((root) => {
+    const rootPath = resolve(cwd, root);
+    const rel = relative(rootPath, path);
+    return (
+      rel === "" ||
+      (!rel.startsWith("..") && !rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`))
+    );
+  });
 }
 
 function listRegistry(registry: TargetRegistry): BapmTarget[] {

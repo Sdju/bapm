@@ -55,6 +55,14 @@ export type DeployedFile = {
   path: string;
   /** Optional content hash (host may omit; core can compute). */
   hash?: string;
+  /**
+   * Target-supplied primitive ownership for this deployment. Core uses this
+   * metadata for lock attribution and never infers it from a host file layout.
+   */
+  primitive?: {
+    name: string;
+    packageName?: string;
+  };
 };
 
 /**
@@ -62,7 +70,7 @@ export type DeployedFile = {
  * (`deployed_file_hashes`) without importing concrete host packages.
  */
 export type MaterializeReport = {
-  /** Registered target that owns these deployment entries. */
+  /** Registered target that owns these deployment entries when any are reported. */
   targetId?: TargetId;
   deployedFiles: DeployedFile[];
 };

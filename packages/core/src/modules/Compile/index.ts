@@ -1,5 +1,5 @@
 /**
- * Compile — emit deterministic AGENTS.md from discovered primitives (cursor).
+ * Compile — delegate deterministic output emission to a selected target.
  *
  * ## Public API
  *
