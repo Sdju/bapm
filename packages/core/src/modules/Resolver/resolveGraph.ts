@@ -22,7 +22,6 @@ import {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
-  ensureModulesRoot,
   modulesCacheDest,
 } from "./defaults.ts";
 import { ResolverError } from "./errors.ts";
@@ -35,6 +34,7 @@ import {
 } from "./semver.ts";
 import type {
   ClassifiedDependency,
+  DownloadArgs,
   Downloader,
   GitRemote,
   MarketplaceLockProvenance,
@@ -170,16 +170,13 @@ export async function resolveDependencyGraph(
       : (loadLockfileOrNull({ cwd })?.document ?? null);
   const warmByIdentity = indexWarmPins(warmLock);
 
-  // Plan-only: defer apm_modules creation until downloadPackages (pl-002).
-  if (!skipDownload) {
-    ensureModulesRoot(cwd);
-  }
-
   const queue: QueueItem[] = [];
   const visitOrder: string[] = [];
   const edgesByIdentity = new Map<string, EdgeRecord[]>();
   /** Expand keys whose children have already been enqueued (avoid re-expand). */
   const expanded = new Set<string>();
+  /** Local copies begin only after every graph edge has passed validation. */
+  const localMaterializations: DownloadArgs[] = [];
 
   const rootDeps = [
     ...listApmDeps(manifest.dependencies),
@@ -249,6 +246,7 @@ export async function resolveDependencyGraph(
         visitOrder,
         queue,
         expanded,
+        localMaterializations,
       });
       continue;
     }
@@ -268,6 +266,10 @@ export async function resolveDependencyGraph(
       expanded,
       shouldUpdate: item.shouldUpdate,
     });
+  }
+
+  for (const materialization of localMaterializations) {
+    await downloader.download(materialization);
   }
 
   // Intersection-pick per identity
@@ -577,6 +579,7 @@ async function resolveLocal(
     visitOrder: string[];
     queue: QueueItem[];
     expanded: Set<string>;
+    localMaterializations: DownloadArgs[];
   },
 ): Promise<void> {
   const abs = resolveLocalPath({
@@ -610,10 +613,11 @@ async function resolveLocal(
     );
   }
 
-  // Plan-only: read local source in place; materialize later via downloadPackages.
+  // Read local source in place while validating the full graph; only materialize
+  // after no queued edge has been rejected.
   const dest = modulesCacheDest(ctx.cwd, identity.replace(/^local:/, "local_"));
   if (!ctx.skipDownload) {
-    await ctx.downloader.download({ path: abs, dest, identity });
+    ctx.localMaterializations.push({ path: abs, dest, identity });
   }
 
   const record: EdgeRecord = {
@@ -624,7 +628,7 @@ async function resolveLocal(
     chain,
     name,
     path: abs,
-    packageRoot: !ctx.skipDownload && existsSync(dest) ? dest : abs,
+    packageRoot: !ctx.skipDownload ? dest : abs,
     repo_url: identity,
     marketplaceProvenance: item.marketplaceProvenance,
   };

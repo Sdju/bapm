@@ -48,18 +48,6 @@ export async function resolveAndLock(
   // Ensure manifest exists (throws ManifestError if missing)
   const { document: manifest } = loadManifest({ cwd });
 
-  // lk-010: purge git-semver install paths for update targets before re-download
-  if (updateRefs && options.purgeInstallPaths !== false) {
-    const names = collectPurgeNames(manifest.dependencies?.apm, existingLock, scope);
-    if (names.length > 0) {
-      purgeModulesInstallPaths({
-        cwd,
-        packageNames: names,
-        lockDeps: (existingLock?.dependencies ?? []) as Array<Record<string, unknown>>,
-      });
-    }
-  }
-
   // Plan only — no durable modules for local path deps (pl-002).
   const graph = await resolveDependencyGraph({
     cwd,
@@ -118,6 +106,18 @@ export async function resolveAndLock(
       identity: n.identity,
       name: n.name,
     }));
+
+  // lk-010: purge only after the complete graph passed boundary and policy checks.
+  if (updateRefs && options.purgeInstallPaths !== false) {
+    const names = collectPurgeNames(manifest.dependencies?.apm, existingLock, scope);
+    if (names.length > 0) {
+      purgeModulesInstallPaths({
+        cwd,
+        packageNames: names,
+        lockDeps: (existingLock?.dependencies ?? []) as Array<Record<string, unknown>>,
+      });
+    }
+  }
 
   await downloadPackages({
     cwd,
@@ -416,10 +416,7 @@ function buildLockDocument(
   return document;
 }
 
-function applyMarketplaceProvenance(
-  entry: LockedDependency,
-  n: ResolvedNode,
-): void {
+function applyMarketplaceProvenance(entry: LockedDependency, n: ResolvedNode): void {
   if (n.discovered_via) entry.discovered_via = n.discovered_via;
   if (n.marketplace_plugin_name) entry.marketplace_plugin_name = n.marketplace_plugin_name;
   if (n.source_url) entry.source_url = n.source_url;

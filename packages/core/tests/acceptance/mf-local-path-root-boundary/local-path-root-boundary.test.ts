@@ -88,17 +88,11 @@ describe("acceptance: mf-local-path-root-boundary", () => {
       "name: root\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./a/../b\n",
     );
     writePackage(join(project.cwd, "a"), "a");
-    writePackage(
-      join(project.cwd, "b"),
-      "b",
-      "  apm:\n    - path: ../sibling\n",
-    );
+    writePackage(join(project.cwd, "b"), "b", "  apm:\n    - path: ../sibling\n");
     writePackage(join(project.cwd, "sibling"), "sibling");
 
     const result = await resolveDependencyGraph({ cwd: project.cwd });
-    expect(result.nodes.map((node) => node.name)).toEqual(
-      expect.arrayContaining(["b", "sibling"]),
-    );
+    expect(result.nodes.map((node) => node.name)).toEqual(expect.arrayContaining(["b", "sibling"]));
     expect(result.nodes.find((node) => node.name === "sibling")).toMatchObject({
       depth: 2,
     });
@@ -123,6 +117,7 @@ describe("acceptance: mf-local-path-root-boundary", () => {
 
     const error = await captureRejection(() => resolveDependencyGraph({ cwd: project.cwd }));
     expectRootEscape(error, escapedPath);
+    expect(existsSync(join(project.cwd, "apm_modules"))).toBe(false);
   });
 
   test.each([
@@ -146,6 +141,28 @@ describe("acceptance: mf-local-path-root-boundary", () => {
 
     const error = await captureRejection(() => resolveDependencyGraph({ cwd: project.cwd }));
     expectRootEscape(error, escapedPath);
+    expect(existsSync(join(project.cwd, "apm_modules"))).toBe(false);
+  });
+
+  test("does not purge update paths before rejecting an escaped edge", async () => {
+    const project = createTempProject("bapm-root-boundary-");
+    const outside = createTempProject("bapm-outside-");
+    projects.push(project, outside);
+    const escapedPath = relative(project.cwd, outside.cwd);
+    const cachedPath = join(project.cwd, "apm_modules", "outside");
+    mkdirSync(cachedPath, { recursive: true });
+    writeFileSync(join(cachedPath, "keep.txt"), "keep", "utf8");
+    writeManifest(
+      project.cwd,
+      `name: root\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ${escapedPath}\n`,
+    );
+
+    const error = await captureRejection(() =>
+      resolveAndLock({ cwd: project.cwd, updateRefs: true }),
+    );
+
+    expectRootEscape(error, escapedPath);
+    expect(existsSync(join(cachedPath, "keep.txt"))).toBe(true);
   });
 
   test("rejects an escaped object path before manifest read, policy, materialization, and lock write", async () => {
