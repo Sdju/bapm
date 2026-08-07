@@ -2,7 +2,7 @@
 name: "/orchestrate"
 id: "orchestrate"
 category: "Workflow"
-description: "Оркестратор реализации: только субагенты, опционально OpenSpec, TDD с отдельными приёмочными тестами"
+description: "Оркестратор: orch-* субагенты, self-commit в фазе, TDD acceptance→promote"
 ---
 
 Оркестрируй реализацию **только через субагентов**. Сам код, тесты, спеки и проверки **не трогай**.
@@ -14,50 +14,42 @@ description: "Оркестратор реализации: только суба
 ## Жёсткие запреты оркестратора (parent)
 
 - Не читай/не правь исходники, спеки, тесты ради реализации или приёмки.
-- Не запускай `vp test` / `vp check` / сборку / OpenSpec CLI сам.
+- Не запускай `vp test` / `vp check` / сборку / OpenSpec CLI / **git** сам.
 - Не «быстро глянь diff» и не верифицируй работу субагента своими глазами.
-- Единственные инструменты работы: **Task** (субагенты), вопросы пользователю, краткий статус фаз.
-- Если нужно что-то узнать о репо — запускай субагента (`explore` / `generalPurpose`), не исследуй сам.
+- Единственные инструменты: **Task** (субагенты), вопросы пользователю, краткий статус фаз.
+- Если нужно узнать о репо — субагент (`explore` / `orch-plan`), не исследуй сам.
+- **Не** создавай отдельный commit-субагент: фаза коммитит сама (см. skill `self-commit.md`).
 
-## Pipeline (по порядку)
+## Pipeline
 
-| # | Фаза | Субагент | Цель |
-|---|------|----------|------|
-| 1 | `plan` | OpenSpec **explore** *или* **propose** | Понять / зафиксировать change + артефакты |
-| 2 | `acceptance` | generalPurpose | Отдельные **приёмочные** тесты (RED) по спеке |
-| 3 | `apply` | generalPurpose | Реализация по спеке + юнит-тесты, довести приёмку до GREEN |
-| 4 | `accept` | generalPurpose (или bugbot/security по запросу) | Приёмка: спека + acceptance tests, без новой фичи |
-| 5 | `promote` | generalPurpose | После `accept=pass`: приёмочные тесты → **общие** (`tests/…`) **или удалить**, если больше не нужны |
-| 6 | `merge` | generalPurpose | Archive/sync OpenSpec |
-| 7 | `deliver` | — | Короткий отчёт пользователю **только** из отчётов субагентов |
+| # | Фаза | `subagent_type` | Цель |
+|---|------|-----------------|------|
+| 1 | `plan` | `orch-plan` | explore/propose + self-commit OpenSpec |
+| 2 | `acceptance` | `orch-acceptance` | приёмочные тесты RED + self-commit |
+| 3 | `apply` | `orch-apply` | реализация GREEN + self-commit |
+| 4 | `accept` | `orch-accept` | приёмка; commit только если правил файлы |
+| 5 | `promote` | `orch-promote` | acceptance → general / delete + self-commit |
+| 6 | `merge` | `orch-merge` | archive/sync + self-commit |
+| — | canvas | `orch-canvas` | roadmap canvas (вне git), по необходимости |
+| 7 | `deliver` | — | отчёт пользователю из reports |
 
-OpenSpec **опционален**: если пользователь явно сказал «без openspec» / однострочный фикс — `plan` всё равно через субагента, но без `openspec new` (мини-plan в ответе субагента). По умолчанию для фич — **с OpenSpec**.
+Роадмап criteria/validate: `apm-expert` (без git).  
+OpenSpec опционален («без openspec» → мини-plan в `orch-plan`).
 
-## Conventional commits после успешных шагов
+## Self-commit (внутри фазы)
 
-После каждой фазы со `status: ok` / `pass` (кроме чистого `explore` без артефактов и кроме `deliver`) parent **обязан** запустить субагента на **conventional commit** изменений этой фазы — **до** следующей фазы. Parent **сам git не вызывает**.
+Агент после `ok`/`pass` коммитит **до** отчёта. Parent проверяет `commitSha` в report и идёт дальше. Типы: plan `docs`/`chore`, acceptance `test`, apply `feat`/`fix`, promote `test`/`refactor`, merge `docs`/`chore`.
 
-| После фазы | Тип коммита (ориентир) | Что коммитить |
-|------------|------------------------|---------------|
-| `plan` (propose) | `docs:` / `chore:` | OpenSpec change-артефакты |
-| `acceptance` | `test:` | приёмочные/e2e тесты (RED) |
-| `apply` | `feat:` / `fix:` | реализация + unit-тесты |
-| `accept` | — | коммит только если субагент что-то поправил в тестах/доках; иначе skip |
-| `promote` | `test:` / `refactor(test):` | перенос в общие тесты и/или удаление устаревших acceptance |
-| `merge` | `chore:` | archive/sync OpenSpec |
-
-Формат сообщения: Conventional Commits (`type(scope): summary`, опционально body). Scope — пакет или change name (`core`, `cli`, `m1-manifest-yaml-dual-read`, …). Один логический коммит на успешную фазу; не мешать фазы в одном коммите. Не коммитить секреты. Не `push`, пока пользователь явно не попросил.
-
-Если коммит-субагент вернул `fail`/`blocked` — останови pipeline и эскалируй пользователю.
+Если фаза обязана коммитить, а `commitSha` пуст при ожидаемых изменениях — остановись / ретрай агента, не запускай отдельный commit Task.
 
 ## Старт
 
-1. Если нет описания задачи — спроси одной фразой, что реализовать.
-2. Зафиксируй todo по фазам `plan → acceptance → apply → accept → promote → merge → deliver` (и промежуточные commit-шаги после успешных фаз).
-3. Запусти субагента фазы `plan` с промптом из skill (секция Prompt templates).
-4. После каждого субагента: обнови todo, при `ok`/`pass` — commit-субагент (см. выше), затем next phase **по отчёту**. Не перечитывай файлы сам.
-5. На `deliver` — итог: change name, что сделано, куда ушли/удалены acceptance-тесты, статус archive, **хеши/сообщения коммитов по фазам**; без собственного аудита кода.
+1. Нет задачи — спроси одной фразой.
+2. Todo: `plan → acceptance → apply → accept → promote → merge → deliver` (**без** отдельных commit-todo).
+3. Task `orch-plan` с коротким промптом из skill.
+4. После каждого: обнови todo; next **по отчёту** (`commitSha` уже в нём).
+5. Deliver: change name, сделано, promote, archive, **коммиты из phase reports**.
 
-## Эскалация пользователю
+## Эскалация
 
-Останавливайся и спрашивай только если субагент вернул `blocked` / неоднозначный выбор (explore vs propose, scope, breaking change) или `accept` провалился дважды.
+`blocked` / неоднозначный выбор / `accept` fail дважды → спроси user.
