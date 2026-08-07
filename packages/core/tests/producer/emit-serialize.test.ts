@@ -14,7 +14,7 @@ import {
   getParseManifest,
   getProducerWrite,
   getSerializeManifest,
-  listBapmTargetPackageNames,
+  listBapmIntegrationPackageNames,
   type TempProject,
 } from "./helpers.ts";
 
@@ -131,10 +131,12 @@ describe("M7 producer write validate-before-emit", () => {
   });
 });
 
-describe("M7 HARD — no new bapm-target-*", () => {
-  test("§22 workspace hosts remain only api + cursor", () => {
-    expect(listBapmTargetPackageNames()).toEqual([
+describe("M7 HARD — integration package inventory", () => {
+  test("§22 workspace integrations include shared API and host packages", () => {
+    expect(listBapmIntegrationPackageNames()).toEqual([
       "bapm-integration-api",
+      "bapm-integration-claude",
+      "bapm-integration-codex",
       "bapm-integration-cursor",
     ]);
   });

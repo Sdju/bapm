@@ -6,7 +6,7 @@ The generated [support matrix](../../../AGENT_PLUGINS_COMPATIBILITY.md) is backe
 
 ## Cursor behavior
 
-The Cursor target adapts portable MCP entries to `.cursor/mcp.json`: `stdio` remains `stdio`, `streamable-http` becomes `http`, and `sse` remains `sse`. A portable MCP file is never copied verbatim as a Cursor configuration. Other targets need their own explicit adapter.
+The Cursor integration adapts portable MCP entries to `.cursor/mcp.json`: `stdio` remains `stdio`, `streamable-http` becomes `http`, and `sse` remains `sse`. A portable MCP file is never copied verbatim as a Cursor configuration. Other hosts need their own explicit integration.
 
 ## Boundary
 
@@ -15,6 +15,8 @@ Portable plugins are distinct from bapm/OpenAPM manifests and from marketplace p
 - `plugin.json` is not `bapm.yml` or `apm.yml`;
 - packing a portable plugin creates an archive, not a marketplace publication;
 - the OpenAPM claims in [CONFORMANCE.md](../../../CONFORMANCE.md) do not assert Agent Plugins conformance.
+
+Marketplace output integrations and portable plugin archives are supported independently of Cursor runtime materialization. They do not imply a client extension, marketplace publication, or runtime adapter for every host.
 
 ## Not supported
 

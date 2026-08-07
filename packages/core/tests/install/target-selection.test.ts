@@ -8,7 +8,7 @@ import { createTargetRegistry } from "bapm-integration-api";
 type Project = { cwd: string; cleanup: () => void };
 
 function createProject(): Project {
-  const cwd = mkdtempSync(join(tmpdir(), "bapm-target-orchestration-"));
+  const cwd = mkdtempSync(join(tmpdir(), "bapm-integration-orchestration-"));
   writeFileSync(
     join(cwd, "bapm.yml"),
     "name: target-orchestration\nversion: 0.0.1\ndependencies:\n  apm: []\n",

@@ -75,7 +75,7 @@ test("docs landing must not advertise multi-client adapters as shipped", () => {
     advertisesShippedMultiClient,
     "landing must not list Copilot/Claude as current shipped adapters without out-of-scope/later qualifier",
   ).toBe(false);
-  expect(landing).toMatch(/cursor-only|target\s+packages|bapm-target/i);
+  expect(landing).toMatch(/cursor-only|integration\s+packages|bapm-integration/i);
 });
 
 test("guide intro must not claim across-clients without cursor-only qualifier", () => {
@@ -87,9 +87,9 @@ test("guide intro must not claim across-clients without cursor-only qualifier", 
   ).toBe(false);
 });
 
-test("architecture overview describes target packages / cursor-only, not in-tree multi-client adapters in @bapm/core", () => {
+test("architecture overview describes integration packages / cursor-only, not in-tree multi-client adapters in @bapm/core", () => {
   const arch = readText(docsArchitecturePath);
-  expect(arch).toMatch(/target\s+packages|bapm-target|cursor-only/i);
+  expect(arch).toMatch(/integration\s+packages|bapm-integration|cursor-only/i);
   expect(arch).not.toMatch(/@bapm\/core[^\n]*adapters|install,\s*adapters/i);
   expect(arch).toMatch(/guide\/conformance|\/guide\/conformance/);
 });

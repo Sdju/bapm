@@ -472,7 +472,7 @@ export function violationsOf(result: unknown): unknown[] {
   return [];
 }
 
-export function listBapmTargetPackageNames(): string[] {
+export function listBapmIntegrationPackageNames(): string[] {
   const packagesDir = join(repoRoot, "packages");
   if (!existsSync(packagesDir)) return [];
   const names: string[] = [];
@@ -482,7 +482,7 @@ export function listBapmTargetPackageNames(): string[] {
     const pkgPath = join(dir, "package.json");
     if (!existsSync(pkgPath)) continue;
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-    if (typeof pkg.name === "string" && pkg.name.startsWith("bapm-target-")) {
+    if (typeof pkg.name === "string" && pkg.name.startsWith("bapm-integration-")) {
       names.push(pkg.name);
     }
   }

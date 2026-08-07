@@ -1,9 +1,12 @@
-/**
- * M8 HARD: no second bapm-target-* — expected GREEN before apply.
- */
+/** M8 HARD: integration package inventory. */
 import { expect, test } from "vite-plus/test";
-import { listBapmTargetPackageNames } from "./helpers.ts";
+import { listBapmIntegrationPackageNames } from "./helpers.ts";
 
-test("HARD: workspace bapm-target-* is only api + cursor", () => {
-  expect(listBapmTargetPackageNames()).toEqual(["bapm-integration-api", "bapm-integration-cursor"]);
+test("HARD: workspace integrations include API and host packages", () => {
+  expect(listBapmIntegrationPackageNames()).toEqual([
+    "bapm-integration-api",
+    "bapm-integration-claude",
+    "bapm-integration-codex",
+    "bapm-integration-cursor",
+  ]);
 });

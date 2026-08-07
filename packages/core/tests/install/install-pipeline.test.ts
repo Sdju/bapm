@@ -105,16 +105,18 @@ describe("install pipeline — modules + lock", () => {
     expect(listFilesRecursive(modulesDir(project.cwd)).length).toBeGreaterThan(0);
   });
 
-  test("core package graph: depends on bapm-integration-api, not bapm-integration-cursor", () => {
+  test("core runtime package graph depends only on bapm-integration-api", () => {
     const pkg = readCorePackageJson();
-    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    expect(deps["bapm-integration-cursor"]).toBeUndefined();
-    for (const key of Object.keys(deps)) {
-      if (key.startsWith("bapm-target-") && key !== "bapm-integration-api") {
-        expect.fail(`core must not hard-depend on concrete target ${key}`);
+    const runtimeDependencies = pkg.dependencies;
+
+    expect(runtimeDependencies["bapm-integration-cursor"]).toBeUndefined();
+    for (const key of Object.keys(runtimeDependencies)) {
+      if (key.startsWith("bapm-integration-") && key !== "bapm-integration-api") {
+        expect.fail(`core must not have a runtime dependency on concrete integration ${key}`);
       }
     }
-    expect(deps["bapm-integration-api"]).toBeTruthy();
+    expect(runtimeDependencies["bapm-integration-api"]).toBeTruthy();
+    expect(pkg.devDependencies?.["bapm-integration-cursor"]).toBe("workspace:*");
   });
 
   test("direct install without target selection fails before target harness writes", async () => {
