@@ -37,6 +37,13 @@ bapm целится в **OpenAPM v0.1** wire (форматы и семантик
 
 Подробности и Limitations — в CONFORMANCE; на сайте docs — [Conformance & boundary](apps/docs/guide/conformance.md).
 
+## Portable Agent Plugins v1
+
+Поддержка переносимых Agent Plugins v1 ограничена `plugin.json`, непосредственными
+`skills/<name>/SKILL.md` и корневым `mcp.json`; Cursor адаптирует поддерживаемые MCP
+транспорты в свой формат. Это не claim универсальной совместимости, не OpenAPM claim
+и не marketplace-публикация. Проверяемая матрица и non-goals: [AGENT_PLUGINS_COMPATIBILITY.md](AGENT_PLUGINS_COMPATIBILITY.md).
+
 ## Команды
 
 ```bash

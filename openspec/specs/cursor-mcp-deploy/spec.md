@@ -60,6 +60,15 @@ Install for projects without MCP dependencies MUST NOT require `.cursor/mcp.json
 - **WHEN** install runs for a project with no MCP deps and cursor skills/rules deploy
 - **THEN** success MUST NOT depend on creating `.cursor/mcp.json`
 
+### Requirement: Portable Agent Plugins MCP is adapted, not copied
+
+When an eligible portable Agent Plugins v1 dependency contributes root `mcp.json`, Cursor MUST adapt its supported transports into Cursor configuration: `stdio` to `stdio`, `streamable-http` to `http`, and `sse` to `sse`. The target MUST NOT copy portable-only metadata or imply that all Agent Plugins clients use the Cursor shape.
+
+#### Scenario: Portable streamable HTTP maps to Cursor HTTP
+
+- **WHEN** an installed portable plugin contributes a valid `streamable-http` MCP server and Cursor is active
+- **THEN** `.cursor/mcp.json` contains that server with `type: "http"` and its URL
+
 ### Requirement: Excluded cursor skips MCP configure writes
 When install’s exclude set includes `cursor`, Cursor MCP deploy MUST NOT write or update `.cursor/mcp.json` for that invocation, even if the cursor target is otherwise active and eligible MCP servers exist. Package skill/rule/agent materialize MAY still occur. A warning or diagnostic that MCP configure was skipped SHOULD be emitted when inexpensive.
 

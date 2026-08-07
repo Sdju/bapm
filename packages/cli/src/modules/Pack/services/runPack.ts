@@ -8,6 +8,7 @@ Usage:
 
 Options:
   --archive                    Write a plain zip artifact (M7 MUST path)
+  --agent-plugins              Pack a validated Agent Plugins v1 portable root
   --dry-run                    Validate / collect without durable zip or marketplace.json
   --check-release              pr-004 tag↔manifest version gate
   --tag <name>                 Tag under check (optional with --check-release; else HEAD)
@@ -24,11 +25,13 @@ Notes:
   Pack refuses secret-pattern paths (.env, *.pem, …) per sc-007.
   When marketplace: is present with outputs selected, pack emits Claude/Codex marketplace.json.
   Marketplace-only projects (no dependencies:) emit JSON and skip empty zip.
+  --agent-plugins never emits marketplace output and requires root plugin.json.
 `;
 }
 
 export type ParsedPackArgs = {
   archive: boolean;
+  agentPlugins: boolean;
   dryRun: boolean;
   checkRelease: boolean;
   tag?: string;
@@ -42,6 +45,7 @@ export type ParsedPackArgs = {
 
 export function parsePackArgs(argv: string[]): ParsedPackArgs {
   let archive = false;
+  let agentPlugins = false;
   let dryRun = false;
   let checkRelease = false;
   let tag: string | undefined;
@@ -53,6 +57,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
 
   const base = (): Omit<ParsedPackArgs, "error" | "help"> => ({
     archive,
+    agentPlugins,
     dryRun,
     checkRelease,
     tag,
@@ -70,6 +75,10 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     }
     if (arg === "--archive") {
       archive = true;
+      continue;
+    }
+    if (arg === "--agent-plugins") {
+      agentPlugins = true;
       continue;
     }
     if (arg === "--dry-run") {
@@ -181,6 +190,7 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
 
     const result = await deps.runPack({
       cwd,
+      agentPlugins: parsed.agentPlugins,
       archive: parsed.archive,
       dryRun: parsed.dryRun,
       checkRelease: parsed.checkRelease,

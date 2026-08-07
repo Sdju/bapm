@@ -1,7 +1,15 @@
 /**
  * cli-plugin-init — non-interactive scaffold, names, overwrite, flags, next-steps.
  */
-import { loadManifest } from "@bapm/core";
+import {
+  AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+  discoverAgentPluginSkills,
+  extractPackArchive,
+  loadManifest,
+  runPack,
+} from "@bapm/core";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   assertThinScaffold,
@@ -9,6 +17,7 @@ import {
   cwdBasename,
   expectKnownCommand,
   existsSync,
+  isDirectory,
   join,
   readText,
   runInProject,
@@ -220,6 +229,66 @@ describe("mp-plugin-init CLI plugin init", () => {
     expectKnownCommand(combined, "plugin");
     expect(result).toBe(0);
     expect(stdoutText(stdout)).toMatch(/bapm\s+pack/i);
+  });
+
+  test("--agent-plugins writes only a canonical portable root", async () => {
+    project = createTempProject({ basename: "portable-plugin" });
+    const { result, combined } = await runInProject(project.cwd, [
+      "plugin",
+      "init",
+      "--yes",
+      "--agent-plugins",
+    ]);
+    expectKnownCommand(combined, "plugin");
+    expect(result).toBe(0);
+    expect(existsSync(join(project.cwd, "plugin.json"))).toBe(true);
+    expect(existsSync(join(project.cwd, "bapm.yml"))).toBe(false);
+    expect(isDirectory(project.cwd, "skills")).toBe(false);
+    expect(JSON.parse(readText(project.cwd, "plugin.json"))).toEqual(
+      expect.objectContaining({
+        $schema: AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+        name: "portable-plugin",
+      }),
+    );
+  });
+
+  test("--agent-plugins --skills opts into portable skills layout", async () => {
+    project = createTempProject({ basename: "portable-skills" });
+    const { result, combined } = await runInProject(project.cwd, [
+      "plugin",
+      "init",
+      "--yes",
+      "--agent-plugins",
+      "--skills",
+    ]);
+    expectKnownCommand(combined, "plugin");
+    expect(result).toBe(0);
+    expect(readText(project.cwd, "skills/example/SKILL.md")).toContain("# Example");
+  });
+
+  test("portable scaffold round-trips through pack, safe extract, and discovery", async () => {
+    project = createTempProject({ basename: "portable-round-trip" });
+    const { result } = await runInProject(project.cwd, [
+      "plugin",
+      "init",
+      "--yes",
+      "--agent-plugins",
+      "--skills",
+    ]);
+    expect(result).toBe(0);
+    writeText(project.cwd, "skills/example/guide.md", "auxiliary skill file\n");
+
+    const packed = await runPack({ cwd: project.cwd, archive: true, agentPlugins: true });
+    const extracted = mkdtempSync(join(tmpdir(), "bapm-portable-plugin-extract-"));
+    try {
+      await extractPackArchive({ archivePath: packed.archivePath, outputDir: extracted });
+      expect(readText(extracted, "skills/example/guide.md")).toBe("auxiliary skill file\n");
+      expect(
+        discoverAgentPluginSkills({ root: extracted }).skills.map((skill) => skill.name),
+      ).toEqual(["example"]);
+    } finally {
+      rmSync(extracted, { recursive: true, force: true });
+    }
   });
 
   test("consumer bapm init still refuses overwrite when bapm.yml exists", async () => {

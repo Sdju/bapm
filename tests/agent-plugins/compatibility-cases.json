@@ -1,0 +1,49 @@
+{
+  "format": "agent-plugins-v1-compatibility-cases/v1",
+  "title": "bapm Agent Plugins v1 compatibility",
+  "boundary": "This is bapm's portable Agent Plugins v1 support matrix, not an Agent Plugins certification or universal client-conformance claim.",
+  "components": [
+    {
+      "id": "manifest",
+      "status": "supported",
+      "summary": "Canonical root plugin.json is validated and can be produced.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
+    },
+    {
+      "id": "skills",
+      "status": "supported",
+      "summary": "Immediate skills/<name>/ directories with SKILL.md are discovered and copied as complete safe directories.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
+    },
+    {
+      "id": "mcp",
+      "status": "supported",
+      "summary": "Root mcp.json supports stdio, streamable HTTP, and SSE after portable validation.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
+    },
+    {
+      "id": "unsafe-input",
+      "status": "rejected",
+      "summary": "Escaping skill paths and reserved or secret-like MCP environment entries are withheld.",
+      "fixture": "tests/fixtures/agent-plugins/v1-unsafe",
+      "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
+    },
+    {
+      "id": "cursor-mcp",
+      "status": "target-specific",
+      "summary": "Cursor maps portable stdio to stdio, streamable-http to http, and SSE to sse in .cursor/mcp.json.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/agent-plugins/consumer.test.ts"
+    },
+    {
+      "id": "unsupported-components",
+      "status": "not-supported",
+      "summary": "Hooks, agents, commands, client extensions, OAuth/secrets, sandboxing, and vendor-specific extension behavior are not implemented.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
+    }
+  ]
+}

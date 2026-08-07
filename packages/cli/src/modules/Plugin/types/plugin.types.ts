@@ -25,8 +25,18 @@ export interface PluginDeps {
     author?: { name: string };
     license?: string;
   }) => string;
+  writeAgentPluginManifest: (options: {
+    root?: string;
+    path?: string;
+    name: string;
+    version?: string;
+    description?: string;
+    author?: { name: string };
+    license?: string;
+  }) => { manifestPath: string };
   existsSync: (path: string) => boolean;
   mkdirSync: (path: string, options?: { recursive?: boolean }) => void;
+  writeFileSync: (path: string, data: string, encoding: "utf8") => void;
 }
 
 export interface PluginOptions {

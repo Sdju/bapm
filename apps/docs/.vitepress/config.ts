@@ -15,6 +15,7 @@ export default defineConfig({
           { text: "Introduction", link: "/guide/" },
           { text: "Quick Start", link: "/guide/quick-start" },
           { text: "Conformance", link: "/guide/conformance" },
+          { text: "Portable Agent Plugins", link: "/guide/agent-plugins" },
         ],
       },
       {

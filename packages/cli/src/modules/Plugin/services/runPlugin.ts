@@ -38,11 +38,14 @@ Usage:
 Options:
   -y, --yes           Non-interactive defaults (version 0.1.0); allow overwrite
   --target <id>       Record host target (e.g. cursor)
+  --agent-plugins     Create an Agent Plugins v1 portable root (no bapm.yml)
+  --skills            Include a minimal portable skills/example/SKILL.md layout
   -v, --verbose       Extra logging (optional)
   --help, -h          Show this help
 
 Notes:
   Writes plugin.json and ${deps.manifestFile} only (no SKILL.md / agents / skills).
+  --agent-plugins writes canonical portable plugin.json only; --skills opts into its skills layout.
   Without --yes, refuses if ${deps.manifestFile} or plugin.json already exists.
   PROJECT_NAME creates a subdirectory (kebab-case; no path separators).
   Unknown flags are rejected. Offline only — no network.
@@ -73,6 +76,8 @@ export function parsePluginInitArgs(argv: string[]): {
   yes: boolean;
   help?: boolean;
   verbose: boolean;
+  agentPlugins: boolean;
+  skills: boolean;
   target?: string;
   projectName?: string;
   error?: string;
@@ -80,6 +85,8 @@ export function parsePluginInitArgs(argv: string[]): {
   let yes = false;
   let help = false;
   let verbose = false;
+  let agentPlugins = false;
+  let skills = false;
   let target: string | undefined;
   let projectName: string | undefined;
 
@@ -97,10 +104,18 @@ export function parsePluginInitArgs(argv: string[]): {
       verbose = true;
       continue;
     }
+    if (arg === "--agent-plugins") {
+      agentPlugins = true;
+      continue;
+    }
+    if (arg === "--skills") {
+      skills = true;
+      continue;
+    }
     if (arg === "--target") {
       const next = argv[i + 1];
       if (!next || next.startsWith("-")) {
-        return { yes, verbose, error: "Missing value for --target <id>" };
+        return { yes, verbose, agentPlugins, skills, error: "Missing value for --target <id>" };
       }
       target = next;
       i += 1;
@@ -108,23 +123,43 @@ export function parsePluginInitArgs(argv: string[]): {
     }
     if (arg.startsWith("--target=")) {
       target = arg.slice("--target=".length);
-      if (!target) return { yes, verbose, error: "Missing value for --target=<id>" };
+      if (!target) {
+        return { yes, verbose, agentPlugins, skills, error: "Missing value for --target=<id>" };
+      }
       continue;
     }
     if (arg.startsWith("-")) {
-      return { yes, verbose, target, error: `Unknown plugin init flag: ${arg}` };
+      return {
+        yes,
+        verbose,
+        agentPlugins,
+        skills,
+        target,
+        error: `Unknown plugin init flag: ${arg}`,
+      };
     }
     if (projectName === undefined) {
       projectName = arg;
       continue;
     }
-    return { yes, verbose, target, projectName, error: `Unexpected argument: ${arg}` };
+    return {
+      yes,
+      verbose,
+      agentPlugins,
+      skills,
+      target,
+      projectName,
+      error: `Unexpected argument: ${arg}`,
+    };
   }
 
-  return { yes, help, verbose, target, projectName };
+  return { yes, help, verbose, agentPlugins, skills, target, projectName };
 }
 
-export async function runPluginInit(deps: PluginDeps, options: PluginOptions): Promise<PluginResult> {
+export async function runPluginInit(
+  deps: PluginDeps,
+  options: PluginOptions,
+): Promise<PluginResult> {
   const parsed = parsePluginInitArgs(options.args ?? []);
   if (parsed.help) {
     console.log(formatPluginInitHelp(deps));
@@ -136,6 +171,12 @@ export async function runPluginInit(deps: PluginDeps, options: PluginOptions): P
   }
 
   const parentCwd = resolve(options.cwd ?? process.cwd());
+
+  if (parsed.agentPlugins && parsed.target) {
+    const message = "--target is an APM scaffold option and cannot be used with --agent-plugins";
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, message };
+  }
 
   if (parsed.projectName !== undefined) {
     const projectCheck = deps.validateProjectName(parsed.projectName);
@@ -167,14 +208,16 @@ export async function runPluginInit(deps: PluginDeps, options: PluginOptions): P
     return { ok: false, message };
   }
 
-  const cwd =
-    parsed.projectName !== undefined ? join(parentCwd, parsed.projectName) : parentCwd;
+  const cwd = parsed.projectName !== undefined ? join(parentCwd, parsed.projectName) : parentCwd;
 
-  const bapmPath = join(cwd, deps.manifestFile);
   const pluginJsonPath = join(cwd, "plugin.json");
+  const bapmPath = join(cwd, deps.manifestFile);
 
-  if (!parsed.yes && (deps.existsSync(bapmPath) || deps.existsSync(pluginJsonPath))) {
-    const which = deps.existsSync(bapmPath) ? deps.manifestFile : "plugin.json";
+  if (
+    !parsed.yes &&
+    (deps.existsSync(pluginJsonPath) || (!parsed.agentPlugins && deps.existsSync(bapmPath)))
+  ) {
+    const which = deps.existsSync(pluginJsonPath) ? "plugin.json" : deps.manifestFile;
     const message = `Refusing to plugin init: ${which} already exists (pass --yes to overwrite)`;
     console.error(`${deps.name}: ${message}`);
     return { ok: false, message };
@@ -185,6 +228,29 @@ export async function runPluginInit(deps: PluginDeps, options: PluginOptions): P
   }
 
   try {
+    if (parsed.agentPlugins) {
+      const { manifestPath } = deps.writeAgentPluginManifest({
+        root: cwd,
+        path: pluginJsonPath,
+        name: pluginName,
+        version: "0.1.0",
+        description: "",
+        author: { name: "author" },
+        license: "MIT",
+      });
+      if (parsed.skills) {
+        const skillPath = join(cwd, "skills", "example", "SKILL.md");
+        deps.mkdirSync(join(cwd, "skills", "example"), { recursive: true });
+        deps.writeFileSync(skillPath, "---\nname: example\n---\n# Example\n", "utf8");
+      }
+      if (parsed.verbose) console.log(`Wrote ${manifestPath}`);
+      console.log(`Created Agent Plugins v1 scaffold in ${cwd}`);
+      console.log("");
+      console.log("Next steps:");
+      console.log("  bapm pack --agent-plugins   # build a portable plugin archive");
+      return { ok: true, path: cwd };
+    }
+
     const document = deps.createMinimalManifest({
       name: pluginName,
       version: "0.1.0",

@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import {
   createMinimalManifest,
+  writeAgentPluginManifest,
   validatePluginName,
   validateProjectName,
   writePluginJson,
@@ -17,6 +18,8 @@ export const plugin = createPlugin({
   createMinimalManifest: (options) => createMinimalManifest(options),
   writeProducerManifest: (document, options) => writeProducerManifest(document, options),
   writePluginJson: (options) => writePluginJson(options),
+  writeAgentPluginManifest: (options) => writeAgentPluginManifest(options),
   existsSync,
   mkdirSync,
+  writeFileSync,
 });
