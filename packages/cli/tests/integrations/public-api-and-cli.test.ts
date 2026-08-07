@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { createIntegrationRegistry } from "bapm-integration-api";
 import type { BapmIntegration, IntegrationRegistry } from "bapm-integration-api";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
@@ -50,7 +50,7 @@ function importExitStatus(source: string): number | null {
   }).status;
 }
 
-describe("integration vocabulary cleanup acceptance", () => {
+describe("integration vocabulary public API and CLI", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
