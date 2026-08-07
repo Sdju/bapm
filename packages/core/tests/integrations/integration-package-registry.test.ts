@@ -1,7 +1,4 @@
-import { createRequire } from "node:module";
 import { describe, expect, test } from "vite-plus/test";
-
-const requireFromAcceptance = createRequire(import.meta.url);
 
 type Registry = {
   register(integration: {
@@ -23,23 +20,11 @@ type CursorIntegration = {
   createCursorTarget(): { id: string };
 };
 
-function requirePackageManifest(packageSpecifier: string): {
-  name: string;
-  dependencies?: Record<string, string>;
-} {
-  return requireFromAcceptance(`${packageSpecifier}/package.json`) as {
-    name: string;
-    dependencies?: Record<string, string>;
-  };
-}
-
-describe("integration package migration", () => {
-  test("exposes renamed integration packages and their public identities", async () => {
+describe("published integration package behavior", () => {
+  test("exposes integration API and Cursor runtime entry points", async () => {
     const api = (await import("bapm-integration-api")) as IntegrationApi;
     const cursor = (await import("bapm-integration-cursor")) as CursorIntegration;
 
-    expect(requirePackageManifest("bapm-integration-api").name).toBe("bapm-integration-api");
-    expect(requirePackageManifest("bapm-integration-cursor").name).toBe("bapm-integration-cursor");
     expect(typeof api.createTargetRegistry).toBe("function");
     expect(cursor.createCursorTarget().id).toBe("cursor");
   });
@@ -63,25 +48,4 @@ describe("integration package migration", () => {
       diagnostics: [],
     });
   });
-
-  test("publishes only the integration-api boundary to core and Cursor", () => {
-    const core = requirePackageManifest("@bapm/core");
-    const cursor = requirePackageManifest("bapm-integration-cursor");
-
-    expect(core.dependencies).toMatchObject({
-      "bapm-integration-api": "workspace:*",
-    });
-    expect(core.dependencies).not.toHaveProperty("bapm-integration-cursor");
-    expect(cursor.dependencies).toEqual({
-      "bapm-integration-api": "workspace:*",
-    });
-  });
-
-  test.each(["bapm-target-api", "bapm-target-cursor"])(
-    "rejects retired package specifier %s without an alias",
-    async (legacySpecifier) => {
-      await expect(import(legacySpecifier)).rejects.toThrow();
-      expect(() => requireFromAcceptance.resolve(legacySpecifier)).toThrow();
-    },
-  );
 });

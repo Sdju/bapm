@@ -41,7 +41,7 @@ async function createMarketplaceRegistry(): Promise<MarketplaceOutputRegistry> {
   return registry;
 }
 
-describe("integration migration public behavior", () => {
+describe("integration runtime and marketplace behavior", () => {
   let cwd: string | undefined;
 
   afterEach(() => {
