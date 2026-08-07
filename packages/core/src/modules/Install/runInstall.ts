@@ -607,7 +607,7 @@ async function runDryRunPreview(args: {
   return {
     ok: true,
     modulesDir: join(args.cwd, APM_MODULES_DIR),
-    activeTargets,
+    activeTargets: args.activeTargets,
     primitivesCount: 0,
     diagnostics: [...policyDiagnostics, ...diagnostics],
     policyDiagnostics,
@@ -1062,7 +1062,13 @@ async function resolveActiveTargets(args: {
     return [args.forcedTargetId];
   }
 
-  if (!args.registry) return [];
+  if (!args.registry) {
+    throw new InstallError(
+      "INSTALL_UNKNOWN_TARGET",
+      "Target detection is unavailable; pass --target <id>",
+      { details: { detectedTargets: [], registry: "missing" } },
+    );
+  }
 
   const detection = await detectRegisteredTargets(args.registry, args.cwd);
   if (detection.detectedIds.length === 1) return detection.detectedIds;

@@ -5,6 +5,7 @@ import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { APM_MODULES_DIR, loadLockfile } from "@bapm/core";
+import { createTargetRegistry } from "bapm-target-api";
 import {
   createFakePorts,
   createTempProject,
@@ -23,6 +24,17 @@ import {
 } from "./helpers.ts";
 
 const COMMIT = "ffffffffffffffffffffffffffffffffffffffff";
+
+function createDetectedTargetRegistry() {
+  const registry = createTargetRegistry();
+  registry.register({
+    id: "test-target",
+    deployRoots: [".test-target"],
+    detect: () => true,
+    materialize: async () => ({ targetId: "test-target", deployedFiles: [] }),
+  });
+  return registry;
+}
 
 describe("install pipeline — modules + lock", () => {
   let project: TempProject;
@@ -52,6 +64,7 @@ describe("install pipeline — modules + lock", () => {
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,
+      targetRegistry: createDetectedTargetRegistry(),
     });
 
     expect(existsSync(modulesDir(project.cwd))).toBe(true);
@@ -84,6 +97,7 @@ describe("install pipeline — modules + lock", () => {
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,
+      targetRegistry: createDetectedTargetRegistry(),
     });
 
     expect(existsSync(modulesDir(project.cwd))).toBe(true);
@@ -103,7 +117,7 @@ describe("install pipeline — modules + lock", () => {
     expect(deps["bapm-target-api"]).toBeTruthy();
   });
 
-  test("integrate without registered target: modules+lock OK, no harness writes", async () => {
+  test("direct install without target selection fails before project mutations", async () => {
     project = createTempProject();
     const ports = createFakePorts();
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
@@ -126,17 +140,19 @@ describe("install pipeline — modules + lock", () => {
     const beforeAgents = listFilesRecursive(join(project.cwd, ".agents"));
 
     const runInstall = getRunInstall();
-    await runInstall({
-      cwd: project.cwd,
-      frozen: false,
-      // empty / omitted registry → no registered targets
-      gitRemote: ports.gitRemote,
-      tagLister: ports.tagLister,
-      downloader: ports.downloader,
-    });
+    await expect(
+      runInstall({
+        cwd: project.cwd,
+        frozen: false,
+        // Empty / omitted registry cannot establish an active target.
+        gitRemote: ports.gitRemote,
+        tagLister: ports.tagLister,
+        downloader: ports.downloader,
+      }),
+    ).rejects.toThrow(/--target\s+<id>/i);
 
-    expect(existsSync(modulesDir(project.cwd))).toBe(true);
-    expect(existingLockPath(project.cwd)).toBeTruthy();
+    expect(existsSync(modulesDir(project.cwd))).toBe(false);
+    expect(existingLockPath(project.cwd)).toBeUndefined();
     expect(listFilesRecursive(join(project.cwd, ".agents"))).toEqual(beforeAgents);
     expect(hasHarnessWrites(project.cwd, [".agents", ".cursor", ".github/instructions"])).toBe(
       false,
