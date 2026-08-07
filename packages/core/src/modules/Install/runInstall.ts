@@ -779,7 +779,7 @@ async function deployMcpAfterPolicy(args: {
   let configPath: string | undefined;
   let configuredTargetId: string | undefined;
 
-  // Cursor legacy bake: resolve ${VAR} / ${env:VAR} / <VAR> before configureMcp write.
+  // Cursor bake: resolve ${VAR} / ${env:VAR} / <VAR> / {bake:NAME} before configureMcp write.
   let configuredServers: typeof approved;
   try {
     configuredServers = approved.map((server) => bakeMcpServerMaps(server));

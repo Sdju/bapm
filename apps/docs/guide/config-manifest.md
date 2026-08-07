@@ -155,7 +155,7 @@ dependencies:
 | `version` | Обязательно. Строка версии. |
 | `target` / `targets` | Предпочитаемый host; лучше дублировать явным `--target cursor` на install. |
 | `dependencies.apm` | Agent/APM-пакеты. |
-| `dependencies.mcp` | MCP-серверы; при активном Cursor по умолчанию в `.cursor/mcp.json` попадают **прямые** записи (transitive — только с `--trust-transitive-mcp`). В `env` / `headers` можно писать плейсхолдеры `${VAR}`, `${env:VAR}` или legacy `<VAR>` — при install bapm **запекает** их в литералы из окружения процесса (Cursor не подставляет `${…}` в runtime). Неразрешённый плейсхолдер → install падает до записи placeholders в `.cursor/mcp.json`. |
+| `dependencies.mcp` | MCP-серверы; при активном Cursor по умолчанию в `.cursor/mcp.json` попадают **прямые** записи (transitive — только с `--trust-transitive-mcp`). В `env` / `headers` можно писать APM-плейсхолдеры `${VAR}`, `${env:VAR}` / legacy `<VAR>` и bapm-директиву `{bake:NAME}` / `{bake:env:NAME}` — при install bapm **запекает** их в литералы из окружения процесса (Cursor не подставляет `${…}` в runtime). Неразрешённый плейсхолдер → install падает до записи placeholders в `.cursor/mcp.json`. |
 | `devDependencies.apm` | Dev-зависимости; `bapm install <ref> --dev`. |
 
 `bapm init -y --target cursor` создаёт каркас с `name` (из имени каталога или аргумента), `version: 0.1.0`, пустыми `dependencies.apm` / `dependencies.mcp` и при необходимости `target`.
@@ -181,7 +181,12 @@ dependencies:
 
 ### MCP env placeholders (Cursor bake)
 
-В `dependencies.mcp[].env` (и `headers`, если заданы) поддерживаются те же формы, что у APM Cursor legacy:
+В `dependencies.mcp[].env` (и `headers`, если заданы) поддерживаются формы APM Cursor legacy **и** явная bapm-директива:
+
+| Форма | Источник |
+| --- | --- |
+| `${VAR}` / `${env:VAR}` / `<VAR>` | OpenAPM/APM parity |
+| `{bake:NAME}` / `{bake:env:NAME}` | **только bapm** (не OpenAPM); `NAME` — идентификатор `[A-Za-z_][A-Za-z0-9_]*` |
 
 ```yaml
 dependencies:
@@ -194,9 +199,12 @@ dependencies:
       env:
         API_TOKEN: "${API_TOKEN}"
         # или: "${env:API_TOKEN}" / "<API_TOKEN>"
+        # bapm-only — явный маркер «обязательно запечь»:
+        BAKED: "{bake:API_TOKEN}"
+        # или: "{bake:env:API_TOKEN}"
 ```
 
-Перед записью `.cursor/mcp.json` bapm подставляет значения из окружения (сначала явные overrides API, затем `process.env`). Пустая строка не считается значением. Если переменная не задана — install завершается с ошибкой и именем ключа (секрет в сообщение не попадает). Литералы без плейсхолдеров пишутся как есть.
+Перед записью `.cursor/mcp.json` bapm подставляет значения из окружения (сначала явные overrides API, затем `process.env`). Пустая строка не считается значением. Если переменная не задана — install завершается с ошибкой и именем ключа (секрет в сообщение не попадает). Литералы без плейсхолдеров пишутся как есть. `{bake:…}` означает «bapm должен запечь здесь»; APM-формы на Cursor по-прежнему тоже bake’ятся.
 
 ## Типичные ошибки
 

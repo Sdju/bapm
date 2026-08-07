@@ -1,18 +1,19 @@
 /**
- * Bake-time resolution of OpenAPM/APM MCP env/header placeholder syntaxes.
+ * Bake-time resolution of MCP env/header placeholder syntaxes.
  * Cursor path: legacy bake only (literals), no runtime translate-mode.
  *
- * Syntax parity with APM `_ENV_PLACEHOLDER_RE`:
- * - `${VAR}` / `${env:VAR}`
- * - legacy `<VAR>` (uppercase identifier only)
+ * Supported forms:
+ * - APM: `${VAR}` / `${env:VAR}` / legacy `<VAR>` (uppercase identifier only)
+ * - bapm-only: `{bake:NAME}` / `{bake:env:NAME}`
  */
 
 /**
- * Single-pass: legacy `<VAR>` OR `${VAR}` / `${env:VAR}`.
- * group(1) = angle name; group(2) = brace name.
+ * Single-pass: legacy `<VAR>` OR `${VAR}` / `${env:VAR}` OR `{bake:NAME}` / `{bake:env:NAME}`.
+ * group(1) = angle name; group(2) = APM brace name; group(3) = bake directive name.
  * Intentionally does not match `${input:…}` or GitHub Actions `${{ … }}`.
  */
-const ENV_PLACEHOLDER_RE = /<([A-Z_][A-Z0-9_]*)>|\$\{(?:env:)?([A-Za-z_][A-Za-z0-9_]*)\}/g;
+const ENV_PLACEHOLDER_RE =
+  /<([A-Z_][A-Z0-9_]*)>|\$\{(?:env:)?([A-Za-z_][A-Za-z0-9_]*)\}|\{bake:(?:env:)?([A-Za-z_][A-Za-z0-9_]*)\}/g;
 
 export type BakeMcpStringMapOptions = {
   /** Prefer these over `env` / `process.env` when non-empty. */
@@ -65,15 +66,18 @@ export function bakeMcpStringValue(value: string, options?: BakeMcpStringMapOpti
 
   const missing: string[] = [];
   ENV_PLACEHOLDER_RE.lastIndex = 0;
-  const baked = value.replace(ENV_PLACEHOLDER_RE, (match, angleName: string, braceName: string) => {
-    const varName = angleName || braceName;
-    const resolved = lookupVar(varName, options);
-    if (resolved === undefined) {
-      missing.push(varName);
-      return match;
-    }
-    return resolved;
-  });
+  const baked = value.replace(
+    ENV_PLACEHOLDER_RE,
+    (match, angleName: string, braceName: string, bakeName: string) => {
+      const varName = angleName || braceName || bakeName;
+      const resolved = lookupVar(varName, options);
+      if (resolved === undefined) {
+        missing.push(varName);
+        return match;
+      }
+      return resolved;
+    },
+  );
 
   if (missing.length > 0) {
     throw new McpEnvBakeError(missing);
