@@ -29,10 +29,9 @@ export function getCreateMarketplaceSource(): (init: Record<string, unknown>) =>
   owner?: string;
   repo?: string;
 } {
-  return pickExport(
-    ["createMarketplaceSource"],
-    "create marketplace source",
-  ) as (init: Record<string, unknown>) => {
+  return pickExport(["createMarketplaceSource"], "create marketplace source") as (
+    init: Record<string, unknown>,
+  ) => {
     kind: string;
     name: string;
     url: string;
@@ -46,17 +45,14 @@ export function getFetchMarketplace(): (
   source: unknown,
   opts?: Record<string, unknown>,
 ) => Promise<unknown> {
-  return pickExport(
-    ["fetchMarketplace"],
-    "fetch marketplace manifest",
-  ) as (source: unknown, opts?: Record<string, unknown>) => Promise<unknown>;
+  return pickExport(["fetchMarketplace"], "fetch marketplace manifest") as (
+    source: unknown,
+    opts?: Record<string, unknown>,
+  ) => Promise<unknown>;
 }
 
 /** Fine-grained marketplace host class (github / ghe_cloud / ghes / gitlab / ado / …). */
-export function getClassifyMarketplaceHost(): (
-  host: string,
-  env?: NodeJS.ProcessEnv,
-) => string {
+export function getClassifyMarketplaceHost(): (host: string, env?: NodeJS.ProcessEnv) => string {
   return pickExport(
     [
       "classifyMarketplaceHost",
@@ -69,10 +65,7 @@ export function getClassifyMarketplaceHost(): (
 }
 
 /** Thin env token resolve by host class. */
-export function getResolveTokenForHost(): (
-  host: string,
-  env?: NodeJS.ProcessEnv,
-) => unknown {
+export function getResolveTokenForHost(): (host: string, env?: NodeJS.ProcessEnv) => unknown {
   return pickExport(
     ["resolveTokenForHost", "resolveMarketplaceTokenForHost", "resolveAuthTokenForHost"],
     "thin resolveTokenForHost",
@@ -94,11 +87,7 @@ export function getResolveMarketplacePackages(): (
   opts: Record<string, unknown>,
 ) => Promise<unknown> {
   return pickExport(
-    [
-      "resolveMarketplacePackages",
-      "resolveAuthoringPackages",
-      "resolveMarketplacePackPackages",
-    ],
+    ["resolveMarketplacePackages", "resolveAuthoringPackages", "resolveMarketplacePackPackages"],
     "pack resolve packages",
   ) as (opts: Record<string, unknown>) => Promise<unknown>;
 }

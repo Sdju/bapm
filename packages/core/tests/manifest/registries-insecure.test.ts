@@ -58,11 +58,7 @@ describe("validateRegistries insecure matrix", () => {
   });
 
   test("loopback http allowed without insecure (localhost / ::1)", () => {
-    for (const url of [
-      "http://127.0.0.1:8080/apm",
-      "http://localhost/apm",
-      "http://[::1]/apm",
-    ]) {
+    for (const url of ["http://127.0.0.1:8080/apm", "http://localhost/apm", "http://[::1]/apm"]) {
       const doc = parseManifest({
         name: "demo",
         version: "1.0.0",
@@ -73,11 +69,7 @@ describe("validateRegistries insecure matrix", () => {
   });
 
   test("RFC1918 http allowed without insecure", () => {
-    for (const url of [
-      "http://10.0.0.5/apm",
-      "http://192.168.1.10/apm",
-      "http://172.16.4.2/apm",
-    ]) {
+    for (const url of ["http://10.0.0.5/apm", "http://192.168.1.10/apm", "http://172.16.4.2/apm"]) {
       const doc = parseManifest({
         name: "demo",
         version: "1.0.0",

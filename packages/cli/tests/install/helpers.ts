@@ -15,7 +15,10 @@ import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { runCli } from "../../src/index.ts";
-import { parseInstallArgs, formatInstallHelp } from "../../src/modules/Install/services/runInstall.ts";
+import {
+  parseInstallArgs,
+  formatInstallHelp,
+} from "../../src/modules/Install/services/runInstall.ts";
 
 export { parseInstallArgs, formatInstallHelp, runCli };
 
@@ -82,9 +85,7 @@ export async function runInProject(
     else process.env[k] = v;
   }
   try {
-    const { result, stdout, stderr } = await withCwd(cwd, () =>
-      withCapturedIo(() => runCli(argv)),
-    );
+    const { result, stdout, stderr } = await withCwd(cwd, () => withCapturedIo(() => runCli(argv)));
     return {
       result,
       stdout,
@@ -156,11 +157,7 @@ dependencies:
     `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
     "utf8",
   );
-  writeText(
-    cwd,
-    "leaf/.apm/skills/hello/SKILL.md",
-    "---\nname: hello\n---\n# Hello\n",
-  );
+  writeText(cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
 }
 
 export function writePolicy(cwd: string, contents: string): string {
@@ -190,9 +187,7 @@ export function hasModules(cwd: string): boolean {
 }
 
 export function readManifestText(cwd: string): string {
-  const path = existsSync(join(cwd, "bapm.yml"))
-    ? join(cwd, "bapm.yml")
-    : join(cwd, "apm.yml");
+  const path = existsSync(join(cwd, "bapm.yml")) ? join(cwd, "bapm.yml") : join(cwd, "apm.yml");
   return readFileSync(path, "utf8");
 }
 

@@ -37,12 +37,7 @@ describe("p7c CLI deps why short-form resolve", () => {
     expect(human.result).toBe(0);
     expect(stdoutText(human.stdout)).toMatch(/shared-utils|acme/i);
 
-    const json = await runInProject(project.cwd, [
-      "deps",
-      "why",
-      "shared-utils",
-      "--json",
-    ]);
+    const json = await runInProject(project.cwd, ["deps", "why", "shared-utils", "--json"]);
     expectKnownFlag(json.combined, "--json");
     expect(json.result).toBe(0);
     const doc = parseJsonStdout(json.stdout);
@@ -85,12 +80,7 @@ describe("p7c CLI deps why short-form resolve", () => {
     writeUniqueSharedUtilsLock(project.cwd);
 
     // Lock URL ends with .git; short queries omit .git.
-    const byBase = await runInProject(project.cwd, [
-      "deps",
-      "why",
-      "shared-utils",
-      "--json",
-    ]);
+    const byBase = await runInProject(project.cwd, ["deps", "why", "shared-utils", "--json"]);
     expect(byBase.result).toBe(0);
     expect((parseJsonStdout(byBase.stdout).package as Record<string, unknown>).repo_url).toBe(
       "https://example.com/acme-org/shared-utils.git",
@@ -118,12 +108,7 @@ describe("p7c CLI deps why short-form resolve", () => {
     expect(human.result).toBe(1);
     expect(human.combined).toMatch(/ambiguous/i);
 
-    const json = await runInProject(project.cwd, [
-      "deps",
-      "why",
-      "shared-utils",
-      "--json",
-    ]);
+    const json = await runInProject(project.cwd, ["deps", "why", "shared-utils", "--json"]);
     expectKnownFlag(json.combined, "--json");
     expect(json.result).toBe(1);
     const err = parseJsonStderr(json.stderr);
@@ -142,12 +127,7 @@ describe("p7c CLI deps why short-form resolve", () => {
     writeManifest(project.cwd, "p7c-why-exact-wins");
     writeExactWinsBasenameLock(project.cwd);
 
-    const json = await runInProject(project.cwd, [
-      "deps",
-      "why",
-      "shared-utils",
-      "--json",
-    ]);
+    const json = await runInProject(project.cwd, ["deps", "why", "shared-utils", "--json"]);
     expectKnownCommand(json.combined, "deps");
     expectKnownFlag(json.combined, "--json");
     expect(json.result).toBe(0);
@@ -197,12 +177,7 @@ describe("p7c CLI deps why P6f regressions", () => {
     const ok = await runInProject(project.cwd, ["deps", "why", "org/child"]);
     expect(ok.result).toBe(0);
 
-    const missing = await runInProject(project.cwd, [
-      "deps",
-      "why",
-      "missing-pkg",
-      "--json",
-    ]);
+    const missing = await runInProject(project.cwd, ["deps", "why", "missing-pkg", "--json"]);
     expect(missing.result).toBe(1);
     expect(parseJsonStderr(missing.stderr).error).toBe("not_installed");
 

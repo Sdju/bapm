@@ -18,10 +18,7 @@ describe("skipped sc rationales (security-depth honesty)", () => {
 
     for (const id of SKIPPED_SC_IDS) {
       const rationale = String(byId(rows, id).rationale ?? "");
-      expect(
-        rationale.length,
-        `${id} needs a written rationale`,
-      ).toBeGreaterThan(0);
+      expect(rationale.length, `${id} needs a written rationale`).toBeGreaterThan(0);
       expect(
         STALE_MARKETPLACE_CATCHALL.test(rationale),
         `${id} still has stale marketplace catch-all: ${JSON.stringify(rationale)}`,

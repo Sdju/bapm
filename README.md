@@ -19,8 +19,8 @@ apps/docs          @bapm/docs        документация (VitePress)
 packages/core      @bapm/core        домен: manifest, lockfile, resolver, install
 packages/cli       bapm              CLI поверх @bapm/core
 # planned (не scaffold заранее):
-#   bapm-target-api                  типы/утилиты; прослойка core ↔ targets
-#   bapm-target-<id>                 eg bapm-target-cursor — materialize в хост
+#   bapm-integration-api                  типы/утилиты; прослойка core ↔ targets
+#   bapm-target-<id>                 eg bapm-integration-cursor — materialize в хост
 openspec/                            спецификации и изменения
 .samples/                            внешние референсы (gitignore) — локальный клон microsoft/apm
 ```

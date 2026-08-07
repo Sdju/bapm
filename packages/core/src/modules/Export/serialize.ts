@@ -2,11 +2,7 @@
  * CycloneDX 1.5 / SPDX 2.3 serializers from lock inventory (APM-aligned).
  */
 
-import {
-  classifyDeclaredLicense,
-  KIND_EXPRESSION,
-  KIND_ID,
-} from "./license.ts";
+import { classifyDeclaredLicense, KIND_EXPRESSION, KIND_ID } from "./license.ts";
 import { buildPurl, componentName, componentVersion, scrubUrl } from "./purl.ts";
 import {
   CYCLONEDX_SPEC_VERSION,
@@ -32,12 +28,7 @@ function asDeps(document: LockfileDocument | LockfileInput): InventoryDep[] {
 
 function isSyntheticSelf(dep: InventoryDep): boolean {
   const repo = String(dep.repo_url ?? "");
-  return (
-    repo === "<self>" ||
-    repo === "." ||
-    dep.virtual_path === "." ||
-    dep.local_path === "."
-  );
+  return repo === "<self>" || repo === "." || dep.virtual_path === "." || dep.local_path === ".";
 }
 
 function sortedDeps(document: LockfileDocument | LockfileInput): Array<[string, InventoryDep]> {
@@ -165,9 +156,7 @@ export function serializeSbom(
   timestamp: string,
 ): string {
   const doc =
-    format === FORMAT_SPDX
-      ? buildSpdx(document, timestamp)
-      : buildCyclonedx(document, timestamp);
+    format === FORMAT_SPDX ? buildSpdx(document, timestamp) : buildCyclonedx(document, timestamp);
   return `${stableStringify(doc, 2)}\n`;
 }
 

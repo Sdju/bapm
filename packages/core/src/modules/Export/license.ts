@@ -58,7 +58,12 @@ function tokenize(text: string): string[] {
 
 function hasExpressionSyntax(tokens: string[]): boolean {
   for (const tok of tokens) {
-    if (tok === "(" || tok === ")" || OPERATORS.has(tok.toUpperCase()) || tok.toUpperCase() === "WITH") {
+    if (
+      tok === "(" ||
+      tok === ")" ||
+      OPERATORS.has(tok.toUpperCase()) ||
+      tok.toUpperCase() === "WITH"
+    ) {
       return true;
     }
   }

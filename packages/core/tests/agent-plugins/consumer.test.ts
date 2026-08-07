@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createTargetRegistry } from "bapm-target-api";
+import { createTargetRegistry } from "bapm-integration-api";
 import { createCursorTarget } from "../../../target-cursor/src/createCursorTarget.ts";
 import {
   AGENT_PLUGIN_MANIFEST_SCHEMA_V1,

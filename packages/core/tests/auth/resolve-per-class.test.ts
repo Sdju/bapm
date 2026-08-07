@@ -3,12 +3,7 @@
  * Diagnostics use source id (sc-007 intact), not secret literals.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  getResolveCredentialsForHost,
-  hasUsableToken,
-  tokenPayload,
-  withEnv,
-} from "./helpers.ts";
+import { getResolveCredentialsForHost, hasUsableToken, tokenPayload, withEnv } from "./helpers.ts";
 
 const SECRET_GH = "ghp_SC_HOST_CLASS_GITHUB_SECRET_DO_NOT_LEAK";
 const SECRET_REG = "bapm_SC_HOST_CLASS_REGISTRY_SECRET_DO_NOT_LEAK";

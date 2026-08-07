@@ -5,7 +5,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, unlinkSync } from "node:fs";
 import { resolve, sep } from "node:path";
-import type { MaterializeReport } from "bapm-target-api";
+import type { MaterializeReport } from "bapm-integration-api";
 import type { LockedDependency, LockfileDocument } from "@/modules/Lockfile";
 import type { AttributedPrimitive } from "@/modules/Primitives";
 import { InstallError } from "./errors.ts";

@@ -115,11 +115,7 @@ export function getValidateAuthoringSource(): (source: string) => unknown {
 
 export function getRenderInitMarketplaceBlock(): (opts: Record<string, unknown>) => unknown {
   return pickExport(
-    [
-      "renderMarketplaceBlock",
-      "renderInitMarketplaceBlock",
-      "createMarketplaceAuthoringTemplate",
-    ],
+    ["renderMarketplaceBlock", "renderInitMarketplaceBlock", "createMarketplaceAuthoringTemplate"],
     "init marketplace template",
   ) as (opts: Record<string, unknown>) => unknown;
 }

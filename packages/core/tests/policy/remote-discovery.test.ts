@@ -89,11 +89,12 @@ describe("P4 github-owner-dotgithub provider (pl-011)", () => {
     const discovered = getDiscoverPolicyProviders()({
       cwd: project.cwd,
       providers: ["github-owner-dotgithub"],
-      listGitRemotes: () => [
-        { name: "origin", url: "https://github.com/acme/app.git" },
-      ],
+      listGitRemotes: () => [{ name: "origin", url: "https://github.com/acme/app.git" }],
       fetchPolicyUrl: (url: string) => {
-        if (/acme\/\.github|acme\/\.github\/apm-policy/i.test(url) || /\/\.github\/apm-policy\.yml/.test(url)) {
+        if (
+          /acme\/\.github|acme\/\.github\/apm-policy/i.test(url) ||
+          /\/\.github\/apm-policy\.yml/.test(url)
+        ) {
           return { ok: true, text: remotePolicy, url };
         }
         return { ok: false, status: 404, url };
@@ -118,9 +119,7 @@ describe("P4 github-owner-dotgithub provider (pl-011)", () => {
       cwd: project.cwd,
       providers: ["github-owner-dotgithub"],
       implementationDefaultHost: "github.com",
-      listGitRemotes: () => [
-        { name: "origin", url: "https://gitlab.com/acme/app.git" },
-      ],
+      listGitRemotes: () => [{ name: "origin", url: "https://gitlab.com/acme/app.git" }],
       fetchPolicyUrl: () => {
         fetched = true;
         return { ok: true, text: "name: x\nenforcement: warn\n" };
@@ -154,9 +153,7 @@ describe("P4 fetch_failure block — remote / transitive extends (pl-010)", () =
           cwd: project.cwd,
           policyProviders: ["github-owner-dotgithub"],
           providers: ["github-owner-dotgithub"],
-          listGitRemotes: () => [
-            { name: "origin", url: "https://github.com/acme/app.git" },
-          ],
+          listGitRemotes: () => [{ name: "origin", url: "https://github.com/acme/app.git" }],
           fetchPolicyUrl: () => {
             throw new Error("network down");
           },

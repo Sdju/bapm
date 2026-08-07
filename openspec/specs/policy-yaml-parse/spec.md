@@ -7,77 +7,98 @@ Parses and validates OpenAPM-shaped policy YAML documents so bapm can load `*-po
 ## Requirements
 
 ### Requirement: Minimal valid policy mapping parses
+
 The system MUST accept a YAML mapping root with at least a string `name` and `enforcement` in `{off, warn, block}` (defaulting enforcement to `warn` when unset is allowed if documented). Non-mapping roots (list or scalar) MUST be rejected.
 
 #### Scenario: Minimal valid warn policy
+
 - **WHEN** a policy document `{name: org, enforcement: warn}` is parsed
 - **THEN** parse MUST succeed and enforcement MUST be the string `warn`
 
 #### Scenario: Non-mapping root rejected
+
 - **WHEN** the policy document root is a YAML list or scalar
 - **THEN** parse/validate MUST fail with a clear error
 
 ### Requirement: Enforcement enum coerce including YAML off bool
+
 The system MUST coerce YAML boolean `off` used as `enforcement` to the string `"off"` (APM parity). Invalid enforcement values (for example `hard`) MUST be rejected.
 
 #### Scenario: YAML bool off becomes string off
+
 - **WHEN** policy YAML sets `enforcement: off` as a boolean
 - **THEN** the model MUST store enforcement as the string `off`
 
 #### Scenario: Invalid enforcement rejected
+
 - **WHEN** policy YAML sets `enforcement: hard`
 - **THEN** validate MUST fail
 
 ### Requirement: Unknown top-level keys warn; x-* preserved
+
 Unknown top-level keys MUST produce warnings and MUST NOT cause a parse error (pl-009). Keys prefixed with `x-` MUST be accepted silently and preserved on the model.
 
 #### Scenario: Unknown top-level warns
+
 - **WHEN** policy contains `future_key: 1` alongside valid fields
 - **THEN** parse MUST succeed and MUST emit at least one warning naming the unknown key
 
 #### Scenario: Extension key preserved
+
 - **WHEN** policy contains `x-acme-foo: bar`
 - **THEN** parse MUST succeed without treating it as an unknown-key warning and the value MUST remain available on the model
 
 ### Requirement: Tri-state allow deny require lists
+
 For `dependencies.allow`, `dependencies.deny`, and `dependencies.require` (and analogous list fields when present), omit and `null` MUST be transparent (unset), `[]` MUST be distinguishable as explicit empty, and a non-empty list MUST be retained (pl-005).
 
 #### Scenario: Omit vs empty vs populated distinguishable
+
 - **WHEN** three documents omit `allow`, set `allow: null`, set `allow: []`, and set `allow: [org/*]` respectively
 - **THEN** the parsed models MUST distinguish unset/transparent from explicit empty from populated list
 
 ### Requirement: Dependencies and security fields accepted when present
+
 The parser MUST accept `dependencies` fields used by M8 evaluation (`allow`, `deny`, `require`, `max_depth`, `require_pinned_constraint`) and top-level `enforcement` / `fetch_failure` (`off|warn|block`, default `fetch_failure` when unset = `warn`). Unsupported sections MAY be preserved or ignored with warnings but MUST NOT crash parse.
 
 #### Scenario: Dependencies block loads
+
 - **WHEN** policy includes `dependencies.deny: [org/legacy]` and `require_pinned_constraint: true`
 - **THEN** parse MUST succeed and those fields MUST be available to evaluators
 
 ### Requirement: Extends field accepted for chain resolve
+
 The parser MUST accept a string `extends` field (relative path, `owner/repo`, or URL form documented by resolve) without treating it as an unknown-key warning, and MUST expose it on the model for chain resolution.
 
 #### Scenario: Extends string preserved
+
 - **WHEN** policy YAML sets `extends: contoso-enterprise/policy`
 - **THEN** parse MUST succeed and the model MUST retain that `extends` value
 
 ### Requirement: Discovery block accepted when present
+
 The parser MUST accept an optional top-level `discovery:` mapping used to select/order providers. Unknown nested keys under `discovery` MAY warn; the block MUST NOT crash parse.
 
 #### Scenario: Discovery providers list parses
+
 - **WHEN** policy includes `discovery: { providers: [local] }`
 - **THEN** parse MUST succeed and provider selection data MUST be available to discovery
 
 ### Requirement: Typed executables deny_all and deny parse
+
 The policy parser MUST accept an optional top-level `executables` mapping with boolean `deny_all` and list `deny` (package ids or patterns). Parsed values MUST be available on the policy model for merge and trust evaluation. Fields beyond this claim floor (`recommend`, `enforce`, `require`, and other nested unknowns under `executables`) MUST NOT crash parse; they MAY be ignored or warned. Unknown top-level keys outside the known set MUST continue to produce pl-009 warnings without failing parse.
 
 #### Scenario: deny_all and deny parse
+
 - **WHEN** policy YAML includes `executables: { deny_all: false, deny: [org/blocked] }`
 - **THEN** parse MUST succeed and expose `deny_all` false and deny list containing `org/blocked`
 
 #### Scenario: deny_all true parses
+
 - **WHEN** policy YAML includes `executables: { deny_all: true }`
 - **THEN** parse MUST succeed and expose `deny_all` true
 
 #### Scenario: Unknown top-level still pl-009
+
 - **WHEN** policy contains an unknown top-level key alongside a valid `executables` block
 - **THEN** parse MUST succeed and MUST emit at least one pl-009 unknown-key warning for the unknown top-level key

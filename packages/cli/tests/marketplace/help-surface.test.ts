@@ -35,11 +35,7 @@ describe("mp-authoring-yml CLI help + consumer boundary", () => {
 
   test("marketplace init --help is not unknown subcommand", async () => {
     project = createTempProject();
-    const { result, combined } = await runInProject(project.cwd, [
-      "marketplace",
-      "init",
-      "--help",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["marketplace", "init", "--help"]);
     expectKnownMarketplaceSub(combined, "init");
     expect(result).toBe(0);
   });

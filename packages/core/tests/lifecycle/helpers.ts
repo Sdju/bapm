@@ -123,10 +123,7 @@ export function getRunDoctor(): (options: Record<string, unknown>) => Promise<un
 }
 
 export function writeDoctorProject(cwd: string, name: string): void {
-  writeText(
-    join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 9.9.9\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "bapm.yml"), `name: ${name}\nversion: 9.9.9\ndependencies:\n  apm: []\n`);
   writeText(
     join(cwd, "bapm.lock.yaml"),
     `lockfile_version: "1"
@@ -494,10 +491,7 @@ export function writeLeafFixture(cwd: string, name: string): void {
     "bapm.yml",
     `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
   );
-  writeText(
-    join(cwd, "leaf", "apm.yml"),
-    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "leaf", "apm.yml"), `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
   writeLock(
     cwd,
     "bapm.lock.yaml",
@@ -529,10 +523,7 @@ export function writeMixedPlanFixture(cwd: string): {
     "bapm.yml",
     `name: p6g-mixed\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/pkg-a.git\n      ref: "^1.0.0"\n    - path: ./leaf\n`,
   );
-  writeText(
-    join(cwd, "leaf", "apm.yml"),
-    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "leaf", "apm.yml"), `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
   writeLock(
     cwd,
     "bapm.lock.yaml",

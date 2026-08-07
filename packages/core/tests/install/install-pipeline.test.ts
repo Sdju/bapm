@@ -5,7 +5,7 @@ import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { APM_MODULES_DIR, loadLockfile } from "@bapm/core";
-import { createTargetRegistry } from "bapm-target-api";
+import { createTargetRegistry } from "bapm-integration-api";
 import {
   createFakePorts,
   createTempProject,
@@ -105,16 +105,16 @@ describe("install pipeline — modules + lock", () => {
     expect(listFilesRecursive(modulesDir(project.cwd)).length).toBeGreaterThan(0);
   });
 
-  test("core package graph: depends on bapm-target-api, not bapm-target-cursor", () => {
+  test("core package graph: depends on bapm-integration-api, not bapm-integration-cursor", () => {
     const pkg = readCorePackageJson();
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    expect(deps["bapm-target-cursor"]).toBeUndefined();
+    expect(deps["bapm-integration-cursor"]).toBeUndefined();
     for (const key of Object.keys(deps)) {
-      if (key.startsWith("bapm-target-") && key !== "bapm-target-api") {
+      if (key.startsWith("bapm-target-") && key !== "bapm-integration-api") {
         expect.fail(`core must not hard-depend on concrete target ${key}`);
       }
     }
-    expect(deps["bapm-target-api"]).toBeTruthy();
+    expect(deps["bapm-integration-api"]).toBeTruthy();
   });
 
   test("direct install without target selection fails before target harness writes", async () => {

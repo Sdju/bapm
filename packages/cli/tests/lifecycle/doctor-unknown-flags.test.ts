@@ -40,19 +40,14 @@ describe("CLI doctor unknown flags fail-closed", () => {
     project = createTempProject();
     writeDoctorProject(project.cwd, "p7f-global");
 
-    const { result, stderr, combined } = await runInProject(project.cwd, [
-      "doctor",
-      "--global",
-    ]);
+    const { result, stderr, combined } = await runInProject(project.cwd, ["doctor", "--global"]);
     expectKnownCommand(combined, "doctor");
     expect(result).not.toBe(0);
     expect(stderr.join("\n")).toMatch(/Unknown doctor flag:\s*--global/);
   });
 
   test("parseDoctorArgs still rejects unknown flags", () => {
-    expect(parseDoctorArgs(["--not-a-flag"]).error).toBe(
-      "Unknown doctor flag: --not-a-flag",
-    );
+    expect(parseDoctorArgs(["--not-a-flag"]).error).toBe("Unknown doctor flag: --not-a-flag");
     expect(parseDoctorArgs(["--global"]).error).toBe("Unknown doctor flag: --global");
     expect(parseDoctorArgs(["-v"]).error).toBeUndefined();
     expect(parseDoctorArgs(["--verbose"]).error).toBeUndefined();

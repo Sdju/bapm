@@ -1,8 +1,4 @@
-import {
-  formatSearchHelp,
-  parseSearchArgs,
-  runSearchCli,
-} from "./services/runSearch.ts";
+import { formatSearchHelp, parseSearchArgs, runSearchCli } from "./services/runSearch.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };

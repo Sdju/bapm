@@ -31,14 +31,9 @@ describe("sc-* status honesty", () => {
       expect(citation.length, `${id} needs a citation`).toBeGreaterThan(0);
 
       const paths = citationPaths(citation);
-      expect(paths.length, `${id} citation should name at least one file`).toBeGreaterThan(
-        0,
-      );
+      expect(paths.length, `${id} citation should name at least one file`).toBeGreaterThan(0);
       for (const rel of paths) {
-        expect(
-          pathExistsInRepo(rel),
-          `${id} citation path missing on disk: ${rel}`,
-        ).toBe(true);
+        expect(pathExistsInRepo(rel), `${id} citation path missing on disk: ${rel}`).toBe(true);
       }
     }
   });
@@ -55,9 +50,7 @@ describe("sc-* status honesty", () => {
 
   test("no unexpected active among residual claim-list candidates", () => {
     const rows = checklistRows(loadChecklist());
-    const falseActives = SKIPPED_SC_IDS.filter(
-      (id) => byId(rows, id).status === "active",
-    );
+    const falseActives = SKIPPED_SC_IDS.filter((id) => byId(rows, id).status === "active");
     expect(
       falseActives,
       `false actives forbidden without Mode B citations: ${falseActives.join(", ")}`,

@@ -5,8 +5,8 @@ import type {
   ConfigureMcpReport,
   MaterializeReport,
   TargetRegistry,
-} from "bapm-target-api";
-import { getConfigureMcp } from "bapm-target-api";
+} from "bapm-integration-api";
+import { getConfigureMcp } from "bapm-integration-api";
 import {
   loadManifest,
   type BapmManifest,

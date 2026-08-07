@@ -1,8 +1,4 @@
-import {
-  formatFindHelp,
-  parseFindArgs,
-  runFindCli,
-} from "./services/runFind.ts";
+import { formatFindHelp, parseFindArgs, runFindCli } from "./services/runFind.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };

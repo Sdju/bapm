@@ -17,18 +17,17 @@ import {
 } from "./sc-claims-helpers.ts";
 
 function rootScripts(): Record<string, string> {
-  const pkg = JSON.parse(
-    readFileSync(join(repoRoot, "package.json"), "utf8"),
-  ) as { scripts?: Record<string, string> };
+  const pkg = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")) as {
+    scripts?: Record<string, string>;
+  };
   return pkg.scripts ?? {};
 }
 
 function restoreConformanceArtifacts(): void {
-  spawnSync(
-    "git",
-    ["checkout", "--", "CONFORMANCE.md", "CONFORMANCE.json"],
-    { cwd: repoRoot, encoding: "utf8" },
-  );
+  spawnSync("git", ["checkout", "--", "CONFORMANCE.md", "CONFORMANCE.json"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
 }
 
 describe("conformance gen/check honesty posture", () => {

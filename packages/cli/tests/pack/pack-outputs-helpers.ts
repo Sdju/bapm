@@ -141,10 +141,7 @@ export function writeClaudeLocalAuthoring(
   opts?: { name?: string; withManifestDeps?: boolean },
 ): void {
   const name = opts?.name ?? "acme-mp";
-  const deps =
-    opts?.withManifestDeps === false
-      ? ""
-      : `dependencies:\n  apm: []\n  mcp: []\n`;
+  const deps = opts?.withManifestDeps === false ? "" : `dependencies:\n  apm: []\n  mcp: []\n`;
   writeText(
     cwd,
     "bapm.yml",
@@ -173,8 +170,7 @@ export function writeClaudeLocalAuthoring(
 /** Authoring with Codex output + category on every package. */
 export function writeCodexLocalAuthoring(cwd: string, opts?: { category?: string | null }): void {
   const category = opts?.category === undefined ? "tools" : opts.category;
-  const categoryLine =
-    category === null ? "" : `      category: ${category}`;
+  const categoryLine = category === null ? "" : `      category: ${category}`;
   writeText(
     cwd,
     "bapm.yml",

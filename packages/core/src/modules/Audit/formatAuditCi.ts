@@ -5,8 +5,7 @@ import type {
   AuditCiSummary,
 } from "./types.ts";
 
-const SARIF_SCHEMA =
-  "https://json.schemastore.org/sarif-2.1.0.json";
+const SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json";
 const SARIF_VERSION = "2.1.0";
 const DRIVER_NAME = "bapm-audit";
 const DRIVER_VERSION = "0.0.0";
@@ -71,11 +70,7 @@ function lockUri(result: AuditCiResult): string {
   return result.lockRelativePath ?? "bapm.lock.yaml";
 }
 
-function uriForDetail(
-  check: AuditCiCheck,
-  detailIndex: number,
-  fallback: string,
-): string {
+function uriForDetail(check: AuditCiCheck, detailIndex: number, fallback: string): string {
   const locs = check.locations;
   if (locs && locs[detailIndex]) return locs[detailIndex]!;
   if (locs && locs.length === 1) return locs[0]!;

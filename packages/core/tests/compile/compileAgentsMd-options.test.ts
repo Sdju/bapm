@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { compileAgentsMd } from "@bapm/core";
-import { createTargetRegistry } from "bapm-target-api";
+import { createTargetRegistry } from "bapm-integration-api";
 
 type TempProject = { cwd: string; cleanup: () => void };
 

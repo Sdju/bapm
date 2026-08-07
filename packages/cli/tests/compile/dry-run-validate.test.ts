@@ -31,10 +31,7 @@ describe("p7d CLI compile dry-run + validate", () => {
     project = createTempProject();
     writeCompileProject(project.cwd, "p7d-validate");
 
-    const { result, stdout, combined } = await runInProject(project.cwd, [
-      "compile",
-      "--validate",
-    ]);
+    const { result, stdout, combined } = await runInProject(project.cwd, ["compile", "--validate"]);
     expectKnownCommand(combined, "compile");
     expectKnownCompileFlag(combined, "--validate");
     expect(result).toBe(0);
@@ -68,10 +65,7 @@ describe("p7d CLI compile dry-run + validate", () => {
     project = createTempProject();
     writeCompileProject(project.cwd, "p7d-dry-run");
 
-    const { result, stdout, combined } = await runInProject(project.cwd, [
-      "compile",
-      "--dry-run",
-    ]);
+    const { result, stdout, combined } = await runInProject(project.cwd, ["compile", "--dry-run"]);
     expectKnownCommand(combined, "compile");
     expectKnownCompileFlag(combined, "--dry-run");
     expect(result).toBe(0);

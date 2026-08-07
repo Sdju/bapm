@@ -15,13 +15,7 @@ import {
 const CLAIM_ACTIVE = ["req-sc-010", "req-sc-011", "req-sc-012"] as const;
 /** Soft zip residual — still skipped after later sc-host-class claim flip. */
 const STAY_SKIPPED = ["req-sc-004"] as const;
-const STAY_ACTIVE = [
-  "req-sc-001",
-  "req-sc-002",
-  "req-sc-006",
-  "req-sc-007",
-  "req-sc-009",
-] as const;
+const STAY_ACTIVE = ["req-sc-001", "req-sc-002", "req-sc-006", "req-sc-007", "req-sc-009"] as const;
 
 describe("sc-executable-governance Mode B claim set", () => {
   test("Mode B checklist.yml is present", () => {

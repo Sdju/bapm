@@ -174,13 +174,13 @@ function listUnder(root: string): string[] {
   return out;
 }
 
-/** Load bapm-target-api. */
+/** Load bapm-integration-api. */
 export async function importTargetApi(): Promise<Record<string, unknown>> {
   try {
-    return (await import("bapm-target-api")) as Record<string, unknown>;
+    return (await import("bapm-integration-api")) as Record<string, unknown>;
   } catch (e) {
     throw new TypeError(
-      `expected package bapm-target-api to resolve (packages/target-api): ${
+      `expected package bapm-integration-api to resolve (packages/integration-api): ${
         e instanceof Error ? e.message : String(e)
       }`,
     );
@@ -191,7 +191,7 @@ export function getCreateRegistry(api: Record<string, unknown>): () => unknown {
   const fn = api.createTargetRegistry ?? api.createRegistry ?? api.createTargetApiRegistry;
   if (typeof fn !== "function") {
     throw new TypeError(
-      "expected bapm-target-api to export createTargetRegistry (or createRegistry)",
+      "expected bapm-integration-api to export createTargetRegistry (or createRegistry)",
     );
   }
   return fn as () => unknown;
@@ -209,7 +209,7 @@ export function getRegisterTarget(
   }
   const fn = api.registerTarget ?? api.register;
   if (typeof fn !== "function") {
-    throw new TypeError("expected bapm-target-api registry.register or registerTarget export");
+    throw new TypeError("expected bapm-integration-api registry.register or registerTarget export");
   }
   return fn as (target: unknown) => unknown;
 }

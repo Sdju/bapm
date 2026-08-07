@@ -31,9 +31,5 @@ export {
   type LicenseClass,
   type LicenseKind,
 } from "./license.ts";
-export {
-  formatUnsupportedMessage,
-  normalizeFormat,
-  serializeSbom,
-} from "./serialize.ts";
+export { formatUnsupportedMessage, normalizeFormat, serializeSbom } from "./serialize.ts";
 export { exportSbom } from "./exportSbom.ts";

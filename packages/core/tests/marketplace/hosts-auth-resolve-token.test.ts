@@ -26,9 +26,10 @@ describe("mp-hosts-auth thin resolveTokenForHost", () => {
       () => {
         const resolve = getResolveTokenForHost();
         const got = resolve("gitlab.com");
-        expect(hasUsableToken(got), `must not select GitHub env for gitlab: ${JSON.stringify(got)}`).toBe(
-          false,
-        );
+        expect(
+          hasUsableToken(got),
+          `must not select GitHub env for gitlab: ${JSON.stringify(got)}`,
+        ).toBe(false);
         const { token } = tokenPayload(got);
         expect(token).not.toBe(SECRET_GH);
       },

@@ -26,7 +26,9 @@ describe("policy executables parse/merge (sc-011)", () => {
     expect(ex?.deny).toEqual(expect.arrayContaining(["org/blocked"]));
 
     const warnText = JSON.stringify(asWarnings(result));
-    expect(warnText).not.toMatch(/PL_009_UNKNOWN_KEY.*"executables"|Unknown top-level policy key "executables"/i);
+    expect(warnText).not.toMatch(
+      /PL_009_UNKNOWN_KEY.*"executables"|Unknown top-level policy key "executables"/i,
+    );
     expect(
       asWarnings(result).some(
         (w) =>
@@ -55,9 +57,9 @@ describe("policy executables parse/merge (sc-011)", () => {
       executables: { deny_all: false, deny: ["org/a"] },
       future_key: 1,
     });
-    expect(asWarnings(result).some((w) => /PL_009|unknown/i.test(String(w.code ?? w.message)))).toBe(
-      true,
-    );
+    expect(
+      asWarnings(result).some((w) => /PL_009|unknown/i.test(String(w.code ?? w.message))),
+    ).toBe(true);
     expect(JSON.stringify(asWarnings(result))).toMatch(/future_key/);
   });
 

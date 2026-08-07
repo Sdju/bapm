@@ -2,14 +2,7 @@
  * Helpers for marketplace search/install suite (core). Soft-resolve @bapm/core APIs.
  */
 import * as core from "@bapm/core";
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -202,10 +195,9 @@ export function registerLocalMarketplace(
 }
 
 export function getParseMarketplaceRef() {
-  return pickExport(
-    ["parseMarketplaceRef", "parse_marketplace_ref"],
-    "parseMarketplaceRef",
-  ) as (spec: string) => unknown;
+  return pickExport(["parseMarketplaceRef", "parse_marketplace_ref"], "parseMarketplaceRef") as (
+    spec: string,
+  ) => unknown;
 }
 
 export function getResolveMarketplacePlugin() {
@@ -240,10 +232,9 @@ export function getLockApis() {
       cwd?: string;
       path?: string;
     }) => unknown,
-    serialize: pickExport(
-      ["serializeLockfile", "serialize_lockfile"],
-      "serializeLockfile",
-    ) as (doc: unknown) => string,
+    serialize: pickExport(["serializeLockfile", "serialize_lockfile"], "serializeLockfile") as (
+      doc: unknown,
+    ) => string,
     parse: pickExport(
       ["parseLockfile", "parseLockfileDocument", "parse_lockfile"],
       "parseLockfile",
@@ -394,9 +385,4 @@ export function modulesPresent(cwd: string): boolean {
   return false;
 }
 
-export {
-  existsSync,
-  join,
-  mkdirSync,
-  readFileSync,
-};
+export { existsSync, join, mkdirSync, readFileSync };

@@ -50,8 +50,7 @@ export function initMarketplaceAuthoring(
       if (doc.marketplace !== undefined && doc.marketplace !== null && !force) {
         return {
           ok: false,
-          error:
-            "bapm.yml already has a 'marketplace:' block. Pass --force to overwrite.",
+          error: "bapm.yml already has a 'marketplace:' block. Pass --force to overwrite.",
         };
       }
     }

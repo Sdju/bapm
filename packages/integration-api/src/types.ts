@@ -159,7 +159,7 @@ export type ConfigureMcpFn = (
   ctx?: ConfigureMcpContext,
 ) => ConfigureMcpReport | Promise<ConfigureMcpReport>;
 
-/** Concrete target contract consumed by core only through `bapm-target-api`. */
+/** Concrete target contract consumed by core only through `bapm-integration-api`. */
 export type BapmTarget = {
   id: TargetId;
   /** Registered deploy root(s) relative to project cwd (tg-002). */
@@ -184,4 +184,26 @@ export type TargetRegistry = {
   getAll(): BapmTarget[];
   /** Evaluate each registered detector once, treating failures as non-matches. */
   detect(cwd: string): Promise<DetectedTargetsResult>;
+};
+
+/**
+ * Host-owned marketplace output. The neutral payload types deliberately avoid
+ * describing any host document schema; integrations own that representation.
+ */
+export type MarketplaceOutputCapability = {
+  format: string;
+  defaultOutput: string;
+  map: (config: unknown, resolved: unknown[]) => Record<string, unknown>;
+};
+
+/** Marketplace-only integrations need no runtime detect or deployment hooks. */
+export type MarketplaceOutputIntegration = {
+  id: string;
+  marketplaceOutput: MarketplaceOutputCapability;
+};
+
+export type MarketplaceOutputRegistry = {
+  register(integration: MarketplaceOutputIntegration): void;
+  list(): MarketplaceOutputIntegration[];
+  get(format: string): MarketplaceOutputIntegration | undefined;
 };

@@ -2,13 +2,7 @@
  * Helpers for ExecutableTrust suites (promoted from sc-executable-governance).
  */
 import * as core from "@bapm/core";
-import {
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -160,6 +154,9 @@ export function userConfigJsonPath(configRoot: string): string {
   return join(configRoot, "config.json");
 }
 
-export function grantSurface(allow: Record<string, unknown> = {}, deny: Record<string, unknown> = {}) {
+export function grantSurface(
+  allow: Record<string, unknown> = {},
+  deny: Record<string, unknown> = {},
+) {
   return { present: true, allow, deny };
 }

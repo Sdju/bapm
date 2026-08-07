@@ -50,9 +50,7 @@ describe("revisionPin helpers", () => {
 
   test("findLatestAnnotatedTag — empty / no annotated → null", () => {
     expect(findLatestAnnotatedTag([], "pkg")).toBeNull();
-    expect(
-      findLatestAnnotatedTag([{ tag: "v1.0.0", commit: "1".repeat(40) }], "pkg"),
-    ).toBeNull();
+    expect(findLatestAnnotatedTag([{ tag: "v1.0.0", commit: "1".repeat(40) }], "pkg")).toBeNull();
     expect(
       findLatestAnnotatedTag(
         [{ tag: "v1.0.0-beta.1", commit: "1".repeat(40), annotated: true }],
@@ -64,10 +62,7 @@ describe("revisionPin helpers", () => {
   test("findLatestAnnotatedTag — name-prefixed patterns", () => {
     const c = "a".repeat(40);
     expect(
-      findLatestAnnotatedTag(
-        [{ tag: "my-pkg--v1.2.3", commit: c, annotated: true }],
-        "my-pkg",
-      ),
+      findLatestAnnotatedTag([{ tag: "my-pkg--v1.2.3", commit: c, annotated: true }], "my-pkg"),
     ).toEqual({ tag: "my-pkg--v1.2.3", commit: c });
     expect(
       findLatestAnnotatedTag([{ tag: "my-pkg-v2.0.0", commit: c, annotated: true }], "my-pkg"),

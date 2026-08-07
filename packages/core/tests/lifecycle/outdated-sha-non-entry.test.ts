@@ -57,9 +57,7 @@ dependencies:
 
     const ports = createRevisionPinPorts({
       tagsByRepo: {
-        "example/abbr": [
-          { tag: "v9.9.9", commit: annotatedNewer, annotated: true },
-        ],
+        "example/abbr": [{ tag: "v9.9.9", commit: annotatedNewer, annotated: true }],
       },
       commitsByRef: {
         [abbr]: tipAhead,

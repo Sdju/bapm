@@ -83,11 +83,11 @@ export function checkNames(checks: Array<Record<string, unknown>>): string[] {
   return checks.map((c) => String(c.name ?? ""));
 }
 
-export function writeCleanLocalProject(cwd: string, name: string): { rel: string; content: string } {
-  writeText(
-    join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+export function writeCleanLocalProject(
+  cwd: string,
+  name: string,
+): { rel: string; content: string } {
+  writeText(join(cwd, "bapm.yml"), `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
   const rel = ".agents/skills/hello/SKILL.md";
   const content = "---\nname: hello\n---\n# Hello\n";
   writeText(join(cwd, rel), content);
@@ -99,10 +99,7 @@ export function writeCleanLocalProject(cwd: string, name: string): { rel: string
 }
 
 export function writeTamperedHashProject(cwd: string, name: string): { rel: string } {
-  writeText(
-    join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "bapm.yml"), `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
   const rel = ".agents/skills/hello/SKILL.md";
   writeText(join(cwd, rel), "TAMPERED\n");
   writeText(
@@ -113,10 +110,7 @@ export function writeTamperedHashProject(cwd: string, name: string): { rel: stri
 }
 
 export function writeMissingTreeProject(cwd: string, name: string): void {
-  writeText(
-    join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "bapm.yml"), `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
   const rel = ".agents/skills/hello/SKILL.md";
   const content = "ok\n";
   writeText(join(cwd, rel), content);

@@ -4,30 +4,16 @@
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync } from "node:fs";
-import {
-  getDefaultPolicyProviders,
-  providersList,
-} from "../policy/helpers.ts";
-import {
-  conformanceJsonPath,
-  conformanceMdPath,
-  loadJsonFile,
-  readText,
-} from "./helpers.ts";
+import { getDefaultPolicyProviders, providersList } from "../policy/helpers.ts";
+import { conformanceJsonPath, conformanceMdPath, loadJsonFile, readText } from "./helpers.ts";
 
 describe("p3 Mode B — published conformance statement (req-cf-002)", () => {
   test("CONFORMANCE.md exists at repository root", () => {
-    expect(
-      existsSync(conformanceMdPath),
-      `expected ${conformanceMdPath}`,
-    ).toBe(true);
+    expect(existsSync(conformanceMdPath), `expected ${conformanceMdPath}`).toBe(true);
   });
 
   test("CONFORMANCE.json exists at repository root", () => {
-    expect(
-      existsSync(conformanceJsonPath),
-      `expected ${conformanceJsonPath}`,
-    ).toBe(true);
+    expect(existsSync(conformanceJsonPath), `expected ${conformanceJsonPath}`).toBe(true);
   });
 
   test("statement declares OpenAPM v0.1 and class posture", () => {
@@ -57,9 +43,7 @@ describe("p3 Mode B — published conformance statement (req-cf-002)", () => {
     expect(classes.consumer, "Consumer must be claimed").toMatch(
       /claim|active|yes|true|floor|primary/i,
     );
-    expect(classes.producer, "Producer must be claimed").toMatch(
-      /claim|active|yes|true|floor/i,
-    );
+    expect(classes.producer, "Producer must be claimed").toMatch(/claim|active|yes|true|floor/i);
     expect(classes.governance, "Governance must be claimed").toMatch(/^claimed$/i);
     expect(classes.registry, "Registry must be N/A").toMatch(
       /n\/a|na|not.?claimed|deferred|none|false/i,

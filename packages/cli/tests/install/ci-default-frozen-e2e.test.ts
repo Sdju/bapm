@@ -82,7 +82,9 @@ describe("CLI CI-default frozen install (req-lk-018 e2e)", () => {
     expectKnownCommand(combined, "install");
     expect(result).not.toBe(0);
     // Must be an explicit conflict, not merely "unknown flag: --no-frozen".
-    expect(combined).toMatch(/conflict|mutually|cannot combine|both|--frozen.*--no-frozen|--no-frozen.*--frozen/i);
+    expect(combined).toMatch(
+      /conflict|mutually|cannot combine|both|--frozen.*--no-frozen|--no-frozen.*--frozen/i,
+    );
     expect(combined).not.toMatch(/Unknown install flag:\s*--no-frozen/i);
     expect(hasLockfile(project.cwd)).toBe(false);
     expect(hasModules(project.cwd)).toBe(false);
@@ -92,11 +94,9 @@ describe("CLI CI-default frozen install (req-lk-018 e2e)", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "ci-update-reject");
 
-    const { result, combined } = await runInProject(
-      project.cwd,
-      ["install", "--update"],
-      { CI: "true" },
-    );
+    const { result, combined } = await runInProject(project.cwd, ["install", "--update"], {
+      CI: "true",
+    });
 
     expectKnownCommand(combined, "install");
     expect(result).not.toBe(0);
@@ -132,11 +132,9 @@ describe("CLI CI-default frozen install (req-lk-018 e2e)", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "force-frozen");
 
-    const { result, combined } = await runInProject(
-      project.cwd,
-      ["install", "--frozen"],
-      { CI: "false" },
-    );
+    const { result, combined } = await runInProject(project.cwd, ["install", "--frozen"], {
+      CI: "false",
+    });
 
     expectKnownCommand(combined, "install");
     expect(result).not.toBe(0);

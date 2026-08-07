@@ -52,7 +52,10 @@ describe("mp-consumer-registry models + parse", () => {
     const create = getCreateMarketplaceSource();
     const fileSource = create({ name: "local-file", url: `${tmp.configDir}/marketplace.json` });
     expect(sourceKind(fileSource)).toBe("local");
-    const uriSource = create({ name: "local-uri", url: `file://${tmp.configDir}/marketplace.json` });
+    const uriSource = create({
+      name: "local-uri",
+      url: `file://${tmp.configDir}/marketplace.json`,
+    });
     expect(sourceKind(uriSource)).toBe("local");
   });
 

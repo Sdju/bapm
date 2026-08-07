@@ -51,7 +51,10 @@ describe("install exclude cursor skips MCP configure", () => {
     const ports = createFakePorts();
     const api = await importTargetApi();
     const registry = getCreateRegistry(api)();
-    getRegisterTarget(api, registry)({
+    getRegisterTarget(
+      api,
+      registry,
+    )({
       id: "cursor",
       deployRoots: [".agents/skills", ".cursor"],
       detect: () => true,

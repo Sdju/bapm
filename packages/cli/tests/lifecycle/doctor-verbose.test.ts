@@ -99,10 +99,7 @@ describe("CLI doctor verbose + help", () => {
     project = createTempProject();
     writeDoctorProject(project.cwd, "p7f-verbose-long");
 
-    const { result, stdout, combined } = await runInProject(project.cwd, [
-      "doctor",
-      "--verbose",
-    ]);
+    const { result, stdout, combined } = await runInProject(project.cwd, ["doctor", "--verbose"]);
     expectKnownCommand(combined, "doctor");
     expectKnownDoctorFlag(combined, "--verbose");
     expect(result).toBe(0);
@@ -157,8 +154,7 @@ describe("CLI doctor verbose + help", () => {
     expect(result).toBe(0);
 
     const text = stdoutText(stdout);
-    const authLine =
-      lineForCheck(text, "auth") ?? lineForCheck(text, "auth-env");
+    const authLine = lineForCheck(text, "auth") ?? lineForCheck(text, "auth-env");
     expect(authLine, `expected informational auth/auth-env row:\n${text}`).toBeTruthy();
     expect(authLine!).toMatch(/^PASS\t/);
     expect(text).not.toMatch(/ghp_|github_pat_|gho_|ghu_/i);
@@ -166,8 +162,6 @@ describe("CLI doctor verbose + help", () => {
     process.env.GITHUB_TOKEN = "ghp_this_must_never_appear_in_output_xyz";
     const withToken = await runInProject(project.cwd, ["doctor"]);
     expect(withToken.result).toBe(0);
-    expect(stdoutText(withToken.stdout)).not.toContain(
-      "ghp_this_must_never_appear_in_output_xyz",
-    );
+    expect(stdoutText(withToken.stdout)).not.toContain("ghp_this_must_never_appear_in_output_xyz");
   });
 });

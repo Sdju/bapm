@@ -42,13 +42,9 @@ describe("mp-authoring-yml CLI marketplace init", () => {
 
   test("init without --force refuses existing marketplace block", async () => {
     project = createTempProject();
-    const original = [
-      `name: keep`,
-      `marketplace:`,
-      `  owner: keep-org`,
-      `  packages: []`,
-      ``,
-    ].join("\n");
+    const original = [`name: keep`, `marketplace:`, `  owner: keep-org`, `  packages: []`, ``].join(
+      "\n",
+    );
     writeText(project.cwd, "bapm.yml", original);
 
     const { result, combined } = await runInProject(project.cwd, [

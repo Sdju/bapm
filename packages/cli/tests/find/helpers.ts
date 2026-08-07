@@ -1,12 +1,7 @@
 /**
  * CLI helpers for Find suite.
  */
-import {
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { runCli } from "../../src/index.ts";
@@ -89,11 +84,7 @@ export function writeText(cwd: string, relative: string, contents: string): stri
 }
 
 export function writeManifest(cwd: string, name: string): void {
-  writeText(
-    cwd,
-    "bapm.yml",
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(cwd, "bapm.yml", `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
 }
 
 export function writeLock(cwd: string, contents: string): void {

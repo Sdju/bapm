@@ -25,10 +25,7 @@ export function atomicWriteMarketplaceJson(absolutePath: string, contents: strin
     try {
       writeFileSync(absolutePath, contents, "utf8");
     } catch (fallbackCause) {
-      throw new MarketplacePackOutputsError(
-        `Failed to write marketplace.json: ${absolutePath}`,
-        1,
-      );
+      throw new MarketplacePackOutputsError(`Failed to write marketplace.json: ${absolutePath}`, 1);
     }
   }
 }

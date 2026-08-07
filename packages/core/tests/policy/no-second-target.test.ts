@@ -5,5 +5,5 @@ import { expect, test } from "vite-plus/test";
 import { listBapmTargetPackageNames } from "./helpers.ts";
 
 test("HARD: workspace bapm-target-* is only api + cursor", () => {
-  expect(listBapmTargetPackageNames()).toEqual(["bapm-target-api", "bapm-target-cursor"]);
+  expect(listBapmTargetPackageNames()).toEqual(["bapm-integration-api", "bapm-integration-cursor"]);
 });

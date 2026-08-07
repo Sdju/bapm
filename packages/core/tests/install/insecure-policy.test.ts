@@ -83,6 +83,8 @@ describe("insecurePolicy helpers", () => {
 
   test("invalid hostname rejected", () => {
     expect(isValidFqdn("not a host")).toBe(false);
-    expect(() => normalizeAllowInsecureHost("not a host")).toThrow(/Invalid hostname|FQDN|bare hostname/);
+    expect(() => normalizeAllowInsecureHost("not a host")).toThrow(
+      /Invalid hostname|FQDN|bare hostname/,
+    );
   });
 });

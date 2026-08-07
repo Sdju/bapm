@@ -157,9 +157,7 @@ describe("core doctor verbose enrichment", () => {
     });
     expect(exitCodeOf(result)).toBe(0);
 
-    const auth = checksOf(result).find(
-      (c) => c.name === "auth" || c.name === "auth-env",
-    );
+    const auth = checksOf(result).find((c) => c.name === "auth" || c.name === "auth-env");
     expect(auth, `expected auth/auth-env check:\n${textOf(result)}`).toBeTruthy();
     expect(auth!.critical).toBe(false);
     expect(auth!.ok).toBe(true);

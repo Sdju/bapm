@@ -25,12 +25,7 @@ export function pickExport(names: string[], label: string): AnyFn {
 /** PSL eTLD+1 credential host-class classifier (sc-005). */
 export function getCredentialHostClassOf(): (hostname: string) => string {
   return pickExport(
-    [
-      "credentialHostClassOf",
-      "credentialHostClass",
-      "authHostClassOf",
-      "hostClassForCredentials",
-    ],
+    ["credentialHostClassOf", "credentialHostClass", "authHostClassOf", "hostClassForCredentials"],
     "credential host-class classifier",
   ) as (hostname: string) => string;
 }
@@ -42,25 +37,15 @@ export function getSameCredentialHostClass(): (
   options?: Record<string, unknown>,
 ) => boolean {
   return pickExport(
-    [
-      "sameCredentialHostClass",
-      "credentialHostClassesEqual",
-      "hostsShareCredentialClass",
-    ],
+    ["sameCredentialHostClass", "credentialHostClassesEqual", "hostsShareCredentialClass"],
     "credential host-class equality",
   ) as (a: string, b: string, options?: Record<string, unknown>) => boolean;
 }
 
 /** Shared resolve — never forwards class A creds to class B (sc-003). */
-export function getResolveCredentialsForHost(): (
-  options: Record<string, unknown>,
-) => unknown {
+export function getResolveCredentialsForHost(): (options: Record<string, unknown>) => unknown {
   return pickExport(
-    [
-      "resolveCredentialsForHost",
-      "resolveAuthCredentialsForHost",
-      "resolveHostCredentials",
-    ],
+    ["resolveCredentialsForHost", "resolveAuthCredentialsForHost", "resolveHostCredentials"],
     "resolve credentials per host class",
   ) as (options: Record<string, unknown>) => unknown;
 }
@@ -89,10 +74,7 @@ export function getCreateFetchTransport(): () => {
     body?: Uint8Array;
   }) => Promise<{ status: number; headers: Record<string, string>; body: Uint8Array }>;
 } {
-  return pickExport(
-    ["createFetchTransport"],
-    "Registry createFetchTransport",
-  ) as () => {
+  return pickExport(["createFetchTransport"], "Registry createFetchTransport") as () => {
     fetch: (request: {
       method: string;
       url: string;
@@ -105,21 +87,13 @@ export function getCreateFetchTransport(): () => {
 /** Git child env: ambient suppress + selected-class attach + sc-008 refuse. */
 export function getBuildGitChildEnv(): (options: Record<string, unknown>) => NodeJS.ProcessEnv {
   return pickExport(
-    [
-      "buildGitChildEnv",
-      "buildHardenedGitEnv",
-      "createGitChildEnv",
-      "gitChildEnvForHost",
-    ],
+    ["buildGitChildEnv", "buildHardenedGitEnv", "createGitChildEnv", "gitChildEnvForHost"],
     "git ambient-suppress child env",
   ) as (options: Record<string, unknown>) => NodeJS.ProcessEnv;
 }
 
 /** Operator / provider class selection with overlap precedence (sc-013). */
-export function getSelectProviderClassForHost(): (
-  host: string,
-  env?: NodeJS.ProcessEnv,
-) => string {
+export function getSelectProviderClassForHost(): (host: string, env?: NodeJS.ProcessEnv) => string {
   return pickExport(
     [
       "selectProviderClassForHost",

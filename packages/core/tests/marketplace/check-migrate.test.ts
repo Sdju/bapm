@@ -93,8 +93,7 @@ describe("mp-authoring-yml check + migrate (core)", () => {
       dryRun: true,
       force: true,
     });
-    const row =
-      result && typeof result === "object" ? asRecord(result) : { ok: result !== false };
+    const row = result && typeof result === "object" ? asRecord(result) : { ok: result !== false };
     expect(row.ok === false ? false : true).toBe(true);
 
     const after = readText(join(project.cwd, "bapm.yml"));

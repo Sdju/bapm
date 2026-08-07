@@ -39,9 +39,7 @@ export function createPluginJson(options: CreatePluginJsonOptions): PluginJsonDo
   return {
     name,
     version:
-      typeof options.version === "string" && options.version.length > 0
-        ? options.version
-        : "0.1.0",
+      typeof options.version === "string" && options.version.length > 0 ? options.version : "0.1.0",
     description: typeof options.description === "string" ? options.description : "",
     author: {
       name:
@@ -50,9 +48,7 @@ export function createPluginJson(options: CreatePluginJsonOptions): PluginJsonDo
           : "author",
     },
     license:
-      typeof options.license === "string" && options.license.length > 0
-        ? options.license
-        : "MIT",
+      typeof options.license === "string" && options.license.length > 0 ? options.license : "MIT",
   };
 }
 
@@ -63,7 +59,9 @@ export const buildPluginJson = createPluginJson;
 /**
  * Serialize `plugin.json` with indent width 2 and a trailing newline.
  */
-export function serializePluginJson(document: PluginJsonDocument | Record<string, unknown>): string {
+export function serializePluginJson(
+  document: PluginJsonDocument | Record<string, unknown>,
+): string {
   return `${JSON.stringify(document, null, 2)}\n`;
 }
 

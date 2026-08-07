@@ -30,7 +30,7 @@ const GITLAB_ENV = ["GITLAB_APM_PAT", "GITLAB_TOKEN"] as const;
 const ADO_ENV = ["ADO_APM_PAT"] as const;
 
 function resolveForClass(
-  cls: MarketplaceHostClass  ,
+  cls: MarketplaceHostClass,
   env: NodeJS.ProcessEnv,
 ): ResolvedMarketplaceToken | null {
   switch (cls) {

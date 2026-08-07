@@ -161,11 +161,7 @@ export async function addMarketplace(
 }
 
 export function writeEmptyProject(cwd: string, name = "consumer"): void {
-  writeText(
-    cwd,
-    "bapm.yml",
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(cwd, "bapm.yml", `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
 }
 
 export function readLockText(cwd: string): string {

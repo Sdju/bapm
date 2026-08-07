@@ -19,9 +19,7 @@ import { runCli } from "../../src/index.ts";
 export type TempProject = { cwd: string; root: string; cleanup: () => void };
 
 /** Temp tree with a kebab-safe project cwd (basename is a valid plugin id). */
-export function createTempProject(
-  options?: { prefix?: string; basename?: string },
-): TempProject {
+export function createTempProject(options?: { prefix?: string; basename?: string }): TempProject {
   const root = mkdtempSync(join(tmpdir(), options?.prefix ?? "bapm-mp-plugin-init-cli-"));
   const dirName = options?.basename ?? "demo-plugin";
   const cwd = join(root, dirName);

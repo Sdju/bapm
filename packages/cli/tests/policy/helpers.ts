@@ -179,9 +179,7 @@ function fingerprintTree(root: string): string {
       if (st.isDirectory()) walk(full, childRel);
       else {
         const body = readFileSync(full);
-        parts.push(
-          `${childRel}:${st.size}:${createHash("sha256").update(body).digest("hex")}`,
-        );
+        parts.push(`${childRel}:${st.size}:${createHash("sha256").update(body).digest("hex")}`);
       }
     }
   };
@@ -190,7 +188,14 @@ function fingerprintTree(root: string): string {
 }
 
 export function projectFingerprint(cwd: string): string {
-  const keys = ["bapm.yml", "apm.yml", "bapm.lock.yaml", "apm.lock.yaml", "apm_modules", "bapm_modules"];
+  const keys = [
+    "bapm.yml",
+    "apm.yml",
+    "bapm.lock.yaml",
+    "apm.lock.yaml",
+    "apm_modules",
+    "bapm_modules",
+  ];
   const parts: string[] = [];
   for (const key of keys) {
     const full = join(cwd, key);

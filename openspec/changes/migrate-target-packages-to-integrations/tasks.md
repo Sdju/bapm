@@ -7,13 +7,13 @@
 
 ## 2. Rename the generic boundary
 
-- [ ] 2.1 Move `packages/target-api` to `packages/integration-api`, rename the package to `bapm-integration-api`, and rename public contract terminology only where it denotes the package boundary rather than a generic runtime concept.
+- [ ] 2.1 Move `packages/integration-api` to `packages/integration-api`, rename the package to `bapm-integration-api`, and rename public contract terminology only where it denotes the package boundary rather than a generic runtime concept.
 - [ ] 2.2 Update `@bapm/core`, CLI, workspace manifests, lockfile, imports, public exports, helper utilities, and generic registry tests to resolve exclusively through `bapm-integration-api`.
 - [ ] 2.3 Verify no source/build/test resolver aliases, compatibility packages, or re-export shims resolve any retired package name.
 
 ## 3. Migrate Cursor runtime ownership
 
-- [ ] 3.1 Move `packages/target-cursor` to `packages/integration-cursor`, rename it `bapm-integration-cursor`, and update its dependency edge to the integration API.
+- [ ] 3.1 Move `packages/integration-cursor` to `packages/integration-cursor`, rename it `bapm-integration-cursor`, and update its dependency edge to the integration API.
 - [ ] 3.2 Update the CLI composition root and all test harnesses to register the Cursor integration through the generic integration registry without adding core→Cursor dependencies.
 - [ ] 3.3 Preserve and verify Cursor detection, primitive deployment, MCP configuration, compile emission, project-root safety, and target-owned inventory reports under the renamed package.
 
@@ -29,7 +29,7 @@
 - [ ] 5.1 Update all live README files, architecture and user docs, inline package/module documentation, test names, fixtures, conformance data, and package descriptions to integration terminology.
 - [ ] 5.2 Rewrite live main OpenSpec specifications to remove retired package identifiers and synchronize this change's delta specs after implementation; retain retired terms only in archived historical snapshots.
 - [ ] 5.3 Regenerate workspace lockfile through the package manager and remove all retired package paths, specifiers, and workspace entries.
-- [ ] 5.4 Make the repository-wide denylist audit pass with zero live matches for `bapm-target-`, `packages/target-api`, and `packages/target-cursor`, and prove old npm specifiers do not resolve.
+- [ ] 5.4 Make the repository-wide denylist audit pass with zero live matches for `bapm-target-`, `packages/integration-api`, and `packages/integration-cursor`, and prove old npm specifiers do not resolve.
 
 ## 6. Verify
 

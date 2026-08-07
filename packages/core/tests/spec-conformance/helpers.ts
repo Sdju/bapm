@@ -16,10 +16,7 @@ export const fixtureRoot = join(repoRoot, "tests/fixtures/spec-conformance");
 /** Informative requirements mirror + Mode B checklist live under this dir. */
 export const specConformanceDir = join(repoRoot, "tests/spec-conformance");
 
-export const requirementsMirrorPath = join(
-  specConformanceDir,
-  "openapm-v0.1.requirements.yml",
-);
+export const requirementsMirrorPath = join(specConformanceDir, "openapm-v0.1.requirements.yml");
 
 /** Machine checklist: status active | skipped | n/a per req-XXX. */
 export const checklistCandidates = [
@@ -144,7 +141,8 @@ function normalizeRow(raw: unknown): ChecklistRow {
       | string
       | string[]
       | undefined,
-    assertion: r.assertion != null ? String(r.assertion) : r.test != null ? String(r.test) : undefined,
+    assertion:
+      r.assertion != null ? String(r.assertion) : r.test != null ? String(r.test) : undefined,
     citation:
       r.citation != null
         ? String(r.citation)

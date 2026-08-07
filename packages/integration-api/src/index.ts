@@ -1,5 +1,5 @@
 /**
- * bapm-target-api — contracts + registry between @bapm/core and host targets.
+ * bapm-integration-api — contracts + registry between @bapm/core and host targets.
  */
 
 export type {
@@ -16,6 +16,9 @@ export type {
   MaterializeContext,
   MaterializeReport,
   McpServerConfig,
+  MarketplaceOutputCapability,
+  MarketplaceOutputIntegration,
+  MarketplaceOutputRegistry,
   PrimitiveSource,
   PrimitiveType,
   TargetDetectFn,
@@ -25,7 +28,11 @@ export type {
   TargetRegistry,
 } from "./types.ts";
 
-export { createTargetRegistry, createRegistry } from "./registry.ts";
+export {
+  createTargetRegistry,
+  createRegistry,
+  createMarketplaceOutputRegistry,
+} from "./registry.ts";
 
 export {
   assertUnderDeployRoots,

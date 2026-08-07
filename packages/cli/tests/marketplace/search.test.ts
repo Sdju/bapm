@@ -47,7 +47,9 @@ describe("mp-search-install G7 top-level search CLI", () => {
     const { result, combined } = await runInEnv(env, ["search", "demo@no-such-market"]);
     expectKnownCommand(combined, "search");
     expect(result).not.toBe(0);
-    expect(combined).toMatch(/marketplace.*not.?found|not.?found|unknown marketplace|no-such-market/i);
+    expect(combined).toMatch(
+      /marketplace.*not.?found|not.?found|unknown marketplace|no-such-market/i,
+    );
   });
 
   test("bad expression without last-@ marketplace fails non-zero", async () => {

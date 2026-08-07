@@ -44,10 +44,7 @@ test("README Conformance & parity lists intentional diffs", () => {
 });
 
 test("dedicated VitePress guide/conformance.md exists and is navigable from sidebar", () => {
-  expect(
-    fileExists(conformanceGuidePath),
-    "apps/docs/guide/conformance.md must exist",
-  ).toBe(true);
+  expect(fileExists(conformanceGuidePath), "apps/docs/guide/conformance.md must exist").toBe(true);
   const config = readText(vitepressConfigPath);
   expect(config).toMatch(/\/guide\/conformance/);
 });
@@ -83,8 +80,7 @@ test("docs landing must not advertise multi-client adapters as shipped", () => {
 
 test("guide intro must not claim across-clients without cursor-only qualifier", () => {
   const intro = readText(docsGuideIndexPath);
-  const acrossClientsBare =
-    /across\s+clients/i.test(intro) && !/cursor-only/i.test(intro);
+  const acrossClientsBare = /across\s+clients/i.test(intro) && !/cursor-only/i.test(intro);
   expect(
     acrossClientsBare,
     'guide intro must not say "across clients" as current fact without cursor-only',
@@ -94,8 +90,6 @@ test("guide intro must not claim across-clients without cursor-only qualifier", 
 test("architecture overview describes target packages / cursor-only, not in-tree multi-client adapters in @bapm/core", () => {
   const arch = readText(docsArchitecturePath);
   expect(arch).toMatch(/target\s+packages|bapm-target|cursor-only/i);
-  expect(arch).not.toMatch(
-    /@bapm\/core[^\n]*adapters|install,\s*adapters/i,
-  );
+  expect(arch).not.toMatch(/@bapm\/core[^\n]*adapters|install,\s*adapters/i);
   expect(arch).toMatch(/guide\/conformance|\/guide\/conformance/);
 });

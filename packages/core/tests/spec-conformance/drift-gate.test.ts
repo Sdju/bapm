@@ -19,8 +19,7 @@ describe("p3 Mode B — statement drift gate", () => {
     const script = findExistingPath(driftScriptCandidates);
     const scriptsDir = join(repoRoot, "scripts");
     const scriptsDirHits =
-      existsSync(scriptsDir) &&
-      readdirSync(scriptsDir).some((name) => /conformance/i.test(name));
+      existsSync(scriptsDir) && readdirSync(scriptsDir).some((name) => /conformance/i.test(name));
 
     const underSpec =
       existsSync(specConformanceDir) &&

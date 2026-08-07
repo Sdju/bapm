@@ -1,5 +1,5 @@
 import { join, resolve } from "node:path";
-import type { BapmTarget, TargetRegistry } from "bapm-target-api";
+import type { BapmTarget, TargetRegistry } from "bapm-integration-api";
 import {
   discoverPrimitives,
   resolvePrimitiveConflicts,

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { compileAgentsMd } from "../../src/index.ts";
-import { createTargetRegistry } from "bapm-target-api";
+import { createTargetRegistry } from "bapm-integration-api";
 
 type Project = { cwd: string; cleanup: () => void };
 
@@ -28,7 +28,11 @@ describe("target capability compilation", () => {
   test("delegates default output and rendering to the forced target capability", async () => {
     project = createProject();
     mkdirSync(join(project.cwd, ".apm", "instructions"), { recursive: true });
-    writeFileSync(join(project.cwd, ".apm", "instructions", "style.md"), "# Target-owned\n", "utf8");
+    writeFileSync(
+      join(project.cwd, ".apm", "instructions", "style.md"),
+      "# Target-owned\n",
+      "utf8",
+    );
 
     const registry = createTargetRegistry();
     const received: Array<{ override?: string; primitives: unknown }> = [];

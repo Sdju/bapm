@@ -120,8 +120,6 @@ describe("M8 discovery — providers include local + remote", () => {
     const providers = providersList(getDefaultPolicyProviders());
     expect(providers).toContain("local");
     expect(providers).toContain("github-owner-dotgithub");
-    expect(providers.indexOf("local")).toBeLessThan(
-      providers.indexOf("github-owner-dotgithub"),
-    );
+    expect(providers.indexOf("local")).toBeLessThan(providers.indexOf("github-owner-dotgithub"));
   });
 });

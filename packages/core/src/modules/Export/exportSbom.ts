@@ -3,11 +3,7 @@
  */
 
 import { loadLockfileOrNull } from "@/modules/Lockfile";
-import {
-  formatUnsupportedMessage,
-  normalizeFormat,
-  serializeSbom,
-} from "./serialize.ts";
+import { formatUnsupportedMessage, normalizeFormat, serializeSbom } from "./serialize.ts";
 import {
   FIXED_EPOCH_TIMESTAMP,
   type ExportSbomOptions,

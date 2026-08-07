@@ -3,28 +3,6 @@ import type { MarketplaceAuthoringConfig } from "../Authoring/types.ts";
 import { MarketplacePackOutputsError } from "./errors.ts";
 import type { MarketplaceOutputFormat } from "./types.ts";
 
-export type MarketplaceOutputProfile = {
-  name: MarketplaceOutputFormat;
-  defaultOutput: string;
-  requiredPackageFields: readonly string[];
-};
-
-export const MARKETPLACE_OUTPUT_PROFILES: Record<MarketplaceOutputFormat, MarketplaceOutputProfile> =
-  {
-    claude: {
-      name: "claude",
-      defaultOutput: ".claude-plugin/marketplace.json",
-      requiredPackageFields: [],
-    },
-    codex: {
-      name: "codex",
-      defaultOutput: ".agents/plugins/marketplace.json",
-      requiredPackageFields: ["category"],
-    },
-  };
-
-export const KNOWN_OUTPUT_FORMATS = new Set<string>(Object.keys(MARKETPLACE_OUTPUT_PROFILES));
-
 /** Ensure candidate resolves under project root (path jail). */
 export function ensureMarketplacePathWithin(absolutePath: string, projectRoot: string): string {
   const root = resolve(projectRoot);
@@ -48,6 +26,7 @@ export function ensureMarketplacePathWithin(absolutePath: string, projectRoot: s
 export type ResolveEffectiveOutputPathOptions = {
   cwd: string;
   format: MarketplaceOutputFormat | string;
+  defaultOutput: string;
   /** Explicit override path (CLI or caller). */
   path?: string;
   config?: MarketplaceAuthoringConfig;
@@ -58,16 +37,9 @@ export type ResolveEffectiveOutputPathOptions = {
  * CLI override → outputs.<fmt>.path → profile default.
  * Confined under project root.
  */
-export function resolveEffectiveOutputPath(
-  options: ResolveEffectiveOutputPathOptions,
-): string {
+export function resolveEffectiveOutputPath(options: ResolveEffectiveOutputPathOptions): string {
   const cwd = resolve(options.cwd);
   const format = options.format;
-  if (!KNOWN_OUTPUT_FORMATS.has(format)) {
-    throw new MarketplacePackOutputsError(`Unknown marketplace format '${format}'`);
-  }
-  const profile = MARKETPLACE_OUTPUT_PROFILES[format as MarketplaceOutputFormat];
-
   let configured: string | undefined = options.path;
   if (configured === undefined && options.config?.outputs) {
     const entry = options.config.outputs[format];
@@ -76,7 +48,7 @@ export function resolveEffectiveOutputPath(
       if (typeof pathVal === "string" && pathVal.trim()) configured = pathVal.trim();
     }
   }
-  if (configured === undefined) configured = profile.defaultOutput;
+  if (configured === undefined) configured = options.defaultOutput;
 
   const absolute = isAbsolute(configured) ? configured : resolve(cwd, configured);
   return ensureMarketplacePathWithin(absolute, cwd);
@@ -96,11 +68,14 @@ function outputEntryEnabled(value: unknown): boolean {
 /**
  * Formats enabled by authoring `outputs` map (and legacy top-level claude/codex keys).
  */
-export function formatsEnabledInConfig(config: MarketplaceAuthoringConfig): MarketplaceOutputFormat[] {
+export function formatsEnabledInConfig(
+  config: MarketplaceAuthoringConfig,
+  knownFormats: Iterable<string>,
+): MarketplaceOutputFormat[] {
   const out: MarketplaceOutputFormat[] = [];
   const outputs = config.outputs ?? {};
 
-  for (const name of Object.keys(MARKETPLACE_OUTPUT_PROFILES) as MarketplaceOutputFormat[]) {
+  for (const name of knownFormats) {
     if (outputEntryEnabled(outputs[name])) {
       out.push(name);
       continue;
@@ -122,6 +97,7 @@ export type ParseMarketplaceFilterResult =
  */
 export function parseMarketplaceFilter(
   marketplace: string | string[] | "all" | "none" | undefined,
+  knownFormats: ReadonlySet<string> = new Set(),
 ): ParseMarketplaceFilterResult {
   if (marketplace === undefined || marketplace === "all") return { kind: "all" };
   if (marketplace === "none") return { kind: "none" };
@@ -136,9 +112,9 @@ export function parseMarketplaceFilter(
   const formats: MarketplaceOutputFormat[] = [];
   for (const p of parts) {
     const lower = p.toLowerCase();
-    if (!KNOWN_OUTPUT_FORMATS.has(lower)) {
+    if (!knownFormats.has(lower)) {
       throw new MarketplacePackOutputsError(
-        `Unknown marketplace format '${p}' (unknown format). Known: ${[...KNOWN_OUTPUT_FORMATS].sort().join(", ")}`,
+        `Unknown marketplace format '${p}' (unknown format). Known: ${[...knownFormats].sort().join(", ")}`,
       );
     }
     formats.push(lower as MarketplaceOutputFormat);
@@ -150,19 +126,18 @@ export function parseMarketplaceFilter(
 export function selectOutputFormats(
   config: MarketplaceAuthoringConfig,
   marketplace: string | string[] | "all" | "none" | undefined,
+  knownFormats: ReadonlySet<string> = new Set(),
 ): MarketplaceOutputFormat[] {
-  const filter = parseMarketplaceFilter(marketplace);
+  const filter = parseMarketplaceFilter(marketplace, knownFormats);
   if (filter.kind === "none") return [];
-  const enabled = formatsEnabledInConfig(config);
+  const enabled = formatsEnabledInConfig(config, knownFormats);
   if (filter.kind === "all") return enabled;
   return filter.formats.filter((f) => enabled.includes(f));
 }
 
 export function normalizeMarketplacePathOverrides(
-  input:
-    | Record<string, string>
-    | Array<string | { format: string; path: string }>
-    | undefined,
+  input: Record<string, string> | Array<string | { format: string; path: string }> | undefined,
+  knownFormats: ReadonlySet<string> = new Set(),
 ): Record<string, string> {
   if (!input) return {};
   if (!Array.isArray(input)) return { ...input };
@@ -178,7 +153,7 @@ export function normalizeMarketplacePathOverrides(
       }
       const format = item.slice(0, eq).trim().toLowerCase();
       const path = item.slice(eq + 1).trim();
-      if (!KNOWN_OUTPUT_FORMATS.has(format)) {
+      if (!knownFormats.has(format)) {
         throw new MarketplacePackOutputsError(
           `Unknown marketplace format '${format}' in --marketplace-path`,
         );
@@ -190,7 +165,7 @@ export function normalizeMarketplacePathOverrides(
       continue;
     }
     const format = String(item.format).trim().toLowerCase();
-    if (!KNOWN_OUTPUT_FORMATS.has(format)) {
+    if (!knownFormats.has(format)) {
       throw new MarketplacePackOutputsError(
         `Unknown marketplace format '${format}' in --marketplace-path`,
       );

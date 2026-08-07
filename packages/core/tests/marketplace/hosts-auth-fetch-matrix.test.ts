@@ -144,9 +144,10 @@ describe("mp-hosts-auth fetch matrix", () => {
             privateToken === "glpat-ACCEPT_GL_ONLY" ||
             auth.includes("glpat-ACCEPT_GL_ONLY") ||
             auth.toLowerCase().startsWith("bearer glpat-");
-          expect(usedGitlab, `expected GitLab auth on ${c.url}, headers=${JSON.stringify(c.headers)}`).toBe(
-            true,
-          );
+          expect(
+            usedGitlab,
+            `expected GitLab auth on ${c.url}, headers=${JSON.stringify(c.headers)}`,
+          ).toBe(true);
         }
       },
     );

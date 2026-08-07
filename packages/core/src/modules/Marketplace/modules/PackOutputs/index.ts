@@ -1,5 +1,5 @@
 /**
- * Marketplace PackOutputs — resolve authoring packages, map Claude/Codex JSON,
+ * Marketplace PackOutputs — resolve authoring packages and invoke registered integrations,
  * path-jail, atomic multi-output write during `bapm pack`.
  *
  * Fractal submodule of Marketplace (not a top-level module).
@@ -20,8 +20,6 @@ export type {
 } from "./types.ts";
 
 export {
-  MARKETPLACE_OUTPUT_PROFILES,
-  KNOWN_OUTPUT_FORMATS,
   ensureMarketplacePathWithin,
   resolveEffectiveOutputPath,
   resolveMarketplaceOutputPath,
@@ -29,7 +27,6 @@ export {
   parseMarketplaceFilter,
   selectOutputFormats,
   normalizeMarketplacePathOverrides,
-  type MarketplaceOutputProfile,
   type ResolveEffectiveOutputPathOptions,
   type ParseMarketplaceFilterResult,
 } from "./profiles.ts";
@@ -40,11 +37,7 @@ export {
   resolveMarketplacePackPackages,
 } from "./resolve.ts";
 
-export {
-  mapClaudeMarketplace,
-  mapCodexMarketplace,
-  serializeMarketplaceJson,
-} from "./mappers.ts";
+export { serializeMarketplaceJson } from "./mappers.ts";
 
 export { atomicWriteMarketplaceJson } from "./write.ts";
 

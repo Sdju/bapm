@@ -2,14 +2,7 @@
  * Unit tests — plugin name validation, plugin.json, plugin-mode minimal manifest.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import {
-  existsSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-} from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

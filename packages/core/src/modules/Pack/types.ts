@@ -1,3 +1,5 @@
+import type { MarketplaceOutputRegistry } from "bapm-integration-api";
+
 export type RunPackOptions = {
   cwd?: string;
   /** Pack an Agent Plugins v1 portable root (never a marketplace output). */
@@ -25,6 +27,8 @@ export type RunPackOptions = {
   offline?: boolean;
   /** Include prerelease tags when resolving version ranges. */
   includePrerelease?: boolean;
+  /** Composition-root registry of marketplace-output integrations. */
+  marketplaceOutputs?: MarketplaceOutputRegistry;
   /** Injectable ls-remote for tests (forwarded to marketplace builder). */
   lsRemote?: (
     repoUrl: string,

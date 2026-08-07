@@ -115,9 +115,7 @@ describe("core exportSbom", () => {
         timestamp: "2020-01-01T00:00:00Z",
       }),
     );
-    expect(out).toMatch(
-      /pkg:github\/example\/one@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/,
-    );
+    expect(out).toMatch(/pkg:github\/example\/one@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/);
   });
 
   test("distribution URL scrub drops userinfo and query", async () => {

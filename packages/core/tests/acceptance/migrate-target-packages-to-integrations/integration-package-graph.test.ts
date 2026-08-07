@@ -39,9 +39,7 @@ describe("integration package migration", () => {
     const cursor = (await import("bapm-integration-cursor")) as CursorIntegration;
 
     expect(requirePackageManifest("bapm-integration-api").name).toBe("bapm-integration-api");
-    expect(requirePackageManifest("bapm-integration-cursor").name).toBe(
-      "bapm-integration-cursor",
-    );
+    expect(requirePackageManifest("bapm-integration-cursor").name).toBe("bapm-integration-cursor");
     expect(typeof api.createTargetRegistry).toBe("function");
     expect(cursor.createCursorTarget().id).toBe("cursor");
   });

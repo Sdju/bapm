@@ -24,12 +24,7 @@ describe("sc-host-class redirect Auth drop (sc-003)", () => {
     const original = globalThis.fetch;
     let count = 0;
     globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.href
-            : input.url;
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
       const headers = new Headers(
         init?.headers ?? (input instanceof Request ? input.headers : undefined),
       );

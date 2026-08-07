@@ -60,13 +60,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
   test("add local marketplace.json succeeds and list shows it", async () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "mp/marketplace.json", LOCAL_FIXTURE);
-    const add = await runMarketplace(env, [
-      "marketplace",
-      "add",
-      fixture,
-      "--name",
-      "local-mp",
-    ]);
+    const add = await runMarketplace(env, ["marketplace", "add", fixture, "--name", "local-mp"]);
     expectMarketplaceKnown(add.combined);
     expect(add.result).toBe(0);
     expect(existsSync(marketplacesJsonPath(env.home))).toBe(true);
@@ -114,13 +108,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
   test("browse lists plugins for a registered local marketplace", async () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "browse/marketplace.json", LOCAL_FIXTURE);
-    const add = await runMarketplace(env, [
-      "marketplace",
-      "add",
-      fixture,
-      "--name",
-      "browse-mp",
-    ]);
+    const add = await runMarketplace(env, ["marketplace", "add", fixture, "--name", "browse-mp"]);
     expect(add.result).toBe(0);
 
     const browse = await runMarketplace(env, ["marketplace", "browse", "browse-mp"]);
@@ -133,9 +121,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "rm/marketplace.json", LOCAL_FIXTURE);
     expect(
-      (
-        await runMarketplace(env, ["marketplace", "add", fixture, "--name", "keep-mp"])
-      ).result,
+      (await runMarketplace(env, ["marketplace", "add", fixture, "--name", "keep-mp"])).result,
     ).toBe(0);
 
     const { result, combined } = await runMarketplace(env, ["marketplace", "remove", "keep-mp"]);
@@ -153,17 +139,10 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "rm2/marketplace.json", LOCAL_FIXTURE);
     expect(
-      (
-        await runMarketplace(env, ["marketplace", "add", fixture, "--name", "gone-mp"])
-      ).result,
+      (await runMarketplace(env, ["marketplace", "add", fixture, "--name", "gone-mp"])).result,
     ).toBe(0);
 
-    const remove = await runMarketplace(env, [
-      "marketplace",
-      "remove",
-      "gone-mp",
-      "-y",
-    ]);
+    const remove = await runMarketplace(env, ["marketplace", "remove", "gone-mp", "-y"]);
     expect(remove.result).toBe(0);
     expect(
       readMarketplaces(env.home).marketplaces.some(
@@ -176,9 +155,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "up/marketplace.json", LOCAL_FIXTURE);
     expect(
-      (
-        await runMarketplace(env, ["marketplace", "add", fixture, "--name", "up-mp"])
-      ).result,
+      (await runMarketplace(env, ["marketplace", "add", fixture, "--name", "up-mp"])).result,
     ).toBe(0);
 
     const update = await runMarketplace(env, ["marketplace", "update", "up-mp"]);
@@ -190,9 +167,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "dup/marketplace.json", DUP_FIXTURE);
     expect(
-      (
-        await runMarketplace(env, ["marketplace", "add", fixture, "--name", "dup-mp"])
-      ).result,
+      (await runMarketplace(env, ["marketplace", "add", fixture, "--name", "dup-mp"])).result,
     ).toBe(0);
 
     const validate = await runMarketplace(env, ["marketplace", "validate", "dup-mp"]);
@@ -205,9 +180,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "ok/marketplace.json", LOCAL_FIXTURE);
     expect(
-      (
-        await runMarketplace(env, ["marketplace", "add", fixture, "--name", "ok-mp"])
-      ).result,
+      (await runMarketplace(env, ["marketplace", "add", fixture, "--name", "ok-mp"])).result,
     ).toBe(0);
 
     const validate = await runMarketplace(env, ["marketplace", "validate", "ok-mp"]);
@@ -230,13 +203,7 @@ describe("mp-consumer-registry CLI consumer surface", () => {
   test("config root used by CLI is ~/.bapm under HOME", async () => {
     env = createIsolatedHome();
     const fixture = writeLocalFixture(env.cwd, "home/marketplace.json", LOCAL_FIXTURE);
-    const add = await runMarketplace(env, [
-      "marketplace",
-      "add",
-      fixture,
-      "--name",
-      "home-mp",
-    ]);
+    const add = await runMarketplace(env, ["marketplace", "add", fixture, "--name", "home-mp"]);
     expect(add.result).toBe(0);
     expect(existsSync(bapmDir(env.home))).toBe(true);
     expect(existsSync(marketplacesJsonPath(env.home))).toBe(true);

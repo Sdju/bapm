@@ -1,7 +1,7 @@
 {
-  "name": "bapm-target-cursor",
+  "name": "bapm-integration-api",
   "version": "0.0.0",
-  "description": "Minimal Cursor host target for bapm (skills materialize)",
+  "description": "Shared contracts and registry for bapm host integrations",
   "license": "MIT",
   "files": [
     "dist"
@@ -20,9 +20,6 @@
     "test": "vp test",
     "check": "vp check",
     "prepublishOnly": "vp run build"
-  },
-  "dependencies": {
-    "bapm-target-api": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

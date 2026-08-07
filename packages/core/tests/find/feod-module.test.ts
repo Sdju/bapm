@@ -38,9 +38,7 @@ describe("mp-find FEOD Find module", () => {
     expect(typeof getFindPath()).toBe("function");
     const c = core as Record<string, unknown>;
     expect(
-      "buildReverseIndex" in c ||
-        "build_reverse_index" in c ||
-        "buildFindReverseIndex" in c,
+      "buildReverseIndex" in c || "build_reverse_index" in c || "buildFindReverseIndex" in c,
     ).toBe(true);
   });
 

@@ -125,8 +125,7 @@ function resolveGithubDict(
   if (repo.toLowerCase().startsWith("github.com/")) {
     repo = repo.slice("github.com/".length);
   }
-  const path =
-    typeof source.path === "string" ? source.path.replace(/^\/+|\/+$/g, "") : "";
+  const path = typeof source.path === "string" ? source.path.replace(/^\/+|\/+$/g, "") : "";
   const declaredRef =
     (typeof versionSpec === "string" && versionSpec) ||
     (typeof source.ref === "string" ? source.ref : "") ||
@@ -143,7 +142,10 @@ function resolveUrlDict(
 ): MarketplaceConcreteDep {
   const url = typeof source.url === "string" ? source.url.trim() : "";
   if (!url) {
-    throw new MarketplaceUnsupportedSourceError(pluginName, "URL source requires a non-empty 'url'");
+    throw new MarketplaceUnsupportedSourceError(
+      pluginName,
+      "URL source requires a non-empty 'url'",
+    );
   }
   const host = hostnameOfUrl(url);
   if (host && !isGithubHostname(host) && !url.startsWith("file:")) {
@@ -174,9 +176,15 @@ function resolveRelativeLocal(
   marketplace: MarketplaceSource,
   pluginRoot: string,
 ): MarketplaceConcreteDep {
-  let rel = relative.trim().replace(/^\.\//, "").replace(/^\/+|\/+$/g, "");
+  let rel = relative
+    .trim()
+    .replace(/^\.\//, "")
+    .replace(/^\/+|\/+$/g, "");
   if (pluginRoot && rel && !rel.includes("/")) {
-    const root = pluginRoot.trim().replace(/^\.\//, "").replace(/^\/+|\/+$/g, "");
+    const root = pluginRoot
+      .trim()
+      .replace(/^\.\//, "")
+      .replace(/^\/+|\/+$/g, "");
     if (root) rel = `${root}/${rel}`;
   }
   const marketplacePath = resolveLocalFilesystemPath(marketplace);
@@ -204,7 +212,11 @@ function mapPluginSource(args: {
   const hasConcrete =
     source !== null &&
     source !== undefined &&
-    !(typeof source === "object" && !Array.isArray(source) && Object.keys(source as object).length === 0);
+    !(
+      typeof source === "object" &&
+      !Array.isArray(source) &&
+      Object.keys(source as object).length === 0
+    );
 
   if (plugin.registry && !hasConcrete) {
     throw new MarketplaceUnsupportedSourceError(
@@ -227,9 +239,15 @@ function mapPluginSource(args: {
     }
     // Relative string on a remote marketplace → owner/repo/subdir (github-shaped)
     if (marketplace.owner && marketplace.repo) {
-      let rel = source.trim().replace(/^\.\//, "").replace(/^\/+|\/+$/g, "");
+      let rel = source
+        .trim()
+        .replace(/^\.\//, "")
+        .replace(/^\/+|\/+$/g, "");
       if (manifest.pluginRoot && rel && !rel.includes("/")) {
-        const root = manifest.pluginRoot.trim().replace(/^\.\//, "").replace(/^\/+|\/+$/g, "");
+        const root = manifest.pluginRoot
+          .trim()
+          .replace(/^\.\//, "")
+          .replace(/^\/+|\/+$/g, "");
         if (root) rel = `${root}/${rel}`;
       }
       const base =

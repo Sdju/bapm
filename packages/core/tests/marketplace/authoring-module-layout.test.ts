@@ -23,7 +23,10 @@ describe("mp-authoring-yml core Marketplace authoring layout", () => {
   test("authoring helper sources exist under Marketplace (Authoring/ or authoring*.ts)", () => {
     const files = listFilesRecursive(marketplaceSrc).filter((f) => f.endsWith(".ts"));
     const authoringFiles = files.filter(
-      (f) => /authoring/i.test(f) || /\/Authoring\//.test(f) || /yml_schema|yml_editor|init_template/i.test(f),
+      (f) =>
+        /authoring/i.test(f) ||
+        /\/Authoring\//.test(f) ||
+        /yml_schema|yml_editor|init_template/i.test(f),
     );
     expect(
       authoringFiles.length,
@@ -58,18 +61,15 @@ describe("mp-authoring-yml core Marketplace authoring layout", () => {
   test("authoring sources do not write host marketplace.json paths", () => {
     const files = listFilesRecursive(marketplaceSrc).filter((f) => f.endsWith(".ts"));
     const authoringFiles = files.filter(
-      (f) => /authoring/i.test(f) || /\/Authoring\//.test(f) || /yml_|init_template|migrate/i.test(f),
+      (f) =>
+        /authoring/i.test(f) || /\/Authoring\//.test(f) || /yml_|init_template|migrate/i.test(f),
     );
     expect(authoringFiles.length).toBeGreaterThan(0);
     for (const file of authoringFiles) {
       const body = readFileSync(file, "utf8");
       // Allow comments / strings documenting deferral, but forbid write of host artifact paths.
-      expect(body, file).not.toMatch(
-        /writeFileSync\([^)]*\.claude-plugin\/marketplace\.json/,
-      );
-      expect(body, file).not.toMatch(
-        /writeFileSync\([^)]*\.agents\/plugins\/marketplace\.json/,
-      );
+      expect(body, file).not.toMatch(/writeFileSync\([^)]*\.claude-plugin\/marketplace\.json/);
+      expect(body, file).not.toMatch(/writeFileSync\([^)]*\.agents\/plugins\/marketplace\.json/);
     }
   });
 });

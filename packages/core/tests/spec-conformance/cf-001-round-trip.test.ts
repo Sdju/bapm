@@ -38,9 +38,7 @@ describe("Mode B req-cf-001 — manifest round-trip", () => {
       >;
       const canonical2 = serializeManifest(secondDoc);
 
-      expect(normalizeTrailingNewline(canonical2)).toBe(
-        normalizeTrailingNewline(canonical1),
-      );
+      expect(normalizeTrailingNewline(canonical2)).toBe(normalizeTrailingNewline(canonical1));
 
       for (const key of Object.keys(firstDoc)) {
         if (key.startsWith("x-")) {
@@ -63,9 +61,7 @@ describe("Mode B req-cf-001 — lockfile round-trip", () => {
       const secondDoc = parseLockfile(canonical1) as Record<string, unknown>;
       const canonical2 = serializeLockfile(secondDoc);
 
-      expect(normalizeTrailingNewline(canonical2)).toBe(
-        normalizeTrailingNewline(canonical1),
-      );
+      expect(normalizeTrailingNewline(canonical2)).toBe(normalizeTrailingNewline(canonical1));
 
       for (const key of Object.keys(firstDoc)) {
         if (key.startsWith("x-")) {

@@ -32,16 +32,10 @@ describe("p3 Mode B — requirements mirror + checklist", () => {
   });
 
   test("machine checklist enumerates reqs with status active|skipped|n/a", () => {
-    expect(
-      existsSync(specConformanceDir),
-      `expected ${specConformanceDir}`,
-    ).toBe(true);
+    expect(existsSync(specConformanceDir), `expected ${specConformanceDir}`).toBe(true);
 
     const path = findExistingPath(checklistCandidates);
-    expect(
-      path,
-      `expected checklist at one of: ${checklistCandidates.join(", ")}`,
-    ).toBeTruthy();
+    expect(path, `expected checklist at one of: ${checklistCandidates.join(", ")}`).toBeTruthy();
 
     const raw = path!.endsWith(".json") ? loadJsonFile(path!) : loadYamlFile(path!);
     const rows = checklistRows(raw);
@@ -59,9 +53,7 @@ describe("p3 Mode B — requirements mirror + checklist", () => {
   test("Registry rg-001 is n/a; Governance pl-003/011/012 may be active when claimed", () => {
     const path = findExistingPath(checklistCandidates);
     expect(path, "checklist required").toBeTruthy();
-    const rows = checklistRows(
-      path!.endsWith(".json") ? loadJsonFile(path!) : loadYamlFile(path!),
-    );
+    const rows = checklistRows(path!.endsWith(".json") ? loadJsonFile(path!) : loadYamlFile(path!));
     byId(rows, "req-rg-001");
 
     const rg = byId(rows, "req-rg-001");
@@ -87,9 +79,7 @@ describe("p3 Mode B — requirements mirror + checklist", () => {
   test("every active row cites fixture path and/or assertion", () => {
     const path = findExistingPath(checklistCandidates);
     expect(path, "checklist required").toBeTruthy();
-    const rows = checklistRows(
-      path!.endsWith(".json") ? loadJsonFile(path!) : loadYamlFile(path!),
-    );
+    const rows = checklistRows(path!.endsWith(".json") ? loadJsonFile(path!) : loadYamlFile(path!));
 
     const active = rows.filter((r) => r.status === "active");
     expect(active.length).toBeGreaterThan(0);
@@ -100,9 +90,9 @@ describe("p3 Mode B — requirements mirror + checklist", () => {
         (Array.isArray(row.fixture) && row.fixture.length > 0);
       const hasCitation = Boolean(
         (row.assertion && row.assertion.length > 0) ||
-          (row.citation && row.citation.length > 0) ||
-          (typeof row.tests === "string" && row.tests.length > 0) ||
-          (Array.isArray(row.tests) && row.tests.length > 0),
+        (row.citation && row.citation.length > 0) ||
+        (typeof row.tests === "string" && row.tests.length > 0) ||
+        (Array.isArray(row.tests) && row.tests.length > 0),
       );
       expect(
         hasFixture || hasCitation,

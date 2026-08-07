@@ -146,13 +146,8 @@ export function parseMarketplaceJson(
     ownerName,
     description,
     pluginRoot,
-    sourceUrl:
-      opts?.sourceUrl ||
-      (typeof obj.source_url === "string" ? obj.source_url : "") ||
-      "",
+    sourceUrl: opts?.sourceUrl || (typeof obj.source_url === "string" ? obj.source_url : "") || "",
     sourceDigest:
-      opts?.sourceDigest ||
-      (typeof obj.source_digest === "string" ? obj.source_digest : "") ||
-      "",
+      opts?.sourceDigest || (typeof obj.source_digest === "string" ? obj.source_digest : "") || "",
   });
 }

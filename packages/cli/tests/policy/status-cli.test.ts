@@ -132,11 +132,7 @@ describe("p6d CLI policy status", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p6d-cli-check-absent");
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "policy",
-      "status",
-      "--check",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["policy", "status", "--check"]);
     expectKnownCommand(combined, "policy");
     expect(result).not.toBe(0);
     expect(combined).toMatch(/absent|disabled|error|no usable|not found/i);
@@ -162,11 +158,7 @@ describe("p6d CLI policy status", () => {
     writeLeafProject(project.cwd, "p6d-cli-check-ok");
     writePolicy(project.cwd, "bapm-policy.yml", RICH_LOCAL);
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "policy",
-      "status",
-      "--check",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["policy", "status", "--check"]);
     expectKnownCommand(combined, "policy");
     expect(result).toBe(0);
     expect(combined).toMatch(/found/i);
@@ -227,10 +219,7 @@ describe("p6d CLI policy status", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p6d-cli-ro");
     writePolicy(project.cwd, "bapm-policy.yml", MINIMAL_WARN);
-    writeText(
-      join(project.cwd, "bapm.lock.yaml"),
-      `lockfile_version: "1"\ndependencies: []\n`,
-    );
+    writeText(join(project.cwd, "bapm.lock.yaml"), `lockfile_version: "1"\ndependencies: []\n`);
     writeText(join(project.cwd, "apm_modules", ".keep"), "keep\n");
 
     const before = projectFingerprint(project.cwd);

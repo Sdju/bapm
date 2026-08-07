@@ -15,18 +15,12 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { createHash } from "node:crypto";
 import { runCli } from "../../src/index.ts";
-import {
-  formatDoctorHelp,
-  parseDoctorArgs,
-} from "../../src/modules/Doctor/services/runDoctor.ts";
+import { formatDoctorHelp, parseDoctorArgs } from "../../src/modules/Doctor/services/runDoctor.ts";
 import {
   formatOutdatedHelp,
   parseOutdatedArgs,
 } from "../../src/modules/Outdated/services/runOutdated.ts";
-import {
-  formatUpdateHelp,
-  parseUpdateArgs,
-} from "../../src/modules/Update/services/runUpdate.ts";
+import { formatUpdateHelp, parseUpdateArgs } from "../../src/modules/Update/services/runUpdate.ts";
 
 export {
   formatDoctorHelp,
@@ -191,10 +185,7 @@ export function writeText(path: string, contents: string): void {
 
 /** Sane project: manifest + lock, no modules dir (absent ok). */
 export function writeDoctorProject(cwd: string, name: string): void {
-  writeText(
-    join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 1.2.3\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "bapm.yml"), `name: ${name}\nversion: 1.2.3\ndependencies:\n  apm: []\n`);
   writeText(
     join(cwd, "bapm.lock.yaml"),
     `lockfile_version: "1"

@@ -31,11 +31,7 @@ describe("p7c CLI deps clean --dry-run", () => {
     populateModules(project.cwd, ["alpha", "beta"]);
     expect(modulesEntryCount(project.cwd)).toBe(2);
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "deps",
-      "clean",
-      "--dry-run",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["deps", "clean", "--dry-run"]);
     expectKnownCommand(combined, "deps");
     expectKnownDepsSubcommand(combined, "clean");
     expectKnownFlag(combined, "--dry-run");
@@ -50,11 +46,7 @@ describe("p7c CLI deps clean --dry-run", () => {
     writeTransitiveLock(project.cwd);
     expect(modulesEmpty(project.cwd)).toBe(true);
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "deps",
-      "clean",
-      "--dry-run",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["deps", "clean", "--dry-run"]);
     expectKnownCommand(combined, "deps");
     expectKnownDepsSubcommand(combined, "clean");
     expectKnownFlag(combined, "--dry-run");

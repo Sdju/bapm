@@ -43,8 +43,20 @@ export type ResolvePolicyChainOptions = {
   /** Injectable ancestor fetcher for owner/repo / URL refs. */
   fetchAncestor?: FetchAncestor;
   /** Optional HTTP helper used when fetchAncestor is absent. */
-  fetchPolicyUrl?: (url: string) => { ok?: boolean; text?: string; body?: string; status?: number; url?: string };
-  httpGet?: (url: string) => { ok?: boolean; text?: string; body?: string; status?: number; url?: string };
+  fetchPolicyUrl?: (url: string) => {
+    ok?: boolean;
+    text?: string;
+    body?: string;
+    status?: number;
+    url?: string;
+  };
+  httpGet?: (url: string) => {
+    ok?: boolean;
+    text?: string;
+    body?: string;
+    status?: number;
+    url?: string;
+  };
 };
 
 export type ResolvePolicyChainResult = {
@@ -59,7 +71,9 @@ export type ResolvePolicyChainResult = {
 /**
  * Resolve `extends:` into one effective policy document.
  */
-export function resolvePolicyChain(options: ResolvePolicyChainOptions = {}): ResolvePolicyChainResult {
+export function resolvePolicyChain(
+  options: ResolvePolicyChainOptions = {},
+): ResolvePolicyChainResult {
   const leafPath = options.leafPath ?? options.path;
   const cwd = options.cwd ?? (leafPath ? dirname(leafPath) : process.cwd());
 
@@ -88,7 +102,10 @@ export function resolvePolicyChain(options: ResolvePolicyChainOptions = {}): Res
     leafDoc = parsed.document;
     warnings.push(...parsed.warnings);
   } else {
-    throw new PolicyError("POLICY_VALIDATION", "resolvePolicyChain requires leaf, leafYaml, or path");
+    throw new PolicyError(
+      "POLICY_VALIDATION",
+      "resolvePolicyChain requires leaf, leafYaml, or path",
+    );
   }
 
   const leafHostClass =
@@ -212,7 +229,12 @@ function fetchParent(
   ctx: WalkCtx,
 ): { document: PolicyDocument; hostClass?: string; baseDir?: string; sourceHint?: string } {
   // Relative / local path
-  if (ref.startsWith("./") || ref.startsWith("../") || ref.endsWith(".yml") || ref.endsWith(".yaml")) {
+  if (
+    ref.startsWith("./") ||
+    ref.startsWith("../") ||
+    ref.endsWith(".yml") ||
+    ref.endsWith(".yaml")
+  ) {
     const absolute = isAbsolute(ref) ? resolve(ref) : resolve(ctx.baseDir, ref);
     if (!existsSync(absolute)) {
       throw new PolicyError("POLICY_EXTENDS_FETCH", `Extends policy file not found: ${ref}`, {
@@ -221,7 +243,10 @@ function fetchParent(
       });
     }
     // Cycle via same path
-    if (ctx.chainIds.includes(absolute) || ctx.chainIds.some((c) => c.endsWith(ref.replace(/^\.\//, "")))) {
+    if (
+      ctx.chainIds.includes(absolute) ||
+      ctx.chainIds.some((c) => c.endsWith(ref.replace(/^\.\//, "")))
+    ) {
       // still allow walk to detect via name/path id
     }
     const text = readFileSync(absolute, "utf8");
@@ -280,9 +305,13 @@ function normalizeFetchResult(
   const r = result as FetchAncestorResult & Record<string, unknown>;
   const rawDoc = r.document ?? r.policy ?? (r.name !== undefined ? r : undefined);
   if (!rawDoc || typeof rawDoc !== "object") {
-    throw new PolicyError("POLICY_EXTENDS_FETCH", `Extends fetch returned no document for "${ref}"`, {
-      details: { ref },
-    });
+    throw new PolicyError(
+      "POLICY_EXTENDS_FETCH",
+      `Extends fetch returned no document for "${ref}"`,
+      {
+        details: { ref },
+      },
+    );
   }
   const parsed =
     "enforcement" in (rawDoc as object) && "name" in (rawDoc as object)
@@ -295,7 +324,8 @@ function normalizeFetchResult(
   if (!hostClass) hostClass = leafHostClass;
 
   return {
-    document: "warnings" in parsed ? (parsed as { document: PolicyDocument }).document : parsed.document,
+    document:
+      "warnings" in parsed ? (parsed as { document: PolicyDocument }).document : parsed.document,
     hostClass,
     sourceHint: r.source ?? r.url ?? r.path ?? ref,
     baseDir: r.path ? dirname(String(r.path)) : undefined,
@@ -305,9 +335,13 @@ function normalizeFetchResult(
 function httpFetchText(url: string, ctx: WalkCtx): string {
   const fetcher = ctx.fetchPolicyUrl ?? ctx.httpGet;
   if (!fetcher) {
-    throw new PolicyError("POLICY_EXTENDS_FETCH", `Extends fetch failed for URL "${url}" (no HTTP fetcher)`, {
-      details: { url },
-    });
+    throw new PolicyError(
+      "POLICY_EXTENDS_FETCH",
+      `Extends fetch failed for URL "${url}" (no HTTP fetcher)`,
+      {
+        details: { url },
+      },
+    );
   }
   try {
     const res = fetcher(url);

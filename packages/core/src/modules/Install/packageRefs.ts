@@ -43,11 +43,10 @@ export function packageRefToEntry(ref: string): DependencyEntry {
     classified = classifyDependencyRef(ref);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
-    throw new InstallError(
-      "INSTALL_PACKAGE_REF",
-      `Invalid package ref "${ref}": ${message}`,
-      { cause, details: { ref } },
-    );
+    throw new InstallError("INSTALL_PACKAGE_REF", `Invalid package ref "${ref}": ${message}`, {
+      cause,
+      details: { ref },
+    });
   }
   if (classified.kind === "local" && classified.path) {
     return { path: classified.path };
@@ -74,15 +73,10 @@ export async function assertMarketplacePackageRefsResolvable(
     }
     if (!parsed) continue;
     try {
-      await resolveMarketplacePlugin(
-        parsed.pluginName,
-        parsed.marketplaceName,
-        parsed.ref,
-        {
-          configDir: opts?.configDir ?? opts?.marketplaceConfigDir,
-          marketplaceConfigDir: opts?.marketplaceConfigDir ?? opts?.configDir,
-        },
-      );
+      await resolveMarketplacePlugin(parsed.pluginName, parsed.marketplaceName, parsed.ref, {
+        configDir: opts?.configDir ?? opts?.marketplaceConfigDir,
+        marketplaceConfigDir: opts?.marketplaceConfigDir ?? opts?.configDir,
+      });
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
       throw new InstallError("INSTALL_PACKAGE_REF", message, { cause, details: { ref } });
@@ -95,7 +89,12 @@ function entryMatchesRef(entry: DependencyEntry, ref: string, asEntry: Dependenc
   if (typeof entry === "string" && typeof asEntry === "string") {
     return entry === asEntry;
   }
-  if (typeof entry === "object" && entry !== null && typeof asEntry === "object" && asEntry !== null) {
+  if (
+    typeof entry === "object" &&
+    entry !== null &&
+    typeof asEntry === "object" &&
+    asEntry !== null
+  ) {
     const a = entry as ObjectDependency;
     const b = asEntry as ObjectDependency;
     if (a.path && b.path && a.path === b.path) return true;
@@ -140,9 +139,7 @@ export function appendPackageRefsToManifest(
 
 export function manifestExistsAt(cwd: string): boolean {
   const root = resolve(cwd);
-  return (
-    existsSync(join(root, "apm.yml")) || existsSync(join(root, "bapm.yml"))
-  );
+  return existsSync(join(root, "apm.yml")) || existsSync(join(root, "bapm.yml"));
 }
 
 /**

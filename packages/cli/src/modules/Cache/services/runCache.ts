@@ -24,7 +24,12 @@ export function parseCacheArgs(argv: string[]): {
     }
     if (arg === "--dry-run") {
       if (subcommand && subcommand !== "clean") {
-        return { subcommand, yes, dryRun, error: `Unsupported cache flag on ${subcommand}: --dry-run` };
+        return {
+          subcommand,
+          yes,
+          dryRun,
+          error: `Unsupported cache flag on ${subcommand}: --dry-run`,
+        };
       }
       dryRun = true;
       continue;

@@ -27,9 +27,7 @@ describe("mp-pack-outputs unit dry-run / filter", () => {
     writeBapmYml(project.cwd, validLocalAuthoringYml());
     writeText(join(project.cwd, "plugins/demo/README.md"), "# demo\n");
     const build = getBuildMarketplaceOutputs();
-    await Promise.resolve(
-      build({ cwd: project.cwd, marketplace: "claude", dryRun: true }),
-    );
+    await Promise.resolve(build({ cwd: project.cwd, marketplace: "claude", dryRun: true }));
     expect(existsSync(join(project.cwd, ".claude-plugin/marketplace.json"))).toBe(false);
   });
 
@@ -38,9 +36,10 @@ describe("mp-pack-outputs unit dry-run / filter", () => {
     writeBapmYml(project.cwd, validLocalAuthoringYml());
     writeText(join(project.cwd, "plugins/demo/README.md"), "# demo\n");
     const build = getBuildMarketplaceOutputs();
-    const result = (await Promise.resolve(
-      build({ cwd: project.cwd, marketplace: "none" }),
-    )) as { skipped?: boolean; written?: unknown[] };
+    const result = (await Promise.resolve(build({ cwd: project.cwd, marketplace: "none" }))) as {
+      skipped?: boolean;
+      written?: unknown[];
+    };
     expect(result.skipped === true || (result.written?.length ?? 0) === 0).toBe(true);
     expect(existsSync(join(project.cwd, ".claude-plugin/marketplace.json"))).toBe(false);
   });

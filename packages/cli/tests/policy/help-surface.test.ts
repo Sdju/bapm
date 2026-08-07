@@ -9,12 +9,9 @@ describe("p6d CLI policy help surface", () => {
   test("top-level help mentions policy", async () => {
     const viaFlag = await withCapturedIo(() => runCli(["--help"]));
     const viaHelp = await withCapturedIo(() => runCli(["help"]));
-    const text = [
-      ...viaFlag.stdout,
-      ...viaFlag.stderr,
-      ...viaHelp.stdout,
-      ...viaHelp.stderr,
-    ].join("\n");
+    const text = [...viaFlag.stdout, ...viaFlag.stderr, ...viaHelp.stdout, ...viaHelp.stderr].join(
+      "\n",
+    );
 
     expect(viaFlag.result === 0 || viaHelp.result === 0).toBe(true);
     expect(text).toMatch(/\bpolicy\b/i);

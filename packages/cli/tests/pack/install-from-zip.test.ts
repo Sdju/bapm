@@ -53,7 +53,12 @@ describe("CLI install-from-archive round-trip", () => {
     const bogus = join(dest.cwd, "not-a-pack.zip");
     writeFileSync(bogus, "not-a-zip", "utf8");
 
-    const { result, combined } = await runInProject(dest.cwd, ["install", "--target", "cursor", bogus]);
+    const { result, combined } = await runInProject(dest.cwd, [
+      "install",
+      "--target",
+      "cursor",
+      bogus,
+    ]);
     expectKnownCommand(combined, "install");
     expect(result).not.toBe(0);
   });

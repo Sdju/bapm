@@ -80,10 +80,7 @@ export function writeLeafProject(cwd: string, name: string): void {
     join(cwd, "bapm.yml"),
     `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
   );
-  writeText(
-    join(cwd, "leaf", "apm.yml"),
-    `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "leaf", "apm.yml"), `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
 }
 
 export function writeSampleLock(cwd: string): string {

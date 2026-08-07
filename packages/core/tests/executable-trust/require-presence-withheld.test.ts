@@ -3,10 +3,7 @@
  * Promoted from sc-executable-governance acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  diagnosticsOf,
-  getEvaluateRequiredPackagePresence,
-} from "./helpers.ts";
+import { diagnosticsOf, getEvaluateRequiredPackagePresence } from "./helpers.ts";
 
 describe("require lock presence + withheld (sc-012)", () => {
   test("present in lock + MCP withheld → presence OK, not POLICY_REQUIRE", () => {

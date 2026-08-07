@@ -3,7 +3,7 @@ import { loadMarketplaceAuthoringConfig } from "../Authoring/detect.ts";
 import { loadMarketplaceFromBapmYml } from "../Authoring/load.ts";
 import type { MarketplaceAuthoringConfig } from "../Authoring/types.ts";
 import { MarketplacePackOutputsError } from "./errors.ts";
-import { mapClaudeMarketplace, mapCodexMarketplace, serializeMarketplaceJson } from "./mappers.ts";
+import { serializeMarketplaceJson } from "./mappers.ts";
 import {
   normalizeMarketplacePathOverrides,
   resolveEffectiveOutputPath,
@@ -13,26 +13,19 @@ import { resolveMarketplacePackages } from "./resolve.ts";
 import type {
   BuildMarketplaceOutputsOptions,
   BuildMarketplaceOutputsResult,
-  MarketplaceOutputFormat,
   MarketplaceOutputWritten,
 } from "./types.ts";
 import { atomicWriteMarketplaceJson } from "./write.ts";
 
-function loadConfig(options: BuildMarketplaceOutputsOptions, cwd: string): MarketplaceAuthoringConfig {
+function loadConfig(
+  options: BuildMarketplaceOutputsOptions,
+  cwd: string,
+): MarketplaceAuthoringConfig {
   if (options.config) return options.config;
   if (options.path) {
     return loadMarketplaceFromBapmYml({ cwd, path: options.path }).config;
   }
   return loadMarketplaceAuthoringConfig({ cwd }).config;
-}
-
-function mapDocument(
-  format: MarketplaceOutputFormat,
-  config: MarketplaceAuthoringConfig,
-  resolved: Awaited<ReturnType<typeof resolveMarketplacePackages>>["packages"],
-): Record<string, unknown> {
-  if (format === "claude") return mapClaudeMarketplace(config, resolved);
-  return mapCodexMarketplace(config, resolved);
 }
 
 /**
@@ -43,6 +36,15 @@ export async function buildMarketplaceOutputs(
 ): Promise<BuildMarketplaceOutputsResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
   const dryRun = Boolean(options.dryRun);
+  const marketplaceOutputs = options.marketplaceOutputs;
+  if (!marketplaceOutputs) {
+    throw new MarketplacePackOutputsError(
+      "Marketplace output registry is required; register host integrations at composition root",
+    );
+  }
+  const knownFormats = new Set(
+    marketplaceOutputs.list().map((integration) => integration.marketplaceOutput.format),
+  );
 
   // Validate filter early (unknown format) even when config missing later
   let config: MarketplaceAuthoringConfig;
@@ -50,12 +52,12 @@ export async function buildMarketplaceOutputs(
     config = loadConfig(options, cwd);
   } catch (err) {
     // Re-check filter on unknown format before bubbling load errors when filter is bad
-    selectOutputFormats({ packages: [], outputs: { claude: true } }, options.marketplace);
+    selectOutputFormats({ packages: [], outputs: {} }, options.marketplace, knownFormats);
     throw err;
   }
 
-  const pathOverrides = normalizeMarketplacePathOverrides(options.marketplacePaths);
-  const formats = selectOutputFormats(config, options.marketplace);
+  const pathOverrides = normalizeMarketplacePathOverrides(options.marketplacePaths, knownFormats);
+  const formats = selectOutputFormats(config, options.marketplace, knownFormats);
 
   if (formats.length === 0) {
     return {
@@ -83,13 +85,20 @@ export async function buildMarketplaceOutputs(
   const warnings: string[] = [];
 
   for (const format of formats) {
+    const integration = marketplaceOutputs.get(format);
+    if (!integration) {
+      throw new MarketplacePackOutputsError(
+        `No marketplace output integration is registered for '${format}'`,
+      );
+    }
     const outPath = resolveEffectiveOutputPath({
       cwd,
       format,
+      defaultOutput: integration.marketplaceOutput.defaultOutput,
       path: pathOverrides[format],
       config,
     });
-    const doc = mapDocument(format, config, resolved);
+    const doc = integration.marketplaceOutput.map(config, resolved);
     const body = serializeMarketplaceJson(doc);
 
     if (dryRun) {
@@ -123,9 +132,7 @@ export const writeMarketplacePackOutputs = buildMarketplaceOutputs;
 /**
  * Detect whether cwd has a loadable marketplace authoring block (no throw on none).
  */
-export function tryLoadMarketplaceAuthoring(
-  cwd: string,
-): MarketplaceAuthoringConfig | undefined {
+export function tryLoadMarketplaceAuthoring(cwd: string): MarketplaceAuthoringConfig | undefined {
   try {
     return loadMarketplaceAuthoringConfig({ cwd }).config;
   } catch (err) {

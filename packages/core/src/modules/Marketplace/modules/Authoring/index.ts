@@ -36,10 +36,7 @@ export {
   githubHttpsUrlFromOwnerRepo,
 } from "./source.ts";
 
-export {
-  loadMarketplaceFromBapmYml,
-  loadMarketplaceFromLegacyYml,
-} from "./load.ts";
+export { loadMarketplaceFromBapmYml, loadMarketplaceFromLegacyYml } from "./load.ts";
 
 export {
   detectAuthoringConfigSource,

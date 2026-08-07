@@ -86,8 +86,10 @@ describe("mp-pack-outputs unit resolve", () => {
         }),
       }),
     );
-    const list = ((result as { packages?: Record<string, unknown>[] }).packages ??
-      []) as Record<string, unknown>[];
+    const list = ((result as { packages?: Record<string, unknown>[] }).packages ?? []) as Record<
+      string,
+      unknown
+    >[];
     expect(list[0]?.sha).toBe("b".repeat(40));
     expect(list[0]?.ref).toBe("main");
   });
@@ -112,8 +114,8 @@ describe("mp-pack-outputs unit resolve", () => {
     );
 
     const resolve = getResolveMarketplacePackages();
-    await expect(
-      Promise.resolve(resolve({ cwd: project.cwd, offline: true })),
-    ).rejects.toThrow(/offline|network|resolve|ls-remote|ref|sha/i);
+    await expect(Promise.resolve(resolve({ cwd: project.cwd, offline: true }))).rejects.toThrow(
+      /offline|network|resolve|ls-remote|ref|sha/i,
+    );
   });
 });

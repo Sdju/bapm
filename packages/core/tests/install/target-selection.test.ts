@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runInstall } from "../../src/index.ts";
-import { createTargetRegistry } from "bapm-target-api";
+import { createTargetRegistry } from "bapm-integration-api";
 
 type Project = { cwd: string; cleanup: () => void };
 

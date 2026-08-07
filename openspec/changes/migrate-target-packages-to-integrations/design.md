@@ -1,16 +1,18 @@
 ## Context
 
-See `proposal.md` for motivation. The current package boundary is `packages/target-api` and `packages/target-cursor`; core and the CLI import their legacy package specifiers, while core also owns the Claude/Codex marketplace mappers. Live specs, documentation, tests, package manifests, and the lockfile retain the same terminology.
+See `proposal.md` for motivation. The current package boundary is `packages/integration-api` and `packages/integration-cursor`; core and the CLI import their legacy package specifiers, while core also owns the Claude/Codex marketplace mappers. Live specs, documentation, tests, package manifests, and the lockfile retain the same terminology.
 
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Make `bapm-integration-api` the sole generic capability boundary for core.
 - Make `bapm-integration-cursor` own existing Cursor runtime behavior.
 - Move each marketplace host format into an explicit integration package.
 - Complete a clean namespace break with mechanical proof that the retired names are absent.
 
 **Non-Goals:**
+
 - Preserve external compatibility for retired package names.
 - Add Claude or Codex runtime deployment support merely because their marketplace integrations exist.
 - Change observable Cursor deployment, MCP, or compile semantics other than package identity.
@@ -20,7 +22,7 @@ See `proposal.md` for motivation. The current package boundary is `packages/targ
 
 ### D1 — Physical package move and package-name break
 
-Move `packages/target-api` to `packages/integration-api` and `packages/target-cursor` to `packages/integration-cursor`; rename their npm identities to `bapm-integration-api` and `bapm-integration-cursor`. Update every workspace dependency, import, test, fixture, generated lockfile entry, and CLI composition root in the same phase.
+Move `packages/integration-api` to `packages/integration-api` and `packages/integration-cursor` to `packages/integration-cursor`; rename their npm identities to `bapm-integration-api` and `bapm-integration-cursor`. Update every workspace dependency, import, test, fixture, generated lockfile entry, and CLI composition root in the same phase.
 
 No workspace alias, `exports` alias, re-export package, tsconfig/vite alias, dynamic fallback, or legacy adapter is allowed. There are no users to migrate, so a hard failure for an old specifier is more reliable than temporarily supporting both names.
 
@@ -49,7 +51,7 @@ Phases are not independently shippable because aliases are forbidden. Their chec
 
 ### D5 — Exhaustive legacy-name proof
 
-Acceptance and final validation use a repository-wide `rg` denylist for `bapm-target-`, `packages/target-api`, `packages/target-cursor`, and selected retired import symbols where names change. The scan excludes `.git`, `node_modules`, and explicitly archived OpenSpec snapshots only; it includes source, manifests, lockfile, tests, docs, and live specs. Package discovery and TypeScript resolution checks separately prove the old npm specifiers cannot resolve.
+Acceptance and final validation use a repository-wide `rg` denylist for `bapm-target-`, `packages/integration-api`, `packages/integration-cursor`, and selected retired import symbols where names change. The scan excludes `.git`, `node_modules`, and explicitly archived OpenSpec snapshots only; it includes source, manifests, lockfile, tests, docs, and live specs. Package discovery and TypeScript resolution checks separately prove the old npm specifiers cannot resolve.
 
 ## Risks / Trade-offs
 

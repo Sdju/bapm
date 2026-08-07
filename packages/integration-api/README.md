@@ -1,4 +1,4 @@
-# bapm-target-api
+# bapm-integration-api
 
 Shared **contracts, registry, and materialize helpers** for bapm host targets.
 
@@ -6,8 +6,8 @@ Shared **contracts, registry, and materialize helpers** for bapm host targets.
 
 | Package                                | May depend on                                          |
 | -------------------------------------- | ------------------------------------------------------ |
-| `@bapm/core`                           | `bapm-target-api` only (no concrete `bapm-target-*`)   |
-| `bapm-target-cursor` (and other hosts) | `bapm-target-api`                                      |
+| `@bapm/core`                           | `bapm-integration-api` only (no concrete `bapm-target-*`)   |
+| `bapm-integration-cursor` (and other hosts) | `bapm-integration-api`                                      |
 | CLI / tests                            | Register concrete targets into a registry created here |
 
 Core Install discovers primitives and calls `materialize` on registered targets through this package. Host packages implement detection, deploy roots, and disk writes — core never imports them.
@@ -39,4 +39,4 @@ type MaterializeReport = { deployedFiles: DeployedFile[] };
 - `path` — project-/cwd-relative harness path (e.g. `.agents/skills/hello/SKILL.md`)
 - `hash` — optional; when omitted, core computes a stable content hash for lock inventory
 
-Core uses this report only via `bapm-target-api` to write `deployed_file_hashes` and drive orphan cleanup / frozen re-verify. There is no adapter catalog or MCP configure surface in this package.
+Core uses this report only via `bapm-integration-api` to write `deployed_file_hashes` and drive orphan cleanup / frozen re-verify. There is no adapter catalog or MCP configure surface in this package.

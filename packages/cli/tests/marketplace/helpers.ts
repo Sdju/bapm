@@ -2,14 +2,7 @@
  * CLI helpers for Marketplace consumer-registry suite.
  * Isolates HOME so ~/.bapm never touches the real user config.
  */
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { runCli } from "../../src/index.ts";
@@ -102,11 +95,7 @@ export function readMarketplaces(home: string): { marketplaces: unknown[] } {
   return JSON.parse(readFileSync(path, "utf8")) as { marketplaces: unknown[] };
 }
 
-export function writeLocalFixture(
-  cwd: string,
-  relativePath: string,
-  body: string,
-): string {
+export function writeLocalFixture(cwd: string, relativePath: string, body: string): string {
   const file = join(cwd, relativePath);
   mkdirSync(dirname(file), { recursive: true });
   writeFileSync(file, body, "utf8");

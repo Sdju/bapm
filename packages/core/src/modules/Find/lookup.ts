@@ -24,7 +24,10 @@ export function normalizeFindPath(query: string): string {
  * Lookup owners for a query path: exact match, else longest `/`-suffix directory prefix.
  * Also treats a query that ends with `/` as a directory prefix over indexed entries (APM parity).
  */
-export function lookupInIndex(query: string, index: ReverseIndex | Map<string, string[]> | Record<string, string[]>): string[] {
+export function lookupInIndex(
+  query: string,
+  index: ReverseIndex | Map<string, string[]> | Record<string, string[]>,
+): string[] {
   const normalized = normalizeFindPath(query);
   const map = toMap(index);
 

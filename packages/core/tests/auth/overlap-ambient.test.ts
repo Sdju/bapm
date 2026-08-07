@@ -2,11 +2,7 @@
  * sc-013 — Operator overlap (one effective class) + ambient suppress on git children.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  getBuildGitChildEnv,
-  getSelectProviderClassForHost,
-  withEnv,
-} from "./helpers.ts";
+import { getBuildGitChildEnv, getSelectProviderClassForHost, withEnv } from "./helpers.ts";
 
 const SECRET_GH = "ghp_SC_HOST_CLASS_AMBIENT_GITHUB_SECRET";
 const SECRET_ADO = "ado_SC_HOST_CLASS_AMBIENT_ADO_SECRET";
@@ -40,7 +36,9 @@ describe("sc-host-class overlap + ambient suppress (sc-013)", () => {
       },
       () => {
         const select = getSelectProviderClassForHost();
-        expect(() => select("overlap.example.com", process.env)).toThrow(/overlap|ambiguous|conflict/i);
+        expect(() => select("overlap.example.com", process.env)).toThrow(
+          /overlap|ambiguous|conflict/i,
+        );
       },
     );
   });

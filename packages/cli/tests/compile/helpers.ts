@@ -100,10 +100,7 @@ export function writeCompileProject(cwd: string, name = "p7d-compile"): void {
     join(cwd, "bapm.yml"),
     `name: ${name}\nversion: 0.0.1\ntarget: cursor\ndependencies:\n  apm: []\n`,
   );
-  writeText(
-    join(cwd, ".apm", "instructions", "style.md"),
-    "# Style\nPrefer concise answers.\n",
-  );
+  writeText(join(cwd, ".apm", "instructions", "style.md"), "# Style\nPrefer concise answers.\n");
 }
 
 export function agentsPath(cwd: string): string {

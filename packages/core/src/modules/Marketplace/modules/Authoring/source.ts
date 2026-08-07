@@ -2,8 +2,7 @@
  * Authoring package source validators (OpenAPM req-mf-017 / APM SOURCE_RE).
  */
 
-const HOST_PAT =
-  "(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z][A-Za-z0-9-]*";
+const HOST_PAT = "(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\.)+[A-Za-z][A-Za-z0-9-]*";
 const SEGMENT_PAT = "[A-Za-z0-9._-]+";
 const OWNER_REPO_PAT = `${SEGMENT_PAT}/${SEGMENT_PAT}`;
 const HTTPS_REPOSITORY_PAT = `${SEGMENT_PAT}(?:/${SEGMENT_PAT})+`;

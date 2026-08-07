@@ -177,9 +177,7 @@ function probeGit(options: RunDoctorOptions): GitProbe {
       return { ok: false, reason: "git is missing / not on PATH" };
     }
     const version = tryGitVersion(String(v));
-    return version
-      ? { ok: true, version }
-      : { ok: true, reason: `whichGit=${v}` };
+    return version ? { ok: true, version } : { ok: true, reason: `whichGit=${v}` };
   }
   if (typeof options.findGit === "function") {
     const v = options.findGit();
@@ -187,9 +185,7 @@ function probeGit(options: RunDoctorOptions): GitProbe {
       return { ok: false, reason: "git is missing / not on PATH" };
     }
     const version = tryGitVersion(String(v));
-    return version
-      ? { ok: true, version }
-      : { ok: true, reason: `findGit=${v}` };
+    return version ? { ok: true, version } : { ok: true, reason: `findGit=${v}` };
   }
   try {
     const r = spawnSync("git", ["--version"], { encoding: "utf8" });
@@ -200,9 +196,7 @@ function probeGit(options: RunDoctorOptions): GitProbe {
     const errText = (r.stderr ?? r.stdout ?? "").trim();
     return {
       ok: false,
-      reason: errText
-        ? `git --version failed: ${errText}`
-        : "git is missing / not on PATH",
+      reason: errText ? `git --version failed: ${errText}` : "git is missing / not on PATH",
     };
   } catch (err) {
     return {
@@ -242,11 +236,10 @@ function probeAuthEnv(): DoctorCheck {
 
 function probeNetwork(): DoctorCheck {
   try {
-    const r = spawnSync(
-      "git",
-      ["ls-remote", NETWORK_LS_REMOTE_URL, "HEAD"],
-      { encoding: "utf8", timeout: NETWORK_TIMEOUT_MS },
-    );
+    const r = spawnSync("git", ["ls-remote", NETWORK_LS_REMOTE_URL, "HEAD"], {
+      encoding: "utf8",
+      timeout: NETWORK_TIMEOUT_MS,
+    });
     if (r.error) {
       const code = (r.error as NodeJS.ErrnoException).code;
       if (code === "ETIMEDOUT" || code === "TIMEOUT") {

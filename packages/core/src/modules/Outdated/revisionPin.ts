@@ -6,10 +6,14 @@ import { normalizeRepoIdentity } from "@/modules/Resolver";
 const FULL_SHA_RE = /^[a-fA-F0-9]{40}$/;
 
 /** APM git_semver_resolver DEFAULT_TAG_PATTERNS + FALLBACK_BARE_PATTERN. */
-const TAG_PATTERNS = ["v{version}", "{name}--v{version}", "{name}-v{version}", "{version}"] as const;
+const TAG_PATTERNS = [
+  "v{version}",
+  "{name}--v{version}",
+  "{name}-v{version}",
+  "{version}",
+] as const;
 
-const VERSION_CAPTURE =
-  String.raw`(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)`;
+const VERSION_CAPTURE = String.raw`(?<version>\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)`;
 
 export type AnnotatedTagCandidate = {
   tag: string;

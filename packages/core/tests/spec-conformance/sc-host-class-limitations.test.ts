@@ -52,7 +52,8 @@ describe("sc-host-class Limitations honesty", () => {
     const md = readText(conformanceMdPath);
 
     expect(
-      /req-sc-003[\s\S]{0,200}active/i.test(md) || /\|\s*req-sc-003\s*\|\s*MUST\s*\|[^|]*\|\s*active/i.test(md),
+      /req-sc-003[\s\S]{0,200}active/i.test(md) ||
+        /\|\s*req-sc-003\s*\|\s*MUST\s*\|[^|]*\|\s*active/i.test(md),
       "CONFORMANCE.md must show req-sc-003 active",
     ).toBe(true);
 

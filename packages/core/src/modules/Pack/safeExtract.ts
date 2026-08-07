@@ -143,12 +143,7 @@ function assertSafeUnixType(entry: ZipCdEntry): void {
       { path: entry.name },
     );
   }
-  if (
-    type === S_IFIFO ||
-    type === S_IFCHR ||
-    type === S_IFBLK ||
-    type === S_IFSOCK
-  ) {
+  if (type === S_IFIFO || type === S_IFCHR || type === S_IFBLK || type === S_IFSOCK) {
     throw new SafeExtractError(
       `Refusing non-regular archive entry: ${entry.name} (unix mode 0x${type.toString(16)})`,
       { path: entry.name },

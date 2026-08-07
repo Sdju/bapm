@@ -32,11 +32,7 @@ describe("p6b core structured audit checks", () => {
 
     const checks = checksOf(result);
     expect(checks).toHaveLength(3);
-    expect(checkNames(checks)).toEqual([
-      "lockfile-exists",
-      "content-integrity",
-      "tree-sha256",
-    ]);
+    expect(checkNames(checks)).toEqual(["lockfile-exists", "content-integrity", "tree-sha256"]);
     for (const check of checks) {
       expect(check.passed).toBe(true);
       expect(typeof check.message).toBe("string");
@@ -62,11 +58,7 @@ describe("p6b core structured audit checks", () => {
 
     const checks = checksOf(result);
     expect(checks).toHaveLength(3);
-    expect(checkNames(checks)).toEqual([
-      "lockfile-exists",
-      "content-integrity",
-      "tree-sha256",
-    ]);
+    expect(checkNames(checks)).toEqual(["lockfile-exists", "content-integrity", "tree-sha256"]);
     expect(checks[0]!.passed).toBe(false);
     expect(checks[1]!.passed).toBe(false);
     expect(checks[2]!.passed).toBe(false);
@@ -84,11 +76,7 @@ describe("p6b core structured audit checks", () => {
     expect(exitCodeOf(result)).toBe(1);
 
     const checks = checksOf(result);
-    expect(checkNames(checks)).toEqual([
-      "lockfile-exists",
-      "content-integrity",
-      "tree-sha256",
-    ]);
+    expect(checkNames(checks)).toEqual(["lockfile-exists", "content-integrity", "tree-sha256"]);
     expect(checks[0]!.passed).toBe(true);
     expect(checks[1]!.passed).toBe(false);
     expect(checks[2]!.passed).toBe(true);
@@ -105,11 +93,7 @@ describe("p6b core structured audit checks", () => {
     expect(exitCodeOf(result)).not.toBe(0);
 
     const checks = checksOf(result);
-    expect(checkNames(checks)).toEqual([
-      "lockfile-exists",
-      "content-integrity",
-      "tree-sha256",
-    ]);
+    expect(checkNames(checks)).toEqual(["lockfile-exists", "content-integrity", "tree-sha256"]);
     expect(checks[0]!.passed).toBe(true);
     expect(checks[1]!.passed).toBe(true);
     expect(checks[2]!.passed).toBe(false);

@@ -31,9 +31,7 @@ describe("CLI bare lock fail-closed argv", () => {
   });
 
   test("parseLockArgs rejects unknown flags and unexpected positionals", () => {
-    expect(parseLockArgs(["--not-a-real-flag"]).error).toBe(
-      "Unknown lock flag: --not-a-real-flag",
-    );
+    expect(parseLockArgs(["--not-a-real-flag"]).error).toBe("Unknown lock flag: --not-a-real-flag");
     expect(parseLockArgs(["--global"]).error).toBe("Unknown lock flag: --global");
     expect(parseLockArgs(["-g"]).error).toBe("Unknown lock flag: -g");
     expect(parseLockArgs(["--target", "x"]).error).toBe("Unknown lock flag: --target");

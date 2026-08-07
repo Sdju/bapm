@@ -52,10 +52,7 @@ export function writeLock(cwd: string, contents: string): void {
 }
 
 export function writeManifest(cwd: string, name: string): void {
-  writeText(
-    join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
-  );
+  writeText(join(cwd, "bapm.yml"), `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
 }
 
 export function listFilesRecursive(dir: string): string[] {
@@ -166,10 +163,9 @@ export function getFindPath() {
 }
 
 export function getApplyDeployedHashesToLock() {
-  return pickExport(
-    ["applyDeployedHashesToLock"],
-    "applyDeployedHashesToLock",
-  ) as (args: Record<string, unknown>) => boolean;
+  return pickExport(["applyDeployedHashesToLock"], "applyDeployedHashesToLock") as (
+    args: Record<string, unknown>,
+  ) => boolean;
 }
 
 export function getFormatOrigin() {
@@ -237,7 +233,12 @@ export function findResultOf(result: unknown): {
   const text = String(row.text ?? row.stdout ?? row.output ?? row.message ?? "");
   const stderr = String(row.stderr ?? row.errorText ?? row.error ?? "");
   const ok = typeof row.ok === "boolean" ? row.ok : exitCode === 0;
-  return { exitCode, ok, text, stderr: stderr === "[object Object]" ? JSON.stringify(row.error) : stderr };
+  return {
+    exitCode,
+    ok,
+    text,
+    stderr: stderr === "[object Object]" ? JSON.stringify(row.error) : stderr,
+  };
 }
 
 export async function invokeFind(

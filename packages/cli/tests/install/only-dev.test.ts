@@ -35,11 +35,7 @@ describe("CLI install --dev and --only", () => {
       "utf8",
     );
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "./extra",
-      "--dev",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "./extra", "--dev"]);
 
     expectKnownCommand(combined, "install");
     expectKnownFlags(combined);
@@ -48,7 +44,8 @@ describe("CLI install --dev and --only", () => {
     const manifest = readManifestText(project.cwd);
     expect(manifest).toMatch(/devDependencies:[\s\S]*apm:[\s\S]*(\.\/extra|path:\s*\.\/extra)/);
     // Must not land only under dependencies.apm solely due to this add.
-    const depsBlock = manifest.match(/^dependencies:[\s\S]*?(?=^devDependencies:|^[a-z]|\Z)/m)?.[0] ?? "";
+    const depsBlock =
+      manifest.match(/^dependencies:[\s\S]*?(?=^devDependencies:|^[a-z]|\Z)/m)?.[0] ?? "";
     expect(depsBlock).not.toMatch(/path:\s*\.\/extra|\.\/extra/);
   });
 

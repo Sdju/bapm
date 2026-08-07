@@ -3,6 +3,9 @@
  * Soft-resolve Marketplace builder / pack-outputs APIs from @bapm/core.
  */
 import * as core from "@bapm/core";
+import { createMarketplaceOutputRegistry } from "bapm-integration-api";
+import { claudeMarketplaceIntegration } from "bapm-integration-claude";
+import { codexMarketplaceIntegration } from "bapm-integration-codex";
 import {
   existsSync,
   mkdirSync,
@@ -73,7 +76,7 @@ export function readSrc(rel: string): string {
 export function getBuildMarketplaceOutputs(): (
   opts: Record<string, unknown>,
 ) => unknown | Promise<unknown> {
-  return pickExport(
+  const build = pickExport(
     [
       "buildMarketplaceOutputs",
       "emitMarketplacePackOutputs",
@@ -82,17 +85,21 @@ export function getBuildMarketplaceOutputs(): (
     ],
     "marketplace pack outputs builder",
   ) as (opts: Record<string, unknown>) => unknown | Promise<unknown>;
+  return (opts) => build({ ...opts, marketplaceOutputs: createMarketplaceOutputsRegistry() });
+}
+
+export function createMarketplaceOutputsRegistry() {
+  const registry = createMarketplaceOutputRegistry();
+  registry.register(claudeMarketplaceIntegration);
+  registry.register(codexMarketplaceIntegration);
+  return registry;
 }
 
 export function getResolveMarketplacePackages(): (
   opts: Record<string, unknown>,
 ) => unknown | Promise<unknown> {
   return pickExport(
-    [
-      "resolveMarketplacePackages",
-      "resolveAuthoringPackages",
-      "resolveMarketplacePackPackages",
-    ],
+    ["resolveMarketplacePackages", "resolveAuthoringPackages", "resolveMarketplacePackPackages"],
     "resolve authoring packages to ResolvedPackage[]",
   ) as (opts: Record<string, unknown>) => unknown | Promise<unknown>;
 }

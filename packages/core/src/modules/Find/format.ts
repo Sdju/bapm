@@ -42,7 +42,9 @@ export function formatFindOrigin(
 
   const d =
     dep ??
-    (owner && typeof owner === "object" ? (owner as LockedDependency | Record<string, unknown>) : null);
+    (owner && typeof owner === "object"
+      ? (owner as LockedDependency | Record<string, unknown>)
+      : null);
   if (!d) return typeof owner === "string" ? owner : "";
 
   const resolvedUrl = d.resolved_url != null ? String(d.resolved_url).trim() : "";

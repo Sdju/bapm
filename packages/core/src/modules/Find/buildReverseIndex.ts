@@ -41,7 +41,9 @@ function addPathsFromList(index: ReverseIndex, list: string[] | undefined, owner
  * Hash-map keys are primary; `deployed_files` / `local_deployed_files` are unioned.
  * Owner order: lock dependency array order, then workspace local.
  */
-export function buildReverseIndex(document: LockfileDocument | Record<string, unknown>): ReverseIndex {
+export function buildReverseIndex(
+  document: LockfileDocument | Record<string, unknown>,
+): ReverseIndex {
   const index: ReverseIndex = new Map();
   const deps = Array.isArray(document.dependencies)
     ? (document.dependencies as LockedDependency[])

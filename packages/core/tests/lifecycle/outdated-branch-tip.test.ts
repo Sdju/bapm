@@ -51,7 +51,9 @@ describe("core outdated — branch / literal tip via resolved_ref", () => {
     });
     expect(exitCodeOf(result)).toBe(0);
     const rows = rowsOf(result);
-    const branch = rows.find((r) => String(r.name ?? "").includes("branch") || /branch/i.test(JSON.stringify(r)));
+    const branch = rows.find(
+      (r) => String(r.name ?? "").includes("branch") || /branch/i.test(JSON.stringify(r)),
+    );
     expect(branch).toBeTruthy();
     expect(statusOf(branch!)).toMatch(/outdated/);
     expect(JSON.stringify(branch)).toMatch(new RegExp(featureTip.slice(0, 12), "i"));
@@ -117,7 +119,9 @@ describe("core outdated — branch / literal tip via resolved_ref", () => {
     });
     expect(exitCodeOf(result)).toBe(0);
     const rows = rowsOf(result);
-    const row = rows.find((r) => /release/i.test(String(r.name ?? "")) || /release/i.test(JSON.stringify(r)));
+    const row = rows.find(
+      (r) => /release/i.test(String(r.name ?? "")) || /release/i.test(JSON.stringify(r)),
+    );
     expect(row).toBeTruthy();
     expect(statusOf(row!)).toMatch(/outdated/);
     expect(ports.lsRemoteCalls.some((c) => /#release$/.test(c) || c.includes("#release"))).toBe(

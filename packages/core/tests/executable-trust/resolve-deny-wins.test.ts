@@ -3,10 +3,7 @@
  * Promoted from sc-executable-governance acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  getResolveExecutableTrust,
-  grantSurface,
-} from "./helpers.ts";
+import { getResolveExecutableTrust, grantSurface } from "./helpers.ts";
 
 describe("resolveExecutableTrust deny-wins (sc-011)", () => {
   test("org deny shadows project allow for MCP", () => {

@@ -13,10 +13,7 @@ import {
 
 describe("p3 Mode B — vendored seed fixtures", () => {
   test("tests/fixtures/spec-conformance/ exists in-repo (not .samples-only)", () => {
-    expect(
-      existsSync(fixtureRoot),
-      `expected vendored fixture root at ${fixtureRoot}`,
-    ).toBe(true);
+    expect(existsSync(fixtureRoot), `expected vendored fixture root at ${fixtureRoot}`).toBe(true);
   });
 
   test("seed layout includes manifest, lockfile, policy, resolution oracles", () => {

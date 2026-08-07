@@ -27,13 +27,7 @@ describe("mp-authoring-yml YAML package editor", () => {
     project = createTempProject();
     writeBapmYml(
       project.cwd,
-      [
-        `name: acme`,
-        `marketplace:`,
-        `  owner: acme-org`,
-        `  packages: []`,
-        ``,
-      ].join("\n"),
+      [`name: acme`, `marketplace:`, `  owner: acme-org`, `  packages: []`, ``].join("\n"),
     );
 
     const editor = getAuthoringEditor();

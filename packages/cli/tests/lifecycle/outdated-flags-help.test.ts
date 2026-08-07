@@ -129,11 +129,7 @@ describe("CLI outdated parallel-checks + help", () => {
     writeLeafProject(project.cwd, "p7b-cli-j-not-json");
     writeLeafLock(project.cwd);
 
-    const { result, stdout, combined } = await runInProject(project.cwd, [
-      "outdated",
-      "-j",
-      "4",
-    ]);
+    const { result, stdout, combined } = await runInProject(project.cwd, ["outdated", "-j", "4"]);
     expectKnownCommand(combined, "outdated");
     expectKnownOutdatedFlag(combined, "-j");
     expect(result).toBe(0);

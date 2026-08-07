@@ -22,9 +22,7 @@ describe("mp-pack-outputs core Marketplace builder layout", () => {
     const modulesDir = join(marketplaceSrc, "modules");
     expect(existsSync(modulesDir)).toBe(true);
     const names = readdirSync(modulesDir);
-    const builderish = names.filter((n) =>
-      /PackOutputs|Builder|pack.?outputs/i.test(n),
-    );
+    const builderish = names.filter((n) => /PackOutputs|Builder|pack.?outputs/i.test(n));
     expect(
       builderish.length,
       `expected PackOutputs/Builder under Marketplace/modules, got: ${names.join(", ")}`,
@@ -60,9 +58,7 @@ describe("mp-pack-outputs core Marketplace builder layout", () => {
 
   test("builder sources mention Claude and Codex mappers", () => {
     const files = listFilesRecursive(marketplaceSrc).filter((f) => f.endsWith(".ts"));
-    const builderFiles = files.filter((f) =>
-      /PackOutputs|Builder|mapper|output.?profile/i.test(f),
-    );
+    const builderFiles = files.filter((f) => /PackOutputs|Builder|mapper|output.?profile/i.test(f));
     expect(builderFiles.length).toBeGreaterThan(0);
     const body = builderFiles.map((f) => readFileSync(f, "utf8")).join("\n");
     expect(body).toMatch(/claude/i);

@@ -9,10 +9,7 @@ import { limitationsNameResidualSecurity } from "../spec-conformance/sc-claims-h
 
 describe("docs conformance guide honesty", () => {
   test("apps/docs/guide/conformance.md exists", () => {
-    expect(
-      existsSync(conformanceGuidePath),
-      `expected ${conformanceGuidePath}`,
-    ).toBe(true);
+    expect(existsSync(conformanceGuidePath), `expected ${conformanceGuidePath}`).toBe(true);
   });
 
   test("guide must not list marketplace/plugin as absolute OOS blanket", () => {

@@ -2,10 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { loadYamlDocument } from "@/common/yaml/loadDocument.ts";
 import { MarketplaceAuthoringError } from "./errors.ts";
-import {
-  loadMarketplaceFromBapmYml,
-  loadMarketplaceFromLegacyYml,
-} from "./load.ts";
+import { loadMarketplaceFromBapmYml, loadMarketplaceFromLegacyYml } from "./load.ts";
 import type {
   DetectAuthoringConfigSourceOptions,
   DetectAuthoringConfigSourceResult,
@@ -31,10 +28,7 @@ function hasMarketplaceBlock(bapmYmlPath: string): boolean {
   try {
     data = loadYamlDocument(text, bapmYmlPath);
   } catch (err) {
-    throw new MarketplaceAuthoringError(
-      err instanceof Error ? err.message : String(err),
-      2,
-    );
+    throw new MarketplaceAuthoringError(err instanceof Error ? err.message : String(err), 2);
   }
   if (!data || typeof data !== "object") return false;
   const marketplace = (data as Record<string, unknown>).marketplace;

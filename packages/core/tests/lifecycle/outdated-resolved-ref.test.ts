@@ -2,11 +2,7 @@
  * Outdated / lock parity — resolveAndLock emits resolved_ref; load→serialize round-trips it.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import {
-  loadLockfile,
-  resolveAndLock,
-  serializeLockfile,
-} from "@bapm/core";
+import { loadLockfile, resolveAndLock, serializeLockfile } from "@bapm/core";
 import {
   createFakePorts,
   createTempProject,

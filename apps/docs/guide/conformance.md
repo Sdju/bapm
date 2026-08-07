@@ -6,7 +6,7 @@ bapm separates three axes that are easy to conflate:
 | ------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **OpenAPM v0.1**    | Normative wire: manifest, lock, policy, resolve, deploy | Claimed classes in root [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A |
 | **APM product CLI** | Full microsoft/apm command and adapter surface          | **Not** full product CLI parity — bapm is not a drop-in APM CLI clone                                             |
-| **Host targets**    | Where packages materialize                              | **cursor-only** today via target packages (`bapm-target-cursor`); multi-target later                              |
+| **Host targets**    | Where packages materialize                              | **cursor-only** today via target packages (`bapm-integration-cursor`); multi-target later                         |
 
 ## Published statement
 

@@ -65,12 +65,7 @@ describe("p6b CLI audit format flags", () => {
     writeCleanAuditProject(project.cwd, "p6b-cli-sarif-ext");
     const outFile = join(project.cwd, "out.sarif");
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "audit",
-      "--ci",
-      "-o",
-      outFile,
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["audit", "--ci", "-o", outFile]);
     expectKnownCommand(combined, "audit");
     expect(result).toBe(0);
     expect(existsSync(outFile)).toBe(true);

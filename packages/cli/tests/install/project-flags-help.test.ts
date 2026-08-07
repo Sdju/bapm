@@ -106,11 +106,7 @@ describe("CLI install project-scope flags + help", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p7a-only-bad", { withCursor: true });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--only",
-      "lsp",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--only", "lsp"]);
 
     expectKnownCommand(combined, "install");
     // --only itself must be a known flag; only the value is invalid.

@@ -69,9 +69,7 @@ export function scrubUrl(url: string): string {
     const hasUserinfo = Boolean(parsed.username || parsed.password);
     if (!hasUserinfo && !parsed.search) return url;
     const host =
-      parsed.port && parsed.port !== ""
-        ? `${parsed.hostname}:${parsed.port}`
-        : parsed.hostname;
+      parsed.port && parsed.port !== "" ? `${parsed.hostname}:${parsed.port}` : parsed.hostname;
     return `${parsed.protocol}//${host}${parsed.pathname}${parsed.hash}`;
   } catch {
     return url;
@@ -105,11 +103,5 @@ export function componentName(dep: InventoryDep): string {
 }
 
 export function componentVersion(dep: InventoryDep): string | undefined {
-  return (
-    dep.version ||
-    dep.resolved_commit ||
-    dep.resolved_hash ||
-    dep.content_hash ||
-    undefined
-  );
+  return dep.version || dep.resolved_commit || dep.resolved_hash || dep.content_hash || undefined;
 }

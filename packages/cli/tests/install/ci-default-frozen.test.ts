@@ -20,10 +20,7 @@ describe("parseInstallArgs CI-default frozen (lk-018)", () => {
 
   test("non-truthy CI → non-frozen by default", () => {
     for (const ci of [undefined, "", "0", "false"] as const) {
-      const env =
-        ci === undefined
-          ? ({} as Record<string, string | undefined>)
-          : { CI: ci };
+      const env = ci === undefined ? ({} as Record<string, string | undefined>) : { CI: ci };
       const parsed = parseInstallArgs([], { env });
       expect(parsed.error).toBeUndefined();
       expect(parsed.frozen).toBe(false);

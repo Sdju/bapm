@@ -3,11 +3,7 @@
  * Promoted from sc-executable-governance acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  getClassifyExecutableTrust,
-  getResolveExecutableTrust,
-  grantSurface,
-} from "./helpers.ts";
+import { getClassifyExecutableTrust, getResolveExecutableTrust, grantSurface } from "./helpers.ts";
 
 const SHARED_INPUTS = {
   packageName: "mcp-dep",

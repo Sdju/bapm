@@ -140,11 +140,7 @@ describe("p6d core runPolicyStatus — outcomes", () => {
 
   test("schema/load failure soft-maps to outcome error (no uncaught throw)", () => {
     project = createTempProject();
-    writePolicy(
-      project.cwd,
-      "bapm-policy.yml",
-      `name: bad\nenforcement: hard\n`,
-    );
+    writePolicy(project.cwd, "bapm-policy.yml", `name: bad\nenforcement: hard\n`);
 
     const report = asReport(getRunPolicyStatus()({ cwd: project.cwd }));
     expect(report.outcome).toBe("error");
@@ -163,7 +159,11 @@ describe("p6d core runPolicyStatus — outcomes", () => {
     const report = asReport(
       getRunPolicyStatus()({
         cwd: project.cwd,
-        fetchPolicyUrl: () => ({ ok: false, status: 503, url: "https://policy.example.com/missing.yml" }),
+        fetchPolicyUrl: () => ({
+          ok: false,
+          status: 503,
+          url: "https://policy.example.com/missing.yml",
+        }),
         httpGet: () => {
           throw new Error("HTTP 503");
         },
@@ -278,10 +278,7 @@ describe("p6d core runPolicyStatus — read-only", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p6d-ro");
     writePolicy(project.cwd, "bapm-policy.yml", MINIMAL_WARN);
-    writeText(
-      join(project.cwd, "bapm.lock.yaml"),
-      `lockfile_version: "1"\ndependencies: []\n`,
-    );
+    writeText(join(project.cwd, "bapm.lock.yaml"), `lockfile_version: "1"\ndependencies: []\n`);
     writeText(join(project.cwd, "apm_modules", ".keep"), "keep\n");
 
     const before = projectFingerprint(project.cwd);

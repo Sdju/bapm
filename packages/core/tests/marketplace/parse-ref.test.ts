@@ -32,7 +32,10 @@ describe("mp-search-install G1 parseMarketplaceRef", () => {
   test("semver-range chars in #ref are rejected with clear error", async () => {
     const parse = getParseMarketplaceRef();
     for (const spec of ["tools@acme#^1.0.0", "tools@acme#~1.0", "tools@acme#>=1", "x@y#!=1"]) {
-      await expectAsyncThrowMatching(() => parse(spec), /semver|range|invalid.*ref|ref.*invalid|~|\^|<|>|=|!/i);
+      await expectAsyncThrowMatching(
+        () => parse(spec),
+        /semver|range|invalid.*ref|ref.*invalid|~|\^|<|>|=|!/i,
+      );
     }
   });
 

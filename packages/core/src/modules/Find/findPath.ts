@@ -19,8 +19,7 @@ export function findPath(options: FindPathOptions = {}): FindPathResult {
   const cwd = resolve(options.cwd ?? process.cwd());
   const queryRaw = String(options.path ?? options.query ?? "").trim();
   const showSource = options.source === true || options.showSource === true;
-  const showPath =
-    options.why === true || options.showPath === true || options.pathDetail === true;
+  const showPath = options.why === true || options.showPath === true || options.pathDetail === true;
 
   let loaded;
   try {
@@ -124,11 +123,7 @@ function indexDeps(document: LockfileDocument): Map<string, LockedDependency> {
  * Offline why chains via Deps walker. Empty why → null (caller prints label only).
  * Root labels use walker's existing text (`→`); never hard-code foreign `apm.yml`.
  */
-function renderWhy(
-  cwd: string,
-  owner: string,
-  dep: LockedDependency | undefined,
-): string | null {
+function renderWhy(cwd: string, owner: string, dep: LockedDependency | undefined): string | null {
   const queries: string[] = [];
   if (dep?.repo_url) queries.push(String(dep.repo_url));
   if (dep?.name) queries.push(String(dep.name));

@@ -102,7 +102,9 @@ describe("P4 extends resolve — depth / cycle (pl-003)", () => {
     const leafRaw = readText(path);
     const parse = getParsePolicy();
     // Precondition: parse retains extends (schema-level).
-    const parsed = policyOf(parse({ name: "x", extends: "contoso-enterprise/policy", enforcement: "block" }));
+    const parsed = policyOf(
+      parse({ name: "x", extends: "contoso-enterprise/policy", enforcement: "block" }),
+    );
     expect(String(parsed.extends)).toBe("contoso-enterprise/policy");
 
     const parentDoc = {

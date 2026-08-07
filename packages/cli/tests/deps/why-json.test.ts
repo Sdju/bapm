@@ -92,12 +92,7 @@ describe("p6f CLI deps why --json + exits", () => {
     expectKnownCommand(human.combined, "deps");
     expect(human.result).toBe(1);
 
-    const json = await runInProject(project.cwd, [
-      "deps",
-      "why",
-      "missing-pkg",
-      "--json",
-    ]);
+    const json = await runInProject(project.cwd, ["deps", "why", "missing-pkg", "--json"]);
     expectKnownCommand(json.combined, "deps");
     expectKnownFlag(json.combined, "--json");
     expect(json.result).toBe(1);

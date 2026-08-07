@@ -4,12 +4,7 @@
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync } from "node:fs";
-import {
-  loadYamlDocument,
-  parseLockfile,
-  parseManifest,
-  parsePolicy,
-} from "@bapm/core";
+import { loadYamlDocument, parseLockfile, parseManifest, parsePolicy } from "@bapm/core";
 import { fixturePath, readFixture } from "./helpers.ts";
 
 function expectRejects(fn: () => unknown, pattern: RegExp): void {
@@ -134,7 +129,10 @@ describe("Mode B seed oracles — policy (governance claimed)", () => {
     expect(existsSync(fixturePath("policy/valid-extends.yml"))).toBe(true);
     expect(existsSync(fixturePath("policy/invalid-extends-cycle.yml"))).toBe(true);
     const valid = parsePolicy(
-      loadYamlDocument(readFixture("policy/valid-extends.yml"), fixturePath("policy/valid-extends.yml")),
+      loadYamlDocument(
+        readFixture("policy/valid-extends.yml"),
+        fixturePath("policy/valid-extends.yml"),
+      ),
     );
     expect(String(valid.document.extends ?? valid.policy?.extends)).toMatch(/contoso-enterprise/);
     const cycle = parsePolicy(
@@ -143,6 +141,8 @@ describe("Mode B seed oracles — policy (governance claimed)", () => {
         fixturePath("policy/invalid-extends-cycle.yml"),
       ),
     );
-    expect(String(cycle.document.extends ?? cycle.policy?.extends)).toMatch(/invalid-extends-cycle/);
+    expect(String(cycle.document.extends ?? cycle.policy?.extends)).toMatch(
+      /invalid-extends-cycle/,
+    );
   });
 });

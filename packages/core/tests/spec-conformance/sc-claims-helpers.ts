@@ -19,13 +19,9 @@ export { conformanceJsonPath, conformanceMdPath, readText, repoRoot };
 export type { ChecklistRow };
 
 export const checklistPath =
-  findExistingPath(checklistCandidates) ??
-  join(repoRoot, "tests/spec-conformance/checklist.yml");
+  findExistingPath(checklistCandidates) ?? join(repoRoot, "tests/spec-conformance/checklist.yml");
 
-export const docsConformanceGuidePath = join(
-  repoRoot,
-  "apps/docs/guide/conformance.md",
-);
+export const docsConformanceGuidePath = join(repoRoot, "apps/docs/guide/conformance.md");
 
 /** Active sc-* — must stay active with citations (003/005/008/013 claimed by sc-host-class). */
 export const ACTIVE_SC_IDS = [
@@ -97,12 +93,8 @@ export function pathExistsInRepo(rel: string): boolean {
  * Require gap-specific keywords that the stale P3 marketplace catch-all does NOT contain
  * (avoid matching only on bare "soft" / "deferred").
  */
-export const SKIPPED_RATIONALE_THEMES: Record<
-  (typeof SKIPPED_SC_IDS)[number],
-  RegExp
-> = {
-  "req-sc-004":
-    /tar\.?gz|size.?\/?\s*entry|entry caps?|100\s*MB|10\s*k|zip|caps?/i,
+export const SKIPPED_RATIONALE_THEMES: Record<(typeof SKIPPED_SC_IDS)[number], RegExp> = {
+  "req-sc-004": /tar\.?gz|size.?\/?\s*entry|entry caps?|100\s*MB|10\s*k|zip|caps?/i,
 };
 
 /** Absolute OOS blanket for interactive approve (forbidden after sc-010 claim). */
@@ -124,12 +116,8 @@ export function scopeOutHasAbsoluteMarketplace(doc: ChecklistDoc): boolean {
 }
 
 export function limitationsNameResidualSecurity(blob: string): boolean {
-  const hostAuth = /host.?class|AuthResolver|mp-hosts-auth|credential scop/i.test(
-    blob,
-  );
+  const hostAuth = /host.?class|AuthResolver|mp-hosts-auth|credential scop/i.test(blob);
   const approve = /approve|deny.?UX|grant store/i.test(blob);
-  const softArchive = /archive|zip|tar\.?gz|caps?|§\s*10|security.?depth/i.test(
-    blob,
-  );
+  const softArchive = /archive|zip|tar\.?gz|caps?|§\s*10|security.?depth/i.test(blob);
   return (hostAuth || softArchive) && (approve || softArchive || hostAuth);
 }

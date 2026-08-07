@@ -46,13 +46,13 @@ describe("install options surface", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "verbose-frozen");
 
-    await expect(
-      installWithSpy(project.cwd, { frozen: true, verbose: false }),
-    ).rejects.toThrow(/frozen|lock/i);
+    await expect(installWithSpy(project.cwd, { frozen: true, verbose: false })).rejects.toThrow(
+      /frozen|lock/i,
+    );
 
-    await expect(
-      installWithSpy(project.cwd, { frozen: true, verbose: true }),
-    ).rejects.toThrow(/frozen|lock/i);
+    await expect(installWithSpy(project.cwd, { frozen: true, verbose: true })).rejects.toThrow(
+      /frozen|lock/i,
+    );
   });
 
   test("MCP frozen sync is default-off (drifted mcp.json does not fail frozen)", async () => {

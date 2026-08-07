@@ -56,11 +56,7 @@ describe("CLI update flags + help", () => {
     writeLeafProject(project.cwd, "cli-update-v");
     writeLeafLock(project.cwd);
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "update",
-      "-v",
-      "--dry-run",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["update", "-v", "--dry-run"]);
     expectKnownCommand(combined, "update");
     expectKnownUpdateFlag(combined, "-v");
     expect(combined).not.toMatch(/Unknown update flag:\s*-v\b/i);

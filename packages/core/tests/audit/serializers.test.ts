@@ -108,9 +108,7 @@ describe("p6b core audit serializers", () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results.some((r) => r.level === "error")).toBe(true);
     expect(
-      results.some(
-        (r) => r.ruleId === "tree-sha256" || r.ruleId === "content-integrity",
-      ),
+      results.some((r) => r.ruleId === "tree-sha256" || r.ruleId === "content-integrity"),
     ).toBe(true);
   });
 });

@@ -6,6 +6,7 @@ import { join } from "node:path";
 import * as core from "@bapm/core";
 import {
   createTempProject,
+  createMarketplaceOutputsRegistry,
   getBuildMarketplaceOutputs,
   type TempProject,
   validLocalAuthoringYml,
@@ -31,7 +32,12 @@ describe("mp-pack-outputs unit profiles / path jail", () => {
       | ((opts: Record<string, unknown>) => string)
       | undefined;
     if (resolvePath) {
-      const path = resolvePath({ cwd: project.cwd, format: "claude" });
+      const path = resolvePath({
+        cwd: project.cwd,
+        format: "claude",
+        defaultOutput:
+          createMarketplaceOutputsRegistry().get("claude")!.marketplaceOutput.defaultOutput,
+      });
       expect(path.replace(/\\/g, "/")).toMatch(/\.claude-plugin\/marketplace\.json$/);
       return;
     }
@@ -72,6 +78,8 @@ describe("mp-pack-outputs unit profiles / path jail", () => {
       resolvePath!({
         cwd: project!.cwd,
         format: "claude",
+        defaultOutput:
+          createMarketplaceOutputsRegistry().get("claude")!.marketplaceOutput.defaultOutput,
         path: "../../outside/marketplace.json",
       }),
     ).toThrow(/jail|escape|project root|within|path/i);

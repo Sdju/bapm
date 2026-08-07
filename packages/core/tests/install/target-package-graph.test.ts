@@ -27,12 +27,12 @@ function listBapmTargetPackageNames(): string[] {
   return names.sort();
 }
 
-test("HARD: only bapm-target-api and bapm-target-cursor among bapm-target-*", () => {
-  expect(listBapmTargetPackageNames()).toEqual(["bapm-target-api", "bapm-target-cursor"]);
+test("HARD: only bapm-integration-api and bapm-integration-cursor among bapm-target-*", () => {
+  expect(listBapmTargetPackageNames()).toEqual(["bapm-integration-api", "bapm-integration-cursor"]);
 });
 
-test("core vite/test config has no path alias for bapm-target-cursor", () => {
+test("core vite/test config has no path alias for bapm-integration-cursor", () => {
   const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-  expect(viteConfig).not.toMatch(/["']bapm-target-cursor["']\s*:/);
+  expect(viteConfig).not.toMatch(/["']bapm-integration-cursor["']\s*:/);
   expect(viteConfig).not.toMatch(/target-cursor\/src/);
 });

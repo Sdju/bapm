@@ -1,7 +1,7 @@
 {
-  "name": "bapm-target-api",
+  "name": "bapm-integration-claude",
   "version": "0.0.0",
-  "description": "Shared contracts and registry for bapm host targets",
+  "description": "Claude marketplace-output integration for bapm",
   "license": "MIT",
   "files": [
     "dist"
@@ -11,15 +11,14 @@
     ".": "./dist/index.mjs",
     "./package.json": "./package.json"
   },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "vp pack",
     "dev": "vp pack --watch",
     "test": "vp test",
-    "check": "vp check",
-    "prepublishOnly": "vp run build"
+    "check": "vp check"
+  },
+  "dependencies": {
+    "bapm-integration-api": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

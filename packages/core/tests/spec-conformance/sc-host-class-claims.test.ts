@@ -11,12 +11,7 @@ import {
   pathExistsInRepo,
 } from "./sc-claims-helpers.ts";
 
-const CLAIM_ACTIVE_IDS = [
-  "req-sc-003",
-  "req-sc-005",
-  "req-sc-008",
-  "req-sc-013",
-] as const;
+const CLAIM_ACTIVE_IDS = ["req-sc-003", "req-sc-005", "req-sc-008", "req-sc-013"] as const;
 
 const KEEP_SKIPPED_IDS = ["req-sc-004"] as const;
 

@@ -39,9 +39,7 @@ describe("install insecure dual-gate + host allowlist", () => {
       /allow-insecure|HTTP|insecure/i,
     );
 
-    expect(ports.downloadCalls.some((c) => c.repo.includes("mirror.example.com"))).toBe(
-      false,
-    );
+    expect(ports.downloadCalls.some((c) => c.repo.includes("mirror.example.com"))).toBe(false);
     // APM-shaped remediation asks for the CLI flag when manifest already allows.
     const msg = err instanceof Error ? err.message : String(err);
     expect(msg).toMatch(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
@@ -140,9 +138,7 @@ describe("install insecure dual-gate + host allowlist", () => {
     });
 
     expect(result).toMatchObject({ ok: true });
-    expect(
-      ports.downloadCalls.some((c) => /mirror\.example\.com|child/i.test(c.repo)),
-    ).toBe(true);
+    expect(ports.downloadCalls.some((c) => /mirror\.example\.com|child/i.test(c.repo))).toBe(true);
   });
 
   test("invalid allowInsecureHosts rejected fail-closed before download", async () => {

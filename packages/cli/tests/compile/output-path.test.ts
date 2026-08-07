@@ -59,11 +59,7 @@ describe("p7d CLI compile output path", () => {
     writeCompileProject(project.cwd, "p7d-long-out");
 
     const outRel = join("build", "AGENTS.md");
-    const { result, combined } = await runInProject(project.cwd, [
-      "compile",
-      "--output",
-      outRel,
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["compile", "--output", outRel]);
     expectKnownCommand(combined, "compile");
     expectKnownCompileFlag(combined, "--output");
     expect(result).toBe(0);

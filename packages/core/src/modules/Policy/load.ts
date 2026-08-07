@@ -84,7 +84,10 @@ export function loadPolicy(options: LoadPolicyExtendedOptions = {}): LoadPolicyR
 
   // Remote URL path without pre-parsed document — shouldn't happen often
   if (/^https?:\/\//i.test(discovered.path)) {
-    throw new PolicyError("POLICY_FETCH_FAILURE", `Remote policy missing document: ${discovered.path}`);
+    throw new PolicyError(
+      "POLICY_FETCH_FAILURE",
+      `Remote policy missing document: ${discovered.path}`,
+    );
   }
 
   return loadFromPath(discovered.path, options);

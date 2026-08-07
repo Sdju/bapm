@@ -76,10 +76,7 @@ describe("whyDeps unit", () => {
 
   function project(lock?: string): void {
     cwd = mkdtempSync(join(tmpdir(), "bapm-why-unit-"));
-    write(
-      join(cwd, "bapm.yml"),
-      "name: why-unit\nversion: 0.0.1\ndependencies:\n  apm: []\n",
-    );
+    write(join(cwd, "bapm.yml"), "name: why-unit\nversion: 0.0.1\ndependencies:\n  apm: []\n");
     if (lock != null) write(join(cwd, "bapm.lock.yaml"), lock);
   }
 

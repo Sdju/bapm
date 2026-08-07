@@ -126,10 +126,7 @@ export function collectInsecureDependencyInfos(
 ): InsecureDependencyInfo[] {
   const infos: InsecureDependencyInfo[] = [];
   const rootName = String(document.name ?? "root");
-  const rootEntries = [
-    ...listApm(document.dependencies),
-    ...listApm(document.devDependencies),
-  ];
+  const rootEntries = [...listApm(document.dependencies), ...listApm(document.devDependencies)];
 
   for (const entry of rootEntries) {
     collectFromEntry(entry, {
@@ -249,9 +246,7 @@ export function enforceInsecurePolicy(args: {
       ),
     ].sort();
     if (blockedHosts.length > 0) {
-      const suggestedFlags = blockedHosts
-        .map((h) => `--allow-insecure-host ${h}`)
-        .join(" ");
+      const suggestedFlags = blockedHosts.map((h) => `--allow-insecure-host ${h}`).join(" ");
       const message =
         `Re-run with ${suggestedFlags} to allow transitive HTTP dependencies ` +
         `from unapproved host(s): ${blockedHosts.join(", ")}.`;

@@ -132,8 +132,6 @@ export {
 
 export {
   MarketplacePackOutputsError,
-  MARKETPLACE_OUTPUT_PROFILES,
-  KNOWN_OUTPUT_FORMATS,
   ensureMarketplacePathWithin,
   resolveEffectiveOutputPath,
   resolveMarketplaceOutputPath,
@@ -144,8 +142,6 @@ export {
   resolveMarketplacePackages,
   resolveAuthoringPackages,
   resolveMarketplacePackPackages,
-  mapClaudeMarketplace,
-  mapCodexMarketplace,
   serializeMarketplaceJson,
   atomicWriteMarketplaceJson,
   buildMarketplaceOutputs,
@@ -162,7 +158,6 @@ export {
   type BuildMarketplaceOutputsResult,
   type ResolveMarketplacePackagesOptions,
   type ResolveMarketplacePackagesResult,
-  type MarketplaceOutputProfile,
   type ResolveEffectiveOutputPathOptions,
   type ParseMarketplaceFilterResult,
 } from "./modules/PackOutputs";

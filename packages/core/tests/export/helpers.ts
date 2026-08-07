@@ -18,10 +18,9 @@ export function pickExport(names: string[], label: string): AnyFn {
 }
 
 export function getExportSbom(): (options: Record<string, unknown>) => unknown {
-  return pickExport(
-    ["exportSbom", "exportLockSbom", "exportLockfileSbom"],
-    "lock SBOM export",
-  ) as (options: Record<string, unknown>) => unknown;
+  return pickExport(["exportSbom", "exportLockSbom", "exportLockfileSbom"], "lock SBOM export") as (
+    options: Record<string, unknown>,
+  ) => unknown;
 }
 
 /** Normalize exportSbom return shapes to SBOM JSON text. */

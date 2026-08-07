@@ -1,6 +1,6 @@
 /**
  * Install ↔ mock target e2e: skills materialize via registry (no concrete cursor import).
- * Real cursor e2e lives under packages/cli and packages/target-cursor.
+ * Real cursor e2e lives under packages/cli and packages/integration-cursor.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";

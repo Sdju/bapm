@@ -8,13 +8,7 @@ import {
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };
-export {
-  detectFormatFromExtension,
-  formatAuditHelp,
-  parseAuditArgs,
-  resolveAuditFormat,
-};
-
+export { detectFormatFromExtension, formatAuditHelp, parseAuditArgs, resolveAuditFormat };
 
 export function createAudit(deps?: LifecycleCliDeps) {
   const resolved: LifecycleCliDeps = deps ?? {

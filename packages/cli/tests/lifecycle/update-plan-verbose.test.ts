@@ -30,10 +30,7 @@ describe("CLI update plan verbosity (keep gate)", () => {
     const lockPath = existingLockPath(project.cwd)!;
     const before = readBytes(lockPath);
 
-    const { result, stdout, combined } = await runInProject(project.cwd, [
-      "update",
-      "--dry-run",
-    ]);
+    const { result, stdout, combined } = await runInProject(project.cwd, ["update", "--dry-run"]);
     expectKnownCommand(combined, "update");
     expect(result).toBe(0);
     expect(Buffer.compare(readBytes(lockPath), before)).toBe(0);

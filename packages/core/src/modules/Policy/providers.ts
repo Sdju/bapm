@@ -71,10 +71,7 @@ export function discoverPolicyWithProviders(
   options: DiscoverPolicyWithProvidersOptions = {},
 ): DiscoverPolicyWithProvidersResult {
   const cwd = options.cwd ?? process.cwd();
-  const providers =
-    options.providers ??
-    options.policyProviders ??
-    [...DEFAULT_POLICY_PROVIDERS];
+  const providers = options.providers ?? options.policyProviders ?? [...DEFAULT_POLICY_PROVIDERS];
 
   const defaultHost = options.implementationDefaultHost ?? IMPLEMENTATION_DEFAULT_HOST;
   const fetchFailure = options.defaultFetchFailure ?? "block";
@@ -110,10 +107,7 @@ export function discoverPolicyWithProviders(
 export const runPolicyDiscovery = discoverPolicyWithProviders;
 export const discoverPolicyProviders = discoverPolicyWithProviders;
 
-function discoverLocal(
-  cwd: string,
-  path?: string,
-): DiscoverPolicyWithProvidersResult | null {
+function discoverLocal(cwd: string, path?: string): DiscoverPolicyWithProvidersResult | null {
   const discovered: DiscoveredPolicy = discoverPolicyPath({ cwd, path });
   if ("absent" in discovered && discovered.absent) return null;
   return {

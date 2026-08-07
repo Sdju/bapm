@@ -111,7 +111,12 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
       throw new PackError("PACK_VALIDATION", message, { cause });
     }
 
-    const selected = selectOutputFormats(config, marketplaceFilter);
+    const knownFormats = new Set(
+      options.marketplaceOutputs
+        ?.list()
+        .map((integration) => integration.marketplaceOutput.format) ?? [],
+    );
+    const selected = selectOutputFormats(config, marketplaceFilter, knownFormats);
     if (selected.length > 0) {
       try {
         const built = await buildMarketplaceOutputs({
@@ -123,6 +128,7 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
           offline: options.offline,
           includePrerelease: options.includePrerelease,
           lsRemote: options.lsRemote,
+          marketplaceOutputs: options.marketplaceOutputs,
         });
         marketplaceWritten = !built.skipped && built.written.length > 0;
       } catch (cause) {

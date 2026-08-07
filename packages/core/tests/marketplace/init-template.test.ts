@@ -26,10 +26,7 @@ describe("mp-authoring-yml init template", () => {
       cwd: project.cwd,
     });
 
-    const text =
-      typeof fragment === "string"
-        ? fragment
-        : JSON.stringify(fragment);
+    const text = typeof fragment === "string" ? fragment : JSON.stringify(fragment);
 
     expect(text).toMatch(/owner/i);
     expect(text).toMatch(/acme-org/);

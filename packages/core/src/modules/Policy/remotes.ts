@@ -30,9 +30,7 @@ export function selectProjectRemote(
   options: SelectProjectRemoteOptions = {},
 ): SelectedProjectRemote {
   const remotes =
-    options.remotes ??
-    options.listGitRemotes?.(options.cwd) ??
-    listGitRemotes(options.cwd);
+    options.remotes ?? options.listGitRemotes?.(options.cwd) ?? listGitRemotes(options.cwd);
 
   if (!remotes.length) {
     return { absent: true, skipped: true, remote: null };
@@ -90,7 +88,9 @@ export function parseGitRemoteV(stdout: string): GitRemoteEntry[] {
 }
 
 /** Parse owner/repo from a git remote URL (https or ssh). */
-export function parseOwnerRepoFromRemoteUrl(url: string): { owner: string; repo: string; host: string } | null {
+export function parseOwnerRepoFromRemoteUrl(
+  url: string,
+): { owner: string; repo: string; host: string } | null {
   const s = url.trim().replace(/\.git$/i, "");
   try {
     if (/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) {

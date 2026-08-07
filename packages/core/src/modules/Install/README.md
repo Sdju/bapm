@@ -2,7 +2,7 @@
 
 Install orchestration for `@bapm/core` (M5): frozen gate → resolve/download →
 orphan cleanup → primitives discover/conflict → invoke registered targets via
-`bapm-target-api` → write `deployed_file_hashes` when not frozen.
+`bapm-integration-api` → write `deployed_file_hashes` when not frozen.
 
 ## Public API
 
@@ -39,5 +39,5 @@ Modes: `off` | `warn` | `block`. See `@/modules/Policy`.
 ## Boundaries
 
 - Consumes Manifest / Lockfile / Resolver / Primitives / Pack only through public module APIs
-- Speaks to hosts only through `bapm-target-api` — never imports `bapm-target-cursor`
+- Speaks to hosts only through `bapm-integration-api` — never imports `bapm-integration-cursor`
 - Inventory / cleanup helpers live under this module (`deployedInventory.ts`), not as a new top-level module

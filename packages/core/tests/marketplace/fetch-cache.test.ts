@@ -49,9 +49,13 @@ describe("mp-consumer-registry fetch + cache", () => {
       name: "generic",
       url: "https://git.example.invalid/acme/tools.git",
     });
-    await expect(callFetch(fetch, generic, { fetch: async () => {
-      throw new Error("network must not be called for unsupported kinds");
-    } })).rejects.toThrow(/git|unsupported|not supported|out of scope/i);
+    await expect(
+      callFetch(fetch, generic, {
+        fetch: async () => {
+          throw new Error("network must not be called for unsupported kinds");
+        },
+      }),
+    ).rejects.toThrow(/git|unsupported|not supported|out of scope/i);
   });
 
   test("HTTP marketplace.json URL is rejected before body download", async () => {

@@ -1,7 +1,7 @@
 /**
  * Install ↔ target registry integration: materialize once with resolved set;
  * core does not write harness paths (mock target does).
- * Registry unit contracts live in packages/target-api/tests/.
+ * Registry unit contracts live in packages/integration-api/tests/.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";

@@ -115,8 +115,7 @@ export function parseSearchArgs(argv: string[]): ParsedSearchArgs {
       limit,
       verbose,
       expression,
-      error:
-        "Invalid search expression: expected QUERY@MARKETPLACE (split on last @)",
+      error: "Invalid search expression: expected QUERY@MARKETPLACE (split on last @)",
     };
   }
 
@@ -129,11 +128,7 @@ export function parseSearchArgs(argv: string[]): ParsedSearchArgs {
   };
 }
 
-function printMatches(
-  plugins: MarketplacePlugin[],
-  marketplace: string,
-  verbose: boolean,
-): void {
+function printMatches(plugins: MarketplacePlugin[], marketplace: string, verbose: boolean): void {
   for (const p of plugins) {
     const desc = p.description?.trim() || "(no description)";
     // Print plugin name once per hit so --limit counting stays accurate.
@@ -174,12 +169,8 @@ export async function runSearchCli(
     const limited = matches.slice(0, parsed.limit);
 
     if (limited.length === 0) {
-      console.log(
-        `No plugins matching '${query}' in marketplace '${marketplaceName}'.`,
-      );
-      console.log(
-        `Try a broader query, or run 'bapm marketplace browse ${marketplaceName}'.`,
-      );
+      console.log(`No plugins matching '${query}' in marketplace '${marketplaceName}'.`);
+      console.log(`Try a broader query, or run 'bapm marketplace browse ${marketplaceName}'.`);
       return { ok: true, exitCode: 0 };
     }
 

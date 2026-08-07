@@ -1,5 +1,5 @@
 import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
-import type { TargetRegistry } from "bapm-target-api";
+import type { TargetRegistry } from "bapm-integration-api";
 
 export type InstallOnlyMode = "apm" | "mcp";
 
@@ -52,7 +52,7 @@ export type RunInstallOptions = {
   forcedTarget?: string;
   /** Alias for `forcedTarget`. */
   forceTarget?: string;
-  /** Injected target registry (from bapm-target-api). */
+  /** Injected target registry (from bapm-integration-api). */
   targetRegistry?: TargetRegistry;
   /** Alias accepted by acceptance helpers. */
   registry?: TargetRegistry;
@@ -101,10 +101,7 @@ export type RunInstallOptions = {
     url?: string;
   };
   /** Injectable extends ancestor fetcher. */
-  fetchAncestor?: (
-    ref: string,
-    context: { leafHostClass: string; chain: string[] },
-  ) => unknown;
+  fetchAncestor?: (ref: string, context: { leafHostClass: string; chain: string[] }) => unknown;
   /** When remote fetch fails before a document exists (pl-010). */
   defaultFetchFailure?: "off" | "warn" | "block";
   implementationDefaultHost?: string;

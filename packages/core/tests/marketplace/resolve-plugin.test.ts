@@ -62,8 +62,7 @@ describe("mp-search-install G2/G8/G10 resolveMarketplacePlugin", () => {
       resolve("tools", "gh-mp", null, { configDir: tmp.configDir }),
     );
     const dep = concreteDepOf(resolution);
-    const text =
-      typeof dep === "string" ? dep : JSON.stringify(asRecord(dep));
+    const text = typeof dep === "string" ? dep : JSON.stringify(asRecord(dep));
     expect(text).toMatch(/acme\/tools|github\.com\/acme\/tools/i);
 
     const prov = provenanceOf(resolution);

@@ -3,10 +3,7 @@ import { resolve } from "node:path";
 import { loadYamlDocument } from "@/common/yaml/loadDocument.ts";
 import { YamlError } from "@/common/yaml/errors.ts";
 import { MarketplaceAuthoringError } from "./errors.ts";
-import {
-  isLocalAuthoringSource,
-  validateMarketplaceAuthoringSource,
-} from "./source.ts";
+import { isLocalAuthoringSource, validateMarketplaceAuthoringSource } from "./source.ts";
 import type {
   LoadMarketplaceFromBapmYmlOptions,
   LoadMarketplaceResult,

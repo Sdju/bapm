@@ -133,6 +133,9 @@ describe("M7 producer write validate-before-emit", () => {
 
 describe("M7 HARD — no new bapm-target-*", () => {
   test("§22 workspace hosts remain only api + cursor", () => {
-    expect(listBapmTargetPackageNames()).toEqual(["bapm-target-api", "bapm-target-cursor"]);
+    expect(listBapmTargetPackageNames()).toEqual([
+      "bapm-integration-api",
+      "bapm-integration-cursor",
+    ]);
   });
 });

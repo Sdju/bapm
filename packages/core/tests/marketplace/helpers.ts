@@ -146,10 +146,9 @@ export function readJson(path: string): unknown {
 }
 
 export function getParseMarketplaceJson() {
-  return pickExport(
-    ["parseMarketplaceJson", "parse_marketplace_json"],
-    "marketplace parse",
-  ) as (input: string | unknown) => unknown;
+  return pickExport(["parseMarketplaceJson", "parse_marketplace_json"], "marketplace parse") as (
+    input: string | unknown,
+  ) => unknown;
 }
 
 export function getCreateMarketplaceSource(): (...args: unknown[]) => Record<string, unknown> {
@@ -200,27 +199,27 @@ export function getRegistryApi() {
       ["listMarketplaces", "getRegisteredMarketplaces", "listRegisteredMarketplaces"],
       "list marketplaces",
     ) as (opts?: { configDir?: string }) => unknown[],
-    get: pickExport(
-      ["getMarketplace", "getRegisteredMarketplace"],
-      "get marketplace",
-    ) as (name: string, opts?: { configDir?: string }) => unknown,
-    add: pickExport(
-      ["addMarketplace", "registerMarketplace"],
-      "add marketplace",
-    ) as (source: unknown, opts?: { configDir?: string }) => unknown,
-    remove: pickExport(
-      ["removeMarketplace", "unregisterMarketplace"],
-      "remove marketplace",
-    ) as (name: string, opts?: { configDir?: string }) => unknown,
+    get: pickExport(["getMarketplace", "getRegisteredMarketplace"], "get marketplace") as (
+      name: string,
+      opts?: { configDir?: string },
+    ) => unknown,
+    add: pickExport(["addMarketplace", "registerMarketplace"], "add marketplace") as (
+      source: unknown,
+      opts?: { configDir?: string },
+    ) => unknown,
+    remove: pickExport(["removeMarketplace", "unregisterMarketplace"], "remove marketplace") as (
+      name: string,
+      opts?: { configDir?: string },
+    ) => unknown,
   };
 }
 
 export function getFetchApi() {
   return {
-    fetch: pickExport(
-      ["fetchMarketplace", "fetch_marketplace"],
-      "fetchMarketplace",
-    ) as (source: unknown, opts?: Record<string, unknown>) => Promise<unknown> | unknown,
+    fetch: pickExport(["fetchMarketplace", "fetch_marketplace"], "fetchMarketplace") as (
+      source: unknown,
+      opts?: Record<string, unknown>,
+    ) => Promise<unknown> | unknown,
     clearCache: pickExport(
       ["clearMarketplaceCache", "clear_marketplace_cache"],
       "clearMarketplaceCache",
@@ -229,10 +228,9 @@ export function getFetchApi() {
 }
 
 export function getValidateMarketplace() {
-  return pickExport(
-    ["validateMarketplace", "validate_marketplace"],
-    "validateMarketplace",
-  ) as (manifest: unknown) => unknown;
+  return pickExport(["validateMarketplace", "validate_marketplace"], "validateMarketplace") as (
+    manifest: unknown,
+  ) => unknown;
 }
 
 export function asRecord(value: unknown): Record<string, unknown> {

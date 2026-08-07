@@ -64,8 +64,6 @@ describe("mp-search-install G5/G6 install positional + lock provenance", () => {
 });
 
 function readProjectManifest(cwd: string): string {
-  const path = existsSync(join(cwd, "bapm.yml"))
-    ? join(cwd, "bapm.yml")
-    : join(cwd, "apm.yml");
+  const path = existsSync(join(cwd, "bapm.yml")) ? join(cwd, "bapm.yml") : join(cwd, "apm.yml");
   return readFileSync(path, "utf8");
 }

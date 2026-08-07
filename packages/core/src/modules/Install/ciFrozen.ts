@@ -37,9 +37,7 @@ export function resolveEffectiveFrozen(options: ResolveEffectiveFrozenOptions = 
   const frozen = options.frozen === true;
   const noFrozen = options.noFrozen === true;
   if (frozen && noFrozen) {
-    throw new Error(
-      "Cannot combine --frozen and --no-frozen (mutually exclusive flags conflict)",
-    );
+    throw new Error("Cannot combine --frozen and --no-frozen (mutually exclusive flags conflict)");
   }
   if (noFrozen) return false;
   if (frozen) return true;

@@ -72,11 +72,7 @@ export function writeLeafProject(
     "utf8",
   );
   if (options?.withSkill !== false) {
-    writeText(
-      cwd,
-      "leaf/.apm/skills/hello/SKILL.md",
-      "---\nname: hello\n---\n# Hello\n",
-    );
+    writeText(cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
   }
 }
 
@@ -105,11 +101,7 @@ dependencies:
     `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
     "utf8",
   );
-  writeText(
-    cwd,
-    "leaf/.apm/skills/hello/SKILL.md",
-    "---\nname: hello\n---\n# Hello\n",
-  );
+  writeText(cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
 }
 
 export function hasLockfile(cwd: string): boolean {
@@ -200,9 +192,7 @@ dependencies:
 }
 
 export function readManifestText(cwd: string): string {
-  const path = existsSync(join(cwd, "bapm.yml"))
-    ? join(cwd, "bapm.yml")
-    : join(cwd, "apm.yml");
+  const path = existsSync(join(cwd, "bapm.yml")) ? join(cwd, "bapm.yml") : join(cwd, "apm.yml");
   return readFileSync(path, "utf8");
 }
 

@@ -95,8 +95,8 @@ describe("CLI outdated — verbose surface", () => {
     expect(result).toBe(0);
     expect(Buffer.compare(readBytes(lockPath), beforeLock)).toBe(0);
     expect(existsSync(join(project.cwd, "apm_modules", ".keep"))).toBe(true);
-    expect(Buffer.compare(readFileSync(join(project.cwd, "apm_modules", ".keep")), beforeKeep)).toBe(
-      0,
-    );
+    expect(
+      Buffer.compare(readFileSync(join(project.cwd, "apm_modules", ".keep")), beforeKeep),
+    ).toBe(0);
   });
 });

@@ -3,8 +3,8 @@
 ```
 packages/core         @bapm/core          domain: manifest, lockfile, resolver, install
 packages/cli          bapm                thin CLI over @bapm/core
-packages/target-api   bapm-target-api     types/utilities between core and targets
-packages/target-cursor bapm-target-cursor cursor-only host materialization
+packages/integration-api   bapm-integration-api     types/utilities between core and targets
+packages/integration-cursor bapm-integration-cursor cursor-only host materialization
 apps/docs             @bapm/docs          VitePress
 ```
 

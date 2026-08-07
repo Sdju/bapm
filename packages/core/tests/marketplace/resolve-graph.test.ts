@@ -140,11 +140,17 @@ describe("mp-search-install G4 resolveGraph marketplace wire", () => {
             );
           },
         },
-        tagLister: { async listTags() { return []; } },
+        tagLister: {
+          async listTags() {
+            return [];
+          },
+        },
       }),
     );
 
-    const deps = lockDepsOf({ document: asRecord(result).lockfile ?? asRecord(result).lock ?? result });
+    const deps = lockDepsOf({
+      document: asRecord(result).lockfile ?? asRecord(result).lock ?? result,
+    });
     const hit = deps.find((d) => JSON.stringify(d).toLowerCase().includes("tools"));
     expect(hit).toBeTruthy();
     expect(String(hit!.discovered_via)).toMatch(/^gh-mp$/i);

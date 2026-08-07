@@ -1,7 +1,8 @@
 import type { MarketplaceAuthoringConfig, PackageEntry } from "../Authoring/types.ts";
+import type { MarketplaceOutputRegistry } from "bapm-integration-api";
 
 /** Supported host marketplace output formats. */
-export type MarketplaceOutputFormat = "claude" | "codex";
+export type MarketplaceOutputFormat = string;
 
 /** Package after ref resolution (local pass-through or remote sha). */
 export type ResolvedPackage = {
@@ -32,7 +33,10 @@ export type LsRemoteResult = {
   ref: string;
 };
 
-export type LsRemoteFn = (repoUrl: string, ref?: string) => Promise<LsRemoteResult> | LsRemoteResult;
+export type LsRemoteFn = (
+  repoUrl: string,
+  ref?: string,
+) => Promise<LsRemoteResult> | LsRemoteResult;
 
 export type BuildMarketplaceOutputsOptions = {
   cwd?: string;
@@ -54,6 +58,8 @@ export type BuildMarketplaceOutputsOptions = {
   lsRemote?: LsRemoteFn;
   /** Pre-loaded config (skips detect/load). */
   config?: MarketplaceAuthoringConfig;
+  /** Registered host-owned marketplace output capabilities. */
+  marketplaceOutputs?: MarketplaceOutputRegistry;
 };
 
 export type MarketplaceOutputWritten = {

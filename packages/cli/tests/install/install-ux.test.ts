@@ -97,7 +97,6 @@ describe("CLI install UX", () => {
     expect(text).toMatch(/frozen/i);
   });
 
-
   test("unknown install flag hard-errors (not soft-ignore)", async () => {
     project = createTempProject();
     writeLeafWithCursor(project.cwd, "unknown-flag");

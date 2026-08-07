@@ -96,12 +96,7 @@ export function runPolicyGate(options: PolicyGateExtendedOptions = {}): PolicyGa
       });
       doc = resolved.document;
     }
-    return evaluateLoaded(
-      doc,
-      discovered.path ?? discovered.url ?? "remote-policy",
-      [],
-      options,
-    );
+    return evaluateLoaded(doc, discovered.path ?? discovered.url ?? "remote-policy", [], options);
   }
 
   if (!discovered.path || /^https?:\/\//i.test(discovered.path)) {

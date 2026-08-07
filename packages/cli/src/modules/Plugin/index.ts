@@ -1,4 +1,9 @@
-import { runPlugin, formatPluginHelp, formatPluginInitHelp, parsePluginArgs } from "./services/runPlugin.ts";
+import {
+  runPlugin,
+  formatPluginHelp,
+  formatPluginInitHelp,
+  parsePluginArgs,
+} from "./services/runPlugin.ts";
 import type { PluginDeps, PluginOptions, PluginResult } from "./types/plugin.types.ts";
 
 export type { PluginDeps, PluginOptions, PluginResult };

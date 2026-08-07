@@ -1,5 +1,5 @@
 /**
- * bapm-target-cursor — minimal Cursor host target.
+ * bapm-integration-cursor — minimal Cursor host target.
  */
 
 export { createCursorTarget } from "./createCursorTarget.ts";
