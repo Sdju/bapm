@@ -53,7 +53,7 @@ describe("p7d CLI compile help + fail-closed", () => {
 
     expect(viaFlag.result).toBe(0);
     expect(text).not.toMatch(/--no-links\b/);
-    expect(text).not.toMatch(/--target\b/);
+    expect(text).toMatch(/--target\s+<id>/);
     expect(text).not.toMatch(/--all\b/);
     expect(text).not.toMatch(/--global\b/);
     expect(text).not.toMatch(/-g\b.*global|global.*-g\b/i);

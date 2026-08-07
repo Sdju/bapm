@@ -12,9 +12,6 @@ import { parseMarketplaceRef, resolveMarketplacePlugin } from "@/modules/Marketp
 import { classifyDependencyRef } from "@/modules/Resolver";
 import { InstallError } from "./errors.ts";
 
-/** Recognized `--exclude` / excludeTargets ids for this product surface. */
-export const KNOWN_EXCLUDE_IDS = new Set(["cursor"]);
-
 export function normalizeExcludeIds(options: {
   excludeTargets?: string[];
   exclude?: string[];
@@ -29,18 +26,6 @@ export function normalizeExcludeIds(options: {
     out.push(trimmed);
   }
   return out;
-}
-
-export function assertKnownExcludeIds(excludeIds: string[]): void {
-  for (const id of excludeIds) {
-    if (!KNOWN_EXCLUDE_IDS.has(id)) {
-      throw new InstallError(
-        "INSTALL_UNKNOWN_EXCLUDE",
-        `Unknown exclude id: ${id} (recognized: ${[...KNOWN_EXCLUDE_IDS].join(", ")})`,
-        { details: { exclude: id } },
-      );
-    }
-  }
 }
 
 export function normalizePackageRefs(refs: string[] | undefined): string[] {

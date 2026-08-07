@@ -30,7 +30,12 @@ describe("mp-search-install G5/G6 install positional + lock provenance", () => {
     expect((await addMarketplace(env, marketplaceRoot, alias)).result).toBe(0);
     writeEmptyProject(env.cwd);
 
-    const { result, combined } = await runInEnv(env, ["install", `${pluginName}@${alias}`]);
+    const { result, combined } = await runInEnv(env, [
+      "install",
+      "--target",
+      "cursor",
+      `${pluginName}@${alias}`,
+    ]);
     expectKnownCommand(combined, "install");
     expect(result).toBe(0);
     expect(hasModules(env.cwd)).toBe(true);

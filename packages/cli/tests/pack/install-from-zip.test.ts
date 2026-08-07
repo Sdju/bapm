@@ -36,7 +36,7 @@ describe("CLI install-from-archive round-trip", () => {
     const zip = findZipUnder(source.cwd);
     expect(zip).toBeTruthy();
 
-    const install = await runInProject(dest.cwd, ["install", zip!]);
+    const install = await runInProject(dest.cwd, ["install", "--target", "cursor", zip!]);
     expectKnownCommand(install.combined, "install");
     expect(install.result).toBe(0);
 
@@ -53,7 +53,7 @@ describe("CLI install-from-archive round-trip", () => {
     const bogus = join(dest.cwd, "not-a-pack.zip");
     writeFileSync(bogus, "not-a-zip", "utf8");
 
-    const { result, combined } = await runInProject(dest.cwd, ["install", bogus]);
+    const { result, combined } = await runInProject(dest.cwd, ["install", "--target", "cursor", bogus]);
     expectKnownCommand(combined, "install");
     expect(result).not.toBe(0);
   });

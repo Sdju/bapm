@@ -58,7 +58,7 @@ describe("CLI CI-default frozen install (req-lk-018 e2e)", () => {
 
     const { result, combined } = await runInProject(
       project.cwd,
-      ["install", "--no-frozen"],
+      ["install", "--no-frozen", "--target", "cursor"],
       { CI: "true" },
     );
 
@@ -113,7 +113,11 @@ describe("CLI CI-default frozen install (req-lk-018 e2e)", () => {
         writeLeafProject(p.cwd, `non-ci-${ci ?? "unset"}`);
         const env: Record<string, string | undefined> =
           ci === undefined ? { CI: undefined } : { CI: ci };
-        const { result, combined } = await runInProject(p.cwd, ["install"], env);
+        const { result, combined } = await runInProject(
+          p.cwd,
+          ["install", "--target", "cursor"],
+          env,
+        );
         expectKnownCommand(combined, "install");
         expect(result).toBe(0);
         expect(hasLockfile(p.cwd)).toBe(true);

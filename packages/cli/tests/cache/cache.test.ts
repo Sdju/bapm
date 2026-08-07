@@ -24,7 +24,7 @@ describe("CLI M9 thin cache info|clean", () => {
     project = createTempProject();
     writeModulesCacheProject(project.cwd);
 
-    const install = await runInProject(project.cwd, ["install"]);
+    const install = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expect(install.result).toBe(0);
     expect(existsSync(join(project.cwd, "apm_modules"))).toBe(true);
 
@@ -40,7 +40,7 @@ describe("CLI M9 thin cache info|clean", () => {
     project = createTempProject();
     writeModulesCacheProject(project.cwd);
 
-    const install = await runInProject(project.cwd, ["install"]);
+    const install = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expect(install.result).toBe(0);
     expect(readdirSync(join(project.cwd, "apm_modules")).length).toBeGreaterThan(0);
 
@@ -60,7 +60,7 @@ describe("CLI M9 thin cache info|clean", () => {
     project = createTempProject();
     writeModulesCacheProject(project.cwd);
 
-    const install = await runInProject(project.cwd, ["install"]);
+    const install = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expect(install.result).toBe(0);
     const before = readdirSync(join(project.cwd, "apm_modules")).length;
     expect(before).toBeGreaterThan(0);

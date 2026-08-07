@@ -38,7 +38,7 @@ describe("CLI M8 install policy gate", () => {
     writeLeafProject(project.cwd, "cli-m8-block");
     writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
 
-    const { result, combined } = await runInProject(project.cwd, ["install"]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownInstallFlags(combined);
     expect(result).not.toBe(0);
     expect(combined).toMatch(/policy|deny|block|leaf|violat/i);
@@ -50,7 +50,7 @@ describe("CLI M8 install policy gate", () => {
     writeLeafProject(project.cwd, "cli-m8-warn");
     writePolicy(project.cwd, "bapm-policy.yml", WARN_DENY_LEAF);
 
-    const { result, combined } = await runInProject(project.cwd, ["install"]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownInstallFlags(combined);
     expect(result).toBe(0);
     expect(combined).toMatch(/policy|enforcement|violat|denied by/i);
@@ -63,7 +63,13 @@ describe("CLI M8 install policy gate", () => {
     writePolicy(project.cwd, "apm-policy.yml", MINIMAL_WARN);
     const denyPath = writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
 
-    const { result, combined } = await runInProject(project.cwd, ["install", "--policy", denyPath]);
+    const { result, combined } = await runInProject(project.cwd, [
+      "install",
+      "--policy",
+      denyPath,
+      "--target",
+      "cursor",
+    ]);
     expectKnownInstallFlags(combined);
     expect(result).not.toBe(0);
     expect(combined).toMatch(/policy|deny|block|leaf|violat/i);
@@ -75,7 +81,12 @@ describe("CLI M8 install policy gate", () => {
     writeLeafProject(project.cwd, "cli-m8-no-policy");
     writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
 
-    const { result, combined } = await runInProject(project.cwd, ["install", "--no-policy"]);
+    const { result, combined } = await runInProject(project.cwd, [
+      "install",
+      "--no-policy",
+      "--target",
+      "cursor",
+    ]);
     expectKnownInstallFlags(combined);
     expect(result).toBe(0);
     expect(hasModules(project.cwd) || hasLock(project.cwd)).toBe(true);
@@ -87,7 +98,7 @@ describe("CLI M8 install policy gate", () => {
     writePolicy(project.cwd, "apm-policy.yml", MINIMAL_WARN);
     writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
 
-    const { result, combined } = await runInProject(project.cwd, ["install"]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownInstallFlags(combined);
     expect(result).not.toBe(0);
     expect(combined).toMatch(/apm-policy\.yml|bapm-policy\.yml|both|conflict/i);
@@ -99,12 +110,12 @@ describe("CLI M8 install policy gate", () => {
     writeLeafProject(project.cwd, "cli-m8-env");
     writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
 
-    const blocked = await runInProject(project.cwd, ["install"]);
+    const blocked = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownInstallFlags(blocked.combined);
     expect(blocked.result).not.toBe(0);
 
     process.env.BAPM_POLICY_DISABLE = "1";
-    const { result, combined } = await runInProject(project.cwd, ["install"]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownInstallFlags(combined);
     expect(result).toBe(0);
     expect(hasModules(project.cwd) || hasLock(project.cwd)).toBe(true);
@@ -141,7 +152,13 @@ describe("CLI M8 relative --policy path", () => {
     writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
     const rel = join("bapm-policy.yml");
 
-    const { result, combined } = await runInProject(project.cwd, ["install", "--policy", rel]);
+    const { result, combined } = await runInProject(project.cwd, [
+      "install",
+      "--policy",
+      rel,
+      "--target",
+      "cursor",
+    ]);
     expectKnownInstallFlags(combined);
     expect(result).not.toBe(0);
     expect(combined).toMatch(/policy|deny|block|leaf|violat/i);

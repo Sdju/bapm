@@ -97,6 +97,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const allowInsecure = options.allowInsecure === true;
   const allowInsecureHosts = options.allowInsecureHosts;
   const dev = options.dev === true;
+  const registry = (options.targetRegistry ?? options.registry) as TargetRegistry | undefined;
 
   const policyPorts = {
     policyProviders: options.policyProviders ?? options.providers,
@@ -109,6 +110,17 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     defaultFetchFailure: options.defaultFetchFailure,
     implementationDefaultHost: options.implementationDefaultHost,
   };
+
+  // Target selection is an install prerequisite. Resolve it before any archive,
+  // manifest, dependency, or target-harness mutation can occur.
+  assertForcedTargetRegistered(forcedTargetId, registry);
+  assertRegisteredExcludeIds(excludeIds, registry);
+  const activeTargets = await resolveActiveTargets({
+    cwd,
+    registry,
+    override: options.activeTargets,
+    forcedTargetId,
+  });
 
   if (options.archivePath && packageRefs.length > 0) {
     throw new InstallError(
@@ -171,9 +183,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       policyPath,
       noPolicy,
       policyPorts,
-      forcedTargetId,
-      registry: (options.targetRegistry ?? options.registry) as TargetRegistry | undefined,
-      activeTargetsOverride: options.activeTargets,
+      activeTargets,
     });
   }
 
@@ -191,10 +201,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     message,
     warn: true,
   }));
-
-  const registry = (options.targetRegistry ?? options.registry) as TargetRegistry | undefined;
-  assertForcedTargetRegistered(forcedTargetId, registry);
-  assertRegisteredExcludeIds(excludeIds, registry);
 
   let lockPath: string | undefined;
   let nodes: ResolvedNode[] = [];
@@ -336,14 +342,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         primitives: raw,
         declarationOrder,
       });
-
-  const activeTargets = await resolveActiveTargets({
-    cwd,
-    rootManifest,
-    registry,
-    override: options.activeTargets,
-    forcedTargetId,
-  });
 
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
@@ -503,9 +501,7 @@ async function runDryRunPreview(args: {
     defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
     implementationDefaultHost?: string;
   };
-  forcedTargetId?: string;
-  registry?: TargetRegistry;
-  activeTargetsOverride?: string[];
+  activeTargets: string[];
 }): Promise<InstallResult> {
   // Validate host tokens even on dry-run (fail-closed).
   if (args.allowInsecureHosts && args.allowInsecureHosts.length > 0) {
@@ -607,18 +603,6 @@ async function runDryRunPreview(args: {
       });
     }
   }
-
-  const activeTargets = rootManifest
-    ? await resolveActiveTargets({
-        cwd: args.cwd,
-        rootManifest,
-        registry: args.registry,
-        override: args.activeTargetsOverride,
-        forcedTargetId: args.forcedTargetId,
-      })
-    : args.forcedTargetId
-      ? [args.forcedTargetId]
-      : [];
 
   return {
     ok: true,
@@ -1058,7 +1042,6 @@ function assertForcedTargetRegistered(
 
 async function resolveActiveTargets(args: {
   cwd: string;
-  rootManifest: BapmManifest;
   registry?: TargetRegistry;
   override?: string[];
   forcedTargetId?: string;

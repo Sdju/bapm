@@ -80,16 +80,16 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     expect(existsSync(join(project.cwd, ".mcp.json"))).toBe(false);
   });
 
-  test("detect honesty: no .cursor/ and no --target → MUST NOT mkdir .cursor for MCP", async () => {
+  test("explicit target may configure MCP without a pre-existing .cursor directory", async () => {
     project = createTempProject();
     writeDirectMcpProject(project.cwd, { withCursorDir: false });
     expect(existsSync(join(project.cwd, ".cursor"))).toBe(false);
 
-    const { result, combined } = await runInProject(project.cwd, ["install"]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
     expect(result).toBe(0);
-    expect(existsSync(join(project.cwd, ".cursor"))).toBe(false);
-    expect(existsSync(mcpJsonPath(project.cwd))).toBe(false);
+    expect(existsSync(join(project.cwd, ".cursor"))).toBe(true);
+    expect(existsSync(mcpJsonPath(project.cwd))).toBe(true);
   });
 
   test("no MCP deps → install success does not require mcp.json (M5 regression)", async () => {

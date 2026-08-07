@@ -76,7 +76,7 @@ describe("CLI install", () => {
     writeLeafProject(project.cwd, "cli-install-happy");
 
     const { result, stderr } = await withCwd(project.cwd, () =>
-      withCapturedIo(() => runCli(["install"])),
+      withCapturedIo(() => runCli(["install", "--target", "cursor"])),
     );
 
     expect(stderr.join("\n")).not.toMatch(/not implemented/i);
@@ -93,7 +93,7 @@ describe("CLI install", () => {
     writeLeafProject(project.cwd, "cli-frozen-nolock");
 
     const { result, stderr } = await withCwd(project.cwd, () =>
-      withCapturedIo(() => runCli(["install", "--frozen"])),
+      withCapturedIo(() => runCli(["install", "--frozen", "--target", "cursor"])),
     );
 
     const err = stderr.join("\n");
@@ -116,7 +116,7 @@ describe("CLI install", () => {
     const before = readFileSync(lockFile);
 
     const { result } = await withCwd(project.cwd, () =>
-      withCapturedIo(() => runCli(["install", "--frozen"])),
+      withCapturedIo(() => runCli(["install", "--frozen", "--target", "cursor"])),
     );
     expect(result).toBe(0);
     expect(Buffer.compare(readFileSync(lockFile), before)).toBe(0);
