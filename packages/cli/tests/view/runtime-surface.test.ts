@@ -1,6 +1,6 @@
 /**
- * Acceptance (RED): cli-runtime-surface — `view` registered; help lists view.
- * OpenSpec change: cli-view-local-package
+ * CLI runtime surface: `view` registered; top-level help lists view
+ * (promoted from cli-view-local-package acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -12,7 +12,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("cli-view-local-package CLI runtime surface", () => {
+describe("CLI view runtime surface", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

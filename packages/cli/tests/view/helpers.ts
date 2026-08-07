@@ -1,12 +1,11 @@
 /**
- * Acceptance helpers for cli-view-local-package (CLI `bapm view`).
- * Behavioural fixtures only — no production source inspection.
+ * CLI helpers for `bapm view` behavioural suite (promoted from cli-view-local-package).
  */
 import * as core from "@bapm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 

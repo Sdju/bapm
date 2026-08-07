@@ -1,6 +1,6 @@
 /**
- * Acceptance (RED): cli-view — top-level `bapm view <package>`.
- * OpenSpec change: cli-view-local-package
+ * CLI `bapm view <package>` — exits, help, fail-closed flags
+ * (promoted from cli-view-local-package acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -15,7 +15,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("cli-view-local-package CLI view command", () => {
+describe("CLI view command", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
