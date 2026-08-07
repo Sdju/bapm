@@ -1,5 +1,5 @@
-import { createIntegrationRegistry } from "bapm-integration-api";
-import { createCursorIntegration } from "bapm-integration-cursor";
+import { createIntegrationRegistry } from "@bapm/integration-api";
+import { createCursorIntegration } from "@bapm/integration-cursor";
 
 /** Register the integration packages shipped with the CLI distribution. */
 export function createCliIntegrationRegistry() {

@@ -1,7 +1,7 @@
 import type { BapmManifest } from "@/modules/Manifest";
 import type { LockfileDocument } from "@/modules/Lockfile";
 import type { ResolvedNode } from "@/modules/Resolver";
-import type { McpServerConfig } from "bapm-integration-api";
+import type { McpServerConfig } from "@bapm/integration-api";
 import type { ExecutableGrantSurface } from "@/modules/ExecutableTrust";
 
 export type CollectedMcpServer = McpServerConfig & {

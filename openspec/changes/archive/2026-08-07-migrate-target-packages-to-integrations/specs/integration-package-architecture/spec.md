@@ -6,7 +6,7 @@ Defines the package boundary that lets host integrations provide runtime and mar
 
 ### Requirement: Integration packages own host capabilities
 
-Each host integration SHALL be published as `bapm-integration-<id>`. An integration MAY provide runtime capabilities (detection, primitive deployment, MCP configuration, or compile emission), marketplace-output capabilities, or both. It MUST own every host-specific layout, document shape, default path, and mapping used by the capabilities it provides.
+Each host integration SHALL be published as `@bapm/integration-<id>`. An integration MAY provide runtime capabilities (detection, primitive deployment, MCP configuration, or compile emission), marketplace-output capabilities, or both. It MUST own every host-specific layout, document shape, default path, and mapping used by the capabilities it provides.
 
 #### Scenario: A host capability is selected
 
@@ -15,12 +15,12 @@ Each host integration SHALL be published as `bapm-integration-<id>`. An integrat
 
 ### Requirement: No legacy target package compatibility
 
-The public workspace package graph SHALL expose `bapm-integration-api` and concrete `bapm-integration-*` packages as the integration boundary. Retired `bapm-target-*` package specifiers MUST fail package resolution. The migration MUST NOT provide a legacy package, package alias, re-export shim, resolver alias, or compatibility adapter for retired specifiers.
+The public workspace package graph SHALL expose `@bapm/integration-api` and concrete `@bapm/integration-*` packages as the integration boundary. Retired `bapm-target-*` package specifiers MUST fail package resolution. The migration MUST NOT provide a legacy package, package alias, re-export shim, resolver alias, or compatibility adapter for retired specifiers.
 
 #### Scenario: Legacy package resolution is rejected
 
 - **WHEN** a consumer resolves a retired `bapm-target-*` package specifier after migration
-- **THEN** resolution fails, while `bapm-integration-api` and the required concrete `bapm-integration-*` packages resolve to their published identities
+- **THEN** resolution fails, while `@bapm/integration-api` and the required concrete `@bapm/integration-*` packages resolve to their published identities
 
 ### Requirement: Migration phases have independently verifiable completion
 
@@ -29,4 +29,4 @@ The migration SHALL complete in ordered phases: generic API rename, Cursor runti
 #### Scenario: Marketplace phase follows runtime rename
 
 - **WHEN** Claude or Codex marketplace output ownership is migrated
-- **THEN** `bapm-integration-api` and the Cursor runtime package graph already resolve without any legacy target package names
+- **THEN** `@bapm/integration-api` and the Cursor runtime package graph already resolve without any legacy target package names

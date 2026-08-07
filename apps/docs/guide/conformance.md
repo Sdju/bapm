@@ -6,7 +6,7 @@ bapm разделяет три оси, которые легко спутать:
 | --- | --- | --- |
 | **OpenAPM v0.1** | Нормативный wire: манифест, lock, policy, resolve, deploy | Заявленные классы в корневом [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A |
 | **APM product CLI** | Полная командная и adapter-поверхность microsoft/apm | **Не** полный product CLI parity — bapm не drop-in клон APM CLI |
-| **Host integrations** | Куда пакеты материализуются или эмитятся артефакты хоста | Runtime **только Cursor** через Cursor-integration; Claude/Codex — marketplace-output; multi-target runtime — позже |
+| **Host integrations** | Куда пакеты материализуются или эмитятся артефакты хоста | Runtime **cursor-only** (только Cursor) через `@bapm/integration-cursor`; Claude/Codex — marketplace-output; multi-target runtime — позже |
 
 ## Опубликованное заявление
 

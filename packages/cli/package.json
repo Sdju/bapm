@@ -1,10 +1,10 @@
 {
-  "name": "bapm",
+  "name": "@bapm/cli",
   "version": "0.0.0",
   "description": "bapm CLI — Better Agent Package Manager",
   "license": "MIT",
   "bin": {
-    "bapm": "./dist/cli.mjs"
+    "cli": "./dist/cli.mjs"
   },
   "files": [
     "dist"
@@ -27,10 +27,10 @@
   },
   "dependencies": {
     "@bapm/core": "workspace:*",
-    "bapm-integration-api": "workspace:*",
-    "bapm-integration-claude": "workspace:*",
-    "bapm-integration-codex": "workspace:*",
-    "bapm-integration-cursor": "workspace:*"
+    "@bapm/integration-api": "workspace:*",
+    "@bapm/integration-claude": "workspace:*",
+    "@bapm/integration-codex": "workspace:*",
+    "@bapm/integration-cursor": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

@@ -1,5 +1,5 @@
 /**
- * Materialize may report deployed paths via bapm-integration-api only.
+ * Materialize may report deployed paths via @bapm/integration-api only.
  * No adapter catalog / MCP configure surface.
  */
 import { expect, test, describe } from "vite-plus/test";

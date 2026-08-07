@@ -1,5 +1,5 @@
 /**
- * bapm-integration-cursor — Cursor host integration.
+ * @bapm/integration-cursor — Cursor host integration.
  */
 
 export { createCursorIntegration } from "./createCursorIntegration.ts";

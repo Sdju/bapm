@@ -17,7 +17,7 @@ function listBapmIntegrationPackageNames(): string[] {
     const pkgPath = join(dir, "package.json");
     if (!existsSync(pkgPath)) continue;
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-    if (typeof pkg.name === "string" && pkg.name.startsWith("bapm-integration-")) {
+    if (typeof pkg.name === "string" && pkg.name.startsWith("@bapm/integration-")) {
       names.push(pkg.name);
     }
   }
@@ -26,10 +26,10 @@ function listBapmIntegrationPackageNames(): string[] {
 
 test("HARD: workspace exposes only the integration package namespace", () => {
   expect(listBapmIntegrationPackageNames()).toEqual([
-    "bapm-integration-api",
-    "bapm-integration-claude",
-    "bapm-integration-codex",
-    "bapm-integration-cursor",
+    "@bapm/integration-api",
+    "@bapm/integration-claude",
+    "@bapm/integration-codex",
+    "@bapm/integration-cursor",
   ]);
 });
 
@@ -39,14 +39,14 @@ test("core uses Cursor integration only as a development dependency", () => {
     devDependencies?: Record<string, string>;
   };
 
-  expect(coreManifest.dependencies).not.toHaveProperty("bapm-integration-cursor");
+  expect(coreManifest.dependencies).not.toHaveProperty("@bapm/integration-cursor");
   expect(coreManifest.devDependencies).toMatchObject({
-    "bapm-integration-cursor": "workspace:*",
+    "@bapm/integration-cursor": "workspace:*",
   });
 });
 
-test("core vite/test config has no path alias for bapm-integration-cursor", () => {
+test("core vite/test config has no path alias for @bapm/integration-cursor", () => {
   const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-  expect(viteConfig).not.toMatch(/["']bapm-integration-cursor["']\s*:/);
+  expect(viteConfig).not.toMatch(/["']@bapm\/integration-cursor["']\s*:/);
   expect(viteConfig).not.toMatch(/target-cursor\/src/);
 });

@@ -1,6 +1,6 @@
 ## Why
 
-The package migration has made `bapm-integration-*` the canonical boundary, but active specifications, live documentation, and the public integration API still use target-era vocabulary. Leaving both vocabularies active makes the supported API unclear and risks recreating compatibility paths that the migration intentionally rejects.
+The package migration has made `@bapm/integration-*` the canonical boundary, but active specifications, live documentation, and the public integration API still use target-era vocabulary. Leaving both vocabularies active makes the supported API unclear and risks recreating compatibility paths that the migration intentionally rejects.
 
 ## What Changes
 
@@ -24,4 +24,4 @@ The package migration has made `bapm-integration-*` the canonical boundary, but 
 
 ## Impact
 
-Affected areas include `bapm-integration-api` exports and consumers in core, CLI, concrete integrations, tests, active OpenSpec specifications, and live README/docs references. Historical OpenSpec archives and their legacy vocabulary are explicitly out of scope for deletion or rewriting.
+Affected areas include `@bapm/integration-api` exports and consumers in core, CLI, concrete integrations, tests, active OpenSpec specifications, and live README/docs references. Historical OpenSpec archives and their legacy vocabulary are explicitly out of scope for deletion or rewriting.

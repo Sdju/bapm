@@ -1,7 +1,7 @@
 import { RegistryError } from "./errors.ts";
 import type { CheckSelfUpdateOptions, CheckSelfUpdateResult } from "./types.ts";
 
-const DEFAULT_PACKAGE = "bapm";
+const DEFAULT_PACKAGE = "@bapm/cli";
 
 /**
  * Compare running CLI version to npm dist-tag (primary metadata source).

@@ -18,14 +18,14 @@ import type {
   ConfigureMcpReport,
   MaterializeReport,
   McpServerConfig,
-} from "bapm-integration-api";
+} from "@bapm/integration-api";
 import {
   assertUnderDeployRoots,
   primitivesList,
   readPrimitiveContent,
   sanitizeName,
   toPosixRel,
-} from "bapm-integration-api";
+} from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".agents/skills", ".cursor"] as const;
 const MCP_JSON_REL = ".cursor/mcp.json";

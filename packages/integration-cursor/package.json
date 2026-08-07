@@ -1,5 +1,5 @@
 {
-  "name": "bapm-integration-cursor",
+  "name": "@bapm/integration-cursor",
   "version": "0.0.0",
   "description": "Cursor integration for bapm",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "bapm-integration-api": "workspace:*"
+    "@bapm/integration-api": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

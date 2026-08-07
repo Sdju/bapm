@@ -7,12 +7,12 @@
 В корне **вашего** проекта (не репозитория bapm):
 
 ```bash
-pnpm add -D bapm
+pnpm add -D @bapm/cli
 # или:
-npm i -D bapm
+npm i -D @bapm/cli
 ```
 
-Дальше вызывайте бинарь:
+Дальше вызывайте бинарь `bapm`:
 
 ```bash
 pnpm exec bapm --help
@@ -24,7 +24,7 @@ npx bapm --help
 
 ### Оговорка про npm
 
-Публичный пакет с именем `bapm` на npm сегодня занят **другим** продуктом; публикация этого CLI ещё не стабилизирована. Следите за релизами проекта. Команды установки выше — целевой UX продукта. Сборка из исходников monorepo — только для контрибьюторов: [Architecture](/architecture/).
+Публикация scoped-пакета `@bapm/cli` ещё может быть нестабильной; следите за релизами проекта. Команды установки выше — целевой UX. Сборка из исходников monorepo — только для контрибьюторов: [Architecture](/architecture/).
 
 Нужен Node.js ≥ 22.12.
 
@@ -104,7 +104,7 @@ Lock без деплоя в хост: `bapm lock` — см. [lockfile](/guide/lo
 | `No manifest found` | В cwd нет ни `apm.yml`, ни `bapm.yml` |
 | `Both apm.yml and bapm.yml are present` | Оставьте один файл |
 | `frozen` / lock error при `--frozen` | Сначала обычный `install` или `lock`, чтобы появился lock |
-| `bapm: command not found` | Установите CLI в проект (`pnpm add -D bapm` / `npm i -D bapm`) и вызывайте через `pnpm exec bapm` / `npx bapm` |
+| `bapm: command not found` | Установите CLI в проект (`pnpm add -D @bapm/cli` / `npm i -D @bapm/cli`) и вызывайте через `pnpm exec bapm` / `npx bapm` |
 | Ожидали Claude/Codex runtime | Сейчас runtime — cursor-only; см. [совместимость](/guide/conformance) |
 
 Дальше: [команды](/guide/commands) → [сценарии](/guide/situations/) → [справка](/reference/).

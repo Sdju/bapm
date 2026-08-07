@@ -4,7 +4,7 @@ The `bapm-target-*` vocabulary now conflates two independently useful concerns: 
 
 ## What Changes
 
-- **BREAKING** Rename the shared API boundary and every concrete `bapm-target-*` workspace package to the `bapm-integration-*` namespace, with no compatibility packages, aliases, re-export shims, or legacy imports.
+- **BREAKING** Rename the shared API boundary and every concrete `bapm-target-*` workspace package to the `@bapm/integration-*` namespace, with no compatibility packages, aliases, re-export shims, or legacy imports.
 - Define an integration package as the owner of both host runtime capabilities (detect, deploy, MCP, compile) and host marketplace-output capabilities; keep `@bapm/core` neutral and capability-driven.
 - Move the existing Cursor implementation and composition-root wiring to the integration namespace while preserving generic registration and injection.
 - Make Claude and Codex marketplace output ownership explicit: define whether they become dedicated integration packages or remain separately capability-provided, and remove core-owned host-specific output mapping accordingly.

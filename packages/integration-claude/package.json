@@ -1,5 +1,5 @@
 {
-  "name": "bapm-integration-claude",
+  "name": "@bapm/integration-claude",
   "version": "0.0.0",
   "description": "Claude marketplace-output integration for bapm",
   "license": "MIT",
@@ -18,7 +18,7 @@
     "check": "vp check"
   },
   "dependencies": {
-    "bapm-integration-api": "workspace:*"
+    "@bapm/integration-api": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

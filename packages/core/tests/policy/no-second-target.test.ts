@@ -4,9 +4,9 @@ import { listBapmIntegrationPackageNames } from "./helpers.ts";
 
 test("HARD: workspace integrations include API and host packages", () => {
   expect(listBapmIntegrationPackageNames()).toEqual([
-    "bapm-integration-api",
-    "bapm-integration-claude",
-    "bapm-integration-codex",
-    "bapm-integration-cursor",
+    "@bapm/integration-api",
+    "@bapm/integration-claude",
+    "@bapm/integration-codex",
+    "@bapm/integration-cursor",
   ]);
 });

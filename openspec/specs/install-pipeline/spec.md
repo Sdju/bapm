@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines `@bapm/core` install orchestration after M3 resolve/download: modules placement, lock write-back unless frozen, target intersection and deploy only through registered `bapm-integration-api` contracts, and basic OpenAPM frozen gate (lk-006).
+Defines `@bapm/core` install orchestration after M3 resolve/download: modules placement, lock write-back unless frozen, target intersection and deploy only through registered `@bapm/integration-api` contracts, and basic OpenAPM frozen gate (lk-006).
 
 ## Requirements
 
@@ -125,12 +125,12 @@ Install MUST accept an explicit forced target id (for example from CLI `--target
 
 ### Requirement: Deploy only via registered integration-api contracts
 
-Core install MUST invoke host materialization only through `bapm-integration-api` registration/contracts. Core MUST NOT hard-depend on `bapm-integration-cursor` or any concrete `bapm-target-*` package. With no target registered or none detected, install MUST still complete modules and lock work and MUST NOT write harness files (MAY warn).
+Core install MUST invoke host materialization only through `@bapm/integration-api` registration/contracts. Core MUST NOT hard-depend on `@bapm/integration-cursor` or any concrete `bapm-target-*` package. With no target registered or none detected, install MUST still complete modules and lock work and MUST NOT write harness files (MAY warn).
 
 #### Scenario: No hard dependency on concrete target
 
 - **WHEN** inspecting `@bapm/core` package dependencies
-- **THEN** it MUST list `bapm-integration-api` (or workspace equivalent) and MUST NOT list `bapm-integration-cursor` or other concrete `bapm-target-*` packages
+- **THEN** it MUST list `@bapm/integration-api` (or workspace equivalent) and MUST NOT list `@bapm/integration-cursor` or other concrete `bapm-target-*` packages
 
 #### Scenario: Integrate without registered target
 

@@ -30,4 +30,4 @@ When argv includes a filesystem path ending in `.zip`, install extracts the
 pack archive into the project root via `@bapm/core` Pack helpers, dual-read
 parses the landed manifest, then continues existing install orchestration.
 
-Cursor registration uses workspace dep `bapm-integration-cursor` here (not in core).
+Cursor registration uses workspace dep `@bapm/integration-cursor` here (not in core).

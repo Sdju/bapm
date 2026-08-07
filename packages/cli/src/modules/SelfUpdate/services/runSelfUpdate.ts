@@ -20,8 +20,8 @@ Exit policy (--check):
   1  update available, unknown version, or check failed
 
 Upgrade path:
-  npm i -g bapm@<version>
-  (or: npm update -g bapm)
+  npm i -g @bapm/cli@<version>
+  (or: npm update -g @bapm/cli)
 
 Without --check, runs the npm global upgrade path unless BAPM_SELF_UPDATE_DISABLE=1.
 Unknown flags are rejected.
@@ -95,7 +95,7 @@ export async function runSelfUpdateCli(
     // SHOULD: upgrade path without --check
     if (process.env.BAPM_SELF_UPDATE_DISABLE === "1") {
       console.error(
-        `${deps.name}: self-update upgrade path disabled (BAPM_SELF_UPDATE_DISABLE=1). Use: npm i -g bapm@latest`,
+        `${deps.name}: self-update upgrade path disabled (BAPM_SELF_UPDATE_DISABLE=1). Use: npm i -g @bapm/cli@latest`,
       );
       return { ok: false, exitCode: 1 };
     }
@@ -116,7 +116,7 @@ export async function runSelfUpdateCli(
     } else {
       await defaultNpmUpgrade(deps.name, target);
     }
-    console.log(`Upgraded via npm i -g bapm@${target}`);
+    console.log(`Upgraded via npm i -g @bapm/cli@${target}`);
     return { ok: true, exitCode: 0 };
   } catch (error) {
     const message =
@@ -130,9 +130,9 @@ export async function runSelfUpdateCli(
   }
 }
 
-function defaultNpmUpgrade(pkg: string, version: string): Promise<void> {
+function defaultNpmUpgrade(_pkg: string, version: string): Promise<void> {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn("npm", ["i", "-g", `${pkg}@${version}`], {
+    const child = spawn("npm", ["i", "-g", `@bapm/cli@${version}`], {
       stdio: "inherit",
     });
     child.on("error", reject);

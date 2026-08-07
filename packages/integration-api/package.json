@@ -1,5 +1,5 @@
 {
-  "name": "bapm-integration-api",
+  "name": "@bapm/integration-api",
   "version": "0.0.0",
   "description": "Shared contracts and registry for bapm host integrations",
   "license": "MIT",

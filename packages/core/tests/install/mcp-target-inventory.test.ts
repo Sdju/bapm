@@ -1,7 +1,7 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { IntegrationRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "@bapm/integration-api";
 import { loadLockfile, runInstall } from "../../src/index.ts";
 import {
   createFakePorts,

@@ -2,7 +2,7 @@
 
 ### Requirement: Claude and Codex marketplace outputs have explicit integration owners
 
-Claude marketplace output MUST be provided by `bapm-integration-claude`, and Codex marketplace output MUST be provided by `bapm-integration-codex`. These packages MAY be marketplace-output-only integrations. Each MUST own its host-specific JSON mapping, default path, validation, and output metadata; `@bapm/core` MUST provide only generic resolution, selection, atomic-write orchestration, and integration capability invocation.
+Claude marketplace output MUST be provided by `@bapm/integration-claude`, and Codex marketplace output MUST be provided by `@bapm/integration-codex`. These packages MAY be marketplace-output-only integrations. Each MUST own its host-specific JSON mapping, default path, validation, and output metadata; `@bapm/core` MUST provide only generic resolution, selection, atomic-write orchestration, and integration capability invocation.
 
 #### Scenario: Claude output is selected
 

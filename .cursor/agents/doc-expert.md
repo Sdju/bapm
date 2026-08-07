@@ -122,7 +122,7 @@ apps/docs/
 - Установка: описывай продуктовый путь (`npx` / `pnpm add -D` / глобально) как **целевой UX**.
   Если публичный npm-пакет ещё не стабилен или имя конфликтует — одна честная оговорка
   («пакет публикуется / имя уточняется»), без увода всего гайда в monorepo.
-- Материализация runtime сегодня **cursor-only** через `bapm-integration-cursor`.
+- Материализация runtime сегодня **cursor-only** через `@bapm/integration-cursor`.
 - Claude/Codex — marketplace-output integrations, не обещай их как runtime install targets.
 - OpenAPM wire ≠ полный drop-in microsoft/apm CLI.
 - Domain selector `--target <id>` и поле manifest `target` остаются user-facing; integration registry — деталь реализации, не первый экран how-to.

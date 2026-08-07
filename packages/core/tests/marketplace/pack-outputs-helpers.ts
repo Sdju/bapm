@@ -3,9 +3,9 @@
  * Soft-resolve Marketplace builder / pack-outputs APIs from @bapm/core.
  */
 import * as core from "@bapm/core";
-import { createMarketplaceOutputRegistry } from "bapm-integration-api";
-import { claudeMarketplaceIntegration } from "bapm-integration-claude";
-import { codexMarketplaceIntegration } from "bapm-integration-codex";
+import { createMarketplaceOutputRegistry } from "@bapm/integration-api";
+import { claudeMarketplaceIntegration } from "@bapm/integration-claude";
+import { codexMarketplaceIntegration } from "@bapm/integration-codex";
 import {
   existsSync,
   mkdirSync,

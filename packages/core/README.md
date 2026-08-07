@@ -58,6 +58,6 @@ Public API for project lockfiles (`apm.lock.yaml` / `bapm.lock.yaml`):
 
 ### Out of M2
 
-M2 does **not** resolve, download, install, run frozen CI, materialize integrations, or invoke `bapm-integration-*` adapters.
+M2 does **not** resolve, download, install, run frozen CI, materialize integrations, or invoke `@bapm/integration-*` adapters.
 
 See OpenSpec change `m2-lockfile-yaml-dual-read`.

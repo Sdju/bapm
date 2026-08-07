@@ -1,4 +1,4 @@
-import type { MarketplaceOutputRegistry } from "bapm-integration-api";
+import type { MarketplaceOutputRegistry } from "@bapm/integration-api";
 
 export type RunPackOptions = {
   cwd?: string;

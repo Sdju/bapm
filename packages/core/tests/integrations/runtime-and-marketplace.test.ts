@@ -7,8 +7,8 @@ import {
   createIntegrationRegistry,
   type MarketplaceOutputIntegration,
   type MarketplaceOutputRegistry,
-} from "bapm-integration-api";
-import { createCursorIntegration } from "bapm-integration-cursor";
+} from "@bapm/integration-api";
+import { createCursorIntegration } from "@bapm/integration-cursor";
 import {
   buildMarketplaceOutputs,
   resolveEffectiveOutputPath,
@@ -19,8 +19,8 @@ async function loadMarketplaceIntegrations(): Promise<{
   claude: MarketplaceOutputIntegration;
   codex: MarketplaceOutputIntegration;
 }> {
-  const claudeSpecifier = ["bapm", "integration", "claude"].join("-");
-  const codexSpecifier = ["bapm", "integration", "codex"].join("-");
+  const claudeSpecifier = "@bapm/integration-claude";
+  const codexSpecifier = "@bapm/integration-codex";
   const claude = (await import(claudeSpecifier)) as {
     claudeMarketplaceIntegration: MarketplaceOutputIntegration;
   };
@@ -50,7 +50,7 @@ describe("integration runtime and marketplace behavior", () => {
   });
 
   test("preserves Cursor runtime behavior through the registered integration", async () => {
-    const project = mkdtempSync(join(tmpdir(), "bapm-integration-cursor-"));
+    const project = mkdtempSync(join(tmpdir(), "bapm-int-cursor-"));
     cwd = project;
     const cursor = createCursorIntegration();
     const registry = createIntegrationRegistry();

@@ -1,5 +1,5 @@
 /**
- * bapm-integration-api — contracts + registry between @bapm/core and host integrations.
+ * @bapm/integration-api — contracts + registry between @bapm/core and host integrations.
  */
 
 export type {

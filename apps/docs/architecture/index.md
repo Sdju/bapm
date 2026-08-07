@@ -6,11 +6,11 @@
 
 ```
 packages/core               @bapm/core                 domain: манифест, lockfile, resolver, install
-packages/cli                bapm                       thin CLI поверх @bapm/core
-packages/integration-api    bapm-integration-api       контракты capability между core и integrations
-packages/integration-cursor bapm-integration-cursor    runtime-материализация (только Cursor)
-packages/integration-claude bapm-integration-claude    Claude marketplace output
-packages/integration-codex  bapm-integration-codex     Codex marketplace output
+packages/cli                @bapm/cli                  thin CLI поверх @bapm/core (bin: bapm)
+packages/integration-api    @bapm/integration-api       контракты capability между core и integrations
+packages/integration-cursor @bapm/integration-cursor    runtime-материализация (только Cursor)
+packages/integration-claude @bapm/integration-claude    Claude marketplace output
+packages/integration-codex  @bapm/integration-codex     Codex marketplace output
 apps/docs                   @bapm/docs                 VitePress
 ```
 

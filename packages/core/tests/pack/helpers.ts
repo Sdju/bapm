@@ -239,7 +239,7 @@ export function listBapmIntegrationPackageNames(): string[] {
     const pkgPath = join(dir, "package.json");
     if (!existsSync(pkgPath)) continue;
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-    if (typeof pkg.name === "string" && pkg.name.startsWith("bapm-integration-")) {
+    if (typeof pkg.name === "string" && pkg.name.startsWith("@bapm/integration-")) {
       names.push(pkg.name);
     }
   }

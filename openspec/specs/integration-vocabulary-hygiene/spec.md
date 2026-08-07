@@ -22,7 +22,7 @@ The cleanup MUST NOT delete or rewrite historical OpenSpec archive entries. Nega
 #### Scenario: Legacy package resolution remains rejected
 
 - **WHEN** a consumer resolves a retired `bapm-target-*` package specifier after vocabulary cleanup
-- **THEN** resolution fails while the canonical `bapm-integration-*` packages resolve normally
+- **THEN** resolution fails while the canonical `@bapm/integration-*` packages resolve normally
 
 ### Requirement: OpenAPM target-domain vocabulary is retained
 

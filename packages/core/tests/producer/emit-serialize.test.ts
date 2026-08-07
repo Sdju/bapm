@@ -134,10 +134,10 @@ describe("M7 producer write validate-before-emit", () => {
 describe("M7 HARD — integration package inventory", () => {
   test("§22 workspace integrations include shared API and host packages", () => {
     expect(listBapmIntegrationPackageNames()).toEqual([
-      "bapm-integration-api",
-      "bapm-integration-claude",
-      "bapm-integration-codex",
-      "bapm-integration-cursor",
+      "@bapm/integration-api",
+      "@bapm/integration-claude",
+      "@bapm/integration-codex",
+      "@bapm/integration-cursor",
     ]);
   });
 });

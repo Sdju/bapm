@@ -1,5 +1,5 @@
 import { compileAgentsMd } from "@bapm/core";
-import type { IntegrationRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "@bapm/integration-api";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type CompileOptions = { args?: string[]; cwd?: string; integrationRegistry?: IntegrationRegistry };

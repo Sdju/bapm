@@ -17,11 +17,11 @@
 ```
 apps/docs          @bapm/docs        документация (VitePress)
 packages/core      @bapm/core        домен: manifest, lockfile, resolver, install
-packages/cli       bapm              CLI поверх @bapm/core
-packages/integration-api     bapm-integration-api     контракты/registry; прослойка core ↔ integrations
-packages/integration-cursor  bapm-integration-cursor  runtime Cursor
-packages/integration-claude  bapm-integration-claude  marketplace-only Claude output
-packages/integration-codex   bapm-integration-codex   marketplace-only Codex output
+packages/cli       @bapm/cli         CLI поверх @bapm/core (bin: bapm)
+packages/integration-api     @bapm/integration-api     контракты/registry; прослойка core ↔ integrations
+packages/integration-cursor  @bapm/integration-cursor  runtime Cursor
+packages/integration-claude  @bapm/integration-claude  marketplace-only Claude output
+packages/integration-codex   @bapm/integration-codex   marketplace-only Codex output
 openspec/                            спецификации и изменения
 .samples/                            внешние референсы (gitignore) — локальный клон microsoft/apm
 ```

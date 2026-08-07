@@ -24,7 +24,7 @@ APM authors MCP secrets in `dependencies.mcp` with placeholders (`${VAR}`, `${en
 ## Impact
 
 - `@bapm/core` — new small bake helper (likely under `Mcp` or `Install`); wire into install → `configureMcp` path.
-- `bapm-integration-cursor` — ensure written `mcpServers` entries use baked values; tests for placeholder → literal.
+- `@bapm/integration-cursor` — ensure written `mcpServers` entries use baked values; tests for placeholder → literal.
 - CLI — optional later: env overrides flag parity with APM; floor is `process.env` + fail-closed.
 - Docs — `apps/docs` mention of MCP env placeholders + Cursor bake.
 - Tests — core unit + CLI/integration install with `${TOKEN}` style env; Agent Plugins path unchanged.

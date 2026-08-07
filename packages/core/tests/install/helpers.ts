@@ -174,13 +174,13 @@ function listUnder(root: string): string[] {
   return out;
 }
 
-/** Load bapm-integration-api. */
+/** Load @bapm/integration-api. */
 export async function importIntegrationApi(): Promise<Record<string, unknown>> {
   try {
-    return (await import("bapm-integration-api")) as Record<string, unknown>;
+    return (await import("@bapm/integration-api")) as Record<string, unknown>;
   } catch (e) {
     throw new TypeError(
-      `expected package bapm-integration-api to resolve (packages/integration-api): ${
+      `expected package @bapm/integration-api to resolve (packages/integration-api): ${
         e instanceof Error ? e.message : String(e)
       }`,
     );
@@ -190,7 +190,7 @@ export async function importIntegrationApi(): Promise<Record<string, unknown>> {
 export function getCreateIntegrationRegistry(api: Record<string, unknown>): () => unknown {
   const fn = api.createIntegrationRegistry;
   if (typeof fn !== "function") {
-    throw new TypeError("expected bapm-integration-api to export createIntegrationRegistry");
+    throw new TypeError("expected @bapm/integration-api to export createIntegrationRegistry");
   }
   return fn as () => unknown;
 }
@@ -207,7 +207,7 @@ export function getRegisterIntegration(
   }
   const fn = api.registerTarget ?? api.register;
   if (typeof fn !== "function") {
-    throw new TypeError("expected bapm-integration-api registry.register or registerTarget export");
+    throw new TypeError("expected @bapm/integration-api registry.register or registerTarget export");
   }
   return fn as (target: unknown) => unknown;
 }

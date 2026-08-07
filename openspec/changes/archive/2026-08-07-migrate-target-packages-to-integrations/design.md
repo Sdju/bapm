@@ -6,8 +6,8 @@ See `proposal.md` for motivation. The current package boundary is `packages/inte
 
 **Goals:**
 
-- Make `bapm-integration-api` the sole generic capability boundary for core.
-- Make `bapm-integration-cursor` own existing Cursor runtime behavior.
+- Make `@bapm/integration-api` the sole generic capability boundary for core.
+- Make `@bapm/integration-cursor` own existing Cursor runtime behavior.
 - Move each marketplace host format into an explicit integration package.
 - Complete a clean namespace break with mechanical proof that the retired names are absent.
 
@@ -22,7 +22,7 @@ See `proposal.md` for motivation. The current package boundary is `packages/inte
 
 ### D1 — Physical package move and package-name break
 
-Move `packages/integration-api` to `packages/integration-api` and `packages/integration-cursor` to `packages/integration-cursor`; rename their npm identities to `bapm-integration-api` and `bapm-integration-cursor`. Update every workspace dependency, import, test, fixture, generated lockfile entry, and CLI composition root in the same phase.
+Move `packages/integration-api` to `packages/integration-api` and `packages/integration-cursor` to `packages/integration-cursor`; rename their npm identities to `@bapm/integration-api` and `@bapm/integration-cursor`. Update every workspace dependency, import, test, fixture, generated lockfile entry, and CLI composition root in the same phase.
 
 No workspace alias, `exports` alias, re-export package, tsconfig/vite alias, dynamic fallback, or legacy adapter is allowed. There are no users to migrate, so a hard failure for an old specifier is more reliable than temporarily supporting both names.
 
@@ -36,7 +36,7 @@ Alternative rejected: keep marketplace outputs as core modules. That would leave
 
 ### D3 — Dedicated marketplace-only Claude and Codex integrations
 
-Create `packages/integration-claude` (`bapm-integration-claude`) and `packages/integration-codex` (`bapm-integration-codex`). They implement only marketplace-output capability at this stage. Claude owns the `.claude-plugin/marketplace.json` shape and default, and Codex owns `.agents/plugins/marketplace.json`, category validation, and its document shape. The CLI composition root registers them for pack; no runtime target activation is involved.
+Create `packages/integration-claude` (`@bapm/integration-claude`) and `packages/integration-codex` (`@bapm/integration-codex`). They implement only marketplace-output capability at this stage. Claude owns the `.claude-plugin/marketplace.json` shape and default, and Codex owns `.agents/plugins/marketplace.json`, category validation, and its document shape. The CLI composition root registers them for pack; no runtime target activation is involved.
 
 Alternative rejected: combine them with Cursor because marketplace outputs are independent of Cursor runtime support. Alternative rejected: expose mapper functions from core because it preserves host-specific core ownership.
 
@@ -51,7 +51,7 @@ Phases are not independently shippable because aliases are forbidden. Their chec
 
 ### D5 — Public package-graph proof
 
-Acceptance and final validation prove the public package graph: required `bapm-integration-*` packages resolve to their declared identities, core exposes only the generic integration API dependency, and retired `bapm-target-*` specifiers fail resolution. No legacy package, resolver alias, re-export shim, or compatibility adapter may be added. This behavioral invariant deliberately permits necessary live references to the new integration package names and does not require acceptance tests to inspect repository source text.
+Acceptance and final validation prove the public package graph: required `@bapm/integration-*` packages resolve to their declared identities, core exposes only the generic integration API dependency, and retired `bapm-target-*` specifiers fail resolution. No legacy package, resolver alias, re-export shim, or compatibility adapter may be added. This behavioral invariant deliberately permits necessary live references to the new integration package names and does not require acceptance tests to inspect repository source text.
 
 ## Risks / Trade-offs
 

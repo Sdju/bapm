@@ -3,8 +3,8 @@
  */
 import { describe, expect, test } from "vite-plus/test";
 import * as core from "@bapm/core";
-import { mapClaudeMarketplace } from "bapm-integration-claude";
-import { mapCodexMarketplace } from "bapm-integration-codex";
+import { mapClaudeMarketplace } from "@bapm/integration-claude";
+import { mapCodexMarketplace } from "@bapm/integration-codex";
 
 describe("mp-pack-outputs unit mappers", () => {
   const serialize = (core as Record<string, unknown>).serializeMarketplaceJson as

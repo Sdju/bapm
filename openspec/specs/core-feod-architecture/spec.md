@@ -112,7 +112,7 @@ Resolver logic for classify, graph resolve, download orchestration, and `resolve
 
 ### Requirement: Domain module Install
 
-Install orchestration (frozen gate, reuse of resolve/download, invoke registered targets via `bapm-integration-api`, lock write when not frozen, deployed-path inventory / `deployed_file_hashes` write-back, orphan cleanup of previously recorded harness files, and frozen hash re-verify when inventory exists) MUST live under `src/modules/Install` as a directory with an `index.ts` public entry. Deep imports into Install internals from outside that module MUST NOT be used. Install MUST consume Manifest, Lockfile, Resolver, and Primitives only through their public module APIs (or `common` concrete paths), and MUST NOT deep-import those modules' internals. Install MUST depend on `bapm-integration-api` contracts for target interaction and MUST NOT import `bapm-integration-cursor` or other concrete target packages. Single-file modules MUST NOT be used. Cleanup and hash helpers MUST remain inside the Install module tree (or `common` concrete utilities), not as new one-file domain modules.
+Install orchestration (frozen gate, reuse of resolve/download, invoke registered targets via `@bapm/integration-api`, lock write when not frozen, deployed-path inventory / `deployed_file_hashes` write-back, orphan cleanup of previously recorded harness files, and frozen hash re-verify when inventory exists) MUST live under `src/modules/Install` as a directory with an `index.ts` public entry. Deep imports into Install internals from outside that module MUST NOT be used. Install MUST consume Manifest, Lockfile, Resolver, and Primitives only through their public module APIs (or `common` concrete paths), and MUST NOT deep-import those modules' internals. Install MUST depend on `@bapm/integration-api` contracts for target interaction and MUST NOT import `@bapm/integration-cursor` or other concrete target packages. Single-file modules MUST NOT be used. Cleanup and hash helpers MUST remain inside the Install module tree (or `common` concrete utilities), not as new one-file domain modules.
 
 #### Scenario: App imports Install only via public entry
 
@@ -122,7 +122,7 @@ Install orchestration (frozen gate, reuse of resolve/download, invoke registered
 #### Scenario: Install does not import concrete cursor package
 
 - **WHEN** Install needs to invoke host materialization
-- **THEN** it MUST use `bapm-integration-api` registration/contracts only and MUST NOT import `bapm-integration-cursor`
+- **THEN** it MUST use `@bapm/integration-api` registration/contracts only and MUST NOT import `@bapm/integration-cursor`
 
 #### Scenario: Inventory and cleanup stay in Install
 
@@ -140,7 +140,7 @@ Primitives discovery, attribution, and conflict resolution MUST live under `src/
 
 ### Requirement: Domain modules for lifecycle and integrity
 
-Lifecycle and integrity domain logic for update, outdated, uninstall, prune, deps inspect, audit CI verify, and doctor basics MUST live under `packages/core/src/modules/` as directory modules with `index.ts` public entries (module names flexible, e.g. `Update`, `Outdated`, `Uninstall`, `Prune`, `Deps`, `Audit`, `Doctor`, or a small set of coalesced modules). Deep imports into those modules' internals from outside MUST NOT be used. Single-file modules MUST NOT be used. These modules MUST consume Manifest, Lockfile, Resolver, Install, and Primitives only through public APIs (or `common` concrete paths). They MUST NOT import `bapm-integration-cursor` or other concrete target packages. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
+Lifecycle and integrity domain logic for update, outdated, uninstall, prune, deps inspect, audit CI verify, and doctor basics MUST live under `packages/core/src/modules/` as directory modules with `index.ts` public entries (module names flexible, e.g. `Update`, `Outdated`, `Uninstall`, `Prune`, `Deps`, `Audit`, `Doctor`, or a small set of coalesced modules). Deep imports into those modules' internals from outside MUST NOT be used. Single-file modules MUST NOT be used. These modules MUST consume Manifest, Lockfile, Resolver, Install, and Primitives only through public APIs (or `common` concrete paths). They MUST NOT import `@bapm/integration-cursor` or other concrete target packages. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
 
 #### Scenario: App imports lifecycle API only via public entry
 
@@ -150,11 +150,11 @@ Lifecycle and integrity domain logic for update, outdated, uninstall, prune, dep
 #### Scenario: Lifecycle modules do not hard-depend on cursor
 
 - **WHEN** uninstall/prune/audit need deployed inventory or cleanup
-- **THEN** they MUST reuse Install/Lockfile public helpers or `bapm-integration-api` contracts and MUST NOT import `bapm-integration-cursor`
+- **THEN** they MUST reuse Install/Lockfile public helpers or `@bapm/integration-api` contracts and MUST NOT import `@bapm/integration-cursor`
 
 ### Requirement: Domain modules for producer pack and release check
 
-Producer pack/archive, secret-path refusal, archive extract helpers, and release-tag check logic MUST live under `packages/core/src/modules/` as directory module(s) with `index.ts` public entries (names flexible, e.g. `Pack`, or Pack + small helpers colocated). Init scaffold helpers MAY live on Manifest public API and/or a dedicated Init directory module — not as single-file modules. Deep imports into those modules' internals from outside MUST NOT be used. These modules MUST consume Manifest and Lockfile only through public APIs (or `common` concrete paths). They MUST NOT import `bapm-integration-cursor` or other concrete target packages. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
+Producer pack/archive, secret-path refusal, archive extract helpers, and release-tag check logic MUST live under `packages/core/src/modules/` as directory module(s) with `index.ts` public entries (names flexible, e.g. `Pack`, or Pack + small helpers colocated). Init scaffold helpers MAY live on Manifest public API and/or a dedicated Init directory module — not as single-file modules. Deep imports into those modules' internals from outside MUST NOT be used. These modules MUST consume Manifest and Lockfile only through public APIs (or `common` concrete paths). They MUST NOT import `@bapm/integration-cursor` or other concrete target packages. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
 
 #### Scenario: App imports Pack API only via public entry
 
@@ -164,11 +164,11 @@ Producer pack/archive, secret-path refusal, archive extract helpers, and release
 #### Scenario: Producer modules do not hard-depend on cursor
 
 - **WHEN** pack or init needs target tokens or layout
-- **THEN** they MUST NOT import `bapm-integration-cursor` and MUST NOT require a new `bapm-target-*` package
+- **THEN** they MUST NOT import `@bapm/integration-cursor` and MUST NOT require a new `bapm-target-*` package
 
 ### Requirement: Domain module Policy
 
-Policy parse, dual-file discovery, rule evaluation, and install-gate helpers MUST live under `packages/core/src/modules/Policy` as a directory with an `index.ts` public entry. Deep imports into Policy internals from outside that module MUST NOT be used. Single-file modules MUST NOT be used. Policy MUST consume shared YAML via `common` concrete paths (and MAY consume Manifest/Resolver/Lockfile only through their public APIs when evaluating candidates). Policy MUST NOT import `bapm-integration-cursor` or other concrete target packages. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
+Policy parse, dual-file discovery, rule evaluation, and install-gate helpers MUST live under `packages/core/src/modules/Policy` as a directory with an `index.ts` public entry. Deep imports into Policy internals from outside that module MUST NOT be used. Single-file modules MUST NOT be used. Policy MUST consume shared YAML via `common` concrete paths (and MAY consume Manifest/Resolver/Lockfile only through their public APIs when evaluating candidates). Policy MUST NOT import `@bapm/integration-cursor` or other concrete target packages. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
 
 #### Scenario: App imports Policy only via public entry
 
@@ -178,11 +178,11 @@ Policy parse, dual-file discovery, rule evaluation, and install-gate helpers MUS
 #### Scenario: Policy does not hard-depend on cursor
 
 - **WHEN** Policy evaluates an install plan
-- **THEN** it MUST NOT import `bapm-integration-cursor` and MUST NOT require a new `bapm-target-*` package
+- **THEN** it MUST NOT import `@bapm/integration-cursor` and MUST NOT require a new `bapm-target-*` package
 
 ### Requirement: Domain modules for MCP trust compile and cache
 
-MCP collect/deploy orchestration helpers, executable trust (sc-009) evaluation, `AGENTS.md` compile emit, and modules-cache info/clean helpers MUST live under `packages/core/src/modules/` as directory module(s) with `index.ts` public entries (names flexible, e.g. `Mcp`, `Compile`, `Cache`, `ExecutableTrust`, or composed under Install). Deep imports into those modules' internals from outside MUST NOT be used. Single-file modules MUST NOT be used. These modules MUST NOT import `bapm-integration-cursor` or other concrete target packages; MCP configure MUST go through `bapm-integration-api` when invoked from core. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
+MCP collect/deploy orchestration helpers, executable trust (sc-009) evaluation, `AGENTS.md` compile emit, and modules-cache info/clean helpers MUST live under `packages/core/src/modules/` as directory module(s) with `index.ts` public entries (names flexible, e.g. `Mcp`, `Compile`, `Cache`, `ExecutableTrust`, or composed under Install). Deep imports into those modules' internals from outside MUST NOT be used. Single-file modules MUST NOT be used. These modules MUST NOT import `@bapm/integration-cursor` or other concrete target packages; MCP configure MUST go through `@bapm/integration-api` when invoked from core. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
 
 #### Scenario: App imports M9 modules only via public entries
 
@@ -192,11 +192,11 @@ MCP collect/deploy orchestration helpers, executable trust (sc-009) evaluation, 
 #### Scenario: M9 core modules do not hard-depend on cursor
 
 - **WHEN** compile or MCP orchestration runs inside `@bapm/core`
-- **THEN** those modules MUST NOT import `bapm-integration-cursor` and MUST NOT require a new `bapm-target-*` package
+- **THEN** those modules MUST NOT import `@bapm/integration-cursor` and MUST NOT require a new `bapm-target-*` package
 
 ### Requirement: Domain module Registry
 
-Registry HTTP client, registry resolve helpers (list/pick/download/verify), flat publish-archive builder, and self-update check metadata helpers MUST live under `packages/core/src/modules/` as directory module(s) with `index.ts` public entries (names flexible, e.g. `Registry`, or Registry + `Publish` / `SelfUpdate` split). Deep imports into those modules' internals from outside MUST NOT be used. Single-file modules MUST NOT be used. These modules MUST consume Manifest, Lockfile, and Resolver only through public APIs (or `common` concrete paths). They MUST NOT import `bapm-integration-cursor` or other concrete target packages. HTTP transport MUST be injectable for tests. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
+Registry HTTP client, registry resolve helpers (list/pick/download/verify), flat publish-archive builder, and self-update check metadata helpers MUST live under `packages/core/src/modules/` as directory module(s) with `index.ts` public entries (names flexible, e.g. `Registry`, or Registry + `Publish` / `SelfUpdate` split). Deep imports into those modules' internals from outside MUST NOT be used. Single-file modules MUST NOT be used. These modules MUST consume Manifest, Lockfile, and Resolver only through public APIs (or `common` concrete paths). They MUST NOT import `@bapm/integration-cursor` or other concrete target packages. HTTP transport MUST be injectable for tests. New public symbols MUST be re-exported from the package entry via `app/publicApi`.
 
 #### Scenario: App imports Registry only via public entry
 
@@ -206,7 +206,7 @@ Registry HTTP client, registry resolve helpers (list/pick/download/verify), flat
 #### Scenario: Registry modules do not hard-depend on cursor
 
 - **WHEN** registry resolve or publish runs inside `@bapm/core`
-- **THEN** those modules MUST NOT import `bapm-integration-cursor` and MUST NOT require a new `bapm-target-*` package
+- **THEN** those modules MUST NOT import `@bapm/integration-cursor` and MUST NOT require a new `bapm-target-*` package
 
 ### Requirement: Domain module Export
 

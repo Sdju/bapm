@@ -1,4 +1,4 @@
-import type { IntegrationRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "@bapm/integration-api";
 
 export type CompileAttributionEntry = {
   name: string;

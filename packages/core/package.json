@@ -22,7 +22,7 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "bapm-integration-api": "workspace:*",
+    "@bapm/integration-api": "workspace:*",
     "fflate": "catalog:",
     "semver": "catalog:",
     "tldts": "catalog:",
@@ -31,9 +31,9 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
-    "bapm-integration-claude": "workspace:*",
-    "bapm-integration-codex": "workspace:*",
-    "bapm-integration-cursor": "workspace:*",
+    "@bapm/integration-claude": "workspace:*",
+    "@bapm/integration-codex": "workspace:*",
+    "@bapm/integration-cursor": "workspace:*",
     "bumpp": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

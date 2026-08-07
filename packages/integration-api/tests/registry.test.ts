@@ -1,5 +1,5 @@
 /**
- * bapm-integration-api package identity and registry contracts.
+ * @bapm/integration-api package identity and registry contracts.
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -9,15 +9,15 @@ import { createIntegrationRegistry } from "../src/index.ts";
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-describe("bapm-integration-api package", () => {
-  test("package is bapm-integration-api with vite-plus scripts", () => {
+describe("@bapm/integration-api package", () => {
+  test("package is @bapm/integration-api with vite-plus scripts", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
       scripts?: Record<string, string>;
       type?: string;
     };
-    expect(pkg.name).toBe("bapm-integration-api");
+    expect(pkg.name).toBe("@bapm/integration-api");
     expect(pkg.type).toBe("module");
     expect(pkg.scripts?.build ?? pkg.scripts?.test ?? pkg.scripts?.check).toBeTruthy();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);

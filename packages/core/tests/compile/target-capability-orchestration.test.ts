@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { compileAgentsMd } from "../../src/index.ts";
-import { createIntegrationRegistry } from "bapm-integration-api";
+import { createIntegrationRegistry } from "@bapm/integration-api";
 
 type Project = { cwd: string; cleanup: () => void };
 

@@ -1,6 +1,6 @@
 import { formatCompileHelp, parseCompileArgs, runCompileCli } from "./services/runCompile.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
-import type { IntegrationRegistry } from "bapm-integration-api";
+import type { IntegrationRegistry } from "@bapm/integration-api";
 
 export type { LifecycleCliDeps, LifecycleResult };
 export { formatCompileHelp, parseCompileArgs };

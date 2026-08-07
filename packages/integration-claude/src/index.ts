@@ -1,4 +1,4 @@
-import type { MarketplaceOutputIntegration } from "bapm-integration-api";
+import type { MarketplaceOutputIntegration } from "@bapm/integration-api";
 
 type PackageEntry = Record<string, unknown>;
 type ResolvedPackage = Record<string, unknown> & { entry: PackageEntry };

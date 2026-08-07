@@ -2,8 +2,8 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createIntegrationRegistry } from "bapm-integration-api";
-import { createCursorIntegration } from "bapm-integration-cursor";
+import { createIntegrationRegistry } from "@bapm/integration-api";
+import { createCursorIntegration } from "@bapm/integration-cursor";
 import {
   AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
   AgentPluginsError,
