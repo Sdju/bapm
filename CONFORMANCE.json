@@ -443,8 +443,8 @@
       "keyword": "MUST",
       "section": "4.3.5",
       "conformance_class": "consumer",
-      "status": "skipped",
-      "rationale": "Soft limitation: mf-016 not claimed active in P3 floor"
+      "status": "active",
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/acceptance/mf-local-path-root-boundary/local-path-root-boundary.test.ts"
     },
     {
       "id": "req-mf-017",

@@ -27,7 +27,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | Class | Active | Skipped | N/A |
 |-------|-------:|--------:|----:|
 | Producer | 12 | 0 | 0 |
-| Consumer | 71 | 10 | 0 |
+| Consumer | 72 | 9 | 0 |
 | Governance | 16 | 0 | 0 |
 | Registry | 0 | 0 | 1 |
 
@@ -98,7 +98,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-mf-013 | MUST | 4.5 | consumer | active | packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts · tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml; tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml; tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml; tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml; tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml |
 | req-mf-014 | MUST | 4.2.3 | producer | active | packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts |
 | req-mf-015 | MUST | 4.2.3 | producer | active | packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts |
-| req-mf-016 | MUST | 4.3.5 | consumer | skipped |  — Soft limitation: mf-016 not claimed active in P3 floor |
+| req-mf-016 | MUST | 4.3.5 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/acceptance/mf-local-path-root-boundary/local-path-root-boundary.test.ts |
 | req-mf-017 | MUST | 4.7 | producer | active | packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts |
 | req-mf-018 | MUST | 4.6.1 | consumer | active | packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts · tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml; tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml; tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml; tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml; tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml |
 | req-mf-019 | MUST | 4.2.4 | consumer | active | packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml |
@@ -170,7 +170,6 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 
 ## Waivers
 
-- **req-mf-016** (skipped): Soft limitation: mf-016 not claimed active in P3 floor
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
 - **req-sc-004** (skipped): Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)
 - **req-tg-002** (skipped): Out of scope for P3: multi-target adapters beyond cursor

@@ -5,7 +5,7 @@
  * APM_MODULES_DIR; injectable TagLister / GitRemote / Downloader ports.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
 import {
   classifyDependencyRef,
@@ -32,6 +32,24 @@ describe("M3 classifyDependencyRef (rs-008 / rs-003)", () => {
     const b = classifyDependencyRef("./packages/foo");
     expect(a.kind ?? a).toMatch(/local/i);
     expect(String(b.kind ?? b)).toMatch(/local/i);
+  });
+
+  test("classifies explicit POSIX, home, and backslash local forms", () => {
+    for (const path of [
+      "./package",
+      "../package",
+      "/project/package",
+      "~/package",
+      ".\\package",
+      "..\\package",
+      "~\\package",
+    ]) {
+      expect(classifyDependencyRef(path)).toMatchObject({ kind: "local", path });
+    }
+    expect(classifyDependencyRef({ path: "..\\package" })).toMatchObject({
+      kind: "local",
+      path: "..\\package",
+    });
   });
 
   test("kind classify git-literal — repo#main or literal ref", () => {
@@ -246,5 +264,52 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
     expect(leaf).toBeTruthy();
     expect(Number(leaf!.depth ?? leaf!.level)).toBeGreaterThanOrEqual(2);
     expect(String(leaf!.resolved_by ?? "")).toMatch(/->|mid|root/i);
+  });
+
+  test("local paths normalize within the root and reject direct and transitive escapes", async () => {
+    project = createTempProject();
+    const outside = createTempProject();
+    try {
+      writeManifest(
+        project.cwd,
+        "bapm.yml",
+        `name: root\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./a/../mid\n`,
+      );
+      for (const dir of ["a", "mid", "sibling"]) {
+        mkdirSync(join(project.cwd, dir), { recursive: true });
+      }
+      writeText(
+        join(project.cwd, "a", "apm.yml"),
+        "name: a\nversion: 0.0.1\ndependencies:\n  apm: []\n",
+      );
+      writeText(
+        join(project.cwd, "mid", "apm.yml"),
+        "name: mid\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ../sibling\n",
+      );
+      writeText(
+        join(project.cwd, "sibling", "apm.yml"),
+        "name: sibling\nversion: 0.0.1\ndependencies:\n  apm: []\n",
+      );
+
+      await expect(resolveDependencyGraph({ cwd: project.cwd })).resolves.toMatchObject({
+        nodes: expect.arrayContaining([
+          expect.objectContaining({ name: "mid", depth: 1 }),
+          expect.objectContaining({ name: "sibling", depth: 2 }),
+        ]),
+      });
+
+      const escapedPath = relative(project.cwd, outside.cwd).replaceAll("/", "\\");
+      writeManifest(
+        project.cwd,
+        "bapm.yml",
+        `name: root\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ${escapedPath}\n`,
+      );
+      await expect(resolveDependencyGraph({ cwd: project.cwd })).rejects.toMatchObject({
+        code: "LOCAL_PATH_ESCAPES_PROJECT_ROOT",
+        details: expect.objectContaining({ originalPath: escapedPath }),
+      });
+    } finally {
+      outside.cleanup();
+    }
   });
 });

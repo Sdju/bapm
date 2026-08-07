@@ -1,12 +1,9 @@
 import { existsSync } from "node:fs";
-import { isAbsolute, resolve } from "node:path";
+import { resolve } from "node:path";
 import { loadManifest } from "@/modules/Manifest";
 import { loadLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
-import {
-  resolveMarketplacePlugin,
-  type MarketplaceProvenance,
-} from "@/modules/Marketplace";
+import { resolveMarketplacePlugin, type MarketplaceProvenance } from "@/modules/Marketplace";
 import {
   createRegistryClient,
   downloadUrl,
@@ -30,6 +27,7 @@ import {
 } from "./defaults.ts";
 import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity, toLockRepoUrl } from "./identity.ts";
+import { resolveLocalPath } from "./localPath.ts";
 import {
   pickHighestInIntersection,
   pickHighestSatisfyingTag,
@@ -310,10 +308,7 @@ async function resolveMarketplaceEdge(
     throw new ResolverError("RESOLVE_FAILED", message, { cause });
   }
 
-  const provenance: MarketplaceProvenance = resolution.provenance(
-    marketplaceName,
-    pluginName,
-  );
+  const provenance: MarketplaceProvenance = resolution.provenance(marketplaceName, pluginName);
   const dep = resolution.dependency;
   const entry: DependencyEntry =
     typeof dep === "string"
@@ -584,8 +579,11 @@ async function resolveLocal(
     expanded: Set<string>;
   },
 ): Promise<void> {
-  const rel = classified.path!;
-  const abs = isAbsolute(rel) ? rel : resolve(item.fromDir, rel);
+  const abs = resolveLocalPath({
+    originalPath: classified.path!,
+    fromDir: item.fromDir,
+    projectRoot: ctx.cwd,
+  });
   if (!existsSync(abs)) {
     throw new ResolverError("RESOLVE_FAILED", `Local dependency path not found: ${abs}`);
   }

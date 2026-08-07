@@ -99,12 +99,16 @@ function hasSourceKey(obj: Record<string, unknown>): boolean {
 function classifyString(spec: string): ClassifiedDependency {
   const trimmed = spec.trim();
 
-  // Local path forms: ./ ../ / absolute, or path: prefix
+  // Local path forms: explicit POSIX/Windows relative, absolute, home, or path: prefix.
   if (
     trimmed.startsWith("path:") ||
     trimmed.startsWith("./") ||
     trimmed.startsWith("../") ||
     trimmed.startsWith("/") ||
+    trimmed.startsWith("~/") ||
+    trimmed.startsWith(".\\") ||
+    trimmed.startsWith("..\\") ||
+    trimmed.startsWith("~\\") ||
     /^[A-Za-z]:[\\/]/.test(trimmed)
   ) {
     const path = trimmed.startsWith("path:") ? trimmed.slice("path:".length).trim() : trimmed;
