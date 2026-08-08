@@ -10,12 +10,12 @@
 
 ## Кто что делает
 
-| Момент | Агент | Действие |
-| ------ | ----- | -------- |
-| Старт propose / первый коммит | `orch-plan` (+ любая фаза через self-commit) | ensure feature branch |
-| Каждая фаза с коммитом | фазовый агент | self-commit **только** на feature branch; **не** push |
-| После OpenSpec archive | `orch-merge` (шаг **ship**) | `vp check` при необходимости, `git push -u origin HEAD`, `gh pr create` если нет открытого PR |
-| Deliver | parent | в отчёт: `branchName`, `prUrl`, sha фаз; **не** merge PR сам |
+| Момент                        | Агент                                        | Действие                                                                                      |
+| ----------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Старт propose / первый коммит | `orch-plan` (+ любая фаза через self-commit) | ensure feature branch                                                                         |
+| Каждая фаза с коммитом        | фазовый агент                                | self-commit **только** на feature branch; **не** push                                         |
+| После OpenSpec archive        | `orch-merge` (шаг **ship**)                  | `vp check` при необходимости, `git push -u origin HEAD`, `gh pr create` если нет открытого PR |
+| Deliver                       | parent                                       | в отчёт: `branchName`, `prUrl`, sha фаз; **не** merge PR сам                                  |
 
 ## Запреты
 

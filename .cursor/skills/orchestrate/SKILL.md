@@ -33,18 +33,18 @@ Parent = диспетчер. Вся работа — в **Task** с `subagent_ty
 
 ## Агенты и pipeline
 
-| #   | Фаза               | `subagent_type`                                                    | Self-commit              |
-| --- | ------------------ | ------------------------------------------------------------------ | ------------------------ |
-| —   | criteria (роадмап) | `apm-expert`                                                       | нет                      |
+| #   | Фаза               | `subagent_type`                                                    | Self-commit                 |
+| --- | ------------------ | ------------------------------------------------------------------ | --------------------------- |
+| —   | criteria (роадмап) | `apm-expert`                                                       | нет                         |
 | 1   | `plan`             | `orch-plan` (explore: можно `explore` → затем `orch-plan` propose) | propose: да + ensure branch |
-| 2   | `acceptance`       | `orch-acceptance`                                                  | да                       |
-| 3   | `apply`            | `orch-apply`                                                       | да                       |
-| 4   | `accept`           | `orch-accept`                                                      | только если правил файлы |
-| —   | validate (роадмап) | `apm-expert`                                                       | нет                      |
-| 5   | `promote`          | `orch-promote`                                                     | да                       |
-| 6   | `merge`            | `orch-merge` (archive + **ship**: push/PR)                         | archive: да; ship: push  |
-| —   | canvas             | `orch-canvas`                                                      | нет                      |
-| 7   | `deliver`          | — (parent)                                                         | —                        |
+| 2   | `acceptance`       | `orch-acceptance`                                                  | да                          |
+| 3   | `apply`            | `orch-apply`                                                       | да                          |
+| 4   | `accept`           | `orch-accept`                                                      | только если правил файлы    |
+| —   | validate (роадмап) | `apm-expert`                                                       | нет                         |
+| 5   | `promote`          | `orch-promote`                                                     | да                          |
+| 6   | `merge`            | `orch-merge` (archive + **ship**: push/PR)                         | archive: да; ship: push     |
+| —   | canvas             | `orch-canvas`                                                      | нет                         |
+| 7   | `deliver`          | — (parent)                                                         | —                           |
 
 После `ok|pass`: проверь `commitSha` в отчёте, если фаза обязана коммитить. Пустой sha при грязных файлах фазы → эскалация / ретрай того же агента с «докажи commit».  
 После plan: сохрани `branchName`. После merge: сохрани `prUrl`.  
@@ -73,14 +73,14 @@ Parent = диспетчер. Вся работа — в **Task** с `subagent_ty
 
 Канон: `.cursor/skills/orchestrate/self-commit.md` (агенты обязаны следовать).
 
-| Фаза         | type                   |
-| ------------ | ---------------------- |
-| plan propose | `docs` / `chore`       |
-| acceptance   | `test`                 |
-| apply        | `feat` / `fix`         |
-| accept       | skip или `test`/`docs` |
-| promote      | `test` / `refactor`    |
-| merge archive| `docs` / `chore`       |
+| Фаза          | type                   |
+| ------------- | ---------------------- |
+| plan propose  | `docs` / `chore`       |
+| acceptance    | `test`                 |
+| apply         | `feat` / `fix`         |
+| accept        | skip или `test`/`docs` |
+| promote       | `test` / `refactor`    |
+| merge archive | `docs` / `chore`       |
 
 ## Structured report
 
