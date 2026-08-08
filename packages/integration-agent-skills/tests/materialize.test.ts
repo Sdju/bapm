@@ -1,7 +1,7 @@
 /**
  * Materialize: skills → .agents/skills/; non-skills skip with diagnostics;
  * portable Agent Plugins copy; no MCP/hooks/compile side effects
- * (integration-agent-skills-runtime acceptance).
+ * .
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";

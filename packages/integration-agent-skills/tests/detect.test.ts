@@ -1,6 +1,6 @@
 /**
  * Detect: never auto-detect (even with .agents/); never mkdir solely for detect
- * (integration-agent-skills-runtime acceptance).
+ * .
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync } from "node:fs";
