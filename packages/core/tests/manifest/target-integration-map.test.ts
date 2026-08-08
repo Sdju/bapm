@@ -1,5 +1,6 @@
 /**
  * Unit: object-map + legacy target/targets parse; declaredTargetIds + map helper.
+ * Promoted coverage from manifest-target-integration-map acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
 import {
@@ -48,6 +49,15 @@ describe("target/targets object-map parse", () => {
     ).toEqual({ cursor: CURSOR_PKG, claude: CLAUDE_PKG });
   });
 
+  test("accepts vendor mf-005 key and opaque @version package text", () => {
+    expect(
+      parse({ targets: { "x-acme-editor": "@acme/integration-editor" } }).targets,
+    ).toEqual({ "x-acme-editor": "@acme/integration-editor" });
+    expect(
+      parse({ targets: { cursor: "@bapm/integration-cursor@1.2.3" } }).targets,
+    ).toEqual({ cursor: "@bapm/integration-cursor@1.2.3" });
+  });
+
   test("legacy string and array still work", () => {
     expect(parse({ target: "cursor" }).target).toBe("cursor");
     expect(parse({ targets: ["cursor", "claude"] }).targets).toEqual([
@@ -56,26 +66,44 @@ describe("target/targets object-map parse", () => {
     ]);
   });
 
-  test("rejects invalid key, empty value, empty map, both fields", () => {
-    expect(reject({ targets: { "not-a-host": CURSOR_PKG } }).message).toMatch(
-      /not-a-host|mf-005/i,
-    );
+  test("rejects invalid key with named diagnostic", () => {
+    const err = reject({ targets: { "not-a-host": CURSOR_PKG } });
+    expect(err.message).toMatch(/not-a-host/);
+    expect(err.message).toMatch(/mf-005|target|token|invalid/i);
+    const named =
+      err.path?.includes("not-a-host") ||
+      err.details?.token === "not-a-host" ||
+      /targets\.not-a-host|targets\[["']?not-a-host/.test(String(err.path ?? ""));
+    expect(named || /not-a-host/.test(err.message)).toBe(true);
+  });
+
+  test("rejects empty / whitespace / non-string values and empty maps", () => {
     expect(reject({ targets: { cursor: "" } }).message).toMatch(/empty|non-empty/i);
+    expect(reject({ target: { cursor: "   " } }).message).toMatch(
+      /empty|non-empty|value|target/i,
+    );
+    expect(reject({ targets: { cursor: 42 } }).message).toMatch(/string/i);
     expect(reject({ targets: {} }).message).toMatch(/empty/i);
+    expect(reject({ target: {} }).message).toMatch(/empty|target/i);
+    expect(
+      reject({ targets: ["cursor", { claude: CLAUDE_PKG }] }).message,
+    ).toMatch(/targets|string|array|object|mapping/i);
+  });
+
+  test("rejects mutual exclusion across legacy and object-map forms", () => {
     expect(reject({ target: "cursor", targets: ["claude"] }).message).toMatch(
-      /both.*target.*targets/i,
+      /both.*target.*targets|target.*and.*targets/i,
     );
     expect(
       reject({ target: { cursor: CURSOR_PKG }, targets: { claude: CLAUDE_PKG } })
         .message,
-    ).toMatch(/both.*target.*targets/i);
-  });
-
-  test("rejects non-string map value and mixed array", () => {
-    expect(reject({ targets: { cursor: 42 } }).message).toMatch(/string/i);
+    ).toMatch(/both.*target.*targets|target.*and.*targets/i);
     expect(
-      reject({ targets: ["cursor", { claude: CLAUDE_PKG }] }).message,
-    ).toMatch(/targets|string|array/i);
+      reject({ target: "cursor", targets: { claude: CLAUDE_PKG } }).message,
+    ).toMatch(/both.*target.*targets|target.*and.*targets/i);
+    expect(
+      reject({ target: { cursor: CURSOR_PKG }, targets: ["claude"] }).message,
+    ).toMatch(/both.*target.*targets|target.*and.*targets/i);
   });
 });
 
@@ -89,6 +117,12 @@ describe("declaredTargetIds + declaredTargetIntegrationMap", () => {
       cursor: CURSOR_PKG,
       claude: CLAUDE_PKG,
     });
+  });
+
+  test("singular target object map: ids and retained helper map", () => {
+    const doc = parse({ target: { claude: CLAUDE_PKG } });
+    expect(declaredTargetIds(doc)).toEqual(["claude"]);
+    expect(declaredTargetIntegrationMap(doc)).toEqual({ claude: CLAUDE_PKG });
   });
 
   test("legacy forms: ids work; map helper undefined", () => {

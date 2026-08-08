@@ -1,7 +1,6 @@
 /**
- * Acceptance (RED): map keys participate in intersection; values do not load integrations.
- * OpenSpec change: manifest-target-integration-map
- * Spec: install-pipeline (object-map bindings do not load; keys as declared ids)
+ * Install: object-map keys participate in intersection; values do not load integrations.
+ * Promoted from manifest-target-integration-map acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync } from "node:fs";
@@ -20,7 +19,7 @@ import {
 /** Package name that must never be resolved/loaded from the map value alone. */
 const FAKE_INTEGRATION_PKG = "@bapm/integration-DOES-NOT-EXIST-acceptance-map";
 
-describe("manifest-target-integration-map install — keys only, no value load", () => {
+describe("install target integration map — keys only, no value load", () => {
   let project: TempProject;
 
   afterEach(() => {

@@ -1,20 +1,23 @@
 /**
- * Acceptance (RED): config-manifest docs cover object-map target / targets.
- * OpenSpec change: manifest-target-integration-map
+ * Docs: config-manifest covers object-map target / targets.
+ * Promoted from manifest-target-integration-map acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { existsSync, readFileSync } from "node:fs";
-import { configManifestGuidePath } from "./helpers.ts";
+import {
+  configManifestGuidePath,
+  fileExists,
+  readText,
+} from "./helpers.ts";
 
-describe("manifest-target-integration-map docs — config-manifest", () => {
+describe("config-manifest docs — target/targets object-map", () => {
   test("guide exists", () => {
-    expect(existsSync(configManifestGuidePath), `expected ${configManifestGuidePath}`).toBe(
+    expect(fileExists(configManifestGuidePath), `expected ${configManifestGuidePath}`).toBe(
       true,
     );
   });
 
   test("documents object-map host→package bindings for target/targets", () => {
-    const md = readFileSync(configManifestGuidePath, "utf8");
+    const md = readText(configManifestGuidePath);
 
     // Concrete map example (host key → npm package string), not merely "object-dep".
     expect(
@@ -26,7 +29,7 @@ describe("manifest-target-integration-map docs — config-manifest", () => {
   });
 
   test("frames object-map target/targets as a bapm extension", () => {
-    const md = readFileSync(configManifestGuidePath, "utf8");
+    const md = readText(configManifestGuidePath);
 
     // Require extension framing tied to target/targets object-map (not marketplace/local).
     const framed =
@@ -47,7 +50,7 @@ describe("manifest-target-integration-map docs — config-manifest", () => {
   });
 
   test("states map values are not auto-loaded and do not select the active host", () => {
-    const md = readFileSync(configManifestGuidePath, "utf8");
+    const md = readText(configManifestGuidePath);
 
     expect(
       md,
@@ -63,7 +66,7 @@ describe("manifest-target-integration-map docs — config-manifest", () => {
   });
 
   test("prefers targets for multi-host object maps", () => {
-    const md = readFileSync(configManifestGuidePath, "utf8");
+    const md = readText(configManifestGuidePath);
     expect(
       md,
       "guide should prefer targets for multi-host object maps",
