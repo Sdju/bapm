@@ -7,6 +7,7 @@
 | **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
 | **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
 | **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
+| **Antigravity** | Нет (отдельный пакет) | Установить `@bapm/integration-antigravity`, объявить `targets:`, затем **явный** `--target antigravity` / `active` (без auto-detect)                   |
 | **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
 | **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
 | **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
@@ -80,6 +81,28 @@ bapm compile --target copilot
 ```
 
 Instructions → `.github/instructions/<name>.instructions.md`, commands/`*.prompt.md` → `.github/prompts/<name>.prompt.md` (не `.github/commands/`), agents → `.github/agents/<name>.agent.md`, skills → `.agents/skills/<name>/`, hooks → per-file `.github/hooks/<pkg>-<stem>.json` (+ scripts и sidecar `.github/bapm-hooks.json`). MCP → home `~/.copilot/mcp-config.json` (`COPILOT_HOME`, translate-placeholders `${VAR}`), compile → `.github/copilot-instructions.md` (instructions из materialize в тело compile не дублируются). Auto-detect: whitelist под `.github/` (`copilot-instructions.md` или dirs instructions/agents/prompts/hooks).
+
+## Antigravity (opt-in, explicit-only)
+
+Отдельный runtime-пакет `@bapm/integration-antigravity`. Shared root `.agents/` **не** является сигналом auto-detect — только явный `--target antigravity` / `active` / object-map (как APM explicit-only; не входит в `--target all` сам по себе).
+
+```bash
+npm i -D @bapm/integration-antigravity
+```
+
+```yaml
+targets:
+  antigravity: "@bapm/integration-antigravity"
+active:
+  - antigravity
+```
+
+```bash
+bapm install --target antigravity
+bapm compile --target antigravity
+```
+
+Instructions → `.agents/rules/<name>.md` (`trigger` / `globs` из `applyTo`), skills → `.agents/skills/<name>/`, hooks → merge `.agents/hooks.json` (agy schema, контейнер `bapm` + sidecar `.agents/bapm-hooks.json`), MCP → `.agents/mcp_config.json` (opt-in: каталог `.agents/` уже существует; remote → `serverUrl`). Agents/commands — skip. Compile → `AGENTS.md` без дублирования rules. Не пишет `~/.gemini/**`. Пишет только rules/skills/hooks/mcp под `.agents/` (осторожно с overlap agent-skills).
 
 ## Кастомный npm-пакет
 
