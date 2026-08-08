@@ -7,6 +7,7 @@
 | **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
 | **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
 | **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
+| **Gemini**     | Нет (отдельный пакет) | Установить `@bapm/integration-gemini`, объявить `targets:`, затем `--target gemini` / `active`                                                           |
 | **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
 | **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
 | **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
@@ -82,6 +83,29 @@ bapm compile --target copilot
 ```
 
 Instructions → `.github/instructions/<name>.instructions.md`, commands/`*.prompt.md` → `.github/prompts/<name>.prompt.md` (не `.github/commands/`), agents → `.github/agents/<name>.agent.md`, skills → `.agents/skills/<name>/`, hooks → per-file `.github/hooks/<pkg>-<stem>.json` (+ scripts и sidecar `.github/bapm-hooks.json`). MCP → home `~/.copilot/mcp-config.json` (`COPILOT_HOME`, translate-placeholders `${VAR}`), compile → `.github/copilot-instructions.md` (instructions из materialize в тело compile не дублируются). Auto-detect: whitelist под `.github/` (`copilot-instructions.md` или dirs instructions/agents/prompts/hooks).
+
+## Gemini (opt-in пакет)
+
+Отдельный runtime-пакет `@bapm/integration-gemini`:
+
+```bash
+npm i -D @bapm/integration-gemini
+```
+
+```yaml
+targets:
+  gemini: "@bapm/integration-gemini"
+active:
+  - gemini
+```
+
+```bash
+bapm init -y --target gemini
+bapm install --target gemini
+bapm compile --target gemini
+```
+
+Commands → `.gemini/commands/<name>.toml` (`$ARGUMENTS` → `{{args}}`), skills → `.agents/skills/<name>/`, hooks → merge `.gemini/settings.json` (+ scripts и sidecar `.gemini/bapm-hooks.json`, события `PreToolUse`→`BeforeTool` и т.п.). Instructions — только через compile → `GEMINI.md` (не раскладываются как rules). MCP → project `.gemini/settings.json` `mcpServers` (opt-in, когда есть `.gemini/`; схема без обязательного `type`). Auto-detect: `.gemini/` или `GEMINI.md`.
 
 ## Кастомный npm-пакет
 
