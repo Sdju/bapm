@@ -14,9 +14,11 @@
     "conformance:gen": "node scripts/gen-conformance-statement.mjs",
     "conformance:check": "node scripts/check-conformance-drift.mjs",
     "agent-plugins:gen": "node scripts/gen-agent-plugins-compatibility.mjs",
-    "agent-plugins:check": "node scripts/gen-agent-plugins-compatibility.mjs --check"
+    "agent-plugins:check": "node scripts/gen-agent-plugins-compatibility.mjs --check",
+    "version:bump": "bumpp packages/*/package.json"
   },
   "devDependencies": {
+    "bumpp": "catalog:",
     "vite-plus": "catalog:"
   },
   "engines": {

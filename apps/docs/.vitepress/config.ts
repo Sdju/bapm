@@ -1,8 +1,12 @@
 import { defineConfig } from "vitepress";
 
+/** Project Pages: set DOCS_BASE=/<repo>/ in CI. Local/preview defaults to "/". */
+const base = process.env.DOCS_BASE || "/";
+
 export default defineConfig({
   title: "bapm",
   description: "Better Agent Package Manager — менеджер зависимостей для конфигурации AI-агентов",
+  base,
   // Корневые CONFORMANCE.md / AGENT_PLUGINS_COMPATIBILITY.md живут вне apps/docs.
   ignoreDeadLinks: [/CONFORMANCE/, /AGENT_PLUGINS_COMPATIBILITY/],
   themeConfig: {

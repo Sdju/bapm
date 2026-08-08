@@ -1,0 +1,120 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Trusted publishing (OIDC): no NPM_TOKEN. Workflow filename on npmjs.com
+# must be exactly "release.yml". Do not set NODE_AUTH_TOKEN / NPM_TOKEN here.
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: npm + GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.20.0
+
+      # Node 24 ships npm ≥11.5.1 required for OIDC trusted publishing.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Assert package versions match tag
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME#v}"
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$ ]]; then
+            echo "Tag must be vX.Y.Z (optional prerelease suffix), got: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+          echo "Expected package version: ${TAG}"
+          mismatch=0
+          for f in packages/*/package.json; do
+            name="$(node -p "require('./${f}').name")"
+            ver="$(node -p "require('./${f}').version")"
+            if [[ "$ver" != "$TAG" ]]; then
+              echo "::error file=${f}::version ${ver} != tag ${TAG} (${name})"
+              mismatch=1
+            else
+              echo "OK ${name}@${ver}"
+            fi
+          done
+          if [[ "$mismatch" -ne 0 ]]; then
+            echo "Bump packages/*/package.json to ${TAG} before tagging ${GITHUB_REF_NAME}."
+            exit 1
+          fi
+
+      - name: Require npm CLI for trusted publishing
+        run: |
+          set -euo pipefail
+          ver="$(npm --version)"
+          echo "npm ${ver}"
+          # Trusted publishing needs npm >= 11.5.1
+          node -e "
+            const [a,b,c] = process.argv[1].split('.').map(Number);
+            if (a < 11 || (a === 11 && (b < 5 || (b === 5 && c < 1)))) {
+              console.error('Need npm >= 11.5.1, got', process.argv[1]);
+              process.exit(1);
+            }
+          " "$ver"
+
+      - name: Check
+        run: pnpm run check
+
+      - name: Test
+        run: pnpm run test
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Pack release assets
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          for dir in packages/*/; do
+            if node -p "Boolean(require('./${dir}package.json').private)" | grep -qx true; then
+              echo "skip private ${dir}"
+              continue
+            fi
+            (cd "$dir" && pnpm pack --pack-destination "$GITHUB_WORKSPACE/release-assets")
+          done
+          ls -la release-assets
+
+      - name: Publish to npm (OIDC trusted publishing)
+        run: |
+          set -euo pipefail
+          # Do not export NODE_AUTH_TOKEN / NPM_TOKEN — OIDC only.
+          unset NODE_AUTH_TOKEN NPM_TOKEN || true
+          pnpm -r --filter './packages/**' \
+            publish \
+            --access public \
+            --no-git-checks
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,66 +1,78 @@
 # bapm
 
-**Better Agent Package Manager** — аналог [microsoft/apm](https://github.com/microsoft/apm) на TypeScript с явной архитектурой.
+**Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов.
 
-Менеджер зависимостей для конфигурации AI-агентов: манифест, lockfile, транзитивное разрешение. Материализация в хосты — отдельные integration-пакеты (не in-tree адаптеры как у APM).
+Объявляете пакеты в манифесте (`bapm.yml`), запускаете `bapm install` — bapm разрешает граф, пишет lock-файл и раскладывает skills, rules, agents и MCP в проект (сейчас — в **Cursor**).
 
-## Стек
+Совместим с wire-форматами [OpenAPM](https://github.com/microsoft/apm) / APM, но **не** drop-in замена всей CLI microsoft/apm.
 
-- **TypeScript** (ESM)
-- **vite-plus** (`vp`): tsdown/`vp pack`, oxlint, oxfmt, vitest, Vite Task
-- **pnpm** workspaces + catalog
-- **VitePress** — `apps/docs`
-- **OpenSpec** — spec-driven workflow (`.cursor` + `openspec/`)
+## Предупреждение
 
-## Структура
+Данный проект является переработкой репозитория [microsoft/apm](https://github.com/microsoft/apm) с целью упрощения поддержки различных платформ (Cursor, Claude, Codex) и более гибких и универсальных сценариев при мультиагентной работе. Миграция и контроль над кодом целиком осуществяется посредством AI-агентами.
 
-```
-apps/docs          @bapm/docs        документация (VitePress)
-packages/core      @bapm/core        домен: manifest, lockfile, resolver, install
-packages/cli       @bapm/cli         CLI поверх @bapm/core (bin: bapm)
-packages/integration-api     @bapm/integration-api     контракты/registry; прослойка core ↔ integrations
-packages/integration-cursor  @bapm/integration-cursor  runtime Cursor
-packages/integration-claude  @bapm/integration-claude  marketplace-only Claude output
-packages/integration-codex   @bapm/integration-codex   marketplace-only Codex output
-openspec/                            спецификации и изменения
-.samples/                            внешние референсы (gitignore) — локальный клон microsoft/apm
-```
+## Установка
 
-Integrations: см. `openspec/specs/integration-package-architecture/` — без паритета с in-tree APM `adapters/client/`.
+Нужен **Node.js ≥ 22.12**.
 
-## Conformance & parity
-
-bapm целится в **OpenAPM v0.1** wire (форматы и семантика), а не в полный product surface microsoft/apm. Это **not a drop-in** замена всей **APM CLI** / каждого адаптера.
-
-- Statement: [`CONFORMANCE.md`](CONFORMANCE.md) (+ [`CONFORMANCE.json`](CONFORMANCE.json))
-- Claimed classes: **Consumer**, **Producer**, **Governance**; **Registry N/A** (host не ship'им)
-- Intentional diffs vs APM: **∩-pick** (не APM **first-wins**), **cursor-only** deploy matrix, **dual-read** branding (`apm.yml`\|`bapm.yml`), bapm-only **`local`** source (vs OpenAPM `path:`)
-
-Подробности и Limitations — в CONFORMANCE; на сайте docs — [Conformance & boundary](apps/docs/guide/conformance.md).
-
-## Portable Agent Plugins v1
-
-Поддержка переносимых Agent Plugins v1 ограничена `plugin.json`, непосредственными
-`skills/<name>/SKILL.md` и корневым `mcp.json`; Cursor адаптирует поддерживаемые MCP
-транспорты в свой формат. Это не claim универсальной совместимости, не OpenAPM claim
-и не marketplace-публикация. Проверяемая матрица и non-goals: [AGENT_PLUGINS_COMPATIBILITY.md](AGENT_PLUGINS_COMPATIBILITY.md).
-
-## Команды
+В корне вашего проекта:
 
 ```bash
-vp install          # зависимости
-vp check            # format + lint + types
-vp run -r test      # тесты
-vp run -r build     # сборка пакетов
-vp run docs#dev     # VitePress
+pnpm add -D @bapm/cli
+# или: npm i -D @bapm/cli
 ```
 
-OpenSpec: `/opsx-propose`, `/opsx-apply`, `/opsx-archive`.
-
-## Референс
-
-В `.samples/apm` лежит локальный клон APM (не в git). Обновить:
+Проверка:
 
 ```bash
-git clone --depth 1 https://github.com/microsoft/apm.git .samples/apm
+pnpm exec bapm --help
+# или: npx bapm --help
 ```
+
+## Быстрый старт
+
+```bash
+bapm init -y --target cursor
+bapm install --target cursor
+```
+
+Типичный результат:
+
+| Артефакт | Назначение |
+| --- | --- |
+| `bapm.yml` | Манифест зависимостей |
+| `bapm.lock.yaml` | Зафиксированный граф |
+| `apm_modules/` | Материализованные пакеты |
+| `.agents/skills/`, `.cursor/rules/`, `.cursor/agents/`, `.cursor/mcp.json` | Деплой в Cursor |
+
+Подробный проход: [быстрый старт](apps/docs/guide/quick-start.md).
+
+## Ключевые моменты
+
+- **Канонический манифест** — `bapm.yml`; `apm.yml` — backcompat-подмножество. Оба сразу — ошибка, merge нет.
+- **Runtime install сегодня cursor-only** (`--target cursor`). Claude/Codex — для marketplace-pack, не как host install.
+- **Lock + install** — воспроизводимый граф для локальной работы и CI (`--frozen` / env `CI`).
+- **MCP** — bake env-плейсхолдеров на install; политика approve/deny для исполняемого MCP.
+- **OpenAPM Consumer / Producer / Governance** — заявленный класс совместимости; детали и limitations: [CONFORMANCE.md](CONFORMANCE.md).
+- **Agent Plugins v1** — узкая portable-граница (`plugin.json` + skills + `mcp.json`): [AGENT_PLUGINS_COMPATIBILITY.md](AGENT_PLUGINS_COMPATIBILITY.md).
+
+## Документация
+
+| Раздел | Ссылка |
+| --- | --- |
+| Обзор возможностей | [guide/](apps/docs/guide/index.md) |
+| Быстрый старт | [guide/quick-start](apps/docs/guide/quick-start.md) |
+| Команды | [guide/commands](apps/docs/guide/commands.md) |
+| Манифест `bapm.yml` | [guide/config-manifest](apps/docs/guide/config-manifest.md) |
+| Lock-файл | [guide/lockfile](apps/docs/guide/lockfile.md) |
+| Сценарии | [guide/situations/](apps/docs/guide/situations/index.md) |
+| Справка по флагам | [reference/](apps/docs/reference/index.md) |
+| Совместимость / OpenAPM | [guide/conformance](apps/docs/guide/conformance.md) · [CONFORMANCE.md](CONFORMANCE.md) |
+| Agent Plugins | [guide/agent-plugins](apps/docs/guide/agent-plugins.md) · [матрица](AGENT_PLUGINS_COMPATIBILITY.md) |
+| Архитектура (для контрибьюторов) | [architecture/](apps/docs/architecture/index.md) · [CONTRIBUTING.md](CONTRIBUTING.md) |
+
+Сайт документации публикуется на **GitHub Pages** из `apps/docs` (после настройки Pages в репозитории).
+
+## Связанные проекты
+
+- [microsoft/apm](https://github.com/microsoft/apm) — референсный APM / OpenAPM
+- [Agent Plugins](https://agent-plugins.org/) — portable-формат skills + MCP
