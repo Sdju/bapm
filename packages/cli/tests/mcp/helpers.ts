@@ -83,14 +83,32 @@ export async function withCwd<T>(cwd: string, fn: () => Promise<T>): Promise<T> 
 export async function runInProject(
   cwd: string,
   argv: string[],
+  env: Record<string, string | undefined> = {},
 ): Promise<{ result: number; stdout: string[]; stderr: string[]; combined: string }> {
-  const { result, stdout, stderr } = await withCwd(cwd, () => withCapturedIo(() => runCli(argv)));
-  return {
-    result,
-    stdout,
-    stderr,
-    combined: [...stdout, ...stderr].join("\n"),
-  };
+  const keys = new Set(["CI", ...Object.keys(env)]);
+  const saved: Record<string, string | undefined> = {};
+  for (const k of keys) {
+    saved[k] = process.env[k];
+  }
+  delete process.env.CI;
+  for (const [k, v] of Object.entries(env)) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+  try {
+    const { result, stdout, stderr } = await withCwd(cwd, () => withCapturedIo(() => runCli(argv)));
+    return {
+      result,
+      stdout,
+      stderr,
+      combined: [...stdout, ...stderr].join("\n"),
+    };
+  } finally {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
 }
 
 /** Fail if CLI rejected argv as unknown flag (prevents false-green on exit≠0). */
