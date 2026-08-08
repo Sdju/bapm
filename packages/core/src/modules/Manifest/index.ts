@@ -10,18 +10,20 @@
  *   `CreateMinimalManifestOptions`, `WriteProducerManifestOptions`,
  *   `WriteProducerManifestResult`
  * - Errors: `ManifestError`
- * - Constants: `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`
- * - Functions: `discoverManifestPath`, `loadManifest`, `parseManifest`,
- *   `parseManifestDocument`, `loadYamlDocument`, `serializeManifest`,
- *   `writeManifest`, `writeProducerManifest`, `createMinimalManifest`,
- *   `validatePluginName`, `validateProjectName`, `createPluginJson`,
- *   `writePluginJson`, `isValidTargetToken`
+ * - Constants: `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`,
+ *   `BAPM_LOCAL_MANIFEST_FILE`, `APM_LOCAL_MANIFEST_FILE`
+ * - Functions: `discoverManifestPath`, `loadManifest`, `loadEffectiveManifest`,
+ *   `parseManifest`, `parseManifestDocument`, `loadYamlDocument`,
+ *   `serializeManifest`, `writeManifest`, `writeProducerManifest`,
+ *   `createMinimalManifest`, `validatePluginName`, `validateProjectName`,
+ *   `createPluginJson`, `writePluginJson`, `isValidTargetToken`,
+ *   `mergeLocalOverlay`, `parseLocalOverlayDocument`
  *
  * ## Example
  *
  * ```ts
- * import { loadManifest, createMinimalManifest } from "@/modules/Manifest";
- * const { document } = loadManifest({ cwd: process.cwd() });
+ * import { loadEffectiveManifest, createMinimalManifest } from "@/modules/Manifest";
+ * const { document, localPath } = loadEffectiveManifest({ cwd: process.cwd() });
  * const scaffold = createMinimalManifest({ name: "my-pkg" });
  * ```
  */
@@ -44,7 +46,17 @@ export type { ManifestErrorCode, ManifestWarning } from "./errors.ts";
 export { ManifestError } from "./errors.ts";
 
 export { APM_MANIFEST_FILE, BAPM_MANIFEST_FILE, discoverManifestPath } from "./discover.ts";
-export { loadManifest } from "./load.ts";
+export { loadManifest, loadEffectiveManifest } from "./load.ts";
+export {
+  APM_LOCAL_MANIFEST_FILE,
+  BAPM_LOCAL_MANIFEST_FILE,
+  assertNoApmLocalOverlay,
+  loadLocalOverlayIfPresent,
+  mergeLocalOverlay,
+  parseLocalOverlayDocument,
+  overlayRootForBase,
+} from "./localOverlay.ts";
+export type { LocalOverlayFields } from "./localOverlay.ts";
 export { parseManifest, parseManifestDocument } from "./parse.ts";
 export { loadYamlDocument } from "./yaml-load.ts";
 export {

@@ -8,8 +8,8 @@ Discover, load, and validate OpenAPM/APM project manifests (`apm.yml` / `bapm.ym
 | ---------------------------------------------------------------------------------------------------- | --------- |
 | `BapmManifest`, `BapmDependency`, `DependencyEntry`, …                                               | types     |
 | `ManifestError`, `ManifestErrorCode`, `ManifestWarning`                                              | errors    |
-| `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`                                                            | constants |
-| `discoverManifestPath`, `loadManifest`, `parseManifest`, `parseManifestDocument`, `loadYamlDocument` | functions |
+| `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`, `BAPM_LOCAL_MANIFEST_FILE`                                 | constants |
+| `discoverManifestPath`, `loadManifest`, `loadEffectiveManifest`, `parseManifest`, …                  | functions |
 | `createMinimalManifest` (+ `pluginMode`), `writeProducerManifest`, `serializeManifest`               | emit      |
 | `validatePluginName`, `validateProjectName`, `createPluginJson`, `writePluginJson`                   | plugin    |
 

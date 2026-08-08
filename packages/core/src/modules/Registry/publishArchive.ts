@@ -10,6 +10,7 @@ const OPTIONAL_ROOT_DOCS = ["README.md", "CHANGELOG.md", "LICENSE", "LICENSE.md"
 /**
  * Build flat registry publish zip: `apm.yml` at root + `.apm/**` (+ optional docs).
  * Does NOT call M7 pack product API — zip I/O only via fflate.
+ * Never includes personal overlay `bapm.local.yml` (unpublished; not walked from root).
  */
 export function buildPublishArchive(
   options: BuildPublishArchiveOptions = {},

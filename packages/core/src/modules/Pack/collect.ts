@@ -1,9 +1,12 @@
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
+import { BAPM_LOCAL_MANIFEST_FILE } from "@/modules/Manifest";
 import { PackError } from "./errors.ts";
 import { describeSecretRefuse, isSecretPackPath } from "./secrets.ts";
 
 const EXCLUDED_DIR_NAMES = new Set([".git", "node_modules"]);
+/** Personal overlay — omit from pack (not a secret-refuse abort). */
+const EXCLUDED_BASENAMES = new Set([BAPM_LOCAL_MANIFEST_FILE]);
 
 export type PackFileEntry = {
   /** Path relative to project root using `/` separators. */
@@ -67,6 +70,8 @@ function walk(root: string, dir: string, out: PackFileEntry[], secrets: string[]
 
     // Prior pack artifacts — do not nest zips.
     if (name.endsWith(".zip")) continue;
+    // Personal overlay stays unpublished (silent omit, not secret-refuse).
+    if (EXCLUDED_BASENAMES.has(name)) continue;
 
     const rel = relative(root, abs).split("\\").join("/");
     if (isSecretPackPath(rel) || isSecretPackPath(name)) {

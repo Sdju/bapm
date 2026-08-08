@@ -1,15 +1,20 @@
 import { readFileSync } from "node:fs";
 import { discoverManifestPath } from "./discover.ts";
 import { ManifestError } from "./errors.ts";
+import {
+  assertNoApmLocalOverlay,
+  loadLocalOverlayIfPresent,
+  mergeLocalOverlay,
+  overlayRootForBase,
+} from "./localOverlay.ts";
 import { parseManifestDocument } from "./parse.ts";
 import type { LoadManifestOptions, LoadManifestResult } from "./types.ts";
 import { loadYamlDocument } from "./yaml-load.ts";
 
 /**
- * Discover → read file → safe YAML → validate.
- * Does not resolve, lock, download, or install.
+ * Discover → read base file → safe YAML → validate (no local overlay).
  */
-export function loadManifest(options: LoadManifestOptions = {}): LoadManifestResult {
+function loadBaseManifest(options: LoadManifestOptions = {}): LoadManifestResult {
   const discovered = discoverManifestPath(options);
 
   let text: string;
@@ -32,4 +37,37 @@ export function loadManifest(options: LoadManifestOptions = {}): LoadManifestRes
     sourceFilename: discovered.filename,
     ...(warnings.length > 0 ? { warnings } : {}),
   };
+}
+
+/**
+ * Load validated base dual-read manifest, then optionally merge `bapm.local.yml`.
+ * Precedence for settings: CLI flags (call-site) → local overlay → base → env overrides.
+ */
+export function loadEffectiveManifest(options: LoadManifestOptions = {}): LoadManifestResult {
+  const base = loadBaseManifest(options);
+  const projectRoot = overlayRootForBase(base.sourcePath);
+
+  assertNoApmLocalOverlay(projectRoot);
+
+  const local = loadLocalOverlayIfPresent(projectRoot);
+  if (!local) {
+    return base;
+  }
+
+  const document = mergeLocalOverlay(base.document, local.fields);
+  return {
+    document,
+    sourcePath: base.sourcePath,
+    sourceFilename: base.sourceFilename,
+    localPath: local.localPath,
+    ...(base.warnings !== undefined ? { warnings: base.warnings } : {}),
+  };
+}
+
+/**
+ * Discover → read file → safe YAML → validate → merge optional personal overlay.
+ * Does not resolve, lock, download, or install.
+ */
+export function loadManifest(options: LoadManifestOptions = {}): LoadManifestResult {
+  return loadEffectiveManifest(options);
 }

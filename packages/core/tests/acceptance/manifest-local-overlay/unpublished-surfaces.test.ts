@@ -51,7 +51,7 @@ describe("manifest-local-overlay — unpublished surfaces", () => {
 
   test("publish archive omits bapm.local.yml", async () => {
     project = createTempProject();
-    writeBaseManifest(project.cwd, conformingBase({ name: "pub-omit", version: "2.0.0" }));
+    writeBaseManifest(project.cwd, conformingBase({ name: "example/pub-omit", version: "2.0.0" }));
     writeLocalOverlay(project.cwd, 'env:\n  SECRETISH: "nope"\n');
     writeText(join(project.cwd, ".apm", "instructions.md"), "# hello\n");
 

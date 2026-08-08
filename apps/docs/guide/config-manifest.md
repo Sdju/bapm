@@ -51,10 +51,11 @@ Discovery ищет файл **только в текущем каталоге** 
 
 Порядок selection для install / compile:
 
-1. `--target <id>` (force; для этого run игнорирует `active` и detect)
-2. манифест `active: [<id>, …]` (install — все перечисленные зарегистрированные id; compile — только если ровно один)
-3. sole auto-detect среди зарегистрированных интеграций
-4. fail-closed (подсказка: `--target <id>` и/или `active` в манифесте)
+1. `--target <id>` (CLI flag; force; для этого run игнорирует `active` и detect)
+2. `bapm.local.yml` → `active` (персональный overlay, если файл есть)
+3. базовый манифест `bapm.yml` / `apm.yml` → `active`
+4. sole auto-detect среди зарегистрированных интеграций
+5. fail-closed (подсказка: `--target <id>` и/или `active` в манифесте / overlay)
 
 Поле `target` / `targets` — заявление предпочтения / ключи intersection / object-map для **загрузки** пакетов. Оно **не** заменяет `active` и **само по себе не активирует** hosts. Для явной активации без detect используйте `active` или `bapm install --target cursor`. Рекомендуется `active` ⊆ объявленных `target`/`targets`, когда оба заданы.
 
@@ -64,6 +65,33 @@ active:
 ```
 
 Пустой `active: []` отклоняется (fail-closed): ключ объявляет intent активации; «ничего не материализовать» — опустите поле. Dual-read: те же правила для `apm.yml` и `bapm.yml`.
+
+### Personal overlay: `bapm.local.yml`
+
+Опциональный **персональный** файл рядом с базовым манифестом (тот же project root, без walk-up по родителям). Имя строго `bapm.local.yml`. Файл `apm.local.yml` в v1 **отклонён** (fail-closed).
+
+Это **не** то же самое, что source discriminator `local:` / `local` у зависимостей (каталог `.agents/local`). Overlay — личные настройки host/env/registry; `local:` — источник пакета.
+
+**Allowlist** top-level ключей (всё остальное, включая `name` / `version` / `dependencies` / `x-*`, — отказ):
+
+| Ключ | Merge |
+| --- | --- |
+| `active` | replace всего списка |
+| `target` / `targets` | object-map + object-map → deep-merge ключей (local wins); иначе replace поля + mutual exclusion |
+| `env` | deep-merge строкового map (local wins per key) |
+| `registries` | deep-merge по имени registry (local entry overlays) |
+
+**Precedence** настроек (выше побеждает): CLI flags (`--target`, …) → `bapm.local.yml` → base `bapm.yml`/`apm.yml` → process-env overrides (только где у setting есть env override).
+
+Держите overlay вне git/pack/publish: добавьте в `.gitignore` строку `bapm.local.yml`. Pack и publish **опускают** файл; `bapm doctor` предупреждает, если он уже tracked (`git rm --cached bapm.local.yml`).
+
+```yaml
+# bapm.local.yml — пример
+active:
+  - x-acme-editor
+env:
+  FOO: "personal"
+```
 
 ### Object-map `target` / `targets` (bapm-расширение)
 

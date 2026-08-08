@@ -59,6 +59,10 @@ dependencies:
 
 Локальный пакет-зависимость должен сам иметь `apm.yml` или `bapm.yml` (например skill с `.apm/skills/...`).
 
+::: tip Personal overlay
+Для личных host/env настроек без правок общего `bapm.yml` положите рядом **`bapm.local.yml`** (allowlist: `active`, `target`/`targets`, `env`, `registries`) и добавьте его в `.gitignore`. Это персональный overlay, а не source `local:`. Подробнее: [манифест — personal overlay](/guide/config-manifest#personal-overlay-bapmlocalyml).
+:::
+
 Подробнее: [манифест](/guide/config-manifest).
 
 ## 3. Первый install в Cursor

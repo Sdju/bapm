@@ -2,7 +2,7 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { loadLockfileOrNull } from "@/modules/Lockfile";
-import { loadManifest } from "@/modules/Manifest";
+import { BAPM_LOCAL_MANIFEST_FILE, loadManifest } from "@/modules/Manifest";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
 import type { DoctorCheck, DoctorResult, RunDoctorOptions } from "./types.ts";
 
@@ -118,6 +118,12 @@ export async function runDoctor(options: RunDoctorOptions = {}): Promise<DoctorR
     });
   }
 
+  // Personal overlay tracked in git — non-critical warning only
+  const overlayTracked = probeLocalOverlayTracked(cwd, git.ok);
+  if (overlayTracked) {
+    checks.push(overlayTracked);
+  }
+
   // Auth-env: always-on informational (names only, never secrets)
   checks.push(probeAuthEnv());
 
@@ -139,6 +145,37 @@ export async function runDoctor(options: RunDoctorOptions = {}): Promise<DoctorR
 
 export const doctor = runDoctor;
 export const checkDoctor = runDoctor;
+
+/**
+ * When `bapm.local.yml` exists and is git-indexed, warn (ok=true, non-critical).
+ * Untracked overlay → no check row (must not claim tracked).
+ */
+function probeLocalOverlayTracked(cwd: string, gitOk: boolean): DoctorCheck | undefined {
+  const localPath = join(cwd, BAPM_LOCAL_MANIFEST_FILE);
+  if (!existsSync(localPath)) return undefined;
+  if (!gitOk) return undefined;
+  if (!existsSync(join(cwd, ".git"))) return undefined;
+
+  try {
+    const r = spawnSync("git", ["ls-files", "--", BAPM_LOCAL_MANIFEST_FILE], {
+      cwd,
+      encoding: "utf8",
+    });
+    if (r.status !== 0) return undefined;
+    const tracked = (r.stdout ?? "").trim().length > 0;
+    if (!tracked) return undefined;
+    return {
+      name: "local-overlay",
+      ok: true,
+      critical: false,
+      message:
+        `${BAPM_LOCAL_MANIFEST_FILE} is git-tracked (personal overlay should stay unpublished). ` +
+        `Untrack with \`git rm --cached ${BAPM_LOCAL_MANIFEST_FILE}\` and add it to .gitignore.`,
+    };
+  } catch {
+    return undefined;
+  }
+}
 
 function formatGitMessage(git: GitProbe, verbose: boolean): string {
   if (!git.ok) {

@@ -30,7 +30,7 @@ describe("manifest-local-overlay — allowlist", () => {
         "active:",
         "  - cursor",
         "targets:",
-        "  cursor: @bapm/integration-cursor",
+        '  cursor: "@bapm/integration-cursor"',
         "env:",
         '  FOO: "bar"',
         "registries:",

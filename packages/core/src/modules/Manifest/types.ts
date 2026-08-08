@@ -88,6 +88,11 @@ export type BapmManifest = {
    * materialize/MCP (multi) or compile (sole). Distinct from `target`/`targets`.
    */
   active?: string[];
+  /**
+   * Optional bake / placeholder defaults (string map). Deep-merged from
+   * `bapm.local.yml` when present (local keys win).
+   */
+  env?: Record<string, string>;
   [key: string]: unknown;
 };
 
@@ -111,5 +116,7 @@ export type LoadManifestResult = {
   document: BapmManifest;
   sourcePath: string;
   sourceFilename: string;
+  /** Absolute path to `bapm.local.yml` when an overlay was merged. */
+  localPath?: string;
   warnings?: ManifestWarning[];
 };

@@ -41,12 +41,12 @@ describe("manifest-local-overlay — merge rules", () => {
       project.cwd,
       conformingBase({
         name: "targets-merge",
-        extraYaml: ["targets:", "  cursor: @bapm/integration-cursor", ""].join("\n"),
+        extraYaml: ['targets:', '  cursor: "@bapm/integration-cursor"', ""].join("\n"),
       }),
     );
     writeLocalOverlay(
       project.cwd,
-      ["targets:", "  x-acme-editor: @scope/acme-integration", ""].join("\n"),
+      ['targets:', '  x-acme-editor: "@scope/acme-integration"', ""].join("\n"),
     );
 
     const doc = documentOf(getLoadEffectiveManifest()({ cwd: project.cwd }));
