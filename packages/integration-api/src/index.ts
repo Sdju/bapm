@@ -15,6 +15,7 @@ export type {
   DeployedFile,
   MaterializeContext,
   MaterializeReport,
+  McpEnvMode,
   McpServerConfig,
   MarketplaceOutputCapability,
   MarketplaceOutputIntegration,

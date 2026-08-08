@@ -6,6 +6,7 @@
 | -------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
 | **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
+| **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
 | **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
 | **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
 | **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
@@ -56,6 +57,29 @@ bapm install --target opencode
 ```
 
 Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, commands → `.opencode/commands/<name>.md`, hooks — явный non-fatal skip (diagnostic), MCP → project `opencode.json` (`mcp`, `type: local` / `remote`). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc`.
+
+## Copilot (opt-in пакет)
+
+Отдельный runtime-пакет `@bapm/integration-copilot`:
+
+```bash
+npm i -D @bapm/integration-copilot
+```
+
+```yaml
+targets:
+  copilot: "@bapm/integration-copilot"
+active:
+  - copilot
+```
+
+```bash
+bapm init -y --target copilot
+bapm install --target copilot
+bapm compile --target copilot
+```
+
+Instructions → `.github/instructions/<name>.instructions.md`, commands/`*.prompt.md` → `.github/prompts/<name>.prompt.md` (не `.github/commands/`), agents → `.github/agents/<name>.agent.md`, skills → `.agents/skills/<name>/`, hooks → per-file `.github/hooks/<pkg>-<stem>.json` (+ scripts и sidecar `.github/bapm-hooks.json`). MCP → home `~/.copilot/mcp-config.json` (`COPILOT_HOME`, translate-placeholders `${VAR}`), compile → `.github/copilot-instructions.md` (instructions из materialize в тело compile не дублируются). Auto-detect: whitelist под `.github/` (`copilot-instructions.md` или dirs instructions/agents/prompts/hooks).
 
 ## Кастомный npm-пакет
 

@@ -1,4 +1,4 @@
-import { join, relative, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import type {
   BapmIntegration,
@@ -833,20 +833,7 @@ async function deployMcpAfterPolicy(args: {
   let wroteConfig = false;
   let configPath: string | undefined;
   let configuredTargetId: string | undefined;
-
-  // Cursor bake: resolve ${VAR} / ${env:VAR} / <VAR> / {bake:NAME} before configureMcp write.
-  let configuredServers: typeof approved;
-  try {
-    configuredServers = approved.map((server) => bakeMcpServerMaps(server));
-  } catch (error) {
-    if (error instanceof McpEnvBakeError) {
-      throw new InstallError("INSTALL_MCP_ENV_BAKE", error.message, {
-        details: { missing: error.missing },
-        cause: error,
-      });
-    }
-    throw error;
-  }
+  let configuredServers: typeof approved | undefined;
 
   for (const targetId of args.activeTargets) {
     const target = findTarget(args.registry, targetId);
@@ -863,6 +850,21 @@ async function deployMcpAfterPolicy(args: {
         warn: true,
       });
       continue;
+    }
+
+    // Per-target bake: omit APM placeholder bake when mcpEnvMode === "translate".
+    // Missing mode ⇒ bake (Cursor default). `{bake:NAME}` still resolved fail-closed.
+    const bakeMode = target.mcpEnvMode === "translate" ? "translate" : "bake";
+    try {
+      configuredServers = approved.map((server) => bakeMcpServerMaps(server, { mode: bakeMode }));
+    } catch (error) {
+      if (error instanceof McpEnvBakeError) {
+        throw new InstallError("INSTALL_MCP_ENV_BAKE", error.message, {
+          details: { missing: error.missing, targetId, mcpEnvMode: bakeMode },
+          cause: error,
+        });
+      }
+      throw error;
     }
 
     const report = (await configureMcp(configuredServers, {
@@ -884,31 +886,32 @@ async function deployMcpAfterPolicy(args: {
 
     const reportedConfigPath =
       typeof report?.configPath === "string" ? report.configPath.trim() : "";
-    const resolvedConfigPath = reportedConfigPath ? resolve(args.cwd, reportedConfigPath) : "";
-    const configPathRelative = resolvedConfigPath ? relative(args.cwd, resolvedConfigPath) : "";
-    if (
-      !reportedConfigPath ||
-      !configPathRelative ||
-      configPathRelative === ".." ||
-      configPathRelative.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`)
-    ) {
+    const normalizedConfigPath = normalizeMcpConfigPath(args.cwd, reportedConfigPath);
+    if (!normalizedConfigPath) {
       throw new InstallError(
         "INSTALL_FAILED",
-        `Target "${targetId}" configured MCP without a project-relative config path`,
+        `Target "${targetId}" configured MCP without a usable config path (project-relative, absolute, or ~/…)`,
         { details: { targetId, configPath: report?.configPath } },
       );
     }
 
     wroteConfig = true;
     configuredTargetId = targetId;
-    configPath = configPathRelative.replace(/\\/g, "/");
+    configPath = normalizedConfigPath;
     break;
   }
 
   let lockDocument = args.lockDocument;
   let lockPath = args.lockPath;
 
-  if (wroteConfig && !args.frozen && lockDocument && configPath && configuredTargetId) {
+  if (
+    wroteConfig &&
+    !args.frozen &&
+    lockDocument &&
+    configPath &&
+    configuredTargetId &&
+    configuredServers
+  ) {
     applyMcpInventoryToLock({
       document: lockDocument,
       servers: configuredServers,
@@ -1279,6 +1282,30 @@ function findTarget(registry: IntegrationRegistry, id: string): BapmIntegration 
     if (t) return t;
   }
   return listRegistry(registry).find((t) => String(t.id) === id);
+}
+
+/**
+ * Normalize configureMcp report paths for lock inventory.
+ * Accepts project-relative paths, absolute home/out-of-project paths, and `~/…` tilde forms.
+ */
+function normalizeMcpConfigPath(cwd: string, reported: string): string | undefined {
+  const trimmed = reported.trim();
+  if (!trimmed) return undefined;
+
+  if (trimmed === "~" || trimmed.startsWith("~/")) {
+    return trimmed.replace(/\\/g, "/");
+  }
+
+  if (isAbsolute(trimmed)) {
+    return trimmed.replace(/\\/g, "/");
+  }
+
+  const resolved = resolve(cwd, trimmed);
+  const rel = relative(cwd, resolved);
+  if (!rel || rel === ".." || rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`)) {
+    return undefined;
+  }
+  return rel.replace(/\\/g, "/");
 }
 
 function collectPackageDeclaredTargets(

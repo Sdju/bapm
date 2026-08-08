@@ -20,7 +20,7 @@ When a project manifest uses object-map `target` / `targets`, the CLI loads each
 2. Named **`createCursorIntegration`** (or an equivalent documented factory) returning `BapmIntegration`; or
 3. **Default export** that is either a `BapmIntegration` object or a factory returning one.
 
-The loaded instance MUST have non-empty `id`, `deployRoots` array, `detect`, and `materialize` (`configureMcp` / `compile` optional). `id` MUST equal the map key. Marketplace-output-only packages (no runtime hooks) are rejected.
+The loaded instance MUST have non-empty `id`, `deployRoots` array, `detect`, and `materialize` (`configureMcp` / `compile` optional). Optional `mcpEnvMode: "bake" | "translate"` tells install whether to bake APM `${VAR}` placeholders before `configureMcp` (omitted ⇒ bake-compatible, Cursor default). `id` MUST equal the map key. Marketplace-output-only packages (no runtime hooks) are rejected. A successful `configureMcp` report MUST include a non-empty `configPath` (project-relative, absolute, or home-tilde form for home-scoped hosts).
 
 See `@bapm/integration-cursor` for a built-in reference and the VitePress architecture guide for the author how-to.
 
