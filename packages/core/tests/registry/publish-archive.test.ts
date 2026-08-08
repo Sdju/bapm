@@ -82,4 +82,30 @@ describe("M10 core flat publish archive", () => {
     expect(manifestText).toMatch(/name:\s*contoso\/demo/);
     expect(manifestText).toMatch(/1\.2\.3/);
   });
+
+  test("wire apm.yml ignores bapm.local.yml overlay fields", async () => {
+    project = createTempProject();
+    writeManifest(
+      project.cwd,
+      "bapm.yml",
+      `name: contoso/base-only\nversion: "9.9.9"\ndependencies:\n  apm: []\n  mcp: []\n`,
+    );
+    writeText(
+      join(project.cwd, "bapm.local.yml"),
+      `active:\n  - cursor\nenv:\n  LEAK_MARKER: "nope"\n`,
+    );
+    writeText(join(project.cwd, ".apm", "instructions.md"), "# hello\n");
+
+    const result = await getBuildPublishArchive()({
+      cwd: project.cwd,
+      dryRun: true,
+    });
+    const bytes = resolveArchiveBytes(project.cwd, result);
+    const entries = unzipSync(bytes);
+    expect(entries["bapm.local.yml"]).toBeUndefined();
+    const wire = new TextDecoder().decode(entries["apm.yml"]!);
+    expect(wire).toMatch(/contoso\/base-only/);
+    expect(wire).not.toMatch(/LEAK_MARKER/);
+    expect(wire).not.toMatch(/\bactive\b/);
+  });
 });

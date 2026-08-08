@@ -12,12 +12,12 @@
  * - Errors: `ManifestError`
  * - Constants: `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`,
  *   `BAPM_LOCAL_MANIFEST_FILE`, `APM_LOCAL_MANIFEST_FILE`
- * - Functions: `discoverManifestPath`, `loadManifest`, `loadEffectiveManifest`,
- *   `parseManifest`, `parseManifestDocument`, `loadYamlDocument`,
- *   `serializeManifest`, `writeManifest`, `writeProducerManifest`,
- *   `createMinimalManifest`, `validatePluginName`, `validateProjectName`,
- *   `createPluginJson`, `writePluginJson`, `isValidTargetToken`,
- *   `mergeLocalOverlay`, `parseLocalOverlayDocument`
+ * - Functions: `discoverManifestPath`, `loadBaseManifest`, `loadManifest`,
+ *   `loadEffectiveManifest`, `parseManifest`, `parseManifestDocument`,
+ *   `loadYamlDocument`, `serializeManifest`, `writeManifest`,
+ *   `writeProducerManifest`, `createMinimalManifest`, `validatePluginName`,
+ *   `validateProjectName`, `createPluginJson`, `writePluginJson`,
+ *   `isValidTargetToken`, `mergeLocalOverlay`, `parseLocalOverlayDocument`
  *
  * ## Example
  *
@@ -46,7 +46,7 @@ export type { ManifestErrorCode, ManifestWarning } from "./errors.ts";
 export { ManifestError } from "./errors.ts";
 
 export { APM_MANIFEST_FILE, BAPM_MANIFEST_FILE, discoverManifestPath } from "./discover.ts";
-export { loadManifest, loadEffectiveManifest } from "./load.ts";
+export { loadBaseManifest, loadManifest, loadEffectiveManifest } from "./load.ts";
 export {
   APM_LOCAL_MANIFEST_FILE,
   BAPM_LOCAL_MANIFEST_FILE,

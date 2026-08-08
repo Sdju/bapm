@@ -14,6 +14,7 @@
 
 - [x] 3.1 Exclude `bapm.local.yml` from pack `collectPackFiles` (omit, not secret-refuse)
 - [x] 3.2 Exclude `bapm.local.yml` from publish archive construction
+- [x] 3.2b Publish wire `apm.yml` from dual-read **base** only (`loadBaseManifest`; no local overlay merge / field leak)
 - [x] 3.3 Ensure/document gitignore pattern; doctor non-critical warning when file is git-tracked
 
 ## 4. Docs

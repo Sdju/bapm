@@ -12,9 +12,11 @@ import type { LoadManifestOptions, LoadManifestResult } from "./types.ts";
 import { loadYamlDocument } from "./yaml-load.ts";
 
 /**
- * Discover → read base file → safe YAML → validate (no local overlay).
+ * Discover → read base dual-read file → safe YAML → validate.
+ * Does **not** merge `bapm.local.yml` (use `loadEffectiveManifest` / `loadManifest` for that).
+ * Suitable for publish/pack wire identity serialization.
  */
-function loadBaseManifest(options: LoadManifestOptions = {}): LoadManifestResult {
+export function loadBaseManifest(options: LoadManifestOptions = {}): LoadManifestResult {
   const discovered = discoverManifestPath(options);
 
   let text: string;

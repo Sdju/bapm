@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { zipSync } from "fflate";
-import { loadManifest, serializeManifest, type BapmManifest } from "@/modules/Manifest";
+import { loadBaseManifest, serializeManifest, type BapmManifest } from "@/modules/Manifest";
 import { RegistryError } from "./errors.ts";
 import type { BuildPublishArchiveOptions, BuildPublishArchiveResult } from "./types.ts";
 
@@ -10,13 +10,14 @@ const OPTIONAL_ROOT_DOCS = ["README.md", "CHANGELOG.md", "LICENSE", "LICENSE.md"
 /**
  * Build flat registry publish zip: `apm.yml` at root + `.apm/**` (+ optional docs).
  * Does NOT call M7 pack product API — zip I/O only via fflate.
- * Never includes personal overlay `bapm.local.yml` (unpublished; not walked from root).
+ * Wire `apm.yml` is serialized from the **dual-read base** only (no `bapm.local.yml` merge).
+ * Never includes personal overlay `bapm.local.yml` as a zip member.
  */
 export function buildPublishArchive(
   options: BuildPublishArchiveOptions = {},
 ): BuildPublishArchiveResult {
   const cwd = resolve(options.cwd ?? process.cwd());
-  const { document } = loadManifest({ cwd });
+  const { document } = loadBaseManifest({ cwd });
   const name = document.name?.trim();
   const version = document.version?.trim();
   if (!name || !name.includes("/")) {

@@ -35,6 +35,7 @@ export {
   BAPM_LOCAL_MANIFEST_FILE,
   APM_LOCAL_MANIFEST_FILE,
   discoverManifestPath,
+  loadBaseManifest,
   loadManifest,
   loadEffectiveManifest,
   mergeLocalOverlay,
