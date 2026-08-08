@@ -1,5 +1,5 @@
 /**
- * Acceptance: deployed command/hook paths enter lock inventory; uninstall orphans them.
+ * Deployed command/hook paths enter lock inventory; uninstall orphans them.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -14,9 +14,9 @@ import {
   writeApmPackage,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./commands-hooks-helpers.ts";
 
-describe("commands-hooks-primitives — lock inventory & orphan cleanup", () => {
+describe("commands/hooks lock inventory & orphan cleanup", () => {
   let project: TempProject;
 
   afterEach(() => {

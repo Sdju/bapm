@@ -1,5 +1,5 @@
 /**
- * Acceptance: OpenCode commands deploy; hooks explicit non-fatal skip.
+ * OpenCode commands deploy; hooks explicit non-fatal skip.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -15,9 +15,9 @@ import {
   writeApmPackage,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./commands-hooks-helpers.ts";
 
-describe("commands-hooks-primitives — OpenCode install materialize", () => {
+describe("commands/hooks OpenCode install materialize", () => {
   let project: TempProject;
 
   afterEach(() => {

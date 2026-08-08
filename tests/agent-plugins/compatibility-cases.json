@@ -29,14 +29,14 @@
       "status": "supported",
       "summary": "Declared plugin.json commands path entries are required, fail-closed on missing/escape, and materialize through the active host matrix.",
       "fixture": "tests/fixtures/agent-plugins/v1-portable",
-      "test": "packages/core/tests/acceptance/commands-hooks-primitives/agent-plugins.test.ts"
+      "test": "packages/core/tests/agent-plugins/commands-hooks.test.ts"
     },
     {
       "id": "hooks",
       "status": "target-specific",
       "summary": "Declared plugin.json hooks path entries fail-closed on missing/escape; Cursor merges into .cursor/hooks.json, OpenCode skips with an inspectable diagnostic.",
       "fixture": "tests/fixtures/agent-plugins/v1-portable",
-      "test": "packages/core/tests/acceptance/commands-hooks-primitives/agent-plugins.test.ts"
+      "test": "packages/core/tests/agent-plugins/commands-hooks.test.ts"
     },
     {
       "id": "unsafe-input",

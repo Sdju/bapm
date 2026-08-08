@@ -1,5 +1,5 @@
 /**
- * Acceptance: Cursor materialize for commands + hooks (install e2e).
+ * Cursor materialize for commands + hooks (install e2e).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -16,9 +16,9 @@ import {
   writeApmPackage,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./commands-hooks-helpers.ts";
 
-describe("commands-hooks-primitives — Cursor install materialize", () => {
+describe("commands/hooks Cursor install materialize", () => {
   let project: TempProject;
 
   afterEach(() => {

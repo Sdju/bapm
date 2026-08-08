@@ -1,10 +1,10 @@
 /**
- * Acceptance: command/hook participate in pr-002/pr-003 conflict rules.
+ * Command/hook participate in pr-002/pr-003 conflict rules.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { diagnosticsOf } from "../../install/helpers.ts";
+import { diagnosticsOf } from "../install/helpers.ts";
 import {
   createTempProject,
   cursorCommandPrompt,
@@ -16,9 +16,9 @@ import {
   sourceOf,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../install/commands-hooks-helpers.ts";
 
-describe("commands-hooks-primitives — conflicts", () => {
+describe("commands/hooks conflicts", () => {
   let project: TempProject;
 
   afterEach(() => {

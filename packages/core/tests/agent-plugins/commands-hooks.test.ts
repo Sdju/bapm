@@ -1,10 +1,10 @@
 /**
- * Acceptance: Agent Plugins declared commands/hooks + matrix honesty.
+ * Agent Plugins declared commands/hooks + matrix honesty.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { repoRoot } from "../../install/helpers.ts";
+import { repoRoot } from "../install/helpers.ts";
 import {
   AGENT_PLUGIN_SCHEMA,
   createCursorRegistry,
@@ -13,9 +13,9 @@ import {
   getRunInstall,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../install/commands-hooks-helpers.ts";
 
-describe("commands-hooks-primitives — Agent Plugins declared paths", () => {
+describe("Agent Plugins declared commands/hooks", () => {
   let project: TempProject;
 
   afterEach(() => {

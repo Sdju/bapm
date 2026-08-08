@@ -1,11 +1,10 @@
 /**
- * Acceptance: discover command/hook primitives from APM layouts
- * (openspec commands-hooks-primitives / primitives-discovery).
+ * Discover command/hook primitives from APM layouts.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { asText } from "../../asText.ts";
+import { asText } from "../asText.ts";
 import {
   createTempProject,
   cursorCommandPrompt,
@@ -19,9 +18,9 @@ import {
   writeApmPackage,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../install/commands-hooks-helpers.ts";
 
-describe("commands-hooks-primitives — discovery", () => {
+describe("commands/hooks discovery", () => {
   let project: TempProject;
 
   afterEach(() => {

@@ -1,13 +1,13 @@
 /**
- * Host-package acceptance: OpenCode commands + explicit hooks skip.
+ * OpenCode commands + explicit hooks skip (direct materialize).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createOpencodeIntegration } from "../../../src/index.ts";
+import { createOpencodeIntegration } from "../src/index.ts";
 
-describe("commands-hooks-primitives — opencode materialize (host)", () => {
+describe("opencode materialize commands/hooks", () => {
   let cwd: string | undefined;
 
   afterEach(() => {

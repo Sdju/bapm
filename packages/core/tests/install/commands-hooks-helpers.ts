@@ -1,5 +1,5 @@
 /**
- * Acceptance helpers for commands-hooks-primitives (discovery + install hosts).
+ * Shared fixtures for command/hook discovery and host install suites.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -17,8 +17,8 @@ import {
   typeOfPrimitive,
   writeText,
   type TempProject,
-} from "../../install/helpers.ts";
-import { getRunUninstall } from "../../lifecycle/helpers.ts";
+} from "./helpers.ts";
+import { getRunUninstall } from "../lifecycle/helpers.ts";
 
 export {
   createTempProject,

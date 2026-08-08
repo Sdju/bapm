@@ -1,13 +1,13 @@
 /**
- * Host-package acceptance: Cursor command/hook writers (direct materialize).
+ * Cursor command/hook writers (direct materialize).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCursorIntegration } from "../../../src/index.ts";
+import { createCursorIntegration } from "../../src/index.ts";
 
-describe("commands-hooks-primitives — cursor materialize (host)", () => {
+describe("cursor materialize commands/hooks", () => {
   let cwd: string | undefined;
 
   afterEach(() => {
