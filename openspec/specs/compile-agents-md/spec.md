@@ -3,7 +3,9 @@
 ## Purpose
 
 Defines thin `bapm compile` for the cursor host: discover project and module primitives and emit a deterministic `AGENTS.md` without multi-host compile adapters or watch mode.
+
 ## Requirements
+
 ### Requirement: Compile emits AGENTS.md for cursor
 
 `bapm compile` MUST discover primitives from the project and installed modules (reuse M4 discovery) and MUST emit an `AGENTS.md` at the project root (or documented cursor-relevant path) when compile targets cursor. Default target MUST be cursor or auto-detect cursor. Compile MUST NOT require Copilot/Claude/Gemini target packages or adapters.

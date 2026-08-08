@@ -1,8 +1,11 @@
 # integration-antigravity-runtime Specification
 
 ## Purpose
+
 Defines the greenfield `@bapm/integration-antigravity` package: explicit-only Antigravity CLI project-scope runtime under `.agents/` (rules, skills, hooks, opt-in MCP), thin `AGENTS.md` compile with rules dedup, depending only on `@bapm/integration-api`.
+
 ## Requirements
+
 ### Requirement: Package @bapm/integration-antigravity exists and depends only on integration API
 
 The monorepo MUST include package directory `packages/integration-antigravity` with package name `@bapm/integration-antigravity`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@bapm/integration-*` packages. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createAntigravityIntegration` as an alias. Runtime integration `id` MUST be `antigravity`. The package MUST NOT expose a marketplace-output mapper in this capability.
@@ -150,4 +153,3 @@ Antigravity runtime in this capability MUST NOT write user-scope paths under `~/
 
 - **WHEN** inspecting `@bapm/core` dependencies
 - **THEN** `@bapm/integration-antigravity` MUST NOT appear as a dependency
-
