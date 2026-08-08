@@ -42,6 +42,10 @@ bapm compile --target cursor -o path/to/OUT.md
 
 Флаги: [compile](/reference/compile).
 
+### Техдолг vs APM
+
+`bapm compile` — **thin** Cursor root-context (один файл). Полный паритет с APM `apm compile` (instructions-only, distributed/`applyTo`, link-inline, multi-host, Build ID, …) **не заявлен**. Inventory: `TD-COMPILE-*` в `.samples/apm-knowledge/topics/tech-debt-compile.md` и § Tech debt в openspec `compile-agents-md`.
+
 ### Если не сработало
 
 - `Target detection is missing or ambiguous; pass --target <id>` → укажите `--target cursor` или sole `active: [cursor]`.

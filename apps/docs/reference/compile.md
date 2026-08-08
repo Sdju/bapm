@@ -25,4 +25,6 @@ bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
 
 Выбор host: `--target` → sole манифест `active` → sole auto-detect → fail. Multi-`active` без `--target` — ошибка (compile остаётся single-host).
 
+Техдолг паритета с APM compile (не заявлен): `TD-COMPILE-*` — см. [US-05](/guide/situations/compile-agents#техдолг-vs-apm).
+
 Сценарий: [US-05 Compile AGENTS.md](/guide/situations/compile-agents).
