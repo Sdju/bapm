@@ -128,17 +128,12 @@ function discoverGithubOwnerDotgithub(args: {
   httpGet?: (url: string) => HttpFetchResult;
   fetchFailure: "off" | "warn" | "block";
 }): DiscoverPolicyWithProvidersResult | null {
-  let selected;
-  try {
-    selected = selectProjectRemote({
-      cwd: args.cwd,
-      remotes: args.remotes,
-      listGitRemotes: args.listGitRemotes ?? ((c) => listGitRemotes(c)),
-    });
-  } catch (err) {
-    // Ambiguous remotes fail closed for remote discovery
-    throw err;
-  }
+  // Ambiguous remotes fail closed for remote discovery
+  const selected = selectProjectRemote({
+    cwd: args.cwd,
+    remotes: args.remotes,
+    listGitRemotes: args.listGitRemotes ?? ((c) => listGitRemotes(c)),
+  });
 
   if (
     selected == null ||

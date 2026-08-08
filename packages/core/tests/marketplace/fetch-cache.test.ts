@@ -1,6 +1,7 @@
 /**
  * marketplace-fetch-cache — local/url/github dispatch, TTL, security.
  */
+import { asText } from "../asText.ts";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -16,7 +17,7 @@ import {
 } from "./helpers.ts";
 
 async function callFetch(
-  fetchFn: (source: unknown, opts?: Record<string, unknown>) => Promise<unknown> | unknown,
+  fetchFn: (source: unknown, opts?: Record<string, unknown>) => unknown,
   source: unknown,
   opts?: Record<string, unknown>,
 ): Promise<unknown> {
@@ -98,7 +99,7 @@ describe("mp-consumer-registry fetch + cache", () => {
     let hits = 0;
     const transport = async (input: string | URL | Request) => {
       hits += 1;
-      const href = String(input);
+      const href = asText(input);
       expect(href).toBe("https://example.com/path/marketplace.json");
       return new Response(FIXTURE_CLAUDE_OK, {
         status: 200,
@@ -172,7 +173,7 @@ describe("mp-consumer-registry fetch + cache", () => {
         fetch: async () =>
           new Response(big, {
             status: 200,
-            headers: { "content-length": String(big.length) },
+            headers: { "content-length": asText(big.length) },
           }),
       }),
     ).rejects.toThrow(/size|limit|too large|10\s*mi?b|10485760/i);
@@ -190,7 +191,7 @@ describe("mp-consumer-registry fetch + cache", () => {
     await callFetch(fetch, source, {
       forceRefresh: true,
       fetch: async (input: string | URL | Request) => {
-        requested.push(String(input));
+        requested.push(asText(input));
         return new Response(FIXTURE_CLAUDE_OK, { status: 200 });
       },
     });

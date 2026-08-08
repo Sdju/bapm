@@ -1,6 +1,7 @@
 /**
  * Resolve/lock test helpers — temp projects, fake ports, flexible result accessors.
  */
+import { asText } from "../asText.ts";
 import {
   mkdirSync,
   mkdtempSync,
@@ -224,7 +225,7 @@ export function walkOrder(result: unknown): string[] {
   if (Array.isArray(r.declarationOrder)) return r.declarationOrder.map(String);
   // Fall back: depth-1 nodes in array order
   const nodes = graphNodes(result).filter((n) => Number(n.depth ?? n.level ?? 0) === 1);
-  return nodes.map((n) => String(n.name ?? n.id ?? n.alias ?? n.repo_url ?? n.spec));
+  return nodes.map((n) => asText(n.name ?? n.id ?? n.alias ?? n.repo_url ?? n.spec));
 }
 
 export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknown {
@@ -244,11 +245,11 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {
@@ -277,11 +278,11 @@ export async function expectRejectsMatching(
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {

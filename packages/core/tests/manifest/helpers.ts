@@ -1,3 +1,4 @@
+import { asText } from "../asText.ts";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync, cpSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
@@ -91,11 +92,11 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {

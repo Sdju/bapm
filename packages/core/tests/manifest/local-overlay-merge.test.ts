@@ -2,6 +2,7 @@
  * Per-field merge rules: active replace, targets/env/registries deep-merge
  * (promoted from manifest-local-overlay acceptance).
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   conformingBase,
@@ -110,7 +111,7 @@ describe("manifest-local-overlay — merge rules", () => {
       typeof overwrite === "string"
         ? overwrite
         : overwrite && typeof overwrite === "object"
-          ? String((overwrite as { url?: unknown }).url ?? "")
+          ? asText((overwrite as { url?: unknown }).url ?? "")
           : "";
     expect(overwriteUrl).toMatch(/new\.example/);
   });

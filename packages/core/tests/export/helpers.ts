@@ -1,6 +1,7 @@
 /**
  * Helpers for Export / SBOM suite.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -29,7 +30,7 @@ export function sbomText(result: unknown): string {
   if (result && typeof result === "object") {
     const r = result as Record<string, unknown>;
     if (r.ok === false) {
-      throw new Error(String(r.error ?? r.message ?? "exportSbom failed"));
+      throw new Error(asText(r.error ?? r.message ?? "exportSbom failed"));
     }
     if (typeof r.json === "string") return r.json;
     if (typeof r.sbom === "string") return r.sbom;

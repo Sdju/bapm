@@ -141,13 +141,11 @@ export function getAuthoringEditor(): {
   };
 }
 
-export function getCheckAuthoringMarketplace(): (
-  opts: Record<string, unknown>,
-) => unknown | Promise<unknown> {
+export function getCheckAuthoringMarketplace(): (opts: Record<string, unknown>) => unknown {
   return pickExport(
     ["checkMarketplaceAuthoring", "checkAuthoringMarketplace", "runMarketplaceAuthoringCheck"],
     "authoring check",
-  ) as (opts: Record<string, unknown>) => unknown | Promise<unknown>;
+  ) as (opts: Record<string, unknown>) => unknown;
 }
 
 export function getMigrateMarketplaceYml(): (opts: Record<string, unknown>) => unknown {

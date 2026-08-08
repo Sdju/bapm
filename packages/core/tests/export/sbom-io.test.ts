@@ -1,6 +1,7 @@
 /**
  * Export SBOM IO: CycloneDX 1.5 / SPDX 2.3 inventory from lock fields.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { join } from "node:path";
 import {
@@ -30,12 +31,12 @@ describe("core exportSbom", () => {
       }),
     );
     const doc = JSON.parse(out) as Record<string, unknown>;
-    expect(doc.bomFormat === "CycloneDX" || doc.bomFormat === "CycloneDX").toBe(true);
-    expect(String(doc.specVersion)).toBe("1.5");
+    expect(doc.bomFormat === "CycloneDX").toBe(true);
+    expect(asText(doc.specVersion)).toBe("1.5");
     expect(Array.isArray(doc.components)).toBe(true);
     const components = doc.components as Array<Record<string, unknown>>;
     // Synthetic local-self omitted; real deps present with purl
-    expect(components.some((c) => String(c.purl ?? "").includes("pkg:"))).toBe(true);
+    expect(components.some((c) => asText(c.purl ?? "").includes("pkg:"))).toBe(true);
   });
 
   test("format spdx emits SPDX-2.3 JSON", async () => {
@@ -48,7 +49,7 @@ describe("core exportSbom", () => {
       }),
     );
     const doc = JSON.parse(out) as Record<string, unknown>;
-    const spdxVersion = String(doc.spdxVersion ?? doc.SPDXVersion ?? "");
+    const spdxVersion = asText(doc.spdxVersion ?? doc.SPDXVersion ?? "");
     expect(spdxVersion).toMatch(/SPDX-2\.3/i);
   });
 
@@ -157,7 +158,7 @@ describe("core exportSbom", () => {
     const pkgs = spdx.packages ?? [];
     expect(pkgs.length).toBeGreaterThan(0);
     for (const p of pkgs) {
-      const license = String(p.licenseDeclared ?? p.licenseConcluded ?? "");
+      const license = asText(p.licenseDeclared ?? p.licenseConcluded ?? "");
       expect(license).toMatch(/NOASSERTION/i);
     }
   });

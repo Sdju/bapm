@@ -1,6 +1,7 @@
 /**
  * Core audit structured-format test helpers (p6b).
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -80,7 +81,7 @@ export function checksOf(result: unknown): Array<Record<string, unknown>> {
 }
 
 export function checkNames(checks: Array<Record<string, unknown>>): string[] {
-  return checks.map((c) => String(c.name ?? ""));
+  return checks.map((c) => asText(c.name ?? ""));
 }
 
 export function writeCleanLocalProject(

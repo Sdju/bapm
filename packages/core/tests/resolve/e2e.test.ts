@@ -2,6 +2,7 @@
  * M3 e2e / fixtures acceptance — checklist C §25–27.
  * Semver oracle port, mini local+git monorepo, diamond golden lock.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -73,7 +74,7 @@ describe("M3 e2e fixtures", () => {
     const blob = JSON.stringify(deps).toLowerCase();
     expect(blob).toMatch(/leaf|mid/);
     expect(blob).toMatch(/leaf-git|example\/leaf-git/);
-    expect(deps.some((d) => String(d.resolved_commit) === gitCommit)).toBe(true);
+    expect(deps.some((d) => asText(d.resolved_commit) === gitCommit)).toBe(true);
 
     const graph = await resolveDependencyGraph({
       cwd: project.cwd,
@@ -140,20 +141,20 @@ describe("M3 e2e fixtures", () => {
 
     // Compare shared winner pin semantically (ignore generated_at / apm_version)
     const actualShared = depsOf(actual).find((d) =>
-      String(d.repo_url ?? d.name ?? "")
+      asText(d.repo_url ?? d.name ?? "")
         .toLowerCase()
         .includes("shared"),
     );
     const goldenShared = depsOf(goldenDoc).find((d) =>
-      String(d.repo_url ?? d.name ?? "")
+      asText(d.repo_url ?? d.name ?? "")
         .toLowerCase()
         .includes("shared"),
     );
     expect(actualShared).toBeTruthy();
     expect(goldenShared).toBeTruthy();
-    expect(String(actualShared!.resolved_commit)).toBe(String(goldenShared!.resolved_commit));
-    expect(String(actualShared!.resolved_tag)).toMatch(/1\.2\.9/);
-    expect(String(actualShared!.constraint)).toMatch(/~1\.2\.0|\^1\.0\.0/);
+    expect(asText(actualShared!.resolved_commit)).toBe(asText(goldenShared!.resolved_commit));
+    expect(asText(actualShared!.resolved_tag)).toMatch(/1\.2\.9/);
+    expect(asText(actualShared!.constraint)).toMatch(/~1\.2\.0|\^1\.0\.0/);
 
     // Full-doc semantic equivalence when shapes align (optional stronger assert)
     const strippedActual = {
@@ -179,9 +180,9 @@ describe("M3 e2e fixtures", () => {
       isSemanticallyEquivalent(strippedActual, {
         lockfile_version: strippedGolden.lockfile_version,
         dependencies: strippedGolden.dependencies.filter((d) =>
-          String(d.repo_url).includes("shared"),
+          asText(d.repo_url).includes("shared"),
         ),
-      }) || String(actualShared!.resolved_commit) === sharedCommit,
+      }) || asText(actualShared!.resolved_commit) === sharedCommit,
     ).toBe(true);
   });
 });

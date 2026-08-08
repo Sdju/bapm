@@ -7,7 +7,7 @@ export interface PackDeps {
     dryRun?: boolean;
     checkRelease?: boolean;
     tag?: string;
-    marketplace?: string | string[] | "all" | "none";
+    marketplace?: string | string[];
     marketplacePaths?: Record<string, string> | string[];
     offline?: boolean;
     includePrerelease?: boolean;

@@ -7,7 +7,7 @@ export type RunPackOptions = {
   /** Produce a durable archive (MUST path for M7). */
   archive?: boolean;
   /** Archive format; only `zip` is supported in M7. */
-  format?: "zip" | string;
+  format?: string;
   /** Validate and collect without writing a durable artifact. */
   dryRun?: boolean;
   /** Explicit output zip path; defaults to `{name}-{version}.zip` under cwd. */
@@ -20,7 +20,7 @@ export type RunPackOptions = {
    * CLI `--marketplace` filter: `all` | `none` | comma list / string[].
    * When omitted, emit all formats enabled in authoring `outputs`.
    */
-  marketplace?: string | string[] | "all" | "none";
+  marketplace?: string | string[];
   /** CLI `--marketplace-path FORMAT=PATH` overrides. */
   marketplacePaths?: Record<string, string> | string[];
   /** Fail-closed remote resolve without network. */

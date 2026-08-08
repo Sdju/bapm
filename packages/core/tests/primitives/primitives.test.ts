@@ -1,6 +1,7 @@
 /**
  * Primitives discovery + pr-001/002/003 + skill bundle.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -33,7 +34,7 @@ describe("primitives discovery (pr-001..003)", () => {
 
     const discover = getDiscoverPrimitives();
     const found = primitivesOf(discover({ cwd: project.cwd }));
-    const foo = found.find((p) => nameOf(p) === "foo" || String(p.path ?? "").includes("foo"));
+    const foo = found.find((p) => nameOf(p) === "foo" || asText(p.path ?? "").includes("foo"));
     expect(foo).toBeTruthy();
     expect(sourceOf(foo!)).toBe("local");
   });
@@ -60,7 +61,7 @@ describe("primitives discovery (pr-001..003)", () => {
       }),
     );
     const skill = found.find(
-      (p) => nameOf(p) === "dep-skill" || String(p.path ?? "").includes("dep-skill"),
+      (p) => nameOf(p) === "dep-skill" || asText(p.path ?? "").includes("dep-skill"),
     );
     expect(skill).toBeTruthy();
     expect(sourceOf(skill!)).toMatch(/^dependency:(dep-pkg|example\/dep-pkg)/);
@@ -154,7 +155,7 @@ describe("primitives discovery (pr-001..003)", () => {
         /skill/i.test(typeOfPrimitive(p)) ||
         nameOf(p) === "bundle" ||
         nameOf(p) === "bundle-skill" ||
-        String(p.path ?? "").endsWith("SKILL.md"),
+        asText(p.path ?? "").endsWith("SKILL.md"),
     );
     expect(skill).toBeTruthy();
     expect(sourceOf(skill!)).toMatch(/^dependency:/);

@@ -2,6 +2,7 @@
  * p6f — core whyDeps structured result, honest exits, name/repo_url match.
  * Spec: deps-inspect.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   asRecord,
@@ -37,7 +38,7 @@ describe("p6f core whyDeps structured result + exits", () => {
     expect(pkg!.name).toBe("org/child");
     expect(pkg!.repo_url).toBe("https://example.com/org/child.git");
     expect(typeof pkg!.version).toBe("string");
-    expect(String(pkg!.version).length).toBeGreaterThan(0);
+    expect(asText(pkg!.version).length).toBeGreaterThan(0);
     expect(pkg!.source).toBeTruthy();
     expect(typeof pkg!.is_direct).toBe("boolean");
     expect(pkg!.is_direct).toBe(false);
@@ -46,7 +47,7 @@ describe("p6f core whyDeps structured result + exits", () => {
     const paths = r.paths as Array<{ chain: Array<Record<string, unknown>> }>;
     expect(paths.length).toBeGreaterThan(0);
     const hasParentThenChild = paths.some((p) => {
-      const ids = (p.chain ?? []).map((n) => String(n.name ?? n.repo_url ?? ""));
+      const ids = (p.chain ?? []).map((n) => asText(n.name ?? n.repo_url ?? ""));
       const pi = ids.findIndex((id) => id.includes("parent"));
       const ci = ids.findIndex((id) => id.includes("child"));
       return pi >= 0 && ci >= 0 && pi < ci;

@@ -1,6 +1,7 @@
 /**
  * Outdated — no invented ^ from resolved_tag; explicit constraint still works.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
   createFakePorts,
@@ -56,7 +57,7 @@ describe("core outdated — semver constraint vs tag-only literal", () => {
     });
     expect(exitCodeOf(result)).toBe(0);
     const rows = rowsOf(result);
-    const row = rows.find((r) => /tagged/i.test(String(r.name ?? "")));
+    const row = rows.find((r) => /tagged/i.test(asText(r.name ?? "")));
     expect(row).toBeTruthy();
     // Must NOT invent ^1.0.0 and flag outdated solely for v1.9.0.
     expect(statusOf(row!)).not.toMatch(/outdated/);

@@ -4,6 +4,7 @@
  * OpenAPM diamond policy (NOT APM first-wins): highest in ∩; empty ∩ fail with
  * both chains joined by `->`.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { join } from "node:path";
 import { readFileSync, mkdirSync } from "node:fs";
@@ -91,16 +92,16 @@ describe("M3 diamond intersection-pick (rs-001 / rs-010)", () => {
     });
     const nodes = graphNodes(result);
     const shared = nodes.filter((n) =>
-      String(n.name ?? n.repo_url ?? n.id ?? "")
+      asText(n.name ?? n.repo_url ?? n.id ?? "")
         .toLowerCase()
         .includes("shared"),
     );
     expect(shared.length).toBe(1);
     const winner = shared[0]!;
-    expect(String(winner.resolved_tag ?? winner.version ?? "")).toMatch(/1\.2\.9/);
-    expect(String(winner.resolved_commit)).toBe(sharedCommit);
-    expect(String(winner.resolved_by ?? "")).toMatch(/via-b|~1\.2\.0/i);
-    expect(String(winner.resolved_by ?? "")).toMatch(/->/);
+    expect(asText(winner.resolved_tag ?? winner.version ?? "")).toMatch(/1\.2\.9/);
+    expect(asText(winner.resolved_commit)).toBe(sharedCommit);
+    expect(asText(winner.resolved_by ?? "")).toMatch(/via-b|~1\.2\.0/i);
+    expect(asText(winner.resolved_by ?? "")).toMatch(/->/);
   });
 
   test("empty ∩ → fail; diagnostic lists both chains with -> (rs-010)", async () => {
@@ -145,7 +146,7 @@ describe("M3 diamond intersection-pick (rs-001 / rs-010)", () => {
         }),
       /intersection|conflict|empty|no overlapping|cannot resolve/i,
     );
-    const text = err instanceof Error ? err.message : String(err);
+    const text = err instanceof Error ? err.message : asText(err);
     expect(text).toMatch(/->/);
     expect(text).toMatch(/shared|example/i);
     expect(text).toMatch(/\^1\.0\.0|\^2\.0\.0/);
@@ -182,12 +183,12 @@ describe("M3 git-semver pin + node-semver oracle (rs-002 / 007 / 014)", () => {
       downloader: ports.downloader,
     });
     const nodes = graphNodes(result);
-    const pkg = nodes.find((n) => String(n.repo_url ?? n.name ?? "").includes("semver-pkg"));
+    const pkg = nodes.find((n) => asText(n.repo_url ?? n.name ?? "").includes("semver-pkg"));
     expect(pkg).toBeTruthy();
-    expect(String(pkg!.constraint)).toBe("^1.2.0");
-    expect(String(pkg!.resolved_tag)).toMatch(/v?1\.3\.0/);
+    expect(asText(pkg!.constraint)).toBe("^1.2.0");
+    expect(asText(pkg!.resolved_tag)).toMatch(/v?1\.3\.0/);
     expect(pkg!.resolved_at).toBeTruthy();
-    expect(String(pkg!.resolved_commit)).toBe(commit130);
+    expect(asText(pkg!.resolved_commit)).toBe(commit130);
   });
 
   test("prerelease exclusion — 1.2.0-beta discarded for ^1.2.0 without opt-in", async () => {
@@ -213,10 +214,10 @@ describe("M3 git-semver pin + node-semver oracle (rs-002 / 007 / 014)", () => {
       tagLister: ports.tagLister,
       downloader: ports.downloader,
     });
-    const pkg = graphNodes(result).find((n) => String(n.repo_url ?? n.name ?? "").includes("pre"));
+    const pkg = graphNodes(result).find((n) => asText(n.repo_url ?? n.name ?? "").includes("pre"));
     expect(pkg).toBeTruthy();
-    expect(String(pkg!.resolved_tag)).not.toMatch(/beta/i);
-    expect(String(pkg!.resolved_tag)).toMatch(/1\.2\.1/);
+    expect(asText(pkg!.resolved_tag)).not.toMatch(/beta/i);
+    expect(asText(pkg!.resolved_tag)).toMatch(/1\.2\.1/);
   });
 
   test("node-semver oracle — semver-dialect.json cases match (rs-007/014)", async () => {
@@ -258,7 +259,7 @@ describe("M3 git-semver pin + node-semver oracle (rs-002 / 007 / 014)", () => {
         });
         const pkg = graphNodes(result)[0];
         expect(pkg, c.id).toBeTruthy();
-        const got = String(pkg!.resolved_tag ?? "").replace(/^v/, "");
+        const got = asText(pkg!.resolved_tag ?? "").replace(/^v/, "");
         const want = c.expected.replace(/^v/, "");
         expect(got, c.id).toBe(want);
       }
@@ -300,7 +301,7 @@ test("local diamond empty ∩ still fail-closed with -> chains", async () => {
         }),
       /intersection|conflict|empty|cannot resolve/i,
     );
-    expect(String(err instanceof Error ? err.message : err)).toMatch(/->/);
+    expect(asText(err instanceof Error ? err.message : err)).toMatch(/->/);
   } finally {
     project.cleanup();
   }

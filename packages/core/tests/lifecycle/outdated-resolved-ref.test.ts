@@ -1,6 +1,7 @@
 /**
  * Outdated / lock parity — resolveAndLock emits resolved_ref; load→serialize round-trips it.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { loadLockfile, resolveAndLock, serializeLockfile } from "@bapm/core";
 import {
@@ -44,10 +45,10 @@ describe("core outdated — resolved_ref emit + round-trip", () => {
     });
 
     const deps = depsOf(lockOf(loadLockfile({ cwd: project.cwd })));
-    const dep = deps.find((d) => String(d.repo_url ?? "").includes("emit-branch"));
+    const dep = deps.find((d) => asText(d.repo_url ?? "").includes("emit-branch"));
     expect(dep).toBeTruthy();
-    expect(String(dep!.resolved_ref ?? "")).toBe("feature/foo");
-    expect(String(dep!.resolved_commit)).toMatch(/^[0-9a-f]{40}$/i);
+    expect(asText(dep!.resolved_ref ?? "")).toBe("feature/foo");
+    expect(asText(dep!.resolved_commit)).toMatch(/^[0-9a-f]{40}$/i);
   });
 
   test("git-semver writes resolved_ref equal to resolved_tag", async () => {
@@ -76,11 +77,11 @@ describe("core outdated — resolved_ref emit + round-trip", () => {
     });
 
     const deps = depsOf(lockOf(loadLockfile({ cwd: project.cwd })));
-    const dep = deps.find((d) => String(d.repo_url ?? "").includes("emit-semver"));
+    const dep = deps.find((d) => asText(d.repo_url ?? "").includes("emit-semver"));
     expect(dep).toBeTruthy();
-    expect(String(dep!.resolved_tag)).toBe("v1.2.0");
-    expect(String(dep!.resolved_ref)).toBe("v1.2.0");
-    expect(String(dep!.constraint)).toMatch(/\^1/);
+    expect(asText(dep!.resolved_tag)).toBe("v1.2.0");
+    expect(asText(dep!.resolved_ref)).toBe("v1.2.0");
+    expect(asText(dep!.constraint)).toMatch(/\^1/);
   });
 
   test("HEAD literal still records resolved_ref", async () => {
@@ -103,10 +104,10 @@ describe("core outdated — resolved_ref emit + round-trip", () => {
     });
 
     const deps = depsOf(lockOf(loadLockfile({ cwd: project.cwd })));
-    const dep = deps.find((d) => String(d.repo_url ?? "").includes("emit-head"));
+    const dep = deps.find((d) => asText(d.repo_url ?? "").includes("emit-head"));
     expect(dep).toBeTruthy();
-    expect(String(dep!.resolved_ref ?? "")).toMatch(/^HEAD$/i);
-    expect(String(dep!.resolved_commit)).toMatch(/^[0-9a-f]{40}$/i);
+    expect(asText(dep!.resolved_ref ?? "")).toMatch(/^HEAD$/i);
+    expect(asText(dep!.resolved_commit)).toMatch(/^[0-9a-f]{40}$/i);
   });
 
   test("resolved_ref round-trips on load → serialize", () => {

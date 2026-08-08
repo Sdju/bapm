@@ -1,6 +1,7 @@
 /**
  * Pack / release-gate / archive round-trip test helpers — pickExport for public APIs.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import {
   existsSync,
@@ -98,28 +99,24 @@ export function getLoadManifest(): (options: Record<string, unknown>) => unknown
 }
 
 /** Plain-zip pack (MUST path `--archive`). */
-export function getRunPack(): (options: Record<string, unknown>) => Promise<unknown> | unknown {
+export function getRunPack(): (options: Record<string, unknown>) => unknown {
   return pickExport(["runPack", "packProject", "packArchive"], "M7 pack") as (
     options: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
+  ) => unknown;
 }
 
 /** Extract helper for install-from-archive round-trip. */
-export function getExtractPackArchive(): (
-  options: Record<string, unknown>,
-) => Promise<unknown> | unknown {
+export function getExtractPackArchive(): (options: Record<string, unknown>) => unknown {
   return pickExport(["extractPackArchive", "unpackArchive", "extractPack"], "M7 extract") as (
     options: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
+  ) => unknown;
 }
 
 /** pr-004 tag↔version gate. */
-export function getCheckReleaseTag(): (
-  options: Record<string, unknown>,
-) => Promise<unknown> | unknown {
+export function getCheckReleaseTag(): (options: Record<string, unknown>) => unknown {
   return pickExport(["checkReleaseTag", "checkRelease", "runCheckRelease"], "M7 pr-004") as (
     options: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
+  ) => unknown;
 }
 
 export function documentOf(result: unknown): Record<string, unknown> {
@@ -154,11 +151,11 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {
@@ -167,10 +164,7 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
   return thrown;
 }
 
-export async function expectRejectsMatching(
-  fn: () => Promise<unknown> | unknown,
-  pattern: RegExp,
-): Promise<unknown> {
+export async function expectRejectsMatching(fn: () => unknown, pattern: RegExp): Promise<unknown> {
   let thrown: unknown;
   try {
     await fn();
@@ -190,8 +184,8 @@ export async function expectRejectsMatching(
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const haystack = `${message}`;
   if (!pattern.test(haystack)) {
     throw new Error(`expected error matching ${pattern}, got: ${haystack}`);

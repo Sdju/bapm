@@ -1,6 +1,7 @@
 /**
  * Policy suite helpers — pickExport for governance/policy APIs (M8 + P4 + P6d status).
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import { createHash } from "node:crypto";
 import {
@@ -51,11 +52,7 @@ export function writeText(path: string, contents: string): void {
   writeFileSync(path, contents, "utf8");
 }
 
-export function writePolicy(
-  cwd: string,
-  filename: "apm-policy.yml" | "bapm-policy.yml" | string,
-  contents: string,
-): string {
+export function writePolicy(cwd: string, filename: string, contents: string): string {
   const path = join(cwd, filename);
   writeFileSync(path, contents, "utf8");
   return path;
@@ -349,7 +346,7 @@ export function providersList(value: unknown): string[] {
 export function modulesDir(cwd: string): string {
   const name =
     typeof (core as Record<string, unknown>).APM_MODULES_DIR === "string"
-      ? String((core as Record<string, unknown>).APM_MODULES_DIR)
+      ? asText((core as Record<string, unknown>).APM_MODULES_DIR)
       : "apm_modules";
   return join(cwd, name);
 }
@@ -384,11 +381,11 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {
@@ -420,8 +417,8 @@ export async function expectRejectsMatching(
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const haystack = message;
   if (!pattern.test(haystack)) {
     throw new Error(`expected error matching ${pattern}, got: ${haystack}`);

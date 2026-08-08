@@ -2,6 +2,7 @@
  * Install / materialize test helpers.
  * Reuses resolve ports/temp projects; adds install/primitives accessors.
  */
+import { asText } from "../asText.ts";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -121,17 +122,17 @@ export function sourceOf(primitive: Record<string, unknown>): string {
 }
 
 export function nameOf(primitive: Record<string, unknown>): string {
-  return String(primitive.name ?? primitive.id ?? primitive.slug ?? "");
+  return asText(primitive.name ?? primitive.id ?? primitive.slug ?? "");
 }
 
 export function typeOfPrimitive(primitive: Record<string, unknown>): string {
-  return String(primitive.type ?? primitive.kind ?? primitive.primitiveType ?? "");
+  return asText(primitive.type ?? primitive.kind ?? primitive.primitiveType ?? "");
 }
 
 export function modulesDir(cwd: string): string {
   const name =
     typeof (core as Record<string, unknown>).APM_MODULES_DIR === "string"
-      ? String((core as Record<string, unknown>).APM_MODULES_DIR)
+      ? asText((core as Record<string, unknown>).APM_MODULES_DIR)
       : "apm_modules";
   return join(cwd, name);
 }
@@ -181,7 +182,7 @@ export async function importIntegrationApi(): Promise<Record<string, unknown>> {
   } catch (e) {
     throw new TypeError(
       `expected package @bapm/integration-api to resolve (packages/integration-api): ${
-        e instanceof Error ? e.message : String(e)
+        e instanceof Error ? e.message : asText(e)
       }`,
     );
   }
@@ -242,5 +243,5 @@ export function deployRootsOf(target: Record<string, unknown>): string[] {
 }
 
 export function idOfTarget(target: Record<string, unknown>): string {
-  return String(target.id ?? target.targetId ?? target.name ?? "");
+  return asText(target.id ?? target.targetId ?? target.name ?? "");
 }

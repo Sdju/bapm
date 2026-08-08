@@ -1,6 +1,7 @@
 /**
  * CLI `bapm lock export` SBOM IO.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -43,7 +44,7 @@ describe("CLI lock export", () => {
     expect(body.length).toBeGreaterThan(0);
     const doc = JSON.parse(body) as Record<string, unknown>;
     expect(doc.bomFormat).toBe("CycloneDX");
-    expect(String(doc.specVersion)).toBe("1.5");
+    expect(asText(doc.specVersion)).toBe("1.5");
     expect(stderr.join("\n")).not.toMatch(/^\s*\{/);
     expect(Buffer.compare(readLockBytes(project.cwd), before)).toBe(0);
   });
@@ -69,7 +70,7 @@ describe("CLI lock export", () => {
     expect(existsSync(outFile)).toBe(true);
     const fileBody = readFileSync(outFile, "utf8");
     const doc = JSON.parse(fileBody) as Record<string, unknown>;
-    const spdxVersion = String(doc.spdxVersion ?? doc.SPDXVersion ?? "");
+    const spdxVersion = asText(doc.spdxVersion ?? doc.SPDXVersion ?? "");
     expect(spdxVersion).toMatch(/SPDX-2\.3/i);
     const stdoutJoined = stdoutText(stdout).trim();
     // SBOM must not be on stdout when -o is used

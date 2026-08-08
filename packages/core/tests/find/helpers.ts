@@ -1,6 +1,7 @@
 /**
  * Helpers for Find suite (core). Soft-resolve @bapm/core Find APIs.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import {
   existsSync,
@@ -159,7 +160,7 @@ export function getFindPath() {
   return pickExport(
     ["findPath", "runFind", "findDeployedPath", "runFindPath"],
     "findPath orchestration",
-  ) as (options: Record<string, unknown>) => unknown | Promise<unknown>;
+  ) as (options: Record<string, unknown>) => unknown;
 }
 
 export function getApplyDeployedHashesToLock() {
@@ -189,7 +190,7 @@ export function ownersOf(result: unknown): string[] {
     return result.map((item) => {
       if (typeof item === "string") return item;
       const row = asRecord(item);
-      return String(row.key ?? row.owner ?? row.id ?? row.name ?? row.repo_url ?? "");
+      return asText(row.key ?? row.owner ?? row.id ?? row.name ?? row.repo_url ?? "");
     });
   }
   const row = asRecord(result);
@@ -230,8 +231,8 @@ export function findResultOf(result: unknown): {
 } {
   const row = asRecord(result);
   const exitCode = Number(row.exitCode ?? row.code ?? (row.ok === false ? 1 : 0));
-  const text = String(row.text ?? row.stdout ?? row.output ?? row.message ?? "");
-  const stderr = String(row.stderr ?? row.errorText ?? row.error ?? "");
+  const text = asText(row.text ?? row.stdout ?? row.output ?? row.message ?? "");
+  const stderr = asText(row.stderr ?? row.errorText ?? row.error ?? "");
   const ok = typeof row.ok === "boolean" ? row.ok : exitCode === 0;
   return {
     exitCode,

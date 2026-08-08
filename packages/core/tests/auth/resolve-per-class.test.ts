@@ -2,6 +2,7 @@
  * sc-003 — Resolve credentials per host class; never forward class A → class B.
  * Diagnostics use source id (sc-007 intact), not secret literals.
  */
+import { asText } from "../asText.ts";
 import { describe, expect, test } from "vite-plus/test";
 import { getResolveCredentialsForHost, hasUsableToken, tokenPayload, withEnv } from "./helpers.ts";
 
@@ -112,7 +113,7 @@ describe("sc-host-class resolve per class (sc-003)", () => {
             if (typeof o.cacheKey === "string") return o.cacheKey;
             if (typeof o.scopeKey === "string") return o.scopeKey;
             if (typeof o.key === "string") return o.key;
-            if (o.port !== undefined) return `port:${String(o.port)}`;
+            if (o.port !== undefined) return `port:${asText(o.port)}`;
           }
           return JSON.stringify(r);
         };

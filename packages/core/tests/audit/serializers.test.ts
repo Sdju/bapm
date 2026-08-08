@@ -1,6 +1,7 @@
 /**
  * Core JSON / SARIF serializers via public API (p6b).
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createTempProject,
@@ -75,7 +76,7 @@ describe("p6b core audit serializers", () => {
     const body = getFormatAuditCiSarif()(result);
     const doc = JSON.parse(body) as Record<string, unknown>;
     expect(doc.version).toBe("2.1.0");
-    expect(String(doc.$schema ?? "")).toMatch(/sarif/i);
+    expect(asText(doc.$schema ?? "")).toMatch(/sarif/i);
 
     const runs = doc.runs as Array<Record<string, unknown>>;
     expect(runs).toHaveLength(1);
@@ -85,7 +86,7 @@ describe("p6b core audit serializers", () => {
 
     const results = (runs[0]!.results as unknown[] | undefined) ?? [];
     const errors = results.filter((r) => {
-      const level = String((r as Record<string, unknown>).level ?? "");
+      const level = asText((r as Record<string, unknown>).level ?? "");
       return level === "error";
     });
     expect(errors).toHaveLength(0);

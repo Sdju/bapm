@@ -1,6 +1,7 @@
 /**
  * G1–G4 — core builder resolve local packages + Claude write (soft API).
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -38,7 +39,7 @@ describe("mp-pack-outputs core builder resolve + emit", () => {
     );
     expect(list!.length).toBeGreaterThanOrEqual(1);
     const demo = (list as Record<string, unknown>[]).find(
-      (p) => p.name === "demo" || String(p.source ?? "").includes("plugins/demo"),
+      (p) => p.name === "demo" || asText(p.source ?? "").includes("plugins/demo"),
     );
     expect(demo, "expected local demo package in resolve result").toBeTruthy();
   });

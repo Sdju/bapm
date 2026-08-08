@@ -2,6 +2,7 @@
  * p7c — CLI deps why short-form (basename / owner/repo) + P6f regressions.
  * Specs: deps-inspect, cli-runtime-surface.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createTempProject,
@@ -117,7 +118,7 @@ describe("p7c CLI deps why short-form resolve", () => {
     expect(Array.isArray(err.matches)).toBe(true);
     const matches = err.matches as Array<Record<string, unknown>>;
     expect(matches.length).toBeGreaterThanOrEqual(2);
-    const urls = matches.map((m) => String(m.repo_url ?? "")).filter(Boolean);
+    const urls = matches.map((m) => asText(m.repo_url ?? "")).filter(Boolean);
     expect(urls.some((u) => u.includes("acme-org/shared-utils"))).toBe(true);
     expect(urls.some((u) => u.includes("other-org/shared-utils"))).toBe(true);
   });

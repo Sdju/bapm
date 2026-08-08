@@ -9,9 +9,9 @@ export function mapCodexMarketplace(config: unknown, resolved: unknown[]): Recor
   const plugins = (resolved as ResolvedPackage[]).map((pkg) => {
     const category = pkg.entry.category;
     if (!category) {
-      throw new TypeError(
-        `package '${pkg.entry.name}' is missing category required for Codex output`,
-      );
+      const name =
+        typeof pkg.entry.name === "string" ? pkg.entry.name : JSON.stringify(pkg.entry.name);
+      throw new TypeError(`package '${name}' is missing category required for Codex output`);
     }
     return {
       name: pkg.name,

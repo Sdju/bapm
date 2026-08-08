@@ -1,3 +1,4 @@
+import { asText } from "../asText.ts";
 /**
  * Conformance drift gate stays green after honesty edits.
  *
@@ -30,7 +31,7 @@ describe("conformance gen/check honesty posture", () => {
     }
     expect(
       result!.status,
-      `conformance:check failed:\n${result!.stdout ?? ""}\n${result!.stderr ?? ""}`,
+      `conformance:check failed:\n${asText(result!.stdout)}\n${asText(result!.stderr)}`,
     ).toBe(0);
   });
 });
