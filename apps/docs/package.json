@@ -12,8 +12,7 @@
   "devDependencies": {
     "esbuild": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
-    "vite-plus": "catalog:",
+    "vite": "^6.4.3",
     "vitepress": "catalog:"
   }
 }
