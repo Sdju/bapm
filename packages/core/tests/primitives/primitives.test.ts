@@ -160,4 +160,43 @@ describe("primitives discovery (pr-001..003)", () => {
     expect(skill).toBeTruthy();
     expect(sourceOf(skill!)).toMatch(/^dependency:/);
   });
+
+  test("prompts → command and hooks → hook discovery + local override", () => {
+    project = createTempProject();
+    writeText(
+      join(project.cwd, ".apm", "prompts", "shared.prompt.md"),
+      "---\ndescription: local\n---\n# Local\n",
+    );
+    writeText(
+      join(project.cwd, ".apm", "hooks", "boot.json"),
+      JSON.stringify({ version: 1, hooks: { sessionStart: [{ command: "./x.sh" }] } }),
+    );
+    const depRoot = join(project.cwd, "apm_modules", "github.com", "example", "other");
+    mkdirSync(depRoot, { recursive: true });
+    writeFileSync(
+      join(depRoot, "apm.yml"),
+      `name: other\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+      "utf8",
+    );
+    writeText(
+      join(depRoot, ".apm", "prompts", "shared.prompt.md"),
+      "---\ndescription: dep\n---\n# Dep\n",
+    );
+
+    const raw = primitivesOf(getDiscoverPrimitives()({ cwd: project.cwd }));
+    expect(
+      raw.some((p) => nameOf(p) === "shared" && typeOfPrimitive(p).toLowerCase() === "command"),
+    ).toBe(true);
+    expect(
+      raw.some((p) => nameOf(p) === "boot" && typeOfPrimitive(p).toLowerCase() === "hook"),
+    ).toBe(true);
+
+    const resolved = getResolvePrimitiveConflicts()({ primitives: raw, cwd: project.cwd });
+    const shared = primitivesOf(resolved).find(
+      (p) => nameOf(p) === "shared" && typeOfPrimitive(p).toLowerCase() === "command",
+    );
+    expect(shared).toBeTruthy();
+    expect(sourceOf(shared!)).toBe("local");
+    expect(diagnosticsOf(resolved).length).toBeGreaterThan(0);
+  });
 });

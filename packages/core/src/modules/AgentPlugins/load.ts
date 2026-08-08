@@ -19,6 +19,8 @@ const TOP_LEVEL_FIELDS = new Set([
   "repository",
   "license",
   "keywords",
+  "commands",
+  "hooks",
   "extensions",
 ]);
 const AUTHOR_FIELDS = new Set(["name", "email", "url"]);
@@ -132,6 +134,14 @@ export function validateAgentPluginManifest(
     }
   }
   if ("author" in document) validateAuthor(document.author, manifestPath);
+  let manifestCommands: string[] | undefined;
+  let manifestHooks: string[] | undefined;
+  if ("commands" in document) {
+    manifestCommands = requirePathList(document.commands, "commands", manifestPath);
+  }
+  if ("hooks" in document) {
+    manifestHooks = requirePathList(document.hooks, "hooks", manifestPath);
+  }
   if ("extensions" in document && !isPlainObject(document.extensions)) {
     diagnostics.push({
       code: "AGENT_PLUGIN_EXTENSIONS_IGNORED",
@@ -151,6 +161,8 @@ export function validateAgentPluginManifest(
   if (Array.isArray(document.keywords)) manifest.keywords = document.keywords as string[];
   if (isPlainObject(document.author))
     manifest.author = document.author as AgentPluginManifest["author"];
+  if (manifestCommands) manifest.commands = manifestCommands;
+  if (manifestHooks) manifest.hooks = manifestHooks;
   if (isPlainObject(document.extensions)) {
     manifest.extensions = document.extensions as AgentPluginManifest["extensions"];
   }
@@ -169,6 +181,17 @@ function validateAuthor(value: unknown, manifestPath: string): void {
       invalid(manifestPath, '"author" may contain only string name, email, and url fields');
     }
   }
+}
+
+function requirePathList(
+  value: unknown,
+  field: "commands" | "hooks",
+  manifestPath: string,
+): string[] {
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+    invalid(manifestPath, `"${field}" must be an array of path strings`);
+  }
+  return value as string[];
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

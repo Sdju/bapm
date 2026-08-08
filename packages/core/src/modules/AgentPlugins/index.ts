@@ -2,15 +2,18 @@
  * Agent Plugins v1 consumer foundation.
  *
  * Validates only the portable root `plugin.json` and discovers portable skill
- * directories and root-scoped `mcp.json`, and writes canonical portable roots.
+ * directories, declared commands/hooks paths, and root-scoped `mcp.json`, and
+ * writes canonical portable roots.
  */
 export type {
   AgentPluginAuthor,
+  AgentPluginDeclaredPath,
   AgentPluginDiagnostic,
   AgentPluginManifest,
   AgentPluginMcpServer,
   AgentPluginSkill,
   CreateAgentPluginManifestOptions,
+  DiscoverAgentPluginDeclaredPathsResult,
   DiscoverAgentPluginMcpOptions,
   DiscoverAgentPluginMcpResult,
   DiscoverAgentPluginSkillsOptions,
@@ -25,6 +28,7 @@ export type { AgentPluginsErrorCode } from "./errors.ts";
 export { AgentPluginsError } from "./errors.ts";
 export { loadAgentPluginManifest, validateAgentPluginManifest } from "./load.ts";
 export { discoverAgentPluginSkills } from "./discover.ts";
+export { discoverAgentPluginDeclaredPaths } from "./declaredPaths.ts";
 export { discoverAgentPluginMcp } from "./mcp.ts";
 export {
   createAgentPluginManifest,

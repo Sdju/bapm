@@ -58,7 +58,7 @@ Portable MCP is an input contract, not a host configuration format. The Cursor t
 Portable Agent Plugins are separate from bapm/OpenAPM manifests, lockfiles, producer claims, and the bapm marketplace. \`plugin.json\` is not \`bapm.yml\` or \`apm.yml\`; portable archive production does not publish to, resolve through, or imply support by a marketplace.
 
 ## Non-goals
-This boundary does not provide sandboxing, OAuth or secret injection, client extensions, hooks, agents, commands, or vendor-specific extension behavior. Unknown manifest fields are diagnostic-only for forward compatibility; they are not an implementation claim. See [CONFORMANCE.md](CONFORMANCE.md) only for bapm's separate OpenAPM claims.
+This boundary does not provide sandboxing, OAuth or secret injection, client extensions, undeclared agents, or vendor-specific extension behavior. Declared \`commands\` / \`hooks\` paths in \`plugin.json\` are in-boundary (see matrix). Unknown manifest fields are diagnostic-only for forward compatibility; they are not an implementation claim. See [CONFORMANCE.md](CONFORMANCE.md) only for bapm's separate OpenAPM claims.
 
 ## Verification
 \`\`\`bash

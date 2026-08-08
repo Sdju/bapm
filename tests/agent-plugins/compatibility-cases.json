@@ -25,6 +25,20 @@
       "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
     },
     {
+      "id": "commands",
+      "status": "supported",
+      "summary": "Declared plugin.json commands path entries are required, fail-closed on missing/escape, and materialize through the active host matrix.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/acceptance/commands-hooks-primitives/agent-plugins.test.ts"
+    },
+    {
+      "id": "hooks",
+      "status": "target-specific",
+      "summary": "Declared plugin.json hooks path entries fail-closed on missing/escape; Cursor merges into .cursor/hooks.json, OpenCode skips with an inspectable diagnostic.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/acceptance/commands-hooks-primitives/agent-plugins.test.ts"
+    },
+    {
       "id": "unsafe-input",
       "status": "rejected",
       "summary": "Escaping skill paths and reserved or secret-like MCP environment entries are withheld.",
@@ -48,7 +62,7 @@
     {
       "id": "unsupported-components",
       "status": "not-supported",
-      "summary": "Hooks, agents, commands, client extensions, OAuth/secrets, sandboxing, and vendor-specific extension behavior are not implemented.",
+      "summary": "Undeclared agents, client extensions, OAuth/secrets, sandboxing, and vendor-specific extension behavior are not implemented.",
       "fixture": "tests/fixtures/agent-plugins/v1-portable",
       "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
     }
