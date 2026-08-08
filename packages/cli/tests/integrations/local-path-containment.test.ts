@@ -1,6 +1,6 @@
 /**
- * Local map paths must stay within project root (fail-closed containment).
- * Change: manifest-target-integration-local-path
+ * Local map paths must stay within project root (fail-closed containment)
+ * (promoted from manifest-target-integration-local-path acceptance).
  */
 import { rmSync } from "node:fs";
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -17,9 +17,9 @@ import {
   runInProject,
   writeMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./local-path-helpers.ts";
 
-describe("acceptance · local-path map · project-root containment", () => {
+describe("CLI · local-path map · project-root containment", () => {
   let project: TempProject | undefined;
   let outside: string | undefined;
 

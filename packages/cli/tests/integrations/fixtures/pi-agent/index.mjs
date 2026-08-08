@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-/** Valid runtime integration for local-path map acceptance (id: x-pi-agent). */
+/** Valid runtime integration for local-path map suites (id: x-pi-agent). */
 export function createIntegration() {
   return {
     id: "x-pi-agent",

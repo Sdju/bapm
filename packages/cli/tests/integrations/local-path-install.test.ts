@@ -1,6 +1,6 @@
 /**
- * Install loads object-map local filesystem paths (directory + explicit file).
- * Change: manifest-target-integration-local-path
+ * Install loads object-map local filesystem paths (directory + explicit file)
+ * (promoted from manifest-target-integration-local-path acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -15,9 +15,9 @@ import {
   runInProject,
   writeMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./local-path-helpers.ts";
 
-describe("acceptance · local-path map · install", () => {
+describe("CLI install · local-path map", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

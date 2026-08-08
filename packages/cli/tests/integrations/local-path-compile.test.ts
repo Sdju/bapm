@@ -1,6 +1,6 @@
 /**
- * Compile composition loads in-root local-path map bindings.
- * Change: manifest-target-integration-local-path
+ * Compile composition loads in-root local-path map bindings
+ * (promoted from manifest-target-integration-local-path acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -12,9 +12,9 @@ import {
   runInProject,
   writeMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./local-path-helpers.ts";
 
-describe("acceptance · local-path map · compile", () => {
+describe("CLI compile · local-path map", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

@@ -1,5 +1,6 @@
 /**
- * Acceptance helpers for manifest-target-integration-local-path.
+ * CLI helpers for object-map local filesystem path bindings
+ * (promoted from manifest-target-integration-local-path acceptance).
  */
 import {
   cpSync,
@@ -14,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 

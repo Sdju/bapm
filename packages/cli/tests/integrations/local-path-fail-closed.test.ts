@@ -1,6 +1,6 @@
 /**
- * Missing / unresolvable local paths and npm heuristic regressions.
- * Change: manifest-target-integration-local-path
+ * Missing / unresolvable local paths and npm heuristic regressions
+ * (promoted from manifest-target-integration-local-path acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { dirname, join } from "node:path";
@@ -14,14 +14,11 @@ import {
   runInProject,
   writeMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./local-path-helpers.ts";
 
-const PROMOTED_FIXTURES = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../integrations/fixtures",
-);
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
-describe("acceptance · local-path map · fail-closed and npm heuristic", () => {
+describe("CLI · local-path map · fail-closed and npm heuristic", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -81,7 +78,7 @@ describe("acceptance · local-path map · fail-closed and npm heuristic", () => 
 
   test("scoped npm package specifier still loads from project node_modules", async () => {
     project = createTempProject();
-    const fixture = join(PROMOTED_FIXTURES, "create-integration-pkg");
+    const fixture = join(FIXTURES, "create-integration-pkg");
     const spec = linkNamedPackage(project.cwd, "@acme/integration-editor", fixture);
     writeMapProject(project.cwd, {
       name: "acc-npm-still",
