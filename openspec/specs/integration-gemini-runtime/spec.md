@@ -1,8 +1,11 @@
 # integration-gemini-runtime Specification
 
 ## Purpose
+
 Defines the greenfield `@bapm/integration-gemini` package: Gemini CLI project-scope detect, materialize of commands/skills/hooks, MCP configure into `.gemini/settings.json`, and thin instruction-only compile to `GEMINI.md`, depending only on `@bapm/integration-api` among bapm packages.
+
 ## Requirements
+
 ### Requirement: Package @bapm/integration-gemini exists and depends only on integration API
 
 The monorepo MUST include package directory `packages/integration-gemini` with package name `@bapm/integration-gemini`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@bapm/integration-*` packages. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createGeminiIntegration` as an alias. Runtime integration `id` MUST be `gemini`. The package MUST NOT expose a marketplace-output mapper in this capability.
@@ -145,4 +148,3 @@ Gemini runtime in this capability MUST NOT write user-scope paths under `~/.gemi
 
 - **WHEN** inspecting `@bapm/core` dependencies
 - **THEN** `@bapm/integration-gemini` MUST NOT appear as a dependency
-
