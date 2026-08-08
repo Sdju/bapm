@@ -1,5 +1,6 @@
 /**
- * Acceptance helpers for manifest-target-integration-load (CLI map load).
+ * CLI helpers for object-map target integration load
+ * (promoted from manifest-target-integration-load acceptance).
  */
 import {
   existsSync,
@@ -13,14 +14,14 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const FIXTURES_DIR = join(HERE, "fixtures");
 
-export function createTempProject(prefix = "bapm-acc-map-load-"): TempProject {
+export function createTempProject(prefix = "bapm-map-load-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,

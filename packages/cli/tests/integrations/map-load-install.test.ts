@@ -1,6 +1,6 @@
 /**
- * Acceptance: object-map loads/registers runtime integrations before install selection.
- * Change: manifest-target-integration-load
+ * Object-map loads/registers runtime integrations before install selection
+ * (promoted from manifest-target-integration-load acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -15,9 +15,9 @@ import {
   writeLegacyCursorProject,
   writeMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./map-load-helpers.ts";
 
-describe("acceptance · manifest-target-integration-load · install map load", () => {
+describe("CLI install · object-map integration load", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

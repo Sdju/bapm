@@ -13,10 +13,7 @@ import {
   registerManifestIntegrations,
 } from "../../src/app/integrations/loadManifestIntegrations.ts";
 
-const FIXTURES = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../acceptance/manifest-target-integration-load/fixtures",
-);
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
 type Temp = { cwd: string; cleanup: () => void };
 

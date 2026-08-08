@@ -1,6 +1,6 @@
 /**
- * Acceptance: fail-closed diagnostics for unknown ids and bad map packages.
- * Change: manifest-target-integration-load
+ * Fail-closed diagnostics for unknown ids and bad map packages
+ * (promoted from manifest-target-integration-load acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -12,11 +12,11 @@ import {
   runInProject,
   writeMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./map-load-helpers.ts";
 
 const MISSING_PKG = "@acme/does-not-exist-map-load";
 
-describe("acceptance · manifest-target-integration-load · fail-closed", () => {
+describe("CLI · object-map integration load fail-closed", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

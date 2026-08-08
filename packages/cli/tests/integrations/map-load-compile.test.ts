@@ -1,6 +1,6 @@
 /**
- * Acceptance: compile composition root loads object-map integrations before selection.
- * Change: manifest-target-integration-load
+ * Compile composition root loads object-map integrations before selection
+ * (promoted from manifest-target-integration-load acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -11,9 +11,9 @@ import {
   runInProject,
   writeMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./map-load-helpers.ts";
 
-describe("acceptance · manifest-target-integration-load · compile map load", () => {
+describe("CLI compile · object-map integration load", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
