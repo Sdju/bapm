@@ -46,3 +46,5 @@ When install invokes `configureMcp` with eligible servers:
 Depends only on `@bapm/integration-api` among bapm packages — not `@bapm/core`.
 Shared materialize helpers (`sanitizeName`, `assertUnderDeployRoots`, `readPrimitiveContent`, …) come from `@bapm/integration-api`; this package keeps Cursor detect and path routing only.
 Register via `createIntegrationRegistry().register(createCursorIntegration())` in CLI or tests.
+
+Third-party authors publishing a custom host for object-map `targets` should prefer a named `createIntegration` factory (see `@bapm/integration-api` README — loadable export contract). This package’s `createCursorIntegration` remains the Cursor-specific factory accepted by the CLI loader.

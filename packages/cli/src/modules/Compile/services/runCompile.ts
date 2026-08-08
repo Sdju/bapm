@@ -1,8 +1,9 @@
 import { compileAgentsMd } from "@bapm/core";
-import type { IntegrationRegistry } from "@bapm/integration-api";
+import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
+import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
-export type CompileOptions = { args?: string[]; cwd?: string; integrationRegistry?: IntegrationRegistry };
+export type CompileOptions = { args?: string[]; cwd?: string };
 
 export type ParsedCompileArgs = {
   validate: boolean;
@@ -152,11 +153,15 @@ export async function runCompileCli(
     return { ok: false, exitCode: 1, message: parsed.error };
   }
   try {
+    const cwd = options.cwd ?? process.cwd();
+    // Fresh registry per run so object-map loads do not leak across projects.
+    const registry = createCliIntegrationRegistry();
+    await registerManifestIntegrationsFromCwd(registry, cwd);
     const result = await compileAgentsMd({
       cwd: options.cwd,
       outputFile: parsed.outputFile,
       forcedTarget: parsed.target,
-      integrationRegistry: options.integrationRegistry,
+      integrationRegistry: registry,
       validate: parsed.validate,
       dryRun: parsed.dryRun,
       verbose: parsed.verbose,

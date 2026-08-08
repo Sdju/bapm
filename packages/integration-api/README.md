@@ -12,6 +12,18 @@ Shared **contracts, registry, and materialize helpers** for bapm integrations.
 
 Core Install discovers primitives and calls `materialize` on registered integrations through this package. Integration packages implement detection, deploy roots, and disk writes — core never imports them.
 
+## Loadable package export contract (object-map)
+
+When a project manifest uses object-map `target` / `targets`, the CLI loads each map value as an npm package from the project cwd and registers a runtime `BapmIntegration`. A loadable package MUST expose (first match wins):
+
+1. Named **`createIntegration`** — zero-arg factory returning `BapmIntegration` (preferred for third parties); or
+2. Named **`createCursorIntegration`** (or an equivalent documented factory) returning `BapmIntegration`; or
+3. **Default export** that is either a `BapmIntegration` object or a factory returning one.
+
+The loaded instance MUST have non-empty `id`, `deployRoots` array, `detect`, and `materialize` (`configureMcp` / `compile` optional). `id` MUST equal the map key. Marketplace-output-only packages (no runtime hooks) are rejected.
+
+See `@bapm/integration-cursor` for a built-in reference and the VitePress architecture guide for the author how-to.
+
 ## Helpers
 
 Optional fs/path helpers for host `materialize` (exported from the package root):

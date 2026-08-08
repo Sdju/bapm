@@ -1,11 +1,11 @@
 import { formatCompileHelp, parseCompileArgs, runCompileCli } from "./services/runCompile.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
-import type { IntegrationRegistry } from "@bapm/integration-api";
 
 export type { LifecycleCliDeps, LifecycleResult };
 export { formatCompileHelp, parseCompileArgs };
 
-export function createCompile(deps?: LifecycleCliDeps, integrationRegistry?: IntegrationRegistry) {
+/** Optional second arg retained for call-site compatibility; registry is created per run. */
+export function createCompile(deps?: LifecycleCliDeps, _integrationRegistry?: unknown) {
   const resolved: LifecycleCliDeps = deps ?? {
     name: "bapm",
     manifestFile: "bapm.yml",
@@ -13,7 +13,7 @@ export function createCompile(deps?: LifecycleCliDeps, integrationRegistry?: Int
   };
   return {
     async run(options: { args?: string[]; cwd?: string }): Promise<LifecycleResult> {
-      return runCompileCli(resolved, { ...options, integrationRegistry });
+      return runCompileCli(resolved, options);
     },
     formatHelp(): string {
       return formatCompileHelp(resolved);

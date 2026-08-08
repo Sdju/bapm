@@ -32,8 +32,8 @@ export function declaredTargetIds(manifest: BapmManifest): string[] {
 
 /**
  * When `target` / `targets` used the object-map form, return the retained
- * host→package map for future wiring. Legacy string/array forms → `undefined`.
- * Install MUST NOT load packages from these values in the current slice.
+ * host→package map. Legacy string/array forms → `undefined`.
+ * CLI composition loads/registers these packages before install/compile selection.
  */
 export function declaredTargetIntegrationMap(
   manifest: BapmManifest,

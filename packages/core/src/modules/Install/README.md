@@ -10,7 +10,7 @@ orphan cleanup → primitives discover/conflict → invoke registered targets vi
 - `enforceFrozen`
 - `isCiEnvTruthy` / `resolveEffectiveFrozen` — OpenAPM req-lk-018 CI-default frozen
 - `declaredTargetIds`
-- `declaredTargetIntegrationMap` — host→package map when object form is used (undefined for legacy)
+- `declaredTargetIntegrationMap` — host→package map when object form is used (undefined for legacy); CLI loads/registers map packages before selection
 - `InstallError`
 - `DEPLOYED_HASH_ALGO` / `hashFileBytes` — SHA-256 hex of file bytes for harness inventory
 

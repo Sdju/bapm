@@ -14,9 +14,22 @@ packages/integration-codex  @bapm/integration-codex     Codex marketplace output
 apps/docs                   @bapm/docs                 VitePress
 ```
 
-Поведение хоста дают **integration-пакеты**. Runtime-материализация сегодня **только Cursor** и остаётся вне `@bapm/core`.
+Поведение хоста дают **integration-пакеты**. Built-in runtime — **Cursor** (`@bapm/integration-cursor`), регистрируется CLI composition root. Object-map `target` / `targets` в манифесте дополнительно **динамически загружает** указанные npm-пакеты (resolve из project cwd) и регистрирует их до selection на `install` / `compile`. Claude и Codex — только marketplace-output, не runtime-адаптеры (невалидны как значения map для install/compile). Multi-target runtime materialize в одном прогоне — отдельный трек.
 
-Claude и Codex — только marketplace-output, не runtime-адаптеры. Multi-target runtime — отдельный трек.
+### Author how-to: custom runtime integration
+
+1. Publish an npm package that exports a runtime `BapmIntegration` (prefer named `createIntegration()`; default-export object/factory also accepted). Contract: `@bapm/integration-api` README; reference implementation: `@bapm/integration-cursor`.
+2. Add the package as a normal project dependency (`pnpm add @acme/my-integration`).
+3. Declare the object-map in `bapm.yml` / `apm.yml`:
+
+```yaml
+targets:
+  x-acme-editor: "@acme/my-integration"
+```
+
+4. Run `bapm install --target x-acme-editor` (or `bapm compile --target x-acme-editor`). Selection rules are unchanged: `--target` → detect → fail.
+
+Claude/Codex packages remain marketplace-output only unless a future runtime package exists.
 
 Граница OpenAPM claim vs APM product CLI: [Совместимость](/guide/conformance).
 

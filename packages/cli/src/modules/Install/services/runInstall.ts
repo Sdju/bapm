@@ -8,6 +8,7 @@ import {
   runInstall as coreRunInstall,
 } from "@bapm/core";
 import type { InstallDeps, InstallOptions, InstallResult } from "../types/install.types.ts";
+import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
 import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
@@ -477,8 +478,10 @@ async function runCoreInstall(
   archivePath: string | undefined,
 ): Promise<InstallResult> {
   const registry = createCliIntegrationRegistry();
+  const cwd = options.cwd ?? process.cwd();
 
   try {
+    await registerManifestIntegrationsFromCwd(registry, cwd);
     const result = await coreRunInstall({
       cwd: options.cwd,
       archivePath,
