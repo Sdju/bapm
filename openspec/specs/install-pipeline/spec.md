@@ -149,7 +149,7 @@ Core install MUST invoke host materialization only through `@bapm/integration-ap
 
 ### Requirement: target and targets mutual exclusion and intersection
 
-Manifest parsing/install MUST hard-error when both `target` and `targets` fields are present (OpenAPM tg-008), for legacy string/array forms and for object-map forms. When integrating, primitives from a package MUST be deployed only into the intersection of active project targets, consumer-authorized targets, and package-declared targets. Declared project target ids MUST be taken from: the single string when `target` is a string; each element when `targets` is a string array; or each key when `target` / `targets` is an object map. Vendor-style ids matching `x-<vendor>-<name>` MUST be accepted as target identifiers (tg-004); deploy MUST occur only if a package is registered for that id. When the object-map form is used, registration of integrations named by map values MUST follow `target-integration-dynamic-load` before forced-target and detect selection; map values MUST NOT replace `--target` / auto-detect as the source of truth for which host id is active.
+Manifest parsing/install MUST hard-error when both `target` and `targets` fields are present (OpenAPM tg-008), for legacy string/array forms and for object-map forms. When integrating, primitives from a package MUST be deployed only into the intersection of active project targets, consumer-authorized targets, and package-declared targets. Declared project target ids MUST be taken from: the single string when `target` is a string; each element when `targets` is a string array; or each key when `target` / `targets` is an object map. Vendor-style ids matching `x-<vendor>-<name>` MUST be accepted as target identifiers (tg-004); deploy MUST occur only if a package is registered for that id. When the object-map form is used, registration of integrations named by map values MUST follow `target-integration-dynamic-load` before forced-target, manifest-`active`, and detect selection; map values MUST NOT replace `--target`, manifest `active`, or auto-detect as the source of truth for which host id is active. The separate `active` field MUST NOT contribute declared preference ids for intersection.
 
 #### Scenario: Mutual exclusion of target fields
 
@@ -175,6 +175,11 @@ Manifest parsing/install MUST hard-error when both `target` and `targets` fields
 
 - **WHEN** the project manifest declares object-map `targets` with `x-acme-editor` bound to a resolvable valid runtime integration package and install runs with `--target x-acme-editor`
 - **THEN** after map load registers that id, install MUST be allowed to materialize through the registered integration subject to intersection rules
+
+#### Scenario: Active does not expand declared preference
+
+- **WHEN** the project manifest declares `targets: [cursor]` and `active: [cursor]` (or additional registered ids only via `active`)
+- **THEN** declared project target ids for intersection MUST still come from `target`/`targets` only
 
 ### Requirement: Deploy only under registered deploy roots
 
@@ -519,22 +524,32 @@ When install records `deployed_file_hashes` for a dependency (or `local_deployed
 
 ### Requirement: Install selects only an unambiguous registered target
 
-For install materialization and MCP configuration, core MUST evaluate target detection through the registered integration registry. When exactly one registered integration is detected, install MUST select that target automatically. When zero or more than one registered integrations are detected, install MUST require an explicit registered target id and MUST fail before target harness writes if none is supplied. An explicit registered target MUST override automatic detection; an unknown id MUST fail closed.
+For install materialization and MCP configuration, core MUST resolve the active host id list in this order: (1) an explicit forced registered target id (for example CLI `--target`) selects that single id and overrides other sources; (2) else when the loaded project manifest has a non-empty `active` list, those ids (after built-in registration and object-map load) become the active set; (3) else when exactly one registered integration is detected for the project cwd, that id is selected; (4) else install MUST fail before target harness writes with guidance to pass `--target <id>` and/or set manifest `active`. An unknown forced id or any unknown id in `active` MUST fail closed. When `active` lists multiple registered ids, install MUST materialize each (subject to intersection, exclude, and only-mode) and MUST NOT require filesystem detect for those ids.
 
 #### Scenario: Sole detected target deploys automatically
 
-- **WHEN** install runs without an explicit target and exactly one registered integration positively detects the project
+- **WHEN** install runs without an explicit target, without manifest `active`, and exactly one registered integration positively detects the project
 - **THEN** install MUST invoke that integration's eligible materialize and MCP capabilities
 
 #### Scenario: No target detection requires explicit target
 
-- **WHEN** install runs without an explicit target and no registered integrations positively detect the project
-- **THEN** install MUST fail with guidance to pass `--target <id>` and MUST NOT write target harness files
+- **WHEN** install runs without an explicit target, without manifest `active`, and no registered integrations positively detect the project
+- **THEN** install MUST fail with guidance to pass `--target <id>` (and MAY mention setting `active`) and MUST NOT write target harness files
 
 #### Scenario: Ambiguous target detection requires explicit target
 
-- **WHEN** install runs without an explicit target and two or more registered integrations positively detect the project
-- **THEN** install MUST fail with guidance to pass `--target <id>` and MUST NOT write target harness files
+- **WHEN** install runs without an explicit target, without manifest `active`, and two or more registered integrations positively detect the project
+- **THEN** install MUST fail with guidance to pass `--target <id>` (and MAY mention setting `active`) and MUST NOT write target harness files
+
+#### Scenario: Manifest active selects without detect
+
+- **WHEN** install runs without `--target`, the manifest declares a non-empty `active` list of registered ids, and detect is absent or ambiguous
+- **THEN** install MUST activate those ids and MUST invoke eligible materialize/MCP for each
+
+#### Scenario: Forced target overrides manifest active
+
+- **WHEN** the manifest declares `active` with multiple registered ids and install is invoked with a forced registered target id
+- **THEN** install MUST activate only the forced id for that run
 
 ### Requirement: Exclude validation derives from registered targets
 

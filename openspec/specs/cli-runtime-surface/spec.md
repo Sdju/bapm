@@ -125,7 +125,7 @@ Invoking install help (`bapm install --help`, `bapm help install`, or the docume
 
 ### Requirement: Install supports target flag with clear rejection
 
-The install command MUST accept `--target <id>` (or an equivalent documented form). When `<id>` is registered—either as a built-in integration (for example `cursor`) or as an integration successfully loaded from the manifest object-map—install MUST pass forced-target activation into core. When `<id>` is unknown/unregistered after built-in registration and map loading, install MUST fail with a clear error.
+The install command MUST accept `--target <id>` (or an equivalent documented form). When `<id>` is registered—either as a built-in integration (for example `cursor`) or as an integration successfully loaded from the manifest object-map—install MUST pass forced-target activation into core and that force MUST override manifest `active` for the run. When `<id>` is unknown/unregistered after built-in registration and map loading, install MUST fail with a clear error. Help for install MUST document `--target` as the forced override and MUST note that a non-empty manifest `active` list may select hosts when `--target` is omitted.
 
 #### Scenario: Target cursor forces activation
 
@@ -141,6 +141,11 @@ The install command MUST accept `--target <id>` (or an equivalent documented for
 
 - **WHEN** `runCli(["install", "--target", "x-acme-editor"])` runs after a successful object-map load that registered `x-acme-editor`
 - **THEN** install MUST pass forced target `x-acme-editor` into core rather than rejecting the id as unregistered
+
+#### Scenario: Install without --target uses manifest active
+
+- **WHEN** `runCli(["install"])` runs in a fixture whose manifest has a non-empty registered `active` list and no `--target`
+- **THEN** core MUST activate those ids per `manifest-active-targets` / `install-pipeline` without requiring detect
 
 ### Requirement: Unknown command fails with help
 
@@ -770,7 +775,7 @@ The CLI MUST register top-level `approve` and `deny` commands that invoke intera
 
 ### Requirement: Compile exposes registered target selection
 
-The CLI `compile` command MUST accept `--target <id>` and `--target=<id>`, forward the selected id to core target orchestration, and document the flag in help. If automatic detection finds zero or multiple registered compile-capable targets, CLI failure output MUST state that `--target <id>` is required. Unknown target ids and targets that lack compile capability MUST fail with a clear error and MUST NOT write compile output. Registration for unknown-id checks MUST include integrations loaded from the manifest object-map when present (`target-integration-dynamic-load`).
+The CLI `compile` command MUST accept `--target <id>` and `--target=<id>`, forward the selected id to core target orchestration, and document the flag in help. If automatic detection finds zero or multiple registered compile-capable targets and the manifest does not supply a sole `active` compile-capable id, CLI failure output MUST state that `--target <id>` is required (and MAY mention `active`). Unknown target ids and targets that lack compile capability MUST fail with a clear error and MUST NOT write compile output. Registration for unknown-id checks MUST include integrations loaded from the manifest object-map when present (`target-integration-dynamic-load`). When `active` lists multiple ids without `--target`, compile MUST fail closed asking for `--target <id>`.
 
 #### Scenario: Explicit compile target is forwarded
 
@@ -780,7 +785,7 @@ The CLI `compile` command MUST accept `--target <id>` and `--target=<id>`, forwa
 #### Scenario: Compile help documents target selection
 
 - **WHEN** `bapm compile --help` runs
-- **THEN** help MUST list `--target <id>` and explain that it is required when automatic target detection is absent or ambiguous
+- **THEN** help MUST list `--target <id>` and explain that it is required when automatic target detection is absent or ambiguous (and when multi-`active` needs a force)
 
 #### Scenario: Unknown compile target is rejected
 
@@ -792,9 +797,14 @@ The CLI `compile` command MUST accept `--target <id>` and `--target=<id>`, forwa
 - **WHEN** `runCli(["compile", "--target", "x-acme-editor"])` runs after object-map load registered a compile-capable `x-acme-editor` integration
 - **THEN** compile MUST forward that id and MUST NOT treat it as an unknown target solely due to absence from the built-in registry
 
+#### Scenario: Sole manifest active selects compile without --target
+
+- **WHEN** `runCli(["compile"])` runs with `active: [cursor]`, cursor registered and compile-capable, and detect absent
+- **THEN** compile MUST select cursor without requiring `--target`
+
 ### Requirement: Install and compile load manifest integration map before core
 
-When the project manifest uses object-map `target` / `targets`, the CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry after built-in registration and before invoking `@bapm/core` install or compile orchestration. Map values MAY be npm package specifiers or local filesystem paths as defined by that capability. Legacy string/array manifests MUST keep today’s built-in-only registration behavior. Help text MAY mention that object-map bindings load integration packages or local modules; it MUST continue to document `--target <id>` as the forced-host selector.
+When the project manifest uses object-map `target` / `targets`, the CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry after built-in registration and before invoking `@bapm/core` install or compile orchestration. Map values MAY be npm package specifiers or local filesystem paths as defined by that capability. Legacy string/array manifests MUST keep today’s built-in-only registration behavior. Help text MAY mention that object-map bindings load integration packages or local modules; it MUST continue to document `--target <id>` as the forced-host selector and MUST NOT claim that map keys alone activate hosts when `active` is absent.
 
 #### Scenario: Install loads map then forces custom target
 
