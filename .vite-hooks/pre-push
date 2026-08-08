@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+set -e
+
+# Read all push refs first — stdin is only available during hook invocation.
+refs=$(cat)
+
+printf '%s\n' "$refs" | while read -r _local_ref _local_sha remote_ref _remote_sha; do
+	[ -z "$remote_ref" ] && continue
+	case "$remote_ref" in
+	refs/heads/master | refs/heads/main)
+		echo "error: direct push to '${remote_ref#refs/heads/}' is forbidden; open a PR" >&2
+		exit 1
+		;;
+	esac
+done
+
+# Same gate as CI "Check" step — catch format/lint before the remote pipeline.
+echo "pre-push: vp check"
+vp check

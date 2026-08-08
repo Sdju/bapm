@@ -17,13 +17,17 @@ my-plugin/
 
 Cursor-integration адаптирует portable MCP в `.cursor/mcp.json`: `stdio` → `stdio`, `streamable-http` → `http`, `sse` → `sse`. Portable MCP-файл **не** копируется as-is.
 
+## В OpenCode
+
+Пакет `@bapm/integration-opencode` (opt-in через `targets:`) адаптирует portable MCP в project `opencode.json` под `mcp`: `stdio` → `type: "local"` + `command` array, `streamable-http` → `type: "remote"` + `url`. Portable `sse` **не** мапится молча (fail-closed). Skills копируются в `.opencode/skills/`.
+
 ## Граница
 
 - `plugin.json` ≠ `bapm.yml` / `apm.yml`
 - Упаковка portable-плагина — архив, не публикация в marketplace
 - OpenAPM в [CONFORMANCE.md](../../../CONFORMANCE.md) ≠ conformance Agent Plugins
 
-Marketplace-output и portable-архивы независимы от Cursor runtime install.
+Marketplace-output и portable-архивы независимы от Cursor/OpenCode runtime install.
 
 ## Что не поддерживается
 

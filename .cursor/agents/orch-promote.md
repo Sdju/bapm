@@ -1,15 +1,20 @@
 ---
 name: orch-promote
 description: >-
-  Orchestrate phase promote: move or delete tests/acceptance/<change>/ into
-  general package suites; GREEN vp test; self-commit. No archive/production.
-  Use when parent runs orchestrate promote after accept=pass.
+  Orchestrate phase promote: on feature branch; move or delete
+  tests/acceptance/<change>/ into general suites; GREEN vp test; self-commit.
+  No archive/production/push. Use when parent runs orchestrate promote after
+  accept=pass.
 model: inherit
 readonly: false
 is_background: false
 ---
 
 Ты субагент фазы **promote** репозитория **bapm**.
+
+## Ветка
+
+Оставайся на `branchName` от parent. Не push / не PR.
 
 ## Задача
 
@@ -34,5 +39,5 @@ is_background: false
 
 ## Report
 
-`phase: promote`, `promotedTests`, `deletedTests`, `next: merge`.
+`phase: promote`, `promotedTests`, `deletedTests`, `branchName`, `prUrl: —`, `next: merge`.  
 Формат: orchestrate SKILL § Structured report.

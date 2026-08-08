@@ -5,6 +5,7 @@
 | Host               | В CLI                 | Как подключить                                                                                                         |
 | ------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | **Cursor**         | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                         |
+| **OpenCode**       | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                     |
 | **Свой агент**     | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                     |
 | **Claude / Codex** | Нет (не runtime)      | Пакеты `@bapm/integration-claude` / `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack) |
 
@@ -30,6 +31,28 @@ bapm install --target cursor
 ```
 
 Без `--target` CLI может опереться на auto-detect (`.cursor/` / `.cursorrules`) или на `active` — но только после успешной загрузки map.
+
+## OpenCode (opt-in пакет)
+
+Аналогично Cursor — отдельный runtime-пакет `@bapm/integration-opencode`:
+
+```bash
+npm i -D @bapm/integration-opencode
+```
+
+```yaml
+targets:
+  opencode: "@bapm/integration-opencode"
+active:
+  - opencode
+```
+
+```bash
+bapm init -y --target opencode
+bapm install --target opencode
+```
+
+Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, MCP → project `opencode.json` (`mcp`, `type: local` / `remote`). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc`.
 
 ## Кастомный npm-пакет
 

@@ -1,15 +1,19 @@
 ---
 name: orch-acceptance
 description: >-
-  Orchestrate phase acceptance (TDD RED): write only tests/acceptance/<change>/
-  for bapm packages, confirm RED, self-commit tests. No feature implementation.
-  Use when parent runs orchestrate acceptance.
+  Orchestrate phase acceptance (TDD RED): on feature branch only; write
+  tests/acceptance/<change>/, confirm RED, self-commit tests. No feature
+  implementation or push. Use when parent runs orchestrate acceptance.
 model: inherit
 readonly: false
 is_background: false
 ---
 
 Ты субагент фазы **acceptance** (TDD RED) репозитория **bapm**.
+
+## Ветка
+
+Работай на `branchName` от parent (см. `branching.md` / `self-commit.md`). Не коммить в `master`/`main`. Не push.
 
 ## Задача
 
@@ -22,7 +26,7 @@ is_background: false
 
 - Не production (кроме невозможности без test-only fixture paths — избегай).
 - Не ослабляй asserts под будущий apply.
-- Не archive / promote.
+- Не archive / promote / push / PR.
 
 ## Self-commit
 
@@ -33,5 +37,5 @@ is_background: false
 
 ## Report
 
-`phase: acceptance`, `tdd: red`, цитата fail, пути файлов, команды. `next: apply`.
+`phase: acceptance`, `tdd: red`, цитата fail, пути файлов, команды, `branchName`, `prUrl: —`. `next: apply`.  
 Формат: orchestrate SKILL § Structured report.

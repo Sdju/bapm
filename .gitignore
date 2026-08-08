@@ -24,8 +24,13 @@ dist-ssr
 *.sln
 *.sw?
 
+# Vite+ generated hook dispatcher (recreated by `vp config`)
+# https://viteplus.dev/guide/commit-hooks
+.vite-hooks/_
+
 # AI agent worktrees
 .claude/worktrees/
+
 
 # External references / samples (not part of the repo)
 .samples/

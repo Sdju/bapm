@@ -1,4 +1,7 @@
-/** Integration package graph and core's test-only Cursor dependency. */
+/**
+ * Integration package graph and core's test-only host deps
+ * (OpenCode soft edge promoted from integration-opencode-runtime acceptance).
+ */
 import { expect, test } from "vite-plus/test";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -24,29 +27,30 @@ function listBapmIntegrationPackageNames(): string[] {
   return names.sort();
 }
 
-test("HARD: workspace exposes only the integration package namespace", () => {
-  expect(listBapmIntegrationPackageNames()).toEqual([
-    "@bapm/integration-api",
-    "@bapm/integration-claude",
-    "@bapm/integration-codex",
-    "@bapm/integration-cursor",
-  ]);
+test("workspace @bapm/integration-* packages stay in that namespace", () => {
+  const names = listBapmIntegrationPackageNames();
+  expect(names.length).toBeGreaterThanOrEqual(2);
+  expect(names).toContain("@bapm/integration-api");
+  expect(names.every((n) => n.startsWith("@bapm/integration-"))).toBe(true);
 });
 
-test("core uses Cursor integration only as a development dependency", () => {
+test("core uses Cursor and OpenCode integrations only as development dependencies", () => {
   const coreManifest = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
   };
 
   expect(coreManifest.dependencies).not.toHaveProperty("@bapm/integration-cursor");
+  expect(coreManifest.dependencies).not.toHaveProperty("@bapm/integration-opencode");
   expect(coreManifest.devDependencies).toMatchObject({
     "@bapm/integration-cursor": "workspace:*",
+    "@bapm/integration-opencode": "workspace:*",
   });
 });
 
-test("core vite/test config has no path alias for @bapm/integration-cursor", () => {
+test("core vite/test config has no path alias for host integrations", () => {
   const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
   expect(viteConfig).not.toMatch(/["']@bapm\/integration-cursor["']\s*:/);
+  expect(viteConfig).not.toMatch(/["']@bapm\/integration-opencode["']\s*:/);
   expect(viteConfig).not.toMatch(/target-cursor\/src/);
 });

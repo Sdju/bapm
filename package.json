@@ -15,7 +15,8 @@
     "conformance:check": "node scripts/check-conformance-drift.mjs",
     "agent-plugins:gen": "node scripts/gen-agent-plugins-compatibility.mjs",
     "agent-plugins:check": "node scripts/gen-agent-plugins-compatibility.mjs --check",
-    "version:bump": "bumpp packages/*/package.json"
+    "version:bump": "bumpp packages/*/package.json",
+    "prepare": "vp config --no-agent"
   },
   "devDependencies": {
     "bumpp": "catalog:",

@@ -1,15 +1,19 @@
 ---
 name: orch-apply
 description: >-
-  Orchestrate phase apply (TDD GREEN): implement OpenSpec change for bapm until
-  acceptance tests pass; FEOD/pnpm/vp; self-commit feat/fix. Do not archive or
-  weaken acceptance. Use when parent runs orchestrate apply.
+  Orchestrate phase apply (TDD GREEN): on feature branch; implement OpenSpec
+  change until acceptance passes; FEOD/pnpm/vp; self-commit feat/fix. No
+  archive, push, or weaken acceptance. Use when parent runs orchestrate apply.
 model: inherit
 readonly: false
 is_background: false
 ---
 
 Ты субагент фазы **apply** репозитория **bapm**.
+
+## Ветка
+
+Работай на `branchName` от parent. Не коммить в `master`/`main`. Не push / не PR.
 
 ## Задача
 
@@ -29,5 +33,5 @@ is_background: false
 
 ## Report
 
-`phase: apply`, `tdd: green|fail`, counts, key files. `next: accept` при green.
+`phase: apply`, `tdd: green|fail`, counts, key files, `branchName`, `prUrl: —`. `next: accept` при green.  
 Формат: orchestrate SKILL § Structured report.

@@ -10,10 +10,11 @@ This is bapm's portable Agent Plugins v1 support matrix, not an Agent Plugins ce
 | `mcp` | supported | Root mcp.json supports stdio, streamable HTTP, and SSE after portable validation. | [fixture](tests/fixtures/agent-plugins/v1-portable) · [test](packages/core/tests/agent-plugins/compatibility-status.test.ts) |
 | `unsafe-input` | rejected | Escaping skill paths and reserved or secret-like MCP environment entries are withheld. | [fixture](tests/fixtures/agent-plugins/v1-unsafe) · [test](packages/core/tests/agent-plugins/compatibility-status.test.ts) |
 | `cursor-mcp` | target-specific | Cursor maps portable stdio to stdio, streamable-http to http, and SSE to sse in .cursor/mcp.json. | [fixture](tests/fixtures/agent-plugins/v1-portable) · [test](packages/core/tests/agent-plugins/consumer.test.ts) |
+| `opencode-mcp` | target-specific | OpenCode maps portable stdio to local and streamable-http to remote under opencode.json mcp; SSE is fail-closed. | [fixture](tests/fixtures/agent-plugins/v1-portable) · [test](packages/core/tests/acceptance/integration-opencode-runtime/agent-plugins-e2e.test.ts) |
 | `unsupported-components` | not-supported | Hooks, agents, commands, client extensions, OAuth/secrets, sandboxing, and vendor-specific extension behavior are not implemented. | [fixture](tests/fixtures/agent-plugins/v1-portable) · [test](packages/core/tests/agent-plugins/compatibility-status.test.ts) |
 
 ## Target behavior
-Portable MCP is an input contract, not a host configuration format. The current Cursor target maps supported transports into `.cursor/mcp.json`: `stdio` → `stdio`, `streamable-http` → `http`, and `sse` → `sse`. Other targets must explicitly implement their own adapter; absence of one is not a portable-plugin failure.
+Portable MCP is an input contract, not a host configuration format. The Cursor target maps supported transports into `.cursor/mcp.json`: `stdio` → `stdio`, `streamable-http` → `http`, and `sse` → `sse`. The OpenCode target (`@bapm/integration-opencode`) maps portable `stdio` → OpenCode `local` and `streamable-http` → `remote` under project `opencode.json` `mcp`; portable `sse` is fail-closed. Other targets must explicitly implement their own adapter; absence of one is not a portable-plugin failure.
 
 ## Product boundary
 Portable Agent Plugins are separate from bapm/OpenAPM manifests, lockfiles, producer claims, and the bapm marketplace. `plugin.json` is not `bapm.yml` or `apm.yml`; portable archive production does not publish to, resolve through, or imply support by a marketplace.

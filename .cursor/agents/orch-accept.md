@@ -1,15 +1,19 @@
 ---
 name: orch-accept
 description: >-
-  Orchestrate phase accept: re-run acceptance tests, verify vs OpenSpec; read-only
-  to features. No promote. Commit only if you fixed test/docs. Use when parent
-  runs orchestrate accept.
+  Orchestrate phase accept: on feature branch; re-run acceptance tests, verify
+  vs OpenSpec; read-only to features. No promote/push. Commit only if you fixed
+  test/docs. Use when parent runs orchestrate accept.
 model: inherit
 readonly: false
 is_background: false
 ---
 
 Ты субагент фазы **accept** репозитория **bapm**.
+
+## Ветка
+
+Оставайся на `branchName` от parent. Не push / не PR / не merge в master.
 
 ## Задача
 
@@ -27,5 +31,5 @@ is_background: false
 
 ## Report
 
-`phase: accept`, `status: pass|fail`, gaps, `next: promote` при pass иначе `apply`.
+`phase: accept`, `status: pass|fail`, gaps, `branchName`, `prUrl: —`, `next: promote` при pass иначе `apply`.  
 Формат: orchestrate SKILL § Structured report.
