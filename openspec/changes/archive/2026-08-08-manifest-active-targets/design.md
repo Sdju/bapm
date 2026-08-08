@@ -46,9 +46,9 @@ Programmatic `options.activeTargets` (if kept) MUST follow the same multi-capabl
 
 ### D4: Separation from `target` / `targets`
 
-| Field | Role |
-| --- | --- |
-| `active` | Which host ids to **activate** this run (materialize/MCP; sole for compile) |
+| Field                | Role                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------- |
+| `active`             | Which host ids to **activate** this run (materialize/MCP; sole for compile)             |
 | `target` / `targets` | Declared preference / intersection keys; object-map → package/path to **load/register** |
 
 Map load still runs before selection. Map keys alone still do not activate. `active` ids need not equal map keys when the id is already built-in (e.g. `cursor`). If `active` names an id that is neither built-in nor map-bound → fail-closed diagnostic naming the id.

@@ -42,8 +42,8 @@ Parent → Task `explore` (или `orch-plan` explore); если `next: propose`
 /orchestrate приступай к M11
 ```
 
-1. `apm-expert` — criteria (knowledge)  
-2. `orch-plan` → … → `orch-merge`  
-3. `apm-expert` validate ∥ можно параллельно с `orch-accept`  
-4. `orch-canvas` после merge  
+1. `apm-expert` — criteria (knowledge)
+2. `orch-plan` → … → `orch-merge`
+3. `apm-expert` validate ∥ можно параллельно с `orch-accept`
+4. `orch-canvas` после merge
 5. deliver

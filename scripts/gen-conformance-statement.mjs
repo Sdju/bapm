@@ -127,7 +127,9 @@ function buildMarkdown(json) {
   lines.push("Spec: OpenAPM `v0.1`");
   lines.push("");
   lines.push("This file is generated. Do NOT edit by hand. Run");
-  lines.push("`pnpm run conformance:gen` (or `node scripts/gen-conformance-statement.mjs`) to regenerate.");
+  lines.push(
+    "`pnpm run conformance:gen` (or `node scripts/gen-conformance-statement.mjs`) to regenerate.",
+  );
   lines.push("Drift gate: `pnpm run conformance:check`.");
   lines.push("");
   lines.push("## Honesty contract");
@@ -203,16 +205,12 @@ function buildMarkdown(json) {
   lines.push("");
   lines.push("## Waivers");
   lines.push("");
-  const waived = json.requirements.filter(
-    (r) => r.status === "skipped" || r.status === "n/a",
-  );
+  const waived = json.requirements.filter((r) => r.status === "skipped" || r.status === "n/a");
   if (!waived.length) {
     lines.push("_None._");
   } else {
     for (const r of waived) {
-      lines.push(
-        `- **${r.id}** (${r.status}): ${r.rationale ?? "see limitations / scope out"}`,
-      );
+      lines.push(`- **${r.id}** (${r.status}): ${r.rationale ?? "see limitations / scope out"}`);
     }
   }
   lines.push("");

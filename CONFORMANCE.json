@@ -84,9 +84,7 @@
       "section": "5.1",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml"],
       "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -111,9 +109,7 @@
       "section": "5.4",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/lockfile/v1-git-only.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/lockfile/v1-git-only.yml"],
       "citation": "packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -170,9 +166,7 @@
       "section": "5.2",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml"],
       "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts"
     },
     {
@@ -197,9 +191,7 @@
       "section": "5.2",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml"],
       "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts"
     },
     {
@@ -312,9 +304,7 @@
       "section": "4.1",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/manifest/valid-minimal.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/manifest/valid-minimal.yml"],
       "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -475,9 +465,7 @@
       "section": "4.2.4",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml"],
       "citation": "packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -486,9 +474,7 @@
       "section": "4.1",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/manifest/invalid-yaml-anchor-alias.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/manifest/invalid-yaml-anchor-alias.yml"],
       "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
     },
     {
@@ -535,9 +521,7 @@
       "section": "6.1",
       "conformance_class": "governance",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/policy/security-integrity.yml"],
       "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -546,9 +530,7 @@
       "section": "6.2",
       "conformance_class": "governance",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/policy/security-integrity.yml"],
       "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -649,9 +631,7 @@
       "section": "6.8",
       "conformance_class": "governance",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/policy/security-integrity.yml"],
       "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -660,9 +640,7 @@
       "section": "6.8",
       "conformance_class": "governance",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/policy/security-integrity.yml"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/policy/security-integrity.yml"],
       "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts"
     },
     {
@@ -783,9 +761,7 @@
       "section": "7.3",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/resolution/semver-dialect.json"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/resolution/semver-dialect.json"],
       "citation": "packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts"
     },
     {
@@ -842,9 +818,7 @@
       "section": "7.3.1",
       "conformance_class": "consumer",
       "status": "active",
-      "fixtures": [
-        "tests/fixtures/spec-conformance/resolution/semver-dialect.json"
-      ],
+      "fixtures": ["tests/fixtures/spec-conformance/resolution/semver-dialect.json"],
       "citation": "packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts"
     },
     {

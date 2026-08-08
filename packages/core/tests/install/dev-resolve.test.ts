@@ -43,7 +43,7 @@ describe("install dev write + root resolve union", () => {
     const manifest = readManifestText(project.cwd);
     expect(manifest).toMatch(/devDependencies:[\s\S]*apm:[\s\S]*(\.\/extra|path:\s*\.\/extra)/);
     const depsOnly =
-      manifest.match(/^dependencies:[\s\S]*?(?=^devDependencies:|^[a-z]|\Z)/m)?.[0] ?? "";
+      manifest.match(/^dependencies:[\s\S]*?(?=^devDependencies:|^[a-z]|Z)/m)?.[0] ?? "";
     expect(depsOnly).not.toMatch(/path:\s*\.\/extra|\.\/extra/);
   });
 

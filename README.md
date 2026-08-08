@@ -17,10 +17,10 @@ npm i -g @bapm/cli
 
 **2. Интеграция с вашим агентом** — без неё `install` некуда раскладывать пакеты.
 
-| Агент | Что сделать |
-| --- | --- |
+| Агент      | Что сделать                                                                                                                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **Cursor** | `npm i -g @bapm/integration-cursor` (или `npm i -D` в проекте), объявить `targets:` / `active`, затем `bapm install --target cursor` |
-| **Свой** | Поставить npm-пакет или положить локальный модуль, объявить в `targets:`, затем `--target <id>` |
+| **Свой**   | Поставить npm-пакет или положить локальный модуль, объявить в `targets:`, затем `--target <id>`                                      |
 
 Пример для Cursor:
 
@@ -38,6 +38,7 @@ active:
 Подробности, кастомные интеграции и скрипты: [поддерживаемые hosts](apps/docs/guide/supported-hosts.md).
 
 Pin CLI в проекте (редко): `npm i -D @bapm/cli`, затем `npx bapm`.
+
 ## Быстрый пример
 
 ```bash
@@ -48,27 +49,27 @@ bapm install --target cursor
 
 ## Артефакты
 
-| Артефакт | Назначение |
-| --- | --- |
-| `bapm.yml` | Манифест зависимостей |
-| `bapm.lock.yaml` | Зафиксированный граф |
-| `apm_modules/` | Материализованные пакеты |
-| `.agents/skills/`, `.cursor/rules/`, `.cursor/agents/`, `.cursor/mcp.json` | Деплой в Cursor |
+| Артефакт                                                                   | Назначение               |
+| -------------------------------------------------------------------------- | ------------------------ |
+| `bapm.yml`                                                                 | Манифест зависимостей    |
+| `bapm.lock.yaml`                                                           | Зафиксированный граф     |
+| `apm_modules/`                                                             | Материализованные пакеты |
+| `.agents/skills/`, `.cursor/rules/`, `.cursor/agents/`, `.cursor/mcp.json` | Деплой в Cursor          |
 
 ## Документация
 
-| Раздел | Ссылка |
-| --- | --- |
-| Быстрый старт | [guide/quick-start](apps/docs/guide/quick-start.md) |
+| Раздел               | Ссылка                                                      |
+| -------------------- | ----------------------------------------------------------- |
+| Быстрый старт        | [guide/quick-start](apps/docs/guide/quick-start.md)         |
 | Поддерживаемые hosts | [guide/supported-hosts](apps/docs/guide/supported-hosts.md) |
-| Что умеет bapm | [guide/](apps/docs/guide/index.md) |
-| Команды | [guide/commands](apps/docs/guide/commands.md) |
-| Манифест `bapm.yml` | [guide/config-manifest](apps/docs/guide/config-manifest.md) |
-| Lock-файл | [guide/lockfile](apps/docs/guide/lockfile.md) |
-| Сценарии | [guide/situations/](apps/docs/guide/situations/index.md) |
-| Справка по флагам | [reference/](apps/docs/reference/index.md) |
-| Agent Plugins | [guide/agent-plugins](apps/docs/guide/agent-plugins.md) |
-| Архитектура | [architecture/](apps/docs/architecture/index.md) |
+| Что умеет bapm       | [guide/](apps/docs/guide/index.md)                          |
+| Команды              | [guide/commands](apps/docs/guide/commands.md)               |
+| Манифест `bapm.yml`  | [guide/config-manifest](apps/docs/guide/config-manifest.md) |
+| Lock-файл            | [guide/lockfile](apps/docs/guide/lockfile.md)               |
+| Сценарии             | [guide/situations/](apps/docs/guide/situations/index.md)    |
+| Справка по флагам    | [reference/](apps/docs/reference/index.md)                  |
+| Agent Plugins        | [guide/agent-plugins](apps/docs/guide/agent-plugins.md)     |
+| Архитектура          | [architecture/](apps/docs/architecture/index.md)            |
 
 ## Ключевое
 

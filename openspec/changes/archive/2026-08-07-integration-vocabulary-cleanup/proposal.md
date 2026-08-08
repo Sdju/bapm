@@ -13,11 +13,13 @@ The package migration has made `@bapm/integration-*` the canonical boundary, but
 ## Capabilities
 
 ### New Capabilities
+
 - `integration-api-contracts`: Defines the integration-neutral public registration API and the absence of legacy API aliases.
 - `integration-cursor-runtime`: Defines the renamed active Cursor integration specification without changing its observable runtime behavior.
 - `integration-vocabulary-hygiene`: Defines active-spec/document reference hygiene while preserving historical archives and OpenAPM target-domain terminology.
 
 ### Modified Capabilities
+
 - `integration-package-architecture`: Makes the canonical architecture specification the sole active architecture contract and preserves rejection of retired target packages.
 - `install-pipeline`: Describes registry-facing install behavior using integration-neutral API vocabulary while retaining the manifest and `--target` domain interface.
 - `compile-agents-md`: Describes registry-facing compile behavior using integration-neutral API vocabulary while retaining the `--target` domain interface.

@@ -8,11 +8,11 @@
 
 ## Три оси
 
-| Ось | Смысл | Позиция bapm |
-| --- | --- | --- |
-| **OpenAPM v0.1** | Wire: манифест, lock, policy, resolve, deploy | Claimed в [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A |
-| **APM product CLI** | Поверхность microsoft/apm | **Не** drop-in клон APM CLI |
-| **Host integrations** | Куда материализуются пакеты | Opt-in: Cursor (`@bapm/integration-cursor`) + `targets:`. Custom: npm / локальный модуль через object-map. Claude/Codex — marketplace-output |
+| Ось                   | Смысл                                         | Позиция bapm                                                                                                                                 |
+| --------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **OpenAPM v0.1**      | Wire: манифест, lock, policy, resolve, deploy | Claimed в [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A                                          |
+| **APM product CLI**   | Поверхность microsoft/apm                     | **Не** drop-in клон APM CLI                                                                                                                  |
+| **Host integrations** | Куда материализуются пакеты                   | Opt-in: Cursor (`@bapm/integration-cursor`) + `targets:`. Custom: npm / локальный модуль через object-map. Claude/Codex — marketplace-output |
 
 ## Вне scope (по Limitations)
 

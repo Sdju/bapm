@@ -5,12 +5,14 @@ See `proposal.md` for motivation and the delta specs for observable behavior. Th
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Make a single explicit target-selection policy reusable by compile, install materialization, and MCP configuration.
 - Extend the generic target boundary so target packages own compile output and report deployment attribution.
 - Move target registration to a composition-root factory usable by both CLI paths and test harnesses.
 - Validate excludes against registrations without adding a host-specific catalog to core.
 
 **Non-Goals:**
+
 - Add another concrete target package or a multi-host `--target all` mode.
 - Change manifest target-intersection semantics for package primitives after a target is selected.
 - Make detection errors fatal by themselves; they remain non-matches with diagnostics unless selection cannot be resolved.

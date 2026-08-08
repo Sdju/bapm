@@ -14,18 +14,18 @@ Claude/Codex здесь — **marketplace-output**, не runtime install targets
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `--archive` | — | Записать plain zip artifact | off |
-| `--agent-plugins` | — | Pack validated Agent Plugins v1 portable root; не эмитит marketplace; нужен root `plugin.json` | off |
-| `--dry-run` | — | Validate / collect без durable zip или marketplace.json | off |
-| `--check-release` | — | Gate tag↔manifest version (pr-004) | off |
-| `--tag` | `<name>` | Tag под check (опционально с `--check-release`; иначе HEAD) | HEAD |
-| `--marketplace`, `-m` | `all` \| `none` \| list | Фильтр host marketplace emit (`claude`, `codex`) | all configured |
-| `--marketplace-path` | `FORMAT=PATH` | Override output path (повторяемый; путь под project root) | — |
-| `--offline` | — | Fail closed, если remote package resolve нужен network | off |
-| `--include-prerelease` | — | Включать prerelease tags при resolve version ranges | off |
-| `--help`, `-h` | — | Показать help | — |
+| Флаг                   | Значение                | Эффект                                                                                         | Default        |
+| ---------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- | -------------- |
+| `--archive`            | —                       | Записать plain zip artifact                                                                    | off            |
+| `--agent-plugins`      | —                       | Pack validated Agent Plugins v1 portable root; не эмитит marketplace; нужен root `plugin.json` | off            |
+| `--dry-run`            | —                       | Validate / collect без durable zip или marketplace.json                                        | off            |
+| `--check-release`      | —                       | Gate tag↔manifest version (pr-004)                                                             | off            |
+| `--tag`                | `<name>`                | Tag под check (опционально с `--check-release`; иначе HEAD)                                    | HEAD           |
+| `--marketplace`, `-m`  | `all` \| `none` \| list | Фильтр host marketplace emit (`claude`, `codex`)                                               | all configured |
+| `--marketplace-path`   | `FORMAT=PATH`           | Override output path (повторяемый; путь под project root)                                      | —              |
+| `--offline`            | —                       | Fail closed, если remote package resolve нужен network                                         | off            |
+| `--include-prerelease` | —                       | Включать prerelease tags при resolve version ranges                                            | off            |
+| `--help`, `-h`         | —                       | Показать help                                                                                  | —              |
 
 ## Замечания
 

@@ -178,10 +178,9 @@ describe("Registry safe-extract (materializeRegistryArchive)", () => {
     const regOut = join(project.cwd, "reg-out");
     const archivePath = writeBytes(join(project.cwd, "twin-symlink.zip"), bytes);
 
-    await expectRejectsMatching(
-      () => getExtractPackArchive()({ archivePath, outputDir: packOut }),
-      /symlink|symbolic|unsafe|link|refusing/i,
-    );
+    await expectRejectsMatching(async () => {
+      await getExtractPackArchive()({ archivePath, outputDir: packOut });
+    }, /symlink|symbolic|unsafe|link|refusing/i);
     expectThrowsMatching(
       () =>
         getMaterializeRegistryArchive()({

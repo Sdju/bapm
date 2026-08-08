@@ -3,7 +3,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { PolicyError } from "./errors.ts";
 import { hostClassOf } from "./hostClass.ts";
 import { mergeDocuments } from "./merge.ts";

@@ -124,7 +124,7 @@ describe("core outdated — branch / literal tip via resolved_ref", () => {
     );
     expect(row).toBeTruthy();
     expect(statusOf(row!)).toMatch(/outdated/);
-    expect(ports.lsRemoteCalls.some((c) => /#release$/.test(c) || c.includes("#release"))).toBe(
+    expect(ports.lsRemoteCalls.some((c) => c.endsWith("#release") || c.includes("#release"))).toBe(
       true,
     );
   });

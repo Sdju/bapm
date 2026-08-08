@@ -10,7 +10,6 @@ import {
   createTempProject,
   expectKnownCommand,
   expectKnownLockFlag,
-  listFilesRecursive,
   lockPath,
   readLockBytes,
   runCli,

@@ -26,12 +26,12 @@ bapm.local.yml
 
 ## Allowlist
 
-| Ключ | Merge |
-| --- | --- |
-| `active` | replace всего списка |
+| Ключ                 | Merge                                                                               |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| `active`             | replace всего списка                                                                |
 | `target` / `targets` | object-map + object-map → deep-merge (local wins); иначе replace + mutual exclusion |
-| `env` | deep-merge строк (local wins per key) |
-| `registries` | deep-merge по имени registry |
+| `env`                | deep-merge строк (local wins per key)                                               |
+| `registries`         | deep-merge по имени registry                                                        |
 
 Всё остальное (`name`, `version`, `dependencies`, `x-*`, …) — отказ.
 

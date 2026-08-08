@@ -22,9 +22,6 @@ export function effectiveLocalPath(local: unknown): string {
 
 /** Normalize a relative local root to a stable rooted gitignore pattern. */
 export function localRootGitignorePattern(effectivePath: string): string {
-  const normalized = effectivePath
-    .replaceAll("\\", "/")
-    .replace(/^\.\//, "")
-    .replace(/\/+$/, "");
+  const normalized = effectivePath.replaceAll("\\", "/").replace(/^\.\//, "").replace(/\/+$/, "");
   return `/${normalized}/`;
 }

@@ -5,11 +5,13 @@ See proposal.md — Why. Baseline: `packages/cli/src/modules/Lock/services/runLo
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Fail-closed bare-lock argv for unknown flags before resolve/write.
 - Mirror install wording + export positional fail-closed + stderr for parse errors.
 - Preserve P6c known surface and export fail-closed.
 
 **Non-Goals (design-level):**
+
 - No new CLI framework / Click port; no core resolve API changes; no CONFORMANCE edits; no implementation of `--global`/`--target`.
 
 ## Decisions
@@ -50,12 +52,12 @@ See proposal.md — Why. Baseline: `packages/cli/src/modules/Lock/services/runLo
 
 ## Risks / Trade-offs
 
-| Risk | Mitigation |
-|------|------------|
-| Scripts that relied on soft-ignore of typos | Intentional **BREAKING** argv; document in proposal |
-| `-t`/`-g` users expecting APM behavior | Clear unknown-flag error; do not implement |
+| Risk                                          | Mitigation                                                                                                     |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Scripts that relied on soft-ignore of typos   | Intentional **BREAKING** argv; document in proposal                                                            |
+| `-t`/`-g` users expecting APM behavior        | Clear unknown-flag error; do not implement                                                                     |
 | Double-print if outer CLI also logs `message` | Match export (already prints); accept if wrapper also surfaces message, or gate once if tests show duplication |
-| Positional fail-closed surprises | SHOULD but cheap; align with export |
+| Positional fail-closed surprises              | SHOULD but cheap; align with export                                                                            |
 
 ## Migration Plan
 

@@ -48,9 +48,9 @@ export function assertNoApmLocalOverlay(projectRoot: string): void {
  * Load + validate optional `bapm.local.yml` at project root.
  * Returns `undefined` when the file is absent.
  */
-export function loadLocalOverlayIfPresent(projectRoot: string):
-  | { fields: LocalOverlayFields; localPath: string }
-  | undefined {
+export function loadLocalOverlayIfPresent(
+  projectRoot: string,
+): { fields: LocalOverlayFields; localPath: string } | undefined {
   const localPath = join(projectRoot, BAPM_LOCAL_MANIFEST_FILE);
   if (!existsSync(localPath)) return undefined;
 
@@ -210,7 +210,7 @@ function mergeRegistriesMaps(
   base: Record<string, RegistryEntry | string> | undefined,
   local: Record<string, RegistryEntry | string>,
 ): Record<string, RegistryEntry | string> {
-  const out: Record<string, RegistryEntry | string> = { ...(base ?? {}) };
+  const out: Record<string, RegistryEntry | string> = { ...base };
 
   for (const [name, localEntry] of Object.entries(local)) {
     if (name === "default") {

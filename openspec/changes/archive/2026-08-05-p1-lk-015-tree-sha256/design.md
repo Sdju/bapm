@@ -7,12 +7,14 @@ See proposal.md — Why. Today `tree_sha256` is accepted/serialized (M2) but not
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Shared helper: directory → `sha256:<hex>` per §5.6.4 (finish + export the WIP module)
 - Enrich git lock entries on `resolveAndLock` / install lock write after download
 - Shared verify/`collectTreeSha256Violations` used by frozen install and `runAuditCi`
 - Invert M6 soft tests to hard fail
 
 **Non-Goals:**
+
 - Multi-target adapters
 - lk-018 CI-default frozen
 - Mode B / CONFORMANCE.md

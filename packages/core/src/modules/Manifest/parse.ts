@@ -262,11 +262,7 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
         { path },
       );
     }
-    if (
-      localVal !== true &&
-      localVal !== null &&
-      !(typeof localVal === "string")
-    ) {
+    if (localVal !== true && localVal !== null && !(typeof localVal === "string")) {
       throw new ManifestError(
         "MANIFEST_VALIDATION",
         `Dependency at ${path}: "local" must be true, null/empty, or a non-empty string path`,
@@ -511,6 +507,11 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
  * Dual-shape `target` / `targets`: legacy string|string[] or host→package object map.
  * Map keys are mf-005; values are trimmed non-empty npm specifier strings.
  */
+function parseTargetOrTargetsField(value: unknown, field: "target"): string | TargetIntegrationMap;
+function parseTargetOrTargetsField(
+  value: unknown,
+  field: "targets",
+): string[] | TargetIntegrationMap;
 function parseTargetOrTargetsField(
   value: unknown,
   field: "target" | "targets",

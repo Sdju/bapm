@@ -15,6 +15,7 @@ After p7c, `bapm compile` still exposes only `--validate` while core already has
 - **SHOULD (DEFER):** default markdown link resolve + `--no-links` — not thin enough for this slice; **omit `--no-links` from help** until resolve ships (truthful)
 
 **Non-goals / out:**
+
 - `--target` / `--all` / multi-host emitters
 - `-g` / `--global`, `--watch`, `--root`, `--clean`, `--single-agents`
 - chatmode / constitution flags

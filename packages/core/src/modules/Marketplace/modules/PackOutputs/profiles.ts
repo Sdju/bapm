@@ -25,7 +25,7 @@ export function ensureMarketplacePathWithin(absolutePath: string, projectRoot: s
 
 export type ResolveEffectiveOutputPathOptions = {
   cwd: string;
-  format: MarketplaceOutputFormat | string;
+  format: MarketplaceOutputFormat;
   defaultOutput: string;
   /** Explicit override path (CLI or caller). */
   path?: string;

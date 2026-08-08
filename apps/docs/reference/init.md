@@ -12,11 +12,11 @@ bapm init [options] [project-name]
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `-y`, `--yes` | — | Non-interactive defaults (`version: 0.1.0`) | off |
-| `--target` | `<id>` | Записать host target в манифест (например `cursor`) | — |
-| `--help`, `-h` | — | Показать help | — |
+| Флаг           | Значение | Эффект                                              | Default |
+| -------------- | -------- | --------------------------------------------------- | ------- |
+| `-y`, `--yes`  | —        | Non-interactive defaults (`version: 0.1.0`)         | off     |
+| `--target`     | `<id>`   | Записать host target в манифест (например `cursor`) | —       |
+| `--help`, `-h` | —        | Показать help                                       | —       |
 
 Позиционный `project-name` задаёт `name` (иначе — имя каталога).
 

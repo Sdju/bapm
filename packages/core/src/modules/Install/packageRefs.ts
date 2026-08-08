@@ -111,7 +111,7 @@ export function appendPackageRefsToManifest(
 ): { document: BapmManifest; added: string[] } {
   const useDev = options?.dev === true;
   if (useDev) {
-    const devDeps = { ...(document.devDependencies ?? {}) };
+    const devDeps = { ...document.devDependencies };
     const apm = Array.isArray(devDeps.apm) ? [...devDeps.apm] : [];
     const added: string[] = [];
     for (const ref of refs) {
@@ -124,7 +124,7 @@ export function appendPackageRefsToManifest(
     return { document: { ...document, devDependencies: devDeps }, added };
   }
 
-  const deps = { ...(document.dependencies ?? {}) };
+  const deps = { ...document.dependencies };
   const apm = Array.isArray(deps.apm) ? [...deps.apm] : [];
   const added: string[] = [];
   for (const ref of refs) {

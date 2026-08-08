@@ -4,11 +4,11 @@ Read-only SBOM inventory export from a recorded lockfile (`exportSbom`).
 
 ## Public API
 
-| Symbol | Role |
-|--------|------|
-| `exportSbom` | CycloneDX 1.5 (default) / SPDX 2.3 from lock fields |
-| `buildPurl`, `scrubUrl` | purl identity + credential scrubbing |
-| `FORMAT_CYCLONEDX`, `FORMAT_SPDX`, `SUPPORTED_FORMATS` | format constants |
+| Symbol                                                 | Role                                                |
+| ------------------------------------------------------ | --------------------------------------------------- |
+| `exportSbom`                                           | CycloneDX 1.5 (default) / SPDX 2.3 from lock fields |
+| `buildPurl`, `scrubUrl`                                | purl identity + credential scrubbing                |
+| `FORMAT_CYCLONEDX`, `FORMAT_SPDX`, `SUPPORTED_FORMATS` | format constants                                    |
 
 ## Example
 

@@ -91,11 +91,11 @@ packages/cli/src/
 
 ### D7 — Defaults for previously open questions (closed)
 
-| Question | Default |
-|----------|---------|
-| Help/Version | Thin `commands/` + logic in `modules/Help` and `modules/Version` |
-| Install-stub | `modules/Install` adapter; core via `app/integrations` + `app/init`; thin `commands/install.ts` |
-| `runCli` / pack entries | Keep `src/index.ts` + `src/cli.ts` as thin façades |
+| Question                | Default                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| Help/Version            | Thin `commands/` + logic in `modules/Help` and `modules/Version`                                |
+| Install-stub            | `modules/Install` adapter; core via `app/integrations` + `app/init`; thin `commands/install.ts` |
+| `runCli` / pack entries | Keep `src/index.ts` + `src/cli.ts` as thin façades                                              |
 
 ## Risks / Trade-offs
 

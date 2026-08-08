@@ -207,7 +207,9 @@ export function getRegisterIntegration(
   }
   const fn = api.registerTarget ?? api.register;
   if (typeof fn !== "function") {
-    throw new TypeError("expected @bapm/integration-api registry.register or registerTarget export");
+    throw new TypeError(
+      "expected @bapm/integration-api registry.register or registerTarget export",
+    );
   }
   return fn as (target: unknown) => unknown;
 }

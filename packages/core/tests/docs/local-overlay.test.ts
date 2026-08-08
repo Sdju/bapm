@@ -25,15 +25,13 @@ describe("manifest-local-overlay — docs", () => {
     const precedence =
       /(?:CLI|--target|flags?)[\s\S]{0,120}(?:bapm\.local\.yml|local)[\s\S]{0,120}(?:bapm\.yml|apm\.yml|base)/i.test(
         md,
-      ) ||
-      /(?:приоритет|precedence|priority)[\s\S]{0,200}bapm\.local\.yml/i.test(md);
+      ) || /(?:приоритет|precedence|priority)[\s\S]{0,200}bapm\.local\.yml/i.test(md);
     expect(precedence, "must document flags → local → base precedence").toBe(true);
 
     const distinctFromLocalSource =
       /bapm\.local\.yml[\s\S]{0,400}(?:не|not|distinct|отлич|≠|!=)[\s\S]{0,120}(?:local:|source\s+local|зависимост)/i.test(
         md,
-      ) ||
-      /(?:local:|source\s*[`"]?local)[\s\S]{0,400}bapm\.local\.yml/i.test(md);
+      ) || /(?:local:|source\s*[`"]?local)[\s\S]{0,400}bapm\.local\.yml/i.test(md);
     expect(
       distinctFromLocalSource,
       "must distinguish personal overlay from local: dependency source",
@@ -54,8 +52,7 @@ describe("manifest-local-overlay — docs", () => {
     const framed =
       /bapm\.local\.yml[\s\S]{0,300}(?:bapm[- ]?only|bapm[- ]?расширен|персональ|personal|intentional|намерен)/i.test(
         md,
-      ) ||
-      /(?:bapm[- ]?only|intentional|намерен|персональ)[\s\S]{0,300}bapm\.local\.yml/i.test(md);
+      ) || /(?:bapm[- ]?only|intentional|намерен|персональ)[\s\S]{0,300}bapm\.local\.yml/i.test(md);
     expect(framed, "must frame bapm.local.yml as bapm personal overlay extension").toBe(true);
     expect(md).not.toMatch(/OpenAPM[\s\S]{0,80}requires[\s\S]{0,40}bapm\.local\.yml/i);
   });

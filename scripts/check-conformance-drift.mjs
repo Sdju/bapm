@@ -40,7 +40,9 @@ if (diff.status === 0) {
   process.exit(0);
 }
 
-console.error("conformance drift check: FAILED — committed statement differs from regenerated output");
+console.error(
+  "conformance drift check: FAILED — committed statement differs from regenerated output",
+);
 process.stderr.write(diff.stdout || "");
 process.stderr.write(diff.stderr || "");
 process.exit(diff.status ?? 1);

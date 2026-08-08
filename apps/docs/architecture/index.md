@@ -19,6 +19,7 @@ apps/docs                   @bapm/docs                 VitePress
 Пользовательский how-to (примеры YAML, контракт `createIntegration`): [Поддерживаемые hosts](/guide/supported-hosts). Контракт пакета: `@bapm/integration-api` README; reference: `@bapm/integration-cursor`.
 
 Граница OpenAPM claim vs APM product CLI: [Совместимость](/guide/conformance).
+
 ## Сборка CLI из исходников
 
 Для разработки в клоне репозитория (не для пользователей продукта):

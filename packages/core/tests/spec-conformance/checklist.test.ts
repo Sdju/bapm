@@ -60,7 +60,7 @@ describe("p3 Mode B — requirements mirror + checklist", () => {
     expect(["n/a", "na", "skipped"]).toContain(rg.status);
     expect(rg.status).not.toBe("active");
 
-    const plExtends = rows.filter((r) => /^req-pl-/.test(r.id));
+    const plExtends = rows.filter((r) => r.id.startsWith("req-pl-"));
     expect(plExtends.length).toBeGreaterThan(0);
 
     // When Governance is claimed, pl-003/011/012 must be active with citations (not skipped as P4 deferred).

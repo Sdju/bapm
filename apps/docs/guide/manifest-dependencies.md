@@ -20,12 +20,12 @@ dependencies:
 
 ## Ключи списков
 
-| Ключ | Валидация |
-| --- | --- |
-| `apm` | Список; каждая запись глубоко проверяется |
-| `mcp` | Список, если присутствует; без deep-resolve на parse |
-| `lsp` | То же: list shape без deep-resolve |
-| другие | List сохраняется as-is; не-list sibling keys тоже |
+| Ключ   | Валидация                                            |
+| ------ | ---------------------------------------------------- |
+| `apm`  | Список; каждая запись глубоко проверяется            |
+| `mcp`  | Список, если присутствует; без deep-resolve на parse |
+| `lsp`  | То же: list shape без deep-resolve                   |
+| другие | List сохраняется as-is; не-list sibling keys тоже    |
 
 `bapm init` пишет пустые `dependencies.apm` и `dependencies.mcp`.
 
@@ -41,12 +41,12 @@ dependencies:
 
 `local` — **bapm-расширение** (не vocabulary OpenAPM v0.1). Портативная OpenAPM-форма — `path:`.
 
-| Форма `local` | Эффективный путь |
-| --- | --- |
-| `- local` | `.agents/local` |
-| `local: true` / `null` / `""` | `.agents/local` |
-| `local: ./alt` | указанный путь |
-| `local: false` | отказ |
+| Форма `local`                 | Эффективный путь |
+| ----------------------------- | ---------------- |
+| `- local`                     | `.agents/local`  |
+| `local: true` / `null` / `""` | `.agents/local`  |
+| `local: ./alt`                | указанный путь   |
+| `local: false`                | отказ            |
 
 Если в графе есть `local`, bapm ensure `.gitignore` и fail-closed при tracked файлах под этим корнем. Обычный `path:` этот gate не включает.
 
@@ -69,10 +69,10 @@ dependencies:
 
 В `dependencies.mcp[].env` (и `headers`) при install в Cursor плейсхолдеры **запекаются** в литералы из окружения. Неразрешённый — install падает.
 
-| Форма | Источник |
-| --- | --- |
+| Форма                             | Источник           |
+| --------------------------------- | ------------------ |
 | `${VAR}` / `${env:VAR}` / `<VAR>` | OpenAPM/APM parity |
-| `{bake:NAME}` / `{bake:env:NAME}` | только bapm |
+| `{bake:NAME}` / `{bake:env:NAME}` | только bapm        |
 
 ```yaml
 dependencies:
@@ -91,10 +91,10 @@ dependencies:
 
 ## Типичные ошибки
 
-| Симптом | Что проверить |
-| --- | --- |
-| `must have exactly one source kind` | Ровно один из `git`\|`id`\|`path`\|`registry`\|`marketplace`\|`local` |
-| `MCP env bake failed` / unresolved | Задайте переменную в окружении перед install |
-| `OpenAPM v0.1 rejects top-level "workspaces"` | Уберите `workspaces` с корня (это не deps) |
+| Симптом                                       | Что проверить                                                         |
+| --------------------------------------------- | --------------------------------------------------------------------- |
+| `must have exactly one source kind`           | Ровно один из `git`\|`id`\|`path`\|`registry`\|`marketplace`\|`local` |
+| `MCP env bake failed` / unresolved            | Задайте переменную в окружении перед install                          |
+| `OpenAPM v0.1 rejects top-level "workspaces"` | Уберите `workspaces` с корня (это не deps)                            |
 
 Сценарий MCP/policy: [Policy и MCP](/guide/situations/policy-mcp).

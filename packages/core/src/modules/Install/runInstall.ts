@@ -1070,11 +1070,9 @@ function assertActiveTargetsRegistered(
 ): void {
   for (const id of activeTargets) {
     if (!registry || !findTarget(registry, id)) {
-      throw new InstallError(
-        "INSTALL_UNKNOWN_TARGET",
-        `Unknown or unregistered target: ${id}`,
-        { details: { target: id, activeTargets } },
-      );
+      throw new InstallError("INSTALL_UNKNOWN_TARGET", `Unknown or unregistered target: ${id}`, {
+        details: { target: id, activeTargets },
+      });
     }
   }
 }

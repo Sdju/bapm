@@ -38,17 +38,17 @@ is_background: false
 
 ## Карта референса (стартовые точки)
 
-| Область | Где смотреть |
-|---------|----------------|
-| CLI entry | `.samples/apm/src/apm_cli/cli.py`, `commands/` |
-| Manifest / models | `models/`, `apm.yml`, docs |
-| Deps / resolve | `deps/`, `registry/` |
-| Install | `install/` (phases, mcp, heals) |
-| Adapters / harness | `adapters/` |
-| Compile / export | `compilation/`, `export/`, `commands/compile/` |
-| Policy / security | `policy/`, `security/`, `PRINCIPLES.md` |
-| Primitives | `primitives/`, `.apm/`, `packages/` |
-| Docs site | `.samples/apm/docs/` |
+| Область            | Где смотреть                                   |
+| ------------------ | ---------------------------------------------- |
+| CLI entry          | `.samples/apm/src/apm_cli/cli.py`, `commands/` |
+| Manifest / models  | `models/`, `apm.yml`, docs                     |
+| Deps / resolve     | `deps/`, `registry/`                           |
+| Install            | `install/` (phases, mcp, heals)                |
+| Adapters / harness | `adapters/`                                    |
+| Compile / export   | `compilation/`, `export/`, `commands/compile/` |
+| Policy / security  | `policy/`, `security/`, `PRINCIPLES.md`        |
+| Primitives         | `primitives/`, `.apm/`, `packages/`            |
+| Docs site          | `.samples/apm/docs/`                           |
 
 ## Формат knowledge
 
@@ -65,8 +65,8 @@ apm-knowledge/
 Таблица или список:
 
 ```markdown
-| topic | file | summary | sources |
-|-------|------|---------|---------|
+| topic    | file               | summary              | sources    |
+| -------- | ------------------ | -------------------- | ---------- |
 | lockfile | topics/lockfile.md | формат apm.lock.yaml | ../apm/... |
 ```
 
@@ -76,15 +76,19 @@ apm-knowledge/
 # <Topic>
 
 ## Summary
+
 1–5 предложений.
 
 ## Facts
+
 - факт — ссылка: [`path`](../../apm/path/to/file.py) (`Symbol` / §)
 
 ## Source map
+
 - [`relative/path`](../../apm/relative/path) — зачем читать
 
 ## Open questions
+
 - что ещё не проверено в коде
 ```
 
@@ -101,16 +105,20 @@ apm-knowledge/
 
 ```markdown
 ## Answer
+
 <суть для пользователя / parent, 5–15 строк или список фактов>
 
 ## Evidence
+
 - path или knowledge topic + краткий вывод
 
 ## Knowledge updates
+
 - created|updated: topics/<slug>.md — что добавлено
 - INDEX: updated|unchanged
 
 ## Gaps
+
 - чего не нашёл / что стоит исследовать дальше
 ```
 

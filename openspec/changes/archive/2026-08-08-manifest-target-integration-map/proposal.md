@@ -1,6 +1,6 @@
 ## Why
 
-Authors want to declare not only *which* OpenAPM host ids a project targets, but also *which npm integration package* is intended for each host (`host-id → npm package`). Today `target` / `targets` accept only a string or string array of mf-005 tokens; that cannot express the binding, and object YAML is rejected. Extending parse/validate (with a clear non-goal on runtime loading) unlocks authoring and a typed hook for a later wiring change without breaking legacy manifests.
+Authors want to declare not only _which_ OpenAPM host ids a project targets, but also _which npm integration package_ is intended for each host (`host-id → npm package`). Today `target` / `targets` accept only a string or string array of mf-005 tokens; that cannot express the binding, and object YAML is rejected. Extending parse/validate (with a clear non-goal on runtime loading) unlocks authoring and a typed hook for a later wiring change without breaking legacy manifests.
 
 ## What Changes
 
@@ -16,7 +16,7 @@ Authors want to declare not only *which* OpenAPM host ids a project targets, but
 
 ### New Capabilities
 
-- *(none)*
+- _(none)_
 
 ### Modified Capabilities
 

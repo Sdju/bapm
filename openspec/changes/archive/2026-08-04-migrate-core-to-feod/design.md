@@ -22,21 +22,21 @@ See `proposal.md` for motivation. Current `packages/core/src` is flat folders `m
 
 ### D1 — Library FEOD profile (packages/core only)
 
-| Parameter | Value |
-|-----------|-------|
-| scope | `packages/core` |
-| modification | base (library) |
-| multiapp | no |
-| framework | none / library (TypeScript ESM) |
-| srcRoot | `src` |
-| alias | `@` → `src` |
-| layerDirs | `app`, `pages`→**`pages`**, `modules`, `common`, `globals` |
-| pages | empty stub (`.gitkeep`); no domain handlers |
-| moduleCommands / private pages | N/A / unused |
-| common.allowIndex | false |
-| modules.allowDeepImports | false |
-| singleFileModules | no |
-| IoC | soft (optional; not required for pure library modules yet) |
+| Parameter                      | Value                                                      |
+| ------------------------------ | ---------------------------------------------------------- |
+| scope                          | `packages/core`                                            |
+| modification                   | base (library)                                             |
+| multiapp                       | no                                                         |
+| framework                      | none / library (TypeScript ESM)                            |
+| srcRoot                        | `src`                                                      |
+| alias                          | `@` → `src`                                                |
+| layerDirs                      | `app`, `pages`→**`pages`**, `modules`, `common`, `globals` |
+| pages                          | empty stub (`.gitkeep`); no domain handlers                |
+| moduleCommands / private pages | N/A / unused                                               |
+| common.allowIndex              | false                                                      |
+| modules.allowDeepImports       | false                                                      |
+| singleFileModules              | no                                                         |
+| IoC                            | soft (optional; not required for pure library modules yet) |
 
 `feod` block in `packages/core/package.json`:
 
@@ -152,15 +152,15 @@ Pure domain modules do not require IoC factories for this migration. Soft IoC MA
 
 ### D8 — Closed explore defaults
 
-| Topic | Decision |
-|-------|----------|
-| pages dir | `pages` + `.gitkeep`, not `commands` |
-| modules | `Manifest`, `Lockfile` |
-| shared YAML | `common`, no barrel |
-| package entry | thin `index.ts` → `app/publicApi` |
-| OpenSpec capability | new `core-feod-architecture` only |
-| CLI code | unchanged if exports stable |
-| verify | M1/M2 acceptance + core unit/check green |
+| Topic               | Decision                                 |
+| ------------------- | ---------------------------------------- |
+| pages dir           | `pages` + `.gitkeep`, not `commands`     |
+| modules             | `Manifest`, `Lockfile`                   |
+| shared YAML         | `common`, no barrel                      |
+| package entry       | thin `index.ts` → `app/publicApi`        |
+| OpenSpec capability | new `core-feod-architecture` only        |
+| CLI code            | unchanged if exports stable              |
+| verify              | M1/M2 acceptance + core unit/check green |
 
 ## Risks / Trade-offs
 

@@ -12,16 +12,16 @@ bapm self-update [--check]
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `--check` | — | Сравнить running version с npm dist-tag `latest` (без upgrade) | off |
-| `--help`, `-h` | — | Показать help | — |
+| Флаг           | Значение | Эффект                                                         | Default |
+| -------------- | -------- | -------------------------------------------------------------- | ------- |
+| `--check`      | —        | Сравнить running version с npm dist-tag `latest` (без upgrade) | off     |
+| `--help`, `-h` | —        | Показать help                                                  | —       |
 
 ## Коды выхода (`--check`)
 
-| Код | Смысл |
-| --- | --- |
-| `0` | up-to-date |
+| Код | Смысл                                              |
+| --- | -------------------------------------------------- |
+| `0` | up-to-date                                         |
 | `1` | update available, unknown version или check failed |
 
 Без `--check` CLI пытается global upgrade через npm (`npm i -g @bapm/cli@…`), если не задан `BAPM_SELF_UPDATE_DISABLE=1`.

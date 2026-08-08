@@ -5,11 +5,13 @@ See proposal.md — Why. Criteria: `.samples/apm-knowledge/topics/mp-search-inst
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Close gaps G1–G10 (G10 decision locked below).
 - Wire Resolver + Install + lock provenance + top-level search on phase-1 registry only.
 - Keep FEOD boundaries: Marketplace owns parse/resolve; Resolver/Install call in; no Registry HTTP for `marketplace.json`.
 
 **Non-Goals (design-level):**
+
 - Nested `marketplace search` alias (S2 deferred).
 - First-class Lockfile type fields beyond preserve-if-present (S3 optional — index signature OK if round-trip proven).
 - Enterprise cross-repo / AuthResolver / GHES matrix (S4 → `mp-hosts-auth`).
@@ -65,6 +67,7 @@ See proposal.md — Why. Criteria: `.samples/apm-knowledge/topics/mp-search-inst
 ### D8 — Plugin source mapping (happy path)
 
 **Choice:**
+
 - github object / Copilot `repository` → git URL `https://github.com/OWNER/REPO` (+ ref from plugin or `#ref` / versionSpec)
 - local relative string → absolute/local path relative to marketplace local root
 - HTTPS git URL string / url-like source already understood by git classifier → pass through

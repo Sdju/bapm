@@ -14,7 +14,7 @@ Authors need an **explicit** bapm signal that a MCP `env`/`headers` value must b
 
 ### New Capabilities
 
-- *(none — extend existing bake capability)*
+- _(none — extend existing bake capability)_
 
 ### Modified Capabilities
 

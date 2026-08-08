@@ -13,7 +13,7 @@ External plugins often declare MCP env with bake placeholders (`{bake:NAME}`, `$
 
 ### New Capabilities
 
-- *(none — extend existing)*
+- _(none — extend existing)_
 
 ### Modified Capabilities
 

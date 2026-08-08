@@ -15,21 +15,21 @@ bapm deps clean [-y|--yes] [--dry-run]
 
 ## Подкоманды
 
-| Подкоманда | Назначение |
-| --- | --- |
-| `list` | Список зависимостей из lock |
-| `tree` | Дерево зависимостей |
-| `why` | Почему пакет в графе |
-| `clean` | Wipe project modules (`apm_modules`), тот же wipe что `cache clean` — не shared APM git/http cache |
+| Подкоманда | Назначение                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| `list`     | Список зависимостей из lock                                                                        |
+| `tree`     | Дерево зависимостей                                                                                |
+| `why`      | Почему пакет в графе                                                                               |
+| `clean`    | Wipe project modules (`apm_modules`), тот же wipe что `cache clean` — не shared APM git/http cache |
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default | Где |
-| --- | --- | --- | --- | --- |
-| `--json` | — | Machine-readable why (success → stdout, errors → stderr) | off | `why` |
-| `-y`, `--yes` | — | Подтвердить wipe modules | off | `clean` |
-| `--dry-run` | — | Превью clean без удаления (`-y` не нужен) | off | `clean` |
-| `--help`, `-h` | — | Показать help | — | любая |
+| Флаг           | Значение | Эффект                                                   | Default | Где     |
+| -------------- | -------- | -------------------------------------------------------- | ------- | ------- |
+| `--json`       | —        | Machine-readable why (success → stdout, errors → stderr) | off     | `why`   |
+| `-y`, `--yes`  | —        | Подтвердить wipe modules                                 | off     | `clean` |
+| `--dry-run`    | —        | Превью clean без удаления (`-y` не нужен)                | off     | `clean` |
+| `--help`, `-h` | —        | Показать help                                            | —       | любая   |
 
 ### Примеры
 

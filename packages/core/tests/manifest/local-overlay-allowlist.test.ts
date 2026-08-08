@@ -65,7 +65,7 @@ describe("manifest-local-overlay — allowlist", () => {
   test("forbidden name key is rejected", () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "forbid-name" }));
-    writeLocalOverlay(project.cwd, 'name: hijacked\nactive:\n  - cursor\n');
+    writeLocalOverlay(project.cwd, "name: hijacked\nactive:\n  - cursor\n");
 
     expectThrowsMatching(
       () => getLoadEffectiveManifest()({ cwd: project!.cwd }),

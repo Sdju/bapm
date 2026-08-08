@@ -107,7 +107,7 @@ describe("install pipeline — modules + lock", () => {
 
   test("core runtime package graph depends only on @bapm/integration-api", () => {
     const pkg = readCorePackageJson();
-    const runtimeDependencies = pkg.dependencies;
+    const runtimeDependencies = pkg.dependencies ?? {};
 
     expect(runtimeDependencies["@bapm/integration-cursor"]).toBeUndefined();
     for (const key of Object.keys(runtimeDependencies)) {

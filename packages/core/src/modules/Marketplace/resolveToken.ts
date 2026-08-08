@@ -2,7 +2,7 @@
  * Thin env-scoped token resolve by marketplace host class.
  * Routes class selection through Auth; MUST NOT consult cross-class env names.
  */
-import { selectProviderClassForHost, type ProviderHostClass } from "@/modules/Auth";
+import { selectProviderClassForHost } from "@/modules/Auth";
 import type { MarketplaceHostClass } from "./hostClassify.ts";
 
 export type ResolvedMarketplaceToken = {

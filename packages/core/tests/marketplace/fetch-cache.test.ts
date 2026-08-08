@@ -96,7 +96,7 @@ describe("mp-consumer-registry fetch + cache", () => {
     const paths = getPathHelpers();
     const { fetch } = getFetchApi();
     let hits = 0;
-    const transport = async (input: RequestInfo | URL) => {
+    const transport = async (input: string | URL | Request) => {
       hits += 1;
       const href = String(input);
       expect(href).toBe("https://example.com/path/marketplace.json");
@@ -189,7 +189,7 @@ describe("mp-consumer-registry fetch + cache", () => {
     });
     await callFetch(fetch, source, {
       forceRefresh: true,
-      fetch: async (input: RequestInfo | URL) => {
+      fetch: async (input: string | URL | Request) => {
         requested.push(String(input));
         return new Response(FIXTURE_CLAUDE_OK, { status: 200 });
       },

@@ -3,11 +3,7 @@
  * Promoted from manifest-active-targets acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  configManifestGuidePath,
-  fileExists,
-  readText,
-} from "./helpers.ts";
+import { configManifestGuidePath, fileExists, readText } from "./helpers.ts";
 
 describe("config-manifest docs — active field", () => {
   test("guide exists", () => {
@@ -28,10 +24,7 @@ describe("config-manifest docs — active field", () => {
         md,
       );
 
-    expect(
-      priority,
-      "guide must state selection priority --target → active → detect",
-    ).toBe(true);
+    expect(priority, "guide must state selection priority --target → active → detect").toBe(true);
   });
 
   test("distinguishes active from target/targets and object-map", () => {
@@ -51,10 +44,9 @@ describe("config-manifest docs — active field", () => {
   test("notes empty active is rejected and dual-read apm.yml", () => {
     const md = readText(configManifestGuidePath);
 
-    expect(
-      md,
-      "guide must reject / warn about empty active: []",
-    ).toMatch(/active\s*:\s*\[\s*\]|пуст\w*\s+active|empty\s+active/i);
+    expect(md, "guide must reject / warn about empty active: []").toMatch(
+      /active\s*:\s*\[\s*\]|пуст\w*\s+active|empty\s+active/i,
+    );
 
     expect(md, "guide must mention dual-read apm.yml / bapm.yml").toMatch(
       /apm\.yml[\s\S]{0,80}bapm\.yml|bapm\.yml[\s\S]{0,80}apm\.yml|dual[- ]?read/i,

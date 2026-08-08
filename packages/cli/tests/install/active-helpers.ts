@@ -2,7 +2,7 @@
  * CLI helpers for manifest `active` selection suites
  * (promoted from manifest-active-targets acceptance).
  */
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createTempProject, runInProject, writeText, type TempProject } from "./helpers.ts";

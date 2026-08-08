@@ -45,15 +45,15 @@ bapm, пока parent явно не поручил сравнение или р�
 
 ## Карта reference
 
-| Область | Где смотреть |
-|---------|--------------|
-| Нормативная спецификация | `spec/` |
-| Plugin manifest | `schemas/1.0.0/plugin.schema.json` |
-| MCP configuration | `schemas/1.0.0/mcp.schema.json` |
-| Portable package layout | `spec/`, `README.md` |
-| Skills / MCP servers | `spec/`, `schemas/`, `README.md` |
-| Security / path containment | `spec/` |
-| Future work / governance | `FUTURE_CONSIDERATIONS.md`, `GOVERNANCE.md` |
+| Область                     | Где смотреть                                |
+| --------------------------- | ------------------------------------------- |
+| Нормативная спецификация    | `spec/`                                     |
+| Plugin manifest             | `schemas/1.0.0/plugin.schema.json`          |
+| MCP configuration           | `schemas/1.0.0/mcp.schema.json`             |
+| Portable package layout     | `spec/`, `README.md`                        |
+| Skills / MCP servers        | `spec/`, `schemas/`, `README.md`            |
+| Security / path containment | `spec/`                                     |
+| Future work / governance    | `FUTURE_CONSIDERATIONS.md`, `GOVERNANCE.md` |
 
 ## Формат knowledge
 
@@ -71,15 +71,19 @@ bapm, пока parent явно не поручил сравнение или р�
 # <Topic>
 
 ## Summary
+
 1–5 предложений.
 
 ## Normative facts
+
 - факт — [`relative/path`](../../agent-plugins-spec/path) (§/symbol)
 
 ## Source map
+
 - путь — зачем читать
 
 ## Open questions
+
 - что не подтверждено
 ```
 
@@ -90,16 +94,20 @@ bapm, пока parent явно не поручил сравнение или р�
 
 ```markdown
 ## Answer
+
 <суть, 5–15 строк>
 
 ## Evidence
+
 - local reference path + вывод
 
 ## Knowledge updates
+
 - created|updated: topics/<slug>.md
 - INDEX: updated|unchanged
 
 ## Gaps
+
 - что ещё не проверено
 ```
 

@@ -11,13 +11,13 @@ bapm lock                 # resolve + lock, без deploy в Cursor
 bapm install --target cursor   # lock + modules + deploy
 ```
 
-| Действие | Команда |
-| --- | --- |
-| Только lock | `bapm lock` |
-| Lock + install | `bapm install` |
-| Без дрейфа пинов | `bapm install --frozen` |
+| Действие           | Команда                            |
+| ------------------ | ---------------------------------- |
+| Только lock        | `bapm lock`                        |
+| Lock + install     | `bapm install`                     |
+| Без дрейфа пинов   | `bapm install --frozen`            |
 | Переразрешить refs | `bapm update` / `install --update` |
-| Только план | `bapm update --dry-run` |
+| Только план        | `bapm update --dry-run`            |
 
 Новый lock пишется как `bapm.lock.yaml`. Если уже есть `apm.lock.yaml` — write-back в него. Оба сразу — `LOCKFILE_DUAL_CONFLICT`. Legacy `apm.lock` игнорируется.
 
@@ -33,12 +33,12 @@ bapm install --target cursor   # lock + modules + deploy
 
 ## Что на диске рядом
 
-| Артефакт | Смысл |
-| --- | --- |
-| `bapm.lock.yaml` / `apm.lock.yaml` | Зафиксированный граф |
-| `apm_modules/` | Материализованные пакеты |
-| `deployed_files` / `deployed_file_hashes` | Атрибуция deploy; `--frozen` может сверить с диском |
-| Deploy в Cursor | `.agents/skills/…`, `.cursor/…` — [быстрый старт](/guide/quick-start) |
+| Артефакт                                  | Смысл                                                                 |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| `bapm.lock.yaml` / `apm.lock.yaml`        | Зафиксированный граф                                                  |
+| `apm_modules/`                            | Материализованные пакеты                                              |
+| `deployed_files` / `deployed_file_hashes` | Атрибуция deploy; `--frozen` может сверить с диском                   |
+| Deploy в Cursor                           | `.agents/skills/…`, `.cursor/…` — [быстрый старт](/guide/quick-start) |
 
 `bapm lock` **не** принимает `--target`. Флаги: [lock](/reference/lock), [install](/reference/install).
 

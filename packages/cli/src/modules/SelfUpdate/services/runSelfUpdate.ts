@@ -138,7 +138,7 @@ function defaultNpmUpgrade(_pkg: string, version: string): Promise<void> {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) resolvePromise();
-      else reject(new Error(`npm i -g ${pkg}@${version} exited ${code}`));
+      else reject(new Error(`npm i -g ${_pkg}@${version} exited ${code}`));
     });
   });
 }

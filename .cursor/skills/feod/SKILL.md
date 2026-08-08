@@ -15,26 +15,26 @@ description: >-
 
 ## Профиль проекта (locked)
 
-| Параметр | Значение |
-|----------|----------|
-| scope | `packages/cli` (`apps/docs` вне FEOD) |
-| modification | base |
-| multiapp | no |
-| framework | none / CLI (TypeScript) |
-| srcRoot | `src` |
-| alias | `@` → `src` |
-| layerDirs | `app`, `commands`, `modules`, `common`, `globals` |
-| commands | верхний `commands/` обязателен |
-| moduleCommands | no |
-| commandRegistry | manual в `app` |
-| privateCommands | forbid |
-| common.allowIndex | false (index в common запрещён полностью) |
-| modules.allowDeepImports | false |
-| singleFileModules | no (запрещены) |
-| transit | none |
-| IoC | soft |
-| DDD in modules | no |
-| ESLint feod-plugin | no |
+| Параметр                 | Значение                                          |
+| ------------------------ | ------------------------------------------------- |
+| scope                    | `packages/cli` (`apps/docs` вне FEOD)             |
+| modification             | base                                              |
+| multiapp                 | no                                                |
+| framework                | none / CLI (TypeScript)                           |
+| srcRoot                  | `src`                                             |
+| alias                    | `@` → `src`                                       |
+| layerDirs                | `app`, `commands`, `modules`, `common`, `globals` |
+| commands                 | верхний `commands/` обязателен                    |
+| moduleCommands           | no                                                |
+| commandRegistry          | manual в `app`                                    |
+| privateCommands          | forbid                                            |
+| common.allowIndex        | false (index в common запрещён полностью)         |
+| modules.allowDeepImports | false                                             |
+| singleFileModules        | no (запрещены)                                    |
+| transit                  | none                                              |
+| IoC                      | soft                                              |
+| DDD in modules           | no                                                |
+| ESLint feod-plugin       | no                                                |
 
 ## Суть
 
@@ -51,15 +51,16 @@ common → modules → commands → app
 global — нигде не импортируется в коде (доступ без import; .d.ts через tsconfig)
 ```
 
-| Уровень | Назначение | Импортирует | Кем импортируется |
-|---------|------------|-------------|-------------------|
-| **global** | shim, полифиллы, `.d.ts` | — | никем (редкий init в app — исключение) |
-| **common** | мелкие переиспользуемые сущности, обычно 1 файл | common | modules, commands, app |
-| **modules** | доменная/CLI-логика, изолированные модули | common, modules (только `index.ts`) | modules, commands, app |
-| **commands** | CLI-команда → тонкий handler | common, modules | только app |
-| **app** | bootstrap, registry команд, config, integrations | common, modules, commands | никем |
+| Уровень      | Назначение                                       | Импортирует                         | Кем импортируется                      |
+| ------------ | ------------------------------------------------ | ----------------------------------- | -------------------------------------- |
+| **global**   | shim, полифиллы, `.d.ts`                         | —                                   | никем (редкий init в app — исключение) |
+| **common**   | мелкие переиспользуемые сущности, обычно 1 файл  | common                              | modules, commands, app                 |
+| **modules**  | доменная/CLI-логика, изолированные модули        | common, modules (только `index.ts`) | modules, commands, app                 |
+| **commands** | CLI-команда → тонкий handler                     | common, modules                     | только app                             |
+| **app**      | bootstrap, registry команд, config, integrations | common, modules, commands           | никем                                  |
 
 **Жёсткие правила:**
+
 - `index.ts` / barrel — **только** публичный API модуля (`modules/<Name>/index.ts`).
 - В `common` **запрещён любой** `index.ts` / barrel — импорт конкретного файла: `@/common/utilities/formatDate`.
 - Межмодульные импорты — **только** через `@/modules/<Name>` → `index.ts`. Deep imports запрещены.
@@ -157,8 +158,8 @@ src/
 ### Шаблон index.ts
 
 ```ts
-export { installDeps } from './services/installDeps'
-export type { InstallOptions, InstallResult } from './types/install.types'
+export { installDeps } from "./services/installDeps";
+export type { InstallOptions, InstallResult } from "./types/install.types";
 ```
 
 ### Soft IoC
@@ -166,25 +167,25 @@ export type { InstallOptions, InstallResult } from './types/install.types'
 ```ts
 // modules/Install/index.ts
 export interface Logger {
-  info(message: string): void
-  error(message: string): void
+  info(message: string): void;
+  error(message: string): void;
 }
 
 export function createInstall(deps?: { logger?: Logger }) {
-  const log = deps?.logger ?? { info: console.log, error: console.error }
+  const log = deps?.logger ?? { info: console.log, error: console.error };
   return {
     async run(options: InstallOptions): Promise<InstallResult> {
-      log.info('install…')
+      log.info("install…");
       // …
     },
-  }
+  };
 }
 
 // app/init/install.ts — внедрение из app при необходимости
-import { createInstall } from '@/modules/Install'
-import { cliLogger } from '../integrations/logger'
+import { createInstall } from "@/modules/Install";
+import { cliLogger } from "../integrations/logger";
 
-export const install = createInstall({ logger: cliLogger })
+export const install = createInstall({ logger: cliLogger });
 ```
 
 Жёсткая связанность без IoC допустима слабо (soft): предпочитай IoC, но не блокируй простой импорт public API другого модуля, если зависимость односторонняя и стабильная.
@@ -200,24 +201,24 @@ export const install = createInstall({ logger: cliLogger })
 
 ```ts
 // commands/install.ts
-import { createInstall } from '@/modules/Install'
+import { createInstall } from "@/modules/Install";
 
 export async function installCommand(argv: string[]): Promise<number> {
-  const install = createInstall()
-  const result = await install.run({ args: argv })
-  return result.ok ? 0 : 1
+  const install = createInstall();
+  const result = await install.run({ args: argv });
+  return result.ok ? 0 : 1;
 }
 ```
 
 ## Куда положить сущность
 
-| Сущность | Уровень |
-|----------|---------|
-| Точка входа, registry команд, config, integrations | **app** |
-| CLI-команда (тонкий handler) | **commands** |
-| Доменная логика, сервисы, работа с манифестом/lock | **modules** |
-| `formatPath`, константы, мелкий тип без домена | **common** |
-| Ambient types, shim Node | **global** |
+| Сущность                                           | Уровень      |
+| -------------------------------------------------- | ------------ |
+| Точка входа, registry команд, config, integrations | **app**      |
+| CLI-команда (тонкий handler)                       | **commands** |
+| Доменная логика, сервисы, работа с манифестом/lock | **modules**  |
+| `formatPath`, константы, мелкий тип без домена     | **common**   |
+| Ambient types, shim Node                           | **global**   |
 
 Подробнее — [reference.md](reference.md).
 

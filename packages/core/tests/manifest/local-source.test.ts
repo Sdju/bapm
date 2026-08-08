@@ -53,9 +53,9 @@ describe("Manifest local source parse", () => {
     expect(rejectApm({ local: false })).toMatch(/local/i);
     expect(rejectApm({ local: { nested: true } })).toMatch(/local/i);
     expect(rejectApm({ local: true, path: "./a" })).toMatch(/local|path|source/i);
-    expect(
-      rejectApm({ local: "./a", git: "https://github.com/example/repo.git" }),
-    ).toMatch(/local|git|source/i);
+    expect(rejectApm({ local: "./a", git: "https://github.com/example/repo.git" })).toMatch(
+      /local|git|source/i,
+    );
   });
 
   test("rejects object with no source key", () => {

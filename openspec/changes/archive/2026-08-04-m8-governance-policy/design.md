@@ -5,12 +5,14 @@ See `proposal.md` for motivation. Today `@bapm/core` Install calls `resolveAndLo
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Ship parse + local dual-read discovery + rule evaluate + install gate (plan → gate → download preferred)
 - Modes `off|warn|block`; escape `--no-policy` / `BAPM_POLICY_DISABLE`
 - Gate `lock` when cheap; same gate on mutating `update`
 - Document local-only provider list; optional thin `policy status`
 
 **Non-Goals (design-level):**
+
 - Remote `github-owner-dotgithub`, `extends` merge chain, pl-010 fetch_failure remote path
 - `approve`/`deny` exec grants (M9)
 - New `bapm-target-*`; deep MCP/compile policy (M9)
@@ -19,38 +21,46 @@ See `proposal.md` for motivation. Today `@bapm/core` Install calls `resolveAndLo
 ## Decisions
 
 ### D1: Core module `Policy` owns parse/discover/evaluate/gate
+
 - **Choice:** `packages/core/src/modules/Policy/` with public `index.ts`; Install/Lock/Update call gate helpers via `@/modules/Policy`.
 - **Why:** Mirrors Manifest/Lockfile FEOD; keeps CLI thin.
 - **Alternatives:** logic inside Install only — rejected (reuse by lock/update/status harder).
 
 ### D2: Local-only discovery providers for M8
+
 - **Choice:** Ordered providers = `[local-dual-read]`; document remote as deferred N/A (resolves open question in acceptance).
 - **Why:** User default; satisfies pl-011 posture without inventing GitHub Contents fetch.
 - **Alternatives:** ship thin github-owner provider — deferred.
 
 ### D3: Plan → gate → download for pl-002
+
 - **Choice:** Split resolve graph/plan from `downloadPackages` on gated paths; run gate on planned nodes/deps before download and before target deploy. Refactor `resolveAndLock` or Install to call `resolveDependencyGraph` → gate → download → lock write as needed.
 - **Why:** APM may download during resolve; OpenAPM pl-002 prefers no durable bytes before abort.
 - **Alternatives:** gate after `resolveAndLock` (may already have modules) — only if refactor cost extreme; document residual gap.
 
 ### D4: Dual-read mirrors Manifest discover
+
 - **Choice:** Same existence matrix as M1 (only-apm / only-bapm / both-error / neither-absent); explicit path wins; no parent walk; constants `APM_POLICY_FILE` / `BAPM_POLICY_FILE`.
 - **Why:** Consistency with product dual-read; acceptance section B.
 
 ### D5: Lock gate SHOULD — include by default
+
 - **Choice:** Wire the same gate into lock path (user: include if cheap). Reuse core gate; CLI gains `--policy` / `--no-policy` on lock.
 - **Why:** APM parity; cheap once Install split exists.
 - **Alternatives:** document-only defer — fallback if resolve/download split slips.
 
 ### D6: Escape env names
+
 - **Choice:** Primary `BAPM_POLICY_DISABLE=1`; also honor `APM_POLICY_DISABLE=1` for drop-in muscle memory.
 - **Why:** Acceptance asks BAPM mirror of APM.
 
 ### D7: Optional `bapm policy status`
+
 - **Choice:** Thin CLI command if cheap after core discover API; otherwise install diagnostics only.
 - **Why:** Useful for conformance docs; not on MUST bar.
 
 ### D8: Deferred pl-*
+
 - **Choice:** `extends` (pl-003/006), host-class pin (pl-004), remote (pl-012), fetch_failure block on remote (pl-010), pl-013/014/015/016 — N/A or later SHOULD; single-doc local policy only in M8.
 - **Why:** Keep M8 install-centric MUST bar small.
 

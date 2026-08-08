@@ -12,12 +12,12 @@ Report-only: не меняет lockfile, modules cache и project files. Exit `0
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `-v`, `--verbose` | — | Богаче detail (chosen tip ref, skip reasons, candidates) | off |
-| `-j`, `--parallel-checks` | `<n>` | Параллельные remote checks; `0` = serial | `4` |
-| `--json` | — | Machine-readable список `{ "dependencies": [...] }` вместо human table | off |
-| `-h`, `--help` | — | Показать help | — |
+| Флаг                      | Значение | Эффект                                                                 | Default |
+| ------------------------- | -------- | ---------------------------------------------------------------------- | ------- |
+| `-v`, `--verbose`         | —        | Богаче detail (chosen tip ref, skip reasons, candidates)               | off     |
+| `-j`, `--parallel-checks` | `<n>`    | Параллельные remote checks; `0` = serial                               | `4`     |
+| `--json`                  | —        | Machine-readable список `{ "dependencies": [...] }` вместо human table | off     |
+| `-h`, `--help`            | —        | Показать help                                                          | —       |
 
 ## Как проверяются пины
 

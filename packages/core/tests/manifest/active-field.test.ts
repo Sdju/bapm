@@ -104,9 +104,15 @@ describe("manifest active — dual-read apm.yml", () => {
     cwd = mkdtempSync(join(tmpdir(), "bapm-active-apm-"));
     writeText(
       join(cwd, "apm.yml"),
-      ["name: dual-active", "version: 0.0.1", "active:", "  - cursor", "dependencies:", "  apm: []", ""].join(
-        "\n",
-      ),
+      [
+        "name: dual-active",
+        "version: 0.0.1",
+        "active:",
+        "  - cursor",
+        "dependencies:",
+        "  apm: []",
+        "",
+      ].join("\n"),
     );
 
     const loaded = loadManifest({ cwd });
@@ -118,9 +124,14 @@ describe("manifest active — dual-read apm.yml", () => {
     cwd = mkdtempSync(join(tmpdir(), "bapm-active-apm-empty-"));
     writeText(
       join(cwd, "apm.yml"),
-      ["name: dual-empty-active", "version: 0.0.1", "active: []", "dependencies:", "  apm: []", ""].join(
-        "\n",
-      ),
+      [
+        "name: dual-empty-active",
+        "version: 0.0.1",
+        "active: []",
+        "dependencies:",
+        "  apm: []",
+        "",
+      ].join("\n"),
     );
 
     expect(() => loadManifest({ cwd: cwd! })).toThrow(/active/i);

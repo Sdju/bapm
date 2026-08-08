@@ -22,11 +22,11 @@ See proposal.md — Why. Today `runAuditCi` returns `{ ok, exitCode, violations[
 
 Always emit **exactly three** checks, fixed order:
 
-| Order | `name` | Source | Pass when |
-|------:|--------|--------|-----------|
-| 1 | `lockfile-exists` | lock dual-read discovery | lock loaded |
-| 2 | `content-integrity` | `collectDeployedHashViolations` | zero hash/presence violations (also vacuously pass if inventory empty) |
-| 3 | `tree-sha256` | `collectTreeSha256Violations` | zero tree violations |
+| Order | `name`              | Source                          | Pass when                                                              |
+| ----: | ------------------- | ------------------------------- | ---------------------------------------------------------------------- |
+|     1 | `lockfile-exists`   | lock dual-read discovery        | lock loaded                                                            |
+|     2 | `content-integrity` | `collectDeployedHashViolations` | zero hash/presence violations (also vacuously pass if inventory empty) |
+|     3 | `tree-sha256`       | `collectTreeSha256Violations`   | zero tree violations                                                   |
 
 - **One check per category**, many `details[]` (violation messages / path lines) — not one check per file.
 - Missing lock: check 1 fails; checks 2–3 still present with `passed: false`, message like `not evaluated (lockfile missing)`, `details: []` — keeps `summary.total === 3` stable for CI consumers.

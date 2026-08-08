@@ -39,18 +39,18 @@ Source of truth: `tests/spec-conformance/checklist.yml` → `pnpm run conformanc
 
 ### 3. Rationale text targets (locked themes)
 
-| ID | Theme |
-|----|--------|
+| ID     | Theme                                                                                                |
+| ------ | ---------------------------------------------------------------------------------------------------- |
 | sc-002 | Soft: partial path-escape on zip extract; full zip-slip + symlink/hardlink + sc-004 caps not claimed |
-| sc-003 | Deferred: cross-host-class credential scoping / redirect Auth drop (`mp-hosts-auth`) |
-| sc-004 | Soft: registry archives are zip; OpenAPM tar.gz-only + size/entry caps not claimed |
-| sc-005 | Deferred: credential host-class = PSL eTLD+1 / aliases not wired on fetch path |
-| sc-006 | Deferred: `registries.*.insecure` + http parse gate not implemented |
-| sc-008 | SHOULD deferred: non-https git-HTTP credential refuse not claimed |
-| sc-010 | Deferred: no interactive approve / user-local grant store |
-| sc-011 | Deferred: org-policy executable deny-wins + install/audit parity not claimed |
-| sc-012 | Deferred: required-package vs withheld-executable audit fidelity not claimed |
-| sc-013 | Deferred: operator host-class overlap + ambient credential suppress not claimed |
+| sc-003 | Deferred: cross-host-class credential scoping / redirect Auth drop (`mp-hosts-auth`)                 |
+| sc-004 | Soft: registry archives are zip; OpenAPM tar.gz-only + size/entry caps not claimed                   |
+| sc-005 | Deferred: credential host-class = PSL eTLD+1 / aliases not wired on fetch path                       |
+| sc-006 | Deferred: `registries.*.insecure` + http parse gate not implemented                                  |
+| sc-008 | SHOULD deferred: non-https git-HTTP credential refuse not claimed                                    |
+| sc-010 | Deferred: no interactive approve / user-local grant store                                            |
+| sc-011 | Deferred: org-policy executable deny-wins + install/audit parity not claimed                         |
+| sc-012 | Deferred: required-package vs withheld-executable audit fidelity not claimed                         |
+| sc-013 | Deferred: operator host-class overlap + ambient credential suppress not claimed                      |
 
 Exact checklist strings MAY be slightly shorter but MUST preserve Soft/Deferred distinction and MUST NOT mention marketplace catch-all.
 

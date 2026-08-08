@@ -19,7 +19,6 @@ const S_IFREG = 0x8000;
 const S_IFLNK = 0xa000;
 const S_IFSOCK = 0xc000;
 
-const EOCD_SIG = 0x06054b50;
 const CD_SIG = 0x02014b50;
 
 export class SafeExtractError extends Error {

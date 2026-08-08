@@ -31,11 +31,11 @@ bapm install --target cursor
 
 ## Поля
 
-| Поле | Форма | Смысл |
-| --- | --- | --- |
-| `target` | строка **или** object-map | Legacy: один host id. Object-map (**bapm-расширение**): host → пакет/путь. Нельзя вместе с `targets` |
-| `targets` | список **или** object-map | Legacy: несколько id. Object-map предпочтительнее для multi-host |
-| `active` | список строк | Какие host id **активировать**. Пустой `active: []` — отказ |
+| Поле      | Форма                     | Смысл                                                                                                |
+| --------- | ------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `target`  | строка **или** object-map | Legacy: один host id. Object-map (**bapm-расширение**): host → пакет/путь. Нельзя вместе с `targets` |
+| `targets` | список **или** object-map | Legacy: несколько id. Object-map предпочтительнее для multi-host                                     |
+| `active`  | список строк              | Какие host id **активировать**. Пустой `active: []` — отказ                                          |
 
 `target` / `targets` — заявление предпочтения и ключи для **загрузки** интеграций. Они **сами по себе не активируют** hosts. Для явной активации без detect: `active` или `--target <id>`. Рекомендуется `active` ⊆ объявленных `target`/`targets`, когда оба заданы.
 
@@ -47,10 +47,10 @@ targets:
   pi: "./agents/integration/pi-agent"
 ```
 
-| Форма значения | Трактовка |
-| --- | --- |
-| `./…`, `../…`, абсолютный путь | Локальный path относительно project root |
-| всё остальное (`@scope/name`, `pkg@version`) | npm package specifier |
+| Форма значения                               | Трактовка                                |
+| -------------------------------------------- | ---------------------------------------- |
+| `./…`, `../…`, абсолютный путь               | Локальный path относительно project root |
+| всё остальное (`@scope/name`, `pkg@version`) | npm package specifier                    |
 
 Когда object-map присутствует, CLI **загружает и регистрирует** каждый пакет/модуль из значений **до** выбора активного host (eager, fail-closed). Map **сам по себе не активирует** host. Без object-map id вроде `cursor` **не** регистрируется автоматически.
 
@@ -60,11 +60,11 @@ Mutual exclusion `target` + `targets` сохраняется для любой �
 
 ## Типичные ошибки
 
-| Симптом | Что проверить |
-| --- | --- |
-| `Target detection is missing or ambiguous` | `--target <id>` или `active: […]` |
-| `Manifest "active" must be a non-empty array` | Уберите `active: []` |
-| `must not declare both "target" and "targets"` | Оставьте одно поле |
-| `Unknown or unregistered target` | Id не загружен из object-map (пакет + `targets:`) |
+| Симптом                                        | Что проверить                                     |
+| ---------------------------------------------- | ------------------------------------------------- |
+| `Target detection is missing or ambiguous`     | `--target <id>` или `active: […]`                 |
+| `Manifest "active" must be a non-empty array`  | Уберите `active: []`                              |
+| `must not declare both "target" and "targets"` | Оставьте одно поле                                |
+| `Unknown or unregistered target`               | Id не загружен из object-map (пакет + `targets:`) |
 
 Personal overlay с `active`: [Overlay](/guide/manifest-overlay).

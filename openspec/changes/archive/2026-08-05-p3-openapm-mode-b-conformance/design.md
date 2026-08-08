@@ -46,12 +46,12 @@ OpenAPM “Mode B” here means the **hybrid fixture-anchored + statement-anchor
 
 ### 4. Claim matrix (initial publish)
 
-| Class | Status | Notes |
-|-------|--------|-------|
-| Consumer | **claim** | Primary; waivers for host-matrix items beyond cursor deploy where required; soft notes for intentional OpenAPM-vs-APM diffs (∩-pick, etc.) as limitations, not failures |
-| Producer | **claim** | init/pack/pr-004 citations |
-| Governance | **floor / limited claim** | Local providers + gate `active`; remote/`extends`-only reqs → `skipped` with P4 rationale |
-| Registry | **N/A** | No host; do not list rg-001 as claimed |
+| Class      | Status                    | Notes                                                                                                                                                                   |
+| ---------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Consumer   | **claim**                 | Primary; waivers for host-matrix items beyond cursor deploy where required; soft notes for intentional OpenAPM-vs-APM diffs (∩-pick, etc.) as limitations, not failures |
+| Producer   | **claim**                 | init/pack/pr-004 citations                                                                                                                                              |
+| Governance | **floor / limited claim** | Local providers + gate `active`; remote/`extends`-only reqs → `skipped` with P4 rationale                                                                               |
+| Registry   | **N/A**                   | No host; do not list rg-001 as claimed                                                                                                                                  |
 
 Copy informative requirements inventory from APM’s `openapm-v0.1.requirements.yml` into e.g. `tests/spec-conformance/openapm-v0.1.requirements.yml` (informative mirror) so the checklist generator does not depend on `.samples`.
 

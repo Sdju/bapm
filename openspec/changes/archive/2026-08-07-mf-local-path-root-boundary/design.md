@@ -5,12 +5,14 @@ Resolver currently recognizes only a subset of local string prefixes and compute
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Establish one lexical normalization and containment operation used before every local filesystem probe or manifest read.
 - Preserve the original declared path for deterministic error diagnostics while carrying a normalized absolute target to graph resolution.
 - Make failures observable through the public Resolver error-code union and stable tests, including the `resolveAndLock` no-side-effects boundary.
 - Make the Mode B `req-mf-016` claim evidence-based and generated from the checklist.
 
 **Non-Goals:**
+
 - Resolving symlinks or defending against symlink/junction escapes after lexical containment.
 - Changing cache directory identity/layout, downloader contracts, or git/registry/marketplace resolution.
 - Adding a policy that categorically rejects absolute or home-prefixed paths.

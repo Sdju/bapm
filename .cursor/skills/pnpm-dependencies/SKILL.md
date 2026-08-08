@@ -36,11 +36,11 @@ pnpm add <pkg> --save-catalog-name <catalog-name>
 
 ### Version selection
 
-| Intent | Approach |
-| --- | --- |
-| Current release | `pnpm add <pkg>@latest --save-catalog` or omit the range and let the CLI resolve |
-| Specific release | First: `pnpm view <pkg> version` (or `pnpm view <pkg> versions`), then `pnpm add <pkg>@<version> --save-catalog` |
-| Already in catalog | `pnpm add <pkg> --save-catalog` (reuses / prefers catalog under `catalogMode: prefer`) |
+| Intent             | Approach                                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Current release    | `pnpm add <pkg>@latest --save-catalog` or omit the range and let the CLI resolve                                 |
+| Specific release   | First: `pnpm view <pkg> version` (or `pnpm view <pkg> versions`), then `pnpm add <pkg>@<version> --save-catalog` |
+| Already in catalog | `pnpm add <pkg> --save-catalog` (reuses / prefers catalog under `catalogMode: prefer`)                           |
 
 Do **not** write `^x.y.z` into manifests by hand.
 

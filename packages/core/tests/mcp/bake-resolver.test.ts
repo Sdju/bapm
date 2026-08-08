@@ -15,10 +15,7 @@ describe("mcp env bake resolver (public API)", () => {
   });
 
   test("${env:VAR} bakes equivalently", () => {
-    const baked = bakeMap(
-      { TOKEN: "${env:MY_TOKEN}" },
-      { env: { MY_TOKEN: "env-prefix-token" } },
-    );
+    const baked = bakeMap({ TOKEN: "${env:MY_TOKEN}" }, { env: { MY_TOKEN: "env-prefix-token" } });
     expect(baked.TOKEN).toBe("env-prefix-token");
   });
 

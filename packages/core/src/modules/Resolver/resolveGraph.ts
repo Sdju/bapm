@@ -134,9 +134,7 @@ function entryMatchesScope(
     return [...scope].some((s) => pathKey.includes(s) || base.includes(s));
   }
   if ("local" in obj) {
-    const pathKey = effectiveLocalPath(obj.local)
-      .replace(/^\.\//, "")
-      .replace(/\/+$/, "");
+    const pathKey = effectiveLocalPath(obj.local).replace(/^\.\//, "").replace(/\/+$/, "");
     const base = pathKey.split("/").filter(Boolean).pop() ?? pathKey;
     if (scope.has(base) || scope.has(pathKey)) return true;
     return [...scope].some((s) => pathKey.includes(s) || base.includes(s));
@@ -583,7 +581,7 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     registry_base_url: e.registry_base_url,
     registry_owner: e.registry_owner,
     registry_repo: e.registry_repo,
-    ...(e.marketplaceProvenance ?? {}),
+    ...e.marketplaceProvenance,
   };
 }
 

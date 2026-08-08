@@ -4,26 +4,26 @@
 
 ## Матрица cross-level импортов
 
-| Импортирует ↓ / из → | global | common | modules | commands | app |
-|----------------------|--------|--------|---------|----------|-----|
-| **global** | — | ❌ | ❌ | ❌ | ❌ |
-| **common** | ✅* | ✅ | ❌** | ❌ | ❌ |
-| **modules** | ✅* | ✅ | ✅ (public API) | ❌ | ❌ |
-| **commands** | ✅* | ✅ | ✅ (public API) | ❌ | ❌ |
-| **app** | ✅* | ✅ | ✅ (public API) | ✅ | ❌ |
+| Импортирует ↓ / из → | global | common | modules         | commands | app |
+| -------------------- | ------ | ------ | --------------- | -------- | --- |
+| **global**           | —      | ❌     | ❌              | ❌       | ❌  |
+| **common**           | ✅*    | ✅     | ❌**            | ❌       | ❌  |
+| **modules**          | ✅*    | ✅     | ✅ (public API) | ❌       | ❌  |
+| **commands**         | ✅*    | ✅     | ✅ (public API) | ❌       | ❌  |
+| **app**              | ✅*    | ✅     | ✅ (public API) | ✅       | ❌  |
 
 \* global не импортируется — сущности через tsconfig / entry init  
 \*\* common → modules только через IoC (интерфейс, реализация в app)
 
 ## Правила путей
 
-| Тип импорта | Путь |
-|-------------|------|
-| Cross-level | `@/common/utilities/formatPath` |
-| Cross-module | `@/modules/Install` (→ index.ts) |
-| In-level (commands) | `./help` |
-| In-module | `./services/installDeps` |
-| Submodule → parent | `../services/installDeps` (исключение, минимизировать) |
+| Тип импорта         | Путь                                                   |
+| ------------------- | ------------------------------------------------------ |
+| Cross-level         | `@/common/utilities/formatPath`                        |
+| Cross-module        | `@/modules/Install` (→ index.ts)                       |
+| In-level (commands) | `./help`                                               |
+| In-module           | `./services/installDeps`                               |
+| Submodule → parent  | `../services/installDeps` (исключение, минимизировать) |
 
 Запрещено: `@/modules/Install/services/installDeps`, `@/common` (barrel), `modules/foo.ts`.
 
@@ -31,13 +31,13 @@
 
 Путь определяет логический уровень:
 
-| Путь | Логический уровень |
-|------|-------------------|
-| `common/utilities/formatPath.ts` | common |
-| `modules/Install/services/installDeps.ts` | modules |
-| `modules/Install/modules/Lockfile/` | modules (submodule) |
-| `commands/install.ts` | commands |
-| `app/registry.ts` | app |
+| Путь                                      | Логический уровень  |
+| ----------------------------------------- | ------------------- |
+| `common/utilities/formatPath.ts`          | common              |
+| `modules/Install/services/installDeps.ts` | modules             |
+| `modules/Install/modules/Lockfile/`       | modules (submodule) |
+| `commands/install.ts`                     | commands            |
+| `app/registry.ts`                         | app                 |
 
 Module commands и private command modules в этом профиле **не используются**.
 
@@ -96,17 +96,18 @@ ModuleName/
 
 ## Частые ошибки
 
-| Ошибка | Правильно |
-|--------|-----------|
-| common = shared-слой | common = перевалочный пункт, без barrel |
-| логика в commands | modules + тонкие commands |
-| `modules/util.ts` | директория + index или common |
-| deep import модуля | только `@/modules/Name` |
-| pages / .vue / router | N/A — это CLI |
+| Ошибка                | Правильно                               |
+| --------------------- | --------------------------------------- |
+| common = shared-слой  | common = перевалочный пункт, без barrel |
+| логика в commands     | modules + тонкие commands               |
+| `modules/util.ts`     | директория + index или common           |
+| deep import модуля    | только `@/modules/Name`                 |
+| pages / .vue / router | N/A — это CLI                           |
 
 ## Документация модуля
 
 `README.md` в корне модуля:
+
 - назначение
 - public API
 - пример использования

@@ -1,6 +1,6 @@
 ## Why
 
-Object-map `target` / `targets` already parse and retain `host-id → package specifier` bindings (`manifest-target-integration-map`), but install/compile still only use map **keys** for intersection and never load the packages. Authors cannot publish `@acme/...` and actually run `bapm install --target x-acme-editor` against a declared map. Wiring the map into CLI registration closes that gap without replacing `--target` / auto-detect as the source of truth for *which* host is active.
+Object-map `target` / `targets` already parse and retain `host-id → package specifier` bindings (`manifest-target-integration-map`), but install/compile still only use map **keys** for intersection and never load the packages. Authors cannot publish `@acme/...` and actually run `bapm install --target x-acme-editor` against a declared map. Wiring the map into CLI registration closes that gap without replacing `--target` / auto-detect as the source of truth for _which_ host is active.
 
 ## What Changes
 

@@ -4,11 +4,11 @@ Machine-readable inventory and generators for the published OpenAPM v0.1 claim.
 
 ## Files
 
-| Path | Role |
-|------|------|
+| Path                            | Role                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------- |
 | `openapm-v0.1.requirements.yml` | Informative mirror of OpenAPM Appendix C requirements (no `.samples` dep) |
-| `checklist.yml` | Per-`req-*` triage: `active` \| `skipped` \| `n/a` + citations/fixtures |
-| `../fixtures/spec-conformance/` | Vendored §12.4 seed fixtures |
+| `checklist.yml`                 | Per-`req-*` triage: `active` \| `skipped` \| `n/a` + citations/fixtures   |
+| `../fixtures/spec-conformance/` | Vendored §12.4 seed fixtures                                              |
 
 ## Regenerate statement
 

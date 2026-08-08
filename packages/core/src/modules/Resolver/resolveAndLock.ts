@@ -28,6 +28,7 @@ import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
 import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity } from "./identity.ts";
 import { ensureLocalSourcesUntracked } from "./ensureLocalUntracked.ts";
+import { effectiveLocalPath } from "./localSource.ts";
 
 /**
  * Orchestrate: load manifest → resolve plan → policy gate → download → write lock.

@@ -17,15 +17,15 @@ bapm install --target cursor
 
 ## Куда идти
 
-| Если нужно… | Откройте |
-| --- | --- |
-| Поставить CLI и первый install | [Быстрый старт](/guide/quick-start) |
-| Cursor или свой host | [Поддерживаемые hosts](/guide/supported-hosts) |
-| Список команд | [Команды](/guide/commands) |
-| Флаги конкретной команды | [Справка](/reference/) |
-| Разобраться с `bapm.yml` | [Манифест](/guide/config-manifest) |
-| Lock и CI | [Lock-файл](/guide/lockfile) |
-| Типовая задача по шагам | [Сценарии](/guide/situations/) |
+| Если нужно…                    | Откройте                                       |
+| ------------------------------ | ---------------------------------------------- |
+| Поставить CLI и первый install | [Быстрый старт](/guide/quick-start)            |
+| Cursor или свой host           | [Поддерживаемые hosts](/guide/supported-hosts) |
+| Список команд                  | [Команды](/guide/commands)                     |
+| Флаги конкретной команды       | [Справка](/reference/)                         |
+| Разобраться с `bapm.yml`       | [Манифест](/guide/config-manifest)             |
+| Lock и CI                      | [Lock-файл](/guide/lockfile)                   |
+| Типовая задача по шагам        | [Сценарии](/guide/situations/)                 |
 
 ## Ограничения (коротко)
 

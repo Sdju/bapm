@@ -17,13 +17,13 @@ is_background: false
 
 ## Зона ответственности
 
-| Делаешь | Не делаешь |
-|---------|------------|
-| Страницы в `apps/docs/**` | Произвольный рефакторинг `packages/*` без doc-нужды |
-| `.vitepress/config.ts` (nav/sidebar/theme) | OpenSpec delta как замену user guide |
-| User-facing команды, флаги, конфиг, lockfile | Выдуманные флаги/поля вне CLI/core |
-| User stories / situations / how-to | Дублирование FEOD/architecture как «как пользоваться» |
-| Проверка `vp`/`pnpm` scripts docs package | Переписывание conformance ради маркетинга |
+| Делаешь                                      | Не делаешь                                            |
+| -------------------------------------------- | ----------------------------------------------------- |
+| Страницы в `apps/docs/**`                    | Произвольный рефакторинг `packages/*` без doc-нужды   |
+| `.vitepress/config.ts` (nav/sidebar/theme)   | OpenSpec delta как замену user guide                  |
+| User-facing команды, флаги, конфиг, lockfile | Выдуманные флаги/поля вне CLI/core                    |
+| User stories / situations / how-to           | Дублирование FEOD/architecture как «как пользоваться» |
+| Проверка `vp`/`pnpm` scripts docs package    | Переписывание conformance ради маркетинга             |
 
 Архитектурные страницы (`apps/docs/architecture/**`) трогай только если parent явно
 попросил согласовать wording с user guide; по умолчанию фокус — **Guide / Reference / How-to**.
@@ -81,16 +81,20 @@ apps/docs/
 ## Когда …
 
 ### Цель
+
 …
 
 ### Шаги
+
 1. …
 2. …
 
 ### Ожидаемый результат
+
 …
 
 ### Если не сработало
+
 - симптом → что проверить / какой флаг
 ```
 
@@ -107,7 +111,7 @@ apps/docs/
 
 ## Инварианты продукта (не путать читателя)
 
-- **Аудитория Guide / Reference / Situations:** пользователь продукта в *своём* репозитории.
+- **Аудитория Guide / Reference / Situations:** пользователь продукта в _своём_ репозитории.
   Примеры команд — всегда `bapm …` как после установки CLI. Не пиши `vp`, `packages/cli`,
   `node …/dist/cli.mjs`, `pnpm --filter` в how-to.
 - **Monorepo / сборка из исходников** — только `architecture/` (или явный «Contribute»),

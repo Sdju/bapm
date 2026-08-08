@@ -29,11 +29,11 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@types/semver": "catalog:",
     "@bapm/integration-claude": "workspace:*",
     "@bapm/integration-codex": "workspace:*",
     "@bapm/integration-cursor": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:",
     "bumpp": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

@@ -10,12 +10,7 @@ const SARIF_VERSION = "2.1.0";
 const DRIVER_NAME = "bapm-audit";
 const DRIVER_VERSION = "0.0.0";
 
-function publicCheck(check: AuditCiCheck): {
-  name: string;
-  passed: boolean;
-  message: string;
-  details: string[];
-} {
+function publicCheck(check: AuditCiCheck): AuditCiCheck {
   return {
     name: check.name,
     passed: check.passed,

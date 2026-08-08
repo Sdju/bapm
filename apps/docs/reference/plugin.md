@@ -16,14 +16,14 @@ bapm plugin <subcommand>
 bapm plugin init [options] [PROJECT_NAME]
 ```
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `-y`, `--yes` | — | Non-interactive defaults (version `0.1.0`); разрешить overwrite | off |
-| `--target` | `<id>` | Записать host target (например `cursor`) | — |
-| `--agent-plugins` | — | Agent Plugins v1 portable root (без `bapm.yml`); canonical `plugin.json` | off |
-| `--skills` | — | Минимальный portable `skills/example/SKILL.md` layout (с `--agent-plugins`) | off |
-| `-v`, `--verbose` | — | Extra logging | off |
-| `--help`, `-h` | — | Показать help | — |
+| Флаг              | Значение | Эффект                                                                      | Default |
+| ----------------- | -------- | --------------------------------------------------------------------------- | ------- |
+| `-y`, `--yes`     | —        | Non-interactive defaults (version `0.1.0`); разрешить overwrite             | off     |
+| `--target`        | `<id>`   | Записать host target (например `cursor`)                                    | —       |
+| `--agent-plugins` | —        | Agent Plugins v1 portable root (без `bapm.yml`); canonical `plugin.json`    | off     |
+| `--skills`        | —        | Минимальный portable `skills/example/SKILL.md` layout (с `--agent-plugins`) | off     |
+| `-v`, `--verbose` | —        | Extra logging                                                               | off     |
+| `--help`, `-h`    | —        | Показать help                                                               | —       |
 
 ### Замечания
 

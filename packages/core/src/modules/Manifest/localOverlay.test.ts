@@ -2,11 +2,7 @@
  * Unit: local overlay merge / allowlist (manifest-local-overlay).
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  mergeLocalOverlay,
-  parseLocalOverlayDocument,
-  parseManifest,
-} from "./index.ts";
+import { mergeLocalOverlay, parseLocalOverlayDocument, parseManifest } from "./index.ts";
 
 describe("local overlay merge helpers", () => {
   test("active replace; targets and env deep-merge; registries by name", () => {

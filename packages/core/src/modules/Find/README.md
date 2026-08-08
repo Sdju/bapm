@@ -4,12 +4,12 @@ Offline reverse lookup: which locked package(s) own a deployed workspace path.
 
 ## Public API
 
-| Export | Role |
-|--------|------|
-| `buildReverseIndex` | Hash keys + list union → path → owners |
-| `lookupInIndex` | Normalize + exact / longest `/` directory prefix |
-| `formatFindOwnerLabel` / `formatFindOrigin` | Labels and `--source` origin |
-| `findPath` / `runFind` | Load lock → index → lookup → format (exits 0/1/2) |
+| Export                                      | Role                                              |
+| ------------------------------------------- | ------------------------------------------------- |
+| `buildReverseIndex`                         | Hash keys + list union → path → owners            |
+| `lookupInIndex`                             | Normalize + exact / longest `/` directory prefix  |
+| `formatFindOwnerLabel` / `formatFindOrigin` | Labels and `--source` origin                      |
+| `findPath` / `runFind`                      | Load lock → index → lookup → format (exits 0/1/2) |
 
 ## Example
 

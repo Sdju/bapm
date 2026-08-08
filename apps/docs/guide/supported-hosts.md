@@ -2,11 +2,11 @@
 
 Куда `bapm install` / `bapm compile` раскладывают пакеты. Поля манифеста: [Hosts и target](/guide/manifest-hosts).
 
-| Host | В CLI | Как подключить |
-| --- | --- | --- |
-| **Cursor** | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active` |
-| **Свой агент** | Нет | npm-пакет или локальный модуль + `targets:` / `target:` object-map |
-| **Claude / Codex** | Нет (не runtime) | Пакеты `@bapm/integration-claude` / `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack) |
+| Host               | В CLI                 | Как подключить                                                                                                         |
+| ------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Cursor**         | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                         |
+| **Свой агент**     | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                     |
+| **Claude / Codex** | Нет (не runtime)      | Пакеты `@bapm/integration-claude` / `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack) |
 
 ## Cursor (opt-in пакет)
 
@@ -30,6 +30,7 @@ bapm install --target cursor
 ```
 
 Без `--target` CLI может опереться на auto-detect (`.cursor/` / `.cursorrules`) или на `active` — но только после успешной загрузки map.
+
 ## Кастомный npm-пакет
 
 1. Поставьте пакет интеграции (глобально рядом с CLI или в проекте — как принято у вас для зависимостей).
@@ -73,12 +74,12 @@ bapm install --target pi
 
 У экземпляра обязательны непустые:
 
-| Поле | Смысл |
-| --- | --- |
-| `id` | Должен совпадать с ключом в `targets:` / `target:` |
-| `deployRoots` | Массив корней деплоя |
-| `detect` | Функция автодетекта host |
-| `materialize` | Запись примитивов на диск |
+| Поле          | Смысл                                              |
+| ------------- | -------------------------------------------------- |
+| `id`          | Должен совпадать с ключом в `targets:` / `target:` |
+| `deployRoots` | Массив корней деплоя                               |
+| `detect`      | Функция автодетекта host                           |
+| `materialize` | Запись примитивов на диск                          |
 
 `configureMcp` / `compile` — опционально. Пакеты только для marketplace-output (без runtime hooks) как значение map для install/compile **отклоняются**.
 
@@ -97,10 +98,10 @@ bapm pack --marketplace claude
 
 ## Типичные ошибки
 
-| Симптом | Что проверить |
-| --- | --- |
-| `Unknown or unregistered target` | Пакет установлен? Id объявлен в object-map `targets:`? |
-| `Target detection is missing or ambiguous` | `--target <id>` или `active: […]` |
-| Отказ загрузки map | Пакет/путь, `createIntegration`, совпадение `id` с ключом, containment пути |
+| Симптом                                    | Что проверить                                                               |
+| ------------------------------------------ | --------------------------------------------------------------------------- |
+| `Unknown or unregistered target`           | Пакет установлен? Id объявлен в object-map `targets:`?                      |
+| `Target detection is missing or ambiguous` | `--target <id>` или `active: […]`                                           |
+| Отказ загрузки map                         | Пакет/путь, `createIntegration`, совпадение `id` с ключом, containment пути |
 
 Дальше: [Hosts и target](/guide/manifest-hosts) · [Быстрый старт](/guide/quick-start).

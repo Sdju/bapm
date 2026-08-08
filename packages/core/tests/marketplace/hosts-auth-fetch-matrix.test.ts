@@ -67,7 +67,7 @@ describe("mp-hosts-auth fetch matrix", () => {
       ref: "main",
     });
 
-    const transport = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const transport = async (input: string | URL | Request, init?: RequestInit) => {
       const url = String(input);
       captured.push({ url, headers: headerMap(init) });
       return new Response(FIXTURE_MP, {
@@ -95,7 +95,7 @@ describe("mp-hosts-auth fetch matrix", () => {
       });
       expect(source.kind).toBe("github");
 
-      const transport = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const transport = async (input: string | URL | Request, init?: RequestInit) => {
         captured.push({ url: String(input), headers: headerMap(init) });
         return new Response(FIXTURE_MP, { status: 200 });
       };
@@ -125,7 +125,7 @@ describe("mp-hosts-auth fetch matrix", () => {
         });
         expect(source.kind).toBe("gitlab");
 
-        const transport = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const transport = async (input: string | URL | Request, init?: RequestInit) => {
           captured.push({ url: String(input), headers: headerMap(init) });
           return new Response(FIXTURE_MP, { status: 200 });
         };
@@ -170,7 +170,7 @@ describe("mp-hosts-auth fetch matrix", () => {
           path: "marketplace.json",
         });
 
-        const transport = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const transport = async (input: string | URL | Request, init?: RequestInit) => {
           captured.push({ url: String(input), headers: headerMap(init) });
           return new Response(FIXTURE_MP, { status: 200 });
         };
@@ -198,7 +198,7 @@ describe("mp-hosts-auth fetch matrix", () => {
       });
       expect(source.kind).toBe("ado");
 
-      const transport = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const transport = async (input: string | URL | Request, init?: RequestInit) => {
         captured.push({ url: String(input), headers: headerMap(init) });
         return new Response(FIXTURE_MP, { status: 200 });
       };
@@ -245,7 +245,7 @@ describe("mp-hosts-auth fetch matrix", () => {
       ref: "main",
     });
 
-    const transport = async (input: RequestInfo | URL) => {
+    const transport = async (input: string | URL | Request) => {
       captured.push({ url: String(input), headers: {} });
       return new Response(FIXTURE_MP, { status: 200 });
     };
@@ -281,7 +281,7 @@ describe("mp-hosts-auth fetch matrix", () => {
     const urlManifest = (await fetchMp(urlSource, {
       configDir: tmp.path,
       forceRefresh: true,
-      fetch: async (input: RequestInfo | URL) => {
+      fetch: async (input: string | URL | Request) => {
         hits += 1;
         expect(String(input)).toBe("https://example.com/path/marketplace.json");
         return new Response(FIXTURE_MP, { status: 200 });

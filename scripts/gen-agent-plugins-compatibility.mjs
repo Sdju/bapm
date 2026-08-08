@@ -13,7 +13,10 @@ const outputPath = resolve(repoRoot, "AGENT_PLUGINS_COMPATIBILITY.md");
 const check = process.argv.includes("--check");
 const cases = JSON.parse(readFileSync(casesPath, "utf8"));
 
-if (cases.format !== "agent-plugins-v1-compatibility-cases/v1" || !Array.isArray(cases.components)) {
+if (
+  cases.format !== "agent-plugins-v1-compatibility-cases/v1" ||
+  !Array.isArray(cases.components)
+) {
   throw new Error(`Invalid Agent Plugins compatibility cases: ${casesPath}`);
 }
 
@@ -27,7 +30,9 @@ for (const component of cases.components) {
     !existsSync(resolve(repoRoot, component.fixture)) ||
     !existsSync(resolve(repoRoot, component.test))
   ) {
-    throw new Error(`Compatibility case "${component.id ?? "(unknown)"}" must cite existing fixture and test`);
+    throw new Error(
+      `Compatibility case "${component.id ?? "(unknown)"}" must cite existing fixture and test`,
+    );
   }
 }
 
@@ -66,7 +71,9 @@ vp test packages/core/tests/agent-plugins/consumer.test.ts
 if (check) {
   const current = existsSync(outputPath) ? readFileSync(outputPath, "utf8") : "";
   if (current !== output) {
-    console.error("Agent Plugins compatibility drift: regenerate with node scripts/gen-agent-plugins-compatibility.mjs");
+    console.error(
+      "Agent Plugins compatibility drift: regenerate with node scripts/gen-agent-plugins-compatibility.mjs",
+    );
     process.exit(1);
   }
   console.log("agent plugins compatibility check: OK");

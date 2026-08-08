@@ -5,6 +5,7 @@ See proposal. Governance gate already exists in `@bapm/core` Policy (`discoverPo
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Thin CLI `policy status` + core report helper
 - Same discovery/resolve path as gate (no second resolver)
 - Human + JSON output; `--check` exit flip for CI
@@ -12,6 +13,7 @@ See proposal. Governance gate already exists in `@bapm/core` Policy (`discoverPo
 - Explicit dual-conflict / fetch-failure diagnostic outcomes
 
 **Non-Goals:**
+
 - `policy explain`, approve/deny / executable-trust UX
 - New providers / ADO cascade / APM multi-candidate remote chain
 - Cache TTL / freshness / hash-pin fiction if not already in bapm

@@ -22,18 +22,18 @@ Parent = диспетчер. Вся работа — в **Task** с `subagent_ty
 
 ## Агенты и pipeline
 
-| # | Фаза | `subagent_type` | Self-commit |
-|---|------|-----------------|-------------|
-| — | criteria (роадмап) | `apm-expert` | нет |
-| 1 | `plan` | `orch-plan` (explore: можно `explore` → затем `orch-plan` propose) | propose: да |
-| 2 | `acceptance` | `orch-acceptance` | да |
-| 3 | `apply` | `orch-apply` | да |
-| 4 | `accept` | `orch-accept` | только если правил файлы |
-| — | validate (роадмап) | `apm-expert` | нет |
-| 5 | `promote` | `orch-promote` | да |
-| 6 | `merge` | `orch-merge` | да |
-| — | canvas | `orch-canvas` | нет |
-| 7 | `deliver` | — (parent) | — |
+| #   | Фаза               | `subagent_type`                                                    | Self-commit              |
+| --- | ------------------ | ------------------------------------------------------------------ | ------------------------ |
+| —   | criteria (роадмап) | `apm-expert`                                                       | нет                      |
+| 1   | `plan`             | `orch-plan` (explore: можно `explore` → затем `orch-plan` propose) | propose: да              |
+| 2   | `acceptance`       | `orch-acceptance`                                                  | да                       |
+| 3   | `apply`            | `orch-apply`                                                       | да                       |
+| 4   | `accept`           | `orch-accept`                                                      | только если правил файлы |
+| —   | validate (роадмап) | `apm-expert`                                                       | нет                      |
+| 5   | `promote`          | `orch-promote`                                                     | да                       |
+| 6   | `merge`            | `orch-merge`                                                       | да                       |
+| —   | canvas             | `orch-canvas`                                                      | нет                      |
+| 7   | `deliver`          | — (parent)                                                         | —                        |
 
 После `ok|pass`: проверь `commitSha` в отчёте, если фаза обязана коммитить. Пустой sha при грязных файлах фазы → эскалация / ретрай того же агента с «докажи commit».  
 **Не** порождай `shell`/`generalPurpose` «только для commit».
@@ -42,10 +42,10 @@ Parent = диспетчер. Вся работа — в **Task** с `subagent_ty
 
 ## OpenSpec (опционально)
 
-| Ситуация | `orch-plan` |
-|----------|-------------|
-| Неясный scope | сначала `explore`, потом propose |
-| Ясная фича | сразу propose |
+| Ситуация       | `orch-plan`                            |
+| -------------- | -------------------------------------- |
+| Неясный scope  | сначала `explore`, потом propose       |
+| Ясная фича     | сразу propose                          |
 | «без openspec» | мини-plan в отчёте, без `openspec new` |
 
 ## TDD (кратко)
@@ -61,19 +61,20 @@ Parent = диспетчер. Вся работа — в **Task** с `subagent_ty
 
 Канон: `.cursor/skills/orchestrate/self-commit.md` (агенты обязаны следовать).
 
-| Фаза | type |
-|------|------|
-| plan propose | `docs` / `chore` |
-| acceptance | `test` |
-| apply | `feat` / `fix` |
-| accept | skip или `test`/`docs` |
-| promote | `test` / `refactor` |
-| merge | `docs` / `chore` |
+| Фаза         | type                   |
+| ------------ | ---------------------- |
+| plan propose | `docs` / `chore`       |
+| acceptance   | `test`                 |
+| apply        | `feat` / `fix`         |
+| accept       | skip или `test`/`docs` |
+| promote      | `test` / `refactor`    |
+| merge        | `docs` / `chore`       |
 
 ## Structured report
 
 ```markdown
 ## Report
+
 - phase: plan|acceptance|apply|accept|promote|merge|canvas
 - status: ok|blocked|fail|pass
 - changeName: <kebab|none>
@@ -154,11 +155,11 @@ Archive/sync OpenSpec; self-commit; не трогай production/acceptance.
 
 ## Deliver
 
-1. Статус pipeline  
-2. `changeName`, openspec used/skipped  
-3. Promote paths / deletions  
-4. 3–5 пунктов из summary  
-5. Коммиты из **отчётов фаз** (`commitSha` + message) — не из отдельного commit-агента  
-6. Blocked / не сделано  
+1. Статус pipeline
+2. `changeName`, openspec used/skipped
+3. Promote paths / deletions
+4. 3–5 пунктов из summary
+5. Коммиты из **отчётов фаз** (`commitSha` + message) — не из отдельного commit-агента
+6. Blocked / не сделано
 
 Без собственного code review.

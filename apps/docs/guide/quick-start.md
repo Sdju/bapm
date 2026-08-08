@@ -71,14 +71,14 @@ dependencies:
 
 ### Что ожидать на диске
 
-| Артефакт | Смысл |
-| --- | --- |
-| `bapm.lock.yaml` | Зафиксированный граф (новый lock по умолчанию — это имя) |
-| `apm_modules/` | Материализованные пакеты |
-| `.agents/skills/<name>/SKILL.md` | Skills |
-| `.cursor/rules/<name>.mdc` | Rules |
-| `.cursor/agents/<name>.md` | Agents |
-| `.cursor/mcp.json` | MCP (если есть eligible direct `dependencies.mcp`) |
+| Артефакт                         | Смысл                                                    |
+| -------------------------------- | -------------------------------------------------------- |
+| `bapm.lock.yaml`                 | Зафиксированный граф (новый lock по умолчанию — это имя) |
+| `apm_modules/`                   | Материализованные пакеты                                 |
+| `.agents/skills/<name>/SKILL.md` | Skills                                                   |
+| `.cursor/rules/<name>.mdc`       | Rules                                                    |
+| `.cursor/agents/<name>.md`       | Agents                                                   |
+| `.cursor/mcp.json`               | MCP (если есть eligible direct `dependencies.mcp`)       |
 
 Полезные флаги: `--dry-run`, `-v` / `--verbose`, `--frozen`. Полный список: [install](/reference/install).
 
@@ -86,13 +86,13 @@ Lock без деплоя: `bapm lock` — [lockfile](/guide/lockfile).
 
 ## 3. Если не сработало
 
-| Симптом | Что проверить |
-| --- | --- |
-| `No manifest found` | В cwd нет `bapm.yml` (или backcompat `apm.yml`) |
-| `frozen` / lock error при `--frozen` | Сначала обычный `install` или `lock` |
-| `bapm: command not found` | `npm i -g @bapm/cli` или `npx` / `pnpm exec` при project-local |
-| Ожидали Claude/Codex runtime | Это marketplace-pack, не install target — [hosts](/guide/supported-hosts) |
-| Свой агент не находится | Object-map `targets:` + `--target <id>` — [hosts](/guide/supported-hosts) |
+| Симптом                              | Что проверить                                                             |
+| ------------------------------------ | ------------------------------------------------------------------------- |
+| `No manifest found`                  | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                           |
+| `frozen` / lock error при `--frozen` | Сначала обычный `install` или `lock`                                      |
+| `bapm: command not found`            | `npm i -g @bapm/cli` или `npx` / `pnpm exec` при project-local            |
+| Ожидали Claude/Codex runtime         | Это marketplace-pack, не install target — [hosts](/guide/supported-hosts) |
+| Свой агент не находится              | Object-map `targets:` + `--target <id>` — [hosts](/guide/supported-hosts) |
 
 ## Реже на старте
 

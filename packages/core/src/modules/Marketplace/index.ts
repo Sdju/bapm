@@ -53,7 +53,7 @@ export {
   type MigrateMarketplaceYmlResult,
   type EditorResult,
   type SourceValidationResult,
-} from "./modules/Authoring";
+} from "./modules/Authoring/index.ts";
 
 export type {
   MarketplaceConfigOptions,
@@ -160,4 +160,4 @@ export {
   type ResolveMarketplacePackagesResult,
   type ResolveEffectiveOutputPathOptions,
   type ParseMarketplaceFilterResult,
-} from "./modules/PackOutputs";
+} from "./modules/PackOutputs/index.ts";

@@ -5,11 +5,13 @@ See proposal.md — Why. Baseline: core `packages/core/src/modules/Doctor/runDoc
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Wire CLI `-v`/`--verbose` → core `verbose` with richer messages for git/manifest/lock/modules.
 - Keep critical exit semantics and fail-closed unknown flags.
 - Ship SHOULD thin network (informational or verbose-only) + auth-env informational without marketplace rows.
 
 **Non-Goals (design-level):**
+
 - No marketplace.yml / format / duplicate / version-alignment / executable-trust checks.
 - No `AuthResolver` / `gh` CLI required dependency; no CONFORMANCE edits; no `--global` doctor.
 
@@ -40,6 +42,7 @@ See proposal.md — Why. Baseline: core `packages/core/src/modules/Doctor/runDoc
 ### D4 — Manifest / lock / modules verbose fields
 
 **Choice:**
+
 - Manifest present: path (`apm.yml` or `bapm.yml` discovered) + `name@version` from loaded document.
 - Lock present: path + `lockfile_version` and `dependencies.length`.
 - Modules: `apm_modules` path; if absent → “absent (ok)”; if dir → entry count (non-recursive readdir length is enough); if exists but not dir → keep critical FAIL.
@@ -70,12 +73,12 @@ See proposal.md — Why. Baseline: core `packages/core/src/modules/Doctor/runDoc
 
 ## Risks / Trade-offs
 
-| Risk | Mitigation |
-|------|------------|
-| Network flaky in verbose CI | Informational only; timeout bounded; tests mock/skip network |
+| Risk                                  | Mitigation                                                      |
+| ------------------------------------- | --------------------------------------------------------------- |
+| Network flaky in verbose CI           | Informational only; timeout bounded; tests mock/skip network    |
 | Verbose messages brittle in snapshots | Assert substrings (version/path/count), not full golden strings |
-| Help lies if probes deferred | Document network/auth in help only when code ships (S3) |
-| Double-detail noise for users | Keep one line per check; enrich message text only |
+| Help lies if probes deferred          | Document network/auth in help only when code ships (S3)         |
+| Double-detail noise for users         | Keep one line per check; enrich message text only               |
 
 ## Migration Plan
 

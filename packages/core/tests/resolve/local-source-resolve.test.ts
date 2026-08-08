@@ -78,9 +78,7 @@ describe("Resolver local source resolve", () => {
     const escapedPath = relative(project.cwd, outside.cwd);
     writeRootApm(project.cwd, `    - local: ${escapedPath}\n`);
 
-    const error = await captureResolverError(() =>
-      resolveDependencyGraph({ cwd: project.cwd }),
-    );
+    const error = await captureResolverError(() => resolveDependencyGraph({ cwd: project.cwd }));
     expect(error).toMatchObject({
       code: "LOCAL_PATH_ESCAPES_PROJECT_ROOT",
       details: expect.objectContaining({

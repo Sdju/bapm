@@ -27,11 +27,7 @@ export async function compileAgentsMd(
   const { primitives } = resolvePrimitiveConflicts({ primitives: raw });
   const sorted = sortPrimitives(primitives);
   const attribution = toAttribution(sorted);
-  const target = await selectCompileTarget(
-    options.integrationRegistry,
-    options.forcedTarget,
-    cwd,
-  );
+  const target = await selectCompileTarget(options.integrationRegistry, options.forcedTarget, cwd);
   if (typeof target.compile !== "function") {
     throw new Error(`Target "${target.id}" does not support compile`);
   }

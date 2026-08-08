@@ -4,16 +4,16 @@
 
 ## Когда коммитить
 
-| Фаза | Коммит? | `type` |
-|------|---------|--------|
-| plan (propose, есть файлы) | да | `docs` или `chore` |
-| plan (explore, без файлов) | нет | — |
-| acceptance | да | `test` |
-| apply | да | `feat` или `fix` |
-| accept | только если правил файлы | `test` / `docs` |
-| promote | да | `test` или `refactor` |
-| merge | да | `docs` или `chore` |
-| canvas / apm-expert criteria|validate | нет (вне git / knowledge) | — |
+| Фаза                         | Коммит?                  | `type`                    |
+| ---------------------------- | ------------------------ | ------------------------- |
+| plan (propose, есть файлы)   | да                       | `docs` или `chore`        |
+| plan (explore, без файлов)   | нет                      | —                         |
+| acceptance                   | да                       | `test`                    |
+| apply                        | да                       | `feat` или `fix`          |
+| accept                       | только если правил файлы | `test` / `docs`           |
+| promote                      | да                       | `test` или `refactor`     |
+| merge                        | да                       | `docs` или `chore`        |
+| canvas / apm-expert criteria | validate                 | нет (вне git / knowledge) | —   |
 
 При `status: fail|blocked` — **не** коммить; `commitSha: —`.
 

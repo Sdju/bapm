@@ -274,7 +274,9 @@ export function pickValue(names: string[], label: string): unknown {
 }
 
 /** Registry HTTP client factory (M10). */
-export function getCreateIntegrationRegistryClient(): (options?: Record<string, unknown>) => unknown {
+export function getCreateIntegrationRegistryClient(): (
+  options?: Record<string, unknown>,
+) => unknown {
   return pickExport(
     ["createRegistryClient", "createRegistryHttpClient", "createPackageRegistryClient"],
     "M10 registry HTTP client",

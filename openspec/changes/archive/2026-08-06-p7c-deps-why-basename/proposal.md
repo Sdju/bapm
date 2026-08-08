@@ -13,6 +13,7 @@ After P6f, `deps why` resolves only exact lock `name` or exact `repo_url`. Opera
 - Help lists `--dry-run` only if shipped (truthful)
 
 **Non-goals / out:**
+
 - `--global` / `-g`
 - CONFORMANCE claim-table edits
 - Shared APM git/http cache semantics

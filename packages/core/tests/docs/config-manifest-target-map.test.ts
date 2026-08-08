@@ -3,17 +3,11 @@
  * Promoted from manifest-target-integration-map acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import {
-  configManifestGuidePath,
-  fileExists,
-  readText,
-} from "./helpers.ts";
+import { configManifestGuidePath, fileExists, readText } from "./helpers.ts";
 
 describe("config-manifest docs — target/targets object-map", () => {
   test("guide exists", () => {
-    expect(fileExists(configManifestGuidePath), `expected ${configManifestGuidePath}`).toBe(
-      true,
-    );
+    expect(fileExists(configManifestGuidePath), `expected ${configManifestGuidePath}`).toBe(true);
   });
 
   test("documents object-map host→package bindings for target/targets", () => {
@@ -59,18 +53,14 @@ describe("config-manifest docs — target/targets object-map", () => {
       /(?:не\s+(?:авто(?:матически)?[- ]?)?(?:загруж|установ|активир)|(?:do\s+not|does\s+not|not)\s+(?:auto-?)?(?:load|install|activat)|без\s+авто[- ]?загруз)/i,
     );
 
-    expect(
-      md,
-      "guide must keep active host selection as --target / detect",
-    ).toMatch(/--target|auto-?detect|detect/i);
+    expect(md, "guide must keep active host selection as --target / detect").toMatch(
+      /--target|auto-?detect|detect/i,
+    );
   });
 
   test("prefers targets for multi-host object maps", () => {
     const md = readText(configManifestGuidePath);
-    expect(
-      md,
-      "guide should prefer targets for multi-host object maps",
-    ).toMatch(
+    expect(md, "guide should prefer targets for multi-host object maps").toMatch(
       /(?:prefer|предпочт\w*|лучше\s+использовать|рекоменд\w*)[\s\S]{0,80}targets/i,
     );
   });

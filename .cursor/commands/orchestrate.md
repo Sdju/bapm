@@ -22,16 +22,16 @@ description: "Оркестратор: orch-* субагенты, self-commit в 
 
 ## Pipeline
 
-| # | Фаза | `subagent_type` | Цель |
-|---|------|-----------------|------|
-| 1 | `plan` | `orch-plan` | explore/propose + self-commit OpenSpec |
-| 2 | `acceptance` | `orch-acceptance` | приёмочные тесты RED + self-commit |
-| 3 | `apply` | `orch-apply` | реализация GREEN + self-commit |
-| 4 | `accept` | `orch-accept` | приёмка; commit только если правил файлы |
-| 5 | `promote` | `orch-promote` | acceptance → general / delete + self-commit |
-| 6 | `merge` | `orch-merge` | archive/sync + self-commit |
-| — | canvas | `orch-canvas` | roadmap canvas (вне git), по необходимости |
-| 7 | `deliver` | — | отчёт пользователю из reports |
+| #   | Фаза         | `subagent_type`   | Цель                                        |
+| --- | ------------ | ----------------- | ------------------------------------------- |
+| 1   | `plan`       | `orch-plan`       | explore/propose + self-commit OpenSpec      |
+| 2   | `acceptance` | `orch-acceptance` | приёмочные тесты RED + self-commit          |
+| 3   | `apply`      | `orch-apply`      | реализация GREEN + self-commit              |
+| 4   | `accept`     | `orch-accept`     | приёмка; commit только если правил файлы    |
+| 5   | `promote`    | `orch-promote`    | acceptance → general / delete + self-commit |
+| 6   | `merge`      | `orch-merge`      | archive/sync + self-commit                  |
+| —   | canvas       | `orch-canvas`     | roadmap canvas (вне git), по необходимости  |
+| 7   | `deliver`    | —                 | отчёт пользователю из reports               |
 
 Роадмап criteria/validate: `apm-expert` (без git).  
 OpenSpec опционален («без openspec» → мини-plan в `orch-plan`).

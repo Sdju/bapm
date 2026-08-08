@@ -34,12 +34,12 @@ Related in-flight change `manifest-env-bake` introduces top-level `env:` on the 
 
 ### 2. Settings precedence (normative)
 
-| Priority | Layer | Notes |
-|----------|--------|--------|
-| 1 | Direct CLI flags | e.g. `--target` forced host |
-| 2 | `bapm.local.yml` | Allowlisted fields only |
-| 3 | Base `bapm.yml` **or** `apm.yml` | Existing dual-read, exactly one |
-| 4 | Process env overrides | Only for settings that already have / later gain an env override; does **not** invent env for every field in v1 |
+| Priority | Layer                            | Notes                                                                                                           |
+| -------- | -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| 1        | Direct CLI flags                 | e.g. `--target` forced host                                                                                     |
+| 2        | `bapm.local.yml`                 | Allowlisted fields only                                                                                         |
+| 3        | Base `bapm.yml` **or** `apm.yml` | Existing dual-read, exactly one                                                                                 |
+| 4        | Process env overrides            | Only for settings that already have / later gain an env override; does **not** invent env for every field in v1 |
 
 CLI flags always win over local for the same concern (notably `--target` vs local/base `active`).
 
@@ -51,12 +51,12 @@ Local file MUST be a YAML mapping. It MUST NOT require `name` / `version`.
 
 **Allowlisted top-level keys (v1):**
 
-| Key | Merge rule |
-|-----|------------|
-| `active` | **Replace** entire list when present in local (no append/union). |
-| `target` | See target merge below. |
-| `targets` | See target merge below. |
-| `env` | **Deep-merge** string map: local key wins; base keys retained if absent in local. Values are plain strings (same validation as base `env` when that field ships). |
+| Key          | Merge rule                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `active`     | **Replace** entire list when present in local (no append/union).                                                                                                                                                                                                                                                              |
+| `target`     | See target merge below.                                                                                                                                                                                                                                                                                                       |
+| `targets`    | See target merge below.                                                                                                                                                                                                                                                                                                       |
+| `env`        | **Deep-merge** string map: local key wins; base keys retained if absent in local. Values are plain strings (same validation as base `env` when that field ships).                                                                                                                                                             |
 | `registries` | **Deep-merge** by registry name: local entry replaces/overlays that name; other base names retained. Per-entry object fields: shallow merge (local field wins). Local string URL form replaces the whole entry for that name. `registries.default` (if modeled as part of the registries block) follows the same key overlay. |
 
 **Forbidden in local (fail closed):** `name`, `version`, `dependencies`, `devDependencies`, and any other non-allowlisted key (including unknown/`x-*` in v1 — keep the overlay strict so personal files stay auditable).

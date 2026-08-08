@@ -17,11 +17,11 @@ See `proposal.md`. Bake already runs in install via `bakeMcpServerMaps` (`packag
 
 ## Decisions
 
-1. **Syntax `{bake:NAME}` / `{bake:env:NAME}`** — single braces, prefix `bake:` (optional `env:`), identifier only.  
-   - **Why:** Matches user request `{bake:*}`; distinct from APM `${…}` and from APM-internal `{name}` templates (those are not `bake:`).  
+1. **Syntax `{bake:NAME}` / `{bake:env:NAME}`** — single braces, prefix `bake:` (optional `env:`), identifier only.
+   - **Why:** Matches user request `{bake:*}`; distinct from APM `${…}` and from APM-internal `{name}` templates (those are not `bake:`).
    - **Alt:** `{bake:${VAR}}` — rejected (harder parse, redundant with NAME lookup).
 
-2. **Same bake pipeline, one regex extension** — do not add a second install hook.  
+2. **Same bake pipeline, one regex extension** — do not add a second install hook.
    - **Alt:** Separate “only bake directives, leave APM forms” mode — deferred; would be **BREAKING** vs current Cursor APM parity.
 
 3. **Forward-compat note in docs** — `{bake:}` means “must bake here”; APM forms remain OpenAPM/APM compatibility on Cursor. Future runtime hosts MAY leave `${VAR}` while still honoring `{bake:}` — not implemented in this change.

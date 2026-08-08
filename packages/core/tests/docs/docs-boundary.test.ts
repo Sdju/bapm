@@ -66,7 +66,9 @@ test("guide intro must not claim across-clients as bare shipped fact", () => {
 });
 
 test("supported-hosts guide exists and is navigable", () => {
-  expect(fileExists(supportedHostsPath), "apps/docs/guide/supported-hosts.md must exist").toBe(true);
+  expect(fileExists(supportedHostsPath), "apps/docs/guide/supported-hosts.md must exist").toBe(
+    true,
+  );
   const config = readText(vitepressConfigPath);
   expect(config).toMatch(/\/guide\/supported-hosts/);
   const page = readText(supportedHostsPath);

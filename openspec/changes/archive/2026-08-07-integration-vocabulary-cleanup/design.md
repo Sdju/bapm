@@ -5,6 +5,7 @@ The package namespace migration is complete, yet three active OpenSpec slugs, li
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Establish one active integration vocabulary for architecture, public API, and CLI composition.
 - Make the public API rename explicitly breaking, with no retained aliases.
 - Keep runtime selection behavior and the OpenAPM target-domain interface stable.
@@ -12,6 +13,7 @@ The package namespace migration is complete, yet three active OpenSpec slugs, li
 - Specify acceptance as runtime/consumer behavior, never inspection of source text, paths, ASTs, or exported-symbol source declarations.
 
 **Non-Goals:**
+
 - Do not rename manifest fields, lockfile data, OpenAPM concepts, integration identifiers, or `--target`.
 - Do not remove or rewrite archived OpenSpec changes.
 - Do not add compatibility shims for retired package or public API names.

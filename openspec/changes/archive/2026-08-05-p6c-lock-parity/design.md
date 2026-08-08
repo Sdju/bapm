@@ -5,12 +5,14 @@ See proposal.md — Why. Baseline: CLI `runLock` is flat (no `export`); `buildLo
 ## Goals / Non-Goals
 
 **Goals:**
+
 - FEOD home for SBOM + thin CLI group routing.
 - Opaque inventory carry on lock rewrite.
 - Read-only deterministic export with APM-aligned formats and IO purity.
 - Accept `--parallel-downloads 0` as serial.
 
 **Non-Goals:**
+
 - Design-level: no new download/license-authoring pipeline; no attestation; no `--global` / multi-target; no OpenAPM claim-table edits; no hard-reject of all bare-lock unknown flags as MUST (SHOULD only — prefer fail-closed on **export** path).
 
 ## Decisions
@@ -55,13 +57,13 @@ Port APM `build_purl` / `scrub_url` semantics cheaply in TypeScript inside `Expo
 
 ## Risks / Trade-offs
 
-| Risk | Mitigation |
-|------|------------|
-| `mcp_servers` map vs APM list shape drift | Opaque carry; SBOM does not require MCP as components |
-| SPDX table size on import | Lazy-load inside Export |
-| Soft-ignored bare-lock typos | Export fail-closed; bare hard-reject deferred |
-| Branding ≠ APM goldens | bapm-owned fixtures only |
-| Carry vs orphan prune | Only top-level bags + per-dep deployed hashes; deps still from resolve graph |
+| Risk                                      | Mitigation                                                                   |
+| ----------------------------------------- | ---------------------------------------------------------------------------- |
+| `mcp_servers` map vs APM list shape drift | Opaque carry; SBOM does not require MCP as components                        |
+| SPDX table size on import                 | Lazy-load inside Export                                                      |
+| Soft-ignored bare-lock typos              | Export fail-closed; bare hard-reject deferred                                |
+| Branding ≠ APM goldens                    | bapm-owned fixtures only                                                     |
+| Carry vs orphan prune                     | Only top-level bags + per-dep deployed hashes; deps still from resolve graph |
 
 ## Migration Plan
 

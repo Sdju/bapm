@@ -50,9 +50,7 @@ function gitignoreOf(cwd: string): string | null {
 }
 
 function lockExists(cwd: string): boolean {
-  return (
-    existsSync(join(cwd, "apm.lock.yaml")) || existsSync(join(cwd, "bapm.lock.yaml"))
-  );
+  return existsSync(join(cwd, "apm.lock.yaml")) || existsSync(join(cwd, "bapm.lock.yaml"));
 }
 
 async function captureResolverError(fn: () => Promise<unknown>): Promise<ResolverError> {

@@ -12,10 +12,10 @@ Experimental PUT flat registry zip. Требует `BAPM_EXPERIMENTAL_REGISTRIES
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `--dry-run` | — | Build/validate без PUT | off |
-| `--zip` | `<path>` | Загрузить готовый archive (без rebuild) | — |
-| `--help`, `-h` | — | Показать help | — |
+| Флаг           | Значение | Эффект                                  | Default |
+| -------------- | -------- | --------------------------------------- | ------- |
+| `--dry-run`    | —        | Build/validate без PUT                  | off     |
+| `--zip`        | `<path>` | Загрузить готовый archive (без rebuild) | —       |
+| `--help`, `-h` | —        | Показать help                           | —       |
 
 См. также: [pack](/reference/pack) (producer zip / marketplace.json), карта [команд](/guide/commands).

@@ -6,10 +6,10 @@
 
 Именованный mapping. Ключ `default` — **не URL**, а имя уже объявленного registry.
 
-| Форма значения | Поля |
-| --- | --- |
-| строка | HTTP(S) URL |
-| объект | обязательный `url`; опционально `insecure`, `aliases`; `token` в YAML **запрещён** |
+| Форма значения | Поля                                                                               |
+| -------------- | ---------------------------------------------------------------------------------- |
+| строка         | HTTP(S) URL                                                                        |
+| объект         | обязательный `url`; опционально `insecure`, `aliases`; `token` в YAML **запрещён** |
 
 `http://` без `insecure: true` — только exempt-хосты (loopback / RFC1918).
 
@@ -43,7 +43,7 @@ Experimental resolve/install и `publish` включаются через `BAPM_
 
 ## Типичные ошибки
 
-| Симптом | Что проверить |
-| --- | --- |
+| Симптом                                          | Что проверить                            |
+| ------------------------------------------------ | ---------------------------------------- |
 | `Registry … uses http:// without insecure: true` | `insecure: true` или HTTPS / exempt host |
-| `OpenAPM v0.1 rejects top-level "workspaces"` | Уберите `workspaces` |
+| `OpenAPM v0.1 rejects top-level "workspaces"`    | Уберите `workspaces`                     |

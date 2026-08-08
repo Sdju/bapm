@@ -10,11 +10,11 @@ See `proposal.md`. Bake already resolves placeholders via `bakeMcpStringMap` (`o
 
 ## Decisions
 
-1. **Precedence: overrides → process.env → manifest.env**  
-   - Matches “доопределить”: ambient/CI secrets win; yml fills gaps for plugin placeholder names.  
+1. **Precedence: overrides → process.env → manifest.env**
+   - Matches “доопределить”: ambient/CI secrets win; yml fills gaps for plugin placeholder names.
    - **Alt:** manifest wins — rejected (encourages committing secrets / shadows CI).
 
-2. **Validate env keys as env-var names** — same shape as MCP env keys.  
+2. **Validate env keys as env-var names** — same shape as MCP env keys.
    - Values: strings only (including `""`); empty does not satisfy bake (same as empty process.env).
 
 3. **Extend `BakeMcpStringMapOptions` with `manifestEnv`** (or `defaults`) — keep `overrides` for future CLI. Install passes `manifest.document.env`.

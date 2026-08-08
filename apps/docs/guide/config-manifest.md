@@ -24,24 +24,24 @@ dependencies:
 bapm init -y --target cursor
 ```
 
-| Поле | Зачем |
-| --- | --- |
-| `name` / `version` | Обязательны |
-| `target` | Предпочитаемый host (`cursor`); **сам по себе не активирует** |
-| `active` | Явный список host id для активации |
-| `dependencies.apm` | Пакеты агента |
-| `dependencies.mcp` | MCP; в Cursor по умолчанию деплоятся **прямые** записи |
+| Поле               | Зачем                                                         |
+| ------------------ | ------------------------------------------------------------- |
+| `name` / `version` | Обязательны                                                   |
+| `target`           | Предпочитаемый host (`cursor`); **сам по себе не активирует** |
+| `active`           | Явный список host id для активации                            |
+| `dependencies.apm` | Пакеты агента                                                 |
+| `dependencies.mcp` | MCP; в Cursor по умолчанию деплоятся **прямые** записи        |
 
 Подробнее формы deps и MCP bake: [Зависимости](/guide/manifest-dependencies).
 
 ## Когда править вручную
 
-| Задача | Как |
-| --- | --- |
-| Новый проект | `bapm init -y --target cursor` |
-| Добавить пакет | `bapm install <package-ref…>` (или `--dev`) |
-| Убрать пакет | `bapm uninstall …` |
-| Path/git/MCP, `name`/`version` | Правка YAML → `bapm install` |
+| Задача                         | Как                                         |
+| ------------------------------ | ------------------------------------------- |
+| Новый проект                   | `bapm init -y --target cursor`              |
+| Добавить пакет                 | `bapm install <package-ref…>` (или `--dev`) |
+| Убрать пакет                   | `bapm uninstall …`                          |
+| Path/git/MCP, `name`/`version` | Правка YAML → `bapm install`                |
 
 ## Host: `active` и `--target`
 
@@ -86,22 +86,22 @@ Precedence: CLI flags (`--target`, …) → `bapm.local.yml` → base `bapm.yml`
 
 ## Дальше по темам
 
-| Тема | Страница |
-| --- | --- |
-| Формы `dependencies.apm` / MCP bake | [Зависимости](/guide/manifest-dependencies) |
-| Cursor и кастомные интеграции | [Поддерживаемые hosts](/guide/supported-hosts) |
-| `target` / `targets` / `active` / object-map | [Hosts](/guide/manifest-hosts) |
-| `bapm.local.yml` | [Overlay](/guide/manifest-overlay) |
-| `registries`, `marketplace:` | [Registries](/guide/manifest-registries) |
+| Тема                                         | Страница                                       |
+| -------------------------------------------- | ---------------------------------------------- |
+| Формы `dependencies.apm` / MCP bake          | [Зависимости](/guide/manifest-dependencies)    |
+| Cursor и кастомные интеграции                | [Поддерживаемые hosts](/guide/supported-hosts) |
+| `target` / `targets` / `active` / object-map | [Hosts](/guide/manifest-hosts)                 |
+| `bapm.local.yml`                             | [Overlay](/guide/manifest-overlay)             |
+| `registries`, `marketplace:`                 | [Registries](/guide/manifest-registries)       |
 
 ## Типичные ошибки
 
-| Симптом | Что проверить |
-| --- | --- |
-| `No manifest found` | Нет `bapm.yml` / `apm.yml` в cwd → `init` |
-| `Manifest requires "name"` / `"version"` | Добавьте оба поля |
-| `Target detection is missing or ambiguous` | `--target cursor` или `active: [cursor]` |
-| `Manifest "active" must be a non-empty array` | Уберите пустой `active: []` |
-| `must not declare both "target" and "targets"` | Оставьте одно из полей |
+| Симптом                                        | Что проверить                             |
+| ---------------------------------------------- | ----------------------------------------- |
+| `No manifest found`                            | Нет `bapm.yml` / `apm.yml` в cwd → `init` |
+| `Manifest requires "name"` / `"version"`       | Добавьте оба поля                         |
+| `Target detection is missing or ambiguous`     | `--target cursor` или `active: [cursor]`  |
+| `Manifest "active" must be a non-empty array`  | Уберите пустой `active: []`               |
+| `must not declare both "target" and "targets"` | Оставьте одно из полей                    |
 
 Lock рядом: [Lock-файл](/guide/lockfile). Init: [init](/reference/init).

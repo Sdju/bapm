@@ -5,11 +5,13 @@ See proposal.md — Why. Criteria: `.samples/apm-knowledge/topics/mp-consumer-re
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Close gaps G1–G12 in core + CLI with FEOD boundaries.
 - Ship thin `validate` (schema + duplicate names) — G12 decision: **ship**, not DEFER.
 - Document `~/.bapm` paths and host limits in this design.
 
 **Non-Goals (design-level):**
+
 - No ETag/SWR/cross-process lock as MUST (S1–S3 deferred).
 - No full AuthResolver / GHES / PROXY_REGISTRY matrix (S4 = thin env token only).
 - No search/install/Resolver wiring; no CONFORMANCE edits.
@@ -19,6 +21,7 @@ See proposal.md — Why. Criteria: `.samples/apm-knowledge/topics/mp-consumer-re
 ### D1 — Core module layout (G1)
 
 **Choice:** New `packages/core/src/modules/Marketplace/` with public `index.ts` exporting:
+
 - models + `parseMarketplaceJson` / `urlNamesRemoteManifest`
 - config paths (`getBapmConfigDir`, `marketplacesJsonPath`, `marketplaceCacheDir`, `ensureBapmConfigDir`)
 - registry CRUD (`list`/`get`/`add`/`remove`)
@@ -35,6 +38,7 @@ Internal files (suggested): `models.ts`, `parse.ts`, `paths.ts`, `registry.ts`, 
 ### D2 — `~/.bapm` config root (G2)
 
 **Choice:** `path.join(os.homedir(), ".bapm")` as sole config root. Ensure dir on first write (`mkdir` recursive, mode `0o700` when creating). Paths:
+
 - Registry: `~/.bapm/marketplaces.json`
 - Cache: `~/.bapm/cache/marketplace/<safeKey>.json` + `.meta.json`
 
@@ -56,7 +60,8 @@ Allow test override via optional `configDir` / `BAPM_CONFIG_DIR` inject on publi
 
 ### D5 — Fetch transport (G5, open question)
 
-**Choice:** 
+**Choice:**
+
 - **github.com:** HTTPS GitHub Contents API `GET /repos/{owner}/{repo}/contents/{path}?ref={ref}` with `Accept: application/vnd.github.raw` (or decode `content` base64 from JSON). Unauthenticated public happy path. If `process.env.GITHUB_TOKEN` or `GH_TOKEN` set, send `Authorization: Bearer <token>` (never log value) — S4 thin.
 - **url:** native `fetch` (injectable) HTTPS-only, follow redirects ≤5, reject if final URL is non-HTTPS; stream/chunk with ~10 MiB cap.
 - **local:** read file; if directory, probe candidates; optional `git --git-dir show` for bare repos if already needed — keep minimal (working tree + direct file first).
@@ -79,6 +84,7 @@ Allow test override via optional `configDir` / `BAPM_CONFIG_DIR` inject on publi
 ### D8 — CLI FEOD (G8)
 
 **Choice:** Mirror Cache/Doctor pattern:
+
 - `packages/cli/src/modules/Marketplace/` (`createMarketplace`, parse/help/run services)
 - `commands/marketplace.ts` thin handler
 - `app/init/marketplace.ts` + `registry.ts` entry `COMMAND_MARKETPLACE`
@@ -89,6 +95,7 @@ Allow test override via optional `configDir` / `BAPM_CONFIG_DIR` inject on publi
 ### D9 — add SOURCE parsing (G9)
 
 **Choice:** Port APM `_parse_marketplace_source` subset for v1 hosts only:
+
 - `OWNER/REPO` → github.com (+ `--host` only for github.com in v1; non-github host → refuse)
 - HTTPS github.com repo URL (+ optional `#ref`)
 - HTTPS `.../marketplace.json` → url kind
@@ -118,13 +125,13 @@ Allow test override via optional `configDir` / `BAPM_CONFIG_DIR` inject on publi
 
 ## Risks / Trade-offs
 
-| Risk | Mitigation |
-|------|------------|
-| Contents API rate-limit / private repos | Public unauth path documented; thin token header; full auth → `mp-hosts-auth` |
-| Kind derivation classifies gitlab before refuse | Explicit refuse at add+fetch with clear message |
-| Atomic write without lock → lost update | Accept v1; document; S3 later |
-| Help sprawl | Consumer-only section; no authoring verbs |
-| Accidental Registry coupling | Lint/review: Marketplace MUST NOT import Registry createClient |
+| Risk                                            | Mitigation                                                                    |
+| ----------------------------------------------- | ----------------------------------------------------------------------------- |
+| Contents API rate-limit / private repos         | Public unauth path documented; thin token header; full auth → `mp-hosts-auth` |
+| Kind derivation classifies gitlab before refuse | Explicit refuse at add+fetch with clear message                               |
+| Atomic write without lock → lost update         | Accept v1; document; S3 later                                                 |
+| Help sprawl                                     | Consumer-only section; no authoring verbs                                     |
+| Accidental Registry coupling                    | Lint/review: Marketplace MUST NOT import Registry createClient                |
 
 ## Migration Plan
 

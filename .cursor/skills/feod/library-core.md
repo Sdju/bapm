@@ -4,21 +4,21 @@
 
 ## Профиль (library)
 
-| Параметр | Значение |
-|----------|----------|
-| scope | `packages/core` |
-| modification | base (library) |
-| multiapp | no |
-| framework | none / library (TypeScript ESM) |
-| srcRoot | `src` |
-| alias | `@` → `src` |
-| layerDirs | `app`, `pages`→**`pages`**, `modules`, `common`, `globals` |
-| pages | empty stub (`.gitkeep`); no domain handlers |
-| moduleCommands / private pages | N/A / unused |
-| common.allowIndex | false |
-| modules.allowDeepImports | false |
-| singleFileModules | no |
-| IoC | soft (optional; not required for pure library modules yet) |
+| Параметр                       | Значение                                                   |
+| ------------------------------ | ---------------------------------------------------------- |
+| scope                          | `packages/core`                                            |
+| modification                   | base (library)                                             |
+| multiapp                       | no                                                         |
+| framework                      | none / library (TypeScript ESM)                            |
+| srcRoot                        | `src`                                                      |
+| alias                          | `@` → `src`                                                |
+| layerDirs                      | `app`, `pages`→**`pages`**, `modules`, `common`, `globals` |
+| pages                          | empty stub (`.gitkeep`); no domain handlers                |
+| moduleCommands / private pages | N/A / unused                                               |
+| common.allowIndex              | false                                                      |
+| modules.allowDeepImports       | false                                                      |
+| singleFileModules              | no                                                         |
+| IoC                            | soft (optional; not required for pure library modules yet) |
 
 `layerDirs.pages` = **`pages`** (не `commands`). В библиотеке нет CLI-команд.
 
@@ -50,11 +50,11 @@ packages/core/src/
 
 ## Отличия от CLI
 
-| | CLI (`packages/cli`) | Library (`packages/core`) |
-|--|----------------------|---------------------------|
-| `pages` dir | `commands` (тонкие handlers) | `pages` stub (пустой) |
-| entry | CLI bootstrap + registry | `app/publicApi` + thin `index.ts` |
-| modules today | Help / Version / Install | Manifest / Lockfile |
+|               | CLI (`packages/cli`)         | Library (`packages/core`)         |
+| ------------- | ---------------------------- | --------------------------------- |
+| `pages` dir   | `commands` (тонкие handlers) | `pages` stub (пустой)             |
+| entry         | CLI bootstrap + registry     | `app/publicApi` + thin `index.ts` |
+| modules today | Help / Version / Install     | Manifest / Lockfile               |
 
 ## Правила (как у CLI, кроме pages)
 

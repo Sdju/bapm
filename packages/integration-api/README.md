@@ -4,11 +4,11 @@ Shared **contracts, registry, and materialize helpers** for bapm integrations.
 
 ## Boundary
 
-| Package                                            | May depend on                                                  |
-| -------------------------------------------------- | -------------------------------------------------------------- |
-| `@bapm/core`                                       | `@bapm/integration-api` only (no concrete `@bapm/integration-*`) |
-| `@bapm/integration-cursor` (and other integrations) | `@bapm/integration-api`                                         |
-| CLI / tests                                        | Register concrete integrations into a registry created here    |
+| Package                                             | May depend on                                                    |
+| --------------------------------------------------- | ---------------------------------------------------------------- |
+| `@bapm/core`                                        | `@bapm/integration-api` only (no concrete `@bapm/integration-*`) |
+| `@bapm/integration-cursor` (and other integrations) | `@bapm/integration-api`                                          |
+| CLI / tests                                         | Register concrete integrations into a registry created here      |
 
 Core Install discovers primitives and calls `materialize` on registered integrations through this package. Integration packages implement detection, deploy roots, and disk writes — core never imports them.
 

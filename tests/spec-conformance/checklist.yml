@@ -1,6 +1,6 @@
 # Mode B machine checklist for OpenAPM v0.1 — bapm P3 claim triage.
 # status: active | skipped | n/a. Edit with care; regenerate CONFORMANCE via scripts/gen-conformance-statement.mjs.
-checklist_format_version: '1'
+checklist_format_version: "1"
 spec_version: v0.1
 claim_posture:
   consumer: claimed
@@ -8,818 +8,832 @@ claim_posture:
   governance: claimed
   registry: n/a
 limitations:
-- Multi-target adapters beyond cursor are out of scope
-- Registry host / rg-001 not claimed (N/A)
-- Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
-- Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
-- ADO / multi-candidate policy cascades are out of scope
-- Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) and hooks/bin/canvas executable gates remain soft (MCP-only trust surface)
-- Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
-- 'Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)'
-- 'P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install'
+  - Multi-target adapters beyond cursor are out of scope
+  - Registry host / rg-001 not claimed (N/A)
+  - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
+  - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
+  - ADO / multi-candidate policy cascades are out of scope
+  - Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) and hooks/bin/canvas executable gates remain soft (MCP-only trust surface)
+  - Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
+  - "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)"
+  - "P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install"
 scope_out:
-- multi-target
-- registry host
-- full ADO cascade
-- residual Auth depth (gh CLI / az bearer / credential-helper / try_with_fallback)
-- soft §10 tar.gz-only container (zip + caps shipped)
-- hooks/bin/canvas executable gates (MCP-only)
-- full Python Mode B port
+  - multi-target
+  - registry host
+  - full ADO cascade
+  - residual Auth depth (gh CLI / az bearer / credential-helper / try_with_fallback)
+  - soft §10 tar.gz-only container (zip + caps shipped)
+  - hooks/bin/canvas executable gates (MCP-only)
+  - full Python Mode B port
 requirements:
-- id: req-mf-001
-  class: producer
-  keyword: MUST
-  section: '4.1'
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-002
-  class: producer
-  keyword: MUST
-  section: '4.1'
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-003
-  class: producer
-  keyword: MUST
-  section: '4.1'
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-004
-  class: producer
-  keyword: SHOULD
-  section: '4.1'
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-005
-  class: producer
-  keyword: MUST
-  section: 4.2.1
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-006
-  class: consumer
-  keyword: MUST
-  section: '4.1'
-  status: active
-  fixture: tests/fixtures/spec-conformance/manifest/valid-minimal.yml
-  citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-mf-007
-  class: consumer
-  keyword: MUST
-  section: 4.3.1
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-008
-  class: consumer
-  keyword: MUST
-  section: 4.3.3
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-009
-  class: consumer
-  keyword: MUST
-  section: 4.3.4
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-010
-  class: consumer
-  keyword: MUST
-  section: 4.3.2
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-011
-  class: consumer
-  keyword: MUST
-  section: 4.3.2
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-012
-  class: consumer
-  keyword: MUST
-  section: 4.3.6
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-013
-  class: consumer
-  keyword: MUST
-  section: '4.5'
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-014
-  class: producer
-  keyword: MUST
-  section: 4.2.3
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-015
-  class: producer
-  keyword: MUST
-  section: 4.2.3
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-016
-  class: consumer
-  keyword: MUST
-  section: 4.3.5
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/acceptance/mf-local-path-root-boundary/local-path-root-boundary.test.ts
-- id: req-mf-017
-  class: producer
-  keyword: MUST
-  section: '4.7'
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-018
-  class: consumer
-  keyword: MUST
-  section: 4.6.1
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-019
-  class: consumer
-  keyword: MUST
-  section: 4.2.4
-  status: active
-  fixture: tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml
-  citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-mf-020
-  class: consumer
-  keyword: MUST
-  section: '4.1'
-  status: active
-  fixture: tests/fixtures/spec-conformance/manifest/invalid-yaml-anchor-alias.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-021
-  class: producer
-  keyword: MUST
-  section: '4.8'
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-022
-  class: consumer
-  keyword: MUST
-  section: 4.3.2
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-mf-023
-  class: consumer
-  keyword: MUST
-  section: '4.5'
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
-  - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
-  citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
-- id: req-ext-001
-  class: consumer
-  keyword: MUST
-  section: '4.1'
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml
-  - tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
-  citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
-- id: req-ext-002
-  class: producer
-  keyword: MUST
-  section: '4.1'
-  status: active
-  citation: packages/core/tests/producer/emit-serialize.test.ts
-- id: req-lk-001
-  class: consumer
-  keyword: MUST
-  section: '5.1'
-  status: active
-  fixture: tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-lk-002
-  class: consumer
-  keyword: MUST
-  section: '5.4'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-003
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-  notes: full-SHA manifest pins must match resolved_commit during conformance audit
-- id: req-lk-004
-  class: consumer
-  keyword: MUST
-  section: '5.4'
-  status: active
-  fixture: tests/fixtures/spec-conformance/lockfile/v1-git-only.yml
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-lk-005
-  class: consumer
-  keyword: MUST
-  section: '5.5'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-006
-  class: consumer
-  keyword: MUST
-  section: '5.5'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-  notes: frozen validation covers direct package pins and MCP state before durable mutation
-- id: req-lk-007
-  class: consumer
-  keyword: SHOULD
-  section: '5.5'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-008
-  class: consumer
-  keyword: MUST
-  section: '5.6'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-009
-  class: consumer
-  keyword: MUST
-  section: '5.6'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-010
-  class: consumer
-  keyword: MUST
-  section: '5.6'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-011
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  fixture: tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
-  citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
-- id: req-lk-012
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-013
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-014
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  fixture: tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
-  citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
-- id: req-lk-015
-  class: consumer
-  keyword: MUST
-  section: 5.6.4
-  status: active
-  citation: packages/core/tests/lockfile/tree-sha256.test.ts; packages/core/tests/resolve/record-tree-sha256.test.ts
-- id: req-lk-016
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-017
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-- id: req-lk-018
-  class: consumer
-  keyword: SHOULD
-  section: '5.5'
-  status: active
-  citation: packages/core/tests/install/ci-frozen.test.ts; packages/core/tests/acceptance/p2-lk-018-ci-default-frozen/resolve-frozen.test.ts
-- id: req-lk-019
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-  notes: name and dependency-apm.yml-derived version are self-asserted inventory metadata, never trust anchors
-- id: req-lk-020
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-  notes: target and identity reconciliation preserves legitimate, indeterminate, and freshly redeployed paths while dropping
-    inactive-target ghosts
-- id: req-lk-021
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-  notes: extends req-lk-020's preserve/remove decision to merge-based hook configuration and its ownership record
-- id: req-lk-022
-  class: consumer
-  keyword: MUST
-  section: '5.2'
-  status: active
-  citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
-  notes: source-cased materialization_repo_url remains non-identity metadata and drives rollback-safe, collision-closed materialization/link
-    spelling
-- id: req-pl-001
-  class: governance
-  keyword: MUST
-  section: '6.1'
-  status: active
-  fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-pl-002
-  class: governance
-  keyword: MUST
-  section: '6.2'
-  status: active
-  fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-pl-003
-  class: governance
-  keyword: MUST
-  section: '6.4'
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/policy/valid-extends.yml
-  - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
-  citation: packages/core/tests/acceptance/p4-governance-remote-extends/extends-resolve.test.ts;
-    packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts
-- id: req-pl-004
-  class: governance
-  keyword: MUST
-  section: '6.4'
-  status: active
-  citation: packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts;
-    packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
-    packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-005
-  class: governance
-  keyword: MUST
-  section: '6.5'
-  status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-006
-  class: governance
-  keyword: MUST
-  section: '6.4'
-  status: active
-  citation: packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts;
-    packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
-    packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-007
-  class: governance
-  keyword: MUST
-  section: 6.3.1
-  status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-008
-  class: governance
-  keyword: MUST
-  section: 6.3.1
-  status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-009
-  class: governance
-  keyword: MUST
-  section: '6.6'
-  status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-010
-  class: governance
-  keyword: MUST
-  section: '6.2'
-  status: active
-  citation: packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts;
-    packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
-    packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-011
-  class: governance
-  keyword: MUST
-  section: 6.1.1
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/policy/valid-extends.yml
-  - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
-  citation: packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts;
-    packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts;
-    packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts
-- id: req-pl-012
-  class: governance
-  keyword: MUST
-  section: 6.1.1
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/policy/valid-extends.yml
-  - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
-  citation: packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts
-- id: req-pl-013
-  class: governance
-  keyword: MUST
-  section: '6.8'
-  status: active
-  fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-pl-014
-  class: governance
-  keyword: MUST
-  section: '6.8'
-  status: active
-  fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
-- id: req-pl-015
-  class: governance
-  keyword: MUST
-  section: 6.3.5
-  status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
-- id: req-pl-016
-  class: governance
-  keyword: MUST
-  section: '6.8'
-  status: active
-  citation: packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
-    packages/core/tests/policy/install-gate.test.ts
-  notes: a canonical deployment-ledger owner absent from apm.lock.yaml is a hard integrity failure independent of security.audit.fail_on_drift;
-    audit exits non-zero in both default and CI modes and refuses to mutate deployed bytes while ownership is invalid
-- id: req-rs-001
-  class: consumer
-  keyword: MUST
-  section: '7.2'
-  status: active
-  citation: packages/core/tests/resolve/intersection-pick.test.ts
-- id: req-rs-002
-  class: consumer
-  keyword: MUST
-  section: '7.3'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-003
-  class: consumer
-  keyword: MUST
-  section: '7.3'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-004
-  class: consumer
-  keyword: MUST
-  section: '7.5'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-005
-  class: consumer
-  keyword: MUST
-  section: '7.6'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-006
-  class: consumer
-  keyword: MUST
-  section: '7.2'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-007
-  class: consumer
-  keyword: MUST
-  section: '7.3'
-  status: active
-  fixture: tests/fixtures/spec-conformance/resolution/semver-dialect.json
-  citation: packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts
-- id: req-rs-008
-  class: consumer
-  keyword: MUST
-  section: '7.1'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-009
-  class: consumer
-  keyword: MUST
-  section: 7.5.1
-  status: active
-  citation: packages/core/tests/registry/resolve-install.test.ts; packages/core/tests/registry/registry-client.test.ts
-- id: req-rs-010
-  class: consumer
-  keyword: MUST
-  section: '7.2'
-  status: active
-  citation: packages/core/tests/resolve/intersection-pick.test.ts
-- id: req-rs-011
-  class: consumer
-  keyword: MUST
-  section: '7.7'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-012
-  class: consumer
-  keyword: MUST
-  section: '7.7'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-013
-  class: consumer
-  keyword: MUST
-  section: '7.2'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-014
-  class: consumer
-  keyword: MUST
-  section: 7.3.1
-  status: active
-  fixture: tests/fixtures/spec-conformance/resolution/semver-dialect.json
-  citation: packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts
-- id: req-rs-015
-  class: consumer
-  keyword: MUST
-  section: '7.5'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-- id: req-rs-016
-  class: consumer
-  keyword: MUST
-  section: '7.2'
-  status: active
-  citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-  notes: minimum repository identity binds every cache layer; distinct identities must not share source material
-- id: req-pr-001
-  class: consumer
-  keyword: MUST
-  section: '8.2'
-  status: active
-  citation: packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts
-- id: req-pr-002
-  class: consumer
-  keyword: MUST
-  section: '8.3'
-  status: active
-  citation: packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts
-- id: req-pr-003
-  class: consumer
-  keyword: MUST
-  section: '8.3'
-  status: active
-  citation: packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts
-- id: req-pr-004
-  class: producer
-  keyword: MUST
-  section: '7.8'
-  status: active
-  citation: packages/core/tests/pack/pack-archive.test.ts; packages/core/tests/pack/release-gate.test.ts
-- id: req-pr-005
-  class: producer
-  keyword: SHOULD
-  section: '7.8'
-  status: active
-  citation: packages/core/tests/pack/release-gate.test.ts
-- id: req-tg-001
-  class: consumer
-  keyword: MUST
-  section: '8.4'
-  status: active
-  citation: packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts
-- id: req-tg-002
-  class: consumer
-  keyword: MUST
-  section: '8.5'
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-- id: req-tg-003
-  class: consumer
-  keyword: MUST
-  section: '8.5'
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-- id: req-tg-004
-  class: consumer
-  keyword: MUST
-  section: 4.2.1
-  status: active
-  citation: packages/core/tests/manifest/validate.test.ts
-- id: req-tg-005
-  class: consumer
-  keyword: MUST
-  section: '8.5'
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-- id: req-tg-006
-  class: consumer
-  keyword: MUST
-  section: '8.5'
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-- id: req-tg-007
-  class: consumer
-  keyword: MUST
-  section: '8.5'
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-- id: req-tg-008
-  class: consumer
-  keyword: MUST
-  section: 8.5.3
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-- id: req-tg-009
-  class: consumer
-  keyword: MUST
-  section: 8.5.1
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-- id: req-tg-010
-  class: consumer
-  keyword: MUST
-  section: 8.5.4
-  status: skipped
-  rationale: 'Out of scope for P3: multi-target adapters beyond cursor'
-  notes: project-scoped native hooks use a portable project-directory environment anchor and reject shell-expansion path syntax
-- id: req-sc-001
-  class: consumer
-  keyword: MUST
-  section: '10.4'
-  status: active
-  citation: packages/core/tests/extras/public-api.test.ts
-- id: req-sc-002
-  class: consumer
-  keyword: MUST
-  section: '10.9'
-  status: active
-  citation: packages/core/tests/pack/safe-extract-pack.test.ts; packages/core/tests/registry/safe-extract-registry.test.ts
-- id: req-sc-003
-  class: consumer
-  keyword: MUST
-  section: '10.3'
-  status: active
-  citation: >-
-    packages/core/tests/auth/redirect-auth-drop.test.ts;
-    packages/core/tests/auth/resolve-per-class.test.ts
-- id: req-sc-004
-  class: consumer
-  keyword: MUST
-  section: '10.5'
-  status: skipped
-  rationale: >-
-    Soft: registry/pack archives remain zip with default 10k-entry / 100MB
-    uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format
-    still soft debt (not claimed)
-- id: req-sc-005
-  class: consumer
-  keyword: MUST
-  section: '10.3'
-  status: active
-  citation: >-
-    packages/core/tests/auth/credential-host-class.test.ts
-- id: req-sc-006
-  class: consumer
-  keyword: MUST
-  section: 4.2.3
-  status: active
-  citation: packages/core/tests/manifest/registries-insecure.test.ts
-- id: req-sc-007
-  class: consumer
-  keyword: MUST
-  section: '10.3'
-  status: active
-  citation: packages/core/tests/pack/pack-archive.test.ts
-- id: req-sc-008
-  class: consumer
-  keyword: SHOULD
-  section: '10.3'
-  status: active
-  citation: >-
-    packages/core/tests/auth/git-https-refuse.test.ts
-- id: req-sc-009
-  class: consumer
-  keyword: MUST
-  section: '10.13'
-  status: active
-  citation: packages/core/tests/extras/public-api.test.ts
-- id: req-sc-010
-  class: consumer
-  keyword: MUST
-  section: '10.13'
-  status: active
-  citation: >-
-    packages/core/tests/executable-trust/user-store.test.ts;
-    packages/cli/tests/mcp/approve-deny.test.ts
-- id: req-sc-011
-  class: consumer
-  keyword: MUST
-  section: '10.14'
-  status: active
-  citation: >-
-    packages/core/tests/executable-trust/resolve-deny-wins.test.ts;
-    packages/core/tests/policy/executables-parse-merge.test.ts;
-    packages/core/tests/executable-trust/install-audit-twin.test.ts
-- id: req-sc-012
-  class: consumer
-  keyword: MUST
-  section: '10.14'
-  status: active
-  citation: >-
-    packages/core/tests/executable-trust/require-presence-withheld.test.ts
-- id: req-sc-013
-  class: consumer
-  keyword: MUST
-  section: '10.3'
-  status: active
-  citation: >-
-    packages/core/tests/auth/overlap-ambient.test.ts
-  notes: configured authority overlap selects one documented host class before credential resolution; only that class's credentials
-    reach requests and child processes; explicit non-default ports remain scoped
-- id: req-rg-001
-  class: registry
-  keyword: MUST
-  section: 11.3.3
-  status: n/a
-  rationale: Registry host not shipped; class N/A (no rg-001 claim)
-- id: req-cf-001
-  class: consumer
-  keyword: MUST
-  section: '12.5'
-  status: active
-  fixture:
-  - tests/fixtures/spec-conformance/manifest/valid-minimal.yml
-  - tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml
-  - tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
-  - tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml
-  citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
-- id: req-cf-002
-  class: consumer
-  keyword: MUST
-  section: '12.3'
-  status: active
-  citation: packages/core/tests/acceptance/p3-openapm-mode-b-conformance/conformance-statement.test.ts; CONFORMANCE.md; CONFORMANCE.json
+  - id: req-mf-001
+    class: producer
+    keyword: MUST
+    section: "4.1"
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-002
+    class: producer
+    keyword: MUST
+    section: "4.1"
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-003
+    class: producer
+    keyword: MUST
+    section: "4.1"
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-004
+    class: producer
+    keyword: SHOULD
+    section: "4.1"
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-005
+    class: producer
+    keyword: MUST
+    section: 4.2.1
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-006
+    class: consumer
+    keyword: MUST
+    section: "4.1"
+    status: active
+    fixture: tests/fixtures/spec-conformance/manifest/valid-minimal.yml
+    citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-mf-007
+    class: consumer
+    keyword: MUST
+    section: 4.3.1
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-008
+    class: consumer
+    keyword: MUST
+    section: 4.3.3
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-009
+    class: consumer
+    keyword: MUST
+    section: 4.3.4
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-010
+    class: consumer
+    keyword: MUST
+    section: 4.3.2
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-011
+    class: consumer
+    keyword: MUST
+    section: 4.3.2
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-012
+    class: consumer
+    keyword: MUST
+    section: 4.3.6
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-013
+    class: consumer
+    keyword: MUST
+    section: "4.5"
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-014
+    class: producer
+    keyword: MUST
+    section: 4.2.3
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-015
+    class: producer
+    keyword: MUST
+    section: 4.2.3
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-016
+    class: consumer
+    keyword: MUST
+    section: 4.3.5
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/acceptance/mf-local-path-root-boundary/local-path-root-boundary.test.ts
+  - id: req-mf-017
+    class: producer
+    keyword: MUST
+    section: "4.7"
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-018
+    class: consumer
+    keyword: MUST
+    section: 4.6.1
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-019
+    class: consumer
+    keyword: MUST
+    section: 4.2.4
+    status: active
+    fixture: tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml
+    citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-mf-020
+    class: consumer
+    keyword: MUST
+    section: "4.1"
+    status: active
+    fixture: tests/fixtures/spec-conformance/manifest/invalid-yaml-anchor-alias.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-021
+    class: producer
+    keyword: MUST
+    section: "4.8"
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-022
+    class: consumer
+    keyword: MUST
+    section: 4.3.2
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-mf-023
+    class: consumer
+    keyword: MUST
+    section: "4.5"
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/invalid-missing-name.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-no-source-key.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-source-kind.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml
+      - tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml
+    citation: packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts
+  - id: req-ext-001
+    class: consumer
+    keyword: MUST
+    section: "4.1"
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml
+      - tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
+    citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
+  - id: req-ext-002
+    class: producer
+    keyword: MUST
+    section: "4.1"
+    status: active
+    citation: packages/core/tests/producer/emit-serialize.test.ts
+  - id: req-lk-001
+    class: consumer
+    keyword: MUST
+    section: "5.1"
+    status: active
+    fixture: tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-lk-002
+    class: consumer
+    keyword: MUST
+    section: "5.4"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-003
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+    notes: full-SHA manifest pins must match resolved_commit during conformance audit
+  - id: req-lk-004
+    class: consumer
+    keyword: MUST
+    section: "5.4"
+    status: active
+    fixture: tests/fixtures/spec-conformance/lockfile/v1-git-only.yml
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-lk-005
+    class: consumer
+    keyword: MUST
+    section: "5.5"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-006
+    class: consumer
+    keyword: MUST
+    section: "5.5"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+    notes: frozen validation covers direct package pins and MCP state before durable mutation
+  - id: req-lk-007
+    class: consumer
+    keyword: SHOULD
+    section: "5.5"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-008
+    class: consumer
+    keyword: MUST
+    section: "5.6"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-009
+    class: consumer
+    keyword: MUST
+    section: "5.6"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-010
+    class: consumer
+    keyword: MUST
+    section: "5.6"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-011
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    fixture: tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
+    citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
+  - id: req-lk-012
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-013
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-014
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    fixture: tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
+    citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
+  - id: req-lk-015
+    class: consumer
+    keyword: MUST
+    section: 5.6.4
+    status: active
+    citation: packages/core/tests/lockfile/tree-sha256.test.ts; packages/core/tests/resolve/record-tree-sha256.test.ts
+  - id: req-lk-016
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-017
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+  - id: req-lk-018
+    class: consumer
+    keyword: SHOULD
+    section: "5.5"
+    status: active
+    citation: packages/core/tests/install/ci-frozen.test.ts; packages/core/tests/acceptance/p2-lk-018-ci-default-frozen/resolve-frozen.test.ts
+  - id: req-lk-019
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+    notes: name and dependency-apm.yml-derived version are self-asserted inventory metadata, never trust anchors
+  - id: req-lk-020
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+    notes:
+      target and identity reconciliation preserves legitimate, indeterminate, and freshly redeployed paths while dropping
+      inactive-target ghosts
+  - id: req-lk-021
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+    notes: extends req-lk-020's preserve/remove decision to merge-based hook configuration and its ownership record
+  - id: req-lk-022
+    class: consumer
+    keyword: MUST
+    section: "5.2"
+    status: active
+    citation: packages/core/tests/lockfile/parse-serialize.test.ts; packages/core/tests/lockfile/discovery.test.ts; packages/core/tests/install/frozen.test.ts
+    notes:
+      source-cased materialization_repo_url remains non-identity metadata and drives rollback-safe, collision-closed materialization/link
+      spelling
+  - id: req-pl-001
+    class: governance
+    keyword: MUST
+    section: "6.1"
+    status: active
+    fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-pl-002
+    class: governance
+    keyword: MUST
+    section: "6.2"
+    status: active
+    fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-pl-003
+    class: governance
+    keyword: MUST
+    section: "6.4"
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/policy/valid-extends.yml
+      - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
+    citation: packages/core/tests/acceptance/p4-governance-remote-extends/extends-resolve.test.ts;
+      packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts
+  - id: req-pl-004
+    class: governance
+    keyword: MUST
+    section: "6.4"
+    status: active
+    citation: packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts;
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
+      packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-005
+    class: governance
+    keyword: MUST
+    section: "6.5"
+    status: active
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-006
+    class: governance
+    keyword: MUST
+    section: "6.4"
+    status: active
+    citation: packages/core/tests/acceptance/p4-governance-remote-extends/merge-host-pin.test.ts;
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
+      packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-007
+    class: governance
+    keyword: MUST
+    section: 6.3.1
+    status: active
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-008
+    class: governance
+    keyword: MUST
+    section: 6.3.1
+    status: active
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-009
+    class: governance
+    keyword: MUST
+    section: "6.6"
+    status: active
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-010
+    class: governance
+    keyword: MUST
+    section: "6.2"
+    status: active
+    citation: packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts;
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts;
+      packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-011
+    class: governance
+    keyword: MUST
+    section: 6.1.1
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/policy/valid-extends.yml
+      - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
+    citation: packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts;
+      packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts;
+      packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts
+  - id: req-pl-012
+    class: governance
+    keyword: MUST
+    section: 6.1.1
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/policy/valid-extends.yml
+      - tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml
+    citation: packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts
+  - id: req-pl-013
+    class: governance
+    keyword: MUST
+    section: "6.8"
+    status: active
+    fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-pl-014
+    class: governance
+    keyword: MUST
+    section: "6.8"
+    status: active
+    fixture: tests/fixtures/spec-conformance/policy/security-integrity.yml
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts
+  - id: req-pl-015
+    class: governance
+    keyword: MUST
+    section: 6.3.5
+    status: active
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts
+  - id: req-pl-016
+    class: governance
+    keyword: MUST
+    section: "6.8"
+    status: active
+    citation:
+      packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts;
+      packages/core/tests/policy/install-gate.test.ts
+    notes:
+      a canonical deployment-ledger owner absent from apm.lock.yaml is a hard integrity failure independent of security.audit.fail_on_drift;
+      audit exits non-zero in both default and CI modes and refuses to mutate deployed bytes while ownership is invalid
+  - id: req-rs-001
+    class: consumer
+    keyword: MUST
+    section: "7.2"
+    status: active
+    citation: packages/core/tests/resolve/intersection-pick.test.ts
+  - id: req-rs-002
+    class: consumer
+    keyword: MUST
+    section: "7.3"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-003
+    class: consumer
+    keyword: MUST
+    section: "7.3"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-004
+    class: consumer
+    keyword: MUST
+    section: "7.5"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-005
+    class: consumer
+    keyword: MUST
+    section: "7.6"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-006
+    class: consumer
+    keyword: MUST
+    section: "7.2"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-007
+    class: consumer
+    keyword: MUST
+    section: "7.3"
+    status: active
+    fixture: tests/fixtures/spec-conformance/resolution/semver-dialect.json
+    citation: packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts
+  - id: req-rs-008
+    class: consumer
+    keyword: MUST
+    section: "7.1"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-009
+    class: consumer
+    keyword: MUST
+    section: 7.5.1
+    status: active
+    citation: packages/core/tests/registry/resolve-install.test.ts; packages/core/tests/registry/registry-client.test.ts
+  - id: req-rs-010
+    class: consumer
+    keyword: MUST
+    section: "7.2"
+    status: active
+    citation: packages/core/tests/resolve/intersection-pick.test.ts
+  - id: req-rs-011
+    class: consumer
+    keyword: MUST
+    section: "7.7"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-012
+    class: consumer
+    keyword: MUST
+    section: "7.7"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-013
+    class: consumer
+    keyword: MUST
+    section: "7.2"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-014
+    class: consumer
+    keyword: MUST
+    section: 7.3.1
+    status: active
+    fixture: tests/fixtures/spec-conformance/resolution/semver-dialect.json
+    citation: packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts
+  - id: req-rs-015
+    class: consumer
+    keyword: MUST
+    section: "7.5"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+  - id: req-rs-016
+    class: consumer
+    keyword: MUST
+    section: "7.2"
+    status: active
+    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
+    notes: minimum repository identity binds every cache layer; distinct identities must not share source material
+  - id: req-pr-001
+    class: consumer
+    keyword: MUST
+    section: "8.2"
+    status: active
+    citation: packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts
+  - id: req-pr-002
+    class: consumer
+    keyword: MUST
+    section: "8.3"
+    status: active
+    citation: packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts
+  - id: req-pr-003
+    class: consumer
+    keyword: MUST
+    section: "8.3"
+    status: active
+    citation: packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts
+  - id: req-pr-004
+    class: producer
+    keyword: MUST
+    section: "7.8"
+    status: active
+    citation: packages/core/tests/pack/pack-archive.test.ts; packages/core/tests/pack/release-gate.test.ts
+  - id: req-pr-005
+    class: producer
+    keyword: SHOULD
+    section: "7.8"
+    status: active
+    citation: packages/core/tests/pack/release-gate.test.ts
+  - id: req-tg-001
+    class: consumer
+    keyword: MUST
+    section: "8.4"
+    status: active
+    citation: packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts
+  - id: req-tg-002
+    class: consumer
+    keyword: MUST
+    section: "8.5"
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+  - id: req-tg-003
+    class: consumer
+    keyword: MUST
+    section: "8.5"
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+  - id: req-tg-004
+    class: consumer
+    keyword: MUST
+    section: 4.2.1
+    status: active
+    citation: packages/core/tests/manifest/validate.test.ts
+  - id: req-tg-005
+    class: consumer
+    keyword: MUST
+    section: "8.5"
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+  - id: req-tg-006
+    class: consumer
+    keyword: MUST
+    section: "8.5"
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+  - id: req-tg-007
+    class: consumer
+    keyword: MUST
+    section: "8.5"
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+  - id: req-tg-008
+    class: consumer
+    keyword: MUST
+    section: 8.5.3
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+  - id: req-tg-009
+    class: consumer
+    keyword: MUST
+    section: 8.5.1
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+  - id: req-tg-010
+    class: consumer
+    keyword: MUST
+    section: 8.5.4
+    status: skipped
+    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    notes: project-scoped native hooks use a portable project-directory environment anchor and reject shell-expansion path syntax
+  - id: req-sc-001
+    class: consumer
+    keyword: MUST
+    section: "10.4"
+    status: active
+    citation: packages/core/tests/extras/public-api.test.ts
+  - id: req-sc-002
+    class: consumer
+    keyword: MUST
+    section: "10.9"
+    status: active
+    citation: packages/core/tests/pack/safe-extract-pack.test.ts; packages/core/tests/registry/safe-extract-registry.test.ts
+  - id: req-sc-003
+    class: consumer
+    keyword: MUST
+    section: "10.3"
+    status: active
+    citation: >-
+      packages/core/tests/auth/redirect-auth-drop.test.ts;
+      packages/core/tests/auth/resolve-per-class.test.ts
+  - id: req-sc-004
+    class: consumer
+    keyword: MUST
+    section: "10.5"
+    status: skipped
+    rationale: >-
+      Soft: registry/pack archives remain zip with default 10k-entry / 100MB
+      uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format
+      still soft debt (not claimed)
+  - id: req-sc-005
+    class: consumer
+    keyword: MUST
+    section: "10.3"
+    status: active
+    citation: >-
+      packages/core/tests/auth/credential-host-class.test.ts
+  - id: req-sc-006
+    class: consumer
+    keyword: MUST
+    section: 4.2.3
+    status: active
+    citation: packages/core/tests/manifest/registries-insecure.test.ts
+  - id: req-sc-007
+    class: consumer
+    keyword: MUST
+    section: "10.3"
+    status: active
+    citation: packages/core/tests/pack/pack-archive.test.ts
+  - id: req-sc-008
+    class: consumer
+    keyword: SHOULD
+    section: "10.3"
+    status: active
+    citation: >-
+      packages/core/tests/auth/git-https-refuse.test.ts
+  - id: req-sc-009
+    class: consumer
+    keyword: MUST
+    section: "10.13"
+    status: active
+    citation: packages/core/tests/extras/public-api.test.ts
+  - id: req-sc-010
+    class: consumer
+    keyword: MUST
+    section: "10.13"
+    status: active
+    citation: >-
+      packages/core/tests/executable-trust/user-store.test.ts;
+      packages/cli/tests/mcp/approve-deny.test.ts
+  - id: req-sc-011
+    class: consumer
+    keyword: MUST
+    section: "10.14"
+    status: active
+    citation: >-
+      packages/core/tests/executable-trust/resolve-deny-wins.test.ts;
+      packages/core/tests/policy/executables-parse-merge.test.ts;
+      packages/core/tests/executable-trust/install-audit-twin.test.ts
+  - id: req-sc-012
+    class: consumer
+    keyword: MUST
+    section: "10.14"
+    status: active
+    citation: >-
+      packages/core/tests/executable-trust/require-presence-withheld.test.ts
+  - id: req-sc-013
+    class: consumer
+    keyword: MUST
+    section: "10.3"
+    status: active
+    citation: >-
+      packages/core/tests/auth/overlap-ambient.test.ts
+    notes:
+      configured authority overlap selects one documented host class before credential resolution; only that class's credentials
+      reach requests and child processes; explicit non-default ports remain scoped
+  - id: req-rg-001
+    class: registry
+    keyword: MUST
+    section: 11.3.3
+    status: n/a
+    rationale: Registry host not shipped; class N/A (no rg-001 claim)
+  - id: req-cf-001
+    class: consumer
+    keyword: MUST
+    section: "12.5"
+    status: active
+    fixture:
+      - tests/fixtures/spec-conformance/manifest/valid-minimal.yml
+      - tests/fixtures/spec-conformance/manifest/x-extension-roundtrip.yml
+      - tests/fixtures/spec-conformance/lockfile/round-trip-unknown-fields.yml
+      - tests/fixtures/spec-conformance/lockfile/v2-with-registry.yml
+    citation: packages/core/tests/spec-conformance/cf-001-round-trip.test.ts
+  - id: req-cf-002
+    class: consumer
+    keyword: MUST
+    section: "12.3"
+    status: active
+    citation: packages/core/tests/acceptance/p3-openapm-mode-b-conformance/conformance-statement.test.ts; CONFORMANCE.md; CONFORMANCE.json

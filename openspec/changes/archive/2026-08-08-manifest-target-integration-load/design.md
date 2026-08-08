@@ -25,13 +25,13 @@ See `proposal.md` for motivation. After `manifest-target-integration-map`, Manif
 
 ### 1. Product semantics (authoritative)
 
-| Concern | Source of truth |
-|--------|------------------|
-| Which package implements host `X` | Object-map value for key `X` (when present) |
+| Concern                               | Source of truth                                                                               |
+| ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Which package implements host `X`     | Object-map value for key `X` (when present)                                                   |
 | Which host is **active** for this run | `--target <id>` if set; else auto-detect among **already registered** integrations; else fail |
-| Built-in cursor | CLI registry always; map entry optional |
-| Unknown `--target X` | Fail if `X` is not registered after built-ins + successful map loads |
-| Bad map package | Fail-closed (resolve or export/contract failure) |
+| Built-in cursor                       | CLI registry always; map entry optional                                                       |
+| Unknown `--target X`                  | Fail if `X` is not registered after built-ins + successful map loads                          |
+| Bad map package                       | Fail-closed (resolve or export/contract failure)                                              |
 
 The map never activates a host solely because a key exists. Without `--target`, detect runs on the expanded registry (built-ins + successfully loaded map integrations), so custom hosts can win detect when their `detect()` matches—still not “map picks the id.”
 

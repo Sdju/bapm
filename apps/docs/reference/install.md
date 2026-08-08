@@ -16,25 +16,25 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `--frozen` | — | Fail, если lock нет или пины дрейфуют; при наличии — re-verify `deployed_file_hashes` | off (но см. CI ниже) |
-| `--no-frozen` | — | Отключить frozen, в том числе CI-default | — |
-| `--dry-run` | — | Превью direct deps / would-add; без durable project writes | off |
-| `--force` | — | Accept force (overwrite / future security gates). Не обновляет refs и не обходит frozen/policy | off |
-| `--allow-insecure` | — | Dual consent для direct `http://` deps с `allow_insecure: true` | off |
-| `--allow-insecure-host` | `<hostname>` | Разрешить transitive `http://` с этого FQDN (повторяемый) | — |
-| `--dev` | — | При package-ref add писать в `devDependencies.apm` (без positional — no-op) | off |
-| `--only` | `apm` \| `mcp` | Только APM packages (без MCP) или только MCP configure (без APM materialize) | оба |
-| `--target` | `<id>` | Принудительно активировать registered host target (игнорирует `active` и detect) | `active` → auto-detect |
-| `--exclude` | `<id>` | Пропустить MCP configure для runtime id; **не** полный skip install (повторяемый) | — |
-| `--update` | — | Переразрешить mutable refs; нельзя с frozen / CI-default frozen | off |
-| `--parallel-downloads` | `<n>` | Параллельные загрузки; `0` = serial | `4` |
-| `-v`, `--verbose` | — | Богаче progress / diagnostics (не ослабляет frozen/policy) | off |
-| `--policy` | `<path>` | Явный policy-файл (побеждает `apm-policy.yml` / `bapm-policy.yml`) | discovery |
-| `--no-policy` | — | Пропустить policy discovery/checks (также `BAPM_POLICY_DISABLE=1`) | off |
-| `--trust-transitive-mcp` | — | Деплоить MCP из зависимостей; по умолчанию только direct `dependencies.mcp` | off |
-| `--help`, `-h` | — | Показать help | — |
+| Флаг                     | Значение       | Эффект                                                                                         | Default                |
+| ------------------------ | -------------- | ---------------------------------------------------------------------------------------------- | ---------------------- |
+| `--frozen`               | —              | Fail, если lock нет или пины дрейфуют; при наличии — re-verify `deployed_file_hashes`          | off (но см. CI ниже)   |
+| `--no-frozen`            | —              | Отключить frozen, в том числе CI-default                                                       | —                      |
+| `--dry-run`              | —              | Превью direct deps / would-add; без durable project writes                                     | off                    |
+| `--force`                | —              | Accept force (overwrite / future security gates). Не обновляет refs и не обходит frozen/policy | off                    |
+| `--allow-insecure`       | —              | Dual consent для direct `http://` deps с `allow_insecure: true`                                | off                    |
+| `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                      | —                      |
+| `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                    | off                    |
+| `--only`                 | `apm` \| `mcp` | Только APM packages (без MCP) или только MCP configure (без APM materialize)                   | оба                    |
+| `--target`               | `<id>`         | Принудительно активировать registered host target (игнорирует `active` и detect)               | `active` → auto-detect |
+| `--exclude`              | `<id>`         | Пропустить MCP configure для runtime id; **не** полный skip install (повторяемый)              | —                      |
+| `--update`               | —              | Переразрешить mutable refs; нельзя с frozen / CI-default frozen                                | off                    |
+| `--parallel-downloads`   | `<n>`          | Параллельные загрузки; `0` = serial                                                            | `4`                    |
+| `-v`, `--verbose`        | —              | Богаче progress / diagnostics (не ослабляет frozen/policy)                                     | off                    |
+| `--policy`               | `<path>`       | Явный policy-файл (побеждает `apm-policy.yml` / `bapm-policy.yml`)                             | discovery              |
+| `--no-policy`            | —              | Пропустить policy discovery/checks (также `BAPM_POLICY_DISABLE=1`)                             | off                    |
+| `--trust-transitive-mcp` | —              | Деплоить MCP из зависимостей; по умолчанию только direct `dependencies.mcp`                    | off                    |
+| `--help`, `-h`           | —              | Показать help                                                                                  | —                      |
 
 ## Замечания
 

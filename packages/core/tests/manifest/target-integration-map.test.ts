@@ -44,26 +44,24 @@ describe("target/targets object-map parse", () => {
     expect(parse({ target: { claude: CLAUDE_PKG } }).target).toEqual({
       claude: CLAUDE_PKG,
     });
-    expect(
-      parse({ target: { cursor: CURSOR_PKG, claude: CLAUDE_PKG } }).target,
-    ).toEqual({ cursor: CURSOR_PKG, claude: CLAUDE_PKG });
+    expect(parse({ target: { cursor: CURSOR_PKG, claude: CLAUDE_PKG } }).target).toEqual({
+      cursor: CURSOR_PKG,
+      claude: CLAUDE_PKG,
+    });
   });
 
   test("accepts vendor mf-005 key and opaque @version package text", () => {
-    expect(
-      parse({ targets: { "x-acme-editor": "@acme/integration-editor" } }).targets,
-    ).toEqual({ "x-acme-editor": "@acme/integration-editor" });
-    expect(
-      parse({ targets: { cursor: "@bapm/integration-cursor@1.2.3" } }).targets,
-    ).toEqual({ cursor: "@bapm/integration-cursor@1.2.3" });
+    expect(parse({ targets: { "x-acme-editor": "@acme/integration-editor" } }).targets).toEqual({
+      "x-acme-editor": "@acme/integration-editor",
+    });
+    expect(parse({ targets: { cursor: "@bapm/integration-cursor@1.2.3" } }).targets).toEqual({
+      cursor: "@bapm/integration-cursor@1.2.3",
+    });
   });
 
   test("legacy string and array still work", () => {
     expect(parse({ target: "cursor" }).target).toBe("cursor");
-    expect(parse({ targets: ["cursor", "claude"] }).targets).toEqual([
-      "cursor",
-      "claude",
-    ]);
+    expect(parse({ targets: ["cursor", "claude"] }).targets).toEqual(["cursor", "claude"]);
   });
 
   test("rejects invalid key with named diagnostic", () => {
@@ -79,15 +77,13 @@ describe("target/targets object-map parse", () => {
 
   test("rejects empty / whitespace / non-string values and empty maps", () => {
     expect(reject({ targets: { cursor: "" } }).message).toMatch(/empty|non-empty/i);
-    expect(reject({ target: { cursor: "   " } }).message).toMatch(
-      /empty|non-empty|value|target/i,
-    );
+    expect(reject({ target: { cursor: "   " } }).message).toMatch(/empty|non-empty|value|target/i);
     expect(reject({ targets: { cursor: 42 } }).message).toMatch(/string/i);
     expect(reject({ targets: {} }).message).toMatch(/empty/i);
     expect(reject({ target: {} }).message).toMatch(/empty|target/i);
-    expect(
-      reject({ targets: ["cursor", { claude: CLAUDE_PKG }] }).message,
-    ).toMatch(/targets|string|array|object|mapping/i);
+    expect(reject({ targets: ["cursor", { claude: CLAUDE_PKG }] }).message).toMatch(
+      /targets|string|array|object|mapping/i,
+    );
   });
 
   test("rejects mutual exclusion across legacy and object-map forms", () => {
@@ -95,15 +91,14 @@ describe("target/targets object-map parse", () => {
       /both.*target.*targets|target.*and.*targets/i,
     );
     expect(
-      reject({ target: { cursor: CURSOR_PKG }, targets: { claude: CLAUDE_PKG } })
-        .message,
+      reject({ target: { cursor: CURSOR_PKG }, targets: { claude: CLAUDE_PKG } }).message,
     ).toMatch(/both.*target.*targets|target.*and.*targets/i);
-    expect(
-      reject({ target: "cursor", targets: { claude: CLAUDE_PKG } }).message,
-    ).toMatch(/both.*target.*targets|target.*and.*targets/i);
-    expect(
-      reject({ target: { cursor: CURSOR_PKG }, targets: ["claude"] }).message,
-    ).toMatch(/both.*target.*targets|target.*and.*targets/i);
+    expect(reject({ target: "cursor", targets: { claude: CLAUDE_PKG } }).message).toMatch(
+      /both.*target.*targets|target.*and.*targets/i,
+    );
+    expect(reject({ target: { cursor: CURSOR_PKG }, targets: ["claude"] }).message).toMatch(
+      /both.*target.*targets|target.*and.*targets/i,
+    );
   });
 });
 
@@ -128,12 +123,11 @@ describe("declaredTargetIds + declaredTargetIntegrationMap", () => {
   test("legacy forms: ids work; map helper undefined", () => {
     expect(declaredTargetIds(parse({ target: "cursor" }))).toEqual(["cursor"]);
     expect(declaredTargetIntegrationMap(parse({ target: "cursor" }))).toBeUndefined();
-    expect(
-      declaredTargetIds(parse({ targets: ["cursor", "claude"] })).sort(),
-    ).toEqual(["claude", "cursor"]);
-    expect(
-      declaredTargetIntegrationMap(parse({ targets: ["cursor", "claude"] })),
-    ).toBeUndefined();
+    expect(declaredTargetIds(parse({ targets: ["cursor", "claude"] })).sort()).toEqual([
+      "claude",
+      "cursor",
+    ]);
+    expect(declaredTargetIntegrationMap(parse({ targets: ["cursor", "claude"] }))).toBeUndefined();
   });
 
   test("undefined when neither field set", () => {

@@ -5,11 +5,13 @@ See proposal.md — Why. Today `bapm install` is non-frozen unless `--frozen` is
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Shared OpenAPM-accurate `CI` truthiness helper + effective-frozen resolution
 - CLI: `--no-frozen` opt-out; CI-default on; keep `--frozen`; reject conflicts
 - Spec lift: remove “lk-018 optional/deferred” from install-pipeline
 
 **Non-Goals:**
+
 - Extra vendor env heuristics (`GITHUB_ACTIONS`, `GITLAB_CI`, …) beyond reading `CI` (those platforms already set `CI=true`)
 - Auto-frozen for `update`/`lock`/`audit` commands
 - Mode B / CONFORMANCE / Governance / multi-target / P5 docs beyond install help

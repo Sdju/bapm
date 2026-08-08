@@ -12,14 +12,14 @@ bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
 
 ## Параметры
 
-| Флаг | Значение | Эффект | Default |
-| --- | --- | --- | --- |
-| `-o`, `--output` | `PATH` | Переопределить default output path target | path target |
-| `--target` | `<id>` | Force host (перекрывает `active`; обязателен при multi-`active` или неоднозначном detect) | `active` (sole) → auto-detect |
-| `--dry-run` | — | Превью would-write path; не писать файл | off |
-| `-v`, `--verbose` | — | Thin source attribution (name, type, path) | off |
-| `--validate` | — | Только discover/validate; не писать | off |
-| `--help`, `-h` | — | Показать help | — |
+| Флаг              | Значение | Эффект                                                                                    | Default                       |
+| ----------------- | -------- | ----------------------------------------------------------------------------------------- | ----------------------------- |
+| `-o`, `--output`  | `PATH`   | Переопределить default output path target                                                 | path target                   |
+| `--target`        | `<id>`   | Force host (перекрывает `active`; обязателен при multi-`active` или неоднозначном detect) | `active` (sole) → auto-detect |
+| `--dry-run`       | —        | Превью would-write path; не писать файл                                                   | off                           |
+| `-v`, `--verbose` | —        | Thin source attribution (name, type, path)                                                | off                           |
+| `--validate`      | —        | Только discover/validate; не писать                                                       | off                           |
+| `--help`, `-h`    | —        | Показать help                                                                             | —                             |
 
 `--dry-run` и `--validate` не пишут выходной файл.
 
