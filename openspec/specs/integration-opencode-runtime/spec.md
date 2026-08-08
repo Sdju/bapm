@@ -70,6 +70,24 @@ When the OpenCode integration is activated by an explicit forced-target request 
 - **WHEN** inspecting `@bapm/core` dependencies
 - **THEN** `@bapm/integration-opencode` MUST NOT appear as a dependency
 
+### Requirement: Commands materialize under .opencode/commands
+
+When the OpenCode integration is active and the conflict-resolved primitive set contains command primitives, each command MUST materialize to `.opencode/commands/<name>.md` under a registered deploy root. Writes MUST NEVER escape registered roots. Command materialize MUST NOT write `opencode.json` MCP entries as a side effect.
+
+#### Scenario: Command becomes OpenCode command markdown
+
+- **WHEN** install runs with opencode active and a dependency provides a command primitive
+- **THEN** a file MUST exist at `.opencode/commands/<name>.md` under a registered root
+
+### Requirement: Hooks are explicitly skipped for OpenCode
+
+When the OpenCode integration is active and the conflict-resolved primitive set contains hook primitives, OpenCode materialize MUST NOT write hook configuration for those primitives (APM host matrix: OpenCode hooks not supported). The integration MUST emit an inspectable skip diagnostic for hooks rather than silently dropping them with no signal. Skipping hooks MUST NOT by itself fail the install when other primitives deploy successfully, unless a separate fail-closed policy is explicitly configured.
+
+#### Scenario: Hook primitive does not write OpenCode hooks
+
+- **WHEN** install runs with opencode active and a dependency provides a hook primitive
+- **THEN** no OpenCode hooks harness file MUST be written for that primitive and an inspectable skip diagnostic MUST be present
+
 ### Requirement: MCP configure merges into project opencode.json
 
 When install invokes OpenCode MCP configure with an eligible server set, `@bapm/integration-opencode` MUST create or update the project-root `opencode.json` under a registered deploy root that covers that path (or an explicitly registered `opencode.json` / `.opencode` containment rule documented by the package). Owned server entries MUST be written under the top-level `mcp` object keyed by server name. Mapping MUST use OpenCode’s documented shapes: portable/`stdio` → `{ type: "local", command: [command, ...args], environment? }`; portable `streamable-http` or host `http` → `{ type: "remote", url, headers? }`. Portable metadata MUST NOT be copied verbatim. Unsupported transports (including portable `sse` when OpenCode has no documented equivalent in this capability) MUST fail closed with a diagnostic and MUST NOT write a partial invented entry. Writes MUST be idempotent overwrites of owned keys, MUST preserve unrelated `opencode.json` keys and unrelated `mcp` server names, MUST NEVER escape registered roots, and MUST report config/deployed paths for lock inventory when the integration-api contract provides a report hook.
