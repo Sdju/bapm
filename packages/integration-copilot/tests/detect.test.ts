@@ -1,42 +1,77 @@
+/**
+ * Detect: APM SIGNAL_WHITELIST under .github/; never mkdir solely for detect.
+ */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createCopilotIntegration } from "../src/index.ts";
+import { createTempProject, loadCopilotIntegration } from "./helpers.ts";
 
-describe("createCopilotIntegration detect", () => {
-  const cleanups: Array<() => void> = [];
+describe("copilot detect", () => {
+  let cleanup: (() => void) | undefined;
 
   afterEach(() => {
-    while (cleanups.length > 0) cleanups.pop()?.();
+    cleanup?.();
+    cleanup = undefined;
   });
 
-  function temp(): string {
-    const cwd = mkdtempSync(join(tmpdir(), "bapm-copilot-unit-detect-"));
-    cleanups.push(() => rmSync(cwd, { recursive: true, force: true }));
-    return cwd;
-  }
+  test.each([
+    {
+      name: "copilot-instructions.md file",
+      setup: (cwd: string) => {
+        mkdirSync(join(cwd, ".github"), { recursive: true });
+        writeFileSync(join(cwd, ".github", "copilot-instructions.md"), "# Copilot\n", "utf8");
+      },
+    },
+    {
+      name: ".github/instructions/ directory",
+      setup: (cwd: string) => {
+        mkdirSync(join(cwd, ".github", "instructions"), { recursive: true });
+      },
+    },
+    {
+      name: ".github/agents/ directory",
+      setup: (cwd: string) => {
+        mkdirSync(join(cwd, ".github", "agents"), { recursive: true });
+      },
+    },
+    {
+      name: ".github/prompts/ directory",
+      setup: (cwd: string) => {
+        mkdirSync(join(cwd, ".github", "prompts"), { recursive: true });
+      },
+    },
+    {
+      name: ".github/hooks/ directory",
+      setup: (cwd: string) => {
+        mkdirSync(join(cwd, ".github", "hooks"), { recursive: true });
+      },
+    },
+  ])("detects whitelist signal alone: $name", async ({ setup }) => {
+    const project = createTempProject("bapm-copilot-detect-signal-");
+    cleanup = project.cleanup;
+    setup(project.cwd);
 
-  test("whitelist matrix and empty / lone .agents", async () => {
-    const target = createCopilotIntegration();
+    const target = loadCopilotIntegration();
+    expect(await target.detect({ cwd: project.cwd })).toBe(true);
+  });
 
-    const empty = temp();
-    expect(await target.detect({ cwd: empty })).toBe(false);
-    expect(existsSync(join(empty, ".github"))).toBe(false);
+  test("empty project is not Copilot and detect does not create roots", async () => {
+    const project = createTempProject("bapm-copilot-detect-none-");
+    cleanup = project.cleanup;
 
-    const agentsOnly = temp();
-    mkdirSync(join(agentsOnly, ".agents", "skills"), { recursive: true });
-    expect(await target.detect({ cwd: agentsOnly })).toBe(false);
+    const target = loadCopilotIntegration();
+    expect(await target.detect({ cwd: project.cwd })).toBe(false);
+    expect(existsSync(join(project.cwd, ".github"))).toBe(false);
+    expect(existsSync(join(project.cwd, ".agents"))).toBe(false);
+  });
 
-    const withFile = temp();
-    mkdirSync(join(withFile, ".github"), { recursive: true });
-    writeFileSync(join(withFile, ".github", "copilot-instructions.md"), "# x\n", "utf8");
-    expect(await target.detect({ cwd: withFile })).toBe(true);
+  test("lone .agents/ without whitelist signals is not Copilot", async () => {
+    const project = createTempProject("bapm-copilot-detect-agents-only-");
+    cleanup = project.cleanup;
+    mkdirSync(join(project.cwd, ".agents", "skills"), { recursive: true });
 
-    for (const dir of ["instructions", "agents", "prompts", "hooks"]) {
-      const cwd = temp();
-      mkdirSync(join(cwd, ".github", dir), { recursive: true });
-      expect(await target.detect({ cwd })).toBe(true);
-    }
+    const target = loadCopilotIntegration();
+    expect(await target.detect({ cwd: project.cwd })).toBe(false);
+    expect(existsSync(join(project.cwd, ".github"))).toBe(false);
   });
 });

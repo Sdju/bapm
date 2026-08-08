@@ -1,10 +1,13 @@
+/**
+ * Hooks → per-file .github/hooks/<pkg>-<stem>.json + scripts + .github/bapm-hooks.json
+ * sidecar; camelCase events; reinstall replaces owned only.
+ */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createCopilotIntegration, toCamelCaseEvent } from "../src/index.ts";
+import { createTempProject, loadCopilotIntegration, readJson, writeJson } from "./helpers.ts";
 
-describe("createCopilotIntegration hooks", () => {
+describe("copilot hooks", () => {
   let cleanup: (() => void) | undefined;
 
   afterEach(() => {
@@ -12,60 +15,107 @@ describe("createCopilotIntegration hooks", () => {
     cleanup = undefined;
   });
 
-  function temp(): string {
-    const cwd = mkdtempSync(join(tmpdir(), "bapm-copilot-unit-hooks-"));
-    cleanup = () => rmSync(cwd, { recursive: true, force: true });
-    return cwd;
-  }
+  test("hook becomes per-file JSON with camelCase event and ownership sidecar", async () => {
+    const project = createTempProject("bapm-copilot-hooks-write-");
+    cleanup = project.cleanup;
+    mkdirSync(join(project.cwd, ".github"), { recursive: true });
 
-  test("toCamelCaseEvent normalizes snake and Pascal", () => {
-    expect(toCamelCaseEvent("session_start")).toBe("sessionStart");
-    expect(toCamelCaseEvent("SessionStart")).toBe("sessionStart");
+    mkdirSync(join(project.cwd, "pkg"), { recursive: true });
+    writeFileSync(join(project.cwd, "pkg", "run.sh"), "#!/bin/sh\necho hi\n", "utf8");
+    const hookSrc = join(project.cwd, "pkg", "session-start.json");
+    writeJson(hookSrc, {
+      hooks: {
+        session_start: [{ type: "command", command: "./run.sh" }],
+      },
+    });
+
+    const target = loadCopilotIntegration();
+    await target.materialize(
+      [
+        {
+          name: "session-start",
+          type: "hook",
+          source: "dependency:demo-pkg",
+          packageName: "demo-pkg",
+          path: hookSrc,
+        },
+      ],
+      { cwd: project.cwd, targetId: "copilot", deployRoots: target.deployRoots },
+    );
+
+    const hookFile = join(project.cwd, ".github", "hooks", "demo-pkg-session-start.json");
+    expect(existsSync(hookFile)).toBe(true);
+    const hookDoc = readJson(hookFile);
+    const hooks = hookDoc.hooks as Record<string, unknown> | undefined;
+    expect(hooks).toBeTruthy();
+    const eventKeys = Object.keys(hooks ?? {});
+    expect(eventKeys.some((k) => k === "sessionStart")).toBe(true);
+    expect(eventKeys.some((k) => k === "session_start" || k === "SessionStart")).toBe(false);
+    expect(JSON.stringify(hookDoc)).not.toMatch(/_apm_source|bapm-owned/i);
+
+    const scriptsDir = join(project.cwd, ".github", "hooks", "scripts", "demo-pkg");
+    expect(existsSync(scriptsDir)).toBe(true);
+    expect(readdirSync(scriptsDir).length).toBeGreaterThan(0);
+
+    const sidecar = join(project.cwd, ".github", "bapm-hooks.json");
+    expect(existsSync(sidecar)).toBe(true);
+    const ownership = readJson(sidecar);
+    expect(ownership).toHaveProperty("owned");
   });
 
-  test("sidecar ownership enables idempotent reinstall", async () => {
-    const cwd = temp();
-    mkdirSync(join(cwd, ".github", "hooks"), { recursive: true });
-    writeFileSync(
-      join(cwd, ".github", "hooks", "user-keep.json"),
-      `${JSON.stringify({ hooks: { sessionStart: [{ command: "./keep.sh" }] } }, null, 2)}\n`,
-      "utf8",
+  test("reinstall replaces owned hooks only and keeps unrelated user hook files", async () => {
+    const project = createTempProject("bapm-copilot-hooks-reinstall-");
+    cleanup = project.cleanup;
+    mkdirSync(join(project.cwd, ".github", "hooks"), { recursive: true });
+    writeJson(join(project.cwd, ".github", "hooks", "user-keep.json"), {
+      hooks: { sessionStart: [{ type: "command", command: "./keep-user.sh" }] },
+    });
+
+    mkdirSync(join(project.cwd, "pkg"), { recursive: true });
+    writeFileSync(join(project.cwd, "pkg", "v1.sh"), "#!/bin/sh\necho v1\n", "utf8");
+    writeFileSync(join(project.cwd, "pkg", "v2.sh"), "#!/bin/sh\necho v2\n", "utf8");
+    const hookV1 = join(project.cwd, "pkg", "hook-v1.json");
+    writeJson(hookV1, {
+      hooks: { SessionStart: [{ type: "command", command: "./v1.sh" }] },
+    });
+    const hookV2 = join(project.cwd, "pkg", "hook-v2.json");
+    writeJson(hookV2, {
+      hooks: { SessionStart: [{ type: "command", command: "./v2.sh" }] },
+    });
+
+    const target = loadCopilotIntegration();
+    const ctx = { cwd: project.cwd, targetId: "copilot", deployRoots: target.deployRoots };
+    await target.materialize(
+      [
+        {
+          name: "owned-hook",
+          type: "hook",
+          source: "dependency:demo-pkg",
+          packageName: "demo-pkg",
+          path: hookV1,
+        },
+      ],
+      ctx,
+    );
+    await target.materialize(
+      [
+        {
+          name: "owned-hook",
+          type: "hook",
+          source: "dependency:demo-pkg",
+          packageName: "demo-pkg",
+          path: hookV2,
+        },
+      ],
+      ctx,
     );
 
-    mkdirSync(join(cwd, "pkg"), { recursive: true });
-    writeFileSync(join(cwd, "pkg", "v1.sh"), "echo v1\n", "utf8");
-    writeFileSync(join(cwd, "pkg", "v2.sh"), "echo v2\n", "utf8");
-    writeFileSync(
-      join(cwd, "pkg", "hook-v1.json"),
-      `${JSON.stringify({ hooks: { session_start: [{ type: "command", command: "./v1.sh" }] } }, null, 2)}\n`,
-      "utf8",
-    );
-    writeFileSync(
-      join(cwd, "pkg", "hook-v2.json"),
-      `${JSON.stringify({ hooks: { SessionStart: [{ type: "command", command: "./v2.sh" }] } }, null, 2)}\n`,
-      "utf8",
-    );
-
-    const target = createCopilotIntegration();
-    const ctx = { cwd, targetId: "copilot", deployRoots: target.deployRoots };
-    const prim = (path: string) =>
-      ({
-        name: "owned-hook",
-        type: "hook",
-        source: "dependency:demo-pkg",
-        packageName: "demo-pkg",
-        path,
-      }) as const;
-
-    await target.materialize([prim(join(cwd, "pkg", "hook-v1.json"))], ctx);
-    await target.materialize([prim(join(cwd, "pkg", "hook-v2.json"))], ctx);
-
-    expect(existsSync(join(cwd, ".github/hooks/user-keep.json"))).toBe(true);
-    const owned = readFileSync(join(cwd, ".github/hooks/demo-pkg-owned-hook.json"), "utf8");
-    expect(owned).toMatch(/v2\.sh/);
-    expect(owned).not.toMatch(/v1\.sh/);
-    expect(owned).toMatch(/sessionStart/);
-    expect(owned).not.toMatch(/session_start|SessionStart|_apm_source/);
-    expect(existsSync(join(cwd, ".github/bapm-hooks.json"))).toBe(true);
+    expect(existsSync(join(project.cwd, ".github", "hooks", "user-keep.json"))).toBe(true);
+    const ownedPath = join(project.cwd, ".github", "hooks", "demo-pkg-owned-hook.json");
+    expect(existsSync(ownedPath)).toBe(true);
+    const ownedRaw = readFileSync(ownedPath, "utf8");
+    expect(ownedRaw).toMatch(/v2\.sh/);
+    expect(ownedRaw).not.toMatch(/v1\.sh/);
+    expect(ownedRaw).not.toMatch(/_apm_source|bapm-owned/i);
   });
 });

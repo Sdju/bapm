@@ -1,11 +1,11 @@
 /**
- * Shared helpers for integration-copilot-runtime acceptance (RED).
+ * Shared helpers for @bapm/integration-copilot runtime tests.
  */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { BapmIntegration, MaterializeReport } from "@bapm/integration-api";
-import { createCopilotIntegration, createIntegration } from "../../../src/index.ts";
+import { createCopilotIntegration, createIntegration } from "../src/index.ts";
 
 export function createTempProject(prefix = "bapm-copilot-"): {
   cwd: string;
