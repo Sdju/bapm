@@ -18,6 +18,10 @@ export default defineConfig({
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
     options: { typeAware: true, typeCheck: true },
   },
+  // https://viteplus.dev/guide/commit-hooks
+  staged: {
+    "*.{js,mjs,cjs,ts,tsx}": "vp check --fix",
+  },
   run: {
     cache: true,
   },

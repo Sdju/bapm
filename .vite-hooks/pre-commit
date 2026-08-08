@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+set -e
+
+# Direct commits on the default branch are forbidden — use a feature branch + PR.
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+case "$branch" in
+master | main)
+	echo "error: direct commits to '$branch' are forbidden; create a feature branch and open a PR" >&2
+	exit 1
+	;;
+esac
+
+vp staged

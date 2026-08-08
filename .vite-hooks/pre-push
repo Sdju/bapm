@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+set -e
+
+# Block direct pushes to the default branch (GitHub rulesets enforce the same remotely).
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+	case "$remote_ref" in
+	refs/heads/master | refs/heads/main)
+		echo "error: direct push to '${remote_ref#refs/heads/}' is forbidden; open a PR" >&2
+		exit 1
+		;;
+	esac
+done
