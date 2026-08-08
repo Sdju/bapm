@@ -50,6 +50,27 @@ describe("opt-in-host-integrations · docs and README", () => {
     expect(arch).toMatch(/@bapm\/integration-cursor|opt-in|object-map|targets:/i);
   });
 
+  test("guide pages do not claim Cursor ships из коробки / Built-in: Cursor", () => {
+    const guideIndex = readRepoText("apps/docs/guide/index.md");
+    expect(guideIndex).not.toMatch(/Из коробки runtime\s*[—–-]\s*\*?\*?Cursor/i);
+    expect(guideIndex).toMatch(/@bapm\/integration-cursor|targets:/i);
+
+    const pages = [
+      "apps/docs/index.md",
+      "apps/docs/guide/index.md",
+      "apps/docs/guide/commands.md",
+      "apps/docs/guide/conformance.md",
+    ] as const;
+    for (const path of pages) {
+      expect(existsSync(join(REPO_ROOT, path)), path).toBe(true);
+      const page = readRepoText(path);
+      expect(page, path).not.toMatch(/Из коробки\s*[—–-]\s*\*?\*?Cursor/i);
+      expect(page, path).not.toMatch(/Из коробки runtime\s*[—–-]\s*\*?\*?Cursor/i);
+      expect(page, path).not.toMatch(/Built-in:\s*Cursor/i);
+      expect(page, path).not.toMatch(/Из коробки deploy идёт в Cursor/i);
+    }
+  });
+
   test("install/compile help must not claim built-in Cursor", async () => {
     project = createTempProject();
     const install = await runInProject(project.cwd, ["install", "--help"]);

@@ -29,6 +29,6 @@ bapm install --target cursor
 
 ## Ограничения (коротко)
 
-- Из коробки runtime — Cursor. Свой агент — npm / локальный модуль через `targets:` ([hosts](/guide/supported-hosts)).
+- Cursor — opt-in пакет `@bapm/integration-cursor` + `targets:`. Свой агент — npm / локальный модуль через `targets:` ([hosts](/guide/supported-hosts)).
 - Claude/Codex — при `pack` / marketplace-output, не замена Cursor install.
 - Граница OpenAPM / APM: [Совместимость](/guide/conformance).
