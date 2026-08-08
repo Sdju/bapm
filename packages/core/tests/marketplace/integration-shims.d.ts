@@ -1,7 +1,13 @@
 /** Ambient types for marketplace-output packages that ship JS-only dist. */
 declare module "@bapm/integration-claude" {
-  import type { MarketplaceOutputIntegration } from "@bapm/integration-api";
-  export const claudeMarketplaceIntegration: MarketplaceOutputIntegration;
+  export const claudeMarketplaceIntegration: {
+    id: string;
+    marketplaceOutput: {
+      format: string;
+      defaultOutput: string;
+      map: (config: unknown, resolved: unknown[]) => Record<string, unknown>;
+    };
+  };
   export function mapClaudeMarketplace(
     config: unknown,
     resolved: unknown[],
@@ -9,8 +15,14 @@ declare module "@bapm/integration-claude" {
 }
 
 declare module "@bapm/integration-codex" {
-  import type { MarketplaceOutputIntegration } from "@bapm/integration-api";
-  export const codexMarketplaceIntegration: MarketplaceOutputIntegration;
+  export const codexMarketplaceIntegration: {
+    id: string;
+    marketplaceOutput: {
+      format: string;
+      defaultOutput: string;
+      map: (config: unknown, resolved: unknown[]) => Record<string, unknown>;
+    };
+  };
   export function mapCodexMarketplace(
     config: unknown,
     resolved: unknown[],

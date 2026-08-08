@@ -29,14 +29,15 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # Workspace packages expose types from dist/; typecheck needs a prior build.
+      - name: Build packages
+        run: pnpm run build
+
       - name: Check
         run: pnpm run check
 
       - name: Test
         run: pnpm run test
-
-      - name: Build packages
-        run: pnpm run build
 
       - name: Build docs
         run: pnpm --filter @bapm/docs build
