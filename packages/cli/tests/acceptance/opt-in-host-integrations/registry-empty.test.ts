@@ -46,10 +46,7 @@ describe("opt-in-host-integrations · empty composition registries", () => {
   });
 
   test("marketplaceOutputs module does not static-import Claude/Codex packages", () => {
-    const src = readFileSync(
-      join(CLI_ROOT, "src/app/integrations/marketplaceOutputs.ts"),
-      "utf8",
-    );
+    const src = readFileSync(join(CLI_ROOT, "src/app/integrations/marketplaceOutputs.ts"), "utf8");
     expect(src).not.toMatch(/@bapm\/integration-claude/);
     expect(src).not.toMatch(/@bapm\/integration-codex/);
   });

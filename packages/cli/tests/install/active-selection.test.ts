@@ -102,11 +102,7 @@ describe("CLI install · manifest active selection", () => {
       "leaf/apm.yml",
       "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n",
     );
-    writeText(
-      project.cwd,
-      "leaf/.apm/skills/hello/SKILL.md",
-      "---\nname: hello\n---\n# Hello\n",
-    );
+    writeText(project.cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
 
     const { result, combined } = await runInProject(project.cwd, ["install"]);
 

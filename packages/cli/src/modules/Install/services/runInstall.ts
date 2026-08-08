@@ -4,12 +4,15 @@ import {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
+  extractPackArchive,
+  loadManifest,
   resolveEffectiveFrozen,
   runInstall as coreRunInstall,
 } from "@bapm/core";
 import type { InstallDeps, InstallOptions, InstallResult } from "../types/install.types.ts";
 import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
 import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
+import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -483,10 +486,23 @@ async function runCoreInstall(
   const cwd = options.cwd ?? process.cwd();
 
   try {
+    // Land archive before object-map load so packaged `targets:` can register hosts.
+    let archiveLanded = false;
+    if (archivePath && !parsed.dryRun) {
+      try {
+        await extractPackArchive({ archivePath, outputDir: cwd, cwd });
+        loadManifest({ cwd });
+      } catch (cause) {
+        const detail = cause instanceof Error ? cause.message : String(cause);
+        throw new Error(`Install from archive failed: ${detail}`);
+      }
+      archiveLanded = true;
+    }
+
     await registerManifestIntegrationsFromCwd(registry, cwd);
     const result = await coreRunInstall({
       cwd: options.cwd,
-      archivePath,
+      archivePath: archiveLanded ? undefined : archivePath,
       dryRun: parsed.dryRun,
       packageRefs: parsed.packageRefs,
       exclude: parsed.exclude,
@@ -520,12 +536,13 @@ async function runCoreInstall(
     }
     return { ok: true };
   } catch (error) {
-    const message =
+    const raw =
       error instanceof Error
         ? error.message
         : typeof error === "object" && error !== null && "message" in error
           ? String((error as { message: unknown }).message)
           : String(error);
+    const message = enrichUnregisteredTargetMessage(raw);
     console.error(`${deps.name}: ${message}`);
     return { ok: false, message };
   }

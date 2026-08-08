@@ -67,6 +67,21 @@ export function parseInitArgs(argv: string[]): {
   return { yes, help, target, projectName };
 }
 
+/**
+ * Prefer object-map `targets: { <id>: "@bapm/integration-<id>" }` + `active`
+ * for conventional published host packages (e.g. cursor).
+ */
+function scaffoldTargetFields(targetId: string): {
+  targets: Record<string, string>;
+  active: string[];
+} {
+  const id = targetId.trim();
+  return {
+    targets: { [id]: `@bapm/integration-${id}` },
+    active: [id],
+  };
+}
+
 export async function runInit(deps: InitDeps, options: InitOptions): Promise<InitResult> {
   const parsed = parseInitArgs(options.args ?? []);
   if (parsed.help) {
@@ -105,7 +120,7 @@ export async function runInit(deps: InitDeps, options: InitOptions): Promise<Ini
     const document = deps.createMinimalManifest({
       name,
       version: "0.1.0",
-      ...(target ? { target } : {}),
+      ...(target ? scaffoldTargetFields(target) : {}),
     });
     const { path } = deps.writeProducerManifest(document, {
       cwd,

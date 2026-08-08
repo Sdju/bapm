@@ -9,6 +9,7 @@ import {
   createTempProject,
   expectKnownFlags,
   hasLock,
+  linkCursorIntegration,
   mcpJsonPath,
   readLockText,
   readMcpServers,
@@ -97,9 +98,10 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
     const { writeFileSync } = await import("node:fs");
+    const spec = linkCursorIntegration(project.cwd);
     writeFileSync(
       join(project.cwd, "bapm.yml"),
-      `name: m9-no-mcp\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+      `name: m9-no-mcp\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm:\n    - path: ./leaf\n`,
       "utf8",
     );
     writeFileSync(

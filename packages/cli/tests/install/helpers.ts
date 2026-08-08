@@ -9,11 +9,13 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { runCli } from "../../src/index.ts";
 import {
   parseInstallArgs,
@@ -24,12 +26,36 @@ export { parseInstallArgs, formatInstallHelp, runCli };
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
+const HERE = dirname(fileURLToPath(import.meta.url));
+const PACKAGES_ROOT = join(HERE, "../../..");
+
 export function createTempProject(prefix = "bapm-cli-install-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
   };
+}
+
+/** Symlink a workspace package directory into the project's node_modules. */
+export function linkPackageDir(projectCwd: string, packageRoot: string): string {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const name = pkg.name;
+  const dest = join(projectCwd, "node_modules", ...name.split("/"));
+  mkdirSync(dirname(dest), { recursive: true });
+  if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
+  symlinkSync(packageRoot, dest, "dir");
+  return name;
+}
+
+export function linkCursorIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-cursor"));
+}
+
+function cursorMapYaml(spec: string): string {
+  return `targets:\n  cursor: "${spec}"\n`;
 }
 
 export async function withCapturedIo<T>(
@@ -118,12 +144,13 @@ export function writeLeafProject(
   options?: { withCursor?: boolean },
 ): void {
   mkdirSync(join(cwd, "leaf"), { recursive: true });
+  const spec = linkCursorIntegration(cwd);
   if (options?.withCursor) {
     mkdirSync(join(cwd, ".cursor"), { recursive: true });
   }
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+    `name: ${name}\nversion: 0.0.1\n${cursorMapYaml(spec)}dependencies:\n  apm:\n    - path: ./leaf\n`,
     "utf8",
   );
   writeFileSync(
@@ -136,11 +163,12 @@ export function writeLeafProject(
 export function writeMcpProject(cwd: string, name: string): void {
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
   mkdirSync(join(cwd, "leaf"), { recursive: true });
+  const spec = linkCursorIntegration(cwd);
   writeFileSync(
     join(cwd, "bapm.yml"),
     `name: ${name}
 version: 0.0.1
-dependencies:
+${cursorMapYaml(spec)}dependencies:
   apm:
     - path: ./leaf
   mcp:

@@ -101,7 +101,10 @@ describe("CLI view command", () => {
   test("view --help / -h document local inspect", async () => {
     project = createTempProject();
 
-    for (const argv of [["view", "--help"], ["view", "-h"]] as const) {
+    for (const argv of [
+      ["view", "--help"],
+      ["view", "-h"],
+    ] as const) {
       const { result, stdout, combined } = await runInProject(project.cwd, [...argv]);
       expectKnownCommand(combined, "view");
       expect(result).toBe(0);

@@ -12,9 +12,7 @@ export function createIntegration() {
       const marker = join(cwd, ".pi", "materialized");
       mkdirSync(dirname(marker), { recursive: true });
       writeFileSync(marker, "x-pi-agent", "utf8");
-      const list = Array.isArray(primitives)
-        ? primitives
-        : (primitives?.primitives ?? []);
+      const list = Array.isArray(primitives) ? primitives : (primitives?.primitives ?? []);
       const deployedFiles = [];
       for (const p of list) {
         const name = String(p.name ?? "unnamed");

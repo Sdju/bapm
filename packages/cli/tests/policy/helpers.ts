@@ -10,13 +10,18 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const PACKAGES_ROOT = join(HERE, "../../..");
 
 export function createTempProject(prefix = "bapm-policy-cli-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
@@ -24,6 +29,22 @@ export function createTempProject(prefix = "bapm-policy-cli-"): TempProject {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
   };
+}
+
+export function linkPackageDir(projectCwd: string, packageRoot: string): string {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const name = pkg.name;
+  const dest = join(projectCwd, "node_modules", ...name.split("/"));
+  mkdirSync(dirname(dest), { recursive: true });
+  if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
+  symlinkSync(packageRoot, dest, "dir");
+  return name;
+}
+
+export function linkCursorIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-cursor"));
 }
 
 export async function withCapturedIo<T>(
@@ -82,9 +103,11 @@ export function writeText(path: string, contents: string): void {
 
 export function writeLeafProject(cwd: string, name: string): void {
   mkdirSync(join(cwd, "leaf"), { recursive: true });
+  mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  const spec = linkCursorIntegration(cwd);
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+    `name: ${name}\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm:\n    - path: ./leaf\n`,
     "utf8",
   );
   writeFileSync(

@@ -1,9 +1,9 @@
 import { createIntegrationRegistry } from "@bapm/integration-api";
-import { createCursorIntegration } from "@bapm/integration-cursor";
 
-/** Register the integration packages shipped with the CLI distribution. */
+/**
+ * Empty runtime registry — hosts register only via object-map load
+ * (`registerManifestIntegrationsFromCwd`), not eager composition-root imports.
+ */
 export function createCliIntegrationRegistry() {
-  const registry = createIntegrationRegistry();
-  registry.register(createCursorIntegration());
-  return registry;
+  return createIntegrationRegistry();
 }

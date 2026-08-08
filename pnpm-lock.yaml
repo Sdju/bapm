@@ -81,16 +81,10 @@ importers:
       '@bapm/integration-api':
         specifier: workspace:*
         version: link:../integration-api
-      '@bapm/integration-claude':
-        specifier: workspace:*
-        version: link:../integration-claude
-      '@bapm/integration-codex':
-        specifier: workspace:*
-        version: link:../integration-codex
+    devDependencies:
       '@bapm/integration-cursor':
         specifier: workspace:*
         version: link:../integration-cursor
-    devDependencies:
       '@types/node':
         specifier: 'catalog:'
         version: 26.1.2

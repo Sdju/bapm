@@ -2,22 +2,10 @@
  * CLI helpers for manifest `active` selection suites
  * (promoted from manifest-active-targets acceptance).
  */
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  createTempProject,
-  runInProject,
-  writeText,
-  type TempProject,
-} from "./helpers.ts";
+import { createTempProject, runInProject, writeText, type TempProject } from "./helpers.ts";
 import { linkFixturePackage } from "../integrations/map-load-helpers.ts";
 
 export { createTempProject, runInProject, writeText, type TempProject };
@@ -64,10 +52,16 @@ export function writeActiveProject(cwd: string, options: ActiveProjectOptions): 
   const filename = options.filename ?? "bapm.yml";
   const activeLines = options.active.map((id) => `  - ${id}`).join("\n");
 
+  let targets = options.targets ? { ...options.targets } : undefined;
+  if (options.active.includes("cursor") && (!targets || !targets.cursor)) {
+    const cursorSpec = linkCursorIntegration(cwd);
+    targets = { ...targets, cursor: cursorSpec };
+  }
+
   const lines: string[] = [`name: ${name}`, "version: 0.0.1", "active:", activeLines];
 
-  if (options.targets) {
-    const mapLines = Object.entries(options.targets)
+  if (targets) {
+    const mapLines = Object.entries(targets)
       .map(([id, spec]) => `  ${id}: "${spec}"`)
       .join("\n");
     lines.push("targets:", mapLines);
@@ -91,16 +85,8 @@ export function writeActiveProject(cwd: string, options: ActiveProjectOptions): 
   }
 
   if (options.withLeafSkill) {
-    writeText(
-      cwd,
-      "leaf/apm.yml",
-      "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n",
-    );
-    writeText(
-      cwd,
-      "leaf/.apm/skills/hello/SKILL.md",
-      "---\nname: hello\n---\n# Hello\n",
-    );
+    writeText(cwd, "leaf/apm.yml", "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n");
+    writeText(cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
   }
 
   if (options.withInstruction) {

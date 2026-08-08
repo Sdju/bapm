@@ -1,9 +1,18 @@
 /**
  * CLI compile polish helpers (-o/--dry-run/-v/--validate).
  */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { runCli } from "../../src/index.ts";
 import {
   formatCompileHelp,
@@ -14,12 +23,31 @@ export { formatCompileHelp, parseCompileArgs, runCli };
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
+const HERE = dirname(fileURLToPath(import.meta.url));
+const PACKAGES_ROOT = join(HERE, "../../..");
+
 export function createTempProject(prefix = "bapm-p7d-cli-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
   };
+}
+
+export function linkPackageDir(projectCwd: string, packageRoot: string): string {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const name = pkg.name;
+  const dest = join(projectCwd, "node_modules", ...name.split("/"));
+  mkdirSync(dirname(dest), { recursive: true });
+  if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
+  symlinkSync(packageRoot, dest, "dir");
+  return name;
+}
+
+export function linkCursorIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-cursor"));
 }
 
 export async function withCapturedIo<T>(
@@ -96,9 +124,10 @@ export function writeText(path: string, contents: string): void {
 /** Cursor-oriented fixture with one discoverable instruction primitive. */
 export function writeCompileProject(cwd: string, name = "p7d-compile"): void {
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  const spec = linkCursorIntegration(cwd);
   writeText(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ntarget: cursor\ndependencies:\n  apm: []\n`,
+    `name: ${name}\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm: []\n`,
   );
   writeText(join(cwd, ".apm", "instructions", "style.md"), "# Style\nPrefer concise answers.\n");
 }

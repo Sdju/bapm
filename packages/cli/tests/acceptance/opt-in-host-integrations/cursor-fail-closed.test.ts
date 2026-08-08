@@ -28,11 +28,7 @@ describe("opt-in-host-integrations · cursor fail-closed without map", () => {
       withCursorDetect: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/cursor/i);
@@ -48,11 +44,7 @@ describe("opt-in-host-integrations · cursor fail-closed without map", () => {
     });
     writeText(project.cwd, ".apm/instructions/guide.md", "# Guide\nPrefer short answers.\n");
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "compile",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["compile", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/cursor/i);
@@ -68,11 +60,7 @@ describe("opt-in-host-integrations · cursor fail-closed without map", () => {
       withCursorDetect: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/cursor/i);
@@ -87,11 +75,7 @@ describe("opt-in-host-integrations · cursor fail-closed without map", () => {
       withLeafSkill: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/cursor/i);

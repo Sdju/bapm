@@ -1,43 +1,52 @@
 # bapm
 
-**Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов.
+**Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов: объявляете пакеты в `bapm.yml`, `bapm install` разрешает граф, пишет lock и раскладывает skills, rules, agents и MCP туда, где их подхватит агент.
 
-Объявляете пакеты в манифесте (`bapm.yml`), запускаете `bapm install` — bapm разрешает граф, пишет lock-файл и раскладывает skills, rules, agents и MCP в проект (сейчас — в **Cursor**).
-
-Совместим с wire-форматами [OpenAPM](https://github.com/microsoft/apm) / APM, но **не** drop-in замена всей CLI microsoft/apm.
-
-## Предупреждение
-
-Данный проект является переработкой репозитория [microsoft/apm](https://github.com/microsoft/apm) с целью упрощения поддержки различных платформ (Cursor, Claude, Codex) и более гибких и универсальных сценариев при мультиагентной работе. Миграция и контроль над кодом целиком осуществяется посредством AI-агентами.
-
-Данный проект ещё не прошёл достаточное ревью для использования в продакшене.
+CLI и host-интеграции ставятся **отдельно**. Cursor — через `@bapm/integration-cursor` и object-map `targets:`. Свой агент — npm-пакет или локальный модуль по тому же контракту.
 
 ## Установка
 
 Нужен **Node.js ≥ 22.12**.
 
-В корне вашего проекта:
+**1. CLI (глобально):**
 
 ```bash
-pnpm add -D @bapm/cli
-# или: npm i -D @bapm/cli
+npm i -g @bapm/cli
+# или: pnpm add -g @bapm/cli
 ```
 
-Проверка:
+**2. Интеграция с вашим агентом** — без неё `install` некуда раскладывать пакеты.
+
+| Агент | Что сделать |
+| --- | --- |
+| **Cursor** | `npm i -g @bapm/integration-cursor` (или `npm i -D` в проекте), объявить `targets:` / `active`, затем `bapm install --target cursor` |
+| **Свой** | Поставить npm-пакет или положить локальный модуль, объявить в `targets:`, затем `--target <id>` |
+
+Пример для Cursor:
 
 ```bash
-pnpm exec bapm --help
-# или: npx bapm --help
+npm i -g @bapm/cli @bapm/integration-cursor
 ```
 
-## Быстрый старт
+```yaml
+targets:
+  cursor: "@bapm/integration-cursor"
+active:
+  - cursor
+```
+
+Подробности, кастомные интеграции и скрипты: [поддерживаемые hosts](apps/docs/guide/supported-hosts.md).
+
+Pin CLI в проекте (редко): `npm i -D @bapm/cli`, затем `npx bapm`.
+## Быстрый пример
 
 ```bash
 bapm init -y --target cursor
+# убедитесь, что @bapm/integration-cursor установлен
 bapm install --target cursor
 ```
 
-Типичный результат:
+## Артефакты
 
 | Артефакт | Назначение |
 | --- | --- |
@@ -46,35 +55,40 @@ bapm install --target cursor
 | `apm_modules/` | Материализованные пакеты |
 | `.agents/skills/`, `.cursor/rules/`, `.cursor/agents/`, `.cursor/mcp.json` | Деплой в Cursor |
 
-Подробный проход: [быстрый старт](apps/docs/guide/quick-start.md).
-
-## Ключевые моменты
-
-- **Канонический манифест** — `bapm.yml`; `apm.yml` — backcompat-подмножество. Оба сразу — ошибка, merge нет.
-- **Runtime install сегодня cursor-only** (`--target cursor`). Claude/Codex — для marketplace-pack, не как host install.
-- **Lock + install** — воспроизводимый граф для локальной работы и CI (`--frozen` / env `CI`).
-- **MCP** — bake env-плейсхолдеров на install; политика approve/deny для исполняемого MCP.
-- **OpenAPM Consumer / Producer / Governance** — заявленный класс совместимости; детали и limitations: [CONFORMANCE.md](CONFORMANCE.md).
-- **Agent Plugins v1** — узкая portable-граница (`plugin.json` + skills + `mcp.json`): [AGENT_PLUGINS_COMPATIBILITY.md](AGENT_PLUGINS_COMPATIBILITY.md).
-
 ## Документация
 
 | Раздел | Ссылка |
 | --- | --- |
-| Обзор возможностей | [guide/](apps/docs/guide/index.md) |
 | Быстрый старт | [guide/quick-start](apps/docs/guide/quick-start.md) |
+| Поддерживаемые hosts | [guide/supported-hosts](apps/docs/guide/supported-hosts.md) |
+| Что умеет bapm | [guide/](apps/docs/guide/index.md) |
 | Команды | [guide/commands](apps/docs/guide/commands.md) |
 | Манифест `bapm.yml` | [guide/config-manifest](apps/docs/guide/config-manifest.md) |
 | Lock-файл | [guide/lockfile](apps/docs/guide/lockfile.md) |
 | Сценарии | [guide/situations/](apps/docs/guide/situations/index.md) |
 | Справка по флагам | [reference/](apps/docs/reference/index.md) |
-| Совместимость / OpenAPM | [guide/conformance](apps/docs/guide/conformance.md) · [CONFORMANCE.md](CONFORMANCE.md) |
-| Agent Plugins | [guide/agent-plugins](apps/docs/guide/agent-plugins.md) · [матрица](AGENT_PLUGINS_COMPATIBILITY.md) |
-| Архитектура (для контрибьюторов) | [architecture/](apps/docs/architecture/index.md) · [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Agent Plugins | [guide/agent-plugins](apps/docs/guide/agent-plugins.md) |
+| Архитектура | [architecture/](apps/docs/architecture/index.md) |
 
-Сайт документации публикуется на **GitHub Pages** из `apps/docs` (после настройки Pages в репозитории).
+Сайт документации — VitePress в `apps/docs`.
+
+## Ключевое
+
+- Канонический манифест — `bapm.yml`.
+- Runtime host — opt-in: пакет интеграции + object-map `targets:` + `--target <id>` / `active` / detect.
+- Claude/Codex — marketplace-pack (`bapm pack`), не runtime install; пакеты `@bapm/integration-claude` / `@bapm/integration-codex` тоже opt-in.
+- Lock + install — воспроизводимый граф; в CI — `--frozen` / env `CI`.
+- MCP — bake env-плейсхолдеров на install; policy approve/deny для исполняемого MCP.
+
+## APM compatible
+
+Совместим с wire-форматами OpenAPM / APM. Детали и границы: [Совместимость](apps/docs/guide/conformance.md) · [`CONFORMANCE.md`](CONFORMANCE.md).
 
 ## Связанные проекты
 
 - [microsoft/apm](https://github.com/microsoft/apm) — референсный APM / OpenAPM
 - [Agent Plugins](https://agent-plugins.org/) — portable-формат skills + MCP
+
+## Предупреждение
+
+Проект — переработка [microsoft/apm](https://github.com/microsoft/apm) с упором на гибкие сценарии и поддержку хостов. Миграция и контроль кода во многом через AI-агентов. Для продакшена ревью ещё недостаточно.

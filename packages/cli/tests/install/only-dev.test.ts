@@ -45,7 +45,7 @@ describe("CLI install --dev and --only", () => {
     expect(manifest).toMatch(/devDependencies:[\s\S]*apm:[\s\S]*(\.\/extra|path:\s*\.\/extra)/);
     // Must not land only under dependencies.apm solely due to this add.
     const depsBlock =
-      manifest.match(/^dependencies:[\s\S]*?(?=^devDependencies:|^[a-z]|\Z)/m)?.[0] ?? "";
+      manifest.match(/^dependencies:[\s\S]*?(?=^devDependencies:|^[a-z]|Z)/m)?.[0] ?? "";
     expect(depsBlock).not.toMatch(/path:\s*\.\/extra|\.\/extra/);
   });
 

@@ -68,13 +68,13 @@ describe("CLI install · object-map integration load", () => {
     expect(readFileSync(acmeMarkerPath(project.cwd), "utf8")).toContain("x-acme-default");
   });
 
-  test("built-in cursor works without a map entry", async () => {
+  test("cursor without object-map fails closed (not a built-in)", async () => {
     project = createTempProject();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
     mkdirSync(join(project.cwd, "leaf", ".apm", "skills", "hello"), { recursive: true });
     writeFileSync(
       join(project.cwd, "bapm.yml"),
-      "name: acc-cursor-builtin\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n",
+      "name: acc-cursor-no-builtin\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n",
       "utf8",
     );
     writeFileSync(
@@ -88,10 +88,11 @@ describe("CLI install · object-map integration load", () => {
       "utf8",
     );
 
-    const { result } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
-    expect(result).toBe(0);
-    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(/unknown or unregistered target|not (?:a )?registered|unregistered/i);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(false);
   });
 
   test("map alone does not activate a host without --target or detect", async () => {
@@ -110,13 +111,15 @@ describe("CLI install · object-map integration load", () => {
     expect(existsSync(acmeMarkerPath(project.cwd))).toBe(false);
   });
 
-  test("legacy string target does not require resolving a package from the field value", async () => {
+  test("legacy string target does not load a package from the field value", async () => {
     project = createTempProject();
     writeLegacyCursorProject(project.cwd, "acc-legacy-string");
 
-    const { result } = await runInProject(project.cwd, ["install"]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
-    expect(result).toBe(0);
-    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
+    expect(result).not.toBe(0);
+    expect(combined).not.toMatch(/Failed to load target integration "cursor" from "cursor"/i);
+    expect(combined).toMatch(/unknown or unregistered target|not (?:a )?registered|unregistered/i);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(false);
   });
 });

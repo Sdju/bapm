@@ -42,7 +42,10 @@ function linkFixture(cwd: string, fixtureDirName: string): string {
   return pkg.name;
 }
 
-function plantLocalIntegration(cwd: string, relativeDir = "agents/integration/local-agent"): string {
+function plantLocalIntegration(
+  cwd: string,
+  relativeDir = "agents/integration/local-agent",
+): string {
   const dest = join(cwd, relativeDir);
   mkdirSync(dirname(dest), { recursive: true });
   // Prefer a package with both `main` and `exports` so directory createRequire.resolve works.

@@ -10,10 +10,12 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { runCli } from "../../src/index.ts";
 
 export type IsolatedEnv = {
@@ -21,6 +23,9 @@ export type IsolatedEnv = {
   cwd: string;
   cleanup: () => void;
 };
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const PACKAGES_ROOT = join(HERE, "../../..");
 
 export function createIsolatedEnv(prefix = "bapm-mp-si-cli-"): IsolatedEnv {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -33,6 +38,22 @@ export function createIsolatedEnv(prefix = "bapm-mp-si-cli-"): IsolatedEnv {
     cwd,
     cleanup: () => rmSync(root, { recursive: true, force: true }),
   };
+}
+
+export function linkPackageDir(projectCwd: string, packageRoot: string): string {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const name = pkg.name;
+  const dest = join(projectCwd, "node_modules", ...name.split("/"));
+  mkdirSync(dirname(dest), { recursive: true });
+  if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
+  symlinkSync(packageRoot, dest, "dir");
+  return name;
+}
+
+export function linkCursorIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-cursor"));
 }
 
 export async function withCapturedIo<T>(
@@ -161,7 +182,12 @@ export async function addMarketplace(
 }
 
 export function writeEmptyProject(cwd: string, name = "consumer"): void {
-  writeText(cwd, "bapm.yml", `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+  const spec = linkCursorIntegration(cwd);
+  writeText(
+    cwd,
+    "bapm.yml",
+    `name: ${name}\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm: []\n`,
+  );
 }
 
 export function readLockText(cwd: string): string {

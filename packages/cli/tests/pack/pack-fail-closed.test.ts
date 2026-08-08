@@ -7,6 +7,7 @@ import {
   expectKnownCommand,
   hasAnyHostMarketplaceJson,
   hasClaudeMarketplaceJson,
+  linkClaudeIntegration,
   runInProject,
   type TempProject,
   writeClaudeLocalAuthoring,
@@ -60,6 +61,7 @@ describe("mp-pack-outputs CLI fail-closed resolve / path jail", () => {
 
   test("non-github remote on emit fails closed", async () => {
     project = createTempProject();
+    linkClaudeIntegration(project.cwd);
     writeText(
       project.cwd,
       "bapm.yml",

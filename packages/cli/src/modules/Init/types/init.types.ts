@@ -5,7 +5,8 @@ export interface InitDeps {
     name: string;
     version?: string;
     target?: string;
-    targets?: string[];
+    targets?: string[] | Record<string, string>;
+    active?: string[];
   }) => Record<string, unknown>;
   writeProducerManifest: (
     document: Record<string, unknown>,

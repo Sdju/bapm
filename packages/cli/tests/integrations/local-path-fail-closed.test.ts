@@ -36,20 +36,14 @@ describe("CLI · local-path map · fail-closed and npm heuristic", () => {
       withCursor: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/x-pi-agent/);
     expect(combined).toMatch(/agents\/integration\/missing|\.\/agents\/integration\/missing/);
     expect(combined).toMatch(/resolv|load|module|cannot find|not found|unresolvable|missing/i);
     expect(existsSync(piMarkerPath(project.cwd))).toBe(false);
-    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(
-      false,
-    );
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(false);
   });
 
   test("bare package name without path prefix remains npm (not a filesystem path)", async () => {
@@ -63,11 +57,7 @@ describe("CLI · local-path map · fail-closed and npm heuristic", () => {
       withCursor: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/x-pi-agent/);

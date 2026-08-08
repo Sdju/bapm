@@ -1,6 +1,7 @@
 import { compileAgentsMd } from "@bapm/core";
 import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
 import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
+import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type CompileOptions = { args?: string[]; cwd?: string };
@@ -191,7 +192,9 @@ export async function runCompileCli(
 
     return { ok: result.ok, exitCode: result.ok ? 0 : 1 };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = enrichUnregisteredTargetMessage(
+      error instanceof Error ? error.message : String(error),
+    );
     console.error(`${deps.name}: ${message}`);
     return { ok: false, exitCode: 1, message };
   }

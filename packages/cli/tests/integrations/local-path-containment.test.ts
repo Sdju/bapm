@@ -45,20 +45,14 @@ describe("CLI · local-path map · project-root containment", () => {
       withCursor: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/x-pi-agent/);
     expect(combined).toMatch(/outside-integration|\.\.\/outside-integration/);
     expect(combined).toMatch(/escap|project.?root|outside|contain/i);
     expect(existsSync(piMarkerPath(project.cwd))).toBe(false);
-    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(
-      false,
-    );
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(false);
   });
 
   test("absolute path outside project root fails closed without importing", async () => {
@@ -74,19 +68,13 @@ describe("CLI · local-path map · project-root containment", () => {
       withCursor: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/x-pi-agent/);
     expect(combined).toMatch(/escap|project.?root|outside|contain/i);
     expect(existsSync(piMarkerPath(project.cwd))).toBe(false);
-    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(
-      false,
-    );
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(false);
   });
 
   test("in-root relative path is allowed by containment", async () => {

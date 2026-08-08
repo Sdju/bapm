@@ -9,14 +9,19 @@ import {
   readdirSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect } from "vite-plus/test";
 import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; root: string; cleanup: () => void };
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const PACKAGES_ROOT = join(HERE, "../../..");
 
 export function createTempProject(prefix = "bapm-mp-pack-outputs-cli-"): TempProject {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -27,6 +32,26 @@ export function createTempProject(prefix = "bapm-mp-pack-outputs-cli-"): TempPro
     cwd,
     cleanup: () => rmSync(root, { recursive: true, force: true }),
   };
+}
+
+export function linkPackageDir(projectCwd: string, packageRoot: string): string {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const name = pkg.name;
+  const dest = join(projectCwd, "node_modules", ...name.split("/"));
+  mkdirSync(dirname(dest), { recursive: true });
+  if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
+  symlinkSync(packageRoot, dest, "dir");
+  return name;
+}
+
+export function linkClaudeIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-claude"));
+}
+
+export function linkCodexIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-codex"));
 }
 
 export async function withCapturedIo<T>(
@@ -138,8 +163,11 @@ export function writeConformingManifest(
 /** Authoring with local package + Claude output (default path). */
 export function writeClaudeLocalAuthoring(
   cwd: string,
-  opts?: { name?: string; withManifestDeps?: boolean },
+  opts?: { name?: string; withManifestDeps?: boolean; linkIntegration?: boolean },
 ): void {
+  if (opts?.linkIntegration !== false) {
+    linkClaudeIntegration(cwd);
+  }
   const name = opts?.name ?? "acme-mp";
   const deps = opts?.withManifestDeps === false ? "" : `dependencies:\n  apm: []\n  mcp: []\n`;
   writeText(
@@ -168,7 +196,13 @@ export function writeClaudeLocalAuthoring(
 }
 
 /** Authoring with Codex output + category on every package. */
-export function writeCodexLocalAuthoring(cwd: string, opts?: { category?: string | null }): void {
+export function writeCodexLocalAuthoring(
+  cwd: string,
+  opts?: { category?: string | null; linkIntegration?: boolean },
+): void {
+  if (opts?.linkIntegration !== false) {
+    linkCodexIntegration(cwd);
+  }
   const category = opts?.category === undefined ? "tools" : opts.category;
   const categoryLine = category === null ? "" : `      category: ${category}`;
   writeText(
@@ -196,6 +230,7 @@ export function writeCodexLocalAuthoring(cwd: string, opts?: { category?: string
 
 /** Remote github shorthand package (needs network resolve unless offline fail). */
 export function writeRemoteGithubAuthoring(cwd: string): void {
+  linkClaudeIntegration(cwd);
   writeText(
     cwd,
     "bapm.yml",

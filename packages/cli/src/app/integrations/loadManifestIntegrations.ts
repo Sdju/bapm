@@ -8,10 +8,7 @@ import {
   type BapmManifest,
 } from "@bapm/core";
 import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
-import {
-  isLocalPathSpecifier,
-  resolveContainedLocalPath,
-} from "./localPathSpecifier.ts";
+import { isLocalPathSpecifier, resolveContainedLocalPath } from "./localPathSpecifier.ts";
 
 export type ManifestIntegrationLoadCause =
   | "unresolvable"
@@ -72,11 +69,7 @@ function resolveNpmPackageSpecifier(specifier: string, cwd: string): string {
  * Local path: containment under project root, then createRequire from cwd only
  * (no CLI fallback — path miss fails closed).
  */
-function resolveLocalIntegrationPath(
-  specifier: string,
-  hostId: string,
-  cwd: string,
-): string {
+function resolveLocalIntegrationPath(specifier: string, hostId: string, cwd: string): string {
   const contained = resolveContainedLocalPath(specifier, cwd);
   if (contained === null) {
     throw new ManifestIntegrationLoadError(

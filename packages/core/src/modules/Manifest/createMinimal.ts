@@ -1,6 +1,6 @@
 import { ManifestError } from "./errors.ts";
 import { parseManifest } from "./parse.ts";
-import type { BapmManifest } from "./types.ts";
+import type { BapmManifest, TargetIntegrationMap } from "./types.ts";
 
 export type CreateMinimalManifestOptions = {
   /** Package / project name (required, non-empty). */
@@ -9,8 +9,10 @@ export type CreateMinimalManifestOptions = {
   version?: string;
   /** Single host target (mutually exclusive with `targets`). */
   target?: string;
-  /** Multi host targets (mutually exclusive with `target`). */
-  targets?: string[];
+  /** Multi host targets or object-map (mutually exclusive with `target`). */
+  targets?: string[] | TargetIntegrationMap;
+  /** Optional active host ids for materialize/compile selection. */
+  active?: string[];
   description?: string;
   author?: string;
   /**
@@ -63,6 +65,7 @@ export function createMinimalManifest(options: CreateMinimalManifestOptions): Ba
   }
   if (options.target !== undefined) doc.target = options.target;
   if (options.targets !== undefined) doc.targets = options.targets;
+  if (options.active !== undefined) doc.active = options.active;
 
   return parseManifest(doc);
 }

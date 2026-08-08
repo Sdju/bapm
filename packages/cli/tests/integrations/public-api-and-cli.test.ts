@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 import { createIntegrationRegistry } from "@bapm/integration-api";
 import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
 import { runCli } from "../../src/index.ts";
+import { linkCursorIntegration } from "../install/helpers.ts";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
@@ -27,9 +28,7 @@ async function withCwd<T>(cwd: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
-async function withCapturedIo<T>(
-  fn: () => Promise<T>,
-): Promise<{ result: T; output: string }> {
+async function withCapturedIo<T>(fn: () => Promise<T>): Promise<{ result: T; output: string }> {
   const lines: string[] = [];
   const originalLog = console.log;
   const originalError = console.error;
@@ -90,9 +89,10 @@ describe("integration vocabulary public API and CLI", () => {
     project = createTempProject();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
     mkdirSync(join(project.cwd, ".apm", "instructions"), { recursive: true });
+    const spec = linkCursorIntegration(project.cwd);
     writeFileSync(
       join(project.cwd, "bapm.yml"),
-      "name: integration-vocabulary\nversion: 0.0.1\ntarget: cursor\ndependencies:\n  apm: []\n",
+      `name: integration-vocabulary\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm: []\n`,
       "utf8",
     );
     writeFileSync(

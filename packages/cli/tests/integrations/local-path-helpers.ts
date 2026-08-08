@@ -36,10 +36,7 @@ export function createTempProject(prefix = "bapm-local-path-"): TempProject {
 }
 
 /** Sibling directory next to the project (outside project root). */
-export function createOutsideSibling(
-  projectCwd: string,
-  dirName = "outside-integration",
-): string {
+export function createOutsideSibling(projectCwd: string, dirName = "outside-integration"): string {
   const sibling = join(dirname(projectCwd), dirName);
   rmSync(sibling, { recursive: true, force: true });
   mkdirSync(sibling, { recursive: true });
@@ -171,16 +168,8 @@ export function writeMapProject(cwd: string, options: MapProjectOptions): void {
   }
 
   if (options.withLeafSkill) {
-    writeText(
-      cwd,
-      "leaf/apm.yml",
-      "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n",
-    );
-    writeText(
-      cwd,
-      "leaf/.apm/skills/hello/SKILL.md",
-      "---\nname: hello\n---\n# Hello\n",
-    );
+    writeText(cwd, "leaf/apm.yml", "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n");
+    writeText(cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
   }
 
   if (options.withInstruction) {

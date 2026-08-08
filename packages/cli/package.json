@@ -27,12 +27,10 @@
   },
   "dependencies": {
     "@bapm/core": "workspace:*",
-    "@bapm/integration-api": "workspace:*",
-    "@bapm/integration-claude": "workspace:*",
-    "@bapm/integration-codex": "workspace:*",
-    "@bapm/integration-cursor": "workspace:*"
+    "@bapm/integration-api": "workspace:*"
   },
   "devDependencies": {
+    "@bapm/integration-cursor": "workspace:*",
     "@types/node": "catalog:",
     "bumpp": "catalog:",
     "typescript": "catalog:",

@@ -170,16 +170,8 @@ export function writeProject(cwd: string, options: MapProjectOptions = {}): void
   }
 
   if (options.withLeafSkill) {
-    writeText(
-      cwd,
-      "leaf/apm.yml",
-      "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n",
-    );
-    writeText(
-      cwd,
-      "leaf/.apm/skills/hello/SKILL.md",
-      "---\nname: hello\n---\n# Hello\n",
-    );
+    writeText(cwd, "leaf/apm.yml", "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n");
+    writeText(cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
   }
 }
 

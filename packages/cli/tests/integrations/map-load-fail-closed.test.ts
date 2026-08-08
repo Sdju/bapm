@@ -24,7 +24,7 @@ describe("CLI · object-map integration load fail-closed", () => {
     project = undefined;
   });
 
-  test("forced id missing from built-in and map fails with named diagnostic", async () => {
+  test("forced id missing from registry and map fails with named diagnostic", async () => {
     project = createTempProject();
     const spec = linkFixturePackage(project.cwd, "create-integration-pkg");
     writeMapProject(project.cwd, {
@@ -55,11 +55,7 @@ describe("CLI · object-map integration load fail-closed", () => {
       withCursor: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/x-acme-editor/);
@@ -78,11 +74,7 @@ describe("CLI · object-map integration load fail-closed", () => {
       withCursor: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/x-acme-market/);

@@ -30,11 +30,7 @@ describe("opt-in-host-integrations · cursor via object-map", () => {
       withCursorDetect: true,
     });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--target",
-      "cursor",
-    ]);
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
 
     expect(combined).not.toMatch(/unknown or unregistered target:\s*cursor/i);
     expect(result).toBe(0);

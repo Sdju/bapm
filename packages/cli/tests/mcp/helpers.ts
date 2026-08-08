@@ -1,12 +1,24 @@
 /**
  * CLI M9 APM extras acceptance helpers.
  */
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const PACKAGES_ROOT = join(HERE, "../../..");
 
 export function createTempProject(prefix = "bapm-m9-cli-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
@@ -14,6 +26,26 @@ export function createTempProject(prefix = "bapm-m9-cli-"): TempProject {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
   };
+}
+
+export function linkPackageDir(projectCwd: string, packageRoot: string): string {
+  const pkg = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const name = pkg.name;
+  const dest = join(projectCwd, "node_modules", ...name.split("/"));
+  mkdirSync(dirname(dest), { recursive: true });
+  if (existsSync(dest)) rmSync(dest, { recursive: true, force: true });
+  symlinkSync(packageRoot, dest, "dir");
+  return name;
+}
+
+export function linkCursorIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-cursor"));
+}
+
+function cursorMapYaml(spec: string): string {
+  return `targets:\n  cursor: "${spec}"\n`;
 }
 
 export async function withCapturedIo<T>(
@@ -130,7 +162,7 @@ export function writeDirectMcpProject(
 
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\n${grants}dependencies:\n  apm: []\n  mcp:\n${STDIO_MCP}`,
+    `name: ${name}\nversion: 0.0.1\n${cursorMapYaml(linkCursorIntegration(cwd))}${grants}dependencies:\n  apm: []\n  mcp:\n${STDIO_MCP}`,
     "utf8",
   );
 }
@@ -155,7 +187,7 @@ export function writeDirectMcpEnvProject(
     join(cwd, "bapm.yml"),
     `name: ${name}
 version: 0.0.1
-dependencies:
+${cursorMapYaml(linkCursorIntegration(cwd))}dependencies:
   apm: []
   mcp:
     - name: ${serverName}
@@ -203,7 +235,7 @@ export function writeDepMcpProject(
 
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\n${grants}dependencies:\n  apm:\n    - path: ./mcp-dep\n`,
+    `name: ${name}\nversion: 0.0.1\n${cursorMapYaml(linkCursorIntegration(cwd))}${grants}dependencies:\n  apm:\n    - path: ./mcp-dep\n`,
     "utf8",
   );
 
@@ -226,9 +258,10 @@ export function writeDepMcpProject(
 export function writeCompileProject(cwd: string, name = "m9-compile"): void {
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
   mkdirSync(join(cwd, ".apm", "instructions"), { recursive: true });
+  const spec = linkCursorIntegration(cwd);
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ntarget: cursor\ndependencies:\n  apm: []\n`,
+    `name: ${name}\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm: []\n`,
     "utf8",
   );
   writeFileSync(
@@ -240,9 +273,11 @@ export function writeCompileProject(cwd: string, name = "m9-compile"): void {
 
 export function writeModulesCacheProject(cwd: string, name = "m9-cache"): void {
   mkdirSync(join(cwd, "leaf"), { recursive: true });
+  mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  const spec = linkCursorIntegration(cwd);
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+    `name: ${name}\nversion: 0.0.1\n${cursorMapYaml(spec)}dependencies:\n  apm:\n    - path: ./leaf\n`,
     "utf8",
   );
   writeFileSync(

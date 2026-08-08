@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runCli } from "../../src/index.ts";
+import { linkCursorIntegration } from "./helpers.ts";
 
 type TempProject = { cwd: string; cleanup: () => void };
 
@@ -52,9 +53,10 @@ async function withCwd<T>(cwd: string, fn: () => Promise<T>): Promise<T> {
 function writeLeafWithCursor(cwd: string, name: string): void {
   mkdirSync(join(cwd, "leaf"), { recursive: true });
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  const spec = linkCursorIntegration(cwd);
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+    `name: ${name}\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm:\n    - path: ./leaf\n`,
     "utf8",
   );
   writeFileSync(
@@ -124,9 +126,10 @@ describe("CLI install UX", () => {
   test("--target cursor forces activation without prior .cursor/", async () => {
     project = createTempProject();
     mkdirSync(join(project.cwd, "leaf"), { recursive: true });
+    const spec = linkCursorIntegration(project.cwd);
     writeFileSync(
       join(project.cwd, "bapm.yml"),
-      `name: force-cli\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+      `name: force-cli\nversion: 0.0.1\ntargets:\n  cursor: "${spec}"\ndependencies:\n  apm:\n    - path: ./leaf\n`,
       "utf8",
     );
     writeFileSync(

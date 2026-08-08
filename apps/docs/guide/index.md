@@ -1,30 +1,34 @@
 # Что умеет bapm
 
-bapm помогает собрать конфигурацию AI-агента из пакетов: объявить зависимости, поставить их в проект и держать одинаковый результат у себя, у коллег и в CI.
+bapm собирает конфигурацию AI-агента из пакетов: объявили зависимости → поставили → одинаковый результат у себя, у коллег и в CI.
 
-## Как это выглядит на практике
+## На практике
 
-1. В корне проекта лежит манифест — канонический `bapm.yml` (или backcompat `apm.yml`).
-2. Вы запускаете `bapm install --target cursor`.
-3. bapm скачивает и связывает зависимости, пишет lock-файл и копирует нужные файлы в каталоги Cursor: skills, rules, agents, при необходимости MCP.
+```bash
+bapm init -y --target cursor
+bapm install --target cursor
+```
 
-Дальше можно обновлять пакеты, проверять «что устарело», собирать сводку в `AGENTS.md`, упаковывать marketplace-артефакты — всё через CLI.
+1. В корне лежит `bapm.yml`.
+2. `install` скачивает зависимости, пишет lock и копирует skills / rules / agents / MCP в каталоги выбранного host (Cursor — через `@bapm/integration-cursor` + `targets:`).
+3. Дальше — `update`, `outdated`, `compile`, marketplace-pack.
 
-Подробный первый проход: [быстрый старт](/guide/quick-start).
+Первый проход: [быстрый старт](/guide/quick-start). Свой агент: [поддерживаемые hosts](/guide/supported-hosts).
 
-## Что стоит знать заранее
-
-- **Сейчас установка в редактор рассчитана на Cursor.** Укажите `--target cursor` (или поле `target` в манифесте). Runtime для Copilot, Claude или Codex в этом CLI пока нет.
-- **Claude и Codex** можно использовать при упаковке marketplace-выхода (`pack`), это не замена установки в Cursor.
-- bapm опирается на форматы OpenAPM, но **не является** полной копией CLI [microsoft/apm](https://github.com/microsoft/apm). Детали совместимости — в разделе [Совместимость](/guide/conformance).
-
-## Разделы документации
+## Куда идти
 
 | Если нужно… | Откройте |
 | --- | --- |
-| Поставить CLI и сделать первый install | [Быстрый старт](/guide/quick-start) |
-| Понять список команд | [Команды](/guide/commands) |
-| Узнать флаги конкретной команды | [Справка](/reference/) |
+| Поставить CLI и первый install | [Быстрый старт](/guide/quick-start) |
+| Cursor или свой host | [Поддерживаемые hosts](/guide/supported-hosts) |
+| Список команд | [Команды](/guide/commands) |
+| Флаги конкретной команды | [Справка](/reference/) |
 | Разобраться с `bapm.yml` | [Манифест](/guide/config-manifest) |
-| Понять, зачем lock и что с ним делать | [Lock-файл](/guide/lockfile) |
-| Пройти типичную задачу по шагам | [Сценарии](/guide/situations/) |
+| Lock и CI | [Lock-файл](/guide/lockfile) |
+| Типовая задача по шагам | [Сценарии](/guide/situations/) |
+
+## Ограничения (коротко)
+
+- Из коробки runtime — Cursor. Свой агент — npm / локальный модуль через `targets:` ([hosts](/guide/supported-hosts)).
+- Claude/Codex — при `pack` / marketplace-output, не замена Cursor install.
+- Граница OpenAPM / APM: [Совместимость](/guide/conformance).

@@ -3,16 +3,18 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runCli } from "../../src/index.ts";
+import { linkCursorIntegration } from "./helpers.ts";
 
 type Project = { cwd: string; cleanup: () => void };
 
-function createProject(withCursorLayout: boolean): Project {
+function createProject(withCursorLayout: boolean, withMap = false): Project {
   const cwd = mkdtempSync(join(tmpdir(), "bapm-cli-target-"));
   if (withCursorLayout) mkdirSync(join(cwd, ".cursor"), { recursive: true });
   mkdirSync(join(cwd, ".apm", "instructions"), { recursive: true });
+  const mapBlock = withMap ? `targets:\n  cursor: "${linkCursorIntegration(cwd)}"\n` : "";
   writeFileSync(
     join(cwd, "bapm.yml"),
-    "name: cli-target\nversion: 0.0.1\ndependencies:\n  apm: []\n",
+    `name: cli-target\nversion: 0.0.1\n${mapBlock}dependencies:\n  apm: []\n`,
     "utf8",
   );
   writeFileSync(join(cwd, ".apm", "instructions", "guide.md"), "# Guide\n", "utf8");
@@ -65,7 +67,7 @@ describe("compile target selection", () => {
   });
 
   test("forwards --target=<id> to the registered Cursor target even without its detection signal", async () => {
-    project = createProject(false);
+    project = createProject(false, true);
 
     const { exitCode, output } = await runInProject(project.cwd, ["compile", "--target=cursor"]);
 

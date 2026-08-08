@@ -39,7 +39,7 @@ describe("CLI init", () => {
     expect(doc).not.toHaveProperty("workspaces");
   });
 
-  test("init -y --target cursor may record cursor without new host package", async () => {
+  test("init -y --target cursor writes object-map targets + active", async () => {
     project = createTempProject();
     const { result, combined } = await runInProject(project.cwd, [
       "init",
@@ -51,14 +51,12 @@ describe("CLI init", () => {
     expectKnownCommand(combined, "init");
     expect(result).toBe(0);
     const { document: doc } = loadManifest({ cwd: project.cwd });
-    const target = doc.target;
-    const targets = doc.targets;
-    if (target !== undefined) {
-      expect(target).toBe("cursor");
-    }
-    if (Array.isArray(targets)) {
-      expect(targets).toContain("cursor");
-    }
+    const targets = doc.targets ?? doc.target;
+    expect(targets).toBeTruthy();
+    expect(typeof targets).toBe("object");
+    expect(Array.isArray(targets)).toBe(false);
+    expect((targets as Record<string, string>).cursor).toBe("@bapm/integration-cursor");
+    expect(doc.active).toEqual(["cursor"]);
   });
 
   test("§15 existing bapm.yml blocks init — non-zero, no overwrite", async () => {

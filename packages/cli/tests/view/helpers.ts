@@ -117,10 +117,7 @@ export function writeInstalledSharedUtilsTree(cwd: string, description?: string)
   const dir = String((toDir as (id: string) => string)(identity));
   const tree = join(cwd, "apm_modules", dir, "bbbbbbbbbbbb");
   const descLine = description ? `description: ${description}\n` : "";
-  writeText(
-    join(tree, "apm.yml"),
-    `name: acme/shared-utils\nversion: 2.1.0\n${descLine}`,
-  );
+  writeText(join(tree, "apm.yml"), `name: acme/shared-utils\nversion: 2.1.0\n${descLine}`);
   writeText(join(tree, "marker.txt"), "shared-utils\n");
   return tree;
 }

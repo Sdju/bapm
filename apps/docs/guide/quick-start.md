@@ -1,114 +1,103 @@
 # Быстрый старт
 
-Цель: поставить CLI в свой проект, завести манифест и выполнить первый `install` в Cursor.
+Цель: поставить CLI, завести манифест и выполнить первый `install` в Cursor.
 
-## 1. Установка CLI
-
-В корне **вашего** проекта (не репозитория bapm):
-
-```bash
-pnpm add -D @bapm/cli
-# или:
-npm i -D @bapm/cli
-```
-
-Дальше вызывайте бинарь `bapm`:
-
-```bash
-pnpm exec bapm --help
-# или:
-npx bapm --help
-```
-
-Ниже в примерах команда записана как `bapm …` — после установки зависимости так и есть (через `pnpm exec` / `npx` / скрипт в `package.json`).
-
-### Оговорка про npm
-
-Публикация scoped-пакета `@bapm/cli` ещё может быть нестабильной; следите за релизами проекта. Команды установки выше — целевой UX. Сборка из исходников monorepo — только для контрибьюторов: [Architecture](/architecture/).
+## 1. Установка
 
 Нужен Node.js ≥ 22.12.
 
-## 2. Манифест проекта
-
-В корне проекта нужен ровно один манифест:
-
-- `bapm.yml` — канонический полный конфиг (то, что пишет `bapm init`);
-- или `apm.yml` — backcompat-подмножество OpenAPM/APM (dual-read того же parser).
-
-Оба файла сразу — ошибка (`MANIFEST_DUAL_CONFLICT`); bapm не мержит их. Полная карта полей: [манифест](/guide/config-manifest).
-
-### Создать через init
+### CLI
 
 ```bash
-bapm init -y --target cursor
+npm i -g @bapm/cli
+# или: pnpm add -g @bapm/cli
+
+bapm --help
 ```
 
-Появится `bapm.yml` с `name`, `version`, пустыми `dependencies.apm` / `dependencies.mcp` и полем `target: cursor`. Команда откажется, если уже есть `apm.yml` или `bapm.yml`.
+### Интеграция с агентом
 
-### Или минимальный пример вручную
+`install` раскладывает пакеты через **host-интеграцию**. Без неё (или без `--target` / `active` / detect) команда fail-closed.
+
+**Cursor** — отдельный пакет + object-map:
+
+```bash
+npm i -g @bapm/integration-cursor
+# или: npm i -D @bapm/integration-cursor
+
+bapm init -y --target cursor
+# init пишет targets: { cursor: "@bapm/integration-cursor" } и active: [cursor]
+```
+
+```yaml
+targets:
+  cursor: "@bapm/integration-cursor"
+active:
+  - cursor
+```
+
+**Свой агент** — поставьте пакет или локальный модуль, объявите `targets:`, активируйте `--target <id>`. Рекомендации и контракт: [поддерживаемые hosts](/guide/supported-hosts).
+
+Pin CLI в проекте (вторично): `npm i -D @bapm/cli` → `npx bapm`.
+
+Ниже команды — после глобальной установки.
+
+## 2. Манифест и install
+
+```bash
+bapm install --target cursor
+```
+
+(`init` из шага выше уже создал `bapm.yml` с `name`, `version`, пустыми deps, object-map `targets:` и `active`. Повторный `init` откажется, если манифест есть.)
+
+Минимальный пример вручную:
 
 ```yaml
 name: my-agent-project
 version: 0.0.1
-target: cursor
+targets:
+  cursor: "@bapm/integration-cursor"
+active:
+  - cursor
 dependencies:
   apm:
     - path: ./packages/hello-skill
   mcp: []
 ```
 
-Локальный пакет-зависимость должен сам иметь `apm.yml` или `bapm.yml` (например skill с `.apm/skills/...`).
+Карта полей: [манифест](/guide/config-manifest).
 
-::: tip Personal overlay
-Для личных host/env настроек без правок общего `bapm.yml` положите рядом **`bapm.local.yml`** (allowlist: `active`, `target`/`targets`, `env`, `registries`) и добавьте его в `.gitignore`. Это персональный overlay, а не source `local:`. Подробнее: [манифест — personal overlay](/guide/config-manifest#personal-overlay-bapmlocalyml).
-:::
-
-Подробнее: [манифест](/guide/config-manifest).
-
-## 3. Первый install в Cursor
-
-```bash
-bapm install --target cursor
-```
-
-`--target cursor` **принудительно** активирует Cursor-integration, даже если в проекте ещё нет каталога `.cursor/`. Без force CLI может опереться на auto-detect (наличие `.cursor/` или legacy `.cursorrules`).
-
-Полезные флаги на старте:
-
-| Флаг | Зачем |
-| --- | --- |
-| `--target cursor` | Явно выбрать Cursor runtime |
-| `--dry-run` | Посмотреть план без записи на диск |
-| `-v` / `--verbose` | Больше диагностики |
-| `--frozen` | Только по существующему lock без дрейфа пинов |
-
-Полный список: [Справка: install](/reference/install).
+`--target cursor` принудительно активирует Cursor-integration. Без force CLI может опереться на auto-detect (наличие `.cursor/` или legacy `.cursorrules`).
 
 ### Что ожидать на диске
 
-После успешного install (типичный happy path):
-
 | Артефакт | Смысл |
 | --- | --- |
-| `bapm.lock.yaml` (или `apm.lock.yaml`) | Зафиксированный граф; свежий lock по умолчанию пишется как `bapm.lock.yaml` |
-| `apm_modules/` | Материализованные пакеты (имя каталога — wire-parity с APM) |
+| `bapm.lock.yaml` | Зафиксированный граф (новый lock по умолчанию — это имя) |
+| `apm_modules/` | Материализованные пакеты |
 | `.agents/skills/<name>/SKILL.md` | Skills |
-| `.cursor/rules/<name>.mdc` | Instructions / rules |
+| `.cursor/rules/<name>.mdc` | Rules |
 | `.cursor/agents/<name>.md` | Agents |
-| `.cursor/mcp.json` | MCP-серверы (если есть eligible `dependencies.mcp`; по умолчанию — прямые) |
+| `.cursor/mcp.json` | MCP (если есть eligible direct `dependencies.mcp`) |
 
-Точный набор файлов зависит от содержимого зависимостей. Install с `--target cursor` может создать нужные deploy-корни; auto-detect без force **не** создаёт `.cursor/` только ради MCP.
+Полезные флаги: `--dry-run`, `-v` / `--verbose`, `--frozen`. Полный список: [install](/reference/install).
 
-Lock без деплоя в хост: `bapm lock` — см. [lockfile](/guide/lockfile).
+Lock без деплоя: `bapm lock` — [lockfile](/guide/lockfile).
 
-## 4. Если не сработало
+## 3. Если не сработало
 
 | Симптом | Что проверить |
 | --- | --- |
-| `No manifest found` | В cwd нет ни `apm.yml`, ни `bapm.yml` |
-| `Both apm.yml and bapm.yml are present` | Оставьте один файл |
-| `frozen` / lock error при `--frozen` | Сначала обычный `install` или `lock`, чтобы появился lock |
-| `bapm: command not found` | Установите CLI в проект (`pnpm add -D @bapm/cli` / `npm i -D @bapm/cli`) и вызывайте через `pnpm exec bapm` / `npx bapm` |
-| Ожидали Claude/Codex runtime | Сейчас runtime — cursor-only; см. [совместимость](/guide/conformance) |
+| `No manifest found` | В cwd нет `bapm.yml` (или backcompat `apm.yml`) |
+| `frozen` / lock error при `--frozen` | Сначала обычный `install` или `lock` |
+| `bapm: command not found` | `npm i -g @bapm/cli` или `npx` / `pnpm exec` при project-local |
+| Ожидали Claude/Codex runtime | Это marketplace-pack, не install target — [hosts](/guide/supported-hosts) |
+| Свой агент не находится | Object-map `targets:` + `--target <id>` — [hosts](/guide/supported-hosts) |
+
+## Реже на старте
+
+Публикация scoped-пакета `@bapm/cli` ещё может быть нестабильной; команды установки выше — целевой UX. Сборка из monorepo — для контрибьюторов: [Architecture](/architecture/).
+
+Personal overlay `bapm.local.yml` (личные `active` / `env` / …, не source `local:`) — в `.gitignore`. Подробнее: [overlay](/guide/manifest-overlay).
 
 Дальше: [команды](/guide/commands) → [сценарии](/guide/situations/) → [справка](/reference/).

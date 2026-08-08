@@ -55,6 +55,6 @@ describe("CLI FEOD Approve/Deny wiring", () => {
       expect(existsSync(modCommands)).toBe(false);
     }
     const commands = readdirSync(join(srcRoot, "commands"));
-    expect(commands.filter((n) => /^_/.test(n))).toEqual([]);
+    expect(commands.filter((n) => n.startsWith("_"))).toEqual([]);
   });
 });
