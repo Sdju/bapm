@@ -1,8 +1,11 @@
 # integration-agent-skills-runtime Specification
 
 ## Purpose
+
 Defines the explicit-only `agent-skills` cross-client skills host on `@bapm/integration-agent-skills`: never auto-detect, skills-only materialize to `.agents/skills/<name>/SKILL.md`, and no MCP/hooks/compile surface.
+
 ## Requirements
+
 ### Requirement: Package exposes thin runtime factory
 
 `@bapm/integration-agent-skills` MUST export a runtime integration factory usable as `createIntegration` (and MAY export an `createAgentSkillsIntegration` alias). The runtime integration MUST implement `BapmIntegration` with at least `id`, `deployRoots`, `detect`, and `materialize`. Package id for the runtime target MUST be `agent-skills`. The package MUST depend on `@bapm/integration-api` without requiring `@bapm/core` as a hard dependency for host behavior. The integration MUST NOT expose `configureMcp` or `compile`.
@@ -104,4 +107,3 @@ User-facing docs MUST document that `agent-skills` is an explicit-only target lo
 
 - **WHEN** a reader opens supported-hosts documentation after this change
 - **THEN** agent-skills MUST appear with explicit-only activation and skills-only layout guidance
-

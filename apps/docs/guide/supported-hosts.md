@@ -2,15 +2,15 @@
 
 Куда `bapm install` / `bapm compile` раскладывают пакеты. Поля манифеста: [Hosts и target](/guide/manifest-hosts).
 
-| Host           | В CLI                 | Как подключить                                                                                                                                           |
-| -------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
-| **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
-| **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
-| **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
-| **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
-| **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
-| **agent-skills** | Нет (отдельный пакет) | Установить `@bapm/integration-agent-skills`, объявить `targets:`, затем `--target agent-skills` / `active` (никогда auto-detect)                    |
+| Host             | В CLI                 | Как подключить                                                                                                                                           |
+| ---------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cursor**       | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
+| **OpenCode**     | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
+| **Copilot**      | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
+| **Свой агент**   | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
+| **Claude**       | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
+| **Codex**        | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
+| **agent-skills** | Нет (отдельный пакет) | Установить `@bapm/integration-agent-skills`, объявить `targets:`, затем `--target agent-skills` / `active` (никогда auto-detect)                         |
 
 ## Cursor (opt-in пакет)
 
