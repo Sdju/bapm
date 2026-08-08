@@ -117,7 +117,7 @@ export type MapProjectOptions = {
   name?: string;
   /** Object-map host→package bindings. */
   targets: Record<string, string>;
-  /** When true, create `.cursor/` so built-in cursor can detect. */
+  /** When true, create `.cursor/` detect signal (host still needs object-map). */
   withCursor?: boolean;
   /** Local leaf dep with a skill (for materialize observation). */
   withLeafSkill?: boolean;

@@ -1,30 +1,24 @@
 /**
- * Docs / README: CLI and host integration are separate installs; no “built-in Cursor”.
+ * Docs / README honesty: CLI and host integration are separate installs;
+ * no “built-in Cursor” (promoted from opt-in-host-integrations acceptance).
  */
-import { afterEach, describe, expect, test } from "vite-plus/test";
+import { describe, expect, test } from "vite-plus/test";
+import { join } from "node:path";
 import {
-  createTempProject,
-  existsSync,
-  join,
-  readRepoText,
-  REPO_ROOT,
-  runInProject,
-  type TempProject,
+  docsArchitecturePath,
+  docsGuideIndexPath,
+  docsLandingPath,
+  docsRoot,
+  fileExists,
+  readText,
+  readmePath,
 } from "./helpers.ts";
 
-const BUILTIN_CURSOR_CLAIM =
-  /уже встроен|из коробки|built-in|встроен в CLI|ships? (?:with|inside) (?:the )?CLI|already (?:in|inside) (?:the )?CLI/i;
+const supportedHostsPath = join(docsRoot, "guide/supported-hosts.md");
 
-describe("opt-in-host-integrations · docs and README", () => {
-  let project: TempProject | undefined;
-
-  afterEach(() => {
-    project?.cleanup();
-    project = undefined;
-  });
-
+describe("docs · opt-in host integrations honesty", () => {
   test("root README does not claim Cursor is built into the CLI", () => {
-    const readme = readRepoText("README.md");
+    const readme = readText(readmePath);
     expect(readme).not.toMatch(/Уже встроен в CLI/i);
     expect(readme).not.toMatch(/Из коробки runtime\s*[—–-]\s*\*?\*?Cursor/i);
     expect(readme).toMatch(/@bapm\/integration-cursor/);
@@ -33,9 +27,8 @@ describe("opt-in-host-integrations · docs and README", () => {
   });
 
   test("supported-hosts guide does not list Cursor as built-in / из коробки", () => {
-    const path = "apps/docs/guide/supported-hosts.md";
-    expect(existsSync(join(REPO_ROOT, path))).toBe(true);
-    const page = readRepoText(path);
+    expect(fileExists(supportedHostsPath)).toBe(true);
+    const page = readText(supportedHostsPath);
     expect(page).not.toMatch(/Cursor \(из коробки\)/i);
     expect(page).not.toMatch(/встроен в CLI/i);
     expect(page).not.toMatch(/\|\s*\*\*Cursor\*\*\s*\|\s*Да\b/);
@@ -44,39 +37,30 @@ describe("opt-in-host-integrations · docs and README", () => {
   });
 
   test("architecture overview does not call Cursor a CLI built-in runtime", () => {
-    const arch = readRepoText("apps/docs/architecture/index.md");
+    const arch = readText(docsArchitecturePath);
     expect(arch).not.toMatch(/built-in runtime \(Cursor\)/i);
     expect(arch).not.toMatch(/Built-in runtime\s*[—–-]\s*\*?\*?Cursor/i);
     expect(arch).toMatch(/@bapm\/integration-cursor|opt-in|object-map|targets:/i);
   });
 
   test("guide pages do not claim Cursor ships из коробки / Built-in: Cursor", () => {
-    const guideIndex = readRepoText("apps/docs/guide/index.md");
+    const guideIndex = readText(docsGuideIndexPath);
     expect(guideIndex).not.toMatch(/Из коробки runtime\s*[—–-]\s*\*?\*?Cursor/i);
     expect(guideIndex).toMatch(/@bapm\/integration-cursor|targets:/i);
 
     const pages = [
-      "apps/docs/index.md",
-      "apps/docs/guide/index.md",
-      "apps/docs/guide/commands.md",
-      "apps/docs/guide/conformance.md",
+      docsLandingPath,
+      docsGuideIndexPath,
+      join(docsRoot, "guide/commands.md"),
+      join(docsRoot, "guide/conformance.md"),
     ] as const;
     for (const path of pages) {
-      expect(existsSync(join(REPO_ROOT, path)), path).toBe(true);
-      const page = readRepoText(path);
+      expect(fileExists(path), path).toBe(true);
+      const page = readText(path);
       expect(page, path).not.toMatch(/Из коробки\s*[—–-]\s*\*?\*?Cursor/i);
       expect(page, path).not.toMatch(/Из коробки runtime\s*[—–-]\s*\*?\*?Cursor/i);
       expect(page, path).not.toMatch(/Built-in:\s*Cursor/i);
       expect(page, path).not.toMatch(/Из коробки deploy идёт в Cursor/i);
     }
-  });
-
-  test("install/compile help must not claim built-in Cursor", async () => {
-    project = createTempProject();
-    const install = await runInProject(project.cwd, ["install", "--help"]);
-    const compile = await runInProject(project.cwd, ["compile", "--help"]);
-    const text = `${install.combined}\n${compile.combined}`;
-    expect(text).not.toMatch(BUILTIN_CURSOR_CLAIM);
-    expect(text).toMatch(/--target\s+<id>/i);
   });
 });

@@ -50,6 +50,13 @@ describe("CLI init", () => {
     ]);
     expectKnownCommand(combined, "init");
     expect(result).toBe(0);
+
+    const raw = readFileSync(join(project.cwd, "bapm.yml"), "utf8");
+    expect(raw).toMatch(/targets:/);
+    expect(raw).toMatch(/cursor:\s*["']?@bapm\/integration-cursor["']?/);
+    expect(raw).toMatch(/active:/);
+    expect(raw).toMatch(/-\s*cursor/);
+
     const { document: doc } = loadManifest({ cwd: project.cwd });
     const targets = doc.targets ?? doc.target;
     expect(targets).toBeTruthy();

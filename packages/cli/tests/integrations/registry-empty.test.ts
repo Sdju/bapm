@@ -1,12 +1,15 @@
 /**
- * Composition root registries start empty; CLI has no hard deps on concrete integrations.
+ * Composition root registries start empty; CLI has no hard deps on concrete integrations
+ * (promoted from opt-in-host-integrations acceptance).
  */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
-import { createCliIntegrationRegistry } from "../../../src/app/integrations/registry.ts";
-import { createCliMarketplaceOutputRegistry } from "../../../src/app/integrations/marketplaceOutputs.ts";
-import { CLI_ROOT, readCliPackageJson } from "./helpers.ts";
+import { createCliIntegrationRegistry } from "../../src/app/integrations/registry.ts";
+import { createCliMarketplaceOutputRegistry } from "../../src/app/integrations/marketplaceOutputs.ts";
+
+const CLI_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const CONCRETE_INTEGRATIONS = [
   "@bapm/integration-cursor",
@@ -14,7 +17,17 @@ const CONCRETE_INTEGRATIONS = [
   "@bapm/integration-codex",
 ] as const;
 
-describe("opt-in-host-integrations · empty composition registries", () => {
+function readCliPackageJson(): {
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+} {
+  return JSON.parse(readFileSync(join(CLI_ROOT, "package.json"), "utf8")) as {
+    dependencies?: Record<string, string>;
+    optionalDependencies?: Record<string, string>;
+  };
+}
+
+describe("CLI · empty composition registries (opt-in hosts)", () => {
   test("createCliIntegrationRegistry starts with no eager host registrations", () => {
     const registry = createCliIntegrationRegistry();
     const ids = registry.list().map((t) => t.id);

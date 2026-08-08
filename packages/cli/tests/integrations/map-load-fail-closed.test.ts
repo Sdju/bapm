@@ -11,6 +11,7 @@ import {
   linkFixturePackage,
   runInProject,
   writeMapProject,
+  writeText,
   type TempProject,
 } from "./map-load-helpers.ts";
 
@@ -103,5 +104,22 @@ describe("CLI · object-map integration load fail-closed", () => {
     expect(combined).toMatch(new RegExp(spec.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     expect(combined).toMatch(/id|mismatch|does not match|expected/i);
     expect(existsSync(acmeMarkerPath(project.cwd))).toBe(false);
+  });
+
+  test("unknown forced id diagnostic hints at install + targets object-map", async () => {
+    project = createTempProject();
+    writeText(
+      project.cwd,
+      "bapm.yml",
+      "name: acc-missing-hint\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n",
+    );
+    writeText(project.cwd, "leaf/apm.yml", "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n");
+    writeText(project.cwd, "leaf/.apm/skills/hello/SKILL.md", "---\nname: hello\n---\n# Hello\n");
+
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
+
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(/cursor/i);
+    expect(combined).toMatch(/targets:|object-map|@bapm\/integration|install.*integration/i);
   });
 });
