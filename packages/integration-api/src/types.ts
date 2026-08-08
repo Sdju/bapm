@@ -73,6 +73,8 @@ export type MaterializeReport = {
   /** Registered target that owns these deployment entries when any are reported. */
   targetId?: TargetId;
   deployedFiles: DeployedFile[];
+  /** Non-fatal adapter notes (frontmatter drops, unsupported primitive skips, …). */
+  diagnostics?: Array<{ code?: string; message: string; [key: string]: unknown }>;
 };
 
 /** Detection predicate hook — true when this host should activate for the project. */

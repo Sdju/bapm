@@ -32,6 +32,8 @@ bapm install --target cursor
 
 Без `--target` CLI может опереться на auto-detect (`.cursor/` / `.cursorrules`) или на `active` — но только после успешной загрузки map.
 
+**Commands / hooks:** `.apm/prompts/*.prompt.md` и root `*.prompt.md` → `.cursor/commands/<name>.md` (Claude-subset frontmatter); `.apm/hooks/*.json` / `hooks/*.json` → merge `.cursor/hooks.json` со скриптами под `.cursor/hooks/` и sidecar ownership `.cursor/bapm-hooks.json`. MCP через `configureMcp`, не через materialize.
+
 ## OpenCode (opt-in пакет)
 
 Аналогично Cursor — отдельный runtime-пакет `@bapm/integration-opencode`:
@@ -52,7 +54,7 @@ bapm init -y --target opencode
 bapm install --target opencode
 ```
 
-Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, MCP → project `opencode.json` (`mcp`, `type: local` / `remote`). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc`.
+Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, commands → `.opencode/commands/<name>.md`, hooks — явный non-fatal skip (diagnostic), MCP → project `opencode.json` (`mcp`, `type: local` / `remote`). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc`.
 
 ## Кастомный npm-пакет
 

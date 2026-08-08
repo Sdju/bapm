@@ -8,7 +8,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, basename, join, relative, resolve } from "node:path";
 import type {
   AttributedPrimitive,
   BapmIntegration,
@@ -29,13 +29,24 @@ import {
 
 const DEFAULT_DEPLOY_ROOTS = [".agents/skills", ".cursor"] as const;
 const MCP_JSON_REL = ".cursor/mcp.json";
+const HOOKS_JSON_REL = ".cursor/hooks.json";
+const HOOKS_OWNERSHIP_REL = ".cursor/bapm-hooks.json";
+const COMMAND_PRESERVED_FRONTMATTER = new Set([
+  "description",
+  "allowed-tools",
+  "model",
+  "argument-hint",
+  "input",
+]);
 
 /**
  * Create the Cursor target.
  * Detect: `.cursor/` directory **or** legacy `.cursorrules` file.
  * Materialize: skills → `.agents/skills/<name>/SKILL.md`,
  * instructions → `.cursor/rules/<name>.mdc`,
- * agents → `.cursor/agents/<name>.md`.
+ * agents → `.cursor/agents/<name>.md`,
+ * commands → `.cursor/commands/<name>.md`,
+ * hooks → merge `.cursor/hooks.json` (+ script copy under `.cursor/hooks/`).
  * MCP: optional `configureMcp` writes `.cursor/mcp.json` (not via materialize).
  */
 export function createCursorIntegration(options?: {
@@ -69,6 +80,8 @@ export function createCursorIntegration(options?: {
       }
 
       const deployedFiles: MaterializeReport["deployedFiles"] = [];
+      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const hookPrimitives: AttributedPrimitive[] = [];
 
       for (const p of primitivesList(primitives)) {
         const type = String(p.type ?? "skill").toLowerCase();
@@ -126,10 +139,48 @@ export function createCursorIntegration(options?: {
           continue;
         }
 
-        // commands/hooks and other types: skip (not required for M5)
+        if (/command/.test(type)) {
+          const destFile = join(cwd, ".cursor", "commands", `${name}.md`);
+          assertUnderDeployRoots(cwd, destFile, roots);
+          mkdirSync(join(cwd, ".cursor", "commands"), { recursive: true });
+          const { content, droppedKeys } = transformCursorCommandMarkdown(readPrimitiveContent(p));
+          writeFileSync(destFile, content, "utf8");
+          deployedFiles.push({
+            path: toPosixRel(cwd, destFile),
+            primitive: { name: String(p.name), packageName: p.packageName },
+          });
+          if (droppedKeys.length > 0) {
+            diagnostics.push({
+              code: "CURSOR_COMMAND_FRONTMATTER_DROPPED",
+              message: `Dropped non-preserved command frontmatter keys for "${p.name}": ${droppedKeys.join(", ")}`,
+              primitive: String(p.name),
+              droppedKeys,
+            });
+          }
+          continue;
+        }
+
+        if (/hook/.test(type)) {
+          hookPrimitives.push(p);
+          continue;
+        }
       }
 
-      return { targetId: id, deployedFiles };
+      if (hookPrimitives.length > 0) {
+        const hookDeployed = materializeCursorHooks({
+          cwd,
+          roots,
+          hooks: hookPrimitives,
+        });
+        deployedFiles.push(...hookDeployed.deployedFiles);
+        diagnostics.push(...hookDeployed.diagnostics);
+      }
+
+      return {
+        targetId: id,
+        deployedFiles,
+        ...(diagnostics.length > 0 ? { diagnostics } : {}),
+      };
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeCursorMcpConfig(servers, {
@@ -368,4 +419,273 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
   }
 
   return entry;
+}
+
+type HookEntry = { command?: string; [key: string]: unknown };
+type HooksDoc = {
+  version?: number;
+  hooks?: Record<string, HookEntry[]>;
+  [key: string]: unknown;
+};
+type OwnershipSidecar = {
+  owned: Record<
+    string,
+    {
+      packageName?: string;
+      entries: Array<{ event: string; command: string }>;
+      scripts: string[];
+    }
+  >;
+};
+
+function transformCursorCommandMarkdown(source: string): {
+  content: string;
+  droppedKeys: string[];
+} {
+  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) return { content: source, droppedKeys: [] };
+
+  const rawFm = match[1] ?? "";
+  const body = match[2] ?? "";
+  const kept: string[] = [];
+  const droppedKeys: string[] = [];
+
+  for (const line of rawFm.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const keyMatch = line.match(/^([A-Za-z0-9_-]+)\s*:/);
+    if (!keyMatch) {
+      kept.push(line);
+      continue;
+    }
+    const key = keyMatch[1]!;
+    if (COMMAND_PRESERVED_FRONTMATTER.has(key)) {
+      kept.push(line);
+    } else {
+      droppedKeys.push(key);
+    }
+  }
+
+  const fmBlock = kept.length > 0 ? `---\n${kept.join("\n")}\n---\n` : "";
+  return { content: `${fmBlock}${body}`.replace(/\s+$/, "\n"), droppedKeys };
+}
+
+function materializeCursorHooks(args: {
+  cwd: string;
+  roots: string[];
+  hooks: AttributedPrimitive[];
+}): {
+  deployedFiles: MaterializeReport["deployedFiles"];
+  diagnostics: NonNullable<MaterializeReport["diagnostics"]>;
+} {
+  const { cwd, roots, hooks } = args;
+  const deployedFiles: MaterializeReport["deployedFiles"] = [];
+  const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+
+  const hooksPath = join(cwd, HOOKS_JSON_REL);
+  const ownershipPath = join(cwd, HOOKS_OWNERSHIP_REL);
+  assertUnderDeployRoots(cwd, hooksPath, roots);
+  assertUnderDeployRoots(cwd, ownershipPath, roots);
+  mkdirSync(join(cwd, ".cursor"), { recursive: true });
+
+  const doc = readHooksDoc(hooksPath);
+  const ownership = readOwnershipSidecar(ownershipPath);
+
+  // Remove previously owned bapm entries so re-install is idempotent.
+  stripOwnedEntries(doc, ownership);
+
+  const nextOwned: OwnershipSidecar["owned"] = {};
+
+  for (const p of hooks) {
+    const name = sanitizeName(String(p.name));
+    const srcPath = p.path ? resolve(p.path) : undefined;
+    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
+      diagnostics.push({
+        code: "CURSOR_HOOK_SOURCE_MISSING",
+        message: `Hook primitive "${p.name}" has no readable source JSON`,
+        primitive: String(p.name),
+      });
+      continue;
+    }
+
+    let parsed: HooksDoc;
+    try {
+      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as HooksDoc;
+    } catch (cause) {
+      diagnostics.push({
+        code: "CURSOR_HOOK_JSON_INVALID",
+        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
+        primitive: String(p.name),
+      });
+      continue;
+    }
+
+    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
+    const ownedEntries: Array<{ event: string; command: string }> = [];
+    const scripts: string[] = [];
+
+    if (!doc.hooks || typeof doc.hooks !== "object") doc.hooks = {};
+    if (typeof parsed.version === "number" && doc.version === undefined) {
+      doc.version = parsed.version;
+    }
+
+    for (const [event, entries] of Object.entries(sourceHooks)) {
+      if (!Array.isArray(entries)) continue;
+      const destList = Array.isArray(doc.hooks[event]) ? [...doc.hooks[event]!] : [];
+      for (const entry of entries) {
+        if (!entry || typeof entry !== "object") continue;
+        const command = typeof entry.command === "string" ? entry.command.trim() : "";
+        if (!command) {
+          destList.push({ ...entry });
+          continue;
+        }
+
+        const rewritten = copyHookScript({
+          cwd,
+          roots,
+          hookName: name,
+          hookFile: srcPath,
+          command,
+        });
+        const nextEntry: HookEntry = { ...entry, command: rewritten.commandRel };
+        destList.push(nextEntry);
+        ownedEntries.push({ event, command: rewritten.commandRel });
+        if (rewritten.scriptRel) {
+          scripts.push(rewritten.scriptRel);
+          deployedFiles.push({
+            path: rewritten.scriptRel,
+            primitive: { name: String(p.name), packageName: p.packageName },
+          });
+        }
+      }
+      doc.hooks[event] = destList;
+    }
+
+    nextOwned[name] = {
+      ...(p.packageName ? { packageName: p.packageName } : {}),
+      entries: ownedEntries,
+      scripts,
+    };
+  }
+
+  if (doc.version === undefined) doc.version = 1;
+  writeFileSync(hooksPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  writeFileSync(
+    ownershipPath,
+    `${JSON.stringify({ owned: nextOwned } satisfies OwnershipSidecar, null, 2)}\n`,
+    "utf8",
+  );
+
+  deployedFiles.push({
+    path: HOOKS_JSON_REL,
+    // Attribute to first hook when possible for lock inventory.
+    ...(hooks[0]
+      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
+      : {}),
+  });
+  deployedFiles.push({
+    path: HOOKS_OWNERSHIP_REL,
+    ...(hooks[0]
+      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
+      : {}),
+  });
+
+  return { deployedFiles, diagnostics };
+}
+
+function copyHookScript(args: {
+  cwd: string;
+  roots: string[];
+  hookName: string;
+  hookFile: string;
+  command: string;
+}): { commandRel: string; scriptRel?: string } {
+  const { cwd, roots, hookName, hookFile, command } = args;
+  // Absolute / already-under-.cursor commands: keep as-is when already registered.
+  if (command.includes(".cursor/")) {
+    return { commandRel: command.startsWith("./") ? command : `./${command.replace(/^\//, "")}` };
+  }
+
+  const cleaned = command.replace(/^\.\//, "");
+  const packageRoot = findHookPackageRoot(hookFile);
+  const candidates = [resolve(dirname(hookFile), cleaned), resolve(packageRoot, cleaned)];
+  const source = candidates.find((p) => {
+    try {
+      return existsSync(p) && statSync(p).isFile();
+    } catch {
+      return false;
+    }
+  });
+  if (!source) {
+    // Keep original path if script is missing — still merge entry.
+    return { commandRel: command };
+  }
+
+  const destRel = `.cursor/hooks/${hookName}/${basename(source)}`;
+  const destAbs = join(cwd, destRel);
+  assertUnderDeployRoots(cwd, destAbs, roots);
+  mkdirSync(dirname(destAbs), { recursive: true });
+  cpSync(source, destAbs);
+  return { commandRel: `./${destRel}`, scriptRel: destRel };
+}
+
+/** Nearest package root for hook script resolution (apm.yml / bapm.yml / plugin.json). */
+function findHookPackageRoot(hookFile: string): string {
+  let dir = dirname(hookFile);
+  for (;;) {
+    if (
+      existsSync(join(dir, "apm.yml")) ||
+      existsSync(join(dir, "bapm.yml")) ||
+      existsSync(join(dir, "plugin.json"))
+    ) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return dirname(hookFile);
+}
+
+function readHooksDoc(path: string): HooksDoc {
+  if (!existsSync(path)) return { version: 1, hooks: {} };
+  try {
+    const raw = JSON.parse(readFileSync(path, "utf8")) as HooksDoc;
+    if (!raw || typeof raw !== "object") return { version: 1, hooks: {} };
+    if (!raw.hooks || typeof raw.hooks !== "object") raw.hooks = {};
+    return raw;
+  } catch {
+    return { version: 1, hooks: {} };
+  }
+}
+
+function readOwnershipSidecar(path: string): OwnershipSidecar {
+  if (!existsSync(path)) return { owned: {} };
+  try {
+    const raw = JSON.parse(readFileSync(path, "utf8")) as OwnershipSidecar;
+    if (!raw || typeof raw !== "object" || !raw.owned || typeof raw.owned !== "object") {
+      return { owned: {} };
+    }
+    return raw;
+  } catch {
+    return { owned: {} };
+  }
+}
+
+function stripOwnedEntries(doc: HooksDoc, ownership: OwnershipSidecar): void {
+  if (!doc.hooks || typeof doc.hooks !== "object") return;
+  const ownedCommands = new Set<string>();
+  for (const record of Object.values(ownership.owned ?? {})) {
+    for (const entry of record.entries ?? []) {
+      if (entry.command) ownedCommands.add(entry.command);
+    }
+  }
+  if (ownedCommands.size === 0) return;
+
+  for (const [event, entries] of Object.entries(doc.hooks)) {
+    if (!Array.isArray(entries)) continue;
+    doc.hooks[event] = entries.filter((e) => {
+      const cmd = typeof e?.command === "string" ? e.command : "";
+      return !ownedCommands.has(cmd);
+    });
+  }
 }

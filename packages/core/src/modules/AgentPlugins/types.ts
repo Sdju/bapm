@@ -18,6 +18,10 @@ export type AgentPluginManifest = {
   repository?: string;
   license?: string;
   keywords?: string[];
+  /** Declared command file paths relative to the plugin root. */
+  commands?: string[];
+  /** Declared hook JSON paths relative to the plugin root. */
+  hooks?: string[];
   extensions?: Record<string, Record<string, unknown>>;
 };
 
@@ -80,6 +84,22 @@ export type DiscoverAgentPluginSkillsOptions = LoadAgentPluginManifestOptions & 
 
 export type DiscoverAgentPluginSkillsResult = LoadedAgentPluginManifest & {
   skills: AgentPluginSkill[];
+};
+
+/** Declared command or hook file under a portable plugin root. */
+export type AgentPluginDeclaredPath = {
+  /** Primitive name derived from the file stem. */
+  name: string;
+  type: "command" | "hook";
+  /** Realpath of the declared file within the plugin root. */
+  path: string;
+  /** Original declared relative path from plugin.json. */
+  declaredPath: string;
+};
+
+export type DiscoverAgentPluginDeclaredPathsResult = LoadedAgentPluginManifest & {
+  commands: AgentPluginDeclaredPath[];
+  hooks: AgentPluginDeclaredPath[];
 };
 
 export type AgentPluginMcpServer = {

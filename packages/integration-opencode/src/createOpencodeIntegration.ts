@@ -31,7 +31,9 @@ const MCP_JSON_REL = "opencode.json";
  * Create the OpenCode target.
  * Detect: `.opencode/` directory **or** `opencode.json` / `opencode.jsonc`.
  * Materialize: skills → `.opencode/skills/<name>/SKILL.md`,
- * agents → `.opencode/agents/<name>.md`.
+ * agents → `.opencode/agents/<name>.md`,
+ * commands → `.opencode/commands/<name>.md`,
+ * hooks → explicit non-fatal skip (not supported on OpenCode).
  * MCP: optional `configureMcp` writes project `opencode.json` (not via materialize).
  */
 export function createOpencodeIntegration(options?: {
@@ -61,6 +63,7 @@ export function createOpencodeIntegration(options?: {
       }
 
       const deployedFiles: MaterializeReport["deployedFiles"] = [];
+      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
 
       for (const p of primitivesList(primitives)) {
         const type = String(p.type ?? "skill").toLowerCase();
@@ -106,10 +109,35 @@ export function createOpencodeIntegration(options?: {
           continue;
         }
 
-        // instructions / commands / hooks: skip (no OpenCode rules mapping in v1)
+        if (/command/.test(type)) {
+          const destFile = join(cwd, ".opencode", "commands", `${name}.md`);
+          assertUnderDeployRoots(cwd, destFile, roots);
+          mkdirSync(join(cwd, ".opencode", "commands"), { recursive: true });
+          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
+          deployedFiles.push({
+            path: toPosixRel(cwd, destFile),
+            primitive: { name: String(p.name), packageName: p.packageName },
+          });
+          continue;
+        }
+
+        if (/hook/.test(type)) {
+          diagnostics.push({
+            code: "OPENCODE_HOOKS_UNSUPPORTED",
+            message: `OpenCode does not support hooks; skipping hook "${p.name}" (not supported)`,
+            primitive: String(p.name),
+          });
+          continue;
+        }
+
+        // instructions and other types: skip (no OpenCode rules mapping in v1)
       }
 
-      return { targetId: id, deployedFiles };
+      return {
+        targetId: id,
+        deployedFiles,
+        ...(diagnostics.length > 0 ? { diagnostics } : {}),
+      };
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeOpencodeMcpConfig(servers, {

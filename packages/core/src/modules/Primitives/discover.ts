@@ -74,6 +74,29 @@ function scanPackageRoot(
       }
     }
   }
+
+  // Package-root *.prompt.md (APM backward-compatible commands)
+  for (const entry of safeReaddir(root)) {
+    if (!/\.prompt\.md$/i.test(entry)) continue;
+    const full = join(root, entry);
+    try {
+      if (!statSync(full).isFile()) continue;
+    } catch {
+      continue;
+    }
+    out.push(
+      makePrimitive({
+        name: promptStem(entry),
+        type: "command",
+        source,
+        path: full,
+        packageName,
+      }),
+    );
+  }
+
+  // Top-level hooks/*.json (hook-only packages + APM layout)
+  scanHooksDir(join(root, "hooks"), source, packageName, out);
 }
 
 function scanTypedApm(
@@ -105,6 +128,59 @@ function scanTypedApm(
         }),
       );
     });
+  }
+
+  // .apm/prompts/*.prompt.md → command
+  const promptsDir = join(apmDir, "prompts");
+  if (existsSync(promptsDir) && statSync(promptsDir).isDirectory()) {
+    for (const entry of safeReaddir(promptsDir)) {
+      if (!/\.prompt\.md$/i.test(entry)) continue;
+      const full = join(promptsDir, entry);
+      try {
+        if (!statSync(full).isFile()) continue;
+      } catch {
+        continue;
+      }
+      out.push(
+        makePrimitive({
+          name: promptStem(entry),
+          type: "command",
+          source,
+          path: full,
+          packageName,
+        }),
+      );
+    }
+  }
+
+  // .apm/hooks/*.json → hook
+  scanHooksDir(join(apmDir, "hooks"), source, packageName, out);
+}
+
+function scanHooksDir(
+  hooksDir: string,
+  source: PrimitiveSource,
+  packageName: string | undefined,
+  out: AttributedPrimitive[],
+): void {
+  if (!existsSync(hooksDir) || !statSync(hooksDir).isDirectory()) return;
+  for (const entry of safeReaddir(hooksDir)) {
+    if (!/\.json$/i.test(entry)) continue;
+    const full = join(hooksDir, entry);
+    try {
+      if (!statSync(full).isFile()) continue;
+    } catch {
+      continue;
+    }
+    out.push(
+      makePrimitive({
+        name: basename(entry).replace(/\.json$/i, ""),
+        type: "hook",
+        source,
+        path: full,
+        packageName,
+      }),
+    );
   }
 }
 
@@ -186,9 +262,16 @@ function inferName(filePath: string, type: PrimitiveType): string {
   if (basename(filePath) === "SKILL.md") {
     return nameFromSkillFile(filePath, basename(dirname(filePath)));
   }
-  const base = basename(filePath).replace(/\.(md|mdc|yml|yaml)$/i, "");
+  const file = basename(filePath);
+  if (/\.prompt\.md$/i.test(file)) return promptStem(file);
+  const base = file.replace(/\.(md|mdc|yml|yaml|json)$/i, "");
   if (base && base !== type) return base;
   return basename(dirname(filePath));
+}
+
+/** Stem of `name.prompt.md` → `name` (APM command naming). */
+function promptStem(fileName: string): string {
+  return basename(fileName).replace(/\.prompt\.md$/i, "");
 }
 
 function makePrimitive(p: {

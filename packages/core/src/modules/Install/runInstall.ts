@@ -1,5 +1,5 @@
 import { join, relative, resolve } from "node:path";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import type {
   BapmIntegration,
   ConfigureMcpReport,
@@ -40,7 +40,11 @@ import {
   resolvePrimitiveConflicts,
   type AttributedPrimitive,
 } from "@/modules/Primitives";
-import { discoverAgentPluginSkills } from "@/modules/AgentPlugins";
+import {
+  discoverAgentPluginSkills,
+  discoverAgentPluginDeclaredPaths,
+  AgentPluginsError,
+} from "@/modules/AgentPlugins";
 import { extractPackArchive } from "@/modules/Pack";
 import {
   loadUserExecutableGrants,
@@ -332,7 +336,42 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     (primitive) => !nodes.some((node) => isPortablePluginPrimitive(node, primitive.path)),
   );
   if (!skipApmMaterialize) {
-    raw.push(...discoverPortablePluginPrimitives(nodes));
+    try {
+      raw.push(...discoverPortablePluginPrimitives(nodes));
+    } catch (error) {
+      // Declared Agent Plugins paths are requirements: fail closed before deploy
+      // and do not leave a freshly written lock from this install.
+      const code =
+        error instanceof AgentPluginsError
+          ? error.code
+          : error && typeof error === "object" && "code" in error
+            ? String((error as { code: unknown }).code)
+            : "";
+      if (
+        code === "AGENT_PLUGIN_DECLARED_PATH_INVALID" &&
+        !previousLock &&
+        lockPath &&
+        existsSync(lockPath)
+      ) {
+        try {
+          unlinkSync(lockPath);
+        } catch {
+          /* best-effort rollback */
+        }
+        // Also clear common lock filenames if resolve wrote a different path.
+        for (const name of ["bapm.lock.yaml", "apm.lock.yaml"]) {
+          const candidate = join(cwd, name);
+          if (existsSync(candidate)) {
+            try {
+              unlinkSync(candidate);
+            } catch {
+              /* best-effort */
+            }
+          }
+        }
+      }
+      throw error;
+    }
   }
   const resolved = skipApmMaterialize
     ? { primitives: [] as AttributedPrimitive[], diagnostics: [] as unknown[] }
@@ -462,6 +501,18 @@ function discoverPortablePluginPrimitives(nodes: ResolvedNode[]): AttributedPrim
         path: skill.skillPath,
         skillDirectory: skill.directory,
         pluginRoot: discovered.root,
+        format: "agent-plugin",
+      });
+    }
+    const declared = discoverAgentPluginDeclaredPaths({ root, packageName: node.name });
+    for (const item of [...declared.commands, ...declared.hooks]) {
+      primitives.push({
+        name: item.name,
+        type: item.type,
+        source: `dependency:${node.name}`,
+        packageName: node.name,
+        path: item.path,
+        pluginRoot: declared.root,
         format: "agent-plugin",
       });
     }
