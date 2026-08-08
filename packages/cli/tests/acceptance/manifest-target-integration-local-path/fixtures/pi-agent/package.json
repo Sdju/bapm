@@ -1,0 +1,9 @@
+{
+  "name": "pi-agent-local",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  }
+}
