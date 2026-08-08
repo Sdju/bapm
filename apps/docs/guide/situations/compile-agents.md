@@ -37,13 +37,15 @@ bapm compile --target cursor -o path/to/OUT.md
 
 - Без `--dry-run` / `--validate` появляется файл по default path target или по `-o`.
 - `--dry-run` и `--validate` **не** пишут выходной файл.
-- Если auto-detect отсутствует или неоднозначен — без `--target` команда просит передать `--target <id>` (например `cursor`).
+- Если auto-detect отсутствует или неоднозначен — без `--target` команда просит передать `--target <id>` (например `cursor`) или задать sole `active` в манифесте.
+- Если `active` перечисляет несколько hosts — без `--target` compile падает (single-host).
 
 Флаги: [compile](/reference/compile).
 
 ### Если не сработало
 
-- `Target detection is missing or ambiguous; pass --target <id>` → укажите `--target cursor`.
-- Unknown target id → сегодня runtime/host для compile в том же селекторе ориентирован на зарегистрированный `cursor`.
+- `Target detection is missing or ambiguous; pass --target <id>` → укажите `--target cursor` или sole `active: [cursor]`.
+- Multi-`active` без `--target` → укажите `--target <id>`.
+- Unknown target id → id должен быть зарегистрирован (built-in или object-map).
 - Пустой / неожиданный вывод → проверьте, что примитивы лежат там, где target их ищет; сначала сделайте install в Cursor.
 - Не путайте с `bapm pack`: compile — host markdown; pack — zip / marketplace.json ([US-06](/guide/situations/marketplace-pack)).

@@ -82,6 +82,11 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
     normalizedTargets = parseTargetOrTargetsField(raw.targets, "targets");
   }
 
+  let normalizedActive: string[] | undefined;
+  if ("active" in raw && raw.active !== undefined) {
+    normalizedActive = parseActiveField(raw.active);
+  }
+
   if (!("name" in raw)) {
     throw new ManifestError("MANIFEST_VALIDATION", 'Manifest requires "name"', {
       path: "name",
@@ -121,6 +126,9 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
   }
   if (normalizedTargets !== undefined) {
     document.targets = normalizedTargets;
+  }
+  if (normalizedActive !== undefined) {
+    document.active = normalizedActive;
   }
 
   if ("dependencies" in raw) {
@@ -460,6 +468,39 @@ function assertValidTargetToken(token: string, path: string): void {
     `Invalid target token "${token}" (mf-005): must be a canonical host id, recognised alias, or x-<vendor>-<name>`,
     { path, details: { token } },
   );
+}
+
+/**
+ * Bapm extension `active`: non-empty sequence of mf-005 host tokens.
+ * Rejects scalars, maps, empty arrays, empty strings, and invalid tokens.
+ */
+function parseActiveField(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      'Manifest "active" must be a non-empty array (YAML sequence) of host tokens',
+      { path: "active" },
+    );
+  }
+  if (value.length === 0) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      'Manifest "active" must be a non-empty array (empty [] is rejected)',
+      { path: "active" },
+    );
+  }
+  for (let i = 0; i < value.length; i++) {
+    const entry = value[i];
+    if (typeof entry !== "string" || !entry.trim()) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        'Manifest "active" entries must be non-empty strings',
+        { path: `active[${i}]` },
+      );
+    }
+    assertValidTargetToken(entry, `active[${i}]`);
+  }
+  return value as string[];
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

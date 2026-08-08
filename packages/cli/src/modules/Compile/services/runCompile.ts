@@ -129,12 +129,14 @@ Usage:
 
 Options:
   -o, --output PATH   Override the target's default output path
-  --target <id>       Required when target detection is missing or ambiguous
+  --target <id>       Force host (overrides manifest active; required when multi-active or detect is ambiguous)
   --dry-run           Preview would-write path; do not write
   -v, --verbose       Print thin source attribution (name, type, path)
   --validate          Discover/validate only; do not write
   --help, -h          Show this help
 
+Host selection: --target <id> → sole manifest active → sole auto-detect → fail.
+When active lists multiple hosts, pass --target <id>. Compile stays single-host.
 The selected target determines the default output path and rendering.
 `;
 }

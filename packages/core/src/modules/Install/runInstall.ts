@@ -350,7 +350,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     registry,
     override: options.activeTargets,
     forcedTargetId,
+    manifestActive: rootManifest.active,
   });
+  assertActiveTargetsRegistered(activeTargets, registry);
 
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
@@ -1062,32 +1064,60 @@ function assertForcedTargetRegistered(
   }
 }
 
+function assertActiveTargetsRegistered(
+  activeTargets: string[],
+  registry: IntegrationRegistry | undefined,
+): void {
+  for (const id of activeTargets) {
+    if (!registry || !findTarget(registry, id)) {
+      throw new InstallError(
+        "INSTALL_UNKNOWN_TARGET",
+        `Unknown or unregistered target: ${id}`,
+        { details: { target: id, activeTargets } },
+      );
+    }
+  }
+}
+
+/** Preserve first-seen order while dropping duplicates. */
+function dedupePreserveOrder(ids: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+  }
+  return out;
+}
+
 async function resolveActiveTargets(args: {
   cwd: string;
   registry?: IntegrationRegistry;
   override?: string[];
   forcedTargetId?: string;
+  manifestActive?: string[];
 }): Promise<string[]> {
-  if (args.override && args.override.length > 0) {
-    if (args.override.length !== 1) {
-      throw new InstallError(
-        "INSTALL_UNKNOWN_TARGET",
-        "Target selection is ambiguous; pass --target <id>",
-        { details: { targets: args.override } },
-      );
-    }
-    assertForcedTargetRegistered(args.override[0], args.registry);
-    return [...args.override];
-  }
-
+  // 1. CLI / forced --target wins over everything.
   if (args.forcedTargetId) {
     return [args.forcedTargetId];
   }
 
+  // 2. Programmatic override (multi-capable) — same semantics as manifest `active`.
+  if (args.override && args.override.length > 0) {
+    return dedupePreserveOrder(args.override);
+  }
+
+  // 3. Manifest `active` (already non-empty when present after parse).
+  if (args.manifestActive && args.manifestActive.length > 0) {
+    return dedupePreserveOrder(args.manifestActive);
+  }
+
+  // 4. Sole auto-detect, else fail-closed.
   if (!args.registry) {
     throw new InstallError(
       "INSTALL_UNKNOWN_TARGET",
-      "Target detection is unavailable; pass --target <id>",
+      "Target detection is unavailable; pass --target <id> or set active in the manifest",
       { details: { detectedTargets: [], registry: "missing" } },
     );
   }
@@ -1096,7 +1126,7 @@ async function resolveActiveTargets(args: {
   if (detection.detectedIds.length === 1) return detection.detectedIds;
   throw new InstallError(
     "INSTALL_UNKNOWN_TARGET",
-    "Target detection is missing or ambiguous; pass --target <id>",
+    "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
     { details: { detectedTargets: detection.detectedIds, diagnostics: detection.diagnostics } },
   );
 }

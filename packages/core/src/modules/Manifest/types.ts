@@ -83,6 +83,11 @@ export type BapmManifest = {
    * (mutually exclusive with `target`). Prefer this field for multi-host maps.
    */
   targets?: string[] | TargetIntegrationMap;
+  /**
+   * Bapm extension: non-empty list of mf-005 host ids to activate for
+   * materialize/MCP (multi) or compile (sole). Distinct from `target`/`targets`.
+   */
+  active?: string[];
   [key: string]: unknown;
 };
 

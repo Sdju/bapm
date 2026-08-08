@@ -42,11 +42,28 @@ Discovery ищет файл **только в текущем каталоге** 
 | `devDependencies` | mapping | То же для dev; `bapm install <ref> --dev` пишет сюда. |
 | `target` | строка **или** object-map | Legacy: один host id (`cursor`). Object-map (**bapm-расширение**): `host-id → npm-пакет или локальный путь`. Нельзя вместе с `targets`. |
 | `targets` | список строк **или** object-map | Legacy: несколько host id. Object-map (**bapm-расширение**): те же ключи→пакеты/пути. Нельзя вместе с `target`. Для multi-host object-map **предпочтительнее `targets`**. |
+| `active` | список строк | **bapm-расширение**: какие host id **активировать** на install/MCP (можно несколько) или compile (ровно один без `--target`). Непустой список mf-005 токенов. Пустой `active: []` — отказ parse. Dual-read на `apm.yml` / `bapm.yml`. |
 | `registries` | mapping | Именованные registry (см. ниже). |
 | `default_host` | строка | Есть в модели манифеста и **сохраняется** при разборе; отдельной специальной валидации в parser нет. |
 | `marketplace` | mapping | **Authoring-расширение bapm** (отдельный путь валидации). Не consumer day-to-day; см. ниже и [marketplace](/reference/marketplace). |
 
-Поле `target` / `targets` — заявление предпочтения. Для гарантированной активации Cursor на install надёжнее явно: `bapm install --target cursor`. Runtime-материализация сегодня **cursor-only**.
+### Выбор активного host (приоритет)
+
+Порядок selection для install / compile:
+
+1. `--target <id>` (force; для этого run игнорирует `active` и detect)
+2. манифест `active: [<id>, …]` (install — все перечисленные зарегистрированные id; compile — только если ровно один)
+3. sole auto-detect среди зарегистрированных интеграций
+4. fail-closed (подсказка: `--target <id>` и/или `active` в манифесте)
+
+Поле `target` / `targets` — заявление предпочтения / ключи intersection / object-map для **загрузки** пакетов. Оно **не** заменяет `active` и **само по себе не активирует** hosts. Для явной активации без detect используйте `active` или `bapm install --target cursor`. Рекомендуется `active` ⊆ объявленных `target`/`targets`, когда оба заданы.
+
+```yaml
+active:
+  - cursor
+```
+
+Пустой `active: []` отклоняется (fail-closed): ключ объявляет intent активации; «ничего не материализовать» — опустите поле. Dual-read: те же правила для `apm.yml` и `bapm.yml`.
 
 ### Object-map `target` / `targets` (bapm-расширение)
 
@@ -71,7 +88,7 @@ targets:
 
 Пустой `{}`, невалидный ключ или пустое значение — отказ parse. Mutual exclusion `target` + `targets` сохраняется для любой комбинации форм. Dual-read `apm.yml` использует те же правила.
 
-Активный host по-прежнему выбирается через `--target` / auto-detect **уже зарегистрированных** интеграций (fail, если ни то ни другое). Когда object-map присутствует, CLI **загружает и регистрирует** каждый npm-пакет или локальный модуль из значений map **до** выбора активного host (eager, fail-closed при ошибке resolve/export/id/containment). Map **сам по себе не активирует** host — без `--target` и без успешного detect команда завершится с просьбой передать `--target <id>`. Built-in Cursor остаётся доступен без строки `cursor` в map (запись в map опциональна и может переопределить built-in). Для multi-host object-map предпочтительнее поле `targets` (singular `target` с несколькими ключами тоже принимается).
+Активный host выбирается по приоритету `--target` → `active` → auto-detect **уже зарегистрированных** интеграций (fail, если ни то ни другое). Когда object-map присутствует, CLI **загружает и регистрирует** каждый npm-пакет или локальный модуль из значений map **до** выбора активного host (eager, fail-closed при ошибке resolve/export/id/containment). Map / `target` / `targets` **сами по себе не активируют** host — без `--target`, без `active` и без успешного detect команда завершится с просьбой передать `--target <id>` (или задать `active`). Built-in Cursor остаётся доступен без строки `cursor` в map (запись в map опциональна и может переопределить built-in). Для multi-host object-map предпочтительнее поле `targets` (singular `target` с несколькими ключами тоже принимается).
 
 ### Отклонённые
 
@@ -184,6 +201,8 @@ registries:
 name: my-project
 version: 0.1.0
 target: cursor
+active:
+  - cursor
 dependencies:
   apm:
     - path: ./packages/hello-skill
@@ -194,7 +213,8 @@ dependencies:
 | --- | --- |
 | `name` | Обязательно. Имя проекта / пакета. |
 | `version` | Обязательно. Строка версии. |
-| `target` / `targets` | Предпочитаемый host; лучше дублировать явным `--target cursor` на install. |
+| `target` / `targets` | Предпочитаемый host / object-map load; **не** активация сами по себе. |
+| `active` | Явный список host id для активации (приоритет: `--target` → `active` → detect). |
 | `dependencies.apm` | Agent/APM-пакеты. |
 | `dependencies.mcp` | MCP-серверы; при активном Cursor по умолчанию в `.cursor/mcp.json` попадают **прямые** записи (transitive — только с `--trust-transitive-mcp`). В `env` / `headers` можно писать APM-плейсхолдеры `${VAR}`, `${env:VAR}` / legacy `<VAR>` и bapm-директиву `{bake:NAME}` / `{bake:env:NAME}` — при install bapm **запекает** их в литералы из окружения процесса (Cursor не подставляет `${…}` в runtime). Неразрешённый плейсхолдер → install падает до записи placeholders в `.cursor/mcp.json`. |
 | `devDependencies.apm` | Dev-зависимости; `bapm install <ref> --dev`. |
@@ -259,8 +279,9 @@ dependencies:
 | `OpenAPM v0.1 rejects top-level "workspaces"` | Уберите `workspaces` с корня манифеста. |
 | `must have exactly one source kind` / `unknown source kind` | В object-dep — ровно один из `git`\|`id`\|`path`\|`registry`\|`marketplace` (с учётом companions). |
 | `Registry … uses http:// without insecure: true` | Выставьте `insecure: true` или используйте HTTPS / exempt host. |
-| `Target detection is missing or ambiguous; pass --target <id>` | Нет однозначного auto-detect (например нет `.cursor/`). Передайте `--target cursor`. |
-| `Unknown or unregistered target: …` | Id не зарегистрирован в CLI (сегодня runtime — `cursor`). |
+| `Target detection is missing or ambiguous; pass --target <id>` | Нет однозначного auto-detect (например нет `.cursor/`). Передайте `--target cursor` или задайте `active: [cursor]`. |
+| `Manifest "active" must be a non-empty array` / empty `active: []` | Укажите хотя бы один mf-005 id или уберите поле `active`. |
+| `Unknown or unregistered target: …` | Id не зарегистрирован (built-in или object-map). Проверьте map / `--target`. |
 | `Refusing to init: … already exists` | Манифест уже есть; правьте существующий файл. |
 
 Дальше: [Быстрый старт](/guide/quick-start). Lock рядом: [Lockfile](/guide/lockfile). Init-флаги: [init](/reference/init).

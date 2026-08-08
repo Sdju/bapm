@@ -1,5 +1,6 @@
 import { join, resolve } from "node:path";
 import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
+import { loadManifest } from "@/modules/Manifest";
 import {
   discoverPrimitives,
   resolvePrimitiveConflicts,
@@ -26,7 +27,11 @@ export async function compileAgentsMd(
   const { primitives } = resolvePrimitiveConflicts({ primitives: raw });
   const sorted = sortPrimitives(primitives);
   const attribution = toAttribution(sorted);
-  const target = await selectCompileTarget(options.integrationRegistry, options.forcedTarget, cwd);
+  const target = await selectCompileTarget(
+    options.integrationRegistry,
+    options.forcedTarget,
+    cwd,
+  );
   if (typeof target.compile !== "function") {
     throw new Error(`Target "${target.id}" does not support compile`);
   }
@@ -74,25 +79,61 @@ function sortPrimitives(primitives: AttributedPrimitive[]): AttributedPrimitive[
   });
 }
 
+function readManifestActive(cwd: string): string[] | undefined {
+  try {
+    const { document } = loadManifest({ cwd });
+    return document.active;
+  } catch {
+    return undefined;
+  }
+}
+
 async function selectCompileTarget(
   registry: IntegrationRegistry | undefined,
   forcedTarget: string | undefined,
   cwd: string,
 ): Promise<BapmIntegration> {
-  if (!registry) throw new Error("Compile requires a registered target; pass --target <id>");
+  if (!registry) {
+    throw new Error(
+      "Compile requires a registered target; pass --target <id> or set active in the manifest",
+    );
+  }
 
+  // 1. Forced --target
   if (forcedTarget) {
     const target = registry.get(forcedTarget);
     if (!target) throw new Error(`Unknown or unregistered target: ${forcedTarget}`);
     return target;
   }
 
+  // 2. Manifest `active` — sole compile-capable id, or fail if multi
+  const manifestActive = readManifestActive(cwd);
+  if (manifestActive && manifestActive.length > 0) {
+    if (manifestActive.length > 1) {
+      // Multi-active without force: do not fall through to detect.
+      throw new Error(
+        "Manifest active lists multiple hosts; pass --target <id> to select one for compile",
+      );
+    }
+
+    const soleId = manifestActive[0]!;
+    const sole = registry.get(soleId);
+    if (!sole) throw new Error(`Unknown or unregistered target: ${soleId}`);
+    if (typeof sole.compile !== "function") {
+      throw new Error(`Target "${sole.id}" does not support compile`);
+    }
+    return sole;
+  }
+
+  // 3. Sole auto-detect among compile-capable registered hosts
   const detection = await detectRegisteredTargets(registry, cwd);
   const candidates = detection.detectedIds
     .map((id) => registry.get(id))
     .filter((target): target is BapmIntegration => Boolean(target?.compile));
   if (candidates.length !== 1) {
-    throw new Error("Target detection is missing or ambiguous; pass --target <id>");
+    throw new Error(
+      "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
+    );
   }
   return candidates[0]!;
 }

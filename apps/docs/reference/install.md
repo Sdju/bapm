@@ -26,7 +26,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--allow-insecure-host` | `<hostname>` | Разрешить transitive `http://` с этого FQDN (повторяемый) | — |
 | `--dev` | — | При package-ref add писать в `devDependencies.apm` (без positional — no-op) | off |
 | `--only` | `apm` \| `mcp` | Только APM packages (без MCP) или только MCP configure (без APM materialize) | оба |
-| `--target` | `<id>` | Принудительно активировать registered host target (например `cursor`) | auto-detect / манифест |
+| `--target` | `<id>` | Принудительно активировать registered host target (игнорирует `active` и detect) | `active` → auto-detect |
 | `--exclude` | `<id>` | Пропустить MCP configure для runtime id; **не** полный skip install (повторяемый) | — |
 | `--update` | — | Переразрешить mutable refs; нельзя с frozen / CI-default frozen | off |
 | `--parallel-downloads` | `<n>` | Параллельные загрузки; `0` = serial | `4` |
@@ -42,6 +42,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Frozen (явный или CI-default) нельзя сочетать с `--update`.
 - Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen` (OpenAPM req-lk-018).
 - `--force` ≠ `--target` (forced-target activation).
+- Выбор host: `--target <id>` → манифест `active: [<id>, …]` → sole auto-detect → fail. См. [манифест](/guide/config-manifest).
 - При активном cursor eligible MCP пишутся в `.cursor/mcp.json` (прямые mcp по умолчанию). Auto-detect без `.cursor/` не создаёт каталог только ради MCP.
 
 Сценарии: [Быстрый старт](/guide/quick-start), [US-01](/guide/situations/install-fresh), [US-02 CI / frozen](/guide/situations/ci-frozen).

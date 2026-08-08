@@ -39,7 +39,7 @@ Commands:
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present
   --no-frozen              Opt out of frozen (including when CI defaults to frozen)
-  --target <id>            Force a registered host target (e.g. cursor)
+  --target <id>            Force a registered host target (overrides manifest active)
   --trust-transitive-mcp   Deploy dependency MCP (default: direct dependencies.mcp only)
 
 Experimental registries:
@@ -64,12 +64,16 @@ Options:
                            Allow transitive http:// from this FQDN (repeatable)
   --dev                    Write package-ref add under devDependencies.apm
   --only <apm|mcp>         Only APM packages or only MCP configure
-  --target <id>            Force activation of a registered host target (e.g. cursor)
+  --target <id>            Force activation of a registered host target (overrides manifest active)
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
   --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
   --help, -h               Show this help
+
+Host selection:
+  Priority: --target <id> → manifest active: [<id>, …] → sole auto-detect → fail.
+  Use active in bapm.yml / apm.yml when detect is missing or ambiguous.
 
 MCP / Cursor:
   When the cursor target is active, eligible MCP servers are written to .cursor/mcp.json.

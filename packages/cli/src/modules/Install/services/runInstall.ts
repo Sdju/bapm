@@ -29,7 +29,7 @@ Options:
                            Allow transitive http:// deps from this FQDN (repeatable)
   --dev                    With package-ref add: write under devDependencies.apm (no-op without positional)
   --only <apm|mcp>         Install only APM packages (skip MCP) or only MCP configure (skip APM materialize)
-  --target <id>            Force activation of a registered host target (e.g. cursor)
+  --target <id>            Force activation of a registered host target (overrides manifest active)
   --exclude <id>           Skip MCP configure for runtime id (e.g. cursor); does not skip install
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
@@ -50,6 +50,8 @@ Notes:
   a minimal manifest when missing). Frozen rejects positional package-ref add.
   --exclude filters MCP/runtime configure only — not a full skip-install.
   --force is distinct from --target (forced-target activation).
+  Host selection: --target <id> → manifest active: [<id>, …] → sole auto-detect → fail.
+  Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
   When cursor is active, eligible MCP servers write .cursor/mcp.json (direct mcp by default).
 `;
 }
