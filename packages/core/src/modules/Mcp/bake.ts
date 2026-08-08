@@ -20,6 +20,11 @@ export type BakeMcpStringMapOptions = {
   overrides?: Record<string, string>;
   /** Lookup environment; defaults to `process.env`. */
   env?: NodeJS.ProcessEnv | Record<string, string | undefined>;
+  /**
+   * `bake` (default): resolve APM `${VAR}` / `${env:VAR}` / `<VAR>` and `{bake:NAME}`.
+   * `translate`: leave APM placeholders untouched; still resolve `{bake:NAME}` (fail-closed).
+   */
+  mode?: "bake" | "translate";
 };
 
 export class McpEnvBakeError extends Error {
@@ -64,11 +69,15 @@ function hasPlaceholder(value: string): boolean {
 export function bakeMcpStringValue(value: string, options?: BakeMcpStringMapOptions): string {
   if (!hasPlaceholder(value)) return value;
 
+  const translate = options?.mode === "translate";
   const missing: string[] = [];
   ENV_PLACEHOLDER_RE.lastIndex = 0;
   const baked = value.replace(
     ENV_PLACEHOLDER_RE,
     (match, angleName: string, braceName: string, bakeName: string) => {
+      // Translate hosts keep APM / legacy placeholders for runtime expansion.
+      if (translate && !bakeName) return match;
+
       const varName = angleName || braceName || bakeName;
       const resolved = lookupVar(varName, options);
       if (resolved === undefined) {

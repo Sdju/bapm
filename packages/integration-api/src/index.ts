@@ -15,6 +15,7 @@ export type {
   DeployedFile,
   MaterializeContext,
   MaterializeReport,
+  McpEnvMode,
   McpServerConfig,
   MarketplaceOutputCapability,
   MarketplaceOutputIntegration,
@@ -30,12 +31,25 @@ export type {
 
 export { createIntegrationRegistry, createMarketplaceOutputRegistry } from "./registry.ts";
 
+export type {
+  PrimitiveMaterializeContext,
+  PrimitiveMaterializeHandler,
+  PrimitiveMaterializeHandlers,
+  PrimitiveMaterializeKind,
+} from "./helpers.ts";
+
 export {
   assertUnderDeployRoots,
+  copyPortableSkillDirectory,
+  findPackageRoot,
   getConfigureMcp,
   hasConfigureMcp,
   isUnderRoot,
+  isWithin,
+  listFiles,
+  materializeSkill,
   primitivesList,
+  primitivesMaterialize,
   readPrimitiveContent,
   sanitizeName,
   toPosixRel,

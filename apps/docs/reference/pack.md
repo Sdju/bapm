@@ -10,7 +10,7 @@ bapm pack [options]
 
 Собирает plain-zip producer archive и/или host `marketplace.json`. Неизвестные флаги отвергаются. `--check-release` не создаёт и не пушит tags. Secret-pattern paths (`.env`, `*.pem`, …) отклоняются.
 
-Claude/Codex здесь — **marketplace-output**, не runtime install targets. Runtime-материализация остаётся cursor-oriented через install/`--target`.
+Claude/Codex здесь — **marketplace-output** emit. Runtime install/compile для тех же hosts — через `@bapm/integration-claude` / `@bapm/integration-codex` + `targets:` / `--target` (см. [hosts](/guide/supported-hosts)).
 
 ## Параметры
 

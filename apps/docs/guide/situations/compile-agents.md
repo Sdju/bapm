@@ -2,7 +2,7 @@
 
 ## Когда …
 
-В проекте уже есть обнаруживаемые примитивы (skills / instructions / agents), и нужен единый target-owned файл для Cursor — обычно `AGENTS.md`.
+В проекте уже есть обнаруживаемые примитивы (skills / instructions / agents), и нужен единый target-owned файл — для Cursor/Codex обычно `AGENTS.md` (один активный compile target; last-writer-wins).
 
 ### Цель
 
@@ -41,6 +41,10 @@ bapm compile --target cursor -o path/to/OUT.md
 - Если `active` перечисляет несколько hosts — без `--target` compile падает (single-host).
 
 Флаги: [compile](/reference/compile).
+
+### Техдолг vs APM
+
+`bapm compile` — **thin** Cursor root-context (один файл). Полный паритет с APM `apm compile` (instructions-only, distributed/`applyTo`, link-inline, multi-host, Build ID, …) **не заявлен**. Inventory: `TD-COMPILE-*` в `.samples/apm-knowledge/topics/tech-debt-compile.md` и § Tech debt в openspec `compile-agents-md`.
 
 ### Если не сработало
 

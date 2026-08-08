@@ -41,4 +41,4 @@ bapm install --target cursor
 - `Refusing to init: … already exists` → манифест уже есть; правьте файл, не вызывайте `init` повторно.
 - `No manifest found` → сделайте `init` или `install <ref>` (создаст минимальный манифест).
 - `Target detection is missing or ambiguous` / нет `.cursor/` → передайте `--target cursor` или задайте `active: [cursor]`.
-- Ожидали Claude/Codex как runtime → это marketplace-pack ([US-06](/guide/situations/marketplace-pack)); свой агент — [поддерживаемые hosts](/guide/supported-hosts).
+- Ожидали Claude/Codex как runtime → поставьте `@bapm/integration-claude` / `@bapm/integration-codex` + `targets:` ([hosts](/guide/supported-hosts)); marketplace JSON — отдельно ([US-06](/guide/situations/marketplace-pack)).

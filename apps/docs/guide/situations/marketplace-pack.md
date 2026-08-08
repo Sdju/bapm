@@ -2,11 +2,11 @@
 
 ## Когда …
 
-Нужны **host marketplace outputs** (`marketplace.json` для Claude и/или Codex) и/или plain-zip archive — без ожидания, что Claude/Codex станут runtime install target как Cursor.
+Нужны **host marketplace outputs** (`marketplace.json` для Claude и/или Codex) и/или plain-zip archive. Runtime install для Claude/Codex — отдельно через `@bapm/integration-claude` / `@bapm/integration-codex` + `targets:` (см. [supported hosts](/guide/supported-hosts)); pack не заменяет install.
 
 ### Цель
 
-Эмитнуть marketplace JSON (и опционально zip) из блока `marketplace:` в манифесте; не смешивать с `bapm install --target …`.
+Эмитнуть marketplace JSON (и опционально zip) из блока `marketplace:` в манифесте; pack не заменяет `bapm install --target claude`.
 
 ### Шаги
 
@@ -55,12 +55,12 @@ bapm pack --check-release
 - Marketplace-only проект (без `dependencies:`) эмитит JSON и **пропускает** пустой zip.
 - `--agent-plugins` пакует portable Agent Plugins root и **не** эмитит marketplace; нужен root `plugin.json`.
 
-Флаги: [pack](/reference/pack). Runtime install по-прежнему: [US-01](/guide/situations/install-fresh) с `--target cursor`.
+Флаги: [pack](/reference/pack). Runtime install: [US-01](/guide/situations/install-fresh) с `--target cursor|opencode|claude|codex`.
 
 ### Если не сработало
 
 - Нет `marketplace:` → добавьте через `marketplace init` / правку YAML.
-- Ожидали `install --target claude|codex` → **не** shipped как runtime; Claude/Codex — marketplace-output integrations.
+- Ожидали `install --target claude|codex` → поставьте соответствующий `@bapm/integration-*` и объявите `targets:` ([hosts](/guide/supported-hosts)); marketplace JSON — отдельно через `pack --marketplace`.
 - Secret-pattern paths (`.env`, `*.pem`, …) → pack отказывается (sc-007).
 - Remote resolve без сети → `--offline` fail closed, если сеть нужна.
 - `--check-release` не пушит и не создаёт tags — только gate.

@@ -5,7 +5,7 @@ Collect MCP server definitions, bake env/header placeholders, and update lock `m
 ## Public API
 
 - `collectMcpServers` — direct root MCP + optional dependency MCP
-- `bakeMcpStringMap` / `bakeMcpServerMaps` — install-time bake of `${VAR}`, `${env:VAR}`, legacy `<VAR>`, and bapm `{bake:NAME}` / `{bake:env:NAME}`
+- `bakeMcpStringMap` / `bakeMcpServerMaps` — install-time bake of `${VAR}`, `${env:VAR}`, legacy `<VAR>`, and bapm `{bake:NAME}` / `{bake:env:NAME}`; `mode: "translate"` leaves APM placeholders untouched while still resolving `{bake:…}` (per-target via `BapmIntegration.mcpEnvMode`)
 - `applyMcpInventoryToLock` — write `mcp_servers` / `mcp_configs` / `mcp_target_servers` / `mcp_config_provenance`
 
 ## Collection rules

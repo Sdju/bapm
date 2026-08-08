@@ -2,12 +2,14 @@
 
 Куда `bapm install` / `bapm compile` раскладывают пакеты. Поля манифеста: [Hosts и target](/guide/manifest-hosts).
 
-| Host               | В CLI                 | Как подключить                                                                                                         |
-| ------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Cursor**         | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                         |
-| **OpenCode**       | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                     |
-| **Свой агент**     | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                     |
-| **Claude / Codex** | Нет (не runtime)      | Пакеты `@bapm/integration-claude` / `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack) |
+| Host           | В CLI                 | Как подключить                                                                                                                                           |
+| -------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
+| **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
+| **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
+| **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
+| **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
+| **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
 
 ## Cursor (opt-in пакет)
 
@@ -55,6 +57,29 @@ bapm install --target opencode
 ```
 
 Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, commands → `.opencode/commands/<name>.md`, hooks — явный non-fatal skip (diagnostic), MCP → project `opencode.json` (`mcp`, `type: local` / `remote`). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc`.
+
+## Copilot (opt-in пакет)
+
+Отдельный runtime-пакет `@bapm/integration-copilot`:
+
+```bash
+npm i -D @bapm/integration-copilot
+```
+
+```yaml
+targets:
+  copilot: "@bapm/integration-copilot"
+active:
+  - copilot
+```
+
+```bash
+bapm init -y --target copilot
+bapm install --target copilot
+bapm compile --target copilot
+```
+
+Instructions → `.github/instructions/<name>.instructions.md`, commands/`*.prompt.md` → `.github/prompts/<name>.prompt.md` (не `.github/commands/`), agents → `.github/agents/<name>.agent.md`, skills → `.agents/skills/<name>/`, hooks → per-file `.github/hooks/<pkg>-<stem>.json` (+ scripts и sidecar `.github/bapm-hooks.json`). MCP → home `~/.copilot/mcp-config.json` (`COPILOT_HOME`, translate-placeholders `${VAR}`), compile → `.github/copilot-instructions.md` (instructions из materialize в тело compile не дублируются). Auto-detect: whitelist под `.github/` (`copilot-instructions.md` или dirs instructions/agents/prompts/hooks).
 
 ## Кастомный npm-пакет
 
@@ -110,16 +135,65 @@ bapm install --target pi
 
 Контракт и helpers: пакет `@bapm/integration-api`. Глубокий authoring: [Architecture](/architecture/).
 
-## Claude и Codex
+## Claude (opt-in runtime + marketplace)
 
-Это **не** runtime install targets. Для marketplace JSON нужны соответствующие integration-пакеты:
+Аналогично Cursor — отдельный пакет `@bapm/integration-claude` даёт **runtime** install/compile и отдельно marketplace pack:
 
 ```bash
-npm i -D @bapm/integration-claude   # или @bapm/integration-codex
+npm i -D @bapm/integration-claude
+```
+
+```yaml
+targets:
+  claude: "@bapm/integration-claude"
+active:
+  - claude
+```
+
+```bash
+bapm install --target claude
+bapm compile --target claude
+```
+
+Skills → `.claude/skills/<name>/SKILL.md`, instructions → `.claude/rules/<name>.md`, agents → `.claude/agents/`, commands → `.claude/commands/`, hooks → `.claude/settings.json` (+ `.claude/bapm-hooks.json`), MCP → project `.mcp.json` (opt-in when `.claude/` exists), compile → `CLAUDE.md`. Auto-detect: `.claude/` или `CLAUDE.md`.
+
+Marketplace JSON по-прежнему:
+
+```bash
 bapm pack --marketplace claude
 ```
 
-Сценарий: [Marketplace pack](/guide/situations/marketplace-pack).
+## Codex (opt-in runtime + marketplace)
+
+Отдельный пакет `@bapm/integration-codex` даёт **runtime** install/compile и marketplace pack:
+
+```bash
+npm i -D @bapm/integration-codex
+```
+
+```yaml
+targets:
+  codex: "@bapm/integration-codex"
+active:
+  - codex
+```
+
+```bash
+bapm install --target codex
+bapm compile --target codex
+```
+
+Skills → `.agents/skills/<name>/SKILL.md`, agents → `.codex/agents/<name>.toml`, hooks → `.codex/hooks.json` (+ `.codex/bapm-hooks.json`), MCP → `.codex/config.toml` (`mcp_servers`), compile → project-root `AGENTS.md` (**включая** instructions). Auto-detect: только `.codex/` (lone `AGENTS.md` не считается Codex).
+
+Cursor и Codex делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
+
+Marketplace JSON по-прежнему:
+
+```bash
+bapm pack --marketplace codex
+```
+
+Сценарий pack: [Marketplace pack](/guide/situations/marketplace-pack).
 
 ## Типичные ошибки
 

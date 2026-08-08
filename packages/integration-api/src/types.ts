@@ -146,7 +146,10 @@ export type ConfigureMcpContext = {
 export type ConfigureMcpReport = {
   /** Registered target that owns the reported MCP deployment. */
   targetId?: TargetId;
-  /** Project-/cwd-relative path to the written target MCP config. */
+  /**
+   * Path to the written target MCP config: project-/cwd-relative for project hosts,
+   * or absolute / `~/…` for home-scoped hosts.
+   */
   configPath: string;
   /** Server names written/updated. */
   servers?: string[];
@@ -160,6 +163,14 @@ export type ConfigureMcpFn = (
   servers: McpServerConfig[] | Record<string, McpServerConfig>,
   ctx?: ConfigureMcpContext,
 ) => ConfigureMcpReport | Promise<ConfigureMcpReport>;
+
+/**
+ * Install-time MCP env policy for a host.
+ * - `bake` (default when omitted): resolve APM `${VAR}` / `${env:VAR}` / `<VAR>` to literals before configure
+ * - `translate`: pass APM placeholders through; host writes runtime `${VAR}` forms
+ * Bapm `{bake:NAME}` directives are still resolved (fail-closed) for both modes.
+ */
+export type McpEnvMode = "bake" | "translate";
 
 /** Concrete target contract consumed by core only through `@bapm/integration-api`. */
 export type BapmIntegration = {
@@ -176,6 +187,11 @@ export type BapmIntegration = {
   configureMcp?: ConfigureMcpFn;
   /** Optional host-owned compile rendering and output placement. */
   compile?: CompileFn;
+  /**
+   * Optional MCP env handling mode. Omitted ⇒ bake-compatible (Cursor default).
+   * Install reads this through the api contract — no host-id allowlists in core.
+   */
+  mcpEnvMode?: McpEnvMode;
   [key: string]: unknown;
 };
 

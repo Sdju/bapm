@@ -19,6 +19,7 @@ catalog:
   fflate: ^0.8.3
   tldts: ^7.4.10
   bumpp: ^11.1.0
+  smol-toml: ^1.7.1
 overrides:
   # Do not force vite → vite-plus-core globally: VitePress needs stock vite
   # (vite-plus-core rolldown bindings are not linked by plain CI installs).

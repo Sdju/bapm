@@ -20,7 +20,7 @@ When a project manifest uses object-map `target` / `targets`, the CLI loads each
 2. Named **`createCursorIntegration`** (or an equivalent documented factory) returning `BapmIntegration`; or
 3. **Default export** that is either a `BapmIntegration` object or a factory returning one.
 
-The loaded instance MUST have non-empty `id`, `deployRoots` array, `detect`, and `materialize` (`configureMcp` / `compile` optional). `id` MUST equal the map key. Marketplace-output-only packages (no runtime hooks) are rejected.
+The loaded instance MUST have non-empty `id`, `deployRoots` array, `detect`, and `materialize` (`configureMcp` / `compile` optional). Optional `mcpEnvMode: "bake" | "translate"` tells install whether to bake APM `${VAR}` placeholders before `configureMcp` (omitted ⇒ bake-compatible, Cursor default). `id` MUST equal the map key. Marketplace-output-only packages (no runtime hooks) are rejected. A successful `configureMcp` report MUST include a non-empty `configPath` (project-relative, absolute, or home-tilde form for home-scoped hosts).
 
 See `@bapm/integration-cursor` for a built-in reference and the VitePress architecture guide for the author how-to.
 
@@ -28,16 +28,24 @@ See `@bapm/integration-cursor` for a built-in reference and the VitePress archit
 
 Optional fs/path helpers for host `materialize` (exported from the package root):
 
-| Symbol                   | Role                                             |
-| ------------------------ | ------------------------------------------------ |
-| `primitivesList`         | Normalize array / `{ primitives }` sets          |
-| `sanitizeName`           | Path-safe single segment from a primitive name   |
-| `isUnderRoot`            | Containment check under a deploy root            |
-| `assertUnderDeployRoots` | Refuse writes outside registered roots           |
-| `readPrimitiveContent`   | Inline content / source file / stub frontmatter  |
-| `toPosixRel`             | Absolute → cwd-relative path with `/` separators |
+| Symbol                       | Role                                                              |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `primitivesList`             | Normalize array / `{ primitives }` sets                           |
+| `primitivesMaterialize`      | Dispatch primitives to `skill` / `instruction` / … handlers       |
+| `sanitizeName`               | Path-safe single segment from a primitive name                    |
+| `isUnderRoot`                | Containment check under a deploy root                             |
+| `assertUnderDeployRoots`     | Refuse writes outside registered roots                            |
+| `readPrimitiveContent`       | Inline content / source file / stub frontmatter                   |
+| `toPosixRel`                 | Absolute → cwd-relative path with `/` separators                  |
+| `findPackageRoot`            | Nearest `apm.yml` / `bapm.yml` / `plugin.json` ancestor           |
+| `isWithin`                   | Path containment (`candidate` under `root`)                       |
+| `listFiles`                  | Recursive file listing (absolute paths)                           |
+| `copyPortableSkillDirectory` | Safe Agent Plugin skill tree copy (no symlink escape)             |
+| `materializeSkill`           | Shared skill deploy (portable tree / SKILL.md / stub + inventory) |
 
-Integrations keep host-specific detect + routing; shared path/content plumbing lives here.
+Prefer `primitivesMaterialize({ skill() {…}, … })` over a manual `primitivesList` loop.
+Use `materializeSkill({ destDir })` inside the `skill` handler — hosts only pick the path.
+Integrations keep host-specific detect + destinations; shared path/content plumbing lives here.
 
 ## Materialize report
 
