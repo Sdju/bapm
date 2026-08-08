@@ -8,6 +8,7 @@ import type {
   DependencyLists,
   ObjectDependency,
   RegistryEntry,
+  TargetIntegrationMap,
 } from "./types.ts";
 
 /** Mutually exclusive source discriminators (path may accompany git as virtual_path;
@@ -70,31 +71,15 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
     );
   }
 
+  let normalizedTarget: string | TargetIntegrationMap | undefined;
+  let normalizedTargets: string[] | TargetIntegrationMap | undefined;
+
   if ("target" in raw && raw.target !== undefined) {
-    if (typeof raw.target !== "string" || !raw.target.trim()) {
-      throw new ManifestError(
-        "MANIFEST_VALIDATION",
-        'Manifest "target" must be a non-empty string (vendor ids x-<vendor>-<name> allowed)',
-        { path: "target" },
-      );
-    }
-    assertValidTargetToken(raw.target, "target");
+    normalizedTarget = parseTargetOrTargetsField(raw.target, "target");
   }
 
   if ("targets" in raw && raw.targets !== undefined) {
-    if (
-      !Array.isArray(raw.targets) ||
-      raw.targets.some((t) => typeof t !== "string" || !t.trim())
-    ) {
-      throw new ManifestError(
-        "MANIFEST_VALIDATION",
-        'Manifest "targets" must be an array of non-empty strings',
-        { path: "targets" },
-      );
-    }
-    for (let i = 0; i < raw.targets.length; i++) {
-      assertValidTargetToken(String(raw.targets[i]), `targets[${i}]`);
-    }
+    normalizedTargets = parseTargetOrTargetsField(raw.targets, "targets");
   }
 
   if (!("name" in raw)) {
@@ -130,6 +115,13 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
   }
 
   const document: BapmManifest = { ...raw, name: raw.name, version: raw.version };
+
+  if (normalizedTarget !== undefined) {
+    document.target = normalizedTarget;
+  }
+  if (normalizedTargets !== undefined) {
+    document.targets = normalizedTargets;
+  }
 
   if ("dependencies" in raw) {
     document.dependencies = validateDependencyBlock(raw.dependencies, "dependencies");
@@ -468,6 +460,104 @@ function assertValidTargetToken(token: string, path: string): void {
     `Invalid target token "${token}" (mf-005): must be a canonical host id, recognised alias, or x-<vendor>-<name>`,
     { path, details: { token } },
   );
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Dual-shape `target` / `targets`: legacy string|string[] or host→package object map.
+ * Map keys are mf-005; values are trimmed non-empty npm specifier strings.
+ */
+function parseTargetOrTargetsField(
+  value: unknown,
+  field: "target" | "targets",
+): string | string[] | TargetIntegrationMap {
+  if (field === "target") {
+    if (typeof value === "string") {
+      if (!value.trim()) {
+        throw new ManifestError(
+          "MANIFEST_VALIDATION",
+          'Manifest "target" must be a non-empty string (vendor ids x-<vendor>-<name> allowed)',
+          { path: "target" },
+        );
+      }
+      assertValidTargetToken(value, "target");
+      return value;
+    }
+    if (isPlainObject(value)) {
+      return parseTargetIntegrationMap(value, "target");
+    }
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      'Manifest "target" must be a non-empty string or a non-empty object mapping (host id → package)',
+      { path: "target" },
+    );
+  }
+
+  // targets
+  if (Array.isArray(value)) {
+    if (value.some((t) => typeof t !== "string" || !t.trim())) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        'Manifest "targets" must be an array of non-empty strings or a string-valued object mapping',
+        { path: "targets" },
+      );
+    }
+    for (let i = 0; i < value.length; i++) {
+      assertValidTargetToken(String(value[i]), `targets[${i}]`);
+    }
+    return value as string[];
+  }
+  if (isPlainObject(value)) {
+    return parseTargetIntegrationMap(value, "targets");
+  }
+  throw new ManifestError(
+    "MANIFEST_VALIDATION",
+    'Manifest "targets" must be an array of non-empty strings or a string-valued object mapping',
+    { path: "targets" },
+  );
+}
+
+function parseTargetIntegrationMap(
+  value: Record<string, unknown>,
+  field: "target" | "targets",
+): TargetIntegrationMap {
+  const keys = Object.keys(value);
+  if (keys.length === 0) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      `Manifest "${field}" object map must not be empty`,
+      { path: field },
+    );
+  }
+
+  const out: TargetIntegrationMap = {};
+  for (const key of keys) {
+    const trimmedKey = key.trim();
+    const entryPath = `${field}.${trimmedKey || key}`;
+    assertValidTargetToken(key, entryPath);
+
+    const rawVal = value[key];
+    if (typeof rawVal !== "string") {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Manifest "${field}" map value for "${trimmedKey || key}" must be a string`,
+        { path: entryPath },
+      );
+    }
+    const trimmedVal = rawVal.trim();
+    if (!trimmedVal) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Manifest "${field}" map value for "${trimmedKey || key}" must be a non-empty string`,
+        { path: entryPath },
+      );
+    }
+    out[trimmedKey] = trimmedVal;
+  }
+  return out;
 }
 
 function assertRegistryHttpUrl(

@@ -6,8 +6,9 @@
  * - Types: `BapmManifest`, `BapmDependency`, `DependencyEntry`, `DependencyLists`,
  *   `DiscoverManifestOptions`, `DiscoveredManifest`, `LoadManifestOptions`,
  *   `LoadManifestResult`, `ManifestFilename`, `ObjectDependency`, `RegistryEntry`,
- *   `ManifestErrorCode`, `ManifestWarning`, `CreateMinimalManifestOptions`,
- *   `WriteProducerManifestOptions`, `WriteProducerManifestResult`
+ *   `TargetIntegrationMap`, `ManifestErrorCode`, `ManifestWarning`,
+ *   `CreateMinimalManifestOptions`, `WriteProducerManifestOptions`,
+ *   `WriteProducerManifestResult`
  * - Errors: `ManifestError`
  * - Constants: `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`
  * - Functions: `discoverManifestPath`, `loadManifest`, `parseManifest`,
@@ -36,6 +37,7 @@ export type {
   ManifestFilename,
   ObjectDependency,
   RegistryEntry,
+  TargetIntegrationMap,
 } from "./types.ts";
 
 export type { ManifestErrorCode, ManifestWarning } from "./errors.ts";

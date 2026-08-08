@@ -6,6 +6,7 @@
  * - `runInstall` / `installProject` — primary install entry
  * - `enforceFrozen` — basic lk-006 gate
  * - `isCiEnvTruthy` / `resolveEffectiveFrozen` — OpenAPM lk-018 CI-default frozen
+ * - `declaredTargetIds` / `declaredTargetIntegrationMap` — tg-008 declared hosts + map hint
  * - Deployed inventory helpers (hash verify / orphan cleanup) for Audit / Uninstall
  * - Types / `InstallError`
  *
@@ -31,7 +32,7 @@ export {
   type ResolveEffectiveFrozenOptions,
 } from "./ciFrozen.ts";
 export { runInstall, installProject } from "./runInstall.ts";
-export { declaredTargetIds } from "./targets.ts";
+export { declaredTargetIds, declaredTargetIntegrationMap } from "./targets.ts";
 export {
   DEPLOYED_HASH_ALGO,
   hashFileBytes,

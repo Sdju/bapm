@@ -56,6 +56,13 @@ export type RegistryEntry = {
 export type ManifestFilename = "apm.yml" | "bapm.yml";
 
 /**
+ * Bapm-extension host id → npm integration package specifier map
+ * (`target` / `targets` object form). Keys are mf-005 tokens; values are
+ * opaque non-empty package strings (not loaded by install in this slice).
+ */
+export type TargetIntegrationMap = Record<string, string>;
+
+/**
  * In-memory project manifest. Known fields are typed; unknown top-level and
  * `x-*` keys are retained on the same object for a future rewrite path.
  */
@@ -66,10 +73,16 @@ export type BapmManifest = {
   devDependencies?: DependencyLists;
   registries?: Record<string, RegistryEntry | string>;
   default_host?: string;
-  /** Single host target id (mutually exclusive with `targets`). Vendor ids `x-<vendor>-<name>` allowed. */
-  target?: string;
-  /** Multi host target ids (mutually exclusive with `target`). */
-  targets?: string[];
+  /**
+   * Host preference: legacy single id string, or object-map host→package
+   * (mutually exclusive with `targets`). Vendor ids `x-<vendor>-<name>` allowed.
+   */
+  target?: string | TargetIntegrationMap;
+  /**
+   * Host preferences: legacy string array, or object-map host→package
+   * (mutually exclusive with `target`). Prefer this field for multi-host maps.
+   */
+  targets?: string[] | TargetIntegrationMap;
   [key: string]: unknown;
 };
 

@@ -40,13 +40,27 @@ Discovery ищет файл **только в текущем каталоге** 
 | --- | --- | --- |
 | `dependencies` | mapping | Блоки списков зависимостей (см. ниже). |
 | `devDependencies` | mapping | То же для dev; `bapm install <ref> --dev` пишет сюда. |
-| `target` | строка | Один host id (например `cursor`). Нельзя вместе с `targets`. |
-| `targets` | список строк | Несколько host id. Нельзя вместе с `target`. |
+| `target` | строка **или** object-map | Legacy: один host id (`cursor`). Object-map (**bapm-расширение**): `host-id → npm-пакет`. Нельзя вместе с `targets`. |
+| `targets` | список строк **или** object-map | Legacy: несколько host id. Object-map (**bapm-расширение**): те же ключи→пакеты. Нельзя вместе с `target`. Для multi-host object-map **предпочтительнее `targets`**. |
 | `registries` | mapping | Именованные registry (см. ниже). |
 | `default_host` | строка | Есть в модели манифеста и **сохраняется** при разборе; отдельной специальной валидации в parser нет. |
 | `marketplace` | mapping | **Authoring-расширение bapm** (отдельный путь валидации). Не consumer day-to-day; см. ниже и [marketplace](/reference/marketplace). |
 
 Поле `target` / `targets` — заявление предпочтения. Для гарантированной активации Cursor на install надёжнее явно: `bapm install --target cursor`. Runtime-материализация сегодня **cursor-only**.
+
+### Object-map `target` / `targets` (bapm-расширение)
+
+Помимо legacy-форм (`target: cursor`, `targets: [cursor, claude]`), оба поля могут быть **object-map** host id → npm package specifier:
+
+```yaml
+targets:
+  cursor: "@bapm/integration-cursor"
+  claude: "@bapm/integration-claude"
+```
+
+Это **bapm-расширение** (не обязательный vocabulary OpenAPM): ключи — mf-005 host tokens (canonical / alias / `x-<vendor>-<name>`); значения — непустые строки пакетов (opaque, допускают `@scope/name@version`). Пустой `{}`, невалидный ключ или пустое значение — отказ parse. Mutual exclusion `target` + `targets` сохраняется для любой комбинации форм. Dual-read `apm.yml` использует те же правила.
+
+Активный host по-прежнему выбирается через `--target` / auto-detect зарегистрированных интеграций. Значения map **не авто-загружаются** и **не** устанавливают / активируют integration-пакет сами по себе (задел под будущий wiring). Для multi-host object-map предпочтительнее поле `targets` (singular `target` с несколькими ключами тоже принимается).
 
 ### Отклонённые
 
