@@ -1,22 +1,24 @@
 /**
- * Acceptance (RED): install host selection via manifest `active`.
- * OpenSpec change: manifest-active-targets
- * Spec: manifest-active-targets / install-pipeline
+ * Install host selection via manifest `active`.
+ * Promoted from manifest-active-targets acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  createTempProject,
-  getCreateIntegrationRegistry,
-  getRegisterIntegration,
-  getRunInstall,
-  importIntegrationApi,
-  writeText,
-  type TempProject,
-} from "./helpers.ts";
+import { runInstall } from "../../src/index.ts";
+import { createIntegrationRegistry } from "@bapm/integration-api";
 
-describe("manifest-active-targets install — selection priority", () => {
-  let project: TempProject | undefined;
+type Project = { cwd: string; cleanup: () => void };
+
+function createProject(yaml: string): Project {
+  const cwd = mkdtempSync(join(tmpdir(), "bapm-active-install-"));
+  writeFileSync(join(cwd, "bapm.yml"), yaml, "utf8");
+  return { cwd, cleanup: () => rmSync(cwd, { recursive: true, force: true }) };
+}
+
+describe("install active selection", () => {
+  let project: Project | undefined;
 
   afterEach(() => {
     project?.cleanup();
@@ -24,9 +26,7 @@ describe("manifest-active-targets install — selection priority", () => {
   });
 
   test("sole active materializes without --target or detect", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: sole-active",
         "version: 0.0.1",
@@ -38,11 +38,9 @@ describe("manifest-active-targets install — selection priority", () => {
       ].join("\n"),
     );
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     const materialized: string[] = [];
-    register({
+    registry.register({
       id: "cursor",
       deployRoots: [".agents"],
       detect: () => false,
@@ -52,20 +50,18 @@ describe("manifest-active-targets install — selection priority", () => {
       },
     });
 
-    const result = (await getRunInstall()({
+    const result = await runInstall({
       cwd: project.cwd,
       integrationRegistry: registry,
       noPolicy: true,
-    })) as { ok?: boolean; activeTargets?: string[] };
+    });
 
     expect(result).toMatchObject({ ok: true, activeTargets: ["cursor"] });
     expect(materialized).toEqual(["cursor"]);
   });
 
   test("multi active materializes each registered host without detect", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: multi-active",
         "version: 0.0.1",
@@ -78,13 +74,11 @@ describe("manifest-active-targets install — selection priority", () => {
       ].join("\n"),
     );
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     const materialized: string[] = [];
 
     for (const id of ["cursor", "x-acme-editor"]) {
-      register({
+      registry.register({
         id,
         deployRoots: [`.${id}`],
         detect: () => false,
@@ -95,11 +89,11 @@ describe("manifest-active-targets install — selection priority", () => {
       });
     }
 
-    const result = (await getRunInstall()({
+    const result = await runInstall({
       cwd: project.cwd,
       integrationRegistry: registry,
       noPolicy: true,
-    })) as { ok?: boolean; activeTargets?: string[] };
+    });
 
     expect(result).toMatchObject({
       ok: true,
@@ -109,9 +103,7 @@ describe("manifest-active-targets install — selection priority", () => {
   });
 
   test("forcedTarget overrides multi active", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: force-over-active",
         "version: 0.0.1",
@@ -124,13 +116,11 @@ describe("manifest-active-targets install — selection priority", () => {
       ].join("\n"),
     );
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     const materialized: string[] = [];
 
     for (const id of ["cursor", "x-acme-editor"]) {
-      register({
+      registry.register({
         id,
         deployRoots: [`.${id}`],
         detect: () => false,
@@ -141,21 +131,19 @@ describe("manifest-active-targets install — selection priority", () => {
       });
     }
 
-    const result = (await getRunInstall()({
+    const result = await runInstall({
       cwd: project.cwd,
       integrationRegistry: registry,
       forcedTarget: "cursor",
       noPolicy: true,
-    })) as { ok?: boolean; activeTargets?: string[] };
+    });
 
     expect(result).toMatchObject({ ok: true, activeTargets: ["cursor"] });
     expect(materialized).toEqual(["cursor"]);
   });
 
   test("absent active keeps detect-or-fail path (no invent from targets alone)", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: no-active",
         "version: 0.0.1",
@@ -167,11 +155,9 @@ describe("manifest-active-targets install — selection priority", () => {
       ].join("\n"),
     );
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     const materialized: string[] = [];
-    register({
+    registry.register({
       id: "cursor",
       deployRoots: [".agents"],
       detect: () => false,
@@ -181,7 +167,7 @@ describe("manifest-active-targets install — selection priority", () => {
     });
 
     await expect(
-      getRunInstall()({
+      runInstall({
         cwd: project.cwd,
         integrationRegistry: registry,
         noPolicy: true,
@@ -189,20 +175,9 @@ describe("manifest-active-targets install — selection priority", () => {
     ).rejects.toThrow(/--target\s+<id>/i);
     expect(materialized).toEqual([]);
   });
-});
-
-describe("manifest-active-targets install — unknown ids fail closed", () => {
-  let project: TempProject | undefined;
-
-  afterEach(() => {
-    project?.cleanup();
-    project = undefined;
-  });
 
   test("unknown sole active id fails without materialize", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: unknown-active",
         "version: 0.0.1",
@@ -214,11 +189,9 @@ describe("manifest-active-targets install — unknown ids fail closed", () => {
       ].join("\n"),
     );
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     const materialized: string[] = [];
-    register({
+    registry.register({
       id: "cursor",
       deployRoots: [".agents"],
       detect: () => false,
@@ -228,7 +201,7 @@ describe("manifest-active-targets install — unknown ids fail closed", () => {
     });
 
     await expect(
-      getRunInstall()({
+      runInstall({
         cwd: project.cwd,
         integrationRegistry: registry,
         noPolicy: true,
@@ -238,9 +211,7 @@ describe("manifest-active-targets install — unknown ids fail closed", () => {
   });
 
   test("one unknown among several aborts all before any materialize", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: partial-active",
         "version: 0.0.1",
@@ -253,11 +224,9 @@ describe("manifest-active-targets install — unknown ids fail closed", () => {
       ].join("\n"),
     );
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     const materialized: string[] = [];
-    register({
+    registry.register({
       id: "cursor",
       deployRoots: [".agents"],
       detect: () => false,
@@ -268,7 +237,7 @@ describe("manifest-active-targets install — unknown ids fail closed", () => {
     });
 
     await expect(
-      getRunInstall()({
+      runInstall({
         cwd: project.cwd,
         integrationRegistry: registry,
         noPolicy: true,

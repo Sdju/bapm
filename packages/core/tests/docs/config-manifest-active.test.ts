@@ -1,18 +1,21 @@
 /**
- * Acceptance (RED): config-manifest docs cover `active` selection.
- * OpenSpec change: manifest-active-targets
+ * Docs: config-manifest covers `active` selection.
+ * Promoted from manifest-active-targets acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { existsSync, readFileSync } from "node:fs";
-import { configManifestGuidePath } from "./helpers.ts";
+import {
+  configManifestGuidePath,
+  fileExists,
+  readText,
+} from "./helpers.ts";
 
-describe("manifest-active-targets docs — config-manifest", () => {
+describe("config-manifest docs — active field", () => {
   test("guide exists", () => {
-    expect(existsSync(configManifestGuidePath), `expected ${configManifestGuidePath}`).toBe(true);
+    expect(fileExists(configManifestGuidePath), `expected ${configManifestGuidePath}`).toBe(true);
   });
 
   test("documents active field and selection priority", () => {
-    const md = readFileSync(configManifestGuidePath, "utf8");
+    const md = readText(configManifestGuidePath);
 
     expect(md, "guide must document the active field").toMatch(
       /(?:^|\n)\s*active\s*:|поле\s+`?active`?|`active`/i,
@@ -32,7 +35,7 @@ describe("manifest-active-targets docs — config-manifest", () => {
   });
 
   test("distinguishes active from target/targets and object-map", () => {
-    const md = readFileSync(configManifestGuidePath, "utf8");
+    const md = readText(configManifestGuidePath);
 
     expect(
       md,
@@ -46,7 +49,7 @@ describe("manifest-active-targets docs — config-manifest", () => {
   });
 
   test("notes empty active is rejected and dual-read apm.yml", () => {
-    const md = readFileSync(configManifestGuidePath, "utf8");
+    const md = readText(configManifestGuidePath);
 
     expect(
       md,

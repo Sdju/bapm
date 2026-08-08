@@ -1,6 +1,6 @@
 /**
- * Acceptance (RED): CLI compile sole vs multi `active`.
- * OpenSpec change: manifest-active-targets
+ * CLI compile sole vs multi `active`.
+ * Promoted from manifest-active-targets acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -13,9 +13,9 @@ import {
   runInProject,
   writeActiveProject,
   type TempProject,
-} from "./helpers.ts";
+} from "../install/active-helpers.ts";
 
-describe("acceptance · manifest-active-targets · CLI compile", () => {
+describe("CLI compile · manifest active selection", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

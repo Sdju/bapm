@@ -1,6 +1,6 @@
 /**
- * Acceptance (RED): CLI install uses manifest `active` (multi, override, fail-closed).
- * OpenSpec change: manifest-active-targets
+ * CLI install uses manifest `active` (multi, override, fail-closed).
+ * Promoted from manifest-active-targets acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { mkdirSync } from "node:fs";
@@ -16,9 +16,9 @@ import {
   writeActiveProject,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./active-helpers.ts";
 
-describe("acceptance · manifest-active-targets · CLI install", () => {
+describe("CLI install · manifest active selection", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

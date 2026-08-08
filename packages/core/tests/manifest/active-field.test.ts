@@ -1,27 +1,39 @@
 /**
- * Unit: manifest `active` parse/validate + serialize round-trip.
- * OpenSpec change: manifest-active-targets
+ * Unit: manifest `active` parse/validate + serialize + dual-read + declared ids.
+ * Promoted coverage from manifest-active-targets acceptance.
  */
-import { describe, expect, test } from "vite-plus/test";
+import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   ManifestError,
+  declaredTargetIds,
+  loadManifest,
   parseManifest,
   parseManifestDocument,
   serializeManifest,
   writeProducerManifest,
 } from "@bapm/core";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 function base(overrides: Record<string, unknown> = {}) {
   return { name: "active-unit", version: "0.0.1", ...overrides };
+}
+
+function writeText(path: string, contents: string): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, contents, "utf8");
 }
 
 describe("manifest active field", () => {
   test("accepts non-empty mf-005 list", () => {
     const doc = parseManifest(base({ active: ["cursor", "x-acme-editor"] }));
     expect(doc.active).toEqual(["cursor", "x-acme-editor"]);
+  });
+
+  test("accepts sole active entry", () => {
+    const doc = parseManifest(base({ active: ["cursor"] }));
+    expect(doc.active).toEqual(["cursor"]);
   });
 
   test("rejects empty active array", () => {
@@ -42,6 +54,12 @@ describe("manifest active field", () => {
 
   test("rejects object-map active", () => {
     expect(() => parseManifest(base({ active: { cursor: true } }))).toThrow(/active/i);
+  });
+
+  test("rejects empty string element", () => {
+    expect(() => parseManifest(base({ active: ["cursor", ""] }))).toThrow(
+      /active|empty|non-empty/i,
+    );
   });
 
   test("rejects invalid token with named diagnostic", () => {
@@ -71,5 +89,60 @@ describe("manifest active field", () => {
     } finally {
       rmSync(cwd, { recursive: true, force: true });
     }
+  });
+});
+
+describe("manifest active — dual-read apm.yml", () => {
+  let cwd: string | undefined;
+
+  afterEach(() => {
+    if (cwd) rmSync(cwd, { recursive: true, force: true });
+    cwd = undefined;
+  });
+
+  test("apm.yml with valid active loads under same rules as bapm.yml", () => {
+    cwd = mkdtempSync(join(tmpdir(), "bapm-active-apm-"));
+    writeText(
+      join(cwd, "apm.yml"),
+      ["name: dual-active", "version: 0.0.1", "active:", "  - cursor", "dependencies:", "  apm: []", ""].join(
+        "\n",
+      ),
+    );
+
+    const loaded = loadManifest({ cwd });
+    expect(loaded.sourceFilename).toMatch(/apm\.yml/);
+    expect(loaded.document.active).toEqual(["cursor"]);
+  });
+
+  test("apm.yml with empty active rejected", () => {
+    cwd = mkdtempSync(join(tmpdir(), "bapm-active-apm-empty-"));
+    writeText(
+      join(cwd, "apm.yml"),
+      ["name: dual-empty-active", "version: 0.0.1", "active: []", "dependencies:", "  apm: []", ""].join(
+        "\n",
+      ),
+    );
+
+    expect(() => loadManifest({ cwd: cwd! })).toThrow(/active/i);
+  });
+});
+
+describe("manifest active vs target/targets roles", () => {
+  test("declaredTargetIds come from targets only, not from active", () => {
+    const doc = parseManifest(
+      base({
+        targets: ["cursor"],
+        active: ["cursor", "x-acme-editor"],
+      }),
+    );
+
+    const ids = declaredTargetIds(doc);
+    expect(ids).toEqual(["cursor"]);
+    expect(ids).not.toContain("x-acme-editor");
+  });
+
+  test("active alone does not invent declared preference ids", () => {
+    const doc = parseManifest(base({ active: ["cursor"] }));
+    expect(declaredTargetIds(doc)).toEqual([]);
   });
 });

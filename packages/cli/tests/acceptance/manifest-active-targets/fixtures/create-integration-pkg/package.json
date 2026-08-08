@@ -1,8 +1,0 @@
-{
-  "name": "@acme/integration-editor",
-  "version": "0.0.0",
-  "type": "module",
-  "exports": {
-    ".": "./index.mjs"
-  }
-}

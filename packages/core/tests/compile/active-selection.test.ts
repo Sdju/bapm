@@ -1,23 +1,30 @@
 /**
- * Acceptance (RED): compile uses sole `active` or requires `--target` for multi.
- * OpenSpec change: manifest-active-targets
- * Spec: compile-agents-md / manifest-active-targets
+ * Compile uses sole `active` or requires `--target` for multi.
+ * Promoted from manifest-active-targets acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
-import {
-  createTempProject,
-  getCompileAgentsMd,
-  getCreateIntegrationRegistry,
-  getRegisterIntegration,
-  importIntegrationApi,
-  writeText,
-  type TempProject,
-} from "./helpers.ts";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { compileAgentsMd } from "../../src/index.ts";
+import { createIntegrationRegistry } from "@bapm/integration-api";
 
-describe("manifest-active-targets compile — sole vs multi active", () => {
-  let project: TempProject | undefined;
+type Project = { cwd: string; cleanup: () => void };
+
+function writeText(path: string, contents: string): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, contents, "utf8");
+}
+
+function createProject(yaml: string): Project {
+  const cwd = mkdtempSync(join(tmpdir(), "bapm-active-compile-"));
+  writeText(join(cwd, "bapm.yml"), yaml);
+  writeText(join(cwd, ".apm", "instructions", "guide.md"), "# Guide\n");
+  return { cwd, cleanup: () => rmSync(cwd, { recursive: true, force: true }) };
+}
+
+describe("compile active selection", () => {
+  let project: Project | undefined;
 
   afterEach(() => {
     project?.cleanup();
@@ -25,9 +32,7 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
   });
 
   test("sole active selects compile host without detect", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: compile-sole-active",
         "version: 0.0.1",
@@ -38,13 +43,10 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
         "",
       ].join("\n"),
     );
-    writeText(join(project.cwd, ".apm", "instructions", "guide.md"), "# Guide\n");
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     let compileCalls = 0;
-    register({
+    registry.register({
       id: "cursor",
       deployRoots: [".agents"],
       detect: () => false,
@@ -60,19 +62,17 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
       },
     });
 
-    await getCompileAgentsMd()({
+    await compileAgentsMd({
       cwd: project.cwd,
       integrationRegistry: registry,
-    });
+    } as never);
 
     expect(compileCalls).toBe(1);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(true);
   });
 
   test("multi active without forcedTarget fails even when sole detect would succeed", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: compile-multi-active",
         "version: 0.0.1",
@@ -84,14 +84,11 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
         "",
       ].join("\n"),
     );
-    writeText(join(project.cwd, ".apm", "instructions", "guide.md"), "# Guide\n");
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
 
     // cursor alone would detect — without honouring multi `active`, compile would succeed.
-    register({
+    registry.register({
       id: "cursor",
       deployRoots: [".agents"],
       detect: () => true,
@@ -100,7 +97,7 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
         throw new Error("compile must not run when multi active requires --target");
       },
     });
-    register({
+    registry.register({
       id: "x-acme-editor",
       deployRoots: [".acme"],
       detect: () => false,
@@ -111,18 +108,16 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
     });
 
     await expect(
-      getCompileAgentsMd()({
+      compileAgentsMd({
         cwd: project.cwd,
         integrationRegistry: registry,
-      }),
+      } as never),
     ).rejects.toThrow(/--target\s+<id>/i);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });
 
   test("forcedTarget overrides multi active for compile", async () => {
-    project = createTempProject();
-    writeText(
-      join(project.cwd, "bapm.yml"),
+    project = createProject(
       [
         "name: compile-force-active",
         "version: 0.0.1",
@@ -134,15 +129,12 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
         "",
       ].join("\n"),
     );
-    writeText(join(project.cwd, ".apm", "instructions", "guide.md"), "# Guide\n");
 
-    const api = await importIntegrationApi();
-    const registry = getCreateIntegrationRegistry(api)();
-    const register = getRegisterIntegration(api, registry);
+    const registry = createIntegrationRegistry();
     const compiled: string[] = [];
 
     for (const id of ["cursor", "x-acme-editor"]) {
-      register({
+      registry.register({
         id,
         deployRoots: [`.${id}`],
         detect: () => false,
@@ -159,11 +151,11 @@ describe("manifest-active-targets compile — sole vs multi active", () => {
       });
     }
 
-    await getCompileAgentsMd()({
+    await compileAgentsMd({
       cwd: project.cwd,
       integrationRegistry: registry,
       forcedTarget: "cursor",
-    });
+    } as never);
 
     expect(compiled).toEqual(["cursor"]);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(true);
