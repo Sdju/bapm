@@ -22,6 +22,6 @@
 
 | Сценарий                                               | Когда                                           |
 | ------------------------------------------------------ | ----------------------------------------------- |
-| [Marketplace pack](/guide/situations/marketplace-pack) | Упаковка для Claude / Codex (не Cursor runtime) |
+| [Marketplace pack](/guide/situations/marketplace-pack) | Marketplace JSON для Claude / Codex (runtime — отдельно) |
 
 Карта команд: [команды](/guide/commands). Флаги: [Справка](/reference/).

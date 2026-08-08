@@ -8,7 +8,7 @@
 | **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
 | **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
 | **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
-| **Codex**      | Нет (marketplace)     | Пакет `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack)                                                                 |
+| **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)  |
 
 ## Cursor (opt-in пакет)
 
@@ -139,16 +139,37 @@ Marketplace JSON по-прежнему:
 bapm pack --marketplace claude
 ```
 
-## Codex (marketplace)
+## Codex (opt-in runtime + marketplace)
 
-Codex остаётся marketplace-output (не runtime install target в этом релизе):
+Отдельный пакет `@bapm/integration-codex` даёт **runtime** install/compile и marketplace pack:
 
 ```bash
 npm i -D @bapm/integration-codex
+```
+
+```yaml
+targets:
+  codex: "@bapm/integration-codex"
+active:
+  - codex
+```
+
+```bash
+bapm install --target codex
+bapm compile --target codex
+```
+
+Skills → `.agents/skills/<name>/SKILL.md`, agents → `.codex/agents/<name>.toml`, hooks → `.codex/hooks.json` (+ `.codex/bapm-hooks.json`), MCP → `.codex/config.toml` (`mcp_servers`), compile → project-root `AGENTS.md` (**включая** instructions). Auto-detect: только `.codex/` (lone `AGENTS.md` не считается Codex).
+
+Cursor и Codex делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
+
+Marketplace JSON по-прежнему:
+
+```bash
 bapm pack --marketplace codex
 ```
 
-Сценарий: [Marketplace pack](/guide/situations/marketplace-pack).
+Сценарий pack: [Marketplace pack](/guide/situations/marketplace-pack).
 
 ## Типичные ошибки
 

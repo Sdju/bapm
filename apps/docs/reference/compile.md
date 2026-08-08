@@ -8,7 +8,7 @@
 bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
 ```
 
-Выбранный target задаёт default output path и rendering. Сегодня runtime-хост для материализации — **cursor** (типичный вывод — `AGENTS.md`). Неизвестные флаги отвергаются.
+Выбранный target задаёт default output path и rendering. Cursor и Codex делят family `AGENTS.md` (last-writer-wins на вызов); Claude — `CLAUDE.md`. Неизвестные флаги отвергаются.
 
 ## Параметры
 

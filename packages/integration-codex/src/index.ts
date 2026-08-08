@@ -1,3 +1,12 @@
+/**
+ * @bapm/integration-codex — Codex CLI runtime + marketplace pack mapper.
+ */
+
+export {
+  createCodexIntegration,
+  createCodexIntegration as createIntegration,
+} from "./createCodexIntegration.ts";
+
 import type { MarketplaceOutputIntegration } from "@bapm/integration-api";
 
 type PackageEntry = Record<string, unknown>;

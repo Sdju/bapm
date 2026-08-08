@@ -11,13 +11,13 @@ packages/integration-api       @bapm/integration-api          контракты
 packages/integration-cursor    @bapm/integration-cursor       Cursor runtime (opt-in package)
 packages/integration-opencode  @bapm/integration-opencode     OpenCode runtime (opt-in package)
 packages/integration-claude    @bapm/integration-claude       Claude runtime + marketplace output
-packages/integration-codex     @bapm/integration-codex        Codex marketplace output
+packages/integration-codex     @bapm/integration-codex        Codex runtime + marketplace output
 apps/docs                      @bapm/docs                    VitePress
 ```
 
-Поведение хоста дают **integration-пакеты** (`@bapm/integration-*` / `@bapm/integration-api`). Cursor (`@bapm/integration-cursor`), OpenCode (`@bapm/integration-opencode`) и Claude (`@bapm/integration-claude`) — **opt-in** runtime: ставятся отдельно и объявляются в object-map `targets:` (Claude: skills под `.claude/skills/`, rules/agents/commands/hooks под `.claude/`, MCP в `.mcp.json`, compile → `CLAUDE.md`); CLI composition root **не** регистрирует hosts eagerly. Object-map `target` / `targets` **динамически загружает** npm-пакеты или локальные пути и регистрирует их до selection на `install` / `compile`. Claude также предоставляет marketplace-output при `bapm pack`; Codex — marketplace-output only (on-demand при pack). Встроенная multi-target runtime matrix в одном прогоне — отдельный трек; кастомные integrations через map — да.
+Поведение хоста дают **integration-пакеты** (`@bapm/integration-*` / `@bapm/integration-api`). Cursor, OpenCode, Claude и Codex — **opt-in** runtime: ставятся отдельно и объявляются в object-map `targets:` (Claude: skills под `.claude/skills/`, rules/agents/commands/hooks под `.claude/`, MCP в `.mcp.json`, compile → `CLAUDE.md`; Codex: skills под `.agents/skills/`, agents/hooks/MCP под `.codex/`, compile → `AGENTS.md` включая instructions); CLI composition root **не** регистрирует hosts eagerly. Object-map `target` / `targets` **динамически загружает** npm-пакеты или локальные пути и регистрирует их до selection на `install` / `compile`. Claude и Codex также предоставляют marketplace-output при `bapm pack` (on-demand). Cursor и Codex делят `AGENTS.md` (last-writer-wins). Встроенная multi-target runtime matrix в одном прогоне — отдельный трек; кастомные integrations через map — да.
 
-Пользовательский how-to (примеры YAML, контракт `createIntegration`): [Поддерживаемые hosts](/guide/supported-hosts). Контракт пакета: `@bapm/integration-api` README; reference: `@bapm/integration-cursor` / `@bapm/integration-opencode` / `@bapm/integration-claude`.
+Пользовательский how-to (примеры YAML, контракт `createIntegration`): [Поддерживаемые hosts](/guide/supported-hosts). Контракт пакета: `@bapm/integration-api` README; reference: `@bapm/integration-cursor` / `@bapm/integration-opencode` / `@bapm/integration-claude` / `@bapm/integration-codex`.
 
 Граница OpenAPM claim vs APM product CLI: [Совместимость](/guide/conformance).
 

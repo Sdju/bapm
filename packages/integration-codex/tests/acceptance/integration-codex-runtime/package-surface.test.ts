@@ -6,10 +6,11 @@ import { describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { codexMarketplaceIntegration, mapCodexMarketplace } from "../../../src/index.ts";
-// @ts-expect-error RED: createIntegration alias lands in apply
-import { createIntegration } from "../../../src/index.ts";
-// @ts-expect-error RED: createCodexIntegration lands in apply
+import {
+  codexMarketplaceIntegration,
+  createIntegration,
+  mapCodexMarketplace,
+} from "../../../src/index.ts";
 import { createCodexIntegration } from "../../../src/createCodexIntegration.ts";
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");

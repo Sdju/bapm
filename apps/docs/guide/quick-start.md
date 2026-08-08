@@ -91,7 +91,7 @@ Lock без деплоя: `bapm lock` — [lockfile](/guide/lockfile).
 | `No manifest found`                  | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                           |
 | `frozen` / lock error при `--frozen` | Сначала обычный `install` или `lock`                                      |
 | `bapm: command not found`            | `npm i -g @bapm/cli` или `npx` / `pnpm exec` при project-local            |
-| Ожидали Claude/Codex runtime         | Это marketplace-pack, не install target — [hosts](/guide/supported-hosts) |
+| Ожидали Claude/Codex runtime         | Opt-in пакет + `targets:` / `--target` — [hosts](/guide/supported-hosts)  |
 | Свой агент не находится              | Object-map `targets:` + `--target <id>` — [hosts](/guide/supported-hosts) |
 
 ## Реже на старте

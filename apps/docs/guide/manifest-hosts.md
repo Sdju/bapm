@@ -2,7 +2,7 @@
 
 Как bapm выбирает, **куда** материализовать пакеты. Обзор манифеста: [bapm.yml](/guide/config-manifest). Пользовательский how-to (Cursor, npm, локальный модуль): [Поддерживаемые hosts](/guide/supported-hosts).
 
-Из коробки CLI **не** тащит runtime hosts. Cursor и другие агенты — через integration-пакет + object-map `targets:` / `target:`. Claude/Codex — marketplace-pack (`bapm pack`), не host install.
+Из коробки CLI **не** тащит runtime hosts. Cursor, Claude, Codex и другие агенты — через integration-пакет + object-map `targets:` / `target:`. Claude/Codex также дают marketplace-pack (`bapm pack`) из того же пакета.
 
 ## Обычно достаточно
 

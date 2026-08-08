@@ -4,7 +4,6 @@
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-// @ts-expect-error RED: createCodexIntegration lands in apply
 import { createCodexIntegration } from "../../../src/createCodexIntegration.ts";
 import { createTempProject, type TempProject } from "./helpers.ts";
 

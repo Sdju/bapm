@@ -1,7 +1,7 @@
 {
   "name": "@bapm/integration-codex",
   "version": "0.0.0",
-  "description": "Codex marketplace-output integration for bapm",
+  "description": "Codex CLI runtime + marketplace-output integration for bapm",
   "license": "MIT",
   "files": [
     "dist"
@@ -21,7 +21,8 @@
     "check": "vp check"
   },
   "dependencies": {
-    "@bapm/integration-api": "workspace:*"
+    "@bapm/integration-api": "workspace:*",
+    "smol-toml": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
