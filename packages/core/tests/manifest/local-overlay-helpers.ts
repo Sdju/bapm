@@ -1,5 +1,6 @@
 /**
- * Acceptance helpers for manifest-local-overlay (RED suite).
+ * Helpers for bapm.local.yml personal overlay tests
+ * (promoted from manifest-local-overlay acceptance).
  */
 import * as core from "@bapm/core";
 import {
@@ -19,12 +20,8 @@ import { spawnSync } from "node:child_process";
 import { unzipSync } from "fflate";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
-export const coreRoot = resolve(suiteDir, "../../..");
+export const coreRoot = resolve(suiteDir, "../..");
 export const repoRoot = resolve(coreRoot, "../..");
-
-export const configManifestGuidePath = join(repoRoot, "apps/docs/guide/config-manifest.md");
-export const quickStartGuidePath = join(repoRoot, "apps/docs/guide/quick-start.md");
-export const conformanceGuidePath = join(repoRoot, "apps/docs/guide/conformance.md");
 
 export type TempProject = { cwd: string; cleanup: () => void };
 

@@ -1,5 +1,6 @@
 /**
- * Install precedence: local active over base; CLI forcedTarget over local.
+ * Install precedence: local active over base; CLI forcedTarget over local
+ * (promoted from manifest-local-overlay acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { createIntegrationRegistry } from "@bapm/integration-api";
@@ -10,7 +11,7 @@ import {
   writeBaseManifest,
   writeLocalOverlay,
   type TempProject,
-} from "./helpers.ts";
+} from "../manifest/local-overlay-helpers.ts";
 
 describe("manifest-local-overlay — install precedence", () => {
   let project: TempProject | undefined;

@@ -1,5 +1,6 @@
 /**
- * Docs: personal overlay in config-manifest, quick-start, conformance boundary.
+ * Docs: personal overlay in config-manifest, quick-start, conformance boundary
+ * (promoted from manifest-local-overlay acceptance).
  */
 import { describe, expect, test } from "vite-plus/test";
 import {

@@ -1,5 +1,6 @@
 /**
- * Optional bapm.local.yml discovery + apm.local.yml refuse (manifest-local-overlay).
+ * Optional bapm.local.yml discovery + apm.local.yml refuse
+ * (promoted from manifest-local-overlay acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { join } from "node:path";
@@ -14,7 +15,7 @@ import {
   writeLocalOverlay,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./local-overlay-helpers.ts";
 
 describe("manifest-local-overlay — discovery", () => {
   let project: TempProject | undefined;

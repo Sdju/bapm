@@ -1,6 +1,7 @@
 /**
  * Pack / publish must omit bapm.local.yml (unpublished personal overlay).
  * Publish wire `apm.yml` MUST be dual-read base only (no overlay field leak).
+ * (promoted from manifest-local-overlay acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { join } from "node:path";
@@ -17,7 +18,7 @@ import {
   writeLocalOverlay,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../manifest/local-overlay-helpers.ts";
 
 function zipMemberText(bytes: Uint8Array, memberName: string): string {
   const entries = unzipSync(bytes);

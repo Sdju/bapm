@@ -1,5 +1,6 @@
 /**
- * Doctor warns when bapm.local.yml is git-tracked (non-critical).
+ * Doctor warns when bapm.local.yml is git-tracked (non-critical)
+ * (promoted from manifest-local-overlay acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -12,7 +13,7 @@ import {
   writeBaseManifest,
   writeLocalOverlay,
   type TempProject,
-} from "./helpers.ts";
+} from "../manifest/local-overlay-helpers.ts";
 
 describe("manifest-local-overlay — doctor tracked warning", () => {
   let project: TempProject | undefined;

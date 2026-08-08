@@ -13,6 +13,7 @@ export const readmePath = join(repoRoot, "README.md");
 export const docsRoot = join(repoRoot, "apps/docs");
 export const conformanceGuidePath = join(docsRoot, "guide/conformance.md");
 export const configManifestGuidePath = join(docsRoot, "guide/config-manifest.md");
+export const quickStartGuidePath = join(docsRoot, "guide/quick-start.md");
 export const docsLandingPath = join(docsRoot, "index.md");
 export const docsGuideIndexPath = join(docsRoot, "guide/index.md");
 export const docsArchitecturePath = join(docsRoot, "architecture/index.md");

@@ -1,5 +1,6 @@
 /**
- * Per-field merge rules: active replace, targets/env/registries deep-merge.
+ * Per-field merge rules: active replace, targets/env/registries deep-merge
+ * (promoted from manifest-local-overlay acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -10,7 +11,7 @@ import {
   writeBaseManifest,
   writeLocalOverlay,
   type TempProject,
-} from "./helpers.ts";
+} from "./local-overlay-helpers.ts";
 
 describe("manifest-local-overlay — merge rules", () => {
   let project: TempProject | undefined;

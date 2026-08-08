@@ -1,5 +1,6 @@
 /**
- * Allowlist validation for bapm.local.yml (manifest-local-overlay).
+ * Allowlist validation for bapm.local.yml
+ * (promoted from manifest-local-overlay acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -11,7 +12,7 @@ import {
   writeBaseManifest,
   writeLocalOverlay,
   type TempProject,
-} from "./helpers.ts";
+} from "./local-overlay-helpers.ts";
 
 describe("manifest-local-overlay — allowlist", () => {
   let project: TempProject | undefined;
