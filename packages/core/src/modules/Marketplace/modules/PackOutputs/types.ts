@@ -48,7 +48,7 @@ export type BuildMarketplaceOutputsOptions = {
    * - `"none"` — skip emit
    * - comma list or string[] — only named formats
    */
-  marketplace?: string | string[] | "all" | "none";
+  marketplace?: string | string[];
   /** CLI `--marketplace-path FORMAT=PATH` overrides. */
   marketplacePaths?: Record<string, string> | Array<string | { format: string; path: string }>;
   dryRun?: boolean;

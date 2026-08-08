@@ -1,6 +1,7 @@
 /**
  * Core outdated — full-SHA resolved_ref uses annotated-tag revision pin.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createRevisionPinPorts,
@@ -59,11 +60,11 @@ describe("core outdated — SHA revision-pin (annotated tag)", () => {
     expect(statusOf(row!)).toBe("outdated");
     expect(ports.tagListCalls.length).toBeGreaterThan(0);
 
-    const latest = String(row!.latest ?? "");
+    const latest = asText(row!.latest ?? "");
     expect(latest).toMatch(/v2\.0\.0/);
     expect(latest).toMatch(new RegExp(shortSha(tagCommit), "i"));
-    expect(String(row!.tip_ref ?? "")).toMatch(/v2\.0\.0/);
-    expect(String(row!.detail ?? "")).toMatch(/revision-pin/i);
+    expect(asText(row!.tip_ref ?? "")).toMatch(/v2\.0\.0/);
+    expect(asText(row!.detail ?? "")).toMatch(/revision-pin/i);
     // Must not silently treat pin SHA tip as up-to-date.
     expect(statusOf(row!)).not.toBe("up-to-date");
   });
@@ -118,12 +119,12 @@ dependencies:
     expect(statusOf(row!)).toBe("up-to-date");
     expect(ports.tagListCalls.length).toBeGreaterThan(0);
 
-    const latest = String(row!.latest ?? "");
+    const latest = asText(row!.latest ?? "");
     expect(latest).toMatch(/v1\.5\.0/);
     expect(latest).toMatch(new RegExp(shortSha(tagCommit), "i"));
     expect(latest).not.toMatch(/v2\.0\.0-rc/);
-    expect(String(row!.tip_ref ?? "")).toMatch(/v1\.5\.0/);
-    expect(String(row!.detail ?? "")).toMatch(/revision-pin/i);
+    expect(asText(row!.tip_ref ?? "")).toMatch(/v1\.5\.0/);
+    expect(asText(row!.detail ?? "")).toMatch(/revision-pin/i);
   });
 
   test("no annotated semver candidate yields unknown (not self-tip up-to-date)", async () => {

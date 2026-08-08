@@ -26,6 +26,8 @@ description: >-
 
 1. Источник поведения — CLI help/parsers и user-visible core, не догадки.
 2. Новая страница → sidebar (и nav при нужде).
-3. Не обещать multi-client runtime или retired `bapm-target-*`.
-4. После правок — docs build в `apps/docs`.
-5. Ответ: pages + sidebar + verification paths + gaps.
+3. Не обещать multi-client runtime или retired `bapm-target-*`; не позиционировать hosts как «из коробки» / built-in в CLI.
+4. Honesty: ссылаться на root `CONFORMANCE.md` где уместно; не выдавать APM CLI parity / OpenAPM claim за одно и то же; residual §10 — security-depth, не absolute marketplace OOS.
+5. После правок — docs build в `apps/docs`.
+6. Ответ: pages + sidebar + verification paths + gaps.
+   Editorial wording живёт здесь (и в review), не в OpenSpec docs-* capabilities и не в regex-тестах на VitePress.

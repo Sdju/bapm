@@ -1,6 +1,7 @@
 /**
  * lk-015: record tree_sha256 on git lock write (resolveAndLock).
  */
+import { asText } from "../asText.ts";
 import { loadLockfile, resolveAndLock } from "@bapm/core";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -44,10 +45,10 @@ describe("lk-015 record tree_sha256 on git lock write", () => {
 
     const deps = depsOf(lockOf(loadLockfile({ cwd: project.cwd })));
     expect(deps.length).toBeGreaterThanOrEqual(1);
-    const gitDep = deps.find((d) => String(d.repo_url ?? "").includes("example/one")) ?? deps[0]!;
+    const gitDep = deps.find((d) => asText(d.repo_url ?? "").includes("example/one")) ?? deps[0]!;
     const recorded = gitDep.tree_sha256;
     expect(typeof recorded).toBe("string");
-    expect(String(recorded)).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(asText(recorded)).toMatch(/^sha256:[0-9a-f]{64}$/);
 
     const treeRoot = findPackageTreeRoot(project.cwd, "one");
     let expected: string;
@@ -56,7 +57,7 @@ describe("lk-015 record tree_sha256 on git lock write", () => {
     } catch {
       expected = referenceCanonicalTreeSha256(treeRoot);
     }
-    expect(String(recorded)).toBe(expected);
+    expect(asText(recorded)).toBe(expected);
   });
 
   test("local-path lock entry does not require tree_sha256", async () => {
@@ -81,7 +82,7 @@ describe("lk-015 record tree_sha256 on git lock write", () => {
 
     const deps = depsOf(lockOf(loadLockfile({ cwd: project.cwd })));
     const local = deps.find(
-      (d) => d.source === "local" || String(d.repo_url ?? "").includes("leaf"),
+      (d) => d.source === "local" || asText(d.repo_url ?? "").includes("leaf"),
     );
     expect(local).toBeTruthy();
     expect(local!.tree_sha256 === undefined || local!.tree_sha256 === null).toBe(true);

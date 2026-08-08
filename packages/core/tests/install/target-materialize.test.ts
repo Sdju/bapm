@@ -3,6 +3,7 @@
  * core does not write harness paths (mock target does).
  * Registry unit contracts live in packages/integration-api/tests/.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -85,7 +86,7 @@ describe("install target materialize integration", () => {
         : null;
     expect(list).toBeTruthy();
     const shared = (list as Record<string, unknown>[]).filter((p) =>
-      String(p.name ?? p.id ?? "").includes("shared"),
+      asText(p.name ?? p.id ?? "").includes("shared"),
     );
     expect(shared.length).toBe(1);
   });

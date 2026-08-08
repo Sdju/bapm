@@ -1,6 +1,7 @@
 /**
  * Core outdated parallelChecks: 0 serial, bound real concurrency, lock order (MUST).
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createProbingPorts,
@@ -68,7 +69,7 @@ describe("core outdated parallelChecks", () => {
     expect(probe.maxInFlight).toBeGreaterThanOrEqual(2);
     expect(probe.overlapEvents).toBeGreaterThan(0);
 
-    const names = rowsOf(result).map((r) => String(r.name ?? ""));
+    const names = rowsOf(result).map((r) => asText(r.name ?? ""));
     expect(names).toEqual(["alpha", "beta", "gamma"]);
   });
 
@@ -93,7 +94,7 @@ describe("core outdated parallelChecks", () => {
     expect(probe.maxInFlight).toBeLessThanOrEqual(4);
     expect(probe.overlapEvents).toBeGreaterThan(0);
 
-    const names = rowsOf(result).map((r) => String(r.name ?? ""));
+    const names = rowsOf(result).map((r) => asText(r.name ?? ""));
     expect(names).toEqual(["d1", "d2", "d3", "d4", "d5"]);
   });
 });

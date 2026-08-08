@@ -73,9 +73,7 @@ export function readSrc(rel: string): string {
 }
 
 /** Builder / pack-outputs entry (G1–G4). */
-export function getBuildMarketplaceOutputs(): (
-  opts: Record<string, unknown>,
-) => unknown | Promise<unknown> {
+export function getBuildMarketplaceOutputs(): (opts: Record<string, unknown>) => unknown {
   const build = pickExport(
     [
       "buildMarketplaceOutputs",
@@ -84,7 +82,7 @@ export function getBuildMarketplaceOutputs(): (
       "writeMarketplacePackOutputs",
     ],
     "marketplace pack outputs builder",
-  ) as (opts: Record<string, unknown>) => unknown | Promise<unknown>;
+  ) as (opts: Record<string, unknown>) => unknown;
   return (opts) => build({ ...opts, marketplaceOutputs: createMarketplaceOutputsRegistry() });
 }
 
@@ -95,13 +93,11 @@ export function createMarketplaceOutputsRegistry() {
   return registry;
 }
 
-export function getResolveMarketplacePackages(): (
-  opts: Record<string, unknown>,
-) => unknown | Promise<unknown> {
+export function getResolveMarketplacePackages(): (opts: Record<string, unknown>) => unknown {
   return pickExport(
     ["resolveMarketplacePackages", "resolveAuthoringPackages", "resolveMarketplacePackPackages"],
     "resolve authoring packages to ResolvedPackage[]",
-  ) as (opts: Record<string, unknown>) => unknown | Promise<unknown>;
+  ) as (opts: Record<string, unknown>) => unknown;
 }
 
 export function validLocalAuthoringYml(): string {

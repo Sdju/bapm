@@ -2,6 +2,7 @@
  * p6f — CLI `deps why --json`, honest exits, name/repo_url match, human path.
  * Specs: deps-inspect, cli-runtime-surface.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createTempProject,
@@ -46,7 +47,7 @@ describe("p6f CLI deps why --json + exits", () => {
     expect(pkg.name).toBe("org/child");
     expect(pkg.repo_url).toBe("https://example.com/org/child.git");
     expect(typeof pkg.version).toBe("string");
-    expect(String(pkg.version).length).toBeGreaterThan(0);
+    expect(asText(pkg.version).length).toBeGreaterThan(0);
     expect(pkg.source).toBeTruthy();
     expect(typeof pkg.is_direct).toBe("boolean");
     expect(Array.isArray(doc.paths)).toBe(true);
@@ -75,7 +76,7 @@ describe("p6f CLI deps why --json + exits", () => {
     const paths = doc.paths as Array<{ chain: Array<Record<string, unknown>> }>;
     expect(Array.isArray(paths)).toBe(true);
     const hasParentThenChild = paths.some((p) => {
-      const ids = (p.chain ?? []).map((n) => String(n.name ?? n.repo_url ?? ""));
+      const ids = (p.chain ?? []).map((n) => asText(n.name ?? n.repo_url ?? ""));
       const pi = ids.findIndex((id) => id.includes("parent"));
       const ci = ids.findIndex((id) => id.includes("child"));
       return pi >= 0 && ci >= 0 && pi < ci;
@@ -142,7 +143,7 @@ describe("p6f CLI deps why --json + exits", () => {
     expect(pkg.repo_url).toBe("https://example.com/org/child.git");
     const paths = doc.paths as Array<{ chain: Array<Record<string, unknown>> }>;
     const mentionsParent = paths.some((p) =>
-      (p.chain ?? []).some((n) => String(n.name ?? n.repo_url ?? "").includes("parent")),
+      (p.chain ?? []).some((n) => asText(n.name ?? n.repo_url ?? "").includes("parent")),
     );
     expect(mentionsParent).toBe(true);
   });

@@ -5,6 +5,7 @@
  * Public API under test (design): `parseLockfile`, `loadLockfile`,
  * `serializeLockfile`, `isSemanticallyEquivalent`.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe } from "vite-plus/test";
 import { parse as parseYaml } from "yaml";
 import {
@@ -66,7 +67,7 @@ describe("M2 parse — container / version", () => {
       () => loadFixture("invalid-version-3.yml"),
       /upgrade|regenerate|unsupported|version/i,
     );
-    const text = err instanceof Error ? err.message : String(err);
+    const text = err instanceof Error ? err.message : asText(err);
     expect(text).toMatch(/upgrade|regenerate/i);
   });
 
@@ -136,8 +137,8 @@ dependencies:
     const yaml = serializeLockfile(doc);
     const reparsed = parseYaml(yaml) as { dependencies: Record<string, unknown>[] };
     const keys = reparsed.dependencies.map((d) => ({
-      repo: String(d.repo_url),
-      vp: d.virtual_path == null ? "" : String(d.virtual_path),
+      repo: asText(d.repo_url),
+      vp: d.virtual_path == null ? "" : asText(d.virtual_path),
     }));
     expect(keys).toEqual([
       { repo: "github.com/contoso/alpha", vp: "instructions/a" },
@@ -158,7 +159,7 @@ dependencies:
   test("bare 64-hex hash normalized to sha256 envelope on read; envelope on write", () => {
     const doc = lockOf(loadFixture("bare-hash.yml"));
     const dep = depsOf(doc)[0];
-    expect(String(dep.resolved_hash)).toBe(
+    expect(asText(dep.resolved_hash)).toBe(
       "sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
     );
     const yaml = serializeLockfile(doc);

@@ -8,12 +8,12 @@ Defines bapm's bounded, testable support for portable Agent Plugins v1 artifacts
 
 ### Requirement: Portable v1 artifact boundary is explicit
 
-bapm MUST document portable Agent Plugins support separately from `CONFORMANCE.md` and OpenAPM claims. The supported artifact components are a root `plugin.json`, immediate `skills/<name>/SKILL.md` directories (including contained auxiliary files), and root `mcp.json` servers using `stdio`, `streamable-http`, or `sse`. `plugin.json` MUST NOT be represented as a bapm/OpenAPM manifest or marketplace publication contract.
+bapm MUST treat portable Agent Plugins support as a boundary separate from `CONFORMANCE.md` and OpenAPM claims. The supported artifact components are a root `plugin.json`, immediate `skills/<name>/SKILL.md` directories (including contained auxiliary files), and root `mcp.json` servers using `stdio`, `streamable-http`, or `sse`. `plugin.json` MUST NOT be treated as a bapm/OpenAPM manifest or marketplace publication contract.
 
-#### Scenario: Reader distinguishes portability from bapm artifacts
+#### Scenario: Compatibility status stays outside OpenAPM claims
 
-- **WHEN** a reader opens the Agent Plugins support documentation
-- **THEN** it distinguishes `plugin.json` from `bapm.yml`/`apm.yml`, OpenAPM claims, and marketplace publication
+- **WHEN** maintainers inspect the Agent Plugins compatibility status artifact
+- **THEN** it covers portable `plugin.json` / skills / MCP mapping without encoding an OpenAPM or marketplace publication claim
 
 ### Requirement: Target MCP behavior is adapter-specific
 
@@ -31,7 +31,7 @@ Portable MCP entries MUST be treated as an input contract and adapted by targets
 
 ### Requirement: Non-goals are not implicit support claims
 
-Documentation MUST state that sandboxing, OAuth or secret injection, hooks, agents, commands, client extensions, vendor-specific extension behavior, and unsupported components are outside this boundary. Reserved or secret-like MCP environment entries and escaping skill paths MUST be rejected or withheld.
+Sandboxing, OAuth or secret injection, hooks, agents, commands, client extensions, vendor-specific extension behavior, and unsupported components MUST remain outside this boundary (no silent support claim via install/materialize). Reserved or secret-like MCP environment entries and escaping skill paths MUST be rejected or withheld.
 
 #### Scenario: Unsafe portable input is not deployed
 

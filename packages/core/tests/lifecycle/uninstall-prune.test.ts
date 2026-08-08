@@ -1,6 +1,7 @@
 /**
  * Core uninstall + prune — checklist C §9–13.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -197,7 +198,7 @@ describe("core uninstall + prune", () => {
       dryRun: true,
       "dry-run": true,
     });
-    const blob = typeof result === "object" ? JSON.stringify(result) : String(result ?? "");
+    const blob = typeof result === "object" ? JSON.stringify(result) : asText(result ?? "");
     expect(blob).toMatch(/orphan/i);
     expect(listFilesRecursive(mod)).toEqual(before);
     expect(existsSync(join(mod, "orphan-dry"))).toBe(true);

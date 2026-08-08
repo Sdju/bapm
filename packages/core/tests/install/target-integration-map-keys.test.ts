@@ -2,6 +2,7 @@
  * Install: object-map keys participate in intersection; values do not load integrations.
  * Promoted from manifest-target-integration-map acceptance.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -121,7 +122,7 @@ describe("install target integration map — keys only, no value load", () => {
           ? primitives
           : ((primitives as { primitives?: unknown[] })?.primitives ?? []);
         for (const p of list as Record<string, unknown>[]) {
-          materializedNames.push(String(p.name ?? p.id ?? ""));
+          materializedNames.push(asText(p.name ?? p.id ?? ""));
         }
       },
     });

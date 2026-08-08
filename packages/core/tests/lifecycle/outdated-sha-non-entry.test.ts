@@ -1,6 +1,7 @@
 /**
  * Core outdated — non–full-SHA pins stay on tip / constraint paths (regressions).
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createRevisionPinPorts,
@@ -76,8 +77,8 @@ dependencies:
     expect(row).toBeTruthy();
     // Tip-of-abbreviated-ref path: outdated vs tipAhead, not vs annotated v9.9.9.
     expect(statusOf(row!)).toBe("outdated");
-    expect(String(row!.latest ?? "")).toMatch(new RegExp(tipAhead, "i"));
-    expect(String(row!.latest ?? "")).not.toMatch(/v9\.9\.9/);
+    expect(asText(row!.latest ?? "")).toMatch(new RegExp(tipAhead, "i"));
+    expect(asText(row!.latest ?? "")).not.toMatch(/v9\.9\.9/);
     expect(ports.lsRemoteCalls.some((c) => c.includes(`#${abbr}`))).toBe(true);
     // Must not enter revision-pin solely because ref looks hex-like.
     expect(ports.tagListCalls).toEqual([]);
@@ -135,10 +136,10 @@ dependencies:
     const row = findRowByName(rowsOf(result), "semver-sha");
     expect(row).toBeTruthy();
     expect(statusOf(row!)).toBe("outdated");
-    expect(String(row!.latest ?? "")).toMatch(/v1\.2\.0/);
+    expect(asText(row!.latest ?? "")).toMatch(/v1\.2\.0/);
     expect(ports.tagListCalls.length).toBeGreaterThan(0);
     // Constraint path — not revision-pin tip_ref / detail.
-    expect(String(row!.detail ?? "")).not.toMatch(/revision-pin/i);
+    expect(asText(row!.detail ?? "")).not.toMatch(/revision-pin/i);
   });
 
   test("branch tip path unchanged beside SHA pins", async () => {
@@ -191,7 +192,7 @@ dependencies:
     const row = findRowByName(rowsOf(result), "branch-pin");
     expect(row).toBeTruthy();
     expect(statusOf(row!)).toBe("outdated");
-    expect(String(row!.latest ?? "")).toMatch(new RegExp(featureTip, "i"));
+    expect(asText(row!.latest ?? "")).toMatch(new RegExp(featureTip, "i"));
     expect(ports.tagListCalls).toEqual([]);
   });
 });

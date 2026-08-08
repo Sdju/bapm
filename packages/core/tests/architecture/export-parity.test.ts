@@ -7,7 +7,7 @@ import { expect, test } from "vite-plus/test";
 import * as core from "@bapm/core";
 
 test("key Manifest / Lockfile / package symbols remain named exports of @bapm/core", () => {
-  const required: Array<keyof typeof core | string> = [
+  const required: Array<keyof typeof core> = [
     "APM_MANIFEST_FILE",
     "BAPM_MANIFEST_FILE",
     "discoverManifestPath",

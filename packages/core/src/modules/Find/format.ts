@@ -1,4 +1,5 @@
 import type { LockedDependency } from "@/modules/Lockfile";
+import { asText } from "@/util/asText.ts";
 import { WORKSPACE_OWNER_KEY } from "./types.ts";
 
 /**
@@ -22,9 +23,9 @@ export const formatOwnerLabel = formatFindOwnerLabel;
 export const findOwnerLabel = formatFindOwnerLabel;
 
 function labelFromDep(dep: LockedDependency | Record<string, unknown>): string {
-  const repo = dep.repo_url != null ? String(dep.repo_url).trim() : "";
+  const repo = dep.repo_url != null ? asText(dep.repo_url).trim() : "";
   if (repo) return repo;
-  const name = dep.name != null ? String(dep.name).trim() : "";
+  const name = dep.name != null ? asText(dep.name).trim() : "";
   return name || WORKSPACE_OWNER_KEY;
 }
 
@@ -47,26 +48,26 @@ export function formatFindOrigin(
       : null);
   if (!d) return typeof owner === "string" ? owner : "";
 
-  const resolvedUrl = d.resolved_url != null ? String(d.resolved_url).trim() : "";
+  const resolvedUrl = d.resolved_url != null ? asText(d.resolved_url).trim() : "";
   if (resolvedUrl.startsWith("oci://")) return resolvedUrl;
 
-  const source = d.source != null ? String(d.source) : "";
-  const localPath = String(d.local_path ?? d.path ?? "").trim();
+  const source = d.source != null ? asText(d.source) : "";
+  const localPath = asText(d.local_path ?? d.path ?? "").trim();
   if (localPath && (source === "local" || d.local_path != null || d.path != null)) {
     // Prefer local when source is local, or local_path/path is set (design D6)
     if (source === "local" || d.local_path != null) return localPath;
   }
 
-  const repo = d.repo_url != null ? String(d.repo_url) : "";
-  const resolvedRef = d.resolved_ref != null ? String(d.resolved_ref) : "";
+  const repo = d.repo_url != null ? asText(d.repo_url) : "";
+  const resolvedRef = d.resolved_ref != null ? asText(d.resolved_ref) : "";
   if (resolvedRef) return repo ? `${repo}@${resolvedRef}` : resolvedRef;
 
-  const resolvedTag = d.resolved_tag != null ? String(d.resolved_tag) : "";
+  const resolvedTag = d.resolved_tag != null ? asText(d.resolved_tag) : "";
   if (resolvedTag) return repo ? `${repo}@${resolvedTag}` : resolvedTag;
 
   const commitRaw =
-    (d.resolved_commit != null && String(d.resolved_commit)) ||
-    (d.resolved_hash != null && String(d.resolved_hash)) ||
+    (d.resolved_commit != null && asText(d.resolved_commit)) ||
+    (d.resolved_hash != null && asText(d.resolved_hash)) ||
     "";
   if (commitRaw) {
     const commit = commitRaw.slice(0, 12);

@@ -2,6 +2,7 @@
  * p3 / req-cf-002: published CONFORMANCE.md + CONFORMANCE.json claim posture.
  * Consumer + Producer claimed; Governance claimed (P4 remote/extends); Registry N/A.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync } from "node:fs";
 import { getDefaultPolicyProviders, providersList } from "../policy/helpers.ts";
@@ -66,13 +67,13 @@ describe("p3 Mode B — published conformance statement (req-cf-002)", () => {
     const cf002 = reqs.find((r) => r.id === "req-cf-002");
     expect(cf001, "CONFORMANCE.json must include req-cf-001").toBeTruthy();
     expect(cf002, "CONFORMANCE.json must include req-cf-002").toBeTruthy();
-    expect(String(cf001!.status ?? "active").toLowerCase()).toMatch(/active|pass/);
-    expect(String(cf002!.status ?? "active").toLowerCase()).toMatch(/active|pass/);
+    expect(asText(cf001!.status ?? "active").toLowerCase()).toMatch(/active|pass/);
+    expect(asText(cf002!.status ?? "active").toLowerCase()).toMatch(/active|pass/);
 
     const rg = reqs.find((r) => r.id === "req-rg-001");
     if (rg) {
-      expect(String(rg.status).toLowerCase()).toMatch(/n\/a|na|skipped|not.?claimed/);
-      expect(String(rg.status).toLowerCase()).not.toMatch(/^(active|pass)$/);
+      expect(asText(rg.status).toLowerCase()).toMatch(/n\/a|na|skipped|not.?claimed/);
+      expect(asText(rg.status).toLowerCase()).not.toMatch(/^(active|pass)$/);
     } else {
       // Omission of rg-001 is acceptable only if Registry class is N/A in header.
       const classes = extractClasses(json);
@@ -86,8 +87,8 @@ describe("p3 Mode B — published conformance statement (req-cf-002)", () => {
     for (const id of ["req-pl-003", "req-pl-011", "req-pl-012"] as const) {
       const row = reqs.find((r) => r.id === id);
       expect(row, `${id} must be present`).toBeTruthy();
-      expect(String(row!.status).toLowerCase()).toBe("active");
-      const citation = String(row!.citation ?? row!.assertion ?? "");
+      expect(asText(row!.status).toLowerCase()).toBe("active");
+      const citation = asText(row!.citation ?? row!.assertion ?? "");
       expect(citation.length).toBeGreaterThan(0);
       expect(citation).not.toMatch(/P4 deferred|floor/i);
     }
@@ -121,11 +122,11 @@ function extractClasses(json: Record<string, unknown>): {
       const v = classes[key] ?? classes[key.toLowerCase()] ?? classes[capitalize(key)];
       if (v == null) continue;
       if (typeof v === "string" || typeof v === "boolean" || typeof v === "number") {
-        return String(v);
+        return asText(v);
       }
       if (typeof v === "object") {
         const o = v as Record<string, unknown>;
-        return String(o.status ?? o.claim ?? o.state ?? JSON.stringify(o));
+        return asText(o.status ?? o.claim ?? o.state ?? JSON.stringify(o));
       }
     }
     // Fallback: scan markdown-like fields
@@ -159,10 +160,10 @@ function extractRequirements(json: Record<string, unknown>): Array<{
   return list.map((raw) => {
     const r = raw as Record<string, unknown>;
     return {
-      id: String(r.id ?? r.req ?? r.req_id ?? ""),
-      status: r.status != null ? String(r.status) : undefined,
-      citation: r.citation != null ? String(r.citation) : undefined,
-      assertion: r.assertion != null ? String(r.assertion) : undefined,
+      id: asText(r.id ?? r.req ?? r.req_id ?? ""),
+      status: r.status != null ? asText(r.status) : undefined,
+      citation: r.citation != null ? asText(r.citation) : undefined,
+      assertion: r.assertion != null ? asText(r.assertion) : undefined,
     };
   });
 }

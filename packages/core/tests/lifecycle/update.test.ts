@@ -1,6 +1,7 @@
 /**
  * Core update — checklist C §1–5 (rs-011/rs-012, lk-010, frozen, dry-run).
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -238,7 +239,7 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
     });
 
     const plan =
-      typeof result === "object" && result ? JSON.stringify(result) : String(result ?? "");
+      typeof result === "object" && result ? JSON.stringify(result) : asText(result ?? "");
     expect(plan.length + (ports.tagListCalls.length > 0 ? 1 : 0)).toBeGreaterThan(0);
     expect(Buffer.compare(readLockBytes(project.cwd), beforeLock)).toBe(0);
     expect(listFilesRecursive(mod)).toEqual(beforeMods);

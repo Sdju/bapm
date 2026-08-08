@@ -56,22 +56,17 @@ export function runPolicyGate(options: PolicyGateExtendedOptions = {}): PolicyGa
   }
 
   // Probe discovery without throwing on absent
-  let discovered;
-  try {
-    discovered = discoverPolicyWithProviders({
-      cwd: options.cwd,
-      providers: options.providers ?? options.policyProviders,
-      listGitRemotes: options.listGitRemotes,
-      remotes: options.remotes,
-      fetchPolicyUrl: options.fetchPolicyUrl,
-      httpGet: options.httpGet,
-      defaultFetchFailure: options.defaultFetchFailure ?? "block",
-      implementationDefaultHost: options.implementationDefaultHost,
-    });
-  } catch (err) {
-    // pl-010 / pl-012 fail closed
-    throw err;
-  }
+  // pl-010 / pl-012 fail closed on discovery errors
+  const discovered = discoverPolicyWithProviders({
+    cwd: options.cwd,
+    providers: options.providers ?? options.policyProviders,
+    listGitRemotes: options.listGitRemotes,
+    remotes: options.remotes,
+    fetchPolicyUrl: options.fetchPolicyUrl,
+    httpGet: options.httpGet,
+    defaultFetchFailure: options.defaultFetchFailure ?? "block",
+    implementationDefaultHost: options.implementationDefaultHost,
+  });
 
   if ("absent" in discovered && discovered.absent) {
     return {

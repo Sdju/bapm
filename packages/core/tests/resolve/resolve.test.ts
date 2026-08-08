@@ -4,6 +4,7 @@
  * Public API (design): classifyDependencyRef, resolveDependencyGraph, MAX_RESOLVE_DEPTH,
  * APM_MODULES_DIR; injectable TagLister / GitRemote / Downloader ports.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { join, relative } from "node:path";
 import { writeFileSync, mkdirSync } from "node:fs";
@@ -31,7 +32,7 @@ describe("M3 classifyDependencyRef (rs-008 / rs-003)", () => {
     const a = classifyDependencyRef({ path: "./packages/foo" });
     const b = classifyDependencyRef("./packages/foo");
     expect(a.kind ?? a).toMatch(/local/i);
-    expect(String(b.kind ?? b)).toMatch(/local/i);
+    expect(asText(b.kind ?? b)).toMatch(/local/i);
   });
 
   test("classifies explicit POSIX, home, and backslash local forms", () => {
@@ -58,8 +59,8 @@ describe("M3 classifyDependencyRef (rs-008 / rs-003)", () => {
       git: "https://github.com/org/repo.git",
       ref: "abc123def456abc123def456abc123def456ab12",
     });
-    expect(String(a.kind ?? a)).toMatch(/git-literal/i);
-    expect(String(b.kind ?? b)).toMatch(/git-literal/i);
+    expect(asText(a.kind ?? a)).toMatch(/git-literal/i);
+    expect(asText(b.kind ?? b)).toMatch(/git-literal/i);
   });
 
   test("kind classify git-semver — ref: ^1.2.0", () => {
@@ -67,7 +68,7 @@ describe("M3 classifyDependencyRef (rs-008 / rs-003)", () => {
       git: "https://github.com/org/repo.git",
       ref: "^1.2.0",
     });
-    expect(String(r.kind ?? r)).toMatch(/git-semver/i);
+    expect(asText(r.kind ?? r)).toMatch(/git-semver/i);
   });
 
   test("kind classify registry — id: → registry; resolve fails deferred (not git fallback)", async () => {
@@ -75,7 +76,7 @@ describe("M3 classifyDependencyRef (rs-008 / rs-003)", () => {
       id: "com.example/pkg",
       registry: "https://registry.example.com",
     });
-    expect(String(r.kind ?? r)).toMatch(/registry/i);
+    expect(asText(r.kind ?? r)).toMatch(/registry/i);
 
     const project = createTempProject();
     try {
@@ -172,7 +173,7 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
       () => resolveDependencyGraph({ cwd: project.cwd }),
       /depth|50|max|chain/i,
     );
-    const text = err instanceof Error ? err.message : String(err);
+    const text = err instanceof Error ? err.message : asText(err);
     expect(text).toMatch(/d0|d1|→|->|\//);
   });
 
@@ -219,7 +220,7 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
     });
     const nodes = graphNodes(result);
     const identities = nodes
-      .map((n) => String(n.identity ?? n.repo_identity ?? n.repo_url ?? ""))
+      .map((n) => asText(n.identity ?? n.repo_identity ?? n.repo_url ?? ""))
       .filter(Boolean);
     // Host-case + trailing .git MUST share identity for example/repo.
     const lowerPath = identities.filter((s) => /example\/repo(?!\/)/i.test(s) && !/REPO/.test(s));
@@ -253,17 +254,17 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
     );
     const result = await resolveDependencyGraph({ cwd: project.cwd });
     const nodes = graphNodes(result);
-    const names = nodes.map((n) => String(n.name ?? n.id ?? n.path ?? "").toLowerCase());
+    const names = nodes.map((n) => asText(n.name ?? n.id ?? n.path ?? "").toLowerCase());
     expect(names.some((n) => n.includes("mid"))).toBe(true);
     expect(names.some((n) => n.includes("leaf"))).toBe(true);
     const leaf = nodes.find((n) =>
-      String(n.name ?? n.id ?? "")
+      asText(n.name ?? n.id ?? "")
         .toLowerCase()
         .includes("leaf"),
     );
     expect(leaf).toBeTruthy();
     expect(Number(leaf!.depth ?? leaf!.level)).toBeGreaterThanOrEqual(2);
-    expect(String(leaf!.resolved_by ?? "")).toMatch(/->|mid|root/i);
+    expect(asText(leaf!.resolved_by ?? "")).toMatch(/->|mid|root/i);
   });
 
   test("local paths normalize within the root and reject direct and transitive escapes", async () => {

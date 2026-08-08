@@ -2,6 +2,7 @@
  * Helpers for bapm.local.yml personal overlay tests
  * (promoted from manifest-local-overlay acceptance).
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import {
   existsSync,
@@ -86,15 +87,13 @@ export function getLoadEffectiveManifest(): (options: Record<string, unknown>) =
   ) => unknown;
 }
 
-export function getRunPack(): (options: Record<string, unknown>) => Promise<unknown> | unknown {
+export function getRunPack(): (options: Record<string, unknown>) => unknown {
   return pickExport(["runPack", "packProject", "packArchive"], "pack archive") as (
     options: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
+  ) => unknown;
 }
 
-export function getBuildPublishArchive(): (
-  options: Record<string, unknown>,
-) => unknown | Promise<unknown> {
+export function getBuildPublishArchive(): (options: Record<string, unknown>) => unknown {
   return pickExport(
     [
       "buildPublishArchive",
@@ -103,7 +102,7 @@ export function getBuildPublishArchive(): (
       "buildRegistryPublishZip",
     ],
     "publish archive",
-  ) as (options: Record<string, unknown>) => unknown | Promise<unknown>;
+  ) as (options: Record<string, unknown>) => unknown;
 }
 
 export function getRunDoctor(): (options: Record<string, unknown>) => Promise<unknown> {
@@ -159,11 +158,11 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {
@@ -204,7 +203,7 @@ export function resolveArchiveBytes(cwd: string, result: unknown): Uint8Array {
     if (r.bytes instanceof Uint8Array) return r.bytes;
     if (Buffer.isBuffer(r.bytes)) return new Uint8Array(r.bytes);
     if (typeof r.archivePath === "string" || typeof r.path === "string") {
-      return new Uint8Array(readFileSync(String(r.archivePath ?? r.path)));
+      return new Uint8Array(readFileSync(asText(r.archivePath ?? r.path)));
     }
   }
   const artifact = resolvePackArtifact(cwd, result);
@@ -241,11 +240,11 @@ export function textOf(result: unknown): string {
     }
     if (Array.isArray(r.checks)) {
       return (r.checks as Array<Record<string, unknown>>)
-        .map((c) => `${c.ok ? "PASS" : "FAIL"}\t${c.name}\t${c.message ?? ""}`)
+        .map((c) => `${c.ok ? "PASS" : "FAIL"}\t${asText(c.name)}\t${asText(c.message)}`)
         .join("\n");
     }
   }
-  return String(result ?? "");
+  return asText(result ?? "");
 }
 
 export function doctorHaystack(result: unknown): string {

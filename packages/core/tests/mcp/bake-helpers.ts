@@ -1,6 +1,7 @@
 /**
  * Helpers for public-API MCP env/headers bake tests.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 
 type AnyFn = (...args: never[]) => unknown;
@@ -46,7 +47,7 @@ function asBakeSuccess(result: unknown): Record<string, string> {
   if (result && typeof result === "object" && "ok" in result) {
     const r = result as { ok: unknown; value?: unknown; env?: unknown; map?: unknown };
     if (!r.ok) {
-      const message = String(
+      const message = asText(
         (r as { message?: unknown; error?: unknown }).message ??
           (r as { error?: unknown }).error ??
           "bake failed",
@@ -62,7 +63,7 @@ function asBakeSuccess(result: unknown): Record<string, string> {
   if (result && typeof result === "object" && !Array.isArray(result)) {
     return result as Record<string, string>;
   }
-  throw new TypeError(`bake returned unexpected value: ${String(result)}`);
+  throw new TypeError(`bake returned unexpected value: ${asText(result)}`);
 }
 
 /** Invoke bake; unwrap Result-style returns; rethrow failures. */
@@ -100,6 +101,6 @@ export function expectBakeFailure(
       const r = (error as { bakeResult: unknown }).bakeResult;
       return JSON.stringify(r);
     }
-    return error instanceof Error ? error.message : String(error);
+    return error instanceof Error ? error.message : asText(error);
   }
 }

@@ -1,6 +1,7 @@
 /**
  * Lifecycle / integrity test helpers for @bapm/core domain APIs.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import { loadLockfile } from "@bapm/core";
 import { createHash } from "node:crypto";
@@ -85,26 +86,24 @@ export function getRunPrune(): (options: Record<string, unknown>) => Promise<unk
   ) => Promise<unknown>;
 }
 
-export function getDepsList(): (options: Record<string, unknown>) => Promise<unknown> | unknown {
+export function getDepsList(): (options: Record<string, unknown>) => unknown {
   return pickExport(["listDeps", "depsList", "runDepsList"]) as (
     options: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
+  ) => unknown;
 }
 
-export function getDepsTree(): (options: Record<string, unknown>) => Promise<unknown> | unknown {
+export function getDepsTree(): (options: Record<string, unknown>) => unknown {
   return pickExport(["treeDeps", "depsTree", "runDepsTree"]) as (
     options: Record<string, unknown>,
-  ) => Promise<unknown> | unknown;
+  ) => unknown;
 }
 
 /** Optional SHOULD (rs-005); returns undefined when deferred. */
-export function getDepsWhyOptional():
-  | ((options: Record<string, unknown>) => Promise<unknown> | unknown)
-  | undefined {
+export function getDepsWhyOptional(): ((options: Record<string, unknown>) => unknown) | undefined {
   const c = core as Record<string, unknown>;
   for (const name of ["whyDeps", "depsWhy", "runDepsWhy"] as const) {
     if (typeof c[name] === "function") {
-      return c[name] as (options: Record<string, unknown>) => Promise<unknown> | unknown;
+      return c[name] as (options: Record<string, unknown>) => unknown;
     }
   }
   return undefined;
@@ -163,7 +162,7 @@ export function lineForCheck(text: string, name: string): string | undefined {
 }
 
 export function messageOf(result: unknown, name: string): string {
-  const fromChecks = checksOf(result).find((c) => String(c.name) === name);
+  const fromChecks = checksOf(result).find((c) => asText(c.name) === name);
   if (fromChecks && typeof fromChecks.message === "string") return fromChecks.message;
   const line = lineForCheck(textOf(result), name);
   return line?.split("\t")[2] ?? "";
@@ -177,7 +176,7 @@ export function sha256Hex(content: string | Buffer): string {
 }
 
 export function statusOf(row: Record<string, unknown>): string {
-  return String(row.status ?? row.state ?? row.result ?? "").toLowerCase();
+  return asText(row.status ?? row.state ?? row.result ?? "").toLowerCase();
 }
 
 export function exitCodeOf(result: unknown): number {
@@ -257,7 +256,7 @@ export function textOf(result: unknown): string {
       if (Array.isArray(r[key])) return (r[key] as unknown[]).map(String).join("\n");
     }
   }
-  return String(result ?? "");
+  return asText(result ?? "");
 }
 
 export function diagnosticsText(result: unknown): string {
@@ -273,7 +272,7 @@ export function diagnosticsText(result: unknown): string {
 }
 
 export function pinOf(dep: Record<string, unknown>): string {
-  return String(
+  return asText(
     dep.resolved_commit ??
       dep.resolvedCommit ??
       dep.commit ??
@@ -284,7 +283,7 @@ export function pinOf(dep: Record<string, unknown>): string {
 }
 
 export function nameOfDep(dep: Record<string, unknown>): string {
-  return String(dep.name ?? dep.id ?? dep.repo_url ?? dep.repoUrl ?? "");
+  return asText(dep.name ?? dep.id ?? dep.repo_url ?? dep.repoUrl ?? "");
 }
 
 export function readManifestText(cwd: string): string {
@@ -626,5 +625,5 @@ export function findRowByName(
   rows: Record<string, unknown>[],
   name: string,
 ): Record<string, unknown> | undefined {
-  return rows.find((r) => String(r.name ?? "") === name);
+  return rows.find((r) => asText(r.name ?? "") === name);
 }

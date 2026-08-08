@@ -96,7 +96,7 @@ export type ParseMarketplaceFilterResult =
  * Parse CLI `--marketplace` filter. Unknown format → hard error.
  */
 export function parseMarketplaceFilter(
-  marketplace: string | string[] | "all" | "none" | undefined,
+  marketplace: string | string[] | undefined,
   knownFormats: ReadonlySet<string> = new Set(),
 ): ParseMarketplaceFilterResult {
   if (marketplace === undefined || marketplace === "all") return { kind: "all" };
@@ -125,7 +125,7 @@ export function parseMarketplaceFilter(
 /** Intersect config-enabled formats with CLI filter. */
 export function selectOutputFormats(
   config: MarketplaceAuthoringConfig,
-  marketplace: string | string[] | "all" | "none" | undefined,
+  marketplace: string | string[] | undefined,
   knownFormats: ReadonlySet<string> = new Set(),
 ): MarketplaceOutputFormat[] {
   const filter = parseMarketplaceFilter(marketplace, knownFormats);

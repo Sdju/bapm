@@ -1,6 +1,7 @@
 /**
  * Mode B helpers — vendored OpenAPM §12.4 fixtures, checklist, conformance statement paths.
  */
+import { asText } from "../asText.ts";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -125,37 +126,37 @@ function normalizeRow(raw: unknown): ChecklistRow {
     throw new TypeError("checklist row must be an object");
   }
   const r = raw as Record<string, unknown>;
-  const id = String(r.id ?? r.req ?? r.req_id ?? "");
-  const status = String(r.status ?? "").toLowerCase();
+  const id = asText(r.id ?? r.req ?? r.req_id ?? "");
+  const status = asText(r.status ?? "").toLowerCase();
   return {
     ...r,
     id,
     status,
     class:
       r.class != null
-        ? String(r.class)
+        ? asText(r.class)
         : r.conformance_class != null
-          ? String(r.conformance_class)
+          ? asText(r.conformance_class)
           : undefined,
     fixture: (r.fixture ?? r.fixtures ?? r.fixture_path ?? r.fixture_paths) as
       | string
       | string[]
       | undefined,
     assertion:
-      r.assertion != null ? String(r.assertion) : r.test != null ? String(r.test) : undefined,
+      r.assertion != null ? asText(r.assertion) : r.test != null ? asText(r.test) : undefined,
     citation:
       r.citation != null
-        ? String(r.citation)
+        ? asText(r.citation)
         : r.test_citation != null
-          ? String(r.test_citation)
+          ? asText(r.test_citation)
           : undefined,
     rationale:
       r.rationale != null
-        ? String(r.rationale)
+        ? asText(r.rationale)
         : r.waiver_rationale != null
-          ? String(r.waiver_rationale)
+          ? asText(r.waiver_rationale)
           : undefined,
-    waiver: r.waiver != null ? String(r.waiver) : undefined,
+    waiver: r.waiver != null ? asText(r.waiver) : undefined,
   };
 }
 

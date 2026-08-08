@@ -2,6 +2,7 @@
  * target/targets wire during install (tg-008 / tg-004).
  * Mutual exclusion of target+targets is covered by manifest/validate.test.ts.
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -57,7 +58,7 @@ describe("target/targets wire (tg-008 / tg-004)", () => {
           ? primitives
           : ((primitives as { primitives?: unknown[] })?.primitives ?? []);
         for (const p of list as Record<string, unknown>[]) {
-          materializedNames.push(String(p.name ?? p.id ?? ""));
+          materializedNames.push(asText(p.name ?? p.id ?? ""));
         }
       },
     });
@@ -85,6 +86,6 @@ describe("target/targets wire (tg-008 / tg-004)", () => {
       target: "x-acme-editor",
       dependencies: { apm: [] },
     }) as Record<string, unknown>;
-    expect(String(doc.target)).toBe("x-acme-editor");
+    expect(asText(doc.target)).toBe("x-acme-editor");
   });
 });

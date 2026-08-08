@@ -10,7 +10,7 @@ export function atomicWriteMarketplaceJson(absolutePath: string, contents: strin
   const dir = dirname(absolutePath);
   try {
     mkdirSync(dir, { recursive: true });
-  } catch (cause) {
+  } catch {
     throw new MarketplacePackOutputsError(
       `Failed to create parent directory for marketplace output: ${dir}`,
       1,
@@ -21,10 +21,10 @@ export function atomicWriteMarketplaceJson(absolutePath: string, contents: strin
   try {
     writeFileSync(tmp, contents, "utf8");
     renameSync(tmp, absolutePath);
-  } catch (cause) {
+  } catch {
     try {
       writeFileSync(absolutePath, contents, "utf8");
-    } catch (fallbackCause) {
+    } catch {
       throw new MarketplacePackOutputsError(`Failed to write marketplace.json: ${absolutePath}`, 1);
     }
   }

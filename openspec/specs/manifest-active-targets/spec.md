@@ -85,12 +85,3 @@ When resolving host activation, the system MUST use the **effective** `active` l
 
 - **WHEN** `bapm.local.yml` provides an object-map `targets` binding `x-acme-editor` and `active: [x-acme-editor]`, and the package is resolvable
 - **THEN** the composition root MUST load/register that map package before activation using the effective map
-
-### Requirement: Docs describe active selection
-
-User documentation for the project manifest and install guide MUST document `active` as the explicit host activation list, the selection priority (`--target` → `bapm.local.yml` → base `active` → detect → fail), dual-read on `bapm.yml`/`apm.yml`, optional personal overlay `bapm.local.yml`, and the distinction from `target`/`targets`.
-
-#### Scenario: Config-manifest documents active
-
-- **WHEN** a reader opens the VitePress config-manifest guide after this change
-- **THEN** the page MUST describe `active`, selection priority including local overlay, and that object-map/`target`/`targets` do not by themselves activate hosts

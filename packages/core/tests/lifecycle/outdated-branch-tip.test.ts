@@ -1,6 +1,7 @@
 /**
  * Outdated — branch/literal pins use tip of resolved_ref (not unconditional HEAD).
  */
+import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import {
   createFakePorts,
@@ -52,7 +53,7 @@ describe("core outdated — branch / literal tip via resolved_ref", () => {
     expect(exitCodeOf(result)).toBe(0);
     const rows = rowsOf(result);
     const branch = rows.find(
-      (r) => String(r.name ?? "").includes("branch") || /branch/i.test(JSON.stringify(r)),
+      (r) => asText(r.name ?? "").includes("branch") || /branch/i.test(JSON.stringify(r)),
     );
     expect(branch).toBeTruthy();
     expect(statusOf(branch!)).toMatch(/outdated/);
@@ -120,7 +121,7 @@ describe("core outdated — branch / literal tip via resolved_ref", () => {
     expect(exitCodeOf(result)).toBe(0);
     const rows = rowsOf(result);
     const row = rows.find(
-      (r) => /release/i.test(String(r.name ?? "")) || /release/i.test(JSON.stringify(r)),
+      (r) => /release/i.test(asText(r.name ?? "")) || /release/i.test(JSON.stringify(r)),
     );
     expect(row).toBeTruthy();
     expect(statusOf(row!)).toMatch(/outdated/);

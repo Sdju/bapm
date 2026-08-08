@@ -2,6 +2,7 @@
  * p7c — core whyDeps short-form resolve + P6f regressions.
  * Spec: deps-inspect.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   asRecord,
@@ -80,7 +81,7 @@ describe("p7c core whyDeps short-form resolve", () => {
     expect(Array.isArray(r.matches)).toBe(true);
     const matches = r.matches as Array<Record<string, unknown>>;
     expect(matches.length).toBeGreaterThanOrEqual(2);
-    const urls = matches.map((m) => String(m.repo_url ?? "")).filter(Boolean);
+    const urls = matches.map((m) => asText(m.repo_url ?? "")).filter(Boolean);
     expect(urls.some((u) => u.includes("acme-org/shared-utils"))).toBe(true);
     expect(urls.some((u) => u.includes("other-org/shared-utils"))).toBe(true);
     expect(textOf(result)).toMatch(/ambiguous/i);

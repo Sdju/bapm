@@ -1,18 +1,13 @@
 /**
  * Limitations / scope_out honesty (promoted from mp-sc-claims): marketplace
  * floor acknowledged; residual gaps are security-depth — not marketplace OOS.
+ * Source of truth: checklist.yml (CONFORMANCE.* via conformance:check).
  */
 import { expect, test, describe } from "vite-plus/test";
-import { existsSync } from "node:fs";
 import {
-  ABSOLUTE_MARKETPLACE_OOS,
-  STALE_MARKETPLACE_CATCHALL,
-  conformanceJsonPath,
-  conformanceMdPath,
   limitationsBlob,
   limitationsNameResidualSecurity,
   loadChecklist,
-  readText,
   scopeOutBlob,
   scopeOutHasAbsoluteMarketplace,
 } from "./sc-claims-helpers.ts";
@@ -56,47 +51,5 @@ describe("Limitations / Scope-out honesty", () => {
       /approve|deny|hooks|bin|canvas/i.test(blob),
       `expected soft approve UX or ungated hooks residual in limitations/scope_out:\n${blob}`,
     ).toBe(true);
-  });
-
-  test("generated CONFORMANCE.md Limitations / Scope out mirror honesty", () => {
-    expect(existsSync(conformanceMdPath), conformanceMdPath).toBe(true);
-    const md = readText(conformanceMdPath);
-
-    expect(
-      ABSOLUTE_MARKETPLACE_OOS.test(md) ||
-        /Marketplace\s*\/\s*plugin surfaces are out of scope/i.test(md),
-      "CONFORMANCE.md still lists marketplace/plugin as absolute OOS",
-    ).toBe(false);
-
-    expect(
-      /^-\s*marketplace\/plugin\s*$/m.test(md),
-      "CONFORMANCE.md Scope out still lists marketplace/plugin",
-    ).toBe(false);
-
-    // Skipped sc waiver block must not retain P3 marketplace catch-all.
-    expect(
-      STALE_MARKETPLACE_CATCHALL.test(md),
-      "CONFORMANCE.md still carries stale marketplace catch-all on sc-* rows",
-    ).toBe(false);
-
-    expect(
-      limitationsNameResidualSecurity(md),
-      "CONFORMANCE.md Limitations must name residual security-depth gaps",
-    ).toBe(true);
-  });
-
-  test("generated CONFORMANCE.json does not encode marketplace absolute OOS for sc honesty", () => {
-    expect(existsSync(conformanceJsonPath), conformanceJsonPath).toBe(true);
-    const json = readText(conformanceJsonPath);
-
-    expect(
-      /Marketplace\s*\/\s*plugin surfaces are out of scope/i.test(json),
-      "CONFORMANCE.json still has absolute marketplace OOS limitation",
-    ).toBe(false);
-
-    expect(
-      STALE_MARKETPLACE_CATCHALL.test(json),
-      "CONFORMANCE.json still has stale marketplace catch-all rationales",
-    ).toBe(false);
   });
 });

@@ -19,7 +19,8 @@ External plugins often declare MCP env with bake placeholders (`{bake:NAME}`, `$
 
 - `manifest-yaml-validate`: Accept/validate top-level `env` mapping (string→string).
 - `mcp-env-bake`: Bake lookup MUST consult manifest `env` after process env when resolving placeholders.
-- `docs-openapm-boundary` (or user docs via apply tasks): Document `env:` as bapm extension for bake.
+
+User docs (`config-manifest.md`) are an apply-task deliverable via doc-expert — not a normative OpenSpec docs capability.
 
 ## Impact
 

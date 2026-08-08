@@ -2,6 +2,7 @@
  * Core `runPolicyStatus` outcomes, fields, redaction, read-only (P6d).
  * Specs: policy-status. Criteria: p6d-policy-status-criteria DoD.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   RICH_LOCAL,
@@ -48,9 +49,9 @@ describe("p6d core runPolicyStatus — outcomes", () => {
 
     const report = asReport(getRunPolicyStatus()({ cwd: project.cwd }));
     expect(report.outcome).toBe("found");
-    expect(String(report.source ?? "")).toContain(path);
-    expect(String(report.provider)).toMatch(/local/i);
-    expect(String(report.enforcement)).toBe("block");
+    expect(asText(report.source ?? "")).toContain(path);
+    expect(asText(report.provider)).toMatch(/local/i);
+    expect(asText(report.enforcement)).toBe("block");
   });
 
   test("found local apm-policy.yml also reports found", () => {
@@ -59,9 +60,9 @@ describe("p6d core runPolicyStatus — outcomes", () => {
 
     const report = asReport(getRunPolicyStatus()({ cwd: project.cwd }));
     expect(report.outcome).toBe("found");
-    expect(String(report.source ?? "")).toContain(path);
-    expect(String(report.provider)).toMatch(/local/i);
-    expect(String(report.enforcement)).toBe("warn");
+    expect(asText(report.source ?? "")).toContain(path);
+    expect(asText(report.provider)).toMatch(/local/i);
+    expect(asText(report.enforcement)).toBe("warn");
   });
 
   test("absent policy → outcome absent (no throw)", () => {
@@ -86,7 +87,7 @@ describe("p6d core runPolicyStatus — outcomes", () => {
 
     const report = asReport(getRunPolicyStatus()({ cwd: project.cwd, noPolicy: true }));
     expect(report.outcome).toBe("disabled");
-    expect(String(report.provider)).toMatch(/escap|none|disabled/i);
+    expect(asText(report.provider)).toMatch(/escap|none|disabled/i);
   });
 
   test("BAPM_POLICY_DISABLE=1 → disabled", () => {
@@ -133,9 +134,9 @@ describe("p6d core runPolicyStatus — outcomes", () => {
       }),
     );
     expect(report.outcome).toBe("found");
-    expect(String(report.source ?? "")).toContain(explicit);
-    expect(String(report.provider)).toMatch(/explicit|local/i);
-    expect(String(report.enforcement)).toBe("warn");
+    expect(asText(report.source ?? "")).toContain(explicit);
+    expect(asText(report.provider)).toMatch(/explicit|local/i);
+    expect(asText(report.enforcement)).toBe("warn");
   });
 
   test("schema/load failure soft-maps to outcome error (no uncaught throw)", () => {
@@ -225,7 +226,7 @@ describe("p6d core runPolicyStatus — stable fields", () => {
     expect(Array.isArray(report.extends_chain)).toBe(true);
     const chain = (report.extends_chain as unknown[]).map(String).join("\n");
     expect(chain).toMatch(/parent\.yml/);
-    expect(String(report.enforcement)).toBe("block");
+    expect(asText(report.enforcement)).toBe("block");
   });
 
   test("credential-bearing source/extends refs are redacted", () => {
@@ -242,7 +243,7 @@ describe("p6d core runPolicyStatus — stable fields", () => {
       getRunPolicyStatus()({
         cwd: project.cwd,
         fetchPolicyUrl: (url: string) => {
-          if (String(url).includes("policy.example.com")) {
+          if (asText(url).includes("policy.example.com")) {
             return {
               ok: true,
               text: `name: parent\nenforcement: warn\n`,

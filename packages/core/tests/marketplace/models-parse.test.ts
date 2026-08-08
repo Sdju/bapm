@@ -1,6 +1,7 @@
 /**
  * marketplace-models — Source kinds + parseMarketplaceJson.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   FIXTURE_BAD_REGISTRY,
@@ -35,7 +36,7 @@ describe("mp-consumer-registry models + parse", () => {
       source = create("acme-tools", { owner: "acme", repo: "tools" });
     }
     expect(sourceKind(source)).toBe("github");
-    const url = String(source.url ?? "");
+    const url = asText(source.url ?? "");
     expect(url).toMatch(/https:\/\/github\.com\/acme\/tools/i);
   });
 

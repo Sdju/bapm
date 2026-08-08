@@ -52,7 +52,7 @@ function formatsEnabledInAuthoring(config: {
   return out;
 }
 
-function parseFilterFormats(marketplace: string | string[] | "all" | "none" | undefined): {
+function parseFilterFormats(marketplace: string | string[] | undefined): {
   kind: "all" | "none" | "list";
   formats: string[];
 } {
@@ -163,7 +163,7 @@ async function loadMarketplacePackage(
  */
 export async function loadCliMarketplaceOutputsForPack(options: {
   cwd?: string;
-  marketplace?: string | string[] | "all" | "none";
+  marketplace?: string | string[];
 }): Promise<MarketplaceOutputRegistry> {
   const cwd = options.cwd ?? process.cwd();
   const registry = createCliMarketplaceOutputRegistry();

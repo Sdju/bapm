@@ -117,11 +117,7 @@ export function writeLeafProject(cwd: string, name: string): void {
   );
 }
 
-export function writePolicy(
-  cwd: string,
-  filename: "apm-policy.yml" | "bapm-policy.yml" | string,
-  contents: string,
-): string {
+export function writePolicy(cwd: string, filename: string, contents: string): string {
   const path = join(cwd, filename);
   writeFileSync(path, contents, "utf8");
   return path;

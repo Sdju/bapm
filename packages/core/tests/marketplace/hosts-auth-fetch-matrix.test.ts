@@ -2,6 +2,7 @@
  * G2–G4 / G6 / G10 — Fetch unlock: GHE api_base, gitlab REST, ado Items REST,
  * cross-class header refuse, generic git refuse, github.com/url/local regression.
  */
+import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   FIXTURE_MP,
@@ -27,11 +28,11 @@ function headerMap(init?: RequestInit): Record<string, string> {
     return out;
   }
   if (Array.isArray(h)) {
-    for (const [k, v] of h) out[String(k).toLowerCase()] = String(v);
+    for (const [k, v] of h) out[asText(k).toLowerCase()] = asText(v);
     return out;
   }
   for (const [k, v] of Object.entries(h as Record<string, string>)) {
-    out[k.toLowerCase()] = String(v);
+    out[k.toLowerCase()] = asText(v);
   }
   return out;
 }
@@ -68,7 +69,7 @@ describe("mp-hosts-auth fetch matrix", () => {
     });
 
     const transport = async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
+      const url = asText(input);
       captured.push({ url, headers: headerMap(init) });
       return new Response(FIXTURE_MP, {
         status: 200,
@@ -96,7 +97,7 @@ describe("mp-hosts-auth fetch matrix", () => {
       expect(source.kind).toBe("github");
 
       const transport = async (input: string | URL | Request, init?: RequestInit) => {
-        captured.push({ url: String(input), headers: headerMap(init) });
+        captured.push({ url: asText(input), headers: headerMap(init) });
         return new Response(FIXTURE_MP, { status: 200 });
       };
 
@@ -126,7 +127,7 @@ describe("mp-hosts-auth fetch matrix", () => {
         expect(source.kind).toBe("gitlab");
 
         const transport = async (input: string | URL | Request, init?: RequestInit) => {
-          captured.push({ url: String(input), headers: headerMap(init) });
+          captured.push({ url: asText(input), headers: headerMap(init) });
           return new Response(FIXTURE_MP, { status: 200 });
         };
 
@@ -171,7 +172,7 @@ describe("mp-hosts-auth fetch matrix", () => {
         });
 
         const transport = async (input: string | URL | Request, init?: RequestInit) => {
-          captured.push({ url: String(input), headers: headerMap(init) });
+          captured.push({ url: asText(input), headers: headerMap(init) });
           return new Response(FIXTURE_MP, { status: 200 });
         };
 
@@ -199,7 +200,7 @@ describe("mp-hosts-auth fetch matrix", () => {
       expect(source.kind).toBe("ado");
 
       const transport = async (input: string | URL | Request, init?: RequestInit) => {
-        captured.push({ url: String(input), headers: headerMap(init) });
+        captured.push({ url: asText(input), headers: headerMap(init) });
         return new Response(FIXTURE_MP, { status: 200 });
       };
 
@@ -246,7 +247,7 @@ describe("mp-hosts-auth fetch matrix", () => {
     });
 
     const transport = async (input: string | URL | Request) => {
-      captured.push({ url: String(input), headers: {} });
+      captured.push({ url: asText(input), headers: {} });
       return new Response(FIXTURE_MP, { status: 200 });
     };
 
@@ -283,7 +284,7 @@ describe("mp-hosts-auth fetch matrix", () => {
       forceRefresh: true,
       fetch: async (input: string | URL | Request) => {
         hits += 1;
-        expect(String(input)).toBe("https://example.com/path/marketplace.json");
+        expect(asText(input)).toBe("https://example.com/path/marketplace.json");
         return new Response(FIXTURE_MP, { status: 200 });
       },
     })) as { plugins?: { name: string }[] };

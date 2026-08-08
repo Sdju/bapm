@@ -209,7 +209,7 @@ async function mapPool<T, R>(
   worker: (item: T, index: number) => Promise<R>,
 ): Promise<R[]> {
   if (items.length === 0) return [];
-  const results: R[] = new Array(items.length);
+  const results: R[] = Array.from({ length: items.length });
   const n = Math.max(1, concurrency);
   let next = 0;
   const runners = Array.from({ length: Math.min(n, items.length) }, async () => {

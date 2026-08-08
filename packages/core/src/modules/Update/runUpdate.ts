@@ -8,6 +8,7 @@ import {
   type ResolvePorts,
 } from "@/modules/Resolver";
 import { runInstall } from "@/modules/Install";
+import { asText } from "@/util/asText.ts";
 import { UpdateError } from "./errors.ts";
 import type { RunUpdateOptions, UpdatePlanEntry, UpdateResult } from "./types.ts";
 
@@ -127,15 +128,15 @@ async function planWithoutMutation(
   const plan: UpdatePlanEntry[] = [];
 
   for (const d of deps ?? []) {
-    const name = String(d.name ?? d.repo_url ?? "");
-    const repo = String(d.repo_url ?? "");
+    const name = asText(d.name ?? d.repo_url ?? "");
+    const repo = asText(d.repo_url ?? "");
     if (!name) continue;
     if (scopeSet.size > 0 && ![...scopeSet].some((s) => name.includes(s) || repo.includes(s))) {
       plan.push({
         name,
         action: "keep",
-        from: String(d.resolved_commit ?? ""),
-        to: String(d.resolved_commit ?? ""),
+        from: asText(d.resolved_commit ?? ""),
+        to: asText(d.resolved_commit ?? ""),
       });
       continue;
     }
@@ -143,13 +144,13 @@ async function planWithoutMutation(
       plan.push({ name, action: "keep", from: "local", to: "local" });
       continue;
     }
-    const from = String(d.resolved_commit ?? d.resolved_tag ?? "");
+    const from = asText(d.resolved_commit ?? d.resolved_tag ?? "");
     const gitUrl = repo.includes("://") ? repo : `https://${repo}`;
     const constraint =
       typeof d.constraint === "string"
         ? d.constraint
         : typeof d.resolved_tag === "string"
-          ? `^${String(d.resolved_tag).replace(/^v/, "").split(".")[0]}.0.0`
+          ? `^${asText(d.resolved_tag).replace(/^v/, "").split(".")[0]}.0.0`
           : undefined;
     try {
       if (constraint) {
@@ -183,11 +184,11 @@ async function planWithoutMutation(
 function pinMap(deps: Array<Record<string, unknown>> | undefined): Map<string, string> {
   const map = new Map<string, string>();
   for (const d of deps ?? []) {
-    const name = String(d.name ?? d.repo_url ?? "");
+    const name = asText(d.name ?? d.repo_url ?? "");
     if (!name) continue;
-    const pin = String(d.resolved_commit ?? d.resolved_tag ?? d.version ?? "");
+    const pin = asText(d.resolved_commit ?? d.resolved_tag ?? d.version ?? "");
     map.set(name, pin);
-    const repo = String(d.repo_url ?? "");
+    const repo = asText(d.repo_url ?? "");
     if (repo) map.set(repo, pin);
   }
   return map;
@@ -197,7 +198,7 @@ function nodesFromLock(
   deps: Array<Record<string, unknown>> | undefined,
 ): Array<{ name: string; resolved_commit?: string; repo_url?: string }> {
   return (deps ?? []).map((d) => ({
-    name: String(d.name ?? d.repo_url ?? ""),
+    name: asText(d.name ?? d.repo_url ?? ""),
     resolved_commit: typeof d.resolved_commit === "string" ? d.resolved_commit : undefined,
     repo_url: typeof d.repo_url === "string" ? d.repo_url : undefined,
   }));

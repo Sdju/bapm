@@ -2,6 +2,7 @@
  * Helpers for Marketplace consumer-registry suite (core).
  * Soft-resolve public @bapm/core Marketplace APIs.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import {
   existsSync,
@@ -147,7 +148,7 @@ export function readJson(path: string): unknown {
 
 export function getParseMarketplaceJson() {
   return pickExport(["parseMarketplaceJson", "parse_marketplace_json"], "marketplace parse") as (
-    input: string | unknown,
+    input: unknown,
   ) => unknown;
 }
 
@@ -219,7 +220,7 @@ export function getFetchApi() {
     fetch: pickExport(["fetchMarketplace", "fetch_marketplace"], "fetchMarketplace") as (
       source: unknown,
       opts?: Record<string, unknown>,
-    ) => Promise<unknown> | unknown,
+    ) => unknown,
     clearCache: pickExport(
       ["clearMarketplaceCache", "clear_marketplace_cache"],
       "clearMarketplaceCache",
@@ -242,18 +243,18 @@ export function pluginNames(manifest: unknown): string[] {
   const m = asRecord(manifest);
   const plugins = m.plugins;
   if (!Array.isArray(plugins)) return [];
-  return plugins.map((p) => String(asRecord(p).name ?? ""));
+  return plugins.map((p) => asText(asRecord(p).name ?? ""));
 }
 
 export function sourceKind(source: unknown): string {
   const s = asRecord(source);
   const kind = s.kind;
   if (typeof kind === "string") return kind;
-  if (typeof kind === "function") return String((kind as () => string).call(source));
+  if (typeof kind === "function") return asText((kind as () => string).call(source));
   // Some implementations expose getter via prototype — try property access again after unwrap
   const proto = Object.getPrototypeOf(source) as { kind?: unknown } | null;
   if (proto && typeof proto.kind === "function") {
-    return String((proto.kind as () => string).call(source));
+    return asText((proto.kind as () => string).call(source));
   }
   throw new TypeError("MarketplaceSource.kind missing");
 }
@@ -269,7 +270,7 @@ export function findPluginByName(manifest: unknown, name: string): unknown {
   if (find) return find.call(manifest, name);
   const plugins = Array.isArray(m.plugins) ? m.plugins : [];
   const hit = plugins.find(
-    (p) => String(asRecord(p).name ?? "").toLowerCase() === name.toLowerCase(),
+    (p) => asText(asRecord(p).name ?? "").toLowerCase() === name.toLowerCase(),
   );
   if (!hit) throw new TypeError(`plugin ${name} not found and no findPlugin helper`);
   return hit;

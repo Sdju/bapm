@@ -1,6 +1,7 @@
 /**
  * Registry distribution test helpers — mock HTTP registry + pickExport.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import { createHash } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
@@ -316,9 +317,7 @@ const legacyIntegrationRegistry = {
   detect: async () => ({ detectedIds: [legacyTarget.id], diagnostics: [] }),
 };
 
-export function getBuildPublishArchive(): (
-  options: Record<string, unknown>,
-) => unknown | Promise<unknown> {
+export function getBuildPublishArchive(): (options: Record<string, unknown>) => unknown {
   return pickExport(
     [
       "buildPublishArchive",
@@ -327,7 +326,7 @@ export function getBuildPublishArchive(): (
       "buildRegistryPublishZip",
     ],
     "M10 flat publish archive",
-  ) as (options: Record<string, unknown>) => unknown | Promise<unknown>;
+  ) as (options: Record<string, unknown>) => unknown;
 }
 
 /** Registry package materialize (digest → safe-extract). */
@@ -370,11 +369,11 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {
@@ -383,19 +382,17 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
   return thrown;
 }
 
-export function getCheckSelfUpdate(): (
-  options: Record<string, unknown>,
-) => unknown | Promise<unknown> {
+export function getCheckSelfUpdate(): (options: Record<string, unknown>) => unknown {
   return pickExport(
     ["checkSelfUpdate", "compareSelfUpdate", "runSelfUpdateCheck", "fetchLatestCliVersion"],
     "M10 self-update check",
-  ) as (options: Record<string, unknown>) => unknown | Promise<unknown>;
+  ) as (options: Record<string, unknown>) => unknown;
 }
 
 export function modulesDir(cwd: string): string {
   const name =
     typeof (core as Record<string, unknown>).APM_MODULES_DIR === "string"
-      ? String((core as Record<string, unknown>).APM_MODULES_DIR)
+      ? asText((core as Record<string, unknown>).APM_MODULES_DIR)
       : "apm_modules";
   return join(cwd, name);
 }
@@ -471,11 +468,11 @@ export async function expectRejectsMatching(
     thrown instanceof Error
       ? thrown.message
       : typeof thrown === "object" && thrown !== null && "message" in thrown
-        ? String((thrown as { message: unknown }).message)
-        : String(thrown);
+        ? asText((thrown as { message: unknown }).message)
+        : asText(thrown);
   const code =
     typeof thrown === "object" && thrown !== null && "code" in thrown
-      ? String((thrown as { code: unknown }).code)
+      ? asText((thrown as { code: unknown }).code)
       : "";
   const haystack = `${message}\n${code}`;
   if (!pattern.test(haystack)) {

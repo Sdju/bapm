@@ -1,6 +1,7 @@
 /**
  * Helpers for marketplace search/install suite (core). Soft-resolve @bapm/core APIs.
  */
+import { asText } from "../asText.ts";
 import * as core from "@bapm/core";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -209,7 +210,7 @@ export function getResolveMarketplacePlugin() {
     marketplace: string,
     versionSpec?: string | null,
     opts?: Record<string, unknown>,
-  ) => unknown | Promise<unknown>;
+  ) => unknown;
 }
 
 export function getClassifyDependencyRef() {
@@ -257,19 +258,19 @@ export function parsedRefOf(result: unknown): {
   }
   if (Array.isArray(result)) {
     return {
-      plugin: String(result[0] ?? ""),
-      marketplace: String(result[1] ?? ""),
-      ref: result[2] == null || result[2] === "" ? null : String(result[2]),
+      plugin: asText(result[0] ?? ""),
+      marketplace: asText(result[1] ?? ""),
+      ref: result[2] == null || result[2] === "" ? null : asText(result[2]),
     };
   }
   const r = asRecord(result);
-  const plugin = String(r.pluginName ?? r.plugin ?? r.name ?? "");
-  const marketplace = String(r.marketplaceName ?? r.marketplace ?? "");
+  const plugin = asText(r.pluginName ?? r.plugin ?? r.name ?? "");
+  const marketplace = asText(r.marketplaceName ?? r.marketplace ?? "");
   const rawRef = r.ref ?? r.version ?? r.versionSpec;
   return {
     plugin,
     marketplace,
-    ref: rawRef == null || rawRef === "" ? null : String(rawRef),
+    ref: rawRef == null || rawRef === "" ? null : asText(rawRef),
   };
 }
 
@@ -315,13 +316,13 @@ export function concreteDepOf(resolution: unknown): unknown {
 export function errorText(err: unknown): string {
   if (err instanceof Error) return `${err.name}: ${err.message}`;
   if (err && typeof err === "object" && "message" in err) {
-    return String((err as { message: unknown }).message);
+    return asText((err as { message: unknown }).message);
   }
-  return String(err);
+  return asText(err);
 }
 
 export async function expectAsyncThrowMatching(
-  fn: () => Promise<unknown> | unknown,
+  fn: () => unknown,
   pattern: RegExp,
 ): Promise<unknown> {
   let thrown: unknown;
