@@ -1,13 +1,14 @@
 /**
- * Acceptance (RED): OpenCode compile → project-root AGENTS.md including instructions.
+ * compile → project-root AGENTS.md including instructions; honor write intent
+ * (promoted from integration-opencode-instructions-compile acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createOpencodeIntegration } from "../../../src/createOpencodeIntegration.ts";
+import { createOpencodeIntegration } from "../src/createOpencodeIntegration.ts";
 
-describe("opencode compile (acceptance)", () => {
+describe("opencode compile", () => {
   let cwd: string | undefined;
 
   afterEach(() => {

@@ -11,4 +11,4 @@
 ## 3. Verification
 
 - [x] 3.1 Acceptance suite under `packages/integration-opencode/tests/acceptance/integration-opencode-instructions-compile/` covering compile write/include-instructions/preview and lone-`AGENTS.md` not detect; keep hooks/MCP regression asserts if needed for RED
-- [ ] 3.2 After GREEN: promote acceptance into general package tests (e.g. `tests/compile.test.ts` + detect assert); run `vp check` / targeted tests for `@bapm/integration-opencode`
+- [x] 3.2 After GREEN: promote acceptance into general package tests (e.g. `tests/compile.test.ts` + detect assert); run `vp check` / targeted tests for `@bapm/integration-opencode`

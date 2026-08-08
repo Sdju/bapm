@@ -1,6 +1,6 @@
 /**
  * @bapm/integration-opencode package identity
- * (detect/materialize live in sibling suites; promoted soft edge covered in core).
+ * (detect/materialize/mcp/compile live in sibling suites).
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -30,6 +30,7 @@ describe("@bapm/integration-opencode package", () => {
     expect(createIntegration).toBe(createOpencodeIntegration);
     const target = createOpencodeIntegration();
     expect(target.id).toBe("opencode");
+    expect(typeof target.compile).toBe("function");
     expect(target.deployRoots).toEqual(expect.arrayContaining([".opencode", "."]));
   });
 });

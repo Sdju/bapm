@@ -38,4 +38,10 @@ describe("opencode detect", () => {
     cwd = mkdtempSync(join(tmpdir(), "bapm-oc-detect-none-"));
     expect(createOpencodeIntegration().detect({ cwd })).toBe(false);
   });
+
+  test("lone AGENTS.md is not OpenCode", () => {
+    cwd = mkdtempSync(join(tmpdir(), "bapm-oc-detect-agents-"));
+    writeFileSync(join(cwd, "AGENTS.md"), "# AGENTS.md\n", "utf8");
+    expect(createOpencodeIntegration().detect({ cwd })).toBe(false);
+  });
 });
