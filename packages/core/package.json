@@ -32,6 +32,7 @@
     "@bapm/integration-claude": "workspace:*",
     "@bapm/integration-codex": "workspace:*",
     "@bapm/integration-cursor": "workspace:*",
+    "@bapm/integration-opencode": "workspace:*",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "bumpp": "catalog:",

@@ -39,6 +39,13 @@
       "test": "packages/core/tests/agent-plugins/consumer.test.ts"
     },
     {
+      "id": "opencode-mcp",
+      "status": "target-specific",
+      "summary": "OpenCode maps portable stdio to local and streamable-http to remote under opencode.json mcp; SSE is fail-closed.",
+      "fixture": "tests/fixtures/agent-plugins/v1-portable",
+      "test": "packages/core/tests/acceptance/integration-opencode-runtime/agent-plugins-e2e.test.ts"
+    },
+    {
       "id": "unsupported-components",
       "status": "not-supported",
       "summary": "Hooks, agents, commands, client extensions, OAuth/secrets, sandboxing, and vendor-specific extension behavior are not implemented.",
