@@ -1,8 +1,11 @@
 # integration-windsurf-runtime Specification
 
 ## Purpose
+
 Defines the greenfield `@bapm/integration-windsurf` package: Windsurf project-scope detect, materialize under `.windsurf/` and `.agents/`, skip agents, and home-scoped MCP bake configure with Copilot-client-adapter JSON parity, depending only on `@bapm/integration-api`.
+
 ## Requirements
+
 ### Requirement: Package @bapm/integration-windsurf exists and depends only on integration API
 
 The monorepo MUST include package directory `packages/integration-windsurf` with package name `@bapm/integration-windsurf`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@bapm/integration-*` packages. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createWindsurfIntegration` as an alias. Runtime integration `id` MUST be `windsurf`. The package MUST NOT expose a marketplace-output mapper in this capability.
@@ -135,4 +138,3 @@ Windsurf runtime in this capability MUST NOT deploy user-scope file primitives u
 
 - **WHEN** inspecting `@bapm/core` dependencies
 - **THEN** `@bapm/integration-windsurf` is not a required dependency of core
-
