@@ -12,8 +12,10 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: "Руководство", link: "/guide/" },
-      { text: "Справка", link: "/reference/" },
+      { text: "Быстрый старт", link: "/guide/quick-start" },
+      { text: "Агенты", link: "/guide/supported-hosts" },
       { text: "Манифест", link: "/guide/config-manifest" },
+      { text: "Справка", link: "/reference/" },
       { text: "Сценарии", link: "/guide/situations/" },
       { text: "Архитектура", link: "/architecture/" },
     ],
@@ -24,6 +26,31 @@ export default defineConfig({
           { text: "Что умеет bapm", link: "/guide/" },
           { text: "Быстрый старт", link: "/guide/quick-start" },
           { text: "Команды", link: "/guide/commands" },
+          { text: "Поддерживаемые hosts", link: "/guide/supported-hosts" },
+        ],
+      },
+      {
+        text: "Конфиг",
+        items: [
+          { text: "Манифест bapm.yml", link: "/guide/config-manifest" },
+          { text: "Зависимости", link: "/guide/manifest-dependencies" },
+          { text: "Hosts и target", link: "/guide/manifest-hosts" },
+          { text: "Personal overlay", link: "/guide/manifest-overlay" },
+          { text: "Registries", link: "/guide/manifest-registries" },
+          { text: "Lock-файл", link: "/guide/lockfile" },
+        ],
+      },
+      {
+        text: "Сценарии",
+        items: [
+          { text: "Оглавление", link: "/guide/situations/" },
+          { text: "Свежий install", link: "/guide/situations/install-fresh" },
+          { text: "CI / frozen", link: "/guide/situations/ci-frozen" },
+          { text: "Обновление зависимостей", link: "/guide/situations/update-deps" },
+          { text: "Политика и MCP", link: "/guide/situations/policy-mcp" },
+          { text: "Compile AGENTS.md", link: "/guide/situations/compile-agents" },
+          { text: "Doctor / audit / prune", link: "/guide/situations/doctor-audit-prune" },
+          { text: "Marketplace pack", link: "/guide/situations/marketplace-pack" },
         ],
       },
       {
@@ -51,26 +78,6 @@ export default defineConfig({
           { text: "marketplace", link: "/reference/marketplace" },
           { text: "search", link: "/reference/search" },
           { text: "publish", link: "/reference/publish" },
-        ],
-      },
-      {
-        text: "Конфиг",
-        items: [
-          { text: "Манифест bapm.yml", link: "/guide/config-manifest" },
-          { text: "Lock-файл", link: "/guide/lockfile" },
-        ],
-      },
-      {
-        text: "Сценарии",
-        items: [
-          { text: "Оглавление", link: "/guide/situations/" },
-          { text: "Свежий install", link: "/guide/situations/install-fresh" },
-          { text: "CI / frozen", link: "/guide/situations/ci-frozen" },
-          { text: "Обновление зависимостей", link: "/guide/situations/update-deps" },
-          { text: "Политика и MCP", link: "/guide/situations/policy-mcp" },
-          { text: "Compile AGENTS.md", link: "/guide/situations/compile-agents" },
-          { text: "Marketplace pack", link: "/guide/situations/marketplace-pack" },
-          { text: "Doctor / audit / prune", link: "/guide/situations/doctor-audit-prune" },
         ],
       },
       {

@@ -42,7 +42,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Frozen (явный или CI-default) нельзя сочетать с `--update`.
 - Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen` (OpenAPM req-lk-018).
 - `--force` ≠ `--target` (forced-target activation).
-- Выбор host: `--target <id>` → манифест `active: [<id>, …]` → sole auto-detect → fail. См. [манифест](/guide/config-manifest).
+- Выбор host: `--target <id>` → манифест `active: [<id>, …]` → sole auto-detect → fail. См. [Поддерживаемые hosts](/guide/supported-hosts), [Hosts](/guide/manifest-hosts).
 - При активном cursor eligible MCP пишутся в `.cursor/mcp.json` (прямые mcp по умолчанию). Auto-detect без `.cursor/` не создаёт каталог только ради MCP.
 
 Сценарии: [Быстрый старт](/guide/quick-start), [US-01](/guide/situations/install-fresh), [US-02 CI / frozen](/guide/situations/ci-frozen).

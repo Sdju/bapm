@@ -10,7 +10,7 @@
 
 ### Шаги
 
-1. Убедитесь, что в проекте доступна команда `bapm` (см. [Быстрый старт](/guide/quick-start)).
+1. Убедитесь, что команда `bapm` доступна (глобально или через `npx` — [Быстрый старт](/guide/quick-start)).
 2. В корне **вашего** проекта:
 
 ```bash
@@ -30,7 +30,7 @@ bapm install --target cursor
 
 ### Ожидаемый результат
 
-- `bapm.yml` с `target: cursor` и/или `active: [cursor]` (или уже существующий манифест без dual-conflict).
+- `bapm.yml` с `target: cursor` и/или `active: [cursor]`.
 - `bapm.lock.yaml` (новый lock по умолчанию) и `apm_modules/`.
 - Deploy в Cursor: `.agents/skills/…`, `.cursor/rules/…`, `.cursor/agents/…`, при eligible MCP — `.cursor/mcp.json`.
 
@@ -39,7 +39,6 @@ bapm install --target cursor
 ### Если не сработало
 
 - `Refusing to init: … already exists` → манифест уже есть; правьте файл, не вызывайте `init` повторно.
-- `Both apm.yml and bapm.yml are present` → оставьте один файл.
-- `No manifest found` → сделайте `init` или `install <ref>` (создаст минимальный `apm.yml`).
+- `No manifest found` → сделайте `init` или `install <ref>` (создаст минимальный манифест).
 - `Target detection is missing or ambiguous` / нет `.cursor/` → передайте `--target cursor` или задайте `active: [cursor]`.
-- Ожидали Claude/Codex как runtime → сейчас runtime install target — **cursor-only**; marketplace outputs — отдельно ([US-06](/guide/situations/marketplace-pack)).
+- Ожидали Claude/Codex как runtime → это marketplace-pack ([US-06](/guide/situations/marketplace-pack)); свой агент — [поддерживаемые hosts](/guide/supported-hosts).

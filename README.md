@@ -70,8 +70,6 @@ bapm install --target cursor
 | Agent Plugins | [guide/agent-plugins](apps/docs/guide/agent-plugins.md) |
 | Архитектура | [architecture/](apps/docs/architecture/index.md) |
 
-Сайт документации — VitePress в `apps/docs`.
-
 ## Ключевое
 
 - Канонический манифест — `bapm.yml`.

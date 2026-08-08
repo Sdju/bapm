@@ -1,23 +1,30 @@
 # Portable Agent Plugins v1
 
-bapm поддерживает узкую portable-границу Agent Plugins v1: корневой `plugin.json`, каталоги `skills/<name>/SKILL.md` на одном уровне и корневой `mcp.json`.
+Узкая portable-граница: корневой `plugin.json`, `skills/<name>/SKILL.md`, корневой `mcp.json`.
 
-Сгенерированная [матрица поддержки](../../../AGENT_PLUGINS_COMPATIBILITY.md) опирается на fixtures и регрессионные тесты. Это не сертификация Agent Plugins и не заявление о совместимости со всеми клиентами.
+```text
+my-plugin/
+  plugin.json
+  mcp.json
+  skills/
+    hello/
+      SKILL.md
+```
 
-## Поведение в Cursor
+Матрица поддержки: [AGENT_PLUGINS_COMPATIBILITY.md](../../../AGENT_PLUGINS_COMPATIBILITY.md) (fixtures + тесты, не сертификация).
 
-Cursor-integration адаптирует portable MCP-записи в `.cursor/mcp.json`: `stdio` остаётся `stdio`, `streamable-http` становится `http`, `sse` остаётся `sse`. Portable MCP-файл никогда не копируется в Cursor как есть. Другим хостам нужна своя явная integration.
+## В Cursor
+
+Cursor-integration адаптирует portable MCP в `.cursor/mcp.json`: `stdio` → `stdio`, `streamable-http` → `http`, `sse` → `sse`. Portable MCP-файл **не** копируется as-is.
 
 ## Граница
 
-Portable-плагины отличаются и от манифестов bapm/OpenAPM, и от marketplace-продуктов:
+- `plugin.json` ≠ `bapm.yml` / `apm.yml`
+- Упаковка portable-плагина — архив, не публикация в marketplace
+- OpenAPM в [CONFORMANCE.md](../../../CONFORMANCE.md) ≠ conformance Agent Plugins
 
-- `plugin.json` — это не `bapm.yml` и не `apm.yml`;
-- упаковка portable-плагина создаёт архив, а не публикацию в marketplace;
-- заявления OpenAPM в [CONFORMANCE.md](../../../CONFORMANCE.md) не означают conformance Agent Plugins.
-
-Marketplace-output integrations и portable-архивы плагинов поддерживаются независимо от runtime-материализации в Cursor. Они не подразумевают расширение клиента, публикацию в marketplace или runtime-адаптер для каждого хоста.
+Marketplace-output и portable-архивы независимы от Cursor runtime install.
 
 ## Что не поддерживается
 
-На этой поверхности нет sandboxing, OAuth или инъекции секретов, hooks, agents, commands, client extensions и vendor-specific расширений. Небезопасные пути skills и зарезервированные / secret-подобные переменные окружения MCP отклоняются.
+Sandboxing, OAuth, инъекция секретов, hooks, agents, commands, client extensions, vendor-specific расширения. Небезопасные пути skills и secret-подобные MCP env отклоняются.

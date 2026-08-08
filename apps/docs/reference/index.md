@@ -1,6 +1,8 @@
 # Справка
 
-Краткие справочники по флагам CLI. Обзор команд — [Команды](/guide/commands). Сценарии — [Сценарии](/guide/situations/). Актуальный help: `bapm help <command>`.
+Флаги CLI. Обзор: [Команды](/guide/commands). Актуальный help: `bapm help <command>`.
+
+## Часто
 
 | Команда | Страница |
 | --- | --- |
@@ -11,6 +13,11 @@
 | `outdated` | [outdated](/reference/outdated) |
 | `uninstall` | [uninstall](/reference/uninstall) |
 | `prune` | [prune](/reference/prune) |
+
+## Инспекция и проверка
+
+| Команда | Страница |
+| --- | --- |
 | `deps` | [deps](/reference/deps) |
 | `find` | [find](/reference/find) |
 | `view` | [view](/reference/view) |
@@ -18,6 +25,11 @@
 | `doctor` | [doctor](/reference/doctor) |
 | `compile` | [compile](/reference/compile) |
 | `policy` / `approve` / `deny` | [policy](/reference/policy) |
+
+## Реже
+
+| Команда | Страница |
+| --- | --- |
 | `cache` | [cache](/reference/cache) |
 | `self-update` | [self-update](/reference/self-update) |
 | `pack` | [pack](/reference/pack) |
@@ -27,3 +39,5 @@
 | `publish` | [publish](/reference/publish) |
 
 `help` и `version` — без отдельных страниц: `bapm help`, `bapm help <command>`, `bapm version` / `-V`.
+
+Сценарии: [Сценарии](/guide/situations/).

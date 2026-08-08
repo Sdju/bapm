@@ -19,7 +19,7 @@ bapm marketplace package add …
 bapm marketplace check
 ```
 
-Подробнее: [marketplace](/reference/marketplace), поле `marketplace:` в [манифесте](/guide/config-manifest).
+Подробнее: [marketplace](/reference/marketplace), поле `marketplace:` в [Registries](/guide/manifest-registries).
 
 2. Превью без durable writes:
 
