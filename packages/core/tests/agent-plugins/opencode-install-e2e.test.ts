@@ -1,20 +1,21 @@
 /**
- * Agent Plugins delta: packed portable plugin installs into OpenCode host.
+ * Agent Plugins delta: packed portable plugin installs into OpenCode host
+ * (promoted from integration-opencode-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createIntegrationRegistry } from "@bapm/integration-api";
+import { createOpencodeIntegration } from "@bapm/integration-opencode";
 import {
   extractPackArchive,
   runInstall,
   runPack,
   writeAgentPluginManifest,
 } from "@bapm/core";
-import { createOpencodeTarget, readJson } from "./helpers.ts";
 
-describe("integration-opencode-runtime · agent-plugins e2e", () => {
+describe("Agent Plugins · OpenCode install e2e", () => {
   let project: string | undefined;
 
   afterEach(() => {
@@ -23,7 +24,7 @@ describe("integration-opencode-runtime · agent-plugins e2e", () => {
   });
 
   test("packed portable plugin installs skills under .opencode/skills and MCP under opencode.json", async () => {
-    project = join(tmpdir(), `bapm-acc-oc-e2e-${Date.now()}`);
+    project = join(tmpdir(), `bapm-oc-e2e-${Date.now()}`);
     const producer = join(project, "producer");
     const consumer = join(project, "consumer");
     const plugin = join(consumer, "plugin");
@@ -63,7 +64,7 @@ describe("integration-opencode-runtime · agent-plugins e2e", () => {
       "utf8",
     );
 
-    const target = await createOpencodeTarget();
+    const target = createOpencodeIntegration();
     const registry = createIntegrationRegistry();
     registry.register(target);
 
@@ -74,7 +75,7 @@ describe("integration-opencode-runtime · agent-plugins e2e", () => {
     ).toBe("# Reference\n");
     expect(existsSync(join(consumer, ".opencode", "skills", "e2e-skill", "SKILL.md"))).toBe(true);
 
-    const mcpDoc = readJson(join(consumer, "opencode.json")) as {
+    const mcpDoc = JSON.parse(readFileSync(join(consumer, "opencode.json"), "utf8")) as {
       mcp?: Record<string, Record<string, unknown>>;
     };
     expect(mcpDoc.mcp?.stdio).toMatchObject({ type: "local", command: expect.any(Array) });

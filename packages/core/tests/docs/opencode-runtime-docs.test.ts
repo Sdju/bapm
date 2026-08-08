@@ -1,35 +1,39 @@
 /**
- * Docs + compatibility matrix expect OpenCode as an explicit opt-in adapter.
+ * Docs + compatibility matrix: OpenCode as explicit opt-in adapter
+ * (promoted from integration-opencode-runtime acceptance).
  */
 import { describe, expect, test } from "vite-plus/test";
-import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { REPO_ROOT } from "./helpers.ts";
+import {
+  docsArchitecturePath,
+  docsRoot,
+  fileExists,
+  readText,
+  repoRoot,
+} from "./helpers.ts";
 
-const docsRoot = join(REPO_ROOT, "apps/docs");
 const supportedHostsPath = join(docsRoot, "guide/supported-hosts.md");
 const agentPluginsGuideCandidates = [
   join(docsRoot, "guide/agent-plugins.md"),
   join(docsRoot, "reference/agent-plugins.md"),
   join(docsRoot, "guide/agent-plugins/index.md"),
 ];
-const architecturePath = join(docsRoot, "architecture/index.md");
-const compatibilityCasesPath = join(REPO_ROOT, "tests/agent-plugins/compatibility-cases.json");
+const compatibilityCasesPath = join(repoRoot, "tests/agent-plugins/compatibility-cases.json");
 
-describe("integration-opencode-runtime · docs and compatibility", () => {
+describe("docs · OpenCode runtime opt-in", () => {
   test("supported-hosts documents @bapm/integration-opencode opt-in", () => {
-    expect(existsSync(supportedHostsPath)).toBe(true);
-    const page = readFileSync(supportedHostsPath, "utf8");
+    expect(fileExists(supportedHostsPath)).toBe(true);
+    const page = readText(supportedHostsPath);
     expect(page).toMatch(/@bapm\/integration-opencode/);
     expect(page).toMatch(/opencode/i);
     expect(page).toMatch(/targets:/);
   });
 
   test("architecture or agent-plugins docs mention OpenCode adapter", () => {
-    const arch = readFileSync(architecturePath, "utf8");
+    const arch = readText(docsArchitecturePath);
     const guide = agentPluginsGuideCandidates
-      .filter((p) => existsSync(p))
-      .map((p) => readFileSync(p, "utf8"))
+      .filter((p) => fileExists(p))
+      .map((p) => readText(p))
       .join("\n");
     const combined = `${arch}\n${guide}`;
     expect(combined).toMatch(/@bapm\/integration-opencode|OpenCode/i);
@@ -37,8 +41,8 @@ describe("integration-opencode-runtime · docs and compatibility", () => {
   });
 
   test("compatibility-cases.json includes an OpenCode target-specific MCP case", () => {
-    expect(existsSync(compatibilityCasesPath)).toBe(true);
-    const doc = JSON.parse(readFileSync(compatibilityCasesPath, "utf8")) as {
+    expect(fileExists(compatibilityCasesPath)).toBe(true);
+    const doc = JSON.parse(readText(compatibilityCasesPath)) as {
       components?: Array<{ id?: string; status?: string; summary?: string; test?: string }>;
     };
     const opencode = (doc.components ?? []).find(

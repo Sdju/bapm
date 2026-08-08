@@ -43,7 +43,7 @@
       "status": "target-specific",
       "summary": "OpenCode maps portable stdio to local and streamable-http to remote under opencode.json mcp; SSE is fail-closed.",
       "fixture": "tests/fixtures/agent-plugins/v1-portable",
-      "test": "packages/core/tests/acceptance/integration-opencode-runtime/agent-plugins-e2e.test.ts"
+      "test": "packages/core/tests/agent-plugins/opencode-install-e2e.test.ts"
     },
     {
       "id": "unsupported-components",
