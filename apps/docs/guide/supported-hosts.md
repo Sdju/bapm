@@ -2,13 +2,13 @@
 
 Куда `bapm install` / `bapm compile` раскладывают пакеты. Поля манифеста: [Hosts и target](/guide/manifest-hosts).
 
-| Host               | В CLI                 | Как подключить                                                                                                         |
-| ------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Cursor**         | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                         |
-| **OpenCode**       | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                     |
-| **Свой агент**     | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                     |
-| **Claude**         | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
-| **Codex**          | Нет (marketplace)     | Пакет `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack) |
+| Host           | В CLI                 | Как подключить                                                                                                                                           |
+| -------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
+| **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
+| **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
+| **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
+| **Codex**      | Нет (marketplace)     | Пакет `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack)                                                                 |
 
 ## Cursor (opt-in пакет)
 
