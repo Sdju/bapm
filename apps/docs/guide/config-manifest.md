@@ -40,8 +40,8 @@ Discovery ищет файл **только в текущем каталоге** 
 | --- | --- | --- |
 | `dependencies` | mapping | Блоки списков зависимостей (см. ниже). |
 | `devDependencies` | mapping | То же для dev; `bapm install <ref> --dev` пишет сюда. |
-| `target` | строка **или** object-map | Legacy: один host id (`cursor`). Object-map (**bapm-расширение**): `host-id → npm-пакет`. Нельзя вместе с `targets`. |
-| `targets` | список строк **или** object-map | Legacy: несколько host id. Object-map (**bapm-расширение**): те же ключи→пакеты. Нельзя вместе с `target`. Для multi-host object-map **предпочтительнее `targets`**. |
+| `target` | строка **или** object-map | Legacy: один host id (`cursor`). Object-map (**bapm-расширение**): `host-id → npm-пакет или локальный путь`. Нельзя вместе с `targets`. |
+| `targets` | список строк **или** object-map | Legacy: несколько host id. Object-map (**bapm-расширение**): те же ключи→пакеты/пути. Нельзя вместе с `target`. Для multi-host object-map **предпочтительнее `targets`**. |
 | `registries` | mapping | Именованные registry (см. ниже). |
 | `default_host` | строка | Есть в модели манифеста и **сохраняется** при разборе; отдельной специальной валидации в parser нет. |
 | `marketplace` | mapping | **Authoring-расширение bapm** (отдельный путь валидации). Не consumer day-to-day; см. ниже и [marketplace](/reference/marketplace). |
@@ -50,17 +50,28 @@ Discovery ищет файл **только в текущем каталоге** 
 
 ### Object-map `target` / `targets` (bapm-расширение)
 
-Помимо legacy-форм (`target: cursor`, `targets: [cursor, claude]`), оба поля могут быть **object-map** host id → npm package specifier:
+Помимо legacy-форм (`target: cursor`, `targets: [cursor, claude]`), оба поля могут быть **object-map** host id → npm package **или** локальный путь к integration-модулю:
 
 ```yaml
 targets:
   cursor: "@bapm/integration-cursor"
-  claude: "@bapm/integration-claude"
+  pi: "./agents/integration/pi-agent"
 ```
 
-Это **bapm-расширение** (не обязательный vocabulary OpenAPM): ключи — mf-005 host tokens (canonical / alias / `x-<vendor>-<name>`); значения — непустые строки пакетов (opaque, допускают `@scope/name@version`). Пустой `{}`, невалидный ключ или пустое значение — отказ parse. Mutual exclusion `target` + `targets` сохраняется для любой комбинации форм. Dual-read `apm.yml` использует те же правила.
+Это **bapm-расширение** (не обязательный vocabulary OpenAPM): ключи — mf-005 host tokens (canonical / alias / `x-<vendor>-<name>`); значения — непустые opaque-строки. Классификация при загрузке:
 
-Активный host по-прежнему выбирается через `--target` / auto-detect **уже зарегистрированных** интеграций (fail, если ни то ни другое). Когда object-map присутствует, CLI **загружает и регистрирует** каждый npm-пакет из значений map **до** выбора активного host (eager, fail-closed при ошибке resolve/export/id). Map **сам по себе не активирует** host — без `--target` и без успешного detect команда завершится с просьбой передать `--target <id>`. Built-in Cursor остаётся доступен без строки `cursor` в map (запись в map опциональна и может переопределить built-in). Для multi-host object-map предпочтительнее поле `targets` (singular `target` с несколькими ключами тоже принимается).
+| Форма значения | Как трактуется |
+| --- | --- |
+| `./…`, `../…`, абсолютный путь (`/` или Windows drive) | Локальный filesystem path относительно project / manifest cwd |
+| всё остальное (`pkg`, `@scope/name`, `pkg@version`) | npm package specifier |
+
+Локальные **директории** резолвятся через Node module resolution (`package.json` `exports` / `main`, затем `index.*`). Можно указать явный entry-файл (например `./agents/integration/pi-agent/index.mjs`), если Node его принимает. Значения без `./` (например `agents/foo`) **не** считаются путём — это имя npm-пакета.
+
+Локальные пути обязаны оставаться **внутри project root** (lexical containment): `../` escape и абсолютные пути вне корня проекта — fail-closed до import. Симлинк-jail за пределы корня в v1 не усиливается. TypeScript-исходники без сборки Node обычно не загрузит — указывайте JS entry или `main` на собранный файл.
+
+Пустой `{}`, невалидный ключ или пустое значение — отказ parse. Mutual exclusion `target` + `targets` сохраняется для любой комбинации форм. Dual-read `apm.yml` использует те же правила.
+
+Активный host по-прежнему выбирается через `--target` / auto-detect **уже зарегистрированных** интеграций (fail, если ни то ни другое). Когда object-map присутствует, CLI **загружает и регистрирует** каждый npm-пакет или локальный модуль из значений map **до** выбора активного host (eager, fail-closed при ошибке resolve/export/id/containment). Map **сам по себе не активирует** host — без `--target` и без успешного detect команда завершится с просьбой передать `--target <id>`. Built-in Cursor остаётся доступен без строки `cursor` в map (запись в map опциональна и может переопределить built-in). Для multi-host object-map предпочтительнее поле `targets` (singular `target` с несколькими ключами тоже принимается).
 
 ### Отклонённые
 

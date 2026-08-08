@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { join } from "node:path";
+import { join, relative, resolve, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   declaredTargetIntegrationMap,
@@ -8,6 +8,10 @@ import {
   type BapmManifest,
 } from "@bapm/core";
 import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
+import {
+  isLocalPathSpecifier,
+  resolveContainedLocalPath,
+} from "./localPathSpecifier.ts";
 
 export type ManifestIntegrationLoadCause =
   | "unresolvable"
@@ -37,7 +41,20 @@ export class ManifestIntegrationLoadError extends Error {
   }
 }
 
-function resolvePackageSpecifier(specifier: string, cwd: string): string {
+function isContainedUnderRoot(absoluteTarget: string, projectRoot: string): boolean {
+  const root = resolve(projectRoot);
+  const targetRelativeToRoot = relative(root, resolve(absoluteTarget));
+  if (targetRelativeToRoot === "") return true;
+  return !(
+    targetRelativeToRoot === ".." ||
+    targetRelativeToRoot.startsWith("..\\") ||
+    targetRelativeToRoot.startsWith("../") ||
+    isAbsolute(targetRelativeToRoot)
+  );
+}
+
+/** npm package: project cwd first, then CLI-shipped fallback. */
+function resolveNpmPackageSpecifier(specifier: string, cwd: string): string {
   const requireFromCwd = createRequire(join(cwd, "package.json"));
   try {
     return requireFromCwd.resolve(specifier);
@@ -49,6 +66,52 @@ function resolvePackageSpecifier(specifier: string, cwd: string): string {
       throw cwdErr;
     }
   }
+}
+
+/**
+ * Local path: containment under project root, then createRequire from cwd only
+ * (no CLI fallback — path miss fails closed).
+ */
+function resolveLocalIntegrationPath(
+  specifier: string,
+  hostId: string,
+  cwd: string,
+): string {
+  const contained = resolveContainedLocalPath(specifier, cwd);
+  if (contained === null) {
+    throw new ManifestIntegrationLoadError(
+      hostId,
+      specifier,
+      "unresolvable",
+      `local path escapes project root (containment): ${specifier}`,
+    );
+  }
+
+  const requireFromCwd = createRequire(join(cwd, "package.json"));
+  let resolved: string;
+  try {
+    resolved = requireFromCwd.resolve(specifier);
+  } catch (cause) {
+    const detail =
+      cause instanceof Error ? cause.message : "cannot find module / unresolvable path";
+    throw new ManifestIntegrationLoadError(
+      hostId,
+      specifier,
+      "unresolvable",
+      `unresolvable local path / missing module: ${detail}`,
+    );
+  }
+
+  if (!isContainedUnderRoot(resolved, cwd)) {
+    throw new ManifestIntegrationLoadError(
+      hostId,
+      specifier,
+      "unresolvable",
+      `resolved local path escapes project root (containment): ${specifier}`,
+    );
+  }
+
+  return resolved;
 }
 
 function isMarketplaceOnly(value: unknown): boolean {
@@ -87,8 +150,9 @@ function extractIntegrationCandidate(mod: Record<string, unknown>): unknown {
 }
 
 /**
- * Resolve a package specifier from project cwd, import it, and extract a runtime
- * `BapmIntegration` (createIntegration → createCursorIntegration → default).
+ * Resolve a map value (npm package or local filesystem path) from project cwd,
+ * import it, and extract a runtime `BapmIntegration`
+ * (createIntegration → createCursorIntegration → default).
  */
 export async function loadIntegrationFromPackage(
   specifier: string,
@@ -96,17 +160,21 @@ export async function loadIntegrationFromPackage(
   cwd: string,
 ): Promise<BapmIntegration> {
   let resolved: string;
-  try {
-    resolved = resolvePackageSpecifier(specifier, cwd);
-  } catch (cause) {
-    const detail =
-      cause instanceof Error ? cause.message : "cannot find module / unresolvable package";
-    throw new ManifestIntegrationLoadError(
-      expectedId,
-      specifier,
-      "unresolvable",
-      `unresolvable module: ${detail}`,
-    );
+  if (isLocalPathSpecifier(specifier)) {
+    resolved = resolveLocalIntegrationPath(specifier, expectedId, cwd);
+  } else {
+    try {
+      resolved = resolveNpmPackageSpecifier(specifier, cwd);
+    } catch (cause) {
+      const detail =
+        cause instanceof Error ? cause.message : "cannot find module / unresolvable package";
+      throw new ManifestIntegrationLoadError(
+        expectedId,
+        specifier,
+        "unresolvable",
+        `unresolvable module: ${detail}`,
+      );
+    }
   }
 
   let mod: Record<string, unknown>;

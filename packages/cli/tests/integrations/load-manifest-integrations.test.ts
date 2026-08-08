@@ -2,9 +2,17 @@
  * Unit tests for object-map integration package loader.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, readFileSync } from "node:fs";
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createIntegrationRegistry } from "@bapm/integration-api";
 import {
@@ -12,6 +20,7 @@ import {
   ManifestIntegrationLoadError,
   registerManifestIntegrations,
 } from "../../src/app/integrations/loadManifestIntegrations.ts";
+import { isLocalPathSpecifier } from "../../src/app/integrations/localPathSpecifier.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
@@ -32,6 +41,32 @@ function linkFixture(cwd: string, fixtureDirName: string): string {
   symlinkSync(fixtureRoot, dest, "dir");
   return pkg.name;
 }
+
+function plantLocalIntegration(cwd: string, relativeDir = "agents/integration/local-agent"): string {
+  const dest = join(cwd, relativeDir);
+  mkdirSync(dirname(dest), { recursive: true });
+  // Prefer a package with both `main` and `exports` so directory createRequire.resolve works.
+  cpSync(join(FIXTURES, "create-integration-pkg"), dest, { recursive: true });
+  const pkgPath = join(dest, "package.json");
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as Record<string, unknown>;
+  pkg.main = "./index.mjs";
+  writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`, "utf8");
+  return `./${relativeDir}`;
+}
+
+describe("isLocalPathSpecifier", () => {
+  test("classifies ./ ../ and absolute as paths", () => {
+    expect(isLocalPathSpecifier("./agents/foo")).toBe(true);
+    expect(isLocalPathSpecifier("../outside")).toBe(true);
+    expect(isLocalPathSpecifier("/tmp/abs")).toBe(true);
+  });
+
+  test("classifies bare and scoped as npm", () => {
+    expect(isLocalPathSpecifier("my-integration")).toBe(false);
+    expect(isLocalPathSpecifier("@acme/my-integration")).toBe(false);
+    expect(isLocalPathSpecifier("agents/foo")).toBe(false);
+  });
+});
 
 describe("loadManifestIntegrations", () => {
   let temp: Temp | undefined;
@@ -120,5 +155,94 @@ describe("loadManifestIntegrations", () => {
     expect(err.message).toContain("x-acme");
     expect(err.message).toContain("@acme/pkg");
     expect(err.message).toContain("unresolvable");
+  });
+
+  test("loads in-root relative directory via Node resolution", async () => {
+    temp = createTemp();
+    const spec = plantLocalIntegration(temp.cwd);
+    const integration = await loadIntegrationFromPackage(spec, "x-acme-editor", temp.cwd);
+    expect(integration.id).toBe("x-acme-editor");
+  });
+
+  test("loads explicit .js/.mjs file under project root", async () => {
+    temp = createTemp();
+    plantLocalIntegration(temp.cwd);
+    const spec = "./agents/integration/local-agent/index.mjs";
+    const integration = await loadIntegrationFromPackage(spec, "x-acme-editor", temp.cwd);
+    expect(integration.id).toBe("x-acme-editor");
+  });
+
+  test("fails closed on missing local path", async () => {
+    temp = createTemp();
+    const spec = "./agents/integration/missing";
+    await expect(loadIntegrationFromPackage(spec, "x-pi-agent", temp.cwd)).rejects.toMatchObject({
+      causeClass: "unresolvable",
+      hostId: "x-pi-agent",
+      specifier: spec,
+    });
+  });
+
+  test("fails closed on ../ escape before import", async () => {
+    temp = createTemp();
+    const outside = join(dirname(temp.cwd), "unit-outside-integration");
+    rmSync(outside, { recursive: true, force: true });
+    mkdirSync(outside, { recursive: true });
+    cpSync(join(FIXTURES, "create-integration-pkg"), outside, { recursive: true });
+    try {
+      const spec = "../unit-outside-integration";
+      await expect(loadIntegrationFromPackage(spec, "x-acme-editor", temp.cwd)).rejects.toSatisfy(
+        (err: unknown) => {
+          expect(err).toMatchObject({
+            causeClass: "unresolvable",
+            hostId: "x-acme-editor",
+            specifier: spec,
+          });
+          expect(String(err)).toMatch(/escap|project.?root|contain/i);
+          return true;
+        },
+      );
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  test("fails closed on absolute path outside project root", async () => {
+    temp = createTemp();
+    const outside = join(dirname(temp.cwd), "unit-abs-outside");
+    rmSync(outside, { recursive: true, force: true });
+    mkdirSync(outside, { recursive: true });
+    cpSync(join(FIXTURES, "create-integration-pkg"), outside, { recursive: true });
+    try {
+      const spec = resolve(outside);
+      await expect(loadIntegrationFromPackage(spec, "x-acme-editor", temp.cwd)).rejects.toSatisfy(
+        (err: unknown) => {
+          expect(err).toMatchObject({
+            causeClass: "unresolvable",
+            hostId: "x-acme-editor",
+            specifier: spec,
+          });
+          expect(String(err)).toMatch(/escap|project.?root|contain/i);
+          return true;
+        },
+      );
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  test("bare / scoped npm strings still load from node_modules", async () => {
+    temp = createTemp();
+    const bare = linkFixture(temp.cwd, "create-integration-pkg");
+    expect(isLocalPathSpecifier(bare)).toBe(false);
+    const integration = await loadIntegrationFromPackage(bare, "x-acme-editor", temp.cwd);
+    expect(integration.id).toBe("x-acme-editor");
+  });
+
+  test("absolute path inside project root is allowed", async () => {
+    temp = createTemp();
+    plantLocalIntegration(temp.cwd);
+    const spec = resolve(temp.cwd, "agents/integration/local-agent");
+    const integration = await loadIntegrationFromPackage(spec, "x-acme-editor", temp.cwd);
+    expect(integration.id).toBe("x-acme-editor");
   });
 });
