@@ -3,10 +3,14 @@ import { defineConfig } from "vite-plus";
 export default defineConfig({
   fmt: {
     // Acceptance YAML fixtures include intentionally invalid documents.
+    // Generated conformance statements must stay byte-stable for the drift gate.
     ignorePatterns: [
       "packages/core/tests/manifest/fixtures/**",
       "packages/core/tests/lockfile/fixtures/**",
       "packages/core/tests/resolve/fixtures/**",
+      "CONFORMANCE.md",
+      "CONFORMANCE.json",
+      "AGENT_PLUGINS_COMPATIBILITY.md",
     ],
   },
   lint: {
