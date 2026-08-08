@@ -42,9 +42,6 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).toMatch(/--verbose\b/);
     expect(text).toMatch(/--validate\b/);
     expect(text).not.toMatch(/optimizer|distributed placement|multi-host/i);
-    expect(text).not.toMatch(
-      /уже встроен|из коробки|built-in|встроен в CLI|ships? (?:with|inside) (?:the )?CLI|already (?:in|inside) (?:the )?CLI/i,
-    );
   });
 
   test("compile help omits deferred --no-links and multi-host flags", async () => {

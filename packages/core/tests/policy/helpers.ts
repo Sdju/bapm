@@ -472,23 +472,6 @@ export function violationsOf(result: unknown): unknown[] {
   return [];
 }
 
-export function listBapmIntegrationPackageNames(): string[] {
-  const packagesDir = join(repoRoot, "packages");
-  if (!existsSync(packagesDir)) return [];
-  const names: string[] = [];
-  for (const entry of readdirSync(packagesDir)) {
-    const dir = join(packagesDir, entry);
-    if (!statSync(dir).isDirectory()) continue;
-    const pkgPath = join(dir, "package.json");
-    if (!existsSync(pkgPath)) continue;
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-    if (typeof pkg.name === "string" && pkg.name.startsWith("@bapm/integration-")) {
-      names.push(pkg.name);
-    }
-  }
-  return names.sort();
-}
-
 export function discoveredPathOf(result: unknown): string | undefined {
   if (typeof result === "string") return result;
   if (!result || typeof result !== "object") return undefined;

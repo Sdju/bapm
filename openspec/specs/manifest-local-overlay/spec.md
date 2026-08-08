@@ -94,17 +94,3 @@ The system MUST treat `bapm.local.yml` as non-publishable personal config: defau
 
 - **WHEN** publish builds a registry or upload zip from a project that contains `bapm.local.yml`
 - **THEN** the published archive MUST NOT include `bapm.local.yml`
-
-### Requirement: Docs describe personal local overlay
-
-User documentation MUST describe `bapm.local.yml` as an optional personal overlay (allowlist, merge precedence vs flags/base/env, gitignore/pack exclude), MUST show a quick-start mention of the personal overlay, and MUST state that it is distinct from the `local` / `local:` dependency source.
-
-#### Scenario: Config-manifest documents overlay
-
-- **WHEN** a reader opens the VitePress config-manifest guide after this change
-- **THEN** the page MUST document `bapm.local.yml`, allowlisted fields, and precedence
-
-#### Scenario: Quick-start mentions personal overlay
-
-- **WHEN** a reader opens the VitePress quick-start guide after this change
-- **THEN** the page MUST mention the personal `bapm.local.yml` overlay

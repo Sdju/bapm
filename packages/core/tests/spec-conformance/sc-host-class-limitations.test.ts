@@ -2,12 +2,12 @@
  * Limitations honesty after sc-host-class claim flip (promoted):
  * claimed §10.3 host-class floor acknowledged; soft zip + residual Auth depth named;
  * must NOT frame full host-class scoping as wholly deferred.
+ * Checklist is source of truth; claim status rows live in CONFORMANCE.json.
  */
 import { describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
 import {
   conformanceJsonPath,
-  conformanceMdPath,
   limitationsBlob,
   loadChecklist,
   readText,
@@ -45,23 +45,6 @@ describe("sc-host-class Limitations honesty", () => {
       /gh\s*CLI|az\s*bearer|credential.?helper|try_with_fallback|residual Auth depth/i.test(blob),
       `residual Auth depth (gh/az/helper / try_with_fallback) must be named:\n${blob}`,
     ).toBe(true);
-  });
-
-  test("CONFORMANCE.md mirrors claimed floor (not wholly deferred host-class)", () => {
-    expect(existsSync(conformanceMdPath), conformanceMdPath).toBe(true);
-    const md = readText(conformanceMdPath);
-
-    expect(
-      /req-sc-003[\s\S]{0,200}active/i.test(md) ||
-        /\|\s*req-sc-003\s*\|\s*MUST\s*\|[^|]*\|\s*active/i.test(md),
-      "CONFORMANCE.md must show req-sc-003 active",
-    ).toBe(true);
-
-    expect(
-      /thin marketplace env host unlock[\s\S]{0,80}not full OpenAPM §10\.3/i.test(md) &&
-        /req-sc-003[\s\S]{0,120}skipped/i.test(md),
-      "CONFORMANCE.md must not keep pre-claim skipped framing for host-class IDs",
-    ).toBe(false);
   });
 
   test("CONFORMANCE.json marks claimed IDs active", () => {

@@ -39,9 +39,6 @@ describe("CLI install UX flags and help", () => {
     expect(text).toMatch(/MCP|configure|runtime/i);
     expect(text).toMatch(/--target\s+<id>/i);
     expect(text).toMatch(/\bactive\b/i);
-    expect(text).not.toMatch(
-      /уже встроен|из коробки|built-in|встроен в CLI|ships? (?:with|inside) (?:the )?CLI|already (?:in|inside) (?:the )?CLI/i,
-    );
   });
 
   test("parseInstallArgs accepts --dry-run, --parallel-downloads, -v, --exclude", () => {

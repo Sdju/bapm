@@ -21,8 +21,6 @@ export type { ChecklistRow };
 export const checklistPath =
   findExistingPath(checklistCandidates) ?? join(repoRoot, "tests/spec-conformance/checklist.yml");
 
-export const docsConformanceGuidePath = join(repoRoot, "apps/docs/guide/conformance.md");
-
 /** Active sc-* — must stay active with citations (003/005/008/013 claimed by sc-host-class). */
 export const ACTIVE_SC_IDS = [
   "req-sc-001",

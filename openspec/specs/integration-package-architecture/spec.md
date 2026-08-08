@@ -99,9 +99,9 @@ The public workspace package graph SHALL expose `@bapm/integration-api` and conc
 
 ### Requirement: Live architecture uses only integration terminology
 
-Live architecture documentation and specifications MUST describe concrete host packages as integrations and the shared boundary as the integration API. Historical migration references may name the retired namespace only in the migration's archived record; live specifications MUST NOT retain it.
+Live OpenSpec specifications MUST describe concrete host packages as integrations and the shared boundary as the integration API. Historical migration references may name the retired namespace only in the migration's archived record; live specifications MUST NOT retain it.
 
 #### Scenario: Architecture specification audit
 
-- **WHEN** maintainers inspect live architecture specifications after the migration
+- **WHEN** maintainers inspect live OpenSpec architecture specifications after the migration
 - **THEN** they find integration package terminology and no retired target package identifier
