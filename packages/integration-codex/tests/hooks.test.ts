@@ -1,30 +1,31 @@
 /**
  * Hooks → `.codex/hooks.json` merge + `.codex/bapm-hooks.json` ownership sidecar;
- * forced target mkdir-on-write.
+ * forced target mkdir-on-write
+ * (promoted from integration-codex-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCodexIntegration } from "../../../src/createCodexIntegration.ts";
-import { createTempProject, type TempProject } from "./helpers.ts";
+import { createCodexIntegration } from "../src/createCodexIntegration.ts";
 
 function readJson(path: string): Record<string, unknown> {
   return JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
 }
 
 describe("codex hooks", () => {
-  let project: TempProject | undefined;
+  let cwd: string | undefined;
 
   afterEach(() => {
-    project?.cleanup();
-    project = undefined;
+    if (cwd) rmSync(cwd, { recursive: true, force: true });
+    cwd = undefined;
   });
 
   test("merges hooks into hooks.json, copies scripts, writes ownership sidecar", async () => {
-    project = createTempProject("bapm-codex-hooks-merge-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-hooks-merge-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
     writeFileSync(
-      join(project.cwd, ".codex", "hooks.json"),
+      join(cwd, ".codex", "hooks.json"),
       `${JSON.stringify(
         {
           version: 1,
@@ -39,10 +40,10 @@ describe("codex hooks", () => {
       "utf8",
     );
 
-    const script = join(project.cwd, "pkg", "run.sh");
-    mkdirSync(join(project.cwd, "pkg"), { recursive: true });
+    const script = join(cwd, "pkg", "run.sh");
+    mkdirSync(join(cwd, "pkg"), { recursive: true });
     writeFileSync(script, "#!/bin/sh\necho hi\n", "utf8");
-    const hookSrc = join(project.cwd, "pkg", "session-start.json");
+    const hookSrc = join(cwd, "pkg", "session-start.json");
     writeFileSync(
       hookSrc,
       JSON.stringify({
@@ -56,10 +57,10 @@ describe("codex hooks", () => {
     const target = createCodexIntegration();
     await target.materialize(
       [{ name: "session-start", type: "hook", source: "local", path: hookSrc }],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    const hooksPath = join(project.cwd, ".codex", "hooks.json");
+    const hooksPath = join(cwd, ".codex", "hooks.json");
     expect(existsSync(hooksPath)).toBe(true);
     const hooksDoc = readJson(hooksPath) as {
       meta?: unknown;
@@ -77,16 +78,16 @@ describe("codex hooks", () => {
     ).toBe(true);
     expect(JSON.stringify(hooksDoc)).not.toMatch(/_apm_source|bapm-owned/i);
 
-    expect(existsSync(join(project.cwd, ".codex", "bapm-hooks.json"))).toBe(true);
-    const ownership = readJson(join(project.cwd, ".codex", "bapm-hooks.json"));
+    expect(existsSync(join(cwd, ".codex", "bapm-hooks.json"))).toBe(true);
+    const ownership = readJson(join(cwd, ".codex", "bapm-hooks.json"));
     expect(ownership).toHaveProperty("owned");
   });
 
   test("reinstall replaces owned hooks only and keeps non-owned handlers", async () => {
-    project = createTempProject("bapm-codex-hooks-reinstall-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-hooks-reinstall-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
     writeFileSync(
-      join(project.cwd, ".codex", "hooks.json"),
+      join(cwd, ".codex", "hooks.json"),
       `${JSON.stringify(
         {
           hooks: {
@@ -99,10 +100,10 @@ describe("codex hooks", () => {
       "utf8",
     );
 
-    mkdirSync(join(project.cwd, "pkg"), { recursive: true });
-    writeFileSync(join(project.cwd, "pkg", "v1.sh"), "#!/bin/sh\necho v1\n", "utf8");
-    writeFileSync(join(project.cwd, "pkg", "v2.sh"), "#!/bin/sh\necho v2\n", "utf8");
-    const hookV1 = join(project.cwd, "pkg", "hook-v1.json");
+    mkdirSync(join(cwd, "pkg"), { recursive: true });
+    writeFileSync(join(cwd, "pkg", "v1.sh"), "#!/bin/sh\necho v1\n", "utf8");
+    writeFileSync(join(cwd, "pkg", "v2.sh"), "#!/bin/sh\necho v2\n", "utf8");
+    const hookV1 = join(cwd, "pkg", "hook-v1.json");
     writeFileSync(
       hookV1,
       JSON.stringify({
@@ -110,7 +111,7 @@ describe("codex hooks", () => {
       }),
       "utf8",
     );
-    const hookV2 = join(project.cwd, "pkg", "hook-v2.json");
+    const hookV2 = join(cwd, "pkg", "hook-v2.json");
     writeFileSync(
       hookV2,
       JSON.stringify({
@@ -120,7 +121,7 @@ describe("codex hooks", () => {
     );
 
     const target = createCodexIntegration();
-    const ctx = { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots };
+    const ctx = { cwd, targetId: "codex", deployRoots: target.deployRoots };
     await target.materialize(
       [{ name: "owned-hook", type: "hook", source: "local", path: hookV1 }],
       ctx,
@@ -130,7 +131,7 @@ describe("codex hooks", () => {
       ctx,
     );
 
-    const hooksDoc = readJson(join(project.cwd, ".codex", "hooks.json")) as {
+    const hooksDoc = readJson(join(cwd, ".codex", "hooks.json")) as {
       hooks?: Record<string, Array<{ command?: string }>>;
     };
     const session = hooksDoc.hooks?.SessionStart ?? [];
@@ -142,17 +143,17 @@ describe("codex hooks", () => {
       false,
     );
 
-    const hooksRaw = readFileSync(join(project.cwd, ".codex", "hooks.json"), "utf8");
+    const hooksRaw = readFileSync(join(cwd, ".codex", "hooks.json"), "utf8");
     expect(hooksRaw).not.toMatch(/_apm_source|bapm-owned/i);
   });
 
   test("forced codex creates .codex roots for hooks when absent", async () => {
-    project = createTempProject("bapm-codex-hooks-force-mkdir-");
-    expect(existsSync(join(project.cwd, ".codex"))).toBe(false);
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-hooks-force-mkdir-"));
+    expect(existsSync(join(cwd, ".codex"))).toBe(false);
 
-    mkdirSync(join(project.cwd, "pkg"), { recursive: true });
-    writeFileSync(join(project.cwd, "pkg", "run.sh"), "#!/bin/sh\necho hi\n", "utf8");
-    const hookSrc = join(project.cwd, "pkg", "session-start.json");
+    mkdirSync(join(cwd, "pkg"), { recursive: true });
+    writeFileSync(join(cwd, "pkg", "run.sh"), "#!/bin/sh\necho hi\n", "utf8");
+    const hookSrc = join(cwd, "pkg", "session-start.json");
     writeFileSync(
       hookSrc,
       JSON.stringify({
@@ -166,10 +167,10 @@ describe("codex hooks", () => {
     const target = createCodexIntegration();
     await target.materialize(
       [{ name: "session-start", type: "hook", source: "local", path: hookSrc }],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    expect(existsSync(join(project.cwd, ".codex", "hooks.json"))).toBe(true);
-    expect(existsSync(join(project.cwd, ".codex", "bapm-hooks.json"))).toBe(true);
+    expect(existsSync(join(cwd, ".codex", "hooks.json"))).toBe(true);
+    expect(existsSync(join(cwd, ".codex", "bapm-hooks.json"))).toBe(true);
   });
 });

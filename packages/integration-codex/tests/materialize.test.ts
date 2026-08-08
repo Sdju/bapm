@@ -1,45 +1,56 @@
 /**
  * Materialize: skills → `.agents/skills/`; agents → `.codex/agents/*.toml`;
- * instruction/command/prompt skip; deploy-root containment; mkdir-on-write.
+ * instruction/command/prompt skip; deploy-root containment; mkdir-on-write
+ * (promoted from integration-codex-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCodexIntegration } from "../../../src/createCodexIntegration.ts";
-import { createTempProject, reportDiagnostics, type TempProject } from "./helpers.ts";
+import type { MaterializeReport } from "@bapm/integration-api";
+import { createCodexIntegration } from "../src/createCodexIntegration.ts";
+
+function reportDiagnostics(
+  report: void | MaterializeReport | undefined,
+): NonNullable<MaterializeReport["diagnostics"]> {
+  if (report && typeof report === "object" && Array.isArray(report.diagnostics)) {
+    return report.diagnostics;
+  }
+  return [];
+}
 
 describe("codex materialize", () => {
-  let project: TempProject | undefined;
+  let cwd: string | undefined;
 
   afterEach(() => {
-    project?.cleanup();
-    project = undefined;
+    if (cwd) rmSync(cwd, { recursive: true, force: true });
+    cwd = undefined;
   });
 
   test("skill appears under .agents/skills/<name>/SKILL.md and not .codex/skills/", async () => {
-    project = createTempProject("bapm-codex-skill-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
-    const srcDir = join(project.cwd, "src-skill");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-skill-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
+    const srcDir = join(cwd, "src-skill");
     mkdirSync(srcDir, { recursive: true });
     writeFileSync(join(srcDir, "SKILL.md"), "---\nname: hello\n---\n# Hello\n", "utf8");
 
     const target = createCodexIntegration();
     await target.materialize(
       [{ name: "hello", type: "skill", source: "local", path: join(srcDir, "SKILL.md") }],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    const dest = join(project.cwd, ".agents", "skills", "hello", "SKILL.md");
+    const dest = join(cwd, ".agents", "skills", "hello", "SKILL.md");
     expect(existsSync(dest)).toBe(true);
     expect(readFileSync(dest, "utf8")).toMatch(/Hello/);
-    expect(existsSync(join(project.cwd, ".codex", "skills", "hello", "SKILL.md"))).toBe(false);
-    expect(existsSync(join(project.cwd, ".codex", "config.toml"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex", "skills", "hello", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex", "config.toml"))).toBe(false);
   });
 
   test("portable Agent Plugins skill directory is fully copied", async () => {
-    project = createTempProject("bapm-codex-portable-skill-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
-    const pluginRoot = join(project.cwd, "plugin");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-portable-skill-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
+    const pluginRoot = join(cwd, "plugin");
     const skillDir = join(pluginRoot, "skills", "example");
     mkdirSync(skillDir, { recursive: true });
     writeFileSync(join(skillDir, "SKILL.md"), "---\nname: example\n---\n# Example\n", "utf8");
@@ -58,20 +69,20 @@ describe("codex materialize", () => {
           pluginRoot,
         },
       ],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    expect(
-      readFileSync(join(project.cwd, ".agents", "skills", "example", "guide.md"), "utf8"),
-    ).toBe("auxiliary skill file\n");
-    expect(existsSync(join(project.cwd, ".agents", "skills", "example", "SKILL.md"))).toBe(true);
-    expect(existsSync(join(project.cwd, ".codex", "skills", "example", "SKILL.md"))).toBe(false);
+    expect(readFileSync(join(cwd, ".agents", "skills", "example", "guide.md"), "utf8")).toBe(
+      "auxiliary skill file\n",
+    );
+    expect(existsSync(join(cwd, ".agents", "skills", "example", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(cwd, ".codex", "skills", "example", "SKILL.md"))).toBe(false);
   });
 
   test("agent becomes .codex/agents/<name>.toml with name/description/developer_instructions", async () => {
-    project = createTempProject("bapm-codex-agent-toml-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
-    const agentSrc = join(project.cwd, "scout.md");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-agent-toml-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
+    const agentSrc = join(cwd, "scout.md");
     writeFileSync(
       agentSrc,
       "---\nname: scout\ndescription: Finds things\n---\n# Scout body\nDo recon.\n",
@@ -80,25 +91,25 @@ describe("codex materialize", () => {
 
     const target = createCodexIntegration();
     await target.materialize([{ name: "scout", type: "agent", source: "local", path: agentSrc }], {
-      cwd: project.cwd,
+      cwd,
       targetId: "codex",
       deployRoots: target.deployRoots,
     });
 
-    const dest = join(project.cwd, ".codex", "agents", "scout.toml");
+    const dest = join(cwd, ".codex", "agents", "scout.toml");
     expect(existsSync(dest)).toBe(true);
     const body = readFileSync(dest, "utf8");
     expect(body).toMatch(/name\s*=\s*"scout"/);
     expect(body).toMatch(/description\s*=\s*"Finds things"/);
     expect(body).toMatch(/developer_instructions\s*=/);
     expect(body).toMatch(/Scout body|Do recon/);
-    expect(existsSync(join(project.cwd, ".codex", "config.toml"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex", "config.toml"))).toBe(false);
   });
 
   test("tools frontmatter is dropped with diagnostic", async () => {
-    project = createTempProject("bapm-codex-agent-tools-drop-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
-    const agentSrc = join(project.cwd, "toolsy.md");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-agent-tools-drop-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
+    const agentSrc = join(cwd, "toolsy.md");
     writeFileSync(
       agentSrc,
       "---\nname: toolsy\ndescription: Has tools\ntools:\n  - Read\n  - Write\n---\n# Body\n",
@@ -108,10 +119,10 @@ describe("codex materialize", () => {
     const target = createCodexIntegration();
     const report = await target.materialize(
       [{ name: "toolsy", type: "agent", source: "local", path: agentSrc }],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    const dest = join(project.cwd, ".codex", "agents", "toolsy.toml");
+    const dest = join(cwd, ".codex", "agents", "toolsy.toml");
     expect(existsSync(dest)).toBe(true);
     const body = readFileSync(dest, "utf8");
     expect(body).not.toMatch(/\btools\b\s*=/);
@@ -129,29 +140,29 @@ describe("codex materialize", () => {
   });
 
   test("instruction does not write a Codex-native rules file under .codex/", async () => {
-    project = createTempProject("bapm-codex-skip-instruction-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
-    const src = join(project.cwd, "style.md");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-skip-instruction-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
+    const src = join(cwd, "style.md");
     writeFileSync(src, "# Style rule\n", "utf8");
 
     const target = createCodexIntegration();
     const report = await target.materialize(
       [{ name: "style", type: "instruction", source: "local", path: src }],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    expect(existsSync(join(project.cwd, ".codex", "rules", "style.md"))).toBe(false);
-    expect(existsSync(join(project.cwd, ".codex", "instructions", "style.md"))).toBe(false);
-    expect(existsSync(join(project.cwd, ".cursor", "rules", "style.mdc"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex", "rules", "style.md"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex", "instructions", "style.md"))).toBe(false);
+    expect(existsSync(join(cwd, ".cursor", "rules", "style.mdc"))).toBe(false);
     const diags = reportDiagnostics(report);
     expect(diags.length).toBeGreaterThan(0);
   });
 
   test("command and prompt do not write native host files", async () => {
-    project = createTempProject("bapm-codex-skip-cmd-prompt-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
-    const cmdSrc = join(project.cwd, "review.md");
-    const promptSrc = join(project.cwd, "ask.md");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-skip-cmd-prompt-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
+    const cmdSrc = join(cwd, "review.md");
+    const promptSrc = join(cwd, "ask.md");
     writeFileSync(cmdSrc, "---\ndescription: review\n---\n# Review\n", "utf8");
     writeFileSync(promptSrc, "# Ask\n", "utf8");
 
@@ -161,20 +172,20 @@ describe("codex materialize", () => {
         { name: "review", type: "command", source: "local", path: cmdSrc },
         { name: "ask", type: "prompt", source: "local", path: promptSrc },
       ],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    expect(existsSync(join(project.cwd, ".codex", "commands", "review.md"))).toBe(false);
-    expect(existsSync(join(project.cwd, ".codex", "prompts", "ask.md"))).toBe(false);
-    expect(existsSync(join(project.cwd, ".agents", "commands", "review.md"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex", "commands", "review.md"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex", "prompts", "ask.md"))).toBe(false);
+    expect(existsSync(join(cwd, ".agents", "commands", "review.md"))).toBe(false);
     const diags = reportDiagnostics(report);
     expect(diags.length).toBeGreaterThan(0);
   });
 
   test("materialize refuses escapes outside deploy roots", async () => {
-    project = createTempProject("bapm-codex-escape-");
-    mkdirSync(join(project.cwd, ".codex"), { recursive: true });
-    const srcDir = join(project.cwd, "src-skill");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-escape-"));
+    mkdirSync(join(cwd, ".codex"), { recursive: true });
+    const srcDir = join(cwd, "src-skill");
     mkdirSync(srcDir, { recursive: true });
     writeFileSync(join(srcDir, "SKILL.md"), "---\nname: escape\n---\n# Escape\n", "utf8");
 
@@ -182,27 +193,27 @@ describe("codex materialize", () => {
     await expect(
       target.materialize(
         [{ name: "escape", type: "skill", source: "local", path: join(srcDir, "SKILL.md") }],
-        { cwd: project.cwd, targetId: "codex", deployRoots: [".codex"] },
+        { cwd, targetId: "codex", deployRoots: [".codex"] },
       ),
     ).rejects.toThrow();
-    expect(existsSync(join(project.cwd, ".agents", "skills", "escape", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(cwd, ".agents", "skills", "escape", "SKILL.md"))).toBe(false);
   });
 
   test("forced codex materialize may create .agents/.codex roots when absent", async () => {
-    project = createTempProject("bapm-codex-force-roots-");
-    const srcDir = join(project.cwd, "src-skill");
+    cwd = mkdtempSync(join(tmpdir(), "bapm-codex-force-roots-"));
+    const srcDir = join(cwd, "src-skill");
     mkdirSync(srcDir, { recursive: true });
     writeFileSync(join(srcDir, "SKILL.md"), "---\nname: forced\n---\n# Forced\n", "utf8");
 
     const target = createCodexIntegration();
-    expect(existsSync(join(project.cwd, ".codex"))).toBe(false);
-    expect(existsSync(join(project.cwd, ".agents"))).toBe(false);
+    expect(existsSync(join(cwd, ".codex"))).toBe(false);
+    expect(existsSync(join(cwd, ".agents"))).toBe(false);
 
     await target.materialize(
       [{ name: "forced", type: "skill", source: "local", path: join(srcDir, "SKILL.md") }],
-      { cwd: project.cwd, targetId: "codex", deployRoots: target.deployRoots },
+      { cwd, targetId: "codex", deployRoots: target.deployRoots },
     );
 
-    expect(existsSync(join(project.cwd, ".agents", "skills", "forced", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(cwd, ".agents", "skills", "forced", "SKILL.md"))).toBe(true);
   });
 });

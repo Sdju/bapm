@@ -1,23 +1,20 @@
 /**
- * Package dual surface: runtime factory + retained marketplace mapper;
- * core must not hard-depend on @bapm/integration-codex.
+ * @bapm/integration-codex package identity + factory surface
+ * (detect/materialize/hooks/mcp/compile live in sibling suites;
+ * promoted from integration-codex-runtime acceptance).
  */
 import { describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  codexMarketplaceIntegration,
-  createIntegration,
-  mapCodexMarketplace,
-} from "../../../src/index.ts";
-import { createCodexIntegration } from "../../../src/createCodexIntegration.ts";
+import { createCodexIntegration } from "../src/createCodexIntegration.ts";
+import { createIntegration } from "../src/index.ts";
 
-const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 
-describe("@bapm/integration-codex package surface", () => {
+describe("@bapm/integration-codex package", () => {
   test("package is @bapm/integration-codex with integration-api dep and no core hard-dep", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
@@ -44,30 +41,6 @@ describe("@bapm/integration-codex package surface", () => {
     expect(typeof target.configureMcp).toBe("function");
     expect(typeof target.compile).toBe("function");
     expect(target.deployRoots).toEqual(expect.arrayContaining([".codex", ".agents", "."]));
-  });
-
-  test("marketplace mapper remains available without requiring runtime activation", () => {
-    expect(codexMarketplaceIntegration).toMatchObject({
-      id: "codex",
-      marketplaceOutput: {
-        format: "codex",
-        defaultOutput: ".agents/plugins/marketplace.json",
-      },
-    });
-    expect(typeof mapCodexMarketplace).toBe("function");
-    expect(
-      mapCodexMarketplace({ name: "Example marketplace" }, [
-        {
-          name: "example-plugin",
-          entry: { category: "development" },
-          isLocal: true,
-          source: "./plugins/example-plugin",
-        },
-      ]),
-    ).toMatchObject({
-      name: "Example marketplace",
-      plugins: [{ name: "example-plugin", category: "development" }],
-    });
   });
 
   test("@bapm/core must not hard-depend on @bapm/integration-codex", () => {
