@@ -1,6 +1,6 @@
 /**
  * Detect: `.windsurf/` directory; never mkdir solely for detect
- * (integration-windsurf-runtime acceptance).
+ *.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync } from "node:fs";

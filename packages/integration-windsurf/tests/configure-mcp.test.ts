@@ -1,7 +1,7 @@
 /**
  * configureMcp → home ~/.codeium/windsurf/mcp_config.json (CODEIUM_HOME)
  * with client-adapter mcpServers parity; preserve unrelated servers;
- * never project MCP / global_rules (integration-windsurf-runtime acceptance).
+ * never project MCP / global_rules.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync } from "node:fs";

@@ -1,7 +1,7 @@
 /**
  * Hooks → merge .windsurf/hooks.json + scripts + .windsurf/bapm-hooks.json
  * sidecar; PascalCase events; reinstall replaces owned only
- * (integration-windsurf-runtime acceptance).
+ *.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";

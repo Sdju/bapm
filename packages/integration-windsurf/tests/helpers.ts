@@ -1,11 +1,11 @@
 /**
- * Shared helpers for integration-windsurf-runtime acceptance (RED).
+ * Shared helpers for integration-windsurf-runtime.
  */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { BapmIntegration, MaterializeReport } from "@bapm/integration-api";
-import { createIntegration, createWindsurfIntegration } from "../../../src/index.ts";
+import { createIntegration, createWindsurfIntegration } from "../src/index.ts";
 
 export function createTempProject(prefix = "bapm-windsurf-"): {
   cwd: string;

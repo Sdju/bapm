@@ -1,14 +1,13 @@
 /**
- * Package identity / registry surface for @bapm/integration-windsurf
- * (integration-windsurf-runtime acceptance).
+ * Package identity / registry surface for @bapm/integration-windsurf.
  */
 import { describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createIntegration, createWindsurfIntegration } from "../../../src/index.ts";
+import { createIntegration, createWindsurfIntegration } from "../src/index.ts";
 
-const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 

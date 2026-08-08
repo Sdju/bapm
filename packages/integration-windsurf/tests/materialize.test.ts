@@ -1,7 +1,7 @@
 /**
  * Materialize: rules/workflows under .windsurf; skills under .agents;
  * agents skipped; deploy-root containment; no global_rules / windsurf skills
- * (integration-windsurf-runtime acceptance).
+ *.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
