@@ -7,7 +7,7 @@
 | **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
 | **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
 | **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
-| **Gemini**     | Нет (отдельный пакет) | Установить `@bapm/integration-gemini`, объявить `targets:`, затем `--target gemini` / `active`                                                           |
+| **Windsurf**   | Нет (отдельный пакет) | Установить `@bapm/integration-windsurf`, объявить `targets:`, затем `--target windsurf` / `active`                                                       |
 | **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
 | **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
 | **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
@@ -57,9 +57,7 @@ bapm init -y --target opencode
 bapm install --target opencode
 ```
 
-Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, commands → `.opencode/commands/<name>.md`, instructions — compile-only (не native rules), hooks — явный non-fatal skip (diagnostic), MCP → project `opencode.json` (`mcp`, `type: local` / `remote`), compile → project-root `AGENTS.md` (**включая** instructions). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc` (lone `AGENTS.md` не считается OpenCode).
-
-Cursor, Codex и OpenCode делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
+Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, commands → `.opencode/commands/<name>.md`, hooks — явный non-fatal skip (diagnostic), MCP → project `opencode.json` (`mcp`, `type: local` / `remote`). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc`.
 
 ## Copilot (opt-in пакет)
 
@@ -84,28 +82,27 @@ bapm compile --target copilot
 
 Instructions → `.github/instructions/<name>.instructions.md`, commands/`*.prompt.md` → `.github/prompts/<name>.prompt.md` (не `.github/commands/`), agents → `.github/agents/<name>.agent.md`, skills → `.agents/skills/<name>/`, hooks → per-file `.github/hooks/<pkg>-<stem>.json` (+ scripts и sidecar `.github/bapm-hooks.json`). MCP → home `~/.copilot/mcp-config.json` (`COPILOT_HOME`, translate-placeholders `${VAR}`), compile → `.github/copilot-instructions.md` (instructions из materialize в тело compile не дублируются). Auto-detect: whitelist под `.github/` (`copilot-instructions.md` или dirs instructions/agents/prompts/hooks).
 
-## Gemini (opt-in пакет)
+## Windsurf (opt-in пакет)
 
-Отдельный runtime-пакет `@bapm/integration-gemini`:
+Отдельный runtime-пакет `@bapm/integration-windsurf`:
 
 ```bash
-npm i -D @bapm/integration-gemini
+npm i -D @bapm/integration-windsurf
 ```
 
 ```yaml
 targets:
-  gemini: "@bapm/integration-gemini"
+  windsurf: "@bapm/integration-windsurf"
 active:
-  - gemini
+  - windsurf
 ```
 
 ```bash
-bapm init -y --target gemini
-bapm install --target gemini
-bapm compile --target gemini
+bapm init -y --target windsurf
+bapm install --target windsurf
 ```
 
-Commands → `.gemini/commands/<name>.toml` (`$ARGUMENTS` → `{{args}}`), skills → `.agents/skills/<name>/`, hooks → merge `.gemini/settings.json` (+ scripts и sidecar `.gemini/bapm-hooks.json`, события `PreToolUse`→`BeforeTool` и т.п.). Instructions — только через compile → `GEMINI.md` (не раскладываются как rules). MCP → project `.gemini/settings.json` `mcpServers` (opt-in, когда есть `.gemini/`; схема без обязательного `type`). Auto-detect: `.gemini/` или `GEMINI.md`.
+Instructions → `.windsurf/rules/<name>.md`, commands → `.windsurf/workflows/<name>.md` (не `.windsurf/commands/`), skills → `.agents/skills/<name>/`, hooks → merge `.windsurf/hooks.json` (+ scripts и sidecar `.windsurf/bapm-hooks.json`, PascalCase events). Agents — skip (diagnostic). MCP → home `~/.codeium/windsurf/mcp_config.json` (`CODEIUM_HOME`, bake/default). Auto-detect: каталог `.windsurf/`. User-scope / `global_rules` — вне scope этого пакета.
 
 ## Кастомный npm-пакет
 
@@ -211,7 +208,7 @@ bapm compile --target codex
 
 Skills → `.agents/skills/<name>/SKILL.md`, agents → `.codex/agents/<name>.toml`, hooks → `.codex/hooks.json` (+ `.codex/bapm-hooks.json`), MCP → `.codex/config.toml` (`mcp_servers`), compile → project-root `AGENTS.md` (**включая** instructions). Auto-detect: только `.codex/` (lone `AGENTS.md` не считается Codex).
 
-Cursor, Codex и OpenCode делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
+Cursor и Codex делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
 
 Marketplace JSON по-прежнему:
 
