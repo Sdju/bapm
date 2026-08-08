@@ -7,7 +7,8 @@
 | **Cursor**         | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                         |
 | **OpenCode**       | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                     |
 | **Свой агент**     | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                     |
-| **Claude / Codex** | Нет (не runtime)      | Пакеты `@bapm/integration-claude` / `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack) |
+| **Claude**         | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
+| **Codex**          | Нет (marketplace)     | Пакет `@bapm/integration-codex` + [Marketplace pack](/guide/situations/marketplace-pack) |
 
 ## Cursor (opt-in пакет)
 
@@ -110,13 +111,41 @@ bapm install --target pi
 
 Контракт и helpers: пакет `@bapm/integration-api`. Глубокий authoring: [Architecture](/architecture/).
 
-## Claude и Codex
+## Claude (opt-in runtime + marketplace)
 
-Это **не** runtime install targets. Для marketplace JSON нужны соответствующие integration-пакеты:
+Аналогично Cursor — отдельный пакет `@bapm/integration-claude` даёт **runtime** install/compile и отдельно marketplace pack:
 
 ```bash
-npm i -D @bapm/integration-claude   # или @bapm/integration-codex
+npm i -D @bapm/integration-claude
+```
+
+```yaml
+targets:
+  claude: "@bapm/integration-claude"
+active:
+  - claude
+```
+
+```bash
+bapm install --target claude
+bapm compile --target claude
+```
+
+Skills → `.claude/skills/<name>/SKILL.md`, instructions → `.claude/rules/<name>.md`, agents → `.claude/agents/`, commands → `.claude/commands/`, hooks → `.claude/settings.json` (+ `.claude/bapm-hooks.json`), MCP → project `.mcp.json` (opt-in when `.claude/` exists), compile → `CLAUDE.md`. Auto-detect: `.claude/` или `CLAUDE.md`.
+
+Marketplace JSON по-прежнему:
+
+```bash
 bapm pack --marketplace claude
+```
+
+## Codex (marketplace)
+
+Codex остаётся marketplace-output (не runtime install target в этом релизе):
+
+```bash
+npm i -D @bapm/integration-codex
+bapm pack --marketplace codex
 ```
 
 Сценарий: [Marketplace pack](/guide/situations/marketplace-pack).

@@ -1,7 +1,7 @@
 {
   "name": "@bapm/integration-claude",
   "version": "0.0.0",
-  "description": "Claude marketplace-output integration for bapm",
+  "description": "Claude Code runtime + marketplace-output integration for bapm",
   "license": "MIT",
   "files": [
     "dist"

@@ -1,3 +1,13 @@
+/**
+ * @bapm/integration-claude — Claude Code runtime + marketplace pack mapper.
+ */
+
+export {
+  createClaudeIntegration,
+  createClaudeIntegration as createIntegration,
+  transformClaudeRulesMarkdown,
+} from "./createClaudeIntegration.ts";
+
 import type { MarketplaceOutputIntegration } from "@bapm/integration-api";
 
 type PackageEntry = Record<string, unknown>;
