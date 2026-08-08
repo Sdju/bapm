@@ -4,13 +4,7 @@
  */
 import { describe, expect, test } from "vite-plus/test";
 import { join } from "node:path";
-import {
-  docsArchitecturePath,
-  docsRoot,
-  fileExists,
-  readText,
-  repoRoot,
-} from "./helpers.ts";
+import { docsArchitecturePath, docsRoot, fileExists, readText, repoRoot } from "./helpers.ts";
 
 const supportedHostsPath = join(docsRoot, "guide/supported-hosts.md");
 const agentPluginsGuideCandidates = [

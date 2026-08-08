@@ -22,15 +22,15 @@ See proposal.md — Why. Today only `@bapm/integration-cursor` is a full runtime
 
 1. **Native `.opencode/` layout over `.agents/skills` compatibility path**  
    OpenCode also reads `.agents/skills`, but native `.opencode/skills` is the documented primary project source and avoids colliding with Cursor’s preferred tg-003 root when both hosts exist.  
-   *Alternative considered:* only `.agents/skills` — rejected because MCP still needs `opencode.json` and dual-host projects benefit from separate skill trees.
+   _Alternative considered:_ only `.agents/skills` — rejected because MCP still needs `opencode.json` and dual-host projects benefit from separate skill trees.
 
 2. **MCP file = project `opencode.json`, merge under `mcp`**  
    Match current OpenCode docs (`type: local` + `command[]`, `type: remote` + `url`). Prefer `opencode.json` over `opencode.jsonc` for machine writes; if only `.jsonc` exists, create/update `opencode.json` (JSON) rather than rewriting comments-aware JSONC in v1.  
-   *Alternative:* separate `.opencode/mcp.json` — rejected; OpenCode does not load MCP from that path.
+   _Alternative:_ separate `.opencode/mcp.json` — rejected; OpenCode does not load MCP from that path.
 
 3. **SSE fail-closed**  
    OpenCode public MCP docs expose local/remote only; portable `sse` has no safe 1:1 mapping. Fail closed instead of inventing remote.  
-   *Alternative:* map sse → remote URL — rejected as unverified.
+   _Alternative:_ map sse → remote URL — rejected as unverified.
 
 4. **Factory export**  
    Prefer `createIntegration` / `createOpencodeIntegration` named exports (CLI load already accepts `createIntegration` then `createCursorIntegration`-style, then default). Implement `createOpencodeIntegration` + re-export as `createIntegration` for consistency with Cursor.

@@ -8,12 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createIntegrationRegistry } from "@bapm/integration-api";
 import { createOpencodeIntegration } from "@bapm/integration-opencode";
-import {
-  extractPackArchive,
-  runInstall,
-  runPack,
-  writeAgentPluginManifest,
-} from "@bapm/core";
+import { extractPackArchive, runInstall, runPack, writeAgentPluginManifest } from "@bapm/core";
 
 describe("Agent Plugins · OpenCode install e2e", () => {
   let project: string | undefined;

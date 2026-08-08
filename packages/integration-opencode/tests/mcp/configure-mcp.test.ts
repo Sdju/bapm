@@ -76,7 +76,9 @@ describe("opencode configureMcp → opencode.json", () => {
       { cwd: project.cwd, deployRoots: target.deployRoots, targetId: "opencode" },
     );
 
-    const doc = JSON.parse(readFileSync(join(project.cwd, "opencode.json"), "utf8")) as OpencodeMcpDoc;
+    const doc = JSON.parse(
+      readFileSync(join(project.cwd, "opencode.json"), "utf8"),
+    ) as OpencodeMcpDoc;
     expect(doc.mcp!["portable-http"]).toMatchObject({
       type: "remote",
       url: "https://example.test/mcp",
@@ -151,7 +153,9 @@ describe("opencode configureMcp → opencode.json", () => {
       { cwd: project.cwd, deployRoots: target.deployRoots, targetId: "opencode" },
     );
 
-    const doc = JSON.parse(readFileSync(join(project.cwd, "opencode.json"), "utf8")) as OpencodeMcpDoc;
+    const doc = JSON.parse(
+      readFileSync(join(project.cwd, "opencode.json"), "utf8"),
+    ) as OpencodeMcpDoc;
     expect(doc.model).toBe("keep-me");
     expect(doc.mcp!["manual"]).toEqual({ type: "remote", url: "https://manual.test/mcp" });
     expect(doc.mcp!["owned"]).toMatchObject({ type: "local" });
