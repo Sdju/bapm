@@ -7,6 +7,7 @@
 | **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
 | **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
 | **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
+| **Windsurf**   | Нет (отдельный пакет) | Установить `@bapm/integration-windsurf`, объявить `targets:`, затем `--target windsurf` / `active`                                                       |
 | **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
 | **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
 | **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
@@ -80,6 +81,28 @@ bapm compile --target copilot
 ```
 
 Instructions → `.github/instructions/<name>.instructions.md`, commands/`*.prompt.md` → `.github/prompts/<name>.prompt.md` (не `.github/commands/`), agents → `.github/agents/<name>.agent.md`, skills → `.agents/skills/<name>/`, hooks → per-file `.github/hooks/<pkg>-<stem>.json` (+ scripts и sidecar `.github/bapm-hooks.json`). MCP → home `~/.copilot/mcp-config.json` (`COPILOT_HOME`, translate-placeholders `${VAR}`), compile → `.github/copilot-instructions.md` (instructions из materialize в тело compile не дублируются). Auto-detect: whitelist под `.github/` (`copilot-instructions.md` или dirs instructions/agents/prompts/hooks).
+
+## Windsurf (opt-in пакет)
+
+Отдельный runtime-пакет `@bapm/integration-windsurf`:
+
+```bash
+npm i -D @bapm/integration-windsurf
+```
+
+```yaml
+targets:
+  windsurf: "@bapm/integration-windsurf"
+active:
+  - windsurf
+```
+
+```bash
+bapm init -y --target windsurf
+bapm install --target windsurf
+```
+
+Instructions → `.windsurf/rules/<name>.md`, commands → `.windsurf/workflows/<name>.md` (не `.windsurf/commands/`), skills → `.agents/skills/<name>/`, hooks → merge `.windsurf/hooks.json` (+ scripts и sidecar `.windsurf/bapm-hooks.json`, PascalCase events). Agents — skip (diagnostic). MCP → home `~/.codeium/windsurf/mcp_config.json` (`CODEIUM_HOME`, bake/default). Auto-detect: каталог `.windsurf/`. User-scope / `global_rules` — вне scope этого пакета.
 
 ## Кастомный npm-пакет
 

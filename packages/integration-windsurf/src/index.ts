@@ -1,5 +1,9 @@
 /**
- * @bapm/integration-windsurf — Windsurf host integration (stub until apply).
+ * @bapm/integration-windsurf — Windsurf/Cascade host integration.
  */
 
-export { createIntegration, createWindsurfIntegration } from "./createWindsurfIntegration.ts";
+export {
+  createIntegration,
+  createWindsurfIntegration,
+  toPascalCaseEvent,
+} from "./createWindsurfIntegration.ts";
