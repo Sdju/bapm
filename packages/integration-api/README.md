@@ -28,16 +28,24 @@ See `@bapm/integration-cursor` for a built-in reference and the VitePress archit
 
 Optional fs/path helpers for host `materialize` (exported from the package root):
 
-| Symbol                   | Role                                             |
-| ------------------------ | ------------------------------------------------ |
-| `primitivesList`         | Normalize array / `{ primitives }` sets          |
-| `sanitizeName`           | Path-safe single segment from a primitive name   |
-| `isUnderRoot`            | Containment check under a deploy root            |
-| `assertUnderDeployRoots` | Refuse writes outside registered roots           |
-| `readPrimitiveContent`   | Inline content / source file / stub frontmatter  |
-| `toPosixRel`             | Absolute → cwd-relative path with `/` separators |
+| Symbol                       | Role                                                              |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `primitivesList`             | Normalize array / `{ primitives }` sets                           |
+| `primitivesMaterialize`      | Dispatch primitives to `skill` / `instruction` / … handlers       |
+| `sanitizeName`               | Path-safe single segment from a primitive name                    |
+| `isUnderRoot`                | Containment check under a deploy root                             |
+| `assertUnderDeployRoots`     | Refuse writes outside registered roots                            |
+| `readPrimitiveContent`       | Inline content / source file / stub frontmatter                   |
+| `toPosixRel`                 | Absolute → cwd-relative path with `/` separators                  |
+| `findPackageRoot`            | Nearest `apm.yml` / `bapm.yml` / `plugin.json` ancestor           |
+| `isWithin`                   | Path containment (`candidate` under `root`)                       |
+| `listFiles`                  | Recursive file listing (absolute paths)                           |
+| `copyPortableSkillDirectory` | Safe Agent Plugin skill tree copy (no symlink escape)             |
+| `materializeSkill`           | Shared skill deploy (portable tree / SKILL.md / stub + inventory) |
 
-Integrations keep host-specific detect + routing; shared path/content plumbing lives here.
+Prefer `primitivesMaterialize({ skill() {…}, … })` over a manual `primitivesList` loop.
+Use `materializeSkill({ destDir })` inside the `skill` handler — hosts only pick the path.
+Integrations keep host-specific detect + destinations; shared path/content plumbing lives here.
 
 ## Materialize report
 
