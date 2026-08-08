@@ -1,6 +1,6 @@
 # @bapm/integration-opencode
 
-Minimal **OpenCode** host for bapm (detect, materialize skills/agents, MCP configure).
+Minimal **OpenCode** host for bapm (detect, materialize skills/agents/commands, MCP configure, compile).
 
 ## Detection vs forced target
 
@@ -9,24 +9,31 @@ Minimal **OpenCode** host for bapm (detect, materialize skills/agents, MCP confi
 | **Auto-detect**                  | `.opencode/` **directory** **or** `opencode.json` / `opencode.jsonc` at project root | Only when materialize / configureMcp runs after a positive detect    |
 | **Forced** (`--target opencode`) | Explicit CLI/core forced target id, even if detect is false                          | MAY `mkdir` registered roots (`.opencode/`, skills/agents) as needed |
 
-Auto-detect without force MUST NOT create `.opencode/` solely for MCP opt-in. Forced activation is owned by Install / CLI; this package’s `detect` stays an honest presence predicate.
+Auto-detect without force MUST NOT create `.opencode/` solely for MCP opt-in. Forced activation is owned by Install / CLI; this package’s `detect` stays an honest presence predicate. Lone project-root `AGENTS.md` is **not** an OpenCode signal (shared compile family with Cursor/Codex).
 
 ## Deploy roots
 
 Registered roots:
 
-- `.opencode` — skills → `skills/<name>/SKILL.md`, agents → `agents/<name>.md`
-- `.` — covers project-root `opencode.json` for MCP only (writer hard-codes that basename)
+- `.opencode` — skills → `skills/<name>/SKILL.md`, agents → `agents/<name>.md`, commands → `commands/<name>.md`
+- `.` — project-root `opencode.json` (MCP) and compile `AGENTS.md` (writers hard-limit basenames)
 
 ## Materialize routing
 
-| Primitive type | Destination                        |
-| -------------- | ---------------------------------- |
-| skill          | `.opencode/skills/<name>/SKILL.md` |
-| agent          | `.opencode/agents/<name>.md`       |
+| Primitive type | Destination                                                          |
+| -------------- | -------------------------------------------------------------------- |
+| skill          | `.opencode/skills/<name>/SKILL.md`                                   |
+| agent          | `.opencode/agents/<name>.md`                                         |
+| command        | `.opencode/commands/<name>.md`                                       |
+| instruction    | skip (compile-only → `AGENTS.md`; non-fatal diagnostic)              |
+| hook           | skip (`OPENCODE_HOOKS_UNSUPPORTED`)                                  |
 
-Instruction/rules mapping is out of scope for v1. Writes never escape registered roots.
+Skills stay under `.opencode/skills/` (not APM `.agents/skills/`). Writes never escape registered roots.
 **Materialize does not write `opencode.json`.** MCP is only via `configureMcp`.
+
+## Compile
+
+`compile` defaults to project-root `AGENTS.md`, **includes** instruction primitives, and honors `write` for preview vs durable emit. Cursor, Codex, and OpenCode share the `AGENTS.md` family: **last writer wins** per invocation.
 
 ## MCP configure (`configureMcp`)
 
