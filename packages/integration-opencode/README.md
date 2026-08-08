@@ -20,13 +20,13 @@ Registered roots:
 
 ## Materialize routing
 
-| Primitive type | Destination                                                          |
-| -------------- | -------------------------------------------------------------------- |
-| skill          | `.opencode/skills/<name>/SKILL.md`                                   |
-| agent          | `.opencode/agents/<name>.md`                                         |
-| command        | `.opencode/commands/<name>.md`                                       |
-| instruction    | skip (compile-only → `AGENTS.md`; non-fatal diagnostic)              |
-| hook           | skip (`OPENCODE_HOOKS_UNSUPPORTED`)                                  |
+| Primitive type | Destination                                             |
+| -------------- | ------------------------------------------------------- |
+| skill          | `.opencode/skills/<name>/SKILL.md`                      |
+| agent          | `.opencode/agents/<name>.md`                            |
+| command        | `.opencode/commands/<name>.md`                          |
+| instruction    | skip (compile-only → `AGENTS.md`; non-fatal diagnostic) |
+| hook           | skip (`OPENCODE_HOOKS_UNSUPPORTED`)                     |
 
 Skills stay under `.opencode/skills/` (not APM `.agents/skills/`). Writes never escape registered roots.
 **Materialize does not write `opencode.json`.** MCP is only via `configureMcp`.

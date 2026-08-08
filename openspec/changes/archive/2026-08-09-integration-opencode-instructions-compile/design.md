@@ -21,7 +21,7 @@
 
 1. **Reuse Codex/Cursor AGENTS.md renderer pattern**  
    Implement `compile` on `createOpencodeIntegration` calling a local `compileOpencodeAgentsMd` + `renderOpencodeAgentsMd` (same section shape: `# AGENTS.md`, generated banner, `## name (type)` + body, sorted by type/name/path). Prefer copy-adapt over extracting a shared helper in this change to avoid a cross-package refactor.  
-   *Alternatives considered:* shared helper in `integration-api` — deferred; three hosts already duplicate lightly.
+   _Alternatives considered:_ shared helper in `integration-api` — deferred; three hosts already duplicate lightly.
 
 2. **Instructions stay compile-only**  
    Materialize continues to skip native instruction/rules files. Add an optional non-fatal diagnostic (e.g. `OPENCODE_PRIMITIVE_UNSUPPORTED` / compile-only message) for instructions, matching Codex honesty without failing install. Hooks keep existing `OPENCODE_HOOKS_UNSUPPORTED`.
