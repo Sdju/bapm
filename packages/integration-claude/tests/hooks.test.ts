@@ -1,24 +1,30 @@
 /**
- * Hooks → .claude/settings.json merge + .claude/bapm-hooks.json ownership sidecar.
+ * Hooks → .claude/settings.json merge + .claude/bapm-hooks.json ownership sidecar
+ * (promoted from integration-claude-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createClaudeTarget, createTempDir, readJson, type TempDir } from "./helpers.ts";
+import { createClaudeIntegration } from "../src/createClaudeIntegration.ts";
 
-describe("integration-claude-runtime · hooks", () => {
-  let project: TempDir | undefined;
+function readJson(path: string): Record<string, unknown> {
+  return JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+}
+
+describe("claude hooks", () => {
+  let cwd: string | undefined;
 
   afterEach(() => {
-    project?.cleanup();
-    project = undefined;
+    if (cwd) rmSync(cwd, { recursive: true, force: true });
+    cwd = undefined;
   });
 
   test("merges hooks into settings.json, copies scripts, writes ownership sidecar", async () => {
-    project = createTempDir("bapm-acc-claude-hooks-merge-");
-    mkdirSync(join(project.cwd, ".claude"), { recursive: true });
+    cwd = mkdtempSync(join(tmpdir(), "bapm-claude-hooks-merge-"));
+    mkdirSync(join(cwd, ".claude"), { recursive: true });
     writeFileSync(
-      join(project.cwd, ".claude", "settings.json"),
+      join(cwd, ".claude", "settings.json"),
       `${JSON.stringify(
         {
           permissions: { allow: ["Bash"] },
@@ -32,10 +38,10 @@ describe("integration-claude-runtime · hooks", () => {
       "utf8",
     );
 
-    const script = join(project.cwd, "pkg", "run.sh");
-    mkdirSync(join(project.cwd, "pkg"), { recursive: true });
+    const script = join(cwd, "pkg", "run.sh");
+    mkdirSync(join(cwd, "pkg"), { recursive: true });
     writeFileSync(script, "#!/bin/sh\necho hi\n", "utf8");
-    const hookSrc = join(project.cwd, "pkg", "session-start.json");
+    const hookSrc = join(cwd, "pkg", "session-start.json");
     writeFileSync(
       hookSrc,
       JSON.stringify({
@@ -46,13 +52,13 @@ describe("integration-claude-runtime · hooks", () => {
       "utf8",
     );
 
-    const target = await createClaudeTarget();
+    const target = createClaudeIntegration();
     await target.materialize(
       [{ name: "session-start", type: "hook", source: "local", path: hookSrc }],
-      { cwd: project.cwd, targetId: "claude", deployRoots: target.deployRoots },
+      { cwd, targetId: "claude", deployRoots: target.deployRoots },
     );
 
-    const settingsPath = join(project.cwd, ".claude", "settings.json");
+    const settingsPath = join(cwd, ".claude", "settings.json");
     expect(existsSync(settingsPath)).toBe(true);
     const settings = readJson(settingsPath) as {
       permissions?: unknown;
@@ -70,16 +76,16 @@ describe("integration-claude-runtime · hooks", () => {
     ).toBe(true);
     expect(JSON.stringify(settings)).not.toMatch(/_apm_source/);
 
-    expect(existsSync(join(project.cwd, ".claude", "bapm-hooks.json"))).toBe(true);
-    const ownership = readJson(join(project.cwd, ".claude", "bapm-hooks.json"));
+    expect(existsSync(join(cwd, ".claude", "bapm-hooks.json"))).toBe(true);
+    const ownership = readJson(join(cwd, ".claude", "bapm-hooks.json"));
     expect(ownership).toHaveProperty("owned");
   });
 
   test("reinstall replaces owned hooks only and keeps non-owned handlers", async () => {
-    project = createTempDir("bapm-acc-claude-hooks-reinstall-");
-    mkdirSync(join(project.cwd, ".claude"), { recursive: true });
+    cwd = mkdtempSync(join(tmpdir(), "bapm-claude-hooks-reinstall-"));
+    mkdirSync(join(cwd, ".claude"), { recursive: true });
     writeFileSync(
-      join(project.cwd, ".claude", "settings.json"),
+      join(cwd, ".claude", "settings.json"),
       `${JSON.stringify(
         {
           hooks: {
@@ -92,10 +98,10 @@ describe("integration-claude-runtime · hooks", () => {
       "utf8",
     );
 
-    mkdirSync(join(project.cwd, "pkg"), { recursive: true });
-    writeFileSync(join(project.cwd, "pkg", "v1.sh"), "#!/bin/sh\necho v1\n", "utf8");
-    writeFileSync(join(project.cwd, "pkg", "v2.sh"), "#!/bin/sh\necho v2\n", "utf8");
-    const hookV1 = join(project.cwd, "pkg", "hook-v1.json");
+    mkdirSync(join(cwd, "pkg"), { recursive: true });
+    writeFileSync(join(cwd, "pkg", "v1.sh"), "#!/bin/sh\necho v1\n", "utf8");
+    writeFileSync(join(cwd, "pkg", "v2.sh"), "#!/bin/sh\necho v2\n", "utf8");
+    const hookV1 = join(cwd, "pkg", "hook-v1.json");
     writeFileSync(
       hookV1,
       JSON.stringify({
@@ -103,7 +109,7 @@ describe("integration-claude-runtime · hooks", () => {
       }),
       "utf8",
     );
-    const hookV2 = join(project.cwd, "pkg", "hook-v2.json");
+    const hookV2 = join(cwd, "pkg", "hook-v2.json");
     writeFileSync(
       hookV2,
       JSON.stringify({
@@ -112,8 +118,8 @@ describe("integration-claude-runtime · hooks", () => {
       "utf8",
     );
 
-    const target = await createClaudeTarget();
-    const ctx = { cwd: project.cwd, targetId: "claude", deployRoots: target.deployRoots };
+    const target = createClaudeIntegration();
+    const ctx = { cwd, targetId: "claude", deployRoots: target.deployRoots };
     await target.materialize(
       [{ name: "owned-hook", type: "hook", source: "local", path: hookV1 }],
       ctx,
@@ -123,7 +129,7 @@ describe("integration-claude-runtime · hooks", () => {
       ctx,
     );
 
-    const settings = readJson(join(project.cwd, ".claude", "settings.json")) as {
+    const settings = readJson(join(cwd, ".claude", "settings.json")) as {
       hooks?: Record<string, Array<{ command?: string }>>;
     };
     const session = settings.hooks?.SessionStart ?? [];
@@ -136,7 +142,7 @@ describe("integration-claude-runtime · hooks", () => {
     );
 
     // Sidecar must not leak into native settings schema.
-    const settingsRaw = readFileSync(join(project.cwd, ".claude", "settings.json"), "utf8");
+    const settingsRaw = readFileSync(join(cwd, ".claude", "settings.json"), "utf8");
     expect(settingsRaw).not.toMatch(/_apm_source|bapm-owned/i);
   });
 });
