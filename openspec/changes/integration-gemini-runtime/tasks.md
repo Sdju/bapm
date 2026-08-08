@@ -17,4 +17,4 @@
 ## 4. Tests
 
 - [x] 4.1 Acceptance suite under `tests/acceptance/integration-gemini-runtime/` (RED then GREEN): package boundary, detect, commands TOML, skills, hooks ownership, MCP, compile
-- [ ] 4.2 Promote acceptance into package unit tests; ensure `@bapm/core` does not depend on gemini
+- [x] 4.2 Promote acceptance into package unit tests; ensure `@bapm/core` does not depend on gemini

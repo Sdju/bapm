@@ -1,11 +1,11 @@
 /**
- * Shared helpers for integration-gemini-runtime acceptance (RED).
+ * Shared helpers for @bapm/integration-gemini runtime tests.
  */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { BapmIntegration, MaterializeReport } from "@bapm/integration-api";
-import { createGeminiIntegration, createIntegration } from "../../../src/index.ts";
+import { createGeminiIntegration, createIntegration } from "../src/index.ts";
 
 export function createTempProject(prefix = "bapm-gemini-"): {
   cwd: string;

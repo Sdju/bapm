@@ -6,9 +6,9 @@ import { describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createGeminiIntegration, createIntegration } from "../../../src/index.ts";
+import { createGeminiIntegration, createIntegration } from "../src/index.ts";
 
-const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 
