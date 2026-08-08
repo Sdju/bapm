@@ -1,5 +1,6 @@
 /**
  * Package boundary: depends on integration-api only; not imported by core.
+ * (promoted from integration-antigravity-runtime acceptance).
  */
 import { describe, expect, test } from "vite-plus/test";
 import { readFileSync } from "node:fs";
@@ -7,7 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const pkgRoot = join(here, "../../..");
+const pkgRoot = join(here, "..");
 const repoRoot = join(pkgRoot, "../..");
 
 describe("antigravity package boundary", () => {

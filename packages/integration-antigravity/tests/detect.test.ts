@@ -1,5 +1,6 @@
 /**
  * Explicit-only detect: always false; shared .agents/ is not a signal.
+ * (promoted from integration-antigravity-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync } from "node:fs";

@@ -1,5 +1,6 @@
 /**
  * Hooks → .agents/hooks.json (agy schema under bapm container) + scripts + sidecar.
+ * (promoted from integration-antigravity-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";

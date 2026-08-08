@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import type { BapmIntegration, MaterializeReport } from "@bapm/integration-api";
-import { createAntigravityIntegration, createIntegration } from "../../../src/index.ts";
+import { createAntigravityIntegration, createIntegration } from "../src/index.ts";
 
 export function createTempProject(prefix = "bapm-agy-"): {
   cwd: string;

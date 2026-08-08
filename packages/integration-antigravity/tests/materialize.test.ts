@@ -1,5 +1,6 @@
 /**
  * Materialize: rules (trigger/globs), skills, skip agents/commands.
+ * (promoted from integration-antigravity-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";

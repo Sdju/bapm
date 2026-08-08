@@ -1,5 +1,6 @@
 /**
  * Thin compile → AGENTS.md; omit instruction primitives deployed as rules.
+ * (promoted from integration-antigravity-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, writeFileSync } from "node:fs";

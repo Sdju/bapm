@@ -1,5 +1,6 @@
 /**
  * configureMcp → .agents/mcp_config.json opt-in; serverUrl for remote; no ~/.gemini.
+ * (promoted from integration-antigravity-runtime acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync } from "node:fs";
