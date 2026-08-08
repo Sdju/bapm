@@ -2,7 +2,7 @@
 
 ## Когда …
 
-В проекте уже есть обнаруживаемые примитивы (skills / instructions / agents), и нужен единый target-owned файл — для Cursor/Codex обычно `AGENTS.md` (один активный compile target; last-writer-wins).
+В проекте уже есть обнаруживаемые примитивы (skills / instructions / agents), и нужен единый target-owned файл — для Cursor/Codex/OpenCode обычно `AGENTS.md` (один активный compile target; last-writer-wins).
 
 ### Цель
 

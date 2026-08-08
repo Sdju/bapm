@@ -1,9 +1,17 @@
 /**
  * Materialize skills → .opencode/skills, agents → .opencode/agents; no MCP side effects
- * (promoted from integration-opencode-runtime acceptance).
+ * (promoted from integration-opencode-runtime / instructions-compile acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createOpencodeIntegration } from "../src/index.ts";
@@ -101,5 +109,35 @@ describe("opencode materialize", () => {
     );
 
     expect(existsSync(join(cwd, ".opencode", "skills", "forced", "SKILL.md"))).toBe(true);
+  });
+
+  test("instruction does not write native rules under .opencode/", async () => {
+    cwd = mkdtempSync(join(tmpdir(), "bapm-oc-instr-mat-"));
+    mkdirSync(join(cwd, ".opencode"), { recursive: true });
+    const instr = join(cwd, "guide.md");
+    writeFileSync(instr, "# Guide Unique\n", "utf8");
+
+    const target = createOpencodeIntegration();
+    const report = await target.materialize(
+      [{ name: "guide", type: "instruction", source: "local", path: instr }],
+      { cwd, targetId: "opencode", deployRoots: target.deployRoots },
+    );
+
+    expect(existsSync(join(cwd, ".opencode", "rules"))).toBe(false);
+    expect(existsSync(join(cwd, ".opencode", "instructions"))).toBe(false);
+    const underOpencode = existsSync(join(cwd, ".opencode"))
+      ? readdirSync(join(cwd, ".opencode"), { withFileTypes: true })
+      : [];
+    expect(underOpencode.filter((e) => e.isFile()).map((e) => e.name)).toEqual([]);
+    const deployed =
+      report && typeof report === "object" && "deployedFiles" in report
+        ? ((report as { deployedFiles?: { path: string }[] }).deployedFiles ?? [])
+        : [];
+    expect(deployed).toEqual([]);
+    const diags =
+      report && typeof report === "object" && "diagnostics" in report
+        ? ((report as { diagnostics?: unknown[] }).diagnostics ?? [])
+        : [];
+    expect(JSON.stringify(diags)).toMatch(/compile-only|instruction|unsupported/i);
   });
 });

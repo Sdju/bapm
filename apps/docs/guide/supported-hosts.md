@@ -56,7 +56,9 @@ bapm init -y --target opencode
 bapm install --target opencode
 ```
 
-Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, commands → `.opencode/commands/<name>.md`, hooks — явный non-fatal skip (diagnostic), MCP → project `opencode.json` (`mcp`, `type: local` / `remote`). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc`.
+Skills → `.opencode/skills/<name>/SKILL.md`, agents → `.opencode/agents/<name>.md`, commands → `.opencode/commands/<name>.md`, instructions — compile-only (не native rules), hooks — явный non-fatal skip (diagnostic), MCP → project `opencode.json` (`mcp`, `type: local` / `remote`), compile → project-root `AGENTS.md` (**включая** instructions). Auto-detect: `.opencode/` или `opencode.json` / `opencode.jsonc` (lone `AGENTS.md` не считается OpenCode).
+
+Cursor, Codex и OpenCode делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
 
 ## Copilot (opt-in пакет)
 
@@ -185,7 +187,7 @@ bapm compile --target codex
 
 Skills → `.agents/skills/<name>/SKILL.md`, agents → `.codex/agents/<name>.toml`, hooks → `.codex/hooks.json` (+ `.codex/bapm-hooks.json`), MCP → `.codex/config.toml` (`mcp_servers`), compile → project-root `AGENTS.md` (**включая** instructions). Auto-detect: только `.codex/` (lone `AGENTS.md` не считается Codex).
 
-Cursor и Codex делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
+Cursor, Codex и OpenCode делят compile family `AGENTS.md`: **last writer wins** на вызов — предпочитайте один активный compile target.
 
 Marketplace JSON по-прежнему:
 
