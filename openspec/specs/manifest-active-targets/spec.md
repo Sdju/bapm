@@ -8,11 +8,11 @@ Defines how the project manifest field `active` selects which registered host in
 
 ### Requirement: Manifest active lists hosts to materialize
 
-When the project manifest declares top-level `active` as a non-empty list of valid mf-005 host tokens, install MUST treat that list (after built-in registration and object-map load) as the ordered set of host ids to activate for materialization and eligible MCP configuration, unless a forced CLI `--target` / forced-target option is supplied. Forced target MUST override `active` for that run and MUST activate only the forced id. Omitting `active` MUST preserve today’s detect-then-fail selection when no force is set. Dual-read `apm.yml` MUST honor the same field.
+When the project manifest declares top-level `active` as a non-empty list of valid mf-005 host tokens, install MUST treat that list (after object-map registration for the run) as the ordered set of host ids to activate for materialization and eligible MCP configuration, unless a forced CLI `--target` / forced-target option is supplied. Forced target MUST override `active` for that run and MUST activate only the forced id. Omitting `active` MUST preserve today’s detect-then-fail selection when no force is set. Dual-read `apm.yml` MUST honor the same field. `active` MUST NOT rely on eagerly built-in host registrations from the CLI.
 
 #### Scenario: Sole active materializes without --target or detect
 
-- **WHEN** the manifest declares `active: [cursor]`, cursor is registered, install runs without `--target`, and detect would not select a host
+- **WHEN** the manifest declares `active: [cursor]`, cursor is registered via object-map, install runs without `--target`, and detect would not select a host
 - **THEN** install MUST activate `cursor` and MUST invoke its materialize subject to existing install gates
 
 #### Scenario: Multi active materializes each registered host
@@ -32,11 +32,11 @@ When the project manifest declares top-level `active` as a non-empty list of val
 
 ### Requirement: Unknown or unregistered active ids fail closed
 
-After built-in registration and successful object-map loading attempts, every id in `active` MUST resolve to a registered integration before any host harness writes for that install. If any id is missing from the registry, the command MUST fail closed with a diagnostic naming the id and MUST NOT partially materialize the remaining listed hosts.
+After successful object-map loading attempts (when present) and with no eager built-in host registrations, every id in `active` MUST resolve to a registered integration before any host harness writes for that install. If any id is missing from the registry, the command MUST fail closed with a diagnostic naming the id and MUST NOT partially materialize the remaining listed hosts.
 
 #### Scenario: Active id missing after map load
 
-- **WHEN** the manifest declares `active: [x-missing]` and neither built-in registration nor map load provides `x-missing`
+- **WHEN** the manifest declares `active: [x-missing]` and map load does not provide `x-missing`
 - **THEN** install MUST exit non-zero naming `x-missing` and MUST NOT write harness files for that id
 
 #### Scenario: One unknown among several aborts all
