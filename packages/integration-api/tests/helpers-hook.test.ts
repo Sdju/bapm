@@ -29,6 +29,12 @@ describe("hook ownership sidecar", () => {
     writeText(path, "{bad");
     expect(readHookOwnershipSidecar(path)).toEqual({ owned: {} });
 
+    writeText(path, JSON.stringify({ owned: "nope" }));
+    expect(readHookOwnershipSidecar(path)).toEqual({ owned: {} });
+
+    writeText(path, JSON.stringify({ something: 1 }));
+    expect(readHookOwnershipSidecar(path)).toEqual({ owned: {} });
+
     const doc: HookOwnershipSidecar = {
       owned: {
         a: {
@@ -49,7 +55,7 @@ describe("hook ownership sidecar", () => {
 });
 
 describe("stripOwnedHookCommands", () => {
-  test("removes owned commands; empty ownership is a no-op", () => {
+  test("removes owned commands; empty ownership is a no-op; no disk deletes", () => {
     const hooks: Record<string, unknown> = {
       SessionStart: [{ command: "./owned.sh" }, { command: "./keep.sh" }],
       meta: { not: "array" },
@@ -64,6 +70,24 @@ describe("stripOwnedHookCommands", () => {
     const before = structuredClone(noop);
     stripOwnedHookCommands(noop, { owned: {} });
     expect(noop).toEqual(before);
+
+    const cwd = tempCwd("bapm-unit-hook-strip-nodel-");
+    const scriptRel = ".cursor/hooks/owned/run.sh";
+    const scriptAbs = join(cwd, scriptRel);
+    writeText(scriptAbs, "#!/bin/sh\necho hi\n");
+    const diskHooks = {
+      SessionStart: [{ command: `./${scriptRel}` }],
+    };
+    stripOwnedHookCommands(diskHooks, {
+      owned: {
+        owned: {
+          entries: [{ event: "SessionStart", command: `./${scriptRel}` }],
+          scripts: [scriptRel],
+        },
+      },
+    });
+    expect(diskHooks.SessionStart).toEqual([]);
+    expect(existsSync(scriptAbs)).toBe(true);
   });
 });
 

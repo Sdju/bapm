@@ -1,11 +1,14 @@
 /**
  * Public export surface + README helpers table
- * (integration-api-hook-helpers acceptance).
+ * (promoted from integration-api-hook-helpers acceptance).
  */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
-import { api, pkgRoot } from "./helpers.ts";
+import * as api from "../src/index.ts";
+
+const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const REQUIRED = [
   "readHookOwnershipSidecar",
@@ -15,7 +18,7 @@ const REQUIRED = [
   "copyHookScript",
 ] as const;
 
-describe("integration-api-hook-helpers exports", () => {
+describe("integration-api hook helpers exports", () => {
   test("package root exports hook ownership and copy helpers", () => {
     for (const name of REQUIRED) {
       expect(api, `missing export ${name}`).toHaveProperty(name);

@@ -1,10 +1,13 @@
 /**
  * Hosts migrate to shared helpers without expanding strip-only cleanup
- * (integration-api-hook-helpers acceptance).
+ * (promoted from integration-api-hook-helpers acceptance).
  */
 import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
-import { hostSrc } from "./helpers.ts";
+
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 const STRIP_ONLY = [
   ["integration-cursor", "createCursorIntegration.ts"],
@@ -25,6 +28,10 @@ const SIMPLE_COPY_HOSTS = [
   ["integration-windsurf", "createWindsurfIntegration.ts"],
   ["integration-copilot", "createCopilotIntegration.ts"],
 ] as const;
+
+function hostSrc(pkg: string, file: string): string {
+  return join(repoRoot, "packages", pkg, "src", file);
+}
 
 function src(pkg: string, file: string): string {
   return readFileSync(hostSrc(pkg, file), "utf8");
