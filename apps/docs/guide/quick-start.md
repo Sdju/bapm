@@ -1,17 +1,29 @@
 # Быстрый старт
 
-Цель: поставить CLI и пакет интеграции, затем `bapm install` — агент находится сам, skills попадают в layout Cursor.
+Цель: поставить CLI и пакет интеграции, затем `bapm install` — агент находится сам, артефакты попадают в layout Cursor.
+
+::: warning Пакеты пока не на npm
+На данный момент пакеты **не опубликованы** в npm. Команды ниже демонстрационные и станут рабочими после первого релиза.
+:::
 
 ## Happy path (Cursor, без `targets:`)
 
 Нужен Node.js ≥ 22.12.
 
+**1. CLI + интеграция** (глобально или в проекте):
+
 ```bash
 npm i -g @bapm/cli @bapm/integration-cursor
+# или: pnpm add -g @bapm/cli @bapm/integration-cursor
 # или в проекте: npm i -D @bapm/cli @bapm/integration-cursor
+```
 
+Вместо `@bapm/integration-cursor` можно взять другой `@bapm/integration-*` или свой пакет интеграции. См. [поддерживаемые hosts](/guide/supported-hosts), [выбор host](/guide/host-selection).
+
+**2. Проект с `.cursor/` и `bapm.yml`:**
+
+```bash
 mkdir my-agent && cd my-agent
-# маркер агента (или уже есть после работы в Cursor)
 mkdir -p .cursor
 
 cat > bapm.yml <<'EOF'
@@ -25,6 +37,8 @@ EOF
 bapm install
 ```
 
+И всё. Артефакты раскладываются в `.cursor/` и `apm_modules/`.
+
 Что происходит:
 
 1. CLI находит агента (**detect**: каталог `.cursor/` или legacy `.cursorrules`).
@@ -33,7 +47,7 @@ bapm install
 
 Object-map `targets:` — только чтобы **подменить** стандартный пакет или добавить свой host. Не prerequisite для Cursor.
 
-Pin CLI в проекте: `npm i -D @bapm/cli` → `npx bapm`.
+Pin CLI в проекте: `npm i -D @bapm/cli` → `npx bapm`. Force host: `bapm install --target cursor`.
 
 ## Альтернативы выбору host
 
