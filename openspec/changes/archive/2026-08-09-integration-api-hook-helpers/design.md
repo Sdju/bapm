@@ -4,13 +4,13 @@ See proposal.md — Why. Hosts already share nearly identical local helpers for 
 
 Observed shapes today:
 
-| Host | Sidecar fields | Reinstall cleanup |
-| --- | --- | --- |
-| cursor / claude / gemini / codex | `entries` + `scripts` | strip owned commands only |
-| windsurf | `entries` + `scripts` | strip + rm scripts |
-| antigravity | `entries` + `scripts` | rm scripts (+ deletes reserved container separately) |
-| copilot | `hookFile` + `scripts` | rm hook file + scripts |
-| kiro | `hookFiles` + `scripts` | rm hook files + scripts |
+| Host                             | Sidecar fields          | Reinstall cleanup                                    |
+| -------------------------------- | ----------------------- | ---------------------------------------------------- |
+| cursor / claude / gemini / codex | `entries` + `scripts`   | strip owned commands only                            |
+| windsurf                         | `entries` + `scripts`   | strip + rm scripts                                   |
+| antigravity                      | `entries` + `scripts`   | rm scripts (+ deletes reserved container separately) |
+| copilot                          | `hookFile` + `scripts`  | rm hook file + scripts                               |
+| kiro                             | `hookFiles` + `scripts` | rm hook files + scripts                              |
 
 Simple script copy (candidate resolve under hook dir / package root, skip when command already contains host needle, write `destRel`, return `./dest` or plain dest) is shared by cursor/claude/windsurf/gemini/codex/copilot. Kiro/antigravity use thicker rewrite (interpreter tokens / nested layout) — out of scope for shared copy.
 
@@ -33,15 +33,15 @@ Simple script copy (candidate resolve under hook dir / package root, skip when c
 
 1. **Flexible owned record, not per-host types**  
    Export `HookOwnershipSidecar` with `owned: Record<string, { packageName?; entries?; scripts?; hookFile?; hookFiles? }>`. Hosts keep writing only the fields they need.  
-   *Alternative considered:* strict unions per layout — rejected; forces api to know host layouts.
+   _Alternative considered:_ strict unions per layout — rejected; forces api to know host layouts.
 
 2. **Compose strip vs remove; do not auto-chain**  
    `stripOwnedHookCommands(hooks, ownership)` mutates/filters a `hooks` object by owned `entries[].command`. `removeOwnedHookArtifacts(cwd, ownership)` best-effort `rm`s `scripts`, `hookFile`, and each `hookFiles` entry under `cwd`. Call sites choose which to invoke (cursor: strip only; windsurf: strip + remove; copilot: remove only).  
-   *Alternative:* one `prepareOwnedHooks` that always removes scripts — rejected; would change cursor/claude/gemini/codex behavior.
+   _Alternative:_ one `prepareOwnedHooks` that always removes scripts — rejected; would change cursor/claude/gemini/codex behavior.
 
 3. **Parameterized simple `copyHookScript`**  
    Signature roughly: `{ cwd, deployRoots, hookFile, command, alreadyDeployedNeedle, destRel, commandAsDotSlash?: boolean }` → `{ commandRel, scriptRel? }`. Behavior mirrors the six simple hosts: if `command` includes `alreadyDeployedNeedle`, normalize optional `./` and return; else resolve candidates from hook dir + `findPackageRoot(hookFile)`; missing source keeps original command; success uses `assertUnderDeployRoots` + `cpSync` and returns command relative path + `scriptRel`.  
-   *Alternative:* helper builds `destRel` from host prefix + hookName — rejected; keeps product paths in api.
+   _Alternative:_ helper builds `destRel` from host prefix + hookName — rejected; keeps product paths in api.
 
 4. **Placement**  
    Implement in `packages/integration-api/src/helpers.ts` (or a small adjacent module re-exported from `helpers` / package root) next to existing fs helpers; export from `index.ts`; document in README table.
