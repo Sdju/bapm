@@ -52,11 +52,11 @@ host не регистрируется (custom id без map → unknown target)
 
 ## Типичные сценарии
 
-| Ситуация                         | Решение                                              |
-| -------------------------------- | ---------------------------------------------------- |
-| Один агент, пакет установлен     | `bapm install` (detect)                              |
-| Два маркера (`.cursor` + `.claude`) | `--target` или `active` / local overlay           |
+| Ситуация                               | Решение                                                          |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| Один агент, пакет установлен           | `bapm install` (detect)                                          |
+| Два маркера (`.cursor` + `.claude`)    | `--target` или `active` / local overlay                          |
 | Команда: общий манифест, разные агенты | `bapm.local.yml` → `active` — [overlay](/guide/manifest-overlay) |
-| Подменить реализацию Cursor      | `targets: { cursor: "./my-cursor" }`                 |
+| Подменить реализацию Cursor            | `targets: { cursor: "./my-cursor" }`                             |
 
 Дальше: [быстрый старт](/guide/quick-start) · [supported hosts](/guide/supported-hosts).

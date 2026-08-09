@@ -21,10 +21,10 @@ npm i -g @bapm/cli @bapm/integration-cursor
 bapm install
 ```
 
-| Агент      | Что сделать                                                                 |
-| ---------- | --------------------------------------------------------------------------- |
+| Агент      | Что сделать                                                                  |
+| ---------- | ---------------------------------------------------------------------------- |
 | **Cursor** | `npm i -D @bapm/integration-cursor`, detect или `active` / `--target cursor` |
-| **Свой**   | npm/path модуль + `targets:` + `--target <id>`                              |
+| **Свой**   | npm/path модуль + `targets:` + `--target <id>`                               |
 
 Подробности: [поддерживаемые hosts](apps/docs/guide/supported-hosts.md), [выбор host](apps/docs/guide/host-selection.md).
 
@@ -51,19 +51,19 @@ bapm install --target cursor
 
 ## Документация
 
-| Раздел               | Ссылка                                                        |
-| -------------------- | ------------------------------------------------------------- |
-| Быстрый старт        | [guide/quick-start](apps/docs/guide/quick-start.md)           |
-| Как выбирается host  | [guide/host-selection](apps/docs/guide/host-selection.md)     |
-| Поддерживаемые hosts | [guide/supported-hosts](apps/docs/guide/supported-hosts.md)   |
-| Что умеет bapm       | [guide/](apps/docs/guide/index.md)                            |
-| Команды              | [guide/commands](apps/docs/guide/commands.md)                 |
-| Манифест `bapm.yml`  | [guide/config-manifest](apps/docs/guide/config-manifest.md)   |
-| Lock-файл            | [guide/lockfile](apps/docs/guide/lockfile.md)                 |
-| Сценарии             | [guide/situations/](apps/docs/guide/situations/index.md)      |
-| Справка по флагам    | [reference/](apps/docs/reference/index.md)                    |
-| Agent Plugins        | [guide/agent-plugins](apps/docs/guide/agent-plugins.md)       |
-| Архитектура          | [architecture/](apps/docs/architecture/index.md)              |
+| Раздел               | Ссылка                                                      |
+| -------------------- | ----------------------------------------------------------- |
+| Быстрый старт        | [guide/quick-start](apps/docs/guide/quick-start.md)         |
+| Как выбирается host  | [guide/host-selection](apps/docs/guide/host-selection.md)   |
+| Поддерживаемые hosts | [guide/supported-hosts](apps/docs/guide/supported-hosts.md) |
+| Что умеет bapm       | [guide/](apps/docs/guide/index.md)                          |
+| Команды              | [guide/commands](apps/docs/guide/commands.md)               |
+| Манифест `bapm.yml`  | [guide/config-manifest](apps/docs/guide/config-manifest.md) |
+| Lock-файл            | [guide/lockfile](apps/docs/guide/lockfile.md)               |
+| Сценарии             | [guide/situations/](apps/docs/guide/situations/index.md)    |
+| Справка по флагам    | [reference/](apps/docs/reference/index.md)                  |
+| Agent Plugins        | [guide/agent-plugins](apps/docs/guide/agent-plugins.md)     |
+| Архитектура          | [architecture/](apps/docs/architecture/index.md)            |
 
 ## Ключевое
 

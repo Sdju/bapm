@@ -37,37 +37,37 @@ Pin CLI в проекте: `npm i -D @bapm/cli` → `npx bapm`.
 
 ## Альтернативы выбору host
 
-| Способ                         | Когда                                                                 |
-| ------------------------------ | --------------------------------------------------------------------- |
-| Auto-detect (как выше)         | Один явный маркер агента в cwd                                        |
-| `active: [cursor]` в манифесте | Pin без detect / политика команды                                     |
+| Способ                         | Когда                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| Auto-detect (как выше)         | Один явный маркер агента в cwd                                             |
+| `active: [cursor]` в манифесте | Pin без detect / политика команды                                          |
 | `bapm.local.yml` → `active`    | Личный агент поверх общего `bapm.yml` — [overlay](/guide/manifest-overlay) |
-| `bapm install --target cursor` | Force поверх detect / `active`                                        |
+| `bapm install --target cursor` | Force поверх detect / `active`                                             |
 
 `bapm init -y --target cursor` по-прежнему может записать `targets:` + `active` (pin) — это удобный scaffold, не единственный путь.
 
 ## Что ожидать на диске
 
-| Артефакт                         | Смысл                                                    |
-| -------------------------------- | -------------------------------------------------------- |
-| `bapm.lock.yaml`                 | Зафиксированный граф                                     |
-| `apm_modules/`                   | Материализованные пакеты                                 |
-| `.agents/skills/<name>/SKILL.md` | Skills (Cursor)                                          |
-| `.cursor/rules/<name>.mdc`       | Rules                                                    |
-| `.cursor/agents/<name>.md`       | Agents                                                   |
-| `.cursor/mcp.json`               | MCP (если есть eligible direct `dependencies.mcp`)       |
+| Артефакт                         | Смысл                                              |
+| -------------------------------- | -------------------------------------------------- |
+| `bapm.lock.yaml`                 | Зафиксированный граф                               |
+| `apm_modules/`                   | Материализованные пакеты                           |
+| `.agents/skills/<name>/SKILL.md` | Skills (Cursor)                                    |
+| `.cursor/rules/<name>.mdc`       | Rules                                              |
+| `.cursor/agents/<name>.md`       | Agents                                             |
+| `.cursor/mcp.json`               | MCP (если есть eligible direct `dependencies.mcp`) |
 
 Полезные флаги: `--dry-run`, `-v` / `--verbose`, `--frozen`. Полный список: [install](/reference/install).
 
 ## Если не сработало
 
-| Симптом                                          | Что проверить                                                                 |
-| ------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `No manifest found`                              | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                               |
-| пакет / `@bapm/integration-cursor` в ошибке      | Установите интеграцию в проект или глобально (`npm i -D @bapm/integration-cursor`) |
-| `Target detection is missing or ambiguous`       | Несколько маркеров (`.cursor` + `.claude`) или ни одного — `--target` / `active` |
-| `frozen` / lock error при `--frozen`             | Сначала обычный `install` или `lock`                                          |
-| Свой / кастомный агент                           | Object-map `targets:` — [hosts](/guide/supported-hosts#advanced-custom-targets) |
+| Симптом                                     | Что проверить                                                                      |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `No manifest found`                         | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                                    |
+| пакет / `@bapm/integration-cursor` в ошибке | Установите интеграцию в проект или глобально (`npm i -D @bapm/integration-cursor`) |
+| `Target detection is missing or ambiguous`  | Несколько маркеров (`.cursor` + `.claude`) или ни одного — `--target` / `active`   |
+| `frozen` / lock error при `--frozen`        | Сначала обычный `install` или `lock`                                               |
+| Свой / кастомный агент                      | Object-map `targets:` — [hosts](/guide/supported-hosts#advanced-custom-targets)    |
 
 Подробнее о приоритете: [Как выбирается host](/guide/host-selection). Три понятия detect / active / targets: [Hosts](/guide/manifest-hosts).
 

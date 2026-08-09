@@ -6,10 +6,10 @@
 
 ## Три понятия (громко)
 
-| Понятие     | Роль                                                                 |
-| ----------- | -------------------------------------------------------------------- |
-| **detect**  | Auto: интеграция говорит «cwd похож на мой host» (маркеры вроде `.cursor/`) |
-| **active**  | Explicit choose: какие host id активны (base и/или `bapm.local.yml`) |
+| Понятие     | Роль                                                                          |
+| ----------- | ----------------------------------------------------------------------------- |
+| **detect**  | Auto: интеграция говорит «cwd похож на мой host» (маркеры вроде `.cursor/`)   |
+| **active**  | Explicit choose: какие host id активны (base и/или `bapm.local.yml`)          |
 | **targets** | Replace/add **пакет реализации** (host id → npm/path). **Не активирует** host |
 
 `targets:` сами по себе не активируют hosts и не нужны, чтобы «разрешить» cursor/claude/… — для известных id CLI пробует `@bapm/integration-<id>`.
@@ -55,11 +55,11 @@ Map entries загружаются **fail-closed**. Canonical hosts без кл�
 
 ## Типичные ошибки
 
-| Симптом                                        | Что проверить                                                              |
-| ---------------------------------------------- | -------------------------------------------------------------------------- |
+| Симптом                                        | Что проверить                                                                    |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
 | `Target detection is missing or ambiguous`     | `--target` / `active`; при маркере без пакета — установите `@bapm/integration-*` |
-| `Unknown or unregistered target`               | Пакет не установлен / custom id без map                                    |
-| `Manifest "active" must be a non-empty array`  | Уберите `active: []`                                                       |
-| `must not declare both "target" and "targets"` | Оставьте одно поле                                                         |
+| `Unknown or unregistered target`               | Пакет не установлен / custom id без map                                          |
+| `Manifest "active" must be a non-empty array`  | Уберите `active: []`                                                             |
+| `must not declare both "target" and "targets"` | Оставьте одно поле                                                               |
 
 Personal overlay: [Overlay](/guide/manifest-overlay).

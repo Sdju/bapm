@@ -18,11 +18,11 @@
 
 ## Развести три понятия
 
-| Понятие   | Роль                                                                 |
-| --------- | -------------------------------------------------------------------- |
-| **detect**  | auto: интеграция говорит «этот cwd похож на мой host»              |
-| **active**  | explicit choose: какой host(ы) активны (base и/или local overlay)  |
-| **targets** | replace/add integration **impl** (host id → package specifier)     |
+| Понятие     | Роль                                                              |
+| ----------- | ----------------------------------------------------------------- |
+| **detect**  | auto: интеграция говорит «этот cwd похож на мой host»             |
+| **active**  | explicit choose: какой host(ы) активны (base и/или local overlay) |
+| **targets** | replace/add integration **impl** (host id → package specifier)    |
 
 `targets:` **не** активирует host и **не** обязателен для canonical hosts.
 

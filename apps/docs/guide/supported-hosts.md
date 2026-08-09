@@ -6,20 +6,20 @@ CLI **не** включает hosts «из коробки». Для извест
 
 ## Таблица
 
-| Host             | Auto-detect                         | Canonical package                 | Explicit-only? | Override |
-| ---------------- | ----------------------------------- | --------------------------------- | -------------- | -------- |
-| **Cursor**       | `.cursor/` или `.cursorrules`       | `@bapm/integration-cursor`        | нет            | `targets:` ниже |
-| **OpenCode**     | `.opencode/` / `opencode.json(c)`   | `@bapm/integration-opencode`      | нет            | `targets:` ниже |
-| **Copilot**      | whitelist под `.github/`            | `@bapm/integration-copilot`       | нет            | `targets:` ниже |
-| **Windsurf**     | `.windsurf/`                        | `@bapm/integration-windsurf`      | нет            | `targets:` ниже |
-| **Kiro**         | `.kiro/`                            | `@bapm/integration-kiro`          | нет            | `targets:` ниже |
-| **Grok Build**   | `.grok/`                            | `@bapm/integration-grok-build`    | нет            | `targets:` ниже |
-| **Claude**       | `.claude/` или `CLAUDE.md`          | `@bapm/integration-claude`        | нет            | `targets:` ниже |
-| **Codex**        | `.codex/`                           | `@bapm/integration-codex`         | нет            | `targets:` ниже |
-| **Gemini**       | `.gemini/` или `GEMINI.md`          | `@bapm/integration-gemini`        | нет            | `targets:` ниже |
-| **Antigravity**  | нет                                 | `@bapm/integration-antigravity`   | да (`--target` / `active`) | `targets:` ниже |
-| **Agent Skills** | нет                                 | `@bapm/integration-agent-skills`  | да             | `targets:` ниже |
-| **Свой агент**   | по вашей `detect`                   | —                                 | map обязателен | см. Advanced |
+| Host             | Auto-detect                       | Canonical package                | Explicit-only?             | Override        |
+| ---------------- | --------------------------------- | -------------------------------- | -------------------------- | --------------- |
+| **Cursor**       | `.cursor/` или `.cursorrules`     | `@bapm/integration-cursor`       | нет                        | `targets:` ниже |
+| **OpenCode**     | `.opencode/` / `opencode.json(c)` | `@bapm/integration-opencode`     | нет                        | `targets:` ниже |
+| **Copilot**      | whitelist под `.github/`          | `@bapm/integration-copilot`      | нет                        | `targets:` ниже |
+| **Windsurf**     | `.windsurf/`                      | `@bapm/integration-windsurf`     | нет                        | `targets:` ниже |
+| **Kiro**         | `.kiro/`                          | `@bapm/integration-kiro`         | нет                        | `targets:` ниже |
+| **Grok Build**   | `.grok/`                          | `@bapm/integration-grok-build`   | нет                        | `targets:` ниже |
+| **Claude**       | `.claude/` или `CLAUDE.md`        | `@bapm/integration-claude`       | нет                        | `targets:` ниже |
+| **Codex**        | `.codex/`                         | `@bapm/integration-codex`        | нет                        | `targets:` ниже |
+| **Gemini**       | `.gemini/` или `GEMINI.md`        | `@bapm/integration-gemini`       | нет                        | `targets:` ниже |
+| **Antigravity**  | нет                               | `@bapm/integration-antigravity`  | да (`--target` / `active`) | `targets:` ниже |
+| **Agent Skills** | нет                               | `@bapm/integration-agent-skills` | да                         | `targets:` ниже |
+| **Свой агент**   | по вашей `detect`                 | —                                | map обязателен             | см. Advanced    |
 
 Пакет нужно **установить** (project `npm i -D` или global рядом с CLI). Absent map ≠ «нет hosts»: CLI пробует canonical для известных id.
 
@@ -80,10 +80,10 @@ bapm install --target x-acme-editor
 
 ## Типичные ошибки
 
-| Симптом                                    | Что проверить                                                    |
-| ------------------------------------------ | ---------------------------------------------------------------- |
-| `Unknown or unregistered target`           | Пакет установлен? Custom id объявлен в `targets:`?               |
-| маркер есть, пакет не найден               | `npm i -D @bapm/integration-<id>`                                |
-| `Target detection is missing or ambiguous` | `--target` / `active` / один маркер                              |
+| Симптом                                    | Что проверить                                      |
+| ------------------------------------------ | -------------------------------------------------- |
+| `Unknown or unregistered target`           | Пакет установлен? Custom id объявлен в `targets:`? |
+| маркер есть, пакет не найден               | `npm i -D @bapm/integration-<id>`                  |
+| `Target detection is missing or ambiguous` | `--target` / `active` / один маркер                |
 
 Дальше: [host selection](/guide/host-selection) · [быстрый старт](/guide/quick-start).
