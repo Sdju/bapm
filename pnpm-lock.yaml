@@ -34,10 +34,10 @@ catalogs:
       specifier: ^7.0.2
       version: 7.0.2
     vite:
-      specifier: npm:@voidzero-dev/vite-plus-core@^0.2.8
+      specifier: npm:@voidzero-dev/vite-plus-core@latest
       version: 0.2.8
     vite-plus:
-      specifier: ^0.2.8
+      specifier: latest
       version: 0.2.8
     vitepress:
       specifier: ^1.6.4
