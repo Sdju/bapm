@@ -2,18 +2,19 @@
 
 Куда `bapm install` / `bapm compile` раскладывают пакеты. Поля манифеста: [Hosts и target](/guide/manifest-hosts).
 
-| Host            | В CLI                 | Как подключить                                                                                                                                           |
-| --------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Cursor**      | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
-| **OpenCode**    | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
-| **Copilot**     | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
-| **Windsurf**    | Нет (отдельный пакет) | Установить `@bapm/integration-windsurf`, объявить `targets:`, затем `--target windsurf` / `active`                                                       |
-| **Kiro**        | Нет (отдельный пакет) | Установить `@bapm/integration-kiro`, объявить `targets:`, затем `--target kiro` / `active`                                                               |
-| **Grok Build**  | Нет (отдельный пакет) | Установить `@bapm/integration-grok-build`, объявить `targets:`, затем `--target grok-build` / `active`                                                   |
-| **Antigravity** | Нет (отдельный пакет) | Установить `@bapm/integration-antigravity`, объявить `targets:`, затем **явный** `--target antigravity` / `active` (без auto-detect)                     |
-| **Свой агент**  | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
-| **Claude**      | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
-| **Codex**       | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
+| Host             | В CLI                 | Как подключить                                                                                                                                           |
+| ---------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cursor**       | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
+| **OpenCode**     | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
+| **Copilot**      | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
+| **Windsurf**     | Нет (отдельный пакет) | Установить `@bapm/integration-windsurf`, объявить `targets:`, затем `--target windsurf` / `active`                                                       |
+| **Kiro**         | Нет (отдельный пакет) | Установить `@bapm/integration-kiro`, объявить `targets:`, затем `--target kiro` / `active`                                                               |
+| **Grok Build**   | Нет (отдельный пакет) | Установить `@bapm/integration-grok-build`, объявить `targets:`, затем `--target grok-build` / `active`                                                   |
+| **Antigravity**  | Нет (отдельный пакет) | Установить `@bapm/integration-antigravity`, объявить `targets:`, затем **явный** `--target antigravity` / `active` (без auto-detect)                     |
+| **Agent Skills** | Нет (отдельный пакет) | Установить `@bapm/integration-agent-skills`, объявить `targets:`, затем **явный** `--target agent-skills` / `active` (без auto-detect)                   |
+| **Свой агент**   | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
+| **Claude**       | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
+| **Codex**        | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
 
 ## Cursor (opt-in пакет)
 
