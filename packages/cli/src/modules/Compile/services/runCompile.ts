@@ -194,6 +194,7 @@ export async function runCompileCli(
   } catch (error) {
     const message = enrichUnregisteredTargetMessage(
       error instanceof Error ? error.message : String(error),
+      options.cwd ?? process.cwd(),
     );
     console.error(`${deps.name}: ${message}`);
     return { ok: false, exitCode: 1, message };

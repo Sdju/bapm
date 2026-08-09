@@ -533,6 +533,8 @@ async function runCoreInstall(
     if (parsed.dryRun || result.dryRun) {
       emitDryRunPreview(deps.name, result.diagnostics);
       console.log(`${deps.name}: dry-run preview complete; no changes made`);
+    } else if (result.activeTargets && result.activeTargets.length > 0) {
+      console.log(`${deps.name}: installed for ${result.activeTargets.join(", ")}`);
     }
     return { ok: true };
   } catch (error) {
@@ -542,7 +544,7 @@ async function runCoreInstall(
         : typeof error === "object" && error !== null && "message" in error
           ? String((error as { message: unknown }).message)
           : String(error);
-    const message = enrichUnregisteredTargetMessage(raw);
+    const message = enrichUnregisteredTargetMessage(raw, cwd);
     console.error(`${deps.name}: ${message}`);
     return { ok: false, message };
   }

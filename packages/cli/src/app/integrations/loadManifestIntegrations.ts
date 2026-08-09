@@ -8,6 +8,7 @@ import {
   type BapmManifest,
 } from "@bapm/core";
 import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
+import { CANONICAL_HOST_IDS, canonicalPackageSpecifier } from "@/common/canonicalHosts.ts";
 import { isLocalPathSpecifier, resolveContainedLocalPath } from "./localPathSpecifier.ts";
 
 export type ManifestIntegrationLoadCause =
@@ -50,8 +51,43 @@ function isContainedUnderRoot(absoluteTarget: string, projectRoot: string): bool
   );
 }
 
-/** npm package: project cwd first, then CLI-shipped fallback. */
-function resolveNpmPackageSpecifier(specifier: string, cwd: string): string {
+type ResolveNpmOptions = {
+  /**
+   * Map entries: project cwd, then CLI package resolve (global sibling next to CLI).
+   * Canonical fallback (`false`): project cwd, then Node `globalPaths` only —
+   * never the CLI package's own node_modules (avoids picking up monorepo devDeps).
+   */
+  allowCliFallback?: boolean;
+};
+
+/** Resolve npm package from the project install (and optionally Node globalPaths). */
+function resolveNpmProjectOrGlobal(specifier: string, cwd: string): string {
+  const requireFromCwd = createRequire(join(cwd, "package.json"));
+  try {
+    return requireFromCwd.resolve(specifier);
+  } catch (cwdErr) {
+    // `module.globalPaths` exists at runtime; default ESM type export may omit it.
+    const mod = createRequire(import.meta.url)("node:module") as { globalPaths?: string[] };
+    const globalPaths = Array.isArray(mod.globalPaths) ? mod.globalPaths : [];
+    if (globalPaths.length === 0) throw cwdErr;
+    try {
+      return requireFromCwd.resolve(specifier, { paths: [...globalPaths] });
+    } catch {
+      throw cwdErr;
+    }
+  }
+}
+
+/** npm package: project cwd first, then CLI-shipped fallback (map) or globalPaths (canonical). */
+function resolveNpmPackageSpecifier(
+  specifier: string,
+  cwd: string,
+  options: ResolveNpmOptions = {},
+): string {
+  const allowCliFallback = options.allowCliFallback !== false;
+  if (!allowCliFallback) {
+    return resolveNpmProjectOrGlobal(specifier, cwd);
+  }
   const requireFromCwd = createRequire(join(cwd, "package.json"));
   try {
     return requireFromCwd.resolve(specifier);
@@ -142,6 +178,14 @@ function extractIntegrationCandidate(mod: Record<string, unknown>): unknown {
   return undefined;
 }
 
+export type LoadIntegrationOptions = {
+  /**
+   * For npm specifiers: also try resolving from the CLI package (map entries).
+   * Canonical fallback sets this false so only the project install counts.
+   */
+  allowCliFallback?: boolean;
+};
+
 /**
  * Resolve a map value (npm package or local filesystem path) from project cwd,
  * import it, and extract a runtime `BapmIntegration`
@@ -151,13 +195,16 @@ export async function loadIntegrationFromPackage(
   specifier: string,
   expectedId: string,
   cwd: string,
+  options: LoadIntegrationOptions = {},
 ): Promise<BapmIntegration> {
   let resolved: string;
   if (isLocalPathSpecifier(specifier)) {
     resolved = resolveLocalIntegrationPath(specifier, expectedId, cwd);
   } else {
     try {
-      resolved = resolveNpmPackageSpecifier(specifier, cwd);
+      resolved = resolveNpmPackageSpecifier(specifier, cwd, {
+        allowCliFallback: options.allowCliFallback,
+      });
     } catch (cause) {
       const detail =
         cause instanceof Error ? cause.message : "cannot find module / unresolvable package";
@@ -237,7 +284,29 @@ export async function loadIntegrationFromPackage(
 }
 
 /**
- * Eagerly load every `declaredTargetIntegrationMap` entry and register/replace by key.
+ * Try to resolve+register a canonical `@bapm/integration-<id>` package.
+ * Soft-fails when the package is missing or unloadable so other hosts still work.
+ */
+async function tryRegisterCanonicalHost(
+  registry: IntegrationRegistry,
+  hostId: string,
+  cwd: string,
+): Promise<void> {
+  if (registry.get(hostId)) return;
+  const specifier = canonicalPackageSpecifier(hostId);
+  try {
+    const integration = await loadIntegrationFromPackage(specifier, hostId, cwd, {
+      allowCliFallback: false,
+    });
+    registry.register(integration);
+  } catch {
+    // Soft-fail: package not installed in the project / not a valid runtime integration.
+  }
+}
+
+/**
+ * Eagerly load object-map entries (fail-closed), then attempt canonical fallback
+ * for known hosts not covered by the map. Absent/partial map ≠ empty registry.
  */
 export async function registerManifestIntegrations(
   registry: IntegrationRegistry,
@@ -245,17 +314,25 @@ export async function registerManifestIntegrations(
   cwd: string,
 ): Promise<void> {
   const map = declaredTargetIntegrationMap(manifest);
-  if (!map) return;
+  const mappedIds = new Set<string>();
 
-  for (const [hostId, specifier] of Object.entries(map)) {
-    const integration = await loadIntegrationFromPackage(specifier, hostId, cwd);
-    registry.register(integration);
+  if (map) {
+    for (const [hostId, specifier] of Object.entries(map)) {
+      const integration = await loadIntegrationFromPackage(specifier, hostId, cwd);
+      registry.register(integration);
+      mappedIds.add(hostId);
+    }
+  }
+
+  for (const hostId of CANONICAL_HOST_IDS) {
+    if (mappedIds.has(hostId)) continue;
+    await tryRegisterCanonicalHost(registry, hostId, cwd);
   }
 }
 
 /**
- * Load project manifest (when present) and register object-map integrations onto `registry`.
- * Missing manifest is a no-op; other manifest errors and load failures propagate (fail-closed).
+ * Load project manifest (when present) and register map + canonical integrations.
+ * Missing manifest is a no-op; explicit map load failures propagate (fail-closed).
  */
 export async function registerManifestIntegrationsFromCwd(
   registry: IntegrationRegistry,

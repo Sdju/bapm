@@ -7,6 +7,7 @@
 | Сценарий                                                   | Когда                                  |
 | ---------------------------------------------------------- | -------------------------------------- |
 | [Свежий install в Cursor](/guide/situations/install-fresh) | Новый проект, первый манифест и deploy |
+| [Команда с разными агентами](/guide/situations/team-local-active) | Общий `bapm.yml`, личный `active` |
 | [Воспроизводимый CI по lock](/guide/situations/ci-frozen)  | Pipeline без дрейфа пинов              |
 | [Обновить зависимости](/guide/situations/update-deps)      | Подтянуть mutable refs / tips          |
 

@@ -26,6 +26,7 @@ export default defineConfig({
           { text: "Что умеет bapm", link: "/guide/" },
           { text: "Быстрый старт", link: "/guide/quick-start" },
           { text: "Команды", link: "/guide/commands" },
+          { text: "Как выбирается host", link: "/guide/host-selection" },
           { text: "Поддерживаемые hosts", link: "/guide/supported-hosts" },
         ],
       },
@@ -45,6 +46,7 @@ export default defineConfig({
         items: [
           { text: "Оглавление", link: "/guide/situations/" },
           { text: "Свежий install", link: "/guide/situations/install-fresh" },
+          { text: "Команда / local active", link: "/guide/situations/team-local-active" },
           { text: "CI / frozen", link: "/guide/situations/ci-frozen" },
           { text: "Обновление зависимостей", link: "/guide/situations/update-deps" },
           { text: "Политика и MCP", link: "/guide/situations/policy-mcp" },

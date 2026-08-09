@@ -1,8 +1,8 @@
 import { createIntegrationRegistry } from "@bapm/integration-api";
 
 /**
- * Empty runtime registry — hosts register only via object-map load
- * (`registerManifestIntegrationsFromCwd`), not eager composition-root imports.
+ * Empty runtime registry — hosts register via `registerManifestIntegrationsFromCwd`
+ * (object-map overrides + canonical `@bapm/integration-*` fallback), not eager imports.
  */
 export function createCliIntegrationRegistry() {
   return createIntegrationRegistry();
