@@ -1,10 +1,10 @@
 /**
- * Acceptance (RED): map overrides canonical; custom hosts require map; canonical fallback.
- * Change: docs-host-happy-path — criteria 3–4.
+ * Map overrides canonical; custom hosts require map; canonical fallback.
+ * Promoted from docs-host-happy-path acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { createCliIntegrationRegistry } from "../../../src/app/integrations/registry.ts";
-import { registerManifestIntegrationsFromCwd } from "../../../src/app/integrations/loadManifestIntegrations.ts";
+import { createCliIntegrationRegistry } from "../../src/app/integrations/registry.ts";
+import { registerManifestIntegrationsFromCwd } from "../../src/app/integrations/loadManifestIntegrations.ts";
 import {
   createTempProject,
   cursorOverrideMarker,
@@ -20,9 +20,9 @@ import {
   skillPath,
   writeNoMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "../install/canonical-host-helpers.ts";
 
-describe("docs-host-happy-path · map override + canonical fallback + custom map-only", () => {
+describe("CLI integrations · map override + canonical fallback + custom map-only", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

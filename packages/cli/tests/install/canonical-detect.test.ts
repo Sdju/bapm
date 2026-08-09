@@ -1,6 +1,6 @@
 /**
- * Acceptance (RED): happy path without object-map + missing canonical package guidance.
- * Change: docs-host-happy-path — criteria 1–2.
+ * Happy path without object-map + missing canonical package guidance.
+ * Promoted from docs-host-happy-path acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -12,9 +12,9 @@ import {
   skillPath,
   writeNoMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./canonical-host-helpers.ts";
 
-describe("docs-host-happy-path · canonical detect install (no targets map)", () => {
+describe("CLI install · canonical detect (no targets map)", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

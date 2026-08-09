@@ -1,11 +1,11 @@
 /**
- * Acceptance (RED): docs P0/P1 happy-path framing (light string / presence checks).
- * Change: docs-host-happy-path — criteria 7–8.
+ * User docs framing for canonical-host happy path (presence / contract checks).
+ * Promoted from docs-host-happy-path acceptance.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { docsExists, readDocs } from "./helpers.ts";
+import { docsExists, readDocs } from "../install/canonical-host-helpers.ts";
 
-describe("docs-host-happy-path · user docs framing", () => {
+describe("docs · host happy-path framing", () => {
   test("quick-start Cursor happy path does not require targets: object-map first", () => {
     const text = readDocs("guide/quick-start.md");
     // Happy path: install finds agent → canonical package → materialize (map optional).

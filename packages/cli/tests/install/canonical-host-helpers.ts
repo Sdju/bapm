@@ -1,5 +1,6 @@
 /**
- * Acceptance helpers for docs-host-happy-path (canonical host load + selection).
+ * Helpers for canonical host load/selection (no object-map happy path).
+ * Promoted from docs-host-happy-path acceptance.
  */
 import {
   existsSync,
@@ -13,16 +14,16 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-export const PACKAGES_ROOT = join(HERE, "../../../..");
+export const PACKAGES_ROOT = join(HERE, "../../..");
 export const REPO_ROOT = join(PACKAGES_ROOT, "..");
 export const DOCS_ROOT = join(REPO_ROOT, "apps/docs");
 
-export function createTempProject(prefix = "bapm-docs-host-happy-path-"): TempProject {
+export function createTempProject(prefix = "bapm-canonical-host-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
@@ -149,7 +150,7 @@ export type NoMapProjectOptions = {
  * Minimal project. By default: no `targets:` object-map (canonical fallback under test).
  */
 export function writeNoMapProject(cwd: string, options: NoMapProjectOptions = {}): void {
-  const name = options.name ?? "docs-host-happy-path";
+  const name = options.name ?? "canonical-host";
   const lines: string[] = [`name: ${name}`, "version: 0.0.1"];
 
   if (options.active?.length) {

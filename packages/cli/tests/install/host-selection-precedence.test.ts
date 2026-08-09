@@ -1,6 +1,6 @@
 /**
- * Acceptance (RED): host selection precedence + local active overlay replace.
- * Change: docs-host-happy-path — criteria 5–6 (without requiring targets: for canonical hosts).
+ * Host selection precedence + local active overlay replace (canonical, no map).
+ * Promoted from docs-host-happy-path acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -14,7 +14,7 @@ import {
   skillPath,
   writeNoMapProject,
   type TempProject,
-} from "./helpers.ts";
+} from "./canonical-host-helpers.ts";
 
 function claudeSkillOrRuleHint(cwd: string): boolean {
   // Claude materialize may land under .claude; Cursor under .agents — either proves selection.
@@ -25,7 +25,7 @@ function claudeSkillOrRuleHint(cwd: string): boolean {
   );
 }
 
-describe("docs-host-happy-path · selection precedence (canonical, no map)", () => {
+describe("CLI install · selection precedence (canonical, no map)", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
