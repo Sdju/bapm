@@ -1,103 +1,74 @@
 # Быстрый старт
 
-Цель: поставить CLI, завести манифест и выполнить первый `install` в Cursor.
+Цель: поставить CLI и пакет интеграции, затем `bapm install` — агент находится сам, skills попадают в layout Cursor.
 
-## 1. Установка
+## Happy path (Cursor, без `targets:`)
 
 Нужен Node.js ≥ 22.12.
 
-### CLI
-
 ```bash
-npm i -g @bapm/cli
-# или: pnpm add -g @bapm/cli
+npm i -g @bapm/cli @bapm/integration-cursor
+# или в проекте: npm i -D @bapm/cli @bapm/integration-cursor
 
-bapm --help
-```
+mkdir my-agent && cd my-agent
+# маркер агента (или уже есть после работы в Cursor)
+mkdir -p .cursor
 
-### Интеграция с агентом
-
-`install` раскладывает пакеты через **host-интеграцию**. Без неё (или без `--target` / `active` / detect) команда fail-closed.
-
-**Cursor** — отдельный пакет + object-map:
-
-```bash
-npm i -g @bapm/integration-cursor
-# или: npm i -D @bapm/integration-cursor
-
-bapm init -y --target cursor
-# init пишет targets: { cursor: "@bapm/integration-cursor" } и active: [cursor]
-```
-
-```yaml
-targets:
-  cursor: "@bapm/integration-cursor"
-active:
-  - cursor
-```
-
-**Свой агент** — поставьте пакет или локальный модуль, объявите `targets:`, активируйте `--target <id>`. Рекомендации и контракт: [поддерживаемые hosts](/guide/supported-hosts).
-
-Pin CLI в проекте (вторично): `npm i -D @bapm/cli` → `npx bapm`.
-
-Ниже команды — после глобальной установки.
-
-## 2. Манифест и install
-
-```bash
-bapm install --target cursor
-```
-
-(`init` из шага выше уже создал `bapm.yml` с `name`, `version`, пустыми deps, object-map `targets:` и `active`. Повторный `init` откажется, если манифест есть.)
-
-Минимальный пример вручную:
-
-```yaml
+cat > bapm.yml <<'EOF'
 name: my-agent-project
 version: 0.0.1
-targets:
-  cursor: "@bapm/integration-cursor"
-active:
-  - cursor
 dependencies:
-  apm:
-    - path: ./packages/hello-skill
+  apm: []
   mcp: []
+EOF
+
+bapm install
 ```
 
-Карта полей: [манифест](/guide/config-manifest).
+Что происходит:
 
-`--target cursor` принудительно активирует Cursor-integration. Без force CLI может опереться на auto-detect (наличие `.cursor/` или legacy `.cursorrules`).
+1. CLI находит агента (**detect**: каталог `.cursor/` или legacy `.cursorrules`).
+2. Для известного host id подтягивается **стандартный** пакет `@bapm/integration-cursor` (canonical fallback; object-map `targets:` не обязателен).
+3. Зависимости материализуются в layout агента.
 
-### Что ожидать на диске
+Object-map `targets:` — только чтобы **подменить** стандартный пакет или добавить свой host. Не prerequisite для Cursor.
 
-| Артефакт                         | Смысл                                                    |
-| -------------------------------- | -------------------------------------------------------- |
-| `bapm.lock.yaml`                 | Зафиксированный граф (новый lock по умолчанию — это имя) |
-| `apm_modules/`                   | Материализованные пакеты                                 |
-| `.agents/skills/<name>/SKILL.md` | Skills                                                   |
-| `.cursor/rules/<name>.mdc`       | Rules                                                    |
-| `.cursor/agents/<name>.md`       | Agents                                                   |
-| `.cursor/mcp.json`               | MCP (если есть eligible direct `dependencies.mcp`)       |
+Pin CLI в проекте: `npm i -D @bapm/cli` → `npx bapm`.
+
+## Альтернативы выбору host
+
+| Способ                         | Когда                                                                      |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| Auto-detect (как выше)         | Один явный маркер агента в cwd                                             |
+| `active: [cursor]` в манифесте | Pin без detect / политика команды                                          |
+| `bapm.local.yml` → `active`    | Личный агент поверх общего `bapm.yml` — [overlay](/guide/manifest-overlay) |
+| `bapm install --target cursor` | Force поверх detect / `active`                                             |
+
+`bapm init -y --target cursor` по-прежнему может записать `targets:` + `active` (pin) — это удобный scaffold, не единственный путь.
+
+## Что ожидать на диске
+
+| Артефакт                         | Смысл                                              |
+| -------------------------------- | -------------------------------------------------- |
+| `bapm.lock.yaml`                 | Зафиксированный граф                               |
+| `apm_modules/`                   | Материализованные пакеты                           |
+| `.agents/skills/<name>/SKILL.md` | Skills (Cursor)                                    |
+| `.cursor/rules/<name>.mdc`       | Rules                                              |
+| `.cursor/agents/<name>.md`       | Agents                                             |
+| `.cursor/mcp.json`               | MCP (если есть eligible direct `dependencies.mcp`) |
 
 Полезные флаги: `--dry-run`, `-v` / `--verbose`, `--frozen`. Полный список: [install](/reference/install).
 
-Lock без деплоя: `bapm lock` — [lockfile](/guide/lockfile).
+## Если не сработало
 
-## 3. Если не сработало
+| Симптом                                     | Что проверить                                                                      |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `No manifest found`                         | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                                    |
+| пакет / `@bapm/integration-cursor` в ошибке | Установите интеграцию в проект или глобально (`npm i -D @bapm/integration-cursor`) |
+| `Target detection is missing or ambiguous`  | Несколько маркеров (`.cursor` + `.claude`) или ни одного — `--target` / `active`   |
+| `frozen` / lock error при `--frozen`        | Сначала обычный `install` или `lock`                                               |
+| Свой / кастомный агент                      | Object-map `targets:` — [hosts](/guide/supported-hosts#advanced-custom-targets)    |
 
-| Симптом                              | Что проверить                                                             |
-| ------------------------------------ | ------------------------------------------------------------------------- |
-| `No manifest found`                  | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                           |
-| `frozen` / lock error при `--frozen` | Сначала обычный `install` или `lock`                                      |
-| `bapm: command not found`            | `npm i -g @bapm/cli` или `npx` / `pnpm exec` при project-local            |
-| Ожидали Claude/Codex runtime         | Opt-in пакет + `targets:` / `--target` — [hosts](/guide/supported-hosts)  |
-| Свой агент не находится              | Object-map `targets:` + `--target <id>` — [hosts](/guide/supported-hosts) |
-
-## Реже на старте
-
-Публикация scoped-пакета `@bapm/cli` ещё может быть нестабильной; команды установки выше — целевой UX. Сборка из monorepo — для контрибьюторов: [Architecture](/architecture/).
-
-Personal overlay `bapm.local.yml` (личные `active` / `env` / …, не source `local:`) — в `.gitignore`. Подробнее: [overlay](/guide/manifest-overlay).
+Подробнее о приоритете: [Как выбирается host](/guide/host-selection). Три понятия detect / active / targets: [Hosts](/guide/manifest-hosts).
 
 Дальше: [команды](/guide/commands) → [сценарии](/guide/situations/) → [справка](/reference/).

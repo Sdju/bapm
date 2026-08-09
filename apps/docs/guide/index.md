@@ -5,30 +5,32 @@ bapm собирает конфигурацию AI-агента из пакето
 ## На практике
 
 ```bash
-bapm init -y --target cursor
-bapm install --target cursor
+npm i -D @bapm/integration-cursor
+bapm install
 ```
 
 1. В корне лежит `bapm.yml`.
-2. `install` скачивает зависимости, пишет lock и копирует skills / rules / agents / MCP в каталоги выбранного host (Cursor — через `@bapm/integration-cursor` + `targets:`).
+2. `install` находит агента (detect / `active` / `--target`), подтягивает стандартный `@bapm/integration-*` при необходимости и копирует skills / rules / agents / MCP в layout host.
 3. Дальше — `update`, `outdated`, `compile`, marketplace-pack.
 
-Первый проход: [быстрый старт](/guide/quick-start). Свой агент: [поддерживаемые hosts](/guide/supported-hosts).
+Первый проход: [быстрый старт](/guide/quick-start). Выбор host: [host selection](/guide/host-selection). Свой агент: [supported hosts](/guide/supported-hosts).
 
 ## Куда идти
 
 | Если нужно…                    | Откройте                                       |
 | ------------------------------ | ---------------------------------------------- |
 | Поставить CLI и первый install | [Быстрый старт](/guide/quick-start)            |
-| Cursor или свой host           | [Поддерживаемые hosts](/guide/supported-hosts) |
+| Понять detect / active / map   | [Как выбирается host](/guide/host-selection)   |
+| Таблица hosts и custom targets | [Поддерживаемые hosts](/guide/supported-hosts) |
 | Список команд                  | [Команды](/guide/commands)                     |
 | Флаги конкретной команды       | [Справка](/reference/)                         |
 | Разобраться с `bapm.yml`       | [Манифест](/guide/config-manifest)             |
+| Команда с разными агентами     | [Personal overlay](/guide/manifest-overlay)    |
 | Lock и CI                      | [Lock-файл](/guide/lockfile)                   |
 | Типовая задача по шагам        | [Сценарии](/guide/situations/)                 |
 
 ## Ограничения (коротко)
 
-- Cursor / Claude / Codex — opt-in пакеты `@bapm/integration-*` + `targets:` ([hosts](/guide/supported-hosts)). Свой агент — npm / локальный модуль через `targets:`.
+- Hosts — opt-in пакеты `@bapm/integration-*` (не бандл CLI). Canonical fallback без `targets:`; map — override/custom.
 - Claude/Codex также эмитят marketplace JSON при `pack`; Cursor, Codex и OpenCode делят `AGENTS.md` (last-writer-wins на compile).
 - Граница OpenAPM / APM: [Совместимость](/guide/conformance).
