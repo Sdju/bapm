@@ -1,37 +1,37 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
   BapmIntegration,
-  CompileContext,
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@bapm/integration-api";
 import {
+  SHARED_COMMAND_FRONTMATTER_KEYS,
   assertUnderDeployRoots,
-  findPackageRoot,
+  compileMarkdownReport,
+  copyHookScript,
+  filterFrontmatterKeys,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  readHookOwnershipSidecar,
   readPrimitiveContent,
+  renderPrimitivesMarkdown,
   sanitizeName,
-  toPosixRel,
+  stripOwnedHookCommands,
+  writeDeployedFile,
+  writeHookOwnershipSidecar,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".claude", "."] as const;
 const MCP_JSON_REL = ".mcp.json";
 const SETTINGS_JSON_REL = ".claude/settings.json";
 const HOOKS_OWNERSHIP_REL = ".claude/bapm-hooks.json";
-const COMMAND_PRESERVED_FRONTMATTER = new Set([
-  "description",
-  "allowed-tools",
-  "model",
-  "argument-hint",
-  "input",
-]);
 
 /**
  * Create the Claude Code target.
@@ -62,7 +62,18 @@ export function createClaudeIntegration(options?: {
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      return compileClaudeMd(primitivesList(primitives), context);
+      const content = renderPrimitivesMarkdown({
+        primitives: primitivesList(primitives),
+        title: "# CLAUDE.md",
+        filter: (p) => !/instruction/i.test(String(p.type ?? "")),
+      });
+      return compileMarkdownReport({
+        cwd: context.cwd,
+        outputFile: context.outputFile ?? "CLAUDE.md",
+        write: context.write,
+        content,
+        outsideCwdMessage: "Claude compile output must be a cwd-relative file path",
+      });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
       const cwd = resolve(ctx?.cwd ?? process.cwd());
@@ -87,35 +98,41 @@ export function createClaudeIntegration(options?: {
           );
         },
         instruction(p, { name }) {
-          const destFile = join(cwd, ".claude", "rules", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(join(cwd, ".claude", "rules"), { recursive: true });
-          writeFileSync(destFile, transformClaudeRulesMarkdown(readPrimitiveContent(p)), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".claude", "rules", `${name}.md`),
+              content: transformClaudeRulesMarkdown(readPrimitiveContent(p)),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         agent(p, { name }) {
-          const destFile = join(cwd, ".claude", "agents", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(join(cwd, ".claude", "agents"), { recursive: true });
-          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".claude", "agents", `${name}.md`),
+              content: readPrimitiveContent(p),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         command(p, { name }) {
-          const destFile = join(cwd, ".claude", "commands", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(join(cwd, ".claude", "commands"), { recursive: true });
-          const { content, droppedKeys } = transformClaudeCommandMarkdown(readPrimitiveContent(p));
-          writeFileSync(destFile, content, "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          const { content, droppedKeys } = filterFrontmatterKeys(
+            readPrimitiveContent(p),
+            SHARED_COMMAND_FRONTMATTER_KEYS,
+          );
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".claude", "commands", `${name}.md`),
+              content,
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
           if (droppedKeys.length > 0) {
             diagnostics.push({
               code: "CLAUDE_COMMAND_FRONTMATTER_DROPPED",
@@ -154,51 +171,6 @@ export function createClaudeIntegration(options?: {
       });
     },
   };
-}
-
-function compileClaudeMd(
-  primitives: AttributedPrimitive[],
-  context: CompileContext,
-): CompileReport {
-  const cwd = resolve(context.cwd);
-  const outputFile = context.outputFile ?? "CLAUDE.md";
-  const outputPath = resolve(cwd, outputFile);
-  const rel = relative(cwd, outputPath);
-  if (!rel || rel === ".." || rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`)) {
-    throw new Error("Claude compile output must be a cwd-relative file path");
-  }
-
-  const content = renderClaudeMd(primitives);
-  const wrote = context.write;
-  if (wrote) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, content, "utf8");
-  }
-
-  return { path: rel.replace(/\\/g, "/"), content, wrote };
-}
-
-function renderClaudeMd(primitives: AttributedPrimitive[]): string {
-  const filtered = primitives.filter((p) => !/instruction/i.test(String(p.type ?? "")));
-  const sorted = [...filtered].sort((a, b) => {
-    const type = String(a.type ?? "").localeCompare(String(b.type ?? ""));
-    if (type !== 0) return type;
-    const name = String(a.name ?? "").localeCompare(String(b.name ?? ""));
-    return name !== 0 ? name : String(a.path ?? "").localeCompare(String(b.path ?? ""));
-  });
-  const sections = [
-    "# CLAUDE.md",
-    "",
-    "<!-- Generated by bapm compile. Do not edit by hand. -->",
-    "",
-  ];
-  if (sorted.length === 0) return [...sections, "_No discoverable primitives._", ""].join("\n");
-
-  for (const primitive of sorted) {
-    sections.push(`## ${primitive.name} (${primitive.type})`, "");
-    sections.push(readPrimitiveContent(primitive, `# ${primitive.name}\n`).trimEnd(), "");
-  }
-  return sections.join("\n");
 }
 
 function writeClaudeMcpConfig(
@@ -383,16 +355,6 @@ type SettingsDoc = {
   hooks?: Record<string, HookEntry[]>;
   [key: string]: unknown;
 };
-type OwnershipSidecar = {
-  owned: Record<
-    string,
-    {
-      packageName?: string;
-      entries: Array<{ event: string; command: string }>;
-      scripts: string[];
-    }
-  >;
-};
 
 /**
  * Convert portable `applyTo` frontmatter to Claude `paths:` (omit when unconditional).
@@ -458,37 +420,6 @@ export function transformClaudeRulesMarkdown(source: string): string {
   return `---\n${fmLines.join("\n")}\n---\n${body}`.replace(/\s+$/, "\n");
 }
 
-function transformClaudeCommandMarkdown(source: string): {
-  content: string;
-  droppedKeys: string[];
-} {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) return { content: source, droppedKeys: [] };
-
-  const rawFm = match[1] ?? "";
-  const body = match[2] ?? "";
-  const kept: string[] = [];
-  const droppedKeys: string[] = [];
-
-  for (const line of rawFm.split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    const keyMatch = line.match(/^([A-Za-z0-9_-]+)\s*:/);
-    if (!keyMatch) {
-      kept.push(line);
-      continue;
-    }
-    const key = keyMatch[1]!;
-    if (COMMAND_PRESERVED_FRONTMATTER.has(key)) {
-      kept.push(line);
-    } else {
-      droppedKeys.push(key);
-    }
-  }
-
-  const fmBlock = kept.length > 0 ? `---\n${kept.join("\n")}\n---\n` : "";
-  return { content: `${fmBlock}${body}`.replace(/\s+$/, "\n"), droppedKeys };
-}
-
 function materializeClaudeHooks(args: {
   cwd: string;
   roots: string[];
@@ -508,11 +439,13 @@ function materializeClaudeHooks(args: {
   mkdirSync(join(cwd, ".claude"), { recursive: true });
 
   const doc = readSettingsDoc(settingsPath);
-  const ownership = readOwnershipSidecar(ownershipPath);
+  const ownership = readHookOwnershipSidecar(ownershipPath);
 
-  stripOwnedEntries(doc, ownership);
+  if (doc.hooks && typeof doc.hooks === "object") {
+    stripOwnedHookCommands(doc.hooks as Record<string, unknown>, ownership);
+  }
 
-  const nextOwned: OwnershipSidecar["owned"] = {};
+  const nextOwned: HookOwnershipSidecar["owned"] = {};
 
   for (const p of hooks) {
     const name = sanitizeName(String(p.name));
@@ -559,10 +492,12 @@ function materializeClaudeHooks(args: {
 
         const rewritten = copyHookScript({
           cwd,
-          roots,
-          hookName: name,
+          deployRoots: roots,
           hookFile: srcPath,
           command,
+          alreadyDeployedNeedle: ".claude/",
+          destRel: `.claude/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
+          commandAsDotSlash: true,
         });
         const { _apm_source: _drop, ...clean } = entry as HookEntry & { _apm_source?: unknown };
         void _drop;
@@ -588,11 +523,7 @@ function materializeClaudeHooks(args: {
   }
 
   writeFileSync(settingsPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeFileSync(
-    ownershipPath,
-    `${JSON.stringify({ owned: nextOwned } satisfies OwnershipSidecar, null, 2)}\n`,
-    "utf8",
-  );
+  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
 
   deployedFiles.push({
     path: SETTINGS_JSON_REL,
@@ -610,40 +541,6 @@ function materializeClaudeHooks(args: {
   return { deployedFiles, diagnostics };
 }
 
-function copyHookScript(args: {
-  cwd: string;
-  roots: string[];
-  hookName: string;
-  hookFile: string;
-  command: string;
-}): { commandRel: string; scriptRel?: string } {
-  const { cwd, roots, hookName, hookFile, command } = args;
-  if (command.includes(".claude/")) {
-    return { commandRel: command.startsWith("./") ? command : `./${command.replace(/^\//, "")}` };
-  }
-
-  const cleaned = command.replace(/^\.\//, "");
-  const packageRoot = findPackageRoot(hookFile);
-  const candidates = [resolve(dirname(hookFile), cleaned), resolve(packageRoot, cleaned)];
-  const source = candidates.find((p) => {
-    try {
-      return existsSync(p) && statSync(p).isFile();
-    } catch {
-      return false;
-    }
-  });
-  if (!source) {
-    return { commandRel: command };
-  }
-
-  const destRel = `.claude/hooks/${hookName}/${basename(source)}`;
-  const destAbs = join(cwd, destRel);
-  assertUnderDeployRoots(cwd, destAbs, roots);
-  mkdirSync(dirname(destAbs), { recursive: true });
-  cpSync(source, destAbs);
-  return { commandRel: `./${destRel}`, scriptRel: destRel };
-}
-
 function readSettingsDoc(path: string): SettingsDoc {
   if (!existsSync(path)) return { hooks: {} };
   try {
@@ -653,37 +550,5 @@ function readSettingsDoc(path: string): SettingsDoc {
     return raw;
   } catch {
     return { hooks: {} };
-  }
-}
-
-function readOwnershipSidecar(path: string): OwnershipSidecar {
-  if (!existsSync(path)) return { owned: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as OwnershipSidecar;
-    if (!raw || typeof raw !== "object" || !raw.owned || typeof raw.owned !== "object") {
-      return { owned: {} };
-    }
-    return raw;
-  } catch {
-    return { owned: {} };
-  }
-}
-
-function stripOwnedEntries(doc: SettingsDoc, ownership: OwnershipSidecar): void {
-  if (!doc.hooks || typeof doc.hooks !== "object") return;
-  const ownedCommands = new Set<string>();
-  for (const record of Object.values(ownership.owned ?? {})) {
-    for (const entry of record.entries ?? []) {
-      if (entry.command) ownedCommands.add(entry.command);
-    }
-  }
-  if (ownedCommands.size === 0) return;
-
-  for (const [event, entries] of Object.entries(doc.hooks)) {
-    if (!Array.isArray(entries)) continue;
-    doc.hooks[event] = entries.filter((e) => {
-      const cmd = typeof e?.command === "string" ? e.command : "";
-      return !ownedCommands.has(cmd);
-    });
   }
 }

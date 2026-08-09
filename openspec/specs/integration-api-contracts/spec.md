@@ -180,3 +180,139 @@ The public API and workspace resolution graph MUST NOT expose legacy target pack
 
 - **WHEN** a consumer or workspace source attempts to resolve a retired target package specifier
 - **THEN** resolution fails because no alias or compatibility package is provided
+
+### Requirement: writeDeployedFile helper
+
+`@bapm/integration-api` MUST export `writeDeployedFile` that writes content under registered deploy roots and returns a `DeployedFile` inventory row.
+
+#### Scenario: Write under deploy roots
+
+- **WHEN** a host calls `writeDeployedFile` with `cwd`, `deployRoots`, a cwd-relative `destRel` under those roots, and string content
+- **THEN** the file MUST be created (parents created as needed), the path MUST pass deploy-root containment, and the return value MUST include a posix cwd-relative `path` and optional `primitive` attribution from the call
+
+#### Scenario: Refuse outside deploy roots
+
+- **WHEN** `destRel` resolves outside every registered deploy root
+- **THEN** `writeDeployedFile` MUST throw without writing the file
+
+### Requirement: renderPrimitivesMarkdown helper
+
+`@bapm/integration-api` MUST export `renderPrimitivesMarkdown` that builds a deterministic markdown document from attributed primitives for host compile hooks.
+
+#### Scenario: Default AGENTS-style document
+
+- **WHEN** called with a title and a list of primitives (no filter)
+- **THEN** the document MUST start with the title, include the generated-by comment, sort primitives by type then name then path, and emit `## name (type)` sections with bodies from `readPrimitiveContent`
+
+#### Scenario: Filter and custom empty message
+
+- **WHEN** a `filter` excludes all primitives
+- **THEN** the document MUST still include the title and comment and MUST use `emptyMessage` when provided (otherwise the default empty placeholder)
+
+### Requirement: compileMarkdownReport helper
+
+`@bapm/integration-api` MUST export `compileMarkdownReport` that turns markdown content into a `CompileReport` with optional durable write.
+
+#### Scenario: Preview without write
+
+- **WHEN** `write` is false and `outputFile` is cwd-relative
+- **THEN** the helper MUST return `{ path, content, wrote: false }` and MUST NOT create the output file
+
+#### Scenario: Write and basename gate
+
+- **WHEN** `write` is true and optional `requireBasename` matches the output basename
+- **THEN** the helper MUST create parent directories as needed, write `content`, and return `wrote: true`
+
+#### Scenario: Reject escape from cwd
+
+- **WHEN** `outputFile` resolves outside `cwd`
+- **THEN** the helper MUST throw and MUST NOT write
+
+### Requirement: filterFrontmatterKeys helper
+
+`@bapm/integration-api` MUST export `filterFrontmatterKeys` that drops YAML frontmatter keys not in a caller-supplied allowlist while preserving body text.
+
+#### Scenario: Drop non-preserved keys
+
+- **WHEN** markdown starts with a `---` frontmatter block containing both preserved and non-preserved keys
+- **THEN** the returned `content` MUST keep only preserved (and non-key) frontmatter lines, and `droppedKeys` MUST list removed key names in encounter order
+
+#### Scenario: No frontmatter fence
+
+- **WHEN** the source has no leading `---` frontmatter fence
+- **THEN** `content` MUST equal the source and `droppedKeys` MUST be empty
+
+### Requirement: Shared command frontmatter allowlist constant
+
+`@bapm/integration-api` MUST export a frozen allowlist constant covering at least `description`, `allowed-tools`, `model`, `argument-hint`, and `input` for hosts that share the same command frontmatter policy. The constant's **exported identifier** MUST NOT embed concrete host product names (so the package stays host-neutral in source).
+
+#### Scenario: Constant usable with filterFrontmatterKeys
+
+- **WHEN** a host passes the exported constant as the preserved set to `filterFrontmatterKeys`
+- **THEN** filtering MUST treat those five keys as preserved
+
+### Requirement: HookOwnershipSidecar type and read/write helpers
+
+`@bapm/integration-api` MUST export a `HookOwnershipSidecar` type describing a document with an `owned` map whose values MAY include optional `packageName`, `entries` (event/command pairs), `scripts` (cwd-relative paths), `hookFile` (single cwd-relative path), and/or `hookFiles` (cwd-relative paths). The package MUST export `readHookOwnershipSidecar` and `writeHookOwnershipSidecar` for that document shape. Read MUST return `{ owned: {} }` when the path is missing, unreadable, or not an object with an `owned` object. Write MUST serialize `{ owned }` as JSON (pretty-printed with trailing newline consistent with other helpers) after the caller has already asserted deploy-root containment for the sidecar path.
+
+#### Scenario: Missing sidecar reads as empty owned
+
+- **WHEN** `readHookOwnershipSidecar` is called for a path that does not exist
+- **THEN** the result MUST be `{ owned: {} }`
+
+#### Scenario: Malformed sidecar reads as empty owned
+
+- **WHEN** the file exists but JSON is invalid or lacks an object `owned` field
+- **THEN** `readHookOwnershipSidecar` MUST return `{ owned: {} }` without throwing
+
+#### Scenario: Write round-trips owned records with mixed fields
+
+- **WHEN** a caller writes a sidecar whose owned records include a mix of `entries`/`scripts` and `hookFile`/`hookFiles`
+- **THEN** a subsequent read of that path MUST preserve those optional fields for the written keys
+
+### Requirement: stripOwnedHookCommands helper
+
+`@bapm/integration-api` MUST export `stripOwnedHookCommands` that, given a host hooks object (event → array of entries with optional `command` string) and a `HookOwnershipSidecar`, removes every entry whose `command` appears in any owned record's `entries`. Non-array event values MUST be left unchanged. The helper MUST NOT delete script files or hook JSON files from disk.
+
+#### Scenario: Owned commands removed; unrelated kept
+
+- **WHEN** hooks contain owned and non-owned command entries for an event and the sidecar lists the owned commands
+- **THEN** only entries whose command matches an owned entry command MUST be removed from that event's array
+
+#### Scenario: Empty ownership is a no-op
+
+- **WHEN** the sidecar has no owned entry commands
+- **THEN** the hooks object MUST remain unchanged
+
+### Requirement: removeOwnedHookArtifacts helper
+
+`@bapm/integration-api` MUST export `removeOwnedHookArtifacts` that best-effort deletes, under the given `cwd`, every path listed in owned records' `scripts`, optional `hookFile`, and optional `hookFiles`. Missing paths MUST be ignored. The helper MUST NOT mutate host hooks JSON and MUST NOT throw solely because a listed path is already absent.
+
+#### Scenario: Removes scripts and hook files listed in sidecar
+
+- **WHEN** the sidecar lists script paths and either `hookFile` or `hookFiles` that exist under `cwd`
+- **THEN** those files MUST be deleted after the call
+
+#### Scenario: Missing paths ignored
+
+- **WHEN** a listed script or hook path does not exist
+- **THEN** the helper MUST continue without throwing for that path
+
+### Requirement: Simple copyHookScript helper
+
+`@bapm/integration-api` MUST export a simple `copyHookScript` helper for hosts that resolve a script next to the hook source or under `findPackageRoot(hookFile)`, copy it to a caller-supplied cwd-relative `destRel` under deploy roots, and return a rewritten command path. Arguments MUST include at least `cwd`, `deployRoots`, `hookFile`, `command`, `alreadyDeployedNeedle`, and `destRel`, plus an optional flag controlling whether the returned command uses a `./` prefix. When `command` already contains `alreadyDeployedNeedle`, the helper MUST NOT copy and MUST return a normalized command path. When no candidate source file exists, it MUST return the original `command` unchanged. Successful copy MUST assert deploy-root containment, create parent directories, copy the file, and return `{ commandRel, scriptRel }` with `scriptRel` equal to `destRel`.
+
+#### Scenario: Copy under deploy roots and rewrite command
+
+- **WHEN** `command` points at an existing script relative to the hook file and does not contain `alreadyDeployedNeedle`
+- **THEN** the helper MUST copy the script to `destRel`, pass deploy-root checks, and return a command relative path referencing that destination plus `scriptRel: destRel`
+
+#### Scenario: Already-deployed needle skips copy
+
+- **WHEN** `command` includes `alreadyDeployedNeedle`
+- **THEN** the helper MUST NOT copy a file and MUST return a command path without inventing a new `scriptRel`
+
+#### Scenario: Missing source keeps original command
+
+- **WHEN** no candidate file exists for `command`
+- **THEN** the helper MUST return `{ commandRel: command }` with no `scriptRel` and MUST NOT write under `cwd`

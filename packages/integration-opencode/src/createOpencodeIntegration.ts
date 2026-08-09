@@ -1,9 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import type {
-  AttributedPrimitive,
   BapmIntegration,
-  CompileContext,
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
@@ -12,11 +10,13 @@ import type {
 } from "@bapm/integration-api";
 import {
   assertUnderDeployRoots,
+  compileMarkdownReport,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
   readPrimitiveContent,
-  toPosixRel,
+  renderPrimitivesMarkdown,
+  writeDeployedFile,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".opencode", "."] as const;
@@ -54,7 +54,18 @@ export function createOpencodeIntegration(options?: {
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      return compileOpencodeAgentsMd(primitivesList(primitives), context);
+      const content = renderPrimitivesMarkdown({
+        primitives: primitivesList(primitives),
+        title: "# AGENTS.md",
+      });
+      return compileMarkdownReport({
+        cwd: context.cwd,
+        outputFile: context.outputFile ?? "AGENTS.md",
+        write: context.write,
+        content,
+        requireBasename: "AGENTS.md",
+        outsideCwdMessage: "OpenCode compile output must be a cwd-relative file path",
+      });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
       const cwd = resolve(ctx?.cwd ?? process.cwd());
@@ -86,24 +97,26 @@ export function createOpencodeIntegration(options?: {
           });
         },
         agent(p, { name }) {
-          const destFile = join(cwd, ".opencode", "agents", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(join(cwd, ".opencode", "agents"), { recursive: true });
-          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".opencode", "agents", `${name}.md`),
+              content: readPrimitiveContent(p),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         command(p, { name }) {
-          const destFile = join(cwd, ".opencode", "commands", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(join(cwd, ".opencode", "commands"), { recursive: true });
-          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".opencode", "commands", `${name}.md`),
+              content: readPrimitiveContent(p),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         hook(p) {
           diagnostics.push({
@@ -128,54 +141,6 @@ export function createOpencodeIntegration(options?: {
       });
     },
   };
-}
-
-function compileOpencodeAgentsMd(
-  primitives: AttributedPrimitive[],
-  context: CompileContext,
-): CompileReport {
-  const cwd = resolve(context.cwd);
-  const outputFile = context.outputFile ?? "AGENTS.md";
-  const outputPath = resolve(cwd, outputFile);
-  const rel = relative(cwd, outputPath);
-  if (!rel || rel === ".." || rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`)) {
-    throw new Error("OpenCode compile output must be a cwd-relative file path");
-  }
-  if (basename(outputPath) !== "AGENTS.md") {
-    throw new Error("OpenCode compile output basename must be AGENTS.md");
-  }
-
-  const content = renderOpencodeAgentsMd(primitives);
-  const wrote = context.write;
-  if (wrote) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, content, "utf8");
-  }
-
-  return { path: rel.replace(/\\/g, "/"), content, wrote };
-}
-
-function renderOpencodeAgentsMd(primitives: AttributedPrimitive[]): string {
-  // Include instructions (compile-only path). Shared AGENTS.md with Cursor/Codex: last writer wins.
-  const sorted = [...primitives].sort((a, b) => {
-    const type = String(a.type ?? "").localeCompare(String(b.type ?? ""));
-    if (type !== 0) return type;
-    const name = String(a.name ?? "").localeCompare(String(b.name ?? ""));
-    return name !== 0 ? name : String(a.path ?? "").localeCompare(String(b.path ?? ""));
-  });
-  const sections = [
-    "# AGENTS.md",
-    "",
-    "<!-- Generated by bapm compile. Do not edit by hand. -->",
-    "",
-  ];
-  if (sorted.length === 0) return [...sections, "_No discoverable primitives._", ""].join("\n");
-
-  for (const primitive of sorted) {
-    sections.push(`## ${primitive.name} (${primitive.type})`, "");
-    sections.push(readPrimitiveContent(primitive, `# ${primitive.name}\n`).trimEnd(), "");
-  }
-  return sections.join("\n");
 }
 
 function writeOpencodeMcpConfig(
