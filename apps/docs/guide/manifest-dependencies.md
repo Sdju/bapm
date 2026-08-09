@@ -74,6 +74,8 @@ dependencies:
 | `${VAR}` / `${env:VAR}` / `<VAR>` | OpenAPM/APM parity |
 | `{bake:NAME}` / `{bake:env:NAME}` | только bapm        |
 
+Lookup: overrides → process.env → top-level манифеста [`env:`](/guide/config-manifest#manifest-env) (непустое).
+
 ```yaml
 dependencies:
   mcp:
@@ -94,7 +96,7 @@ dependencies:
 | Симптом                                       | Что проверить                                                         |
 | --------------------------------------------- | --------------------------------------------------------------------- |
 | `must have exactly one source kind`           | Ровно один из `git`\|`id`\|`path`\|`registry`\|`marketplace`\|`local` |
-| `MCP env bake failed` / unresolved            | Задайте переменную в окружении перед install                          |
+| `MCP env bake failed` / unresolved            | Задайте переменную в окружении или в top-level `env:` перед install |
 | `OpenAPM v0.1 rejects top-level "workspaces"` | Уберите `workspaces` с корня (это не deps)                            |
 
 Сценарий MCP/policy: [Policy и MCP](/guide/situations/policy-mcp).

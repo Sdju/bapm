@@ -29,10 +29,45 @@ bapm init -y --target cursor
 | `name` / `version` | Обязательны                                                   |
 | `target`           | Предпочитаемый host (`cursor`); **сам по себе не активирует** |
 | `active`           | Явный список host id для активации                            |
+| `env`              | Bake-defaults для MCP placeholders (**bapm-расширение**)      |
 | `dependencies.apm` | Пакеты агента                                                 |
 | `dependencies.mcp` | MCP; в Cursor по умолчанию деплоятся **прямые** записи        |
 
 Подробнее формы deps и MCP bake: [Зависимости](/guide/manifest-dependencies).
+
+## Top-level `env:` (bake defaults) {#manifest-env}
+
+Опциональная карта **строка → строка** на корне `bapm.yml` / `apm.yml`. Это **bapm-расширение** (не требование OpenAPM): подставляет значения в MCP placeholders при install bake, когда в process env имени нет.
+
+Ключи — имена переменных окружения: `[A-Za-z_][A-Za-z0-9_]*`. Значения — обычные строки (без вложенного bake в v1).
+
+```yaml
+name: my-project
+version: 0.1.0
+env:
+  PLUGIN_TOKEN: "from-yml"
+dependencies:
+  mcp:
+    - name: my-server
+      registry: false
+      transport: stdio
+      command: echo
+      args: ["--ok"]
+      env:
+        TOKEN: "{bake:PLUGIN_TOKEN}"
+```
+
+**Precedence при bake:** явные overrides (если переданы) → непустое **process.env** → непустое top-level **`env`**. Process/CI выигрывает; `env:` только «доопределяет» пробелы.
+
+**Не путать:**
+
+| Поле | Где | Зачем |
+| ---- | --- | ----- |
+| Top-level `env:` | корень манифеста | defaults для `{bake:NAME}` / `${VAR}` |
+| `dependencies.mcp[].env` | у MCP-сервера | env map сервера (может содержать placeholders) |
+| `bapm.local.yml` → `env` | overlay | deep-merge поверх base `env` (local wins) |
+
+Не коммитьте секреты в git через `env:`. Для личных/секретных значений предпочитайте process env или [personal overlay](/guide/manifest-overlay) (`bapm.local.yml` в `.gitignore`).
 
 ## Когда править вручную
 

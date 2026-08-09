@@ -72,4 +72,35 @@ describe("bakeMcpStringMap", () => {
       McpEnvBakeError,
     );
   });
+
+  test("manifestEnv fills when process env missing; process wins; empty manifest does not", () => {
+    expect(
+      bakeMcpStringMap(
+        { TOKEN: "${PLUGIN_TOKEN}", BAKE: "{bake:PLUGIN_TOKEN}" },
+        { env: {}, manifestEnv: { PLUGIN_TOKEN: "from-yml" } },
+      ),
+    ).toEqual({ TOKEN: "from-yml", BAKE: "from-yml" });
+
+    expect(
+      bakeMcpStringMap(
+        { TOKEN: "${API_TOKEN}" },
+        { env: { API_TOKEN: "from-process" }, manifestEnv: { API_TOKEN: "from-yml" } },
+      ),
+    ).toEqual({ TOKEN: "from-process" });
+
+    expect(
+      bakeMcpStringMap(
+        { X: "{bake:VAR}" },
+        {
+          overrides: { VAR: "from-override" },
+          env: { VAR: "from-process" },
+          manifestEnv: { VAR: "from-yml" },
+        },
+      ),
+    ).toEqual({ X: "from-override" });
+
+    expect(() =>
+      bakeMcpStringMap({ X: "${EMPTY_VAR}" }, { env: {}, manifestEnv: { EMPTY_VAR: "" } }),
+    ).toThrow(McpEnvBakeError);
+  });
 });

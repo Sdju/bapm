@@ -14,6 +14,7 @@
  *   `BAPM_LOCAL_MANIFEST_FILE`, `APM_LOCAL_MANIFEST_FILE`
  * - Functions: `discoverManifestPath`, `loadBaseManifest`, `loadManifest`,
  *   `loadEffectiveManifest`, `parseManifest`, `parseManifestDocument`,
+ *   `validateManifestEnv`,
  *   `loadYamlDocument`, `serializeManifest`, `writeManifest`,
  *   `writeProducerManifest`, `createMinimalManifest`, `validatePluginName`,
  *   `validateProjectName`, `createPluginJson`, `writePluginJson`,
@@ -57,7 +58,7 @@ export {
   overlayRootForBase,
 } from "./localOverlay.ts";
 export type { LocalOverlayFields } from "./localOverlay.ts";
-export { parseManifest, parseManifestDocument } from "./parse.ts";
+export { parseManifest, parseManifestDocument, validateManifestEnv } from "./parse.ts";
 export { loadYamlDocument } from "./yaml-load.ts";
 export {
   serializeManifest,
