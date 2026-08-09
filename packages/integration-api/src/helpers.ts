@@ -9,6 +9,7 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -411,4 +412,149 @@ export function filterFrontmatterKeys(
 
   const fmBlock = kept.length > 0 ? `---\n${kept.join("\n")}\n---\n` : "";
   return { content: `${fmBlock}${body}`.replace(/\s+$/, "\n"), droppedKeys };
+}
+
+/** Owned-hook sidecar document (hosts write only the fields they need). */
+export type HookOwnershipSidecar = {
+  owned: Record<
+    string,
+    {
+      packageName?: string;
+      entries?: Array<{ event: string; command: string }>;
+      scripts?: string[];
+      hookFile?: string;
+      hookFiles?: string[];
+    }
+  >;
+};
+
+/** Read ownership sidecar; missing/malformed → `{ owned: {} }`. */
+export function readHookOwnershipSidecar(path: string): HookOwnershipSidecar {
+  if (!existsSync(path)) return { owned: {} };
+  try {
+    const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { owned: {} };
+    const owned = (raw as { owned?: unknown }).owned;
+    if (!owned || typeof owned !== "object" || Array.isArray(owned)) return { owned: {} };
+    return { owned: owned as HookOwnershipSidecar["owned"] };
+  } catch {
+    return { owned: {} };
+  }
+}
+
+/** Write `{ owned }` as pretty JSON with trailing newline (caller asserts deploy roots). */
+export function writeHookOwnershipSidecar(path: string, doc: HookOwnershipSidecar): void {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, `${JSON.stringify({ owned: doc.owned ?? {} }, null, 2)}\n`, "utf8");
+}
+
+/**
+ * Remove entries whose `command` appears in any owned `entries`.
+ * Mutates `hooks` in place; does not delete files from disk.
+ */
+export function stripOwnedHookCommands(
+  hooks: Record<string, unknown>,
+  ownership: HookOwnershipSidecar,
+): void {
+  const ownedCommands = new Set<string>();
+  for (const record of Object.values(ownership.owned ?? {})) {
+    for (const entry of record.entries ?? []) {
+      if (entry.command) ownedCommands.add(entry.command);
+    }
+  }
+  if (ownedCommands.size === 0) return;
+
+  for (const [event, entries] of Object.entries(hooks)) {
+    if (!Array.isArray(entries)) continue;
+    hooks[event] = entries.filter((e) => {
+      const cmd =
+        e && typeof e === "object" && typeof (e as { command?: unknown }).command === "string"
+          ? (e as { command: string }).command
+          : "";
+      return !ownedCommands.has(cmd);
+    });
+  }
+}
+
+/**
+ * Best-effort delete of owned `scripts`, `hookFile`, and `hookFiles` under `cwd`.
+ * Missing paths are ignored; does not mutate hooks JSON.
+ */
+export function removeOwnedHookArtifacts(cwd: string, ownership: HookOwnershipSidecar): void {
+  for (const record of Object.values(ownership.owned ?? {})) {
+    const rels: string[] = [];
+    if (typeof record.hookFile === "string" && record.hookFile) rels.push(record.hookFile);
+    if (Array.isArray(record.hookFiles)) {
+      for (const f of record.hookFiles) {
+        if (typeof f === "string" && f) rels.push(f);
+      }
+    }
+    if (Array.isArray(record.scripts)) {
+      for (const s of record.scripts) {
+        if (typeof s === "string" && s) rels.push(s);
+      }
+    }
+    for (const rel of rels) {
+      try {
+        const abs = join(cwd, rel);
+        if (existsSync(abs)) rmSync(abs, { force: true });
+      } catch {
+        // best-effort cleanup
+      }
+    }
+  }
+}
+
+export type CopyHookScriptArgs = {
+  cwd: string;
+  deployRoots: string[];
+  hookFile: string;
+  command: string;
+  alreadyDeployedNeedle: string;
+  destRel: string;
+  commandAsDotSlash?: boolean;
+};
+
+export type CopyHookScriptResult = {
+  commandRel: string;
+  scriptRel?: string;
+};
+
+/**
+ * Simple hook-script copy for hosts that resolve next to the hook file or under
+ * `findPackageRoot`, then write a caller-supplied `destRel` under deploy roots.
+ */
+export function copyHookScript(args: CopyHookScriptArgs): CopyHookScriptResult {
+  const { cwd, deployRoots, hookFile, command, alreadyDeployedNeedle, destRel, commandAsDotSlash } =
+    args;
+
+  if (command.includes(alreadyDeployedNeedle)) {
+    const commandRel = commandAsDotSlash
+      ? command.startsWith("./")
+        ? command
+        : `./${command.replace(/^\//, "")}`
+      : command;
+    return { commandRel };
+  }
+
+  const cleaned = command.replace(/^\.\//, "");
+  const packageRoot = findPackageRoot(hookFile);
+  const candidates = [resolve(dirname(hookFile), cleaned), resolve(packageRoot, cleaned)];
+  const source = candidates.find((p) => {
+    try {
+      return existsSync(p) && statSync(p).isFile();
+    } catch {
+      return false;
+    }
+  });
+  if (!source) {
+    return { commandRel: command };
+  }
+
+  const destAbs = join(cwd, destRel);
+  assertUnderDeployRoots(cwd, destAbs, deployRoots);
+  mkdirSync(dirname(destAbs), { recursive: true });
+  cpSync(source, destAbs);
+  const commandRel = commandAsDotSlash ? `./${destRel}` : destRel;
+  return { commandRel, scriptRel: destRel };
 }

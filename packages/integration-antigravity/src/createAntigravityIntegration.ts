@@ -1,12 +1,4 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
@@ -14,6 +6,7 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@bapm/integration-api";
@@ -24,10 +17,13 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  readHookOwnershipSidecar,
   readPrimitiveContent,
+  removeOwnedHookArtifacts,
   renderPrimitivesMarkdown,
   sanitizeName,
   writeDeployedFile,
+  writeHookOwnershipSidecar,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".agents", "."] as const;
@@ -386,16 +382,6 @@ type HookHandler = { type?: string; command?: string; timeout?: number; [key: st
 type NestedHookGroup = { matcher?: string; hooks: HookHandler[]; [key: string]: unknown };
 type AgyEventValue = NestedHookGroup[] | HookHandler[];
 type AgyHooksDoc = Record<string, unknown>;
-type OwnershipSidecar = {
-  owned: Record<
-    string,
-    {
-      packageName?: string;
-      entries: Array<{ event: string; command: string }>;
-      scripts: string[];
-    }
-  >;
-};
 
 function materializeAntigravityHooks(args: {
   cwd: string;
@@ -416,12 +402,12 @@ function materializeAntigravityHooks(args: {
   mkdirSync(join(cwd, ".agents"), { recursive: true });
 
   const doc = readAgyHooksDoc(hooksPath);
-  const ownership = readOwnershipSidecar(ownershipPath);
-  cleanupOwnedScripts(cwd, ownership);
+  const ownership = readHookOwnershipSidecar(ownershipPath);
+  removeOwnedHookArtifacts(cwd, ownership);
   delete doc[BAPM_HOOK_CONTAINER];
 
   const container: Record<string, AgyEventValue> = {};
-  const nextOwned: OwnershipSidecar["owned"] = {};
+  const nextOwned: HookOwnershipSidecar["owned"] = {};
 
   for (const p of hooks) {
     const name = sanitizeName(String(p.name));
@@ -482,11 +468,7 @@ function materializeAntigravityHooks(args: {
 
   doc[BAPM_HOOK_CONTAINER] = container;
   writeFileSync(hooksPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeFileSync(
-    ownershipPath,
-    `${JSON.stringify({ owned: nextOwned } satisfies OwnershipSidecar, null, 2)}\n`,
-    "utf8",
-  );
+  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
 
   deployedFiles.push({
     path: HOOKS_JSON_REL,
@@ -673,31 +655,5 @@ function readAgyHooksDoc(path: string): AgyHooksDoc {
     return raw && typeof raw === "object" && !Array.isArray(raw) ? { ...(raw as AgyHooksDoc) } : {};
   } catch {
     return {};
-  }
-}
-
-function readOwnershipSidecar(path: string): OwnershipSidecar {
-  if (!existsSync(path)) return { owned: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as OwnershipSidecar;
-    if (!raw || typeof raw !== "object" || !raw.owned || typeof raw.owned !== "object") {
-      return { owned: {} };
-    }
-    return raw;
-  } catch {
-    return { owned: {} };
-  }
-}
-
-function cleanupOwnedScripts(cwd: string, ownership: OwnershipSidecar): void {
-  for (const record of Object.values(ownership.owned ?? {})) {
-    for (const scriptRel of record.scripts ?? []) {
-      const abs = join(cwd, scriptRel);
-      try {
-        if (existsSync(abs) && statSync(abs).isFile()) rmSync(abs);
-      } catch {
-        // best-effort cleanup
-      }
-    }
   }
 }

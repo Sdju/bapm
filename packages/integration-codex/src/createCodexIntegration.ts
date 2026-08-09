@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import type {
@@ -7,20 +7,24 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@bapm/integration-api";
 import {
   assertUnderDeployRoots,
   compileMarkdownReport,
-  findPackageRoot,
+  copyHookScript,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  readHookOwnershipSidecar,
   readPrimitiveContent,
   renderPrimitivesMarkdown,
   sanitizeName,
+  stripOwnedHookCommands,
   writeDeployedFile,
+  writeHookOwnershipSidecar,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".codex", ".agents", "."] as const;
@@ -452,16 +456,6 @@ type HooksDoc = {
   hooks?: Record<string, HookEntry[]>;
   [key: string]: unknown;
 };
-type OwnershipSidecar = {
-  owned: Record<
-    string,
-    {
-      packageName?: string;
-      entries: Array<{ event: string; command: string }>;
-      scripts: string[];
-    }
-  >;
-};
 
 function materializeCodexHooks(args: {
   cwd: string;
@@ -482,10 +476,12 @@ function materializeCodexHooks(args: {
   mkdirSync(join(cwd, ".codex"), { recursive: true });
 
   const doc = readHooksDoc(hooksPath);
-  const ownership = readOwnershipSidecar(ownershipPath);
-  stripOwnedEntries(doc, ownership);
+  const ownership = readHookOwnershipSidecar(ownershipPath);
+  if (doc.hooks && typeof doc.hooks === "object") {
+    stripOwnedHookCommands(doc.hooks as Record<string, unknown>, ownership);
+  }
 
-  const nextOwned: OwnershipSidecar["owned"] = {};
+  const nextOwned: HookOwnershipSidecar["owned"] = {};
 
   for (const p of hooks) {
     const name = sanitizeName(String(p.name));
@@ -534,10 +530,12 @@ function materializeCodexHooks(args: {
 
         const rewritten = copyHookScript({
           cwd,
-          roots,
-          hookName: name,
+          deployRoots: roots,
           hookFile: srcPath,
           command,
+          alreadyDeployedNeedle: ".codex/",
+          destRel: `.codex/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
+          commandAsDotSlash: true,
         });
         const nextEntry: HookEntry = { ...entry, command: rewritten.commandRel };
         destList.push(nextEntry);
@@ -562,11 +560,7 @@ function materializeCodexHooks(args: {
 
   if (doc.version === undefined) doc.version = 1;
   writeFileSync(hooksPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeFileSync(
-    ownershipPath,
-    `${JSON.stringify({ owned: nextOwned } satisfies OwnershipSidecar, null, 2)}\n`,
-    "utf8",
-  );
+  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
 
   deployedFiles.push({
     path: HOOKS_JSON_REL,
@@ -596,40 +590,6 @@ function normalizeCodexHookEvent(event: string): string {
     .join("");
 }
 
-function copyHookScript(args: {
-  cwd: string;
-  roots: string[];
-  hookName: string;
-  hookFile: string;
-  command: string;
-}): { commandRel: string; scriptRel?: string } {
-  const { cwd, roots, hookName, hookFile, command } = args;
-  if (command.includes(".codex/")) {
-    return { commandRel: command.startsWith("./") ? command : `./${command.replace(/^\//, "")}` };
-  }
-
-  const cleaned = command.replace(/^\.\//, "");
-  const packageRoot = findPackageRoot(hookFile);
-  const candidates = [resolve(dirname(hookFile), cleaned), resolve(packageRoot, cleaned)];
-  const source = candidates.find((p) => {
-    try {
-      return existsSync(p) && statSync(p).isFile();
-    } catch {
-      return false;
-    }
-  });
-  if (!source) {
-    return { commandRel: command };
-  }
-
-  const destRel = `.codex/hooks/${hookName}/${basename(source)}`;
-  const destAbs = join(cwd, destRel);
-  assertUnderDeployRoots(cwd, destAbs, roots);
-  mkdirSync(dirname(destAbs), { recursive: true });
-  cpSync(source, destAbs);
-  return { commandRel: `./${destRel}`, scriptRel: destRel };
-}
-
 function readHooksDoc(path: string): HooksDoc {
   if (!existsSync(path)) return { version: 1, hooks: {} };
   try {
@@ -639,37 +599,5 @@ function readHooksDoc(path: string): HooksDoc {
     return raw;
   } catch {
     return { version: 1, hooks: {} };
-  }
-}
-
-function readOwnershipSidecar(path: string): OwnershipSidecar {
-  if (!existsSync(path)) return { owned: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as OwnershipSidecar;
-    if (!raw || typeof raw !== "object" || !raw.owned || typeof raw.owned !== "object") {
-      return { owned: {} };
-    }
-    return raw;
-  } catch {
-    return { owned: {} };
-  }
-}
-
-function stripOwnedEntries(doc: HooksDoc, ownership: OwnershipSidecar): void {
-  if (!doc.hooks || typeof doc.hooks !== "object") return;
-  const ownedCommands = new Set<string>();
-  for (const record of Object.values(ownership.owned ?? {})) {
-    for (const entry of record.entries ?? []) {
-      if (entry.command) ownedCommands.add(entry.command);
-    }
-  }
-  if (ownedCommands.size === 0) return;
-
-  for (const [event, entries] of Object.entries(doc.hooks)) {
-    if (!Array.isArray(entries)) continue;
-    doc.hooks[event] = entries.filter((e) => {
-      const cmd = typeof e?.command === "string" ? e.command : "";
-      return !ownedCommands.has(cmd);
-    });
   }
 }

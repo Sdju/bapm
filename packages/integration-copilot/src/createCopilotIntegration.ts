@@ -1,34 +1,30 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
   BapmIntegration,
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@bapm/integration-api";
 import {
   assertUnderDeployRoots,
   compileMarkdownReport,
-  findPackageRoot,
+  copyHookScript,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  readHookOwnershipSidecar,
   readPrimitiveContent,
+  removeOwnedHookArtifacts,
   renderPrimitivesMarkdown,
   sanitizeName,
   writeDeployedFile,
+  writeHookOwnershipSidecar,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".github", ".agents"] as const;
@@ -46,16 +42,6 @@ type HookEntry = { command?: string; type?: string; [key: string]: unknown };
 type HookDoc = {
   hooks?: Record<string, HookEntry[]>;
   [key: string]: unknown;
-};
-type OwnershipSidecar = {
-  owned: Record<
-    string,
-    {
-      packageName?: string;
-      hookFile: string;
-      scripts: string[];
-    }
-  >;
 };
 
 /**
@@ -378,10 +364,10 @@ function materializeCopilotHooks(args: {
   assertUnderDeployRoots(cwd, ownershipPath, roots);
   mkdirSync(join(cwd, ".github", "hooks"), { recursive: true });
 
-  const ownership = readOwnershipSidecar(ownershipPath);
-  removeOwnedArtifacts(cwd, ownership);
+  const ownership = readHookOwnershipSidecar(ownershipPath);
+  removeOwnedHookArtifacts(cwd, ownership);
 
-  const nextOwned: OwnershipSidecar["owned"] = {};
+  const nextOwned: HookOwnershipSidecar["owned"] = {};
 
   for (const p of hooks) {
     const stem = sanitizeName(String(p.name));
@@ -431,10 +417,12 @@ function materializeCopilotHooks(args: {
         }
         const rewritten = copyHookScript({
           cwd,
-          roots,
-          pkg,
+          deployRoots: roots,
           hookFile: srcPath,
           command,
+          alreadyDeployedNeedle: ".github/hooks/",
+          destRel: `.github/hooks/scripts/${pkg}/${basename(command.replace(/^\.\//, ""))}`,
+          commandAsDotSlash: true,
         });
         destList.push({ ...clean, command: rewritten.commandRel });
         if (rewritten.scriptRel) {
@@ -463,11 +451,7 @@ function materializeCopilotHooks(args: {
     };
   }
 
-  writeFileSync(
-    ownershipPath,
-    `${JSON.stringify({ owned: nextOwned } satisfies OwnershipSidecar, null, 2)}\n`,
-    "utf8",
-  );
+  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
   deployedFiles.push({
     path: HOOKS_OWNERSHIP_REL,
     ...(hooks[0]
@@ -476,64 +460,4 @@ function materializeCopilotHooks(args: {
   });
 
   return { deployedFiles, diagnostics };
-}
-
-function copyHookScript(args: {
-  cwd: string;
-  roots: string[];
-  pkg: string;
-  hookFile: string;
-  command: string;
-}): { commandRel: string; scriptRel?: string } {
-  const { cwd, roots, pkg, hookFile, command } = args;
-  if (command.includes(".github/hooks/")) {
-    return { commandRel: command.startsWith("./") ? command : `./${command.replace(/^\//, "")}` };
-  }
-
-  const cleaned = command.replace(/^\.\//, "");
-  const packageRoot = findPackageRoot(hookFile);
-  const candidates = [resolve(dirname(hookFile), cleaned), resolve(packageRoot, cleaned)];
-  const source = candidates.find((p) => {
-    try {
-      return existsSync(p) && statSync(p).isFile();
-    } catch {
-      return false;
-    }
-  });
-  if (!source) {
-    return { commandRel: command };
-  }
-
-  const destRel = `.github/hooks/scripts/${pkg}/${basename(source)}`;
-  const destAbs = join(cwd, destRel);
-  assertUnderDeployRoots(cwd, destAbs, roots);
-  mkdirSync(dirname(destAbs), { recursive: true });
-  cpSync(source, destAbs);
-  return { commandRel: `./${destRel}`, scriptRel: destRel };
-}
-
-function readOwnershipSidecar(path: string): OwnershipSidecar {
-  if (!existsSync(path)) return { owned: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as OwnershipSidecar;
-    if (!raw || typeof raw !== "object" || !raw.owned || typeof raw.owned !== "object") {
-      return { owned: {} };
-    }
-    return raw;
-  } catch {
-    return { owned: {} };
-  }
-}
-
-function removeOwnedArtifacts(cwd: string, ownership: OwnershipSidecar): void {
-  for (const record of Object.values(ownership.owned ?? {})) {
-    if (record.hookFile) {
-      const abs = join(cwd, record.hookFile);
-      if (existsSync(abs)) rmSync(abs, { force: true });
-    }
-    for (const script of record.scripts ?? []) {
-      const abs = join(cwd, script);
-      if (existsSync(abs)) rmSync(abs, { force: true });
-    }
-  }
 }

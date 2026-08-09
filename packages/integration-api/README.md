@@ -47,6 +47,12 @@ Optional fs/path helpers for host `materialize` (exported from the package root)
 | `compileMarkdownReport`           | Preview/write `CompileReport` for host compile hooks              |
 | `filterFrontmatterKeys`           | Drop non-allowlisted YAML frontmatter keys                        |
 | `SHARED_COMMAND_FRONTMATTER_KEYS` | Shared command FM allowlist (description/tools/model/…)           |
+| `HookOwnershipSidecar`            | Type for `.*/bapm-hooks.json` owned map (flexible optional fields)|
+| `readHookOwnershipSidecar`        | Read ownership sidecar; missing/malformed → `{ owned: {} }`       |
+| `writeHookOwnershipSidecar`       | Write `{ owned }` as pretty JSON + trailing newline               |
+| `stripOwnedHookCommands`          | Filter event arrays by owned entry commands (no disk deletes)     |
+| `removeOwnedHookArtifacts`        | Best-effort rm of owned `scripts` / `hookFile` / `hookFiles`      |
+| `copyHookScript`                  | Simple script copy + command rewrite (needle + caller `destRel`)  |
 
 Prefer `primitivesMaterialize({ skill() {…}, … })` over a manual `primitivesList` loop.
 Use `materializeSkill({ destDir })` inside the `skill` handler — hosts only pick the path.

@@ -1,5 +1,5 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
 import { stringify as stringifyToml } from "smol-toml";
 import type {
   AttributedPrimitive,
@@ -7,20 +7,24 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@bapm/integration-api";
 import {
   assertUnderDeployRoots,
   compileMarkdownReport,
-  findPackageRoot,
+  copyHookScript,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  readHookOwnershipSidecar,
   readPrimitiveContent,
   renderPrimitivesMarkdown,
   sanitizeName,
+  stripOwnedHookCommands,
   writeDeployedFile,
+  writeHookOwnershipSidecar,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".gemini", ".agents", "."] as const;
@@ -341,16 +345,6 @@ type SettingsDoc = {
   mcpServers?: Record<string, unknown>;
   [key: string]: unknown;
 };
-type OwnershipSidecar = {
-  owned: Record<
-    string,
-    {
-      packageName?: string;
-      entries: Array<{ event: string; command: string }>;
-      scripts: string[];
-    }
-  >;
-};
 
 function materializeGeminiHooks(args: {
   cwd: string;
@@ -371,11 +365,13 @@ function materializeGeminiHooks(args: {
   mkdirSync(join(cwd, ".gemini"), { recursive: true });
 
   const doc = readSettingsDoc(settingsPath);
-  const ownership = readOwnershipSidecar(ownershipPath);
+  const ownership = readHookOwnershipSidecar(ownershipPath);
 
-  stripOwnedEntries(doc, ownership);
+  if (doc.hooks && typeof doc.hooks === "object") {
+    stripOwnedHookCommands(doc.hooks as Record<string, unknown>, ownership);
+  }
 
-  const nextOwned: OwnershipSidecar["owned"] = {};
+  const nextOwned: HookOwnershipSidecar["owned"] = {};
 
   for (const p of hooks) {
     const name = sanitizeName(String(p.name));
@@ -423,10 +419,12 @@ function materializeGeminiHooks(args: {
 
         const rewritten = copyHookScript({
           cwd,
-          roots,
-          hookName: name,
+          deployRoots: roots,
           hookFile: srcPath,
           command,
+          alreadyDeployedNeedle: ".gemini/",
+          destRel: `.gemini/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
+          commandAsDotSlash: true,
         });
         const { _apm_source: _drop, ...clean } = entry as HookEntry & { _apm_source?: unknown };
         void _drop;
@@ -452,11 +450,7 @@ function materializeGeminiHooks(args: {
   }
 
   writeFileSync(settingsPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeFileSync(
-    ownershipPath,
-    `${JSON.stringify({ owned: nextOwned } satisfies OwnershipSidecar, null, 2)}\n`,
-    "utf8",
-  );
+  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
 
   deployedFiles.push({
     path: SETTINGS_JSON_REL,
@@ -474,40 +468,6 @@ function materializeGeminiHooks(args: {
   return { deployedFiles, diagnostics };
 }
 
-function copyHookScript(args: {
-  cwd: string;
-  roots: string[];
-  hookName: string;
-  hookFile: string;
-  command: string;
-}): { commandRel: string; scriptRel?: string } {
-  const { cwd, roots, hookName, hookFile, command } = args;
-  if (command.includes(".gemini/")) {
-    return { commandRel: command.startsWith("./") ? command : `./${command.replace(/^\//, "")}` };
-  }
-
-  const cleaned = command.replace(/^\.\//, "");
-  const packageRoot = findPackageRoot(hookFile);
-  const candidates = [resolve(dirname(hookFile), cleaned), resolve(packageRoot, cleaned)];
-  const source = candidates.find((p) => {
-    try {
-      return existsSync(p) && statSync(p).isFile();
-    } catch {
-      return false;
-    }
-  });
-  if (!source) {
-    return { commandRel: command };
-  }
-
-  const destRel = `.gemini/hooks/${hookName}/${basename(source)}`;
-  const destAbs = join(cwd, destRel);
-  assertUnderDeployRoots(cwd, destAbs, roots);
-  mkdirSync(dirname(destAbs), { recursive: true });
-  cpSync(source, destAbs);
-  return { commandRel: `./${destRel}`, scriptRel: destRel };
-}
-
 function readSettingsDoc(path: string): SettingsDoc {
   if (!existsSync(path)) return { hooks: {} };
   try {
@@ -516,37 +476,5 @@ function readSettingsDoc(path: string): SettingsDoc {
     return raw;
   } catch {
     return { hooks: {} };
-  }
-}
-
-function readOwnershipSidecar(path: string): OwnershipSidecar {
-  if (!existsSync(path)) return { owned: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as OwnershipSidecar;
-    if (!raw || typeof raw !== "object" || !raw.owned || typeof raw.owned !== "object") {
-      return { owned: {} };
-    }
-    return raw;
-  } catch {
-    return { owned: {} };
-  }
-}
-
-function stripOwnedEntries(doc: SettingsDoc, ownership: OwnershipSidecar): void {
-  if (!doc.hooks || typeof doc.hooks !== "object") return;
-  const ownedCommands = new Set<string>();
-  for (const record of Object.values(ownership.owned ?? {})) {
-    for (const entry of record.entries ?? []) {
-      if (entry.command) ownedCommands.add(entry.command);
-    }
-  }
-  if (ownedCommands.size === 0) return;
-
-  for (const [event, entries] of Object.entries(doc.hooks)) {
-    if (!Array.isArray(entries)) continue;
-    doc.hooks[event] = entries.filter((e) => {
-      const cmd = typeof e?.command === "string" ? e.command : "";
-      return !ownedCommands.has(cmd);
-    });
   }
 }

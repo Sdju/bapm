@@ -1,12 +1,4 @@
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import type {
   AttributedPrimitive,
@@ -14,6 +6,7 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@bapm/integration-api";
@@ -24,10 +17,13 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  readHookOwnershipSidecar,
   readPrimitiveContent,
+  removeOwnedHookArtifacts,
   renderPrimitivesMarkdown,
   sanitizeName,
   writeDeployedFile,
+  writeHookOwnershipSidecar,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".kiro", "."] as const;
@@ -73,17 +69,6 @@ const KIRO_EVENT_MAP: Record<string, string> = {
   PostFileCreate: "PostFileCreate",
   PostFileSave: "PostFileSave",
   PostFileDelete: "PostFileDelete",
-};
-
-type OwnershipSidecar = {
-  owned: Record<
-    string,
-    {
-      packageName?: string;
-      hookFiles: string[];
-      scripts: string[];
-    }
-  >;
 };
 
 /**
@@ -624,10 +609,10 @@ function materializeKiroHooks(args: {
   assertUnderDeployRoots(cwd, ownershipPath, roots);
   mkdirSync(join(cwd, ".kiro", "hooks"), { recursive: true });
 
-  const ownership = readOwnershipSidecar(ownershipPath);
-  removeOwnedArtifacts(cwd, ownership);
+  const ownership = readHookOwnershipSidecar(ownershipPath);
+  removeOwnedHookArtifacts(cwd, ownership);
 
-  const nextOwned: OwnershipSidecar["owned"] = {};
+  const nextOwned: HookOwnershipSidecar["owned"] = {};
 
   for (const p of hooks) {
     const stem = sanitizeName(String(p.name));
@@ -730,11 +715,7 @@ function materializeKiroHooks(args: {
     };
   }
 
-  writeFileSync(
-    ownershipPath,
-    `${JSON.stringify({ owned: nextOwned } satisfies OwnershipSidecar, null, 2)}\n`,
-    "utf8",
-  );
+  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
   deployedFiles.push({
     path: HOOKS_OWNERSHIP_REL,
     ...(hooks[0]
@@ -859,30 +840,4 @@ function copyHookScript(args: {
     commandRel: rewritten.includes(destRel) ? rewritten : destRel,
     scriptRel: destRel,
   };
-}
-
-function readOwnershipSidecar(path: string): OwnershipSidecar {
-  if (!existsSync(path)) return { owned: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as OwnershipSidecar;
-    if (!raw || typeof raw !== "object" || !raw.owned || typeof raw.owned !== "object") {
-      return { owned: {} };
-    }
-    return raw;
-  } catch {
-    return { owned: {} };
-  }
-}
-
-function removeOwnedArtifacts(cwd: string, ownership: OwnershipSidecar): void {
-  for (const record of Object.values(ownership.owned ?? {})) {
-    for (const hookFile of record.hookFiles ?? []) {
-      const abs = join(cwd, hookFile);
-      if (existsSync(abs)) rmSync(abs, { force: true });
-    }
-    for (const script of record.scripts ?? []) {
-      const abs = join(cwd, script);
-      if (existsSync(abs)) rmSync(abs, { force: true });
-    }
-  }
 }
