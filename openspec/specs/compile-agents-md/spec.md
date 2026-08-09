@@ -17,7 +17,7 @@ Defines thin `bapm compile` for the cursor host: discover project and module pri
 
 ### Requirement: No multi-host compile outputs in M9
 
-Cursor-default `bapm compile` MUST NOT create `.claude/`, `CLAUDE.md`, `GEMINI.md`, or `.github/copilot-instructions.md` as foreign-host side effects. Multi-host `--target all` behavior remains out of scope for this capability. When the active compile target is Claude and `@bapm/integration-claude` exposes `compile`, that host-owned emitter MAY write `CLAUDE.md` (or the compile output path supplied for that target). When the active compile target is Codex and `@bapm/integration-codex` exposes `compile`, that host-owned emitter MAY write project-root `AGENTS.md` (or the compile output path supplied for that target), including instruction primitives. When the active compile target is Copilot and `@bapm/integration-copilot` exposes `compile`, that host-owned emitter MAY write `.github/copilot-instructions.md` (or the compile output path supplied for that target). When the active compile target is Antigravity and `@bapm/integration-antigravity` exposes `compile`, that host-owned emitter MAY write project-root `AGENTS.md` (or the compile output path supplied for that target), omitting instruction primitives already deployed under `.agents/rules/`. Creating `.claude/`, `.codex/`, `.github/`, or `.agents/` trees remains install/materialize’s responsibility except for the host-owned compile output file itself. Cursor, Codex, and Antigravity share the `AGENTS.md` compile family path; concurrent dual-host compiles are last-writer-wins per invocation and MUST NOT invent a merged multi-host document in this capability.
+Cursor-default `bapm compile` MUST NOT create `.claude/`, `CLAUDE.md`, `GEMINI.md`, or `.github/copilot-instructions.md` as foreign-host side effects. Multi-host `--target all` behavior remains out of scope for this capability. When the active compile target is Claude and `@bapm/integration-claude` exposes `compile`, that host-owned emitter MAY write `CLAUDE.md` (or the compile output path supplied for that target). When the active compile target is Codex and `@bapm/integration-codex` exposes `compile`, that host-owned emitter MAY write project-root `AGENTS.md` (or the compile output path supplied for that target), including instruction primitives. When the active compile target is Copilot and `@bapm/integration-copilot` exposes `compile`, that host-owned emitter MAY write `.github/copilot-instructions.md` (or the compile output path supplied for that target). When the active compile target is Grok Build and `@bapm/integration-grok-build` exposes `compile`, that host-owned emitter MAY write project-root `AGENTS.md` (or the compile output path supplied for that target). Creating `.claude/`, `.codex/`, `.grok/`, or `.github/` trees remains install/materialize’s responsibility except for the host-owned compile output file itself. Cursor, Codex, and Grok Build share the `AGENTS.md` compile family path; concurrent dual-host compiles are last-writer-wins per invocation and MUST NOT invent a merged multi-host document in this capability.
 
 #### Scenario: Compile does not emit foreign host files
 
@@ -39,10 +39,10 @@ Cursor-default `bapm compile` MUST NOT create `.claude/`, `CLAUDE.md`, `GEMINI.m
 - **WHEN** compile runs with the Copilot integration active as the compile target and that integration exposes `compile`
 - **THEN** `.github/copilot-instructions.md` (or the Copilot compile output path) MAY be written by the Copilot host emitter and MUST NOT be treated as a forbidden foreign artifact for that run
 
-#### Scenario: Antigravity-target compile may emit AGENTS.md
+#### Scenario: Grok-build-target compile may emit AGENTS.md
 
-- **WHEN** compile runs with the Antigravity integration active as the compile target and that integration exposes `compile`
-- **THEN** `AGENTS.md` (or the Antigravity compile output path) MAY be written by the Antigravity host emitter and MUST NOT be treated as a forbidden foreign artifact for that run
+- **WHEN** compile runs with the Grok Build integration active as the compile target and that integration exposes `compile`
+- **THEN** `AGENTS.md` (or the Grok Build compile output path) MAY be written by the Grok Build host emitter and MUST NOT be treated as a forbidden foreign artifact for that run
 
 ### Requirement: Deterministic emit when inputs unchanged
 
