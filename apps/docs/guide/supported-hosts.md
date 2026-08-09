@@ -2,15 +2,17 @@
 
 Куда `bapm install` / `bapm compile` раскладывают пакеты. Поля манифеста: [Hosts и target](/guide/manifest-hosts).
 
-| Host             | В CLI                 | Как подключить                                                                                                                                           |
-| ---------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Cursor**       | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
-| **OpenCode**     | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
-| **Copilot**      | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
-| **Свой агент**   | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
-| **Claude**       | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
-| **Codex**        | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
-| **agent-skills** | Нет (отдельный пакет) | Установить `@bapm/integration-agent-skills`, объявить `targets:`, затем `--target agent-skills` / `active` (никогда auto-detect)                         |
+| Host           | В CLI                 | Как подключить                                                                                                                                           |
+| -------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cursor**     | Нет (отдельный пакет) | Установить `@bapm/integration-cursor`, объявить `targets:`, затем `--target cursor` / `active`                                                           |
+| **OpenCode**   | Нет (отдельный пакет) | Установить `@bapm/integration-opencode`, объявить `targets:`, затем `--target opencode` / `active`                                                       |
+| **Copilot**    | Нет (отдельный пакет) | Установить `@bapm/integration-copilot`, объявить `targets:`, затем `--target copilot` / `active`                                                         |
+| **Windsurf**   | Нет (отдельный пакет) | Установить `@bapm/integration-windsurf`, объявить `targets:`, затем `--target windsurf` / `active`                                                       |
+| **Kiro**       | Нет (отдельный пакет) | Установить `@bapm/integration-kiro`, объявить `targets:`, затем `--target kiro` / `active`                                                               |
+| **Grok Build** | Нет (отдельный пакет) | Установить `@bapm/integration-grok-build`, объявить `targets:`, затем `--target grok-build` / `active`                                                   |
+| **Свой агент** | Нет                   | npm-пакет или локальный модуль + `targets:` / `target:` object-map                                                                                       |
+| **Claude**     | Нет (отдельный пакет) | Установить `@bapm/integration-claude`, объявить `targets:`, затем `--target claude` / `active`; marketplace — [pack](/guide/situations/marketplace-pack) |
+| **Codex**      | Нет (отдельный пакет) | Установить `@bapm/integration-codex`, объявить `targets:`, затем `--target codex` / `active`; marketplace — [pack](/guide/situations/marketplace-pack)   |
 
 ## Cursor (opt-in пакет)
 
@@ -82,26 +84,27 @@ bapm compile --target copilot
 
 Instructions → `.github/instructions/<name>.instructions.md`, commands/`*.prompt.md` → `.github/prompts/<name>.prompt.md` (не `.github/commands/`), agents → `.github/agents/<name>.agent.md`, skills → `.agents/skills/<name>/`, hooks → per-file `.github/hooks/<pkg>-<stem>.json` (+ scripts и sidecar `.github/bapm-hooks.json`). MCP → home `~/.copilot/mcp-config.json` (`COPILOT_HOME`, translate-placeholders `${VAR}`), compile → `.github/copilot-instructions.md` (instructions из materialize в тело compile не дублируются). Auto-detect: whitelist под `.github/` (`copilot-instructions.md` или dirs instructions/agents/prompts/hooks).
 
-## agent-skills (opt-in пакет)
+## Windsurf (opt-in пакет)
 
-Кросс-клиентский **skills-only** host `@bapm/integration-agent-skills` — общий каталог `.agents/skills/` (как в APM `KNOWN_TARGETS["agent-skills"]`). **Никогда** не auto-detect’ится (даже при существующем `.agents/`); только explicit `targets` + `active` / `--target agent-skills`.
+Отдельный runtime-пакет `@bapm/integration-windsurf`:
 
 ```bash
-npm i -D @bapm/integration-agent-skills
+npm i -D @bapm/integration-windsurf
 ```
 
 ```yaml
 targets:
-  agent-skills: "@bapm/integration-agent-skills"
+  windsurf: "@bapm/integration-windsurf"
 active:
-  - agent-skills
+  - windsurf
 ```
 
 ```bash
-bapm install --target agent-skills
+bapm init -y --target windsurf
+bapm install --target windsurf
 ```
 
-Skills → `.agents/skills/<name>/SKILL.md`. Instruction / agent / command / prompt / hook — non-fatal skip. Нет MCP, hooks merge и compile. Пересечение пути с Cursor/Codex/Copilot/antigravity по `.agents/skills/` — ожидаемо.
+Instructions → `.windsurf/rules/<name>.md`, commands → `.windsurf/workflows/<name>.md` (не `.windsurf/commands/`), skills → `.agents/skills/<name>/`, hooks → merge `.windsurf/hooks.json` (+ scripts и sidecar `.windsurf/bapm-hooks.json`, PascalCase events). Agents — skip (diagnostic). MCP → home `~/.codeium/windsurf/mcp_config.json` (`CODEIUM_HOME`, bake/default). Auto-detect: каталог `.windsurf/`. User-scope / `global_rules` — вне scope этого пакета.
 
 ## Кастомный npm-пакет
 
