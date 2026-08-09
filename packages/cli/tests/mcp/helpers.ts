@@ -192,6 +192,8 @@ export function writeDirectMcpEnvProject(
     name?: string;
     serverName?: string;
     envYaml: string;
+    /** Top-level bapm.yml `env:` block body (indented under `env:`). */
+    manifestEnvYaml?: string;
     withCursorDir?: boolean;
   },
 ): void {
@@ -201,11 +203,13 @@ export function writeDirectMcpEnvProject(
     mkdirSync(join(cwd, ".cursor"), { recursive: true });
   }
 
+  const topEnv = options.manifestEnvYaml !== undefined ? `env:\n${options.manifestEnvYaml}` : "";
+
   writeFileSync(
     join(cwd, "bapm.yml"),
     `name: ${name}
 version: 0.0.1
-${cursorMapYaml(linkCursorIntegration(cwd))}dependencies:
+${cursorMapYaml(linkCursorIntegration(cwd))}${topEnv}dependencies:
   apm: []
   mcp:
     - name: ${serverName}

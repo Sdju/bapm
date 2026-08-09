@@ -21,6 +21,11 @@ export type BakeMcpStringMapOptions = {
   /** Lookup environment; defaults to `process.env`. */
   env?: NodeJS.ProcessEnv | Record<string, string | undefined>;
   /**
+   * Project manifest top-level `env` defaults.
+   * Lookup order: overrides → process/`env` → `manifestEnv` (non-empty only).
+   */
+  manifestEnv?: Record<string, string>;
+  /**
    * `bake` (default): resolve APM `${VAR}` / `${env:VAR}` / `<VAR>` and `{bake:NAME}`.
    * `translate`: leave APM placeholders untouched; still resolve `{bake:NAME}` (fail-closed).
    */
@@ -54,7 +59,10 @@ function lookupVar(name: string, options: BakeMcpStringMapOptions | undefined): 
   if (fromOverride !== undefined) return fromOverride;
 
   const source = options?.env ?? process.env;
-  return nonEmpty(source[name]);
+  const fromEnv = nonEmpty(source[name]);
+  if (fromEnv !== undefined) return fromEnv;
+
+  return nonEmpty(options?.manifestEnv?.[name]);
 }
 
 function hasPlaceholder(value: string): boolean {

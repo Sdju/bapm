@@ -4,7 +4,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { ManifestError } from "./errors.ts";
-import { parseManifestDocument } from "./parse.ts";
+import { parseManifestDocument, validateManifestEnv } from "./parse.ts";
 import type { BapmManifest, RegistryEntry, TargetIntegrationMap } from "./types.ts";
 import { loadYamlDocument } from "./yaml-load.ts";
 
@@ -137,25 +137,18 @@ function stripRegistriesDefaultForStub(value: unknown): unknown {
 }
 
 function validateOverlayEnv(value: unknown, sourcePath?: string): Record<string, string> {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new ManifestError(
-      "MANIFEST_VALIDATION",
-      'Local overlay "env" must be a mapping of string keys to string values',
-      { path: sourcePath ? `${sourcePath}:env` : "env" },
-    );
-  }
-  const out: Record<string, string> = {};
-  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
-    if (typeof entry !== "string") {
-      throw new ManifestError(
-        "MANIFEST_VALIDATION",
-        `Local overlay "env.${key}" must be a string`,
-        { path: sourcePath ? `${sourcePath}:env.${key}` : `env.${key}` },
-      );
+  try {
+    return validateManifestEnv(value, "env");
+  } catch (error) {
+    if (error instanceof ManifestError && sourcePath) {
+      throw new ManifestError(error.code, error.message, {
+        path: error.path ? `${sourcePath}:${error.path}` : `${sourcePath}:env`,
+        details: error.details,
+        cause: error,
+      });
     }
-    out[key] = entry;
+    throw error;
   }
-  return out;
 }
 
 /**

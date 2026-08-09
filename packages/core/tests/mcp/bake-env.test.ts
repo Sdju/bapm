@@ -72,4 +72,57 @@ describe("bakeMcpStringMap", () => {
       McpEnvBakeError,
     );
   });
+
+  test("manifestEnv fills when process env missing; process wins; empty manifest does not", () => {
+    expect(
+      bakeMcpStringMap(
+        { TOKEN: "${PLUGIN_TOKEN}", BAKE: "{bake:PLUGIN_TOKEN}" },
+        { env: {}, manifestEnv: { PLUGIN_TOKEN: "from-yml" } },
+      ),
+    ).toEqual({ TOKEN: "from-yml", BAKE: "from-yml" });
+
+    expect(
+      bakeMcpStringMap(
+        { TOKEN: "${API_TOKEN}" },
+        { env: { API_TOKEN: "from-process" }, manifestEnv: { API_TOKEN: "from-yml" } },
+      ),
+    ).toEqual({ TOKEN: "from-process" });
+
+    expect(
+      bakeMcpStringMap(
+        { X: "{bake:VAR}" },
+        {
+          overrides: { VAR: "from-override" },
+          env: { VAR: "from-process" },
+          manifestEnv: { VAR: "from-yml" },
+        },
+      ),
+    ).toEqual({ X: "from-override" });
+
+    expect(() =>
+      bakeMcpStringMap({ X: "${EMPTY_VAR}" }, { env: {}, manifestEnv: { EMPTY_VAR: "" } }),
+    ).toThrow(McpEnvBakeError);
+  });
+
+  test("headers map falls back to manifestEnv; missing names fail closed without secret leak", () => {
+    expect(
+      bakeMcpStringMap(
+        { Authorization: "Bearer ${PLUGIN_TOKEN}" },
+        { env: {}, manifestEnv: { PLUGIN_TOKEN: "hdr-from-yml" } },
+      ),
+    ).toEqual({ Authorization: "Bearer hdr-from-yml" });
+
+    const secret = "super-secret-do-not-leak";
+    try {
+      bakeMcpStringMap(
+        { A: "${KNOWN}", B: "${MISSING_SECRET}" },
+        { env: { KNOWN: secret }, manifestEnv: { KNOWN: "yml-known" } },
+      );
+      expect.unreachable("expected throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(McpEnvBakeError);
+      expect((error as Error).message).toMatch(/MISSING_SECRET/);
+      expect((error as Error).message).not.toContain(secret);
+    }
+  });
 });

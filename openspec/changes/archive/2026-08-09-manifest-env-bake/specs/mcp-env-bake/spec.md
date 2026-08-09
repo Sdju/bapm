@@ -1,19 +1,3 @@
-## ADDED Requirements
-
-### Requirement: Top-level env mapping is validated
-
-When the project manifest declares top-level `env`, it MUST be a mapping whose keys are non-empty strings matching env-var name shape `[A-Za-z_][A-Za-z0-9_]*` and whose values are strings (empty string allowed). Non-mapping `env` or invalid key/value shapes MUST fail validation. Absence of `env` MUST remain valid.
-
-#### Scenario: Valid env map accepted
-
-- **WHEN** the manifest includes `env: { API_TOKEN: "x", EMPTY: "" }`
-- **THEN** parse/load MUST succeed and retain those entries on the document
-
-#### Scenario: Invalid env rejected
-
-- **WHEN** `env` is a list, or a key is `1BAD`, or a value is a nested mapping
-- **THEN** validation MUST fail closed
-
 ## MODIFIED Requirements
 
 ### Requirement: Resolve MCP placeholder syntaxes at bake time

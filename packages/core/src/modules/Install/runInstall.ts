@@ -854,9 +854,16 @@ async function deployMcpAfterPolicy(args: {
 
     // Per-target bake: omit APM placeholder bake when mcpEnvMode === "translate".
     // Missing mode ⇒ bake (Cursor default). `{bake:NAME}` still resolved fail-closed.
+    // Lookup: overrides → process.env → effective manifest `env` (fills gaps).
     const bakeMode = target.mcpEnvMode === "translate" ? "translate" : "bake";
+    const manifestEnv = args.rootManifest.env;
     try {
-      configuredServers = approved.map((server) => bakeMcpServerMaps(server, { mode: bakeMode }));
+      configuredServers = approved.map((server) =>
+        bakeMcpServerMaps(server, {
+          mode: bakeMode,
+          ...(manifestEnv !== undefined ? { manifestEnv } : {}),
+        }),
+      );
     } catch (error) {
       if (error instanceof McpEnvBakeError) {
         throw new InstallError("INSTALL_MCP_ENV_BAKE", error.message, {

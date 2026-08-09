@@ -42,6 +42,7 @@ export {
   parseLocalOverlayDocument,
   parseManifest,
   parseManifestDocument,
+  validateManifestEnv,
   loadYamlDocument,
   serializeManifest,
   writeManifest,

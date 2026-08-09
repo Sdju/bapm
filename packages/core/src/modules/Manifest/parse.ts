@@ -36,10 +36,46 @@ const DEP_META_KEYS = new Set([
 const SEMVER_RE =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
+/** Env-safe key shape for top-level `env` / `{bake:NAME}` identifiers. */
+const ENV_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
 export type ParseManifestResult = {
   document: BapmManifest;
   warnings: ManifestWarning[];
 };
+
+/**
+ * Validate top-level (or overlay) `env` as string→string with env-safe keys.
+ * Empty string values are allowed (shape); bake still requires non-empty at lookup.
+ */
+export function validateManifestEnv(value: unknown, pathPrefix = "env"): Record<string, string> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      `Manifest "${pathPrefix}" must be a mapping of string keys to string values`,
+      { path: pathPrefix },
+    );
+  }
+
+  const out: Record<string, string> = {};
+  for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
+    const entryPath = `${pathPrefix}.${key}`;
+    if (!ENV_KEY_RE.test(key)) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Manifest env key "${key}" is not env-safe (expected [A-Za-z_][A-Za-z0-9_]*)`,
+        { path: entryPath, details: { key } },
+      );
+    }
+    if (typeof entry !== "string") {
+      throw new ManifestError("MANIFEST_VALIDATION", `Manifest "${entryPath}" must be a string`, {
+        path: entryPath,
+      });
+    }
+    out[key] = entry;
+  }
+  return out;
+}
 
 /**
  * Validate a pre-parsed JS value as an OpenAPM/APM project manifest.
@@ -129,6 +165,10 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
   }
   if (normalizedActive !== undefined) {
     document.active = normalizedActive;
+  }
+
+  if ("env" in raw && raw.env !== undefined) {
+    document.env = validateManifestEnv(raw.env);
   }
 
   if ("dependencies" in raw) {
