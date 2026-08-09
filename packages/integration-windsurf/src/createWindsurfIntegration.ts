@@ -24,7 +24,7 @@ import {
   primitivesMaterialize,
   readPrimitiveContent,
   sanitizeName,
-  toPosixRel,
+  writeDeployedFile,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".windsurf", ".agents"] as const;
@@ -91,24 +91,26 @@ export function createWindsurfIntegration(options?: {
           );
         },
         instruction(p, { name }) {
-          const destFile = join(cwd, ".windsurf", "rules", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(dirname(destFile), { recursive: true });
-          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".windsurf", "rules", `${name}.md`),
+              content: readPrimitiveContent(p),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         command(p, { name }) {
-          const destFile = join(cwd, ".windsurf", "workflows", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(dirname(destFile), { recursive: true });
-          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".windsurf", "workflows", `${name}.md`),
+              content: readPrimitiveContent(p),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         agent(p) {
           diagnostics.push({

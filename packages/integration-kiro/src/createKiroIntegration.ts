@@ -11,7 +11,6 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import type {
   AttributedPrimitive,
   BapmIntegration,
-  CompileContext,
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
@@ -20,13 +19,15 @@ import type {
 } from "@bapm/integration-api";
 import {
   assertUnderDeployRoots,
+  compileMarkdownReport,
   findPackageRoot,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
   readPrimitiveContent,
+  renderPrimitivesMarkdown,
   sanitizeName,
-  toPosixRel,
+  writeDeployedFile,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".kiro", "."] as const;
@@ -109,7 +110,18 @@ export function createKiroIntegration(options?: {
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      return compileKiroAgentsMd(primitivesList(primitives), context);
+      const content = renderPrimitivesMarkdown({
+        primitives: primitivesList(primitives),
+        title: "# AGENTS.md",
+        filter: (p) => !/instruction/i.test(String(p.type ?? "")),
+      });
+      return compileMarkdownReport({
+        cwd: context.cwd,
+        outputFile: context.outputFile ?? COMPILE_DEFAULT,
+        write: context.write,
+        content,
+        outsideCwdMessage: "Kiro compile output must be a cwd-relative file path",
+      });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
       const cwd = resolve(ctx?.cwd ?? process.cwd());
@@ -134,14 +146,15 @@ export function createKiroIntegration(options?: {
           );
         },
         instruction(p, { name }) {
-          const destFile = join(cwd, ".kiro", "steering", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(dirname(destFile), { recursive: true });
-          writeFileSync(destFile, transformKiroSteeringMarkdown(readPrimitiveContent(p)), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".kiro", "steering", `${name}.md`),
+              content: transformKiroSteeringMarkdown(readPrimitiveContent(p)),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         agent(p, { name }) {
           const result = renderKiroAgent(readPrimitiveContent(p), String(p.name));
@@ -153,14 +166,15 @@ export function createKiroIntegration(options?: {
             });
             return;
           }
-          const destFile = join(cwd, ".kiro", "agents", `${name}.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(dirname(destFile), { recursive: true });
-          writeFileSync(destFile, result.content, "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".kiro", "agents", `${name}.md`),
+              content: result.content,
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         command(p, { name }) {
           diagnostics.push({
@@ -207,51 +221,6 @@ export function createKiroIntegration(options?: {
       });
     },
   };
-}
-
-function compileKiroAgentsMd(
-  primitives: AttributedPrimitive[],
-  context: CompileContext,
-): CompileReport {
-  const cwd = resolve(context.cwd);
-  const outputFile = context.outputFile ?? COMPILE_DEFAULT;
-  const outputPath = resolve(cwd, outputFile);
-  const rel = relative(cwd, outputPath);
-  if (!rel || rel === ".." || rel.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`)) {
-    throw new Error("Kiro compile output must be a cwd-relative file path");
-  }
-
-  const content = renderKiroAgentsMd(primitives);
-  const wrote = context.write;
-  if (wrote) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, content, "utf8");
-  }
-
-  return { path: rel.replace(/\\/g, "/"), content, wrote };
-}
-
-function renderKiroAgentsMd(primitives: AttributedPrimitive[]): string {
-  const filtered = primitives.filter((p) => !/instruction/i.test(String(p.type ?? "")));
-  const sorted = [...filtered].sort((a, b) => {
-    const type = String(a.type ?? "").localeCompare(String(b.type ?? ""));
-    if (type !== 0) return type;
-    const name = String(a.name ?? "").localeCompare(String(b.name ?? ""));
-    return name !== 0 ? name : String(a.path ?? "").localeCompare(String(b.path ?? ""));
-  });
-  const sections = [
-    "# AGENTS.md",
-    "",
-    "<!-- Generated by bapm compile. Do not edit by hand. -->",
-    "",
-  ];
-  if (sorted.length === 0) return [...sections, "_No discoverable primitives._", ""].join("\n");
-
-  for (const primitive of sorted) {
-    sections.push(`## ${primitive.name} (${primitive.type})`, "");
-    sections.push(readPrimitiveContent(primitive, `# ${primitive.name}\n`).trimEnd(), "");
-  }
-  return sections.join("\n");
 }
 
 function writeKiroMcpConfig(

@@ -39,8 +39,11 @@ export type {
 } from "./helpers.ts";
 
 export {
+  SHARED_COMMAND_FRONTMATTER_KEYS,
   assertUnderDeployRoots,
+  compileMarkdownReport,
   copyPortableSkillDirectory,
+  filterFrontmatterKeys,
   findPackageRoot,
   getConfigureMcp,
   hasConfigureMcp,
@@ -51,6 +54,8 @@ export {
   primitivesList,
   primitivesMaterialize,
   readPrimitiveContent,
+  renderPrimitivesMarkdown,
   sanitizeName,
   toPosixRel,
+  writeDeployedFile,
 } from "./helpers.ts";

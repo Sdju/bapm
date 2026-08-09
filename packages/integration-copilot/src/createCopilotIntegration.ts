@@ -12,7 +12,6 @@ import { basename, dirname, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
   BapmIntegration,
-  CompileContext,
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
@@ -21,13 +20,15 @@ import type {
 } from "@bapm/integration-api";
 import {
   assertUnderDeployRoots,
+  compileMarkdownReport,
   findPackageRoot,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
   readPrimitiveContent,
+  renderPrimitivesMarkdown,
   sanitizeName,
-  toPosixRel,
+  writeDeployedFile,
 } from "@bapm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".github", ".agents"] as const;
@@ -78,7 +79,18 @@ export function createCopilotIntegration(options?: {
     detect: ({ cwd }) => detectCopilot(cwd),
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      return compileCopilotInstructions(primitivesList(primitives), context);
+      const content = renderPrimitivesMarkdown({
+        primitives: primitivesList(primitives),
+        title: "# GitHub Copilot instructions",
+        filter: (p) => !/instruction/i.test(String(p.type ?? "")),
+      });
+      return compileMarkdownReport({
+        cwd: context.cwd,
+        outputFile: context.outputFile ?? COMPILE_DEFAULT,
+        write: context.write,
+        content,
+        outsideCwdMessage: "Copilot compile output must be a cwd-relative file path",
+      });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
       const cwd = resolve(ctx?.cwd ?? process.cwd());
@@ -100,24 +112,26 @@ export function createCopilotIntegration(options?: {
           );
         },
         instruction(p, { name }) {
-          const destFile = join(cwd, ".github", "instructions", `${name}.instructions.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(dirname(destFile), { recursive: true });
-          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".github", "instructions", `${name}.instructions.md`),
+              content: readPrimitiveContent(p),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         agent(p, { name }) {
-          const destFile = join(cwd, ".github", "agents", `${name}.agent.md`);
-          assertUnderDeployRoots(cwd, destFile, roots);
-          mkdirSync(dirname(destFile), { recursive: true });
-          writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-          deployedFiles.push({
-            path: toPosixRel(cwd, destFile),
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
+          deployedFiles.push(
+            writeDeployedFile({
+              cwd,
+              deployRoots: roots,
+              destRel: join(".github", "agents", `${name}.agent.md`),
+              content: readPrimitiveContent(p),
+              primitive: { name: String(p.name), packageName: p.packageName },
+            }),
+          );
         },
         command(p, { name }) {
           materializePromptLike(p, name, cwd, roots, deployedFiles);
@@ -175,60 +189,15 @@ function materializePromptLike(
   roots: string[],
   deployedFiles: MaterializeReport["deployedFiles"],
 ): void {
-  const destFile = join(cwd, ".github", "prompts", `${name}.prompt.md`);
-  assertUnderDeployRoots(cwd, destFile, roots);
-  mkdirSync(dirname(destFile), { recursive: true });
-  writeFileSync(destFile, readPrimitiveContent(p), "utf8");
-  deployedFiles.push({
-    path: toPosixRel(cwd, destFile),
-    primitive: { name: String(p.name), packageName: p.packageName },
-  });
-}
-
-function compileCopilotInstructions(
-  primitives: AttributedPrimitive[],
-  context: CompileContext,
-): CompileReport {
-  const cwd = resolve(context.cwd);
-  const outputFile = context.outputFile ?? COMPILE_DEFAULT;
-  const outputPath = resolve(cwd, outputFile);
-  const rel = toPosixRel(cwd, outputPath);
-  if (!rel || rel.startsWith("..")) {
-    throw new Error("Copilot compile output must be a cwd-relative file path");
-  }
-
-  const content = renderCopilotInstructions(primitives);
-  const wrote = context.write;
-  if (wrote) {
-    mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, content, "utf8");
-  }
-
-  return { path: rel, content, wrote };
-}
-
-function renderCopilotInstructions(primitives: AttributedPrimitive[]): string {
-  // Instructions already land under `.github/instructions/` — omit from thin compile.
-  const filtered = primitives.filter((p) => !/instruction/i.test(String(p.type ?? "")));
-  const sorted = [...filtered].sort((a, b) => {
-    const type = String(a.type ?? "").localeCompare(String(b.type ?? ""));
-    if (type !== 0) return type;
-    const name = String(a.name ?? "").localeCompare(String(b.name ?? ""));
-    return name !== 0 ? name : String(a.path ?? "").localeCompare(String(b.path ?? ""));
-  });
-  const sections = [
-    "# GitHub Copilot instructions",
-    "",
-    "<!-- Generated by bapm compile. Do not edit by hand. -->",
-    "",
-  ];
-  if (sorted.length === 0) return [...sections, "_No discoverable primitives._", ""].join("\n");
-
-  for (const primitive of sorted) {
-    sections.push(`## ${primitive.name} (${primitive.type})`, "");
-    sections.push(readPrimitiveContent(primitive, `# ${primitive.name}\n`).trimEnd(), "");
-  }
-  return sections.join("\n");
+  deployedFiles.push(
+    writeDeployedFile({
+      cwd,
+      deployRoots: roots,
+      destRel: join(".github", "prompts", `${name}.prompt.md`),
+      content: readPrimitiveContent(p),
+      primitive: { name: String(p.name), packageName: p.packageName },
+    }),
+  );
 }
 
 function resolveCopilotHome(): string {
