@@ -103,4 +103,26 @@ describe("bakeMcpStringMap", () => {
       bakeMcpStringMap({ X: "${EMPTY_VAR}" }, { env: {}, manifestEnv: { EMPTY_VAR: "" } }),
     ).toThrow(McpEnvBakeError);
   });
+
+  test("headers map falls back to manifestEnv; missing names fail closed without secret leak", () => {
+    expect(
+      bakeMcpStringMap(
+        { Authorization: "Bearer ${PLUGIN_TOKEN}" },
+        { env: {}, manifestEnv: { PLUGIN_TOKEN: "hdr-from-yml" } },
+      ),
+    ).toEqual({ Authorization: "Bearer hdr-from-yml" });
+
+    const secret = "super-secret-do-not-leak";
+    try {
+      bakeMcpStringMap(
+        { A: "${KNOWN}", B: "${MISSING_SECRET}" },
+        { env: { KNOWN: secret }, manifestEnv: { KNOWN: "yml-known" } },
+      );
+      expect.unreachable("expected throw");
+    } catch (error) {
+      expect(error).toBeInstanceOf(McpEnvBakeError);
+      expect((error as Error).message).toMatch(/MISSING_SECRET/);
+      expect((error as Error).message).not.toContain(secret);
+    }
+  });
 });
