@@ -6,6 +6,10 @@
 На данный момент пакеты **не опубликованы** в npm. Примеры установки демонстрационные и станут рабочими после первого релиза.
 :::
 
+::: warning Не production-ready
+bapm — переписывание [microsoft/apm](https://github.com/microsoft/apm). Большая часть кода и документации перенесена с помощью AI и **пока недостаточно ревьюирована** для production.
+:::
+
 ## Зачем?
 
 - Легко и быстро ставить зависимости для агента
@@ -45,3 +49,8 @@ bapm install
 4. [Сценарии](/guide/situations/) — CI, команда с разными агентами, политика
 
 Флаги: [справка](/reference/).
+
+## Связанные проекты
+
+- [microsoft/apm](https://github.com/microsoft/apm) — исходный APM
+- [Agent Plugins](https://github.com/Sdju/agent-plugins) — runtime/плагины; см. [guide/agent-plugins](/guide/agent-plugins)

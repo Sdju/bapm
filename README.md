@@ -10,15 +10,6 @@
 - Используйте различные агенты на 1 проекте не думая как переиспользовать общие MCP/Skills/Instructions...
 - Настраивайте корпоративные политики для агентов в вашей компании
 
-Почему не amp?
-
-- Нет привязки к конкретному агенту, используйте отдельные интеграционные пакеты под ваши потребности
-- Есть возможность интеграции с кастомными агентами
-- Заточен под командную работу, особый контроль над разделением личных и командых артефактов
-- Более продвинутая система работы
-- SOON: Поддержка кастомных артефактов или паттернов для агентов
-- SOON: Система плагинов для расширения функционала bapm
-
 CLI и host-интеграции ставятся **отдельно**. Для известных hosts достаточно установить `@bapm/integration-<id>` — object-map `targets:` не обязателен (canonical fallback). Map — чтобы подменить пакет или добавить свой host.
 
 ## Установка
@@ -80,3 +71,12 @@ bapm install --target cursor
 | Справка по флагам    | [reference/](apps/docs/reference/index.md)                  |
 | Agent Plugins        | [guide/agent-plugins](apps/docs/guide/agent-plugins.md)     |
 | Архитектура          | [architecture/](apps/docs/architecture/index.md)            |
+
+## Связанные проекты
+
+- [microsoft/apm](https://github.com/microsoft/apm) — исходный APM; bapm — совместимый менеджер с другим UX и архитектурой
+- [Agent Plugins](https://github.com/Sdju/agent-plugins) — runtime/плагины агента; пересечение с bapm описано в [guide/agent-plugins](apps/docs/guide/agent-plugins.md)
+
+## Предупреждение
+
+bapm — переписывание [microsoft/apm](https://github.com/microsoft/apm) с другой архитектурой и UX. Большая часть кода и документации перенесена с помощью AI и **пока недостаточно ревьюирована**, чтобы считать проект готовым к production.
