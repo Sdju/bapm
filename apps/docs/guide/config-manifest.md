@@ -61,11 +61,11 @@ dependencies:
 
 **Не путать:**
 
-| Поле | Где | Зачем |
-| ---- | --- | ----- |
-| Top-level `env:` | корень манифеста | defaults для `{bake:NAME}` / `${VAR}` |
-| `dependencies.mcp[].env` | у MCP-сервера | env map сервера (может содержать placeholders) |
-| `bapm.local.yml` → `env` | overlay | deep-merge поверх base `env` (local wins) |
+| Поле                     | Где              | Зачем                                          |
+| ------------------------ | ---------------- | ---------------------------------------------- |
+| Top-level `env:`         | корень манифеста | defaults для `{bake:NAME}` / `${VAR}`          |
+| `dependencies.mcp[].env` | у MCP-сервера    | env map сервера (может содержать placeholders) |
+| `bapm.local.yml` → `env` | overlay          | deep-merge поверх base `env` (local wins)      |
 
 Не коммитьте секреты в git через `env:`. Для личных/секретных значений предпочитайте process env или [personal overlay](/guide/manifest-overlay) (`bapm.local.yml` в `.gitignore`).
 
