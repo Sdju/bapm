@@ -1,11 +1,24 @@
 # Что умеет bapm
 
-bapm собирает конфигурацию AI-агента из пакетов: объявили зависимости → поставили → одинаковый результат у себя, у коллег и в CI.
+bapm — как npm / pip для AI-агента: объявили зависимости в `bapm.yml` → `bapm install` → одинаковый результат у себя, у коллег и в CI.
 
-## На практике
+## Зачем это на практике
+
+- Быстро ставить skills, rules, agents и MCP
+- Тянуть модули из private registry
+- Разделять командные и личные возможности агента ([overlay](/guide/manifest-overlay))
+- Держать разные агенты на одном проекте и переиспользовать общие артефакты
+- Задавать корпоративные политики ([policy](/guide/situations/policy-mcp))
+
+## Happy path
+
+::: warning Пакеты пока не на npm
+Примеры `npm i` демонстрационные до первого релиза.
+:::
 
 ```bash
-npm i -D @bapm/integration-cursor
+npm i -g @bapm/cli @bapm/integration-cursor
+# cwd с .cursor/ и bapm.yml
 bapm install
 ```
 
@@ -14,6 +27,12 @@ bapm install
 3. Дальше — `update`, `outdated`, `compile`, marketplace-pack.
 
 Первый проход: [быстрый старт](/guide/quick-start). Выбор host: [host selection](/guide/host-selection). Свой агент: [supported hosts](/guide/supported-hosts).
+
+## Почему не APM?
+
+Кратко vs [microsoft/apm](https://github.com/microsoft/apm): нет привязки к одному агенту; отдельные integration packages; кастомные агенты; акцент на командной работе и личных vs командных артефактах. Подробнее о границе OpenAPM / APM CLI: [Совместимость](/guide/conformance).
+
+**SOON:** кастомные артефакты / паттерны; плагины bapm.
 
 ## Куда идти
 
@@ -31,6 +50,6 @@ bapm install
 
 ## Ограничения (коротко)
 
-- Hosts — opt-in пакеты `@bapm/integration-*` (не бандл CLI). Canonical fallback без `targets:`; map — override/custom.
+- Hosts — отдельные пакеты `@bapm/integration-*` (не бандл CLI). Canonical fallback без `targets:`; map — override/custom.
 - Claude/Codex также эмитят marketplace JSON при `pack`; Cursor, Codex и OpenCode делят `AGENTS.md` (last-writer-wins на compile).
 - Граница OpenAPM / APM: [Совместимость](/guide/conformance).

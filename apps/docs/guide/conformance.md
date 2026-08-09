@@ -2,17 +2,17 @@
 
 Изолированная страница про APM / OpenAPM. Для повседневной работы с CLI она не нужна — начните с [быстрого старта](/guide/quick-start).
 
-- Runtime host — opt-in пакет (пример: **Cursor** / `@bapm/integration-cursor`) через object-map `targets:` ([hosts](/guide/supported-hosts)).
+- Runtime host — opt-in пакет (пример: **Cursor** / `@bapm/integration-cursor`); для известных hosts object-map `targets:` не обязателен (canonical fallback). Map — override / custom ([hosts](/guide/supported-hosts)).
 - OpenAPM wire ≠ полная копия CLI [microsoft/apm](https://github.com/microsoft/apm).
 - Полный dump классов и limitations: корневой [`CONFORMANCE.md`](../../../CONFORMANCE.md).
 
 ## Три оси
 
-| Ось                   | Смысл                                         | Позиция bapm                                                                                                                                                 |
-| --------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **OpenAPM v0.1**      | Wire: манифест, lock, policy, resolve, deploy | Claimed в [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A                                                          |
-| **APM product CLI**   | Поверхность microsoft/apm                     | **Не** drop-in клон APM CLI                                                                                                                                  |
-| **Host integrations** | Куда материализуются пакеты                   | Opt-in: Cursor / Claude / Codex (`@bapm/integration-*`) + `targets:`. Custom: npm / локальный модуль через object-map. Claude/Codex также marketplace-output |
+| Ось                   | Смысл                                         | Позиция bapm                                                                                                                                 |
+| --------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **OpenAPM v0.1**      | Wire: манифест, lock, policy, resolve, deploy | Claimed в [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A                                          |
+| **APM product CLI**   | Поверхность microsoft/apm                     | **Не** drop-in клон APM CLI                                                                                                                  |
+| **Host integrations** | Куда материализуются пакеты                   | Opt-in `@bapm/integration-*` (не бандл CLI); canonical fallback без `targets:`; map — override/custom. Claude/Codex также marketplace-output |
 
 ## Вне scope (по Limitations)
 

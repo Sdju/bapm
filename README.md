@@ -1,6 +1,23 @@
 # bapm
 
-**Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов: объявляете пакеты в `bapm.yml`, `bapm install` разрешает граф, пишет lock и раскладывает skills, rules, agents и MCP туда, где их подхватит агент.
+**Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов: объявляете пакеты в `bapm.yml`, `bapm install` разрешает граф, пишет lock и раскладывает skills, rules, agents и MCP туда, где их подхватит агент. Воспринимайте его как npm / pip для вашего агента.
+
+Зачем?
+
+- Устанавливайте легко и быстро любые зависимости для вашего агента
+- Подключайте корпоративные модули из вашего private registry
+- Разделяйте возможности агента для всей команды и ваши личные
+- Используйте различные агенты на 1 проекте не думая как переиспользовать общие MCP/Skills/Instructions...
+- Настраивайте корпоративные политики для агентов в вашей компании
+
+Почему не amp?
+
+- Нет привязки к конкретному агенту, используйте отдельные интеграционные пакеты под ваши потребности
+- Есть возможность интеграции с кастомными агентами
+- Заточен под командную работу, особый контроль над разделением личных и командых артефактов
+- Более продвинутая система работы
+- SOON: Поддержка кастомных артефактов или паттернов для агентов
+- SOON: Система плагинов для расширения функционала bapm
 
 CLI и host-интеграции ставятся **отдельно**. Для известных hosts достаточно установить `@bapm/integration-<id>` — object-map `targets:` не обязателен (canonical fallback). Map — чтобы подменить пакет или добавить свой host.
 
@@ -10,10 +27,16 @@ CLI и host-интеграции ставятся **отдельно**. Для �
 
 **1. CLI + интеграция (глобально или в проекте):**
 
+> !WARNING: на данный момент пакеты не доступны в npm. Примеры ниже демонстрационные и будут доступны только после первого релиза.
+
 ```bash
 npm i -g @bapm/cli @bapm/integration-cursor
 # или: pnpm add -g @bapm/cli @bapm/integration-cursor
 ```
+
+Вместо @bapm/integration-cursor можно использовать любой другой интеграционный пакет, например @bapm/integration-claude... Или использовать свой собственный пакет для интеграции с вашим агентом.
+
+Подробности: [поддерживаемые hosts](apps/docs/guide/supported-hosts.md), [выбор host](apps/docs/guide/host-selection.md).
 
 **2. Happy path** — в проекте с `.cursor/` и `bapm.yml`:
 
@@ -21,14 +44,7 @@ npm i -g @bapm/cli @bapm/integration-cursor
 bapm install
 ```
 
-| Агент      | Что сделать                                                                  |
-| ---------- | ---------------------------------------------------------------------------- |
-| **Cursor** | `npm i -D @bapm/integration-cursor`, detect или `active` / `--target cursor` |
-| **Свой**   | npm/path модуль + `targets:` + `--target <id>`                               |
-
-Подробности: [поддерживаемые hosts](apps/docs/guide/supported-hosts.md), [выбор host](apps/docs/guide/host-selection.md).
-
-Pin CLI в проекте: `npm i -D @bapm/cli`, затем `npx bapm`.
+И все. Артефакты будут разложены в `.cursor/` и `apm_modules/` соответственно.
 
 ## Быстрый пример
 
@@ -64,11 +80,3 @@ bapm install --target cursor
 | Справка по флагам    | [reference/](apps/docs/reference/index.md)                  |
 | Agent Plugins        | [guide/agent-plugins](apps/docs/guide/agent-plugins.md)     |
 | Архитектура          | [architecture/](apps/docs/architecture/index.md)            |
-
-## Ключевое
-
-- Канонический манифест — `bapm.yml`.
-- Runtime host — opt-in пакет `@bapm/integration-*`; selection: `--target` → local `active` → base `active` → sole detect.
-- `targets:` — override/add impl, не активация host.
-- Lock + install — воспроизводимый граф; в CI — `--frozen` / env `CI`.
-- MCP — bake env-плейсхолдеров на install; policy approve/deny для исполняемого MCP.
