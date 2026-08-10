@@ -1,6 +1,6 @@
 # bapm lock — флаги
 
-По `bapm help lock`.
+По `bapm lock --help`.
 
 ## Использование
 

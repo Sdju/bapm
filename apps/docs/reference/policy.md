@@ -1,6 +1,6 @@
 # bapm policy / approve / deny — флаги
 
-По `bapm help policy` (также `bapm help approve`, `bapm help deny`).
+По `bapm policy --help` (также `bapm approve --help`, `bapm deny --help`).
 
 ## policy status
 

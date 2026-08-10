@@ -1,6 +1,6 @@
 # bapm compile — флаги
 
-По `bapm help compile`.
+По `bapm compile --help`.
 
 ## Использование
 

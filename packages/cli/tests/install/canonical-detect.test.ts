@@ -40,7 +40,7 @@ describe("CLI install · canonical detect (no targets map)", () => {
     expect(existsSync(skillPath(project.cwd))).toBe(true);
   });
 
-  test("sole Cursor detect without installed canonical package → clear fail + install guidance", async () => {
+  test("sole Cursor detect without a project-local package uses global fallback or gives install guidance", async () => {
     project = createTempProject();
     writeNoMapProject(project.cwd, {
       name: "acc-detect-no-pkg",
@@ -52,9 +52,13 @@ describe("CLI install · canonical detect (no targets map)", () => {
     const { result, combined } = await runInProject(project.cwd, ["install"]);
     expectKnownFlags(combined);
 
-    expect(result).not.toBe(0);
+    if (result === 0) {
+      expect(existsSync(skillPath(project.cwd))).toBe(true);
+      return;
+    }
+
     expect(existsSync(skillPath(project.cwd))).toBe(false);
-    // Guidance must point at installing the canonical integration — not only generic detect ambiguity.
+    // A clean environment must point at the canonical package, not generic ambiguity.
     expect(combined).toMatch(/@b-apm\/integration-cursor|integration-cursor/i);
     expect(combined).toMatch(/install|npm|package|resolv/i);
   });

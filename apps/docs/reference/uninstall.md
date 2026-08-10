@@ -1,6 +1,6 @@
 # bapm uninstall — флаги
 
-По `bapm help uninstall`.
+По `bapm uninstall --help`.
 
 ## Использование
 

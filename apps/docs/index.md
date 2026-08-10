@@ -1,6 +1,6 @@
 # bapm
 
-**Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов: объявляете пакеты в `bapm.yml`, `bapm install` разрешает граф, пишет lock и раскладывает skills, rules, agents и MCP туда, где их подхватит агент. Воспринимайте его как npm / pip для вашего агента.
+**Better Agent Package Manager** управляет зависимостями для конфигурации AI-агентов. Объявите пакеты в `bapm.yml`, запустите `bapm install`, и CLI зафиксирует граф в lock-файле и разложит skills, rules, agents и MCP в layout выбранного host.
 
 Репозиторий: [github.com/Sdju/bapm](https://github.com/Sdju/bapm)
 
@@ -11,6 +11,17 @@
 ::: warning AI-migrated rewrite
 bapm — переписывание [microsoft/apm](https://github.com/microsoft/apm). Большая часть кода и документации перенесена с помощью AI и **пока недостаточно ревьюирована** для production.
 :::
+
+## Начните с задачи
+
+| Нужно сделать                       | Откройте                                       |
+| ----------------------------------- | ---------------------------------------------- |
+| Первый install в проекте            | [Быстрый старт](/guide/quick-start)            |
+| Выбрать или сменить host            | [Поддерживаемые hosts](/guide/supported-hosts) |
+| Понять detect, `active` и `targets` | [Как выбирается host](/guide/host-selection)   |
+| Настроить манифест                  | [Манифест `bapm.yml`](/guide/config-manifest)  |
+| Работать в команде, CI или с policy | [Сценарии](/guide/situations/)                 |
+| Найти флаг команды                  | [Справка](/reference/)                         |
 
 ## Зачем?
 
@@ -34,28 +45,7 @@ bapm — переписывание [microsoft/apm](https://github.com/microsoft
 - **SOON:** кастомные артефакты или паттерны для агентов
 - **SOON:** система плагинов для расширения bapm
 
-CLI и host-интеграции ставятся **отдельно**. Для известных hosts достаточно `@b-apm/integration-<id>` — object-map `targets:` не обязателен (canonical fallback). Map — чтобы подменить пакет или добавить свой host. Возможности hosts различаются — см. [поддерживаемые hosts](/guide/supported-hosts).
-
-## Happy path
-
-```bash
-npm i -g @b-apm/cli @b-apm/integration-cursor
-# в проекте с .cursor/ и bapm.yml:
-bapm install
-```
-
-Артефакты материализуются в `apm_modules/`, пишется lock; для Cursor skills обычно уходят в `.agents/skills/`, rules / agents / MCP — в `.cursor/`.
-
-[Перейти к быстрому старту →](/guide/quick-start)
-
-## С чего начать
-
-1. [Быстрый старт](/guide/quick-start) — CLI, пакет интеграции, первый `install`
-2. [Как выбирается host](/guide/host-selection) — precedence и canonical fallback
-3. [Поддерживаемые hosts](/guide/supported-hosts) — таблица пакетов и Advanced targets
-4. [Сценарии](/guide/situations/) — CI, команда с разными агентами, политика
-
-Флаги: [справка](/reference/).
+У известных hosts CLI может разрешить стандартный пакет `@b-apm/integration-<id>` без object-map `targets:`. Map нужен, когда вы подменяете пакет или добавляете собственный host. Возможности hosts различаются: сверяйтесь с [таблицей поддерживаемых hosts](/guide/supported-hosts).
 
 ## Связанные проекты
 

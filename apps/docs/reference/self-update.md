@@ -1,6 +1,6 @@
 # bapm self-update — флаги
 
-По `bapm help self-update`.
+По `bapm self-update --help`.
 
 ## Использование
 

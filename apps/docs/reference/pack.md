@@ -1,6 +1,6 @@
 # bapm pack — флаги
 
-По `bapm help pack`.
+По `bapm pack --help`.
 
 ## Использование
 
@@ -10,7 +10,7 @@ bapm pack [options]
 
 Собирает plain-zip producer archive и/или host `marketplace.json`. Неизвестные флаги отвергаются. `--check-release` не создаёт и не пушит tags. Secret-pattern paths (`.env`, `*.pem`, …) отклоняются.
 
-Claude/Codex здесь — **marketplace-output** emit. Runtime install/compile для тех же hosts — через `@b-apm/integration-claude` / `@b-apm/integration-codex` + `targets:` / `--target` (см. [hosts](/guide/supported-hosts)).
+Claude/Codex здесь — **marketplace-output** emit. Runtime install/compile для тех же hosts — через `@b-apm/integration-claude` / `@b-apm/integration-codex` и detect, `active` или `--target`; `targets:` нужен только для override/custom host (см. [hosts](/guide/supported-hosts)).
 
 ## Параметры
 

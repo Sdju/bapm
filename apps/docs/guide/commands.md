@@ -1,6 +1,6 @@
 # Команды
 
-Карта CLI. Флаги — в [Справке](/reference/) и `bapm help <command>`. Установка: [Быстрый старт](/guide/quick-start).
+Карта CLI. Флаги — в [Справке](/reference/) и `bapm <command> --help`. Установка: [Быстрый старт](/guide/quick-start).
 
 ## Каждый день
 
@@ -21,7 +21,7 @@ bapm outdated
 | `uninstall` | Убрать пакеты из манифеста, modules, deploy, lock | [uninstall](/reference/uninstall) |
 | `prune`     | Удалить orphan-модули вне графа                   | [prune](/reference/prune)         |
 
-Deploy в Cursor — после установки `@b-apm/integration-cursor` и объявления `targets:` / `--target cursor`. Свой host — [поддерживаемые hosts](/guide/supported-hosts).
+Deploy в Cursor — после установки `@b-apm/integration-cursor` и выбора host через detect, `active` или `--target cursor`. `targets:` нужен только для override/custom host — [поддерживаемые hosts](/guide/supported-hosts).
 
 ## Инспекция и проверка
 

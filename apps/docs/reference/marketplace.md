@@ -1,6 +1,6 @@
 # bapm marketplace — флаги
 
-По `bapm help marketplace`.
+По `bapm marketplace --help`.
 
 ## Обзор
 

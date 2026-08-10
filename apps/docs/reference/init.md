@@ -1,6 +1,6 @@
 # bapm init — флаги
 
-По `bapm help init`.
+По `bapm init --help`.
 
 ## Использование
 

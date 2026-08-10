@@ -1,6 +1,6 @@
 # bapm find — флаги
 
-По `bapm help find`.
+По `bapm find --help`.
 
 ## Использование
 

@@ -18,6 +18,7 @@ import { createIntegrationRegistry } from "@b-apm/integration-api";
 import {
   loadIntegrationFromPackage,
   ManifestIntegrationLoadError,
+  globalModuleRootForCliEntry,
   registerManifestIntegrations,
 } from "../../src/app/integrations/loadManifestIntegrations.ts";
 import { isLocalPathSpecifier } from "../../src/app/integrations/localPathSpecifier.ts";
@@ -40,6 +41,22 @@ function linkFixture(cwd: string, fixtureDirName: string): string {
   mkdirSync(dirname(dest), { recursive: true });
   symlinkSync(fixtureRoot, dest, "dir");
   return pkg.name;
+}
+
+function installFixtureInGlobalRoot(
+  cwd: string,
+  fixtureDirName: string,
+): {
+  globalRoot: string;
+  specifier: string;
+} {
+  const fixtureRoot = join(FIXTURES, fixtureDirName);
+  const pkg = JSON.parse(readFileSync(join(fixtureRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const globalRoot = join(cwd, "global", "lib", "node_modules");
+  cpSync(fixtureRoot, join(globalRoot, ...pkg.name.split("/")), { recursive: true });
+  return { globalRoot, specifier: pkg.name };
 }
 
 function plantLocalIntegration(
@@ -93,6 +110,31 @@ describe("loadManifestIntegrations", () => {
     const spec = linkFixture(temp.cwd, "default-export-pkg");
     const integration = await loadIntegrationFromPackage(spec, "x-acme-default", temp.cwd);
     expect(integration.id).toBe("x-acme-default");
+  });
+
+  test("loads a canonical integration from an isolated global module root", async () => {
+    temp = createTemp();
+    const { globalRoot, specifier } = installFixtureInGlobalRoot(
+      temp.cwd,
+      "create-integration-pkg",
+    );
+
+    const integration = await loadIntegrationFromPackage(specifier, "x-acme-editor", temp.cwd, {
+      allowCliFallback: false,
+      globalRoots: [globalRoot],
+    });
+
+    expect(integration.id).toBe("x-acme-editor");
+  });
+
+  test("derives a global module root only from the installed CLI entrypoint", () => {
+    temp = createTemp();
+    const entry = join(temp.cwd, "global", "node_modules", "@b-apm", "cli", "dist", "cli.mjs");
+
+    expect(globalModuleRootForCliEntry(entry)).toBe(join(temp.cwd, "global", "node_modules"));
+    expect(
+      globalModuleRootForCliEntry(join(temp.cwd, "node_modules", "vite-plus", "bin", "vp.mjs")),
+    ).toBe(undefined);
   });
 
   test("fails closed on unresolvable specifier", async () => {

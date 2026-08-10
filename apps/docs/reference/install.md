@@ -1,6 +1,6 @@
 # bapm install — флаги
 
-По `bapm help install`.
+По `bapm install --help`.
 
 ## Использование
 

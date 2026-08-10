@@ -1,6 +1,6 @@
 # bapm audit — флаги
 
-По `bapm help audit`.
+По `bapm audit --help`.
 
 ## Использование
 

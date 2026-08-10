@@ -1,6 +1,6 @@
 # bapm plugin — флаги
 
-По `bapm help plugin`.
+По `bapm plugin --help`.
 
 ## Обзор
 

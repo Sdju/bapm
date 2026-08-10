@@ -1,6 +1,6 @@
 # bapm publish — флаги
 
-По `bapm help publish`.
+По `bapm publish --help`.
 
 ## Использование
 

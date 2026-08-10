@@ -1,6 +1,6 @@
 # bapm doctor — флаги
 
-По `bapm help doctor`.
+По `bapm doctor --help`.
 
 ## Использование
 

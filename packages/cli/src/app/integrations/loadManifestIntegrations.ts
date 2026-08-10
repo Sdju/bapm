@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
-import { join, relative, resolve, isAbsolute } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { basename, dirname, join, relative, resolve, isAbsolute, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   declaredTargetIntegrationMap,
@@ -52,33 +53,82 @@ function isContainedUnderRoot(absoluteTarget: string, projectRoot: string): bool
 }
 
 type ResolveNpmOptions = {
-  /**
-   * Map entries: project cwd, then CLI package resolve (global sibling next to CLI).
-   * Canonical fallback (`false`): project cwd, then Node `globalPaths` only —
-   * never the CLI package's own node_modules (avoids picking up monorepo devDeps).
-   */
+  /** Map entries may resolve from the CLI package; canonical entries must not. */
   allowCliFallback?: boolean;
+  /** Overrides discovered global roots for an embedding or isolated test. */
+  globalRoots?: readonly string[];
 };
 
-/** Resolve npm package from the project install (and optionally Node globalPaths). */
-function resolveNpmProjectOrGlobal(specifier: string, cwd: string): string {
+let cachedGlobalModuleRoots: readonly string[] | undefined;
+
+/**
+ * Return the node_modules root only when the invoked entrypoint is this CLI
+ * package. Resolving the symlink handles npm and pnpm global bin shims without
+ * spawning a package manager during every CLI process.
+ */
+export function globalModuleRootForCliEntry(entryPath: string | undefined): string | undefined {
+  if (!entryPath) return undefined;
+
+  let entry = resolve(entryPath);
+  try {
+    entry = realpathSync(entry);
+  } catch {
+    // Keep the resolved path for embedders and tests with a synthetic entrypoint.
+  }
+
+  for (let directory = dirname(entry); ; directory = dirname(directory)) {
+    if (basename(directory) === "node_modules") {
+      const packagePath = relative(directory, entry).split(sep);
+      return packagePath[0] === "@b-apm" && packagePath[1] === "cli" ? directory : undefined;
+    }
+    const parent = dirname(directory);
+    if (parent === directory) return undefined;
+  }
+}
+
+function isWorkspaceModuleRoot(moduleRoot: string): boolean {
+  for (let directory = dirname(moduleRoot); ; directory = dirname(directory)) {
+    if (existsSync(join(directory, "pnpm-workspace.yaml"))) return true;
+    const parent = dirname(directory);
+    if (parent === directory) return false;
+  }
+}
+
+/** Locate the global module root of the invoked CLI without consulting dev dependencies. */
+export function globalModuleRoots(): readonly string[] {
+  if (cachedGlobalModuleRoots) return cachedGlobalModuleRoots;
+
+  const root = globalModuleRootForCliEntry(process.argv[1]);
+  cachedGlobalModuleRoots = root && !isWorkspaceModuleRoot(root) ? [root] : [];
+  return cachedGlobalModuleRoots;
+}
+
+/** Resolve a canonical package from the project, global paths, or global module roots. */
+function resolveNpmProjectOrGlobal(
+  specifier: string,
+  cwd: string,
+  globalRoots: readonly string[] = globalModuleRoots(),
+): string {
   const requireFromCwd = createRequire(join(cwd, "package.json"));
   try {
     return requireFromCwd.resolve(specifier);
   } catch (cwdErr) {
     // `module.globalPaths` exists at runtime; default ESM type export may omit it.
     const mod = createRequire(import.meta.url)("node:module") as { globalPaths?: string[] };
-    const globalPaths = Array.isArray(mod.globalPaths) ? mod.globalPaths : [];
-    if (globalPaths.length === 0) throw cwdErr;
+    const globalPaths = Array.isArray(mod.globalPaths)
+      ? mod.globalPaths.filter((path) => !isWorkspaceModuleRoot(path))
+      : [];
+    const searchRoots = [...globalPaths, ...globalRoots];
+    if (searchRoots.length === 0) throw cwdErr;
     try {
-      return requireFromCwd.resolve(specifier, { paths: [...globalPaths] });
+      return requireFromCwd.resolve(specifier, { paths: searchRoots });
     } catch {
       throw cwdErr;
     }
   }
 }
 
-/** npm package: project cwd first, then CLI-shipped fallback (map) or globalPaths (canonical). */
+/** npm package: project cwd first, then CLI fallback (map) or global lookup (canonical). */
 function resolveNpmPackageSpecifier(
   specifier: string,
   cwd: string,
@@ -86,7 +136,7 @@ function resolveNpmPackageSpecifier(
 ): string {
   const allowCliFallback = options.allowCliFallback !== false;
   if (!allowCliFallback) {
-    return resolveNpmProjectOrGlobal(specifier, cwd);
+    return resolveNpmProjectOrGlobal(specifier, cwd, options.globalRoots);
   }
   const requireFromCwd = createRequire(join(cwd, "package.json"));
   try {
@@ -181,9 +231,11 @@ function extractIntegrationCandidate(mod: Record<string, unknown>): unknown {
 export type LoadIntegrationOptions = {
   /**
    * For npm specifiers: also try resolving from the CLI package (map entries).
-   * Canonical fallback sets this false so only the project install counts.
+   * Canonical fallback sets this false to use project and global roots only.
    */
   allowCliFallback?: boolean;
+  /** Overrides discovered global roots for an embedding or isolated test. */
+  globalRoots?: readonly string[];
 };
 
 /**
@@ -204,6 +256,7 @@ export async function loadIntegrationFromPackage(
     try {
       resolved = resolveNpmPackageSpecifier(specifier, cwd, {
         allowCliFallback: options.allowCliFallback,
+        globalRoots: options.globalRoots,
       });
     } catch (cause) {
       const detail =

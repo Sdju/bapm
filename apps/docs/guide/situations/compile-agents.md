@@ -50,6 +50,6 @@ bapm compile --target cursor -o path/to/OUT.md
 
 - `Target detection is missing or ambiguous; pass --target <id>` → укажите `--target cursor` или sole `active: [cursor]`.
 - Multi-`active` без `--target` → укажите `--target <id>`.
-- Unknown target id → id должен быть зарегистрирован через object-map (пакет + `targets:`).
+- Unknown target id → для известного host установите `@b-apm/integration-<id>`; custom id зарегистрируйте через object-map `targets:`.
 - Пустой / неожиданный вывод → проверьте, что примитивы лежат там, где target их ищет; сначала сделайте install в Cursor.
 - Не путайте с `bapm pack`: compile — host markdown; pack — zip / marketplace.json ([US-06](/guide/situations/marketplace-pack)).

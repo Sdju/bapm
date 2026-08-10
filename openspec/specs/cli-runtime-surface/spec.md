@@ -799,12 +799,12 @@ The CLI `compile` command MUST accept `--target <id>` and `--target=<id>`, forwa
 
 #### Scenario: Sole manifest active selects compile without --target
 
-- **WHEN** `runCli(["compile"])` runs with `active: [cursor]`, cursor registered via object-map and compile-capable, and detect absent
+- **WHEN** `runCli(["compile"])` runs with `active: [cursor]`, cursor registered by an object-map or resolvable canonical package and compile-capable, and detect absent
 - **THEN** compile MUST select cursor without requiring `--target`
 
 ### Requirement: Install and compile load manifest integration map before core
 
-When the project manifest uses object-map `target` / `targets`, the CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry before invoking `@b-apm/core` install or compile orchestration. The registry MUST start without eagerly registered built-in hosts. Map values MAY be npm package specifiers or local filesystem paths as defined by that capability. Legacy string/array manifests MUST NOT receive built-in-only host registration; without an object-map, no concrete host integrations are registered by the composition root. Help text MAY mention that object-map bindings load integration packages or local modules; it MUST continue to document `--target <id>` as the forced-host selector and MUST NOT claim that map keys alone activate hosts when `active` is absent. Help MUST NOT claim Cursor ships built into the CLI.
+The CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry before invoking `@b-apm/core` install or compile orchestration. The registry MUST start without eagerly registered built-in hosts. Map values MAY be npm package specifiers or local filesystem paths as defined by that capability. For known host ids omitted from the map, the composition root MUST attempt their documented canonical `@b-apm/integration-<id>` package; a map entry overrides canonical resolution for its id. Help text MAY mention that object-map bindings load integration packages or local modules; it MUST continue to document `--target <id>` as the forced-host selector and MUST NOT claim that map keys alone activate hosts when `active` is absent. Help MUST NOT claim Cursor ships built into the CLI.
 
 #### Scenario: Install loads map then forces custom target
 
@@ -821,12 +821,12 @@ When the project manifest uses object-map `target` / `targets`, the CLI `install
 - **WHEN** `runCli(["compile", "--target", "x-acme-editor"])` runs with the same valid object-map binding and the loaded integration exposes compile capability
 - **THEN** compile MUST select that registered integration rather than failing as an unknown target id
 
-#### Scenario: Install unknown target after map still fails
+#### Scenario: Install unknown custom target after registration still fails
 
-- **WHEN** `runCli(["install", "--target", "not-a-host"])` runs and the id is not present as a successful map binding
+- **WHEN** `runCli(["install", "--target", "not-a-host"])` runs and the id is not present as a successful map binding or known canonical package
 - **THEN** the return code MUST be non-zero with a clear unknown/unregistered target diagnostic
 
-#### Scenario: Cursor without map is unknown
+#### Scenario: Cursor without map loads its canonical package
 
-- **WHEN** `runCli(["install", "--target", "cursor"])` runs without a successful object-map binding for `cursor`
-- **THEN** the return code MUST be non-zero with an unknown/unregistered target diagnostic for `cursor`
+- **WHEN** `runCli(["install", "--target", "cursor"])` runs without a successful object-map binding for `cursor` and `@b-apm/integration-cursor` is resolvable
+- **THEN** Cursor MUST be registered through canonical resolution and the command MUST NOT fail solely because `targets:` is absent
