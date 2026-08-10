@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
 import { join, relative, resolve, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -52,16 +53,41 @@ function isContainedUnderRoot(absoluteTarget: string, projectRoot: string): bool
 }
 
 type ResolveNpmOptions = {
-  /**
-   * Map entries: project cwd, then CLI package resolve (global sibling next to CLI).
-   * Canonical fallback (`false`): project cwd, then Node `globalPaths` only —
-   * never the CLI package's own node_modules (avoids picking up monorepo devDeps).
-   */
+  /** Map entries may resolve from the CLI package; canonical entries must not. */
   allowCliFallback?: boolean;
+  /** Overrides package-manager global roots for an embedding or isolated test. */
+  globalRoots?: readonly string[];
 };
 
-/** Resolve npm package from the project install (and optionally Node globalPaths). */
-function resolveNpmProjectOrGlobal(specifier: string, cwd: string): string {
+let cachedGlobalModuleRoots: readonly string[] | undefined;
+
+/** Locate package-manager global module roots without consulting CLI dev dependencies. */
+export function globalModuleRoots(): readonly string[] {
+  if (cachedGlobalModuleRoots) return cachedGlobalModuleRoots;
+
+  const roots = new Set<string>();
+  for (const command of ["npm", "pnpm"]) {
+    try {
+      const root = execFileSync(command, ["root", "-g"], {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim();
+      if (root) roots.add(resolve(root));
+    } catch {
+      // A missing package manager must not prevent project-local resolution.
+    }
+  }
+
+  cachedGlobalModuleRoots = [...roots];
+  return cachedGlobalModuleRoots;
+}
+
+/** Resolve a canonical package from the project, global paths, or global module roots. */
+function resolveNpmProjectOrGlobal(
+  specifier: string,
+  cwd: string,
+  globalRoots: readonly string[] = globalModuleRoots(),
+): string {
   const requireFromCwd = createRequire(join(cwd, "package.json"));
   try {
     return requireFromCwd.resolve(specifier);
@@ -69,16 +95,17 @@ function resolveNpmProjectOrGlobal(specifier: string, cwd: string): string {
     // `module.globalPaths` exists at runtime; default ESM type export may omit it.
     const mod = createRequire(import.meta.url)("node:module") as { globalPaths?: string[] };
     const globalPaths = Array.isArray(mod.globalPaths) ? mod.globalPaths : [];
-    if (globalPaths.length === 0) throw cwdErr;
+    const searchRoots = [...globalPaths, ...globalRoots];
+    if (searchRoots.length === 0) throw cwdErr;
     try {
-      return requireFromCwd.resolve(specifier, { paths: [...globalPaths] });
+      return requireFromCwd.resolve(specifier, { paths: searchRoots });
     } catch {
       throw cwdErr;
     }
   }
 }
 
-/** npm package: project cwd first, then CLI-shipped fallback (map) or globalPaths (canonical). */
+/** npm package: project cwd first, then CLI fallback (map) or global lookup (canonical). */
 function resolveNpmPackageSpecifier(
   specifier: string,
   cwd: string,
@@ -86,7 +113,7 @@ function resolveNpmPackageSpecifier(
 ): string {
   const allowCliFallback = options.allowCliFallback !== false;
   if (!allowCliFallback) {
-    return resolveNpmProjectOrGlobal(specifier, cwd);
+    return resolveNpmProjectOrGlobal(specifier, cwd, options.globalRoots);
   }
   const requireFromCwd = createRequire(join(cwd, "package.json"));
   try {
@@ -181,9 +208,11 @@ function extractIntegrationCandidate(mod: Record<string, unknown>): unknown {
 export type LoadIntegrationOptions = {
   /**
    * For npm specifiers: also try resolving from the CLI package (map entries).
-   * Canonical fallback sets this false so only the project install counts.
+   * Canonical fallback sets this false to use project and global roots only.
    */
   allowCliFallback?: boolean;
+  /** Overrides package-manager global roots for an embedding or isolated test. */
+  globalRoots?: readonly string[];
 };
 
 /**
@@ -204,6 +233,7 @@ export async function loadIntegrationFromPackage(
     try {
       resolved = resolveNpmPackageSpecifier(specifier, cwd, {
         allowCliFallback: options.allowCliFallback,
+        globalRoots: options.globalRoots,
       });
     } catch (cause) {
       const detail =

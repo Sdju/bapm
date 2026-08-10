@@ -42,6 +42,22 @@ function linkFixture(cwd: string, fixtureDirName: string): string {
   return pkg.name;
 }
 
+function installFixtureInGlobalRoot(
+  cwd: string,
+  fixtureDirName: string,
+): {
+  globalRoot: string;
+  specifier: string;
+} {
+  const fixtureRoot = join(FIXTURES, fixtureDirName);
+  const pkg = JSON.parse(readFileSync(join(fixtureRoot, "package.json"), "utf8")) as {
+    name: string;
+  };
+  const globalRoot = join(cwd, "global", "lib", "node_modules");
+  cpSync(fixtureRoot, join(globalRoot, ...pkg.name.split("/")), { recursive: true });
+  return { globalRoot, specifier: pkg.name };
+}
+
 function plantLocalIntegration(
   cwd: string,
   relativeDir = "agents/integration/local-agent",
@@ -93,6 +109,21 @@ describe("loadManifestIntegrations", () => {
     const spec = linkFixture(temp.cwd, "default-export-pkg");
     const integration = await loadIntegrationFromPackage(spec, "x-acme-default", temp.cwd);
     expect(integration.id).toBe("x-acme-default");
+  });
+
+  test("loads a canonical integration from an isolated global module root", async () => {
+    temp = createTemp();
+    const { globalRoot, specifier } = installFixtureInGlobalRoot(
+      temp.cwd,
+      "create-integration-pkg",
+    );
+
+    const integration = await loadIntegrationFromPackage(specifier, "x-acme-editor", temp.cwd, {
+      allowCliFallback: false,
+      globalRoots: [globalRoot],
+    });
+
+    expect(integration.id).toBe("x-acme-editor");
   });
 
   test("fails closed on unresolvable specifier", async () => {
