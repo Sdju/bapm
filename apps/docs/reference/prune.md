@@ -1,6 +1,6 @@
 # bapm prune — флаги
 
-По `bapm help prune`.
+По `bapm prune --help`.
 
 ## Использование
 

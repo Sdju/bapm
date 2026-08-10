@@ -1,6 +1,6 @@
 # bapm deps — флаги
 
-По `bapm help deps`.
+По `bapm deps --help`.
 
 ## Использование
 

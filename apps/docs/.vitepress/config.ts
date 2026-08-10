@@ -13,13 +13,37 @@ export default defineConfig({
     nav: [
       { text: "Руководство", link: "/guide/" },
       { text: "Быстрый старт", link: "/guide/quick-start" },
-      { text: "Агенты", link: "/guide/supported-hosts" },
-      { text: "Манифест", link: "/guide/config-manifest" },
-      { text: "Справка", link: "/reference/" },
       { text: "Сценарии", link: "/guide/situations/" },
+      { text: "Справка", link: "/reference/" },
       { text: "Архитектура", link: "/architecture/" },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/Sdju/bapm" }],
+    search: {
+      provider: "local",
+      options: {
+        translations: {
+          button: {
+            buttonText: "Поиск",
+            buttonAriaLabel: "Поиск по документации",
+          },
+          modal: {
+            displayDetails: "Показать подробности",
+            resetButtonTitle: "Сбросить поиск",
+            backButtonTitle: "Назад",
+            noResultsText: "Ничего не найдено",
+            footer: {
+              selectText: "Выбрать",
+              selectKeyAriaLabel: "Enter",
+              navigateText: "Перейти",
+              navigateUpKeyAriaLabel: "Стрелка вверх",
+              navigateDownKeyAriaLabel: "Стрелка вниз",
+              closeText: "Закрыть",
+              closeKeyAriaLabel: "Escape",
+            },
+          },
+        },
+      },
+    },
     editLink: {
       pattern: "https://github.com/Sdju/bapm/edit/master/apps/docs/:path",
       text: "Редактировать на GitHub",
@@ -61,9 +85,8 @@ export default defineConfig({
         ],
       },
       {
-        text: "Справка",
+        text: "Зависимости",
         items: [
-          { text: "Оглавление", link: "/reference/" },
           { text: "init", link: "/reference/init" },
           { text: "install", link: "/reference/install" },
           { text: "lock", link: "/reference/lock" },
@@ -71,14 +94,29 @@ export default defineConfig({
           { text: "outdated", link: "/reference/outdated" },
           { text: "uninstall", link: "/reference/uninstall" },
           { text: "prune", link: "/reference/prune" },
+        ],
+      },
+      {
+        text: "Проверка и восстановление",
+        items: [
           { text: "deps", link: "/reference/deps" },
           { text: "find", link: "/reference/find" },
           { text: "view", link: "/reference/view" },
           { text: "audit", link: "/reference/audit" },
           { text: "doctor", link: "/reference/doctor" },
+          { text: "cache", link: "/reference/cache" },
+        ],
+      },
+      {
+        text: "Host и политика",
+        items: [
           { text: "compile", link: "/reference/compile" },
           { text: "policy / approve / deny", link: "/reference/policy" },
-          { text: "cache", link: "/reference/cache" },
+        ],
+      },
+      {
+        text: "Публикация и marketplace",
+        items: [
           { text: "self-update", link: "/reference/self-update" },
           { text: "pack", link: "/reference/pack" },
           { text: "plugin", link: "/reference/plugin" },

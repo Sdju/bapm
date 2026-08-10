@@ -1,6 +1,6 @@
 # Справка
 
-Флаги CLI. Обзор: [Команды](/guide/commands). Актуальный help: `bapm help <command>`.
+Флаги CLI. Обзор: [Команды](/guide/commands). Актуальный help: `bapm <command> --help`.
 
 ## Часто
 
@@ -38,6 +38,6 @@
 | `search`      | [search](/reference/search)           |
 | `publish`     | [publish](/reference/publish)         |
 
-`help` и `version` — без отдельных страниц: `bapm help`, `bapm help <command>`, `bapm version` / `-V`.
+`help` и `version` — без отдельных страниц: `bapm help`, `bapm version` / `-V`.
 
 Сценарии: [Сценарии](/guide/situations/).

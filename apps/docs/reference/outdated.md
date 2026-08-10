@@ -1,6 +1,6 @@
 # bapm outdated — флаги
 
-По `bapm help outdated`.
+По `bapm outdated --help`.
 
 ## Использование
 

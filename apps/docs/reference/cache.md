@@ -1,6 +1,6 @@
 # bapm cache — флаги
 
-По `bapm help cache`.
+По `bapm cache --help`.
 
 ## Использование
 
