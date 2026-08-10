@@ -53,8 +53,8 @@ bapm install
 
 ### Если не сработало
 
-| Симптом                    | Что сделать                         |
-| -------------------------- | ----------------------------------- |
+| Симптом                    | Что сделать                          |
+| -------------------------- | ------------------------------------ |
 | пакет / integration-cursor | `npm i -D @b-apm/integration-cursor` |
-| ambiguous detect           | `--target cursor` или `active`      |
-| нет манифеста              | создайте `bapm.yml` или `bapm init` |
+| ambiguous detect           | `--target cursor` или `active`       |
+| нет манифеста              | создайте `bapm.yml` или `bapm init`  |

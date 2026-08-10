@@ -55,11 +55,11 @@ Map entries загружаются **fail-closed**. Canonical hosts без кл�
 
 ## Типичные ошибки
 
-| Симптом                                        | Что проверить                                                                    |
-| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| Симптом                                        | Что проверить                                                                     |
+| ---------------------------------------------- | --------------------------------------------------------------------------------- |
 | `Target detection is missing or ambiguous`     | `--target` / `active`; при маркере без пакета — установите `@b-apm/integration-*` |
-| `Unknown or unregistered target`               | Пакет не установлен / custom id без map                                          |
-| `Manifest "active" must be a non-empty array`  | Уберите `active: []`                                                             |
-| `must not declare both "target" and "targets"` | Оставьте одно поле                                                               |
+| `Unknown or unregistered target`               | Пакет не установлен / custom id без map                                           |
+| `Manifest "active" must be a non-empty array`  | Уберите `active: []`                                                              |
+| `must not declare both "target" and "targets"` | Оставьте одно поле                                                                |
 
 Personal overlay: [Overlay](/guide/manifest-overlay).

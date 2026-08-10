@@ -75,13 +75,13 @@ Pin CLI в проекте: `npm i -D @b-apm/cli` → `npx bapm`. Force host: `ba
 
 ## Если не сработало
 
-| Симптом                                     | Что проверить                                                                      |
-| ------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `No manifest found`                         | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                                    |
+| Симптом                                      | Что проверить                                                                       |
+| -------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `No manifest found`                          | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                                     |
 | пакет / `@b-apm/integration-cursor` в ошибке | Установите интеграцию в проект или глобально (`npm i -D @b-apm/integration-cursor`) |
-| `Target detection is missing or ambiguous`  | Несколько маркеров (`.cursor` + `.claude`) или ни одного — `--target` / `active`   |
-| `frozen` / lock error при `--frozen`        | Сначала обычный `install` или `lock`                                               |
-| Свой / кастомный агент                      | Object-map `targets:` — [hosts](/guide/supported-hosts#advanced-custom-targets)    |
+| `Target detection is missing or ambiguous`   | Несколько маркеров (`.cursor` + `.claude`) или ни одного — `--target` / `active`    |
+| `frozen` / lock error при `--frozen`         | Сначала обычный `install` или `lock`                                                |
+| Свой / кастомный агент                       | Object-map `targets:` — [hosts](/guide/supported-hosts#advanced-custom-targets)     |
 
 Подробнее о приоритете: [Как выбирается host](/guide/host-selection). Три понятия detect / active / targets: [Hosts](/guide/manifest-hosts).
 

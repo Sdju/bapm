@@ -2,7 +2,21 @@
   "name": "@b-apm/core",
   "version": "0.1.0",
   "description": "Core library for bapm: manifest, lockfile, resolver, install, adapters",
+  "keywords": [
+    "b-apm",
+    "bapm",
+    "unstable"
+  ],
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/core"
+  },
   "files": [
     "dist"
   ],
@@ -40,6 +54,9 @@
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "feod": {
     "srcRoot": "src",
     "aliasPrefix": "@",
@@ -63,22 +80,5 @@
       "modulePages": false,
       "privateModulesPrefix": null
     }
-  },
-  "engines": {
-    "node": ">=22.12.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Sdju/bapm.git",
-    "directory": "packages/core"
-  },
-  "homepage": "https://github.com/Sdju/bapm#readme",
-  "bugs": {
-    "url": "https://github.com/Sdju/bapm/issues"
-  },
-  "keywords": [
-    "unstable",
-    "bapm",
-    "b-apm"
-  ]
+  }
 }

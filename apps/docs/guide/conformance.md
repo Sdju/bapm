@@ -8,10 +8,10 @@
 
 ## Три оси
 
-| Ось                   | Смысл                                         | Позиция bapm                                                                                                                                 |
-| --------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **OpenAPM v0.1**      | Wire: манифест, lock, policy, resolve, deploy | Claimed в [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A                                          |
-| **APM product CLI**   | Поверхность microsoft/apm                     | **Не** drop-in клон APM CLI                                                                                                                  |
+| Ось                   | Смысл                                         | Позиция bapm                                                                                                                                  |
+| --------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **OpenAPM v0.1**      | Wire: манифест, lock, policy, resolve, deploy | Claimed в [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A                                           |
+| **APM product CLI**   | Поверхность microsoft/apm                     | **Не** drop-in клон APM CLI                                                                                                                   |
 | **Host integrations** | Куда материализуются пакеты                   | Opt-in `@b-apm/integration-*` (не бандл CLI); canonical fallback без `targets:`; map — override/custom. Claude/Codex также marketplace-output |
 
 ## Вне scope (по Limitations)

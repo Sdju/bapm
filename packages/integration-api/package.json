@@ -2,7 +2,21 @@
   "name": "@b-apm/integration-api",
   "version": "0.1.0",
   "description": "Shared contracts and registry for bapm host integrations",
+  "keywords": [
+    "b-apm",
+    "bapm",
+    "unstable"
+  ],
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/integration-api"
+  },
   "files": [
     "dist"
   ],
@@ -29,19 +43,5 @@
   },
   "engines": {
     "node": ">=22.12.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Sdju/bapm.git",
-    "directory": "packages/integration-api"
-  },
-  "homepage": "https://github.com/Sdju/bapm#readme",
-  "bugs": {
-    "url": "https://github.com/Sdju/bapm/issues"
-  },
-  "keywords": [
-    "unstable",
-    "bapm",
-    "b-apm"
-  ]
+  }
 }

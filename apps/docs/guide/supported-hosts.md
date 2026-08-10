@@ -6,8 +6,8 @@ CLI **не** включает hosts «из коробки». Для извест
 
 ## Таблица
 
-| Host             | Auto-detect                       | Canonical package                | Explicit-only?             | Override        |
-| ---------------- | --------------------------------- | -------------------------------- | -------------------------- | --------------- |
+| Host             | Auto-detect                       | Canonical package                 | Explicit-only?             | Override        |
+| ---------------- | --------------------------------- | --------------------------------- | -------------------------- | --------------- |
 | **Cursor**       | `.cursor/` или `.cursorrules`     | `@b-apm/integration-cursor`       | нет                        | `targets:` ниже |
 | **OpenCode**     | `.opencode/` / `opencode.json(c)` | `@b-apm/integration-opencode`     | нет                        | `targets:` ниже |
 | **Copilot**      | whitelist под `.github/`          | `@b-apm/integration-copilot`      | нет                        | `targets:` ниже |
@@ -19,7 +19,7 @@ CLI **не** включает hosts «из коробки». Для извест
 | **Gemini**       | `.gemini/` или `GEMINI.md`        | `@b-apm/integration-gemini`       | нет                        | `targets:` ниже |
 | **Antigravity**  | нет                               | `@b-apm/integration-antigravity`  | да (`--target` / `active`) | `targets:` ниже |
 | **Agent Skills** | нет                               | `@b-apm/integration-agent-skills` | да                         | `targets:` ниже |
-| **Свой агент**   | по вашей `detect`                 | —                                | map обязателен             | см. Advanced    |
+| **Свой агент**   | по вашей `detect`                 | —                                 | map обязателен             | см. Advanced    |
 
 Пакет нужно **установить** (project `npm i -D` или global рядом с CLI). Absent map ≠ «нет hosts»: CLI пробует canonical для известных id.
 
@@ -87,7 +87,7 @@ bapm install --target x-acme-editor
 | Симптом                                    | Что проверить                                      |
 | ------------------------------------------ | -------------------------------------------------- |
 | `Unknown or unregistered target`           | Пакет установлен? Custom id объявлен в `targets:`? |
-| маркер есть, пакет не найден               | `npm i -D @b-apm/integration-<id>`                  |
+| маркер есть, пакет не найден               | `npm i -D @b-apm/integration-<id>`                 |
 | `Target detection is missing or ambiguous` | `--target` / `active` / один маркер                |
 
 Дальше: [host selection](/guide/host-selection) · [быстрый старт](/guide/quick-start).
