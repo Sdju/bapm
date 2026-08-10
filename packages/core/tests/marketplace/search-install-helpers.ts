@@ -335,7 +335,7 @@ export async function expectAsyncThrowMatching(
     throw new Error(`expected throw matching ${pattern}`);
   }
   // Soft-export missing should stay visible as RED machinery failure, not swallowed
-  if (thrown instanceof TypeError && /expected @bapm\/core to export/i.test(thrown.message)) {
+  if (thrown instanceof TypeError && /expected @b-apm\/core to export/i.test(thrown.message)) {
     throw thrown;
   }
   const haystack = errorText(thrown);

@@ -50,6 +50,6 @@ describe("@b-apm/integration-codex package", () => {
     expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-codex");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-codex["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-codex["']\s*:/);
   });
 });

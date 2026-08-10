@@ -53,7 +53,7 @@ describe("CLI init", () => {
 
     const raw = readFileSync(join(project.cwd, "bapm.yml"), "utf8");
     expect(raw).toMatch(/targets:/);
-    expect(raw).toMatch(/cursor:\s*["']?@bapm\/integration-cursor["']?/);
+    expect(raw).toMatch(/cursor:\s*["']?@b-apm\/integration-cursor["']?/);
     expect(raw).toMatch(/active:/);
     expect(raw).toMatch(/-\s*cursor/);
 

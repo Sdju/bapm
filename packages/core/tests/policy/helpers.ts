@@ -373,7 +373,7 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
   }
   if (
     thrown instanceof TypeError &&
-    /is not a function|expected @bapm\/core/i.test(thrown.message)
+    /is not a function|expected @b-apm\/core/i.test(thrown.message)
   ) {
     throw thrown;
   }
@@ -409,7 +409,7 @@ export async function expectRejectsMatching(
   }
   if (
     thrown instanceof TypeError &&
-    /is not a function|expected @bapm\/core/i.test(thrown.message)
+    /is not a function|expected @b-apm\/core/i.test(thrown.message)
   ) {
     throw thrown;
   }

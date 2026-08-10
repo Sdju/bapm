@@ -50,7 +50,7 @@ test("core uses Cursor and OpenCode integrations only as development dependencie
 
 test("core vite/test config has no path alias for host integrations", () => {
   const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-  expect(viteConfig).not.toMatch(/["']@bapm\/integration-cursor["']\s*:/);
-  expect(viteConfig).not.toMatch(/["']@bapm\/integration-opencode["']\s*:/);
+  expect(viteConfig).not.toMatch(/["']@b-apm\/integration-cursor["']\s*:/);
+  expect(viteConfig).not.toMatch(/["']@b-apm\/integration-opencode["']\s*:/);
   expect(viteConfig).not.toMatch(/target-cursor\/src/);
 });

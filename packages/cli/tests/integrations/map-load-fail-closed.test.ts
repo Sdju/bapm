@@ -124,6 +124,6 @@ describe("CLI · object-map integration load fail-closed", () => {
 
     expect(result).not.toBe(0);
     expect(combined).toMatch(/cursor/i);
-    expect(combined).toMatch(/targets:|object-map|@bapm\/integration|install.*integration/i);
+    expect(combined).toMatch(/targets:|object-map|@b-apm\/integration|install.*integration/i);
   });
 });

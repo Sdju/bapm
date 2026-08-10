@@ -89,7 +89,7 @@ test("commands must not import @b-apm/core directly", () => {
   expect(existsSync(commandsDir)).toBe(true);
   const offenders = listFilesRecursive(commandsDir)
     .filter((file) => file.endsWith(".ts"))
-    .filter((file) => /from\s+["']@bapm\/core["']/.test(readFileSync(file, "utf8")));
+    .filter((file) => /from\s+["']@b-apm\/core["']/.test(readFileSync(file, "utf8")));
   expect(offenders).toEqual([]);
 });
 

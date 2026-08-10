@@ -48,7 +48,7 @@ describe("mp-plugin-init CLI FEOD Plugin wiring", () => {
 
   test("commands/plugin.ts does not import @b-apm/core directly", () => {
     const body = readSrc("commands/plugin.ts");
-    expect(body).not.toMatch(/from\s+["']@bapm\/core["']/);
+    expect(body).not.toMatch(/from\s+["']@b-apm\/core["']/);
   });
 
   test("Plugin module has no module-local commands/ folder", () => {

@@ -48,6 +48,6 @@ describe("@b-apm/integration-windsurf package boundary", () => {
     expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-windsurf");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-windsurf["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-windsurf["']\s*:/);
   });
 });

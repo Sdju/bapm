@@ -48,6 +48,6 @@ describe("@b-apm/integration-agent-skills package boundary", () => {
     expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-agent-skills");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-agent-skills["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-agent-skills["']\s*:/);
   });
 });

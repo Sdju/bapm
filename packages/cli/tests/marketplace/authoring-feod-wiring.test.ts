@@ -26,7 +26,7 @@ describe("mp-authoring-yml CLI FEOD Marketplace authoring wiring", () => {
 
   test("thin commands/marketplace.ts does not import @b-apm/core directly", () => {
     const body = readSrc("commands/marketplace.ts");
-    expect(body).not.toMatch(/from\s+["']@bapm\/core["']/);
+    expect(body).not.toMatch(/from\s+["']@b-apm\/core["']/);
     expect(body.length).toBeLessThan(4000);
   });
 

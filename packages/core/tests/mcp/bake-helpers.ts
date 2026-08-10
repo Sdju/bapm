@@ -91,7 +91,7 @@ export function expectBakeFailure(
     const value = bakeMap(map, options);
     throw new Error(`expected bake to fail, got ${JSON.stringify(value)}`);
   } catch (error) {
-    if (error instanceof TypeError && /expected @bapm\/core to export/i.test(error.message)) {
+    if (error instanceof TypeError && /expected @b-apm\/core to export/i.test(error.message)) {
       throw error;
     }
     if (error instanceof Error && error.message.startsWith("expected bake to fail")) {

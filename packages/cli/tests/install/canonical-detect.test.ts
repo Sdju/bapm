@@ -55,7 +55,7 @@ describe("CLI install · canonical detect (no targets map)", () => {
     expect(result).not.toBe(0);
     expect(existsSync(skillPath(project.cwd))).toBe(false);
     // Guidance must point at installing the canonical integration — not only generic detect ambiguity.
-    expect(combined).toMatch(/@bapm\/integration-cursor|integration-cursor/i);
+    expect(combined).toMatch(/@b-apm\/integration-cursor|integration-cursor/i);
     expect(combined).toMatch(/install|npm|package|resolv/i);
   });
 });

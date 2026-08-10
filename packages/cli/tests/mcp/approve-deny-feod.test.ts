@@ -34,8 +34,8 @@ describe("CLI FEOD Approve/Deny wiring", () => {
     expect(existsSync(join(srcRoot, "commands", "deny.ts"))).toBe(true);
     const approve = readSrc("commands/approve.ts");
     const deny = readSrc("commands/deny.ts");
-    expect(approve).not.toMatch(/from\s+["']@bapm\/core["']/);
-    expect(deny).not.toMatch(/from\s+["']@bapm\/core["']/);
+    expect(approve).not.toMatch(/from\s+["']@b-apm\/core["']/);
+    expect(deny).not.toMatch(/from\s+["']@b-apm\/core["']/);
     expect(approve.length).toBeLessThan(4000);
     expect(deny.length).toBeLessThan(4000);
   });

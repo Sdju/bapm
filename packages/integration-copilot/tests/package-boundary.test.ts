@@ -49,6 +49,6 @@ describe("@b-apm/integration-copilot package boundary", () => {
     expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-copilot");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-copilot["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-copilot["']\s*:/);
   });
 });

@@ -150,7 +150,7 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
   }
   if (
     thrown instanceof TypeError &&
-    /is not a function|expected @bapm\/core to export/i.test(thrown.message)
+    /is not a function|expected @b-apm\/core to export/i.test(thrown.message)
   ) {
     throw thrown;
   }

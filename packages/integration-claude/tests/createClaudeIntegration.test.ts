@@ -50,7 +50,7 @@ describe("@b-apm/integration-claude package", () => {
     expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-claude");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-claude["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-claude["']\s*:/);
   });
 });
 

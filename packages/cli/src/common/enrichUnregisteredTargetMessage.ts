@@ -8,7 +8,7 @@ import {
 } from "@/common/canonicalHosts.ts";
 
 const ALREADY_GUIDED =
-  /@bapm\/integration-|install the (?:host )?integration|npm i |not installed or resolvable/i;
+  /@b-apm\/integration-|install the (?:host )?integration|npm i |not installed or resolvable/i;
 
 function extractUnregisteredId(message: string): string | undefined {
   const m = message.match(/unknown or unregistered target:\s*([^\s,;]+)/i);

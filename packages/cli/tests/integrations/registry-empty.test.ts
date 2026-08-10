@@ -54,13 +54,13 @@ describe("CLI · empty composition registries (opt-in hosts)", () => {
 
   test("runtime registry module does not static-import @b-apm/integration-cursor", () => {
     const src = readFileSync(join(CLI_ROOT, "src/app/integrations/registry.ts"), "utf8");
-    expect(src).not.toMatch(/@bapm\/integration-cursor/);
+    expect(src).not.toMatch(/@b-apm\/integration-cursor/);
     expect(src).not.toMatch(/createCursorIntegration/);
   });
 
   test("marketplaceOutputs module does not static-import Claude/Codex packages", () => {
     const src = readFileSync(join(CLI_ROOT, "src/app/integrations/marketplaceOutputs.ts"), "utf8");
-    expect(src).not.toMatch(/@bapm\/integration-claude/);
-    expect(src).not.toMatch(/@bapm\/integration-codex/);
+    expect(src).not.toMatch(/@b-apm\/integration-claude/);
+    expect(src).not.toMatch(/@b-apm\/integration-codex/);
   });
 });

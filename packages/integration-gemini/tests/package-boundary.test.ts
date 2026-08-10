@@ -48,6 +48,6 @@ describe("@b-apm/integration-gemini package boundary", () => {
     expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-gemini");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-gemini["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-gemini["']\s*:/);
   });
 });
