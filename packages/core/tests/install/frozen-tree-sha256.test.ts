@@ -1,7 +1,7 @@
 /**
  * lk-015: frozen install re-verifies tree_sha256 for git entries.
  */
-import { downloadPackages } from "@bapm/core";
+import { downloadPackages } from "@b-apm/core";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {

@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-codex — Codex CLI runtime + marketplace pack mapper.
+ * @b-apm/integration-codex — Codex CLI runtime + marketplace pack mapper.
  */
 
 export {
@@ -7,7 +7,7 @@ export {
   createCodexIntegration as createIntegration,
 } from "./createCodexIntegration.ts";
 
-import type { MarketplaceOutputIntegration } from "@bapm/integration-api";
+import type { MarketplaceOutputIntegration } from "@b-apm/integration-api";
 
 type PackageEntry = Record<string, unknown>;
 type ResolvedPackage = Record<string, unknown> & { entry: PackageEntry };

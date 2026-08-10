@@ -10,7 +10,7 @@ import {
   parseManifest,
   serializeLockfile,
   serializeManifest,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { fixturePath, normalizeTrailingNewline, readFixture } from "./helpers.ts";
 
 const MANIFEST_FIXTURES = [

@@ -1,6 +1,8 @@
 # Auth
 
-Shared OpenAPM §10.3 credential host-class helpers for `@bapm/core`.
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
+Shared OpenAPM §10.3 credential host-class helpers for `@b-apm/core`.
 
 ## Public API
 

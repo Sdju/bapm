@@ -13,7 +13,7 @@
 
 - [x] 3.1 Update `apps/docs/index.md` landing: remove shipped multi-client (Copilot/Claude/…) adapter marketing; state cursor-only + target packages
 - [x] 3.2 Update `apps/docs/guide/index.md` intro similarly (no “across clients” as current fact without cursor-only qualifier)
-- [x] 3.3 Update `apps/docs/architecture/index.md` package diagram text: target packages / cursor-only, not in-tree multi-client adapters inside `@bapm/core`
+- [x] 3.3 Update `apps/docs/architecture/index.md` package diagram text: target packages / cursor-only, not in-tree multi-client adapters inside `@b-apm/core`
 
 ## 4. CONFORMANCE discoverability (no coverage hand-edit)
 

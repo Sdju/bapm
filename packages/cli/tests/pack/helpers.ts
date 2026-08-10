@@ -84,7 +84,7 @@ export function writeConformingManifest(
   const version = options?.version ?? "1.2.3";
   writeFileSync(
     join(cwd, "bapm.yml"),
-    `name: ${name}\nversion: "${version}"\ntargets:\n  cursor: "@bapm/integration-cursor"\ndependencies:\n  apm: []\n  mcp: []\n`,
+    `name: ${name}\nversion: "${version}"\ntargets:\n  cursor: "@b-apm/integration-cursor"\ndependencies:\n  apm: []\n  mcp: []\n`,
     "utf8",
   );
 }

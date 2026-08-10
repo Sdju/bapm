@@ -24,8 +24,10 @@ bapm self-update [--check]
 | `0` | up-to-date                                         |
 | `1` | update available, unknown version или check failed |
 
-Без `--check` CLI пытается global upgrade через npm (`npm i -g @bapm/cli@…`), если не задан `BAPM_SELF_UPDATE_DISABLE=1`.
+Без `--check` CLI пытается global upgrade через npm (`npm i -g @b-apm/cli@…`), если не задан `BAPM_SELF_UPDATE_DISABLE=1`.
 
 ## Оговорка про npm
 
-Публикация scoped-пакета `@bapm/cli` ещё может быть нестабильной. Не полагайтесь на `npm i -g @bapm/cli` / `self-update` без `--check`, пока пользовательский publish path не зафиксирован. Установка в проект: [Быстрый старт](/guide/quick-start).
+::: warning UNSTABLE
+Пакет `@b-apm/cli` опубликован на npm (первый релиз **0.1.0**), но релиз ранний: API и поведение могут меняться без major bump. Для проверки обновления без установки предпочитайте `bapm self-update --check`. Установка: [Быстрый старт](/guide/quick-start).
+:::

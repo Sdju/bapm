@@ -27,7 +27,7 @@ See proposal.md for motivation (Gap1 local `view` only). Today `deps list` / `tr
 
 ### D2 — Core module: `View` (or thin Deps export)
 
-- **Choice:** Prefer new `@bapm/core` FEOD module `View` with public `viewPackage` / `runView`-style orchestration exported via `app/publicApi`. Internally reuse Lockfile load, shared resolve helpers from Deps (extract or import Deps public helpers if already exported), and `locateGitPackageTree` (or Lockfile public equivalent).
+- **Choice:** Prefer new `@b-apm/core` FEOD module `View` with public `viewPackage` / `runView`-style orchestration exported via `app/publicApi`. Internally reuse Lockfile load, shared resolve helpers from Deps (extract or import Deps public helpers if already exported), and `locateGitPackageTree` (or Lockfile public equivalent).
 - **Why:** Keeps view formatting/orchestration out of the growing Deps why surface; mirrors Find vs Deps split.
 - **Alternatives:** Add `viewDeps` inside Deps — acceptable if extract cost is high; still export a clear public symbol. Do not bury view only in CLI.
 

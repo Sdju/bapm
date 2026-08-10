@@ -101,7 +101,7 @@ Object-map (**bapm-расширение**): host id → npm-пакет или л
 
 ```yaml
 targets:
-  cursor: "@bapm/integration-cursor"
+  cursor: "@b-apm/integration-cursor"
   pi: "./agents/integration/pi-agent"
 ```
 

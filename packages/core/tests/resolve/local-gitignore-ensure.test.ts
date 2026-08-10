@@ -12,7 +12,7 @@ import {
   ensureLocalSourcesUntracked,
   parseManifestDocument,
   ResolverError,
-} from "@bapm/core";
+} from "@b-apm/core";
 
 type Temp = { cwd: string; cleanup: () => void };
 

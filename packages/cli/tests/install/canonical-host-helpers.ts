@@ -193,7 +193,7 @@ export function writeNoMapProject(cwd: string, options: NoMapProjectOptions = {}
 
 /**
  * Local path package that claims host id `cursor` but writes an override marker
- * (proves map entry replaced canonical `@bapm/integration-cursor`).
+ * (proves map entry replaced canonical `@b-apm/integration-cursor`).
  */
 export function plantCursorOverridePackage(
   cwd: string,

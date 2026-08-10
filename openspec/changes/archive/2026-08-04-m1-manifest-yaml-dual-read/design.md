@@ -1,12 +1,12 @@
 ## Context
 
-`@bapm/core` today exports a stub `parseManifest(input: unknown)` that validates only `name`/`version` on a pre-parsed object, plus constants `BAPM_MANIFEST_FILE = "bapm.yml"` / `BAPM_LOCK_FILE`. There is no YAML dependency, no filesystem discovery, and no OpenAPM-aligned dep/registry validation. Motivation and product scope: see `proposal.md`. Normative acceptance checklist: `.samples/apm-knowledge/topics/m1-manifest-acceptance.md`. Behavior contracts: delta specs `manifest-dual-file-discovery` and `manifest-yaml-validate`.
+`@b-apm/core` today exports a stub `parseManifest(input: unknown)` that validates only `name`/`version` on a pre-parsed object, plus constants `BAPM_MANIFEST_FILE = "bapm.yml"` / `BAPM_LOCK_FILE`. There is no YAML dependency, no filesystem discovery, and no OpenAPM-aligned dep/registry validation. Motivation and product scope: see `proposal.md`. Normative acceptance checklist: `.samples/apm-knowledge/topics/m1-manifest-acceptance.md`. Behavior contracts: delta specs `manifest-dual-file-discovery` and `manifest-yaml-validate`.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Implement discovery + YAML load + validate in `@bapm/core` as the M1 public surface for acceptance tests
+- Implement discovery + YAML load + validate in `@b-apm/core` as the M1 public surface for acceptance tests
 - Keep API small and testable without requiring FEOD CLI work
 - Match OpenAPM Consumer/Producer parse baseline listed in the proposal (mf-001..004, 007..012, 014..015 if registries, 019..021, ext-002; anchors/aliases reject)
 - Record loaded filename on the result for future same-path write-back
@@ -21,9 +21,9 @@
 
 ## Decisions
 
-### 1. Primary surface is `@bapm/core` API, not CLI
+### 1. Primary surface is `@b-apm/core` API, not CLI
 
-- **Choice:** Export discovery + load/validate from `@bapm/core`. Acceptance and e2e call core (fixtures under `packages/core/tests/acceptance/m1-manifest-yaml-dual-read/`). Thin CLI is optional and out of M1 MUST.
+- **Choice:** Export discovery + load/validate from `@b-apm/core`. Acceptance and e2e call core (fixtures under `packages/core/tests/acceptance/m1-manifest-yaml-dual-read/`). Thin CLI is optional and out of M1 MUST.
 - **Why:** Unblocks lock/resolve later without coupling M1 to FEOD CLI structure; matches roadmap “core first”.
 - **Alternatives:** CLI-only doctor command — rejected for M1 (harder TDD, unnecessary FEOD work).
 
@@ -77,7 +77,7 @@
 
 ## Migration Plan
 
-- Additive API in `@bapm/core`; existing stub `parseManifest` either gains full validation (compatible for valid minimal objects) or is superseded by documented `loadManifest` / `parseManifestDocument` with re-export alias—prefer strengthening `parseManifest` for object input and adding `loadManifest` for FS/YAML without breaking the minimal happy path.
+- Additive API in `@b-apm/core`; existing stub `parseManifest` either gains full validation (compatible for valid minimal objects) or is superseded by documented `loadManifest` / `parseManifestDocument` with re-export alias—prefer strengthening `parseManifest` for object input and adding `loadManifest` for FS/YAML without breaking the minimal happy path.
 - No lockfile/CLI migration in M1.
 - Rollback: revert the change; no data format written by M1.
 

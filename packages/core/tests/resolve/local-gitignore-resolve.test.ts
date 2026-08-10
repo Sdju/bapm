@@ -6,7 +6,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
-import { loadLockfile, resolveAndLock, type ResolverError } from "@bapm/core";
+import { loadLockfile, resolveAndLock, type ResolverError } from "@b-apm/core";
 import { createTempProject, writeManifest, writeText, type TempProject } from "./helpers.ts";
 
 function writePackageAt(cwd: string, relDir: string, name: string): void {

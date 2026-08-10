@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the thin `bapm lock` CLI surface that invokes `@bapm/core` `resolveAndLock` for drop-in ergonomics without target deploy, registry HTTP, or a separate update product command.
+Defines the thin `bapm lock` CLI surface that invokes `@b-apm/core` `resolveAndLock` for drop-in ergonomics without target deploy, registry HTTP, or a separate update product command.
 
 ## ADDED Requirements
 

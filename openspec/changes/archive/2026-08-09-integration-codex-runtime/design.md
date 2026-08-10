@@ -1,13 +1,13 @@
 ## Context
 
-See proposal.md — Why. Today `@bapm/integration-codex` exports only `codexMarketplaceIntegration` / `mapCodexMarketplace`. Cursor/Claude/OpenCode already show the runtime package shape (`create*Integration`, `primitivesMaterialize`, hooks sidecar, `configureMcp`, `compile`). APM `KNOWN_TARGETS["codex"]` uses `root_dir=".codex"`, `auto_create=False`, detect signal **only** `.codex/`, skills under `.agents/skills/`, agents as `.codex/agents/<n>.toml`, hooks merge `.codex/hooks.json` with `require_dir=True`, MCP at `.codex/config.toml` `mcp_servers`, compile family `agents` → project `AGENTS.md` with instructions rolled in (no native rules files).
+See proposal.md — Why. Today `@b-apm/integration-codex` exports only `codexMarketplaceIntegration` / `mapCodexMarketplace`. Cursor/Claude/OpenCode already show the runtime package shape (`create*Integration`, `primitivesMaterialize`, hooks sidecar, `configureMcp`, `compile`). APM `KNOWN_TARGETS["codex"]` uses `root_dir=".codex"`, `auto_create=False`, detect signal **only** `.codex/`, skills under `.agents/skills/`, agents as `.codex/agents/<n>.toml`, hooks merge `.codex/hooks.json` with `require_dir=True`, MCP at `.codex/config.toml` `mcp_servers`, compile family `agents` → project `AGENTS.md` with instructions rolled in (no native rules files).
 
 ## Goals / Non-Goals
 
 **Goals:**
 
 - One package owns both marketplace pack mapping and Codex CLI project-scope runtime without splitting packages.
-- Mirror Cursor/Claude helper patterns from `@bapm/integration-api`, with Codex-native paths (skills converged under `.agents/skills/`; agents TOML under `.codex/`).
+- Mirror Cursor/Claude helper patterns from `@b-apm/integration-api`, with Codex-native paths (skills converged under `.agents/skills/`; agents TOML under `.codex/`).
 - Resolve forced-target missing-`.codex/` policy for hooks **and** MCP consistently; document shared `AGENTS.md` collision with Cursor.
 
 **Non-Goals:**
@@ -20,9 +20,9 @@ See proposal.md — Why. Today `@bapm/integration-codex` exports only `codexMark
 
 ## Decisions
 
-1. **Extend `@bapm/integration-codex` (not a new package)**  
+1. **Extend `@b-apm/integration-codex` (not a new package)**  
    Knowledge priority and marketplace skeleton already exist; keep marketplace mapper exports and add `createCodexIntegration` / `createIntegration`.  
-   _Alternative:_ new `@bapm/integration-codex-cli` — rejected (duplicate token / `targets.codex` confusion).
+   _Alternative:_ new `@b-apm/integration-codex-cli` — rejected (duplicate token / `targets.codex` confusion).
 
 2. **Default `deployRoots`: `[".codex", ".agents", "."]`**  
    Materialize skills under `.agents/skills/**`; agents/hooks/MCP under `.codex/**`. Compile default `AGENTS.md` at repo root, so `"."` is registered with a **hard basename allowlist** (`AGENTS.md` only for compile; never arbitrary root writes from materialize).  
@@ -80,12 +80,12 @@ See proposal.md — Why. Today `@bapm/integration-codex` exports only `codexMark
 - [TOML parse failure on existing config] → Mitigation: skip write + diagnostic; never clobber unreadable files.
 - [Forced mkdir vs APM hooks `require_dir`] → Mitigation: unified mkdir-on-write only when Codex is actively invoked; detect stays non-creating.
 - [Docs still say Codex is marketplace-only] → Mitigation: update supported-hosts / situations in tasks.
-- [New TOML dependency] → Mitigation: add via pnpm catalog only (`pnpm-dependencies` skill); keep `@bapm/core` free of this dep.
+- [New TOML dependency] → Mitigation: add via pnpm catalog only (`pnpm-dependencies` skill); keep `@b-apm/core` free of this dep.
 
 ## Migration Plan
 
-1. Land runtime + tests in `@bapm/integration-codex`; marketplace tests keep passing.
-2. Users: ensure `@bapm/integration-codex` installed, `targets.codex` (or `--target codex`), `bapm install`, optional `bapm compile` when Codex is the active compile target.
+1. Land runtime + tests in `@b-apm/integration-codex`; marketplace tests keep passing.
+2. Users: ensure `@b-apm/integration-codex` installed, `targets.codex` (or `--target codex`), `bapm install`, optional `bapm compile` when Codex is the active compile target.
 3. Rollback: remove map entry / stop using factory; delete generated `.codex/**`, owned hooks, MCP server tables, and project `AGENTS.md` manually if desired. Marketplace pack path remains.
 
 ## Open Questions

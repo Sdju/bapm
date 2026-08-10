@@ -4,7 +4,7 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadManifest } from "@bapm/core";
+import { loadManifest } from "@b-apm/core";
 import {
   createTempProject,
   expectKnownCommand,

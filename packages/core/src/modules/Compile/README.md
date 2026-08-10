@@ -1,5 +1,7 @@
 # Compile
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Thin cursor-only compile: discover primitives → emit deterministic `AGENTS.md`.
 
 ## Public API

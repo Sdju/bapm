@@ -11,7 +11,7 @@ For change `m5-cursor-install-polish`, the workspace MUST contain among packages
 
 ### Requirement: Core tests must not path-alias concrete cursor package
 
-`@bapm/core` test/vite configuration MUST NOT use a path alias that remaps `bapm-target-cursor` to a filesystem entry under `packages/target-cursor` as a substitute for package resolution. Optional e2e that needs cursor MUST resolve it via workspace protocol / standard Node resolution from a package that is allowed to depend on cursor (CLI or a dedicated test harness), or avoid importing cursor from core entirely by using a mock target registered through `bapm-target-api`.
+`@b-apm/core` test/vite configuration MUST NOT use a path alias that remaps `bapm-target-cursor` to a filesystem entry under `packages/target-cursor` as a substitute for package resolution. Optional e2e that needs cursor MUST resolve it via workspace protocol / standard Node resolution from a package that is allowed to depend on cursor (CLI or a dedicated test harness), or avoid importing cursor from core entirely by using a mock target registered through `bapm-target-api`.
 
 #### Scenario: No vite cursor alias in core
 

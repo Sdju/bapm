@@ -1,8 +1,22 @@
 {
-  "name": "@bapm/core",
-  "version": "0.0.0",
+  "name": "@b-apm/core",
+  "version": "0.1.0",
   "description": "Core library for bapm: manifest, lockfile, resolver, install, adapters",
+  "keywords": [
+    "b-apm",
+    "bapm",
+    "unstable"
+  ],
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/core"
+  },
   "files": [
     "dist"
   ],
@@ -22,23 +36,26 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@bapm/integration-api": "workspace:*",
+    "@b-apm/integration-api": "workspace:*",
     "fflate": "catalog:",
     "semver": "catalog:",
     "tldts": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@bapm/integration-claude": "workspace:*",
-    "@bapm/integration-codex": "workspace:*",
-    "@bapm/integration-cursor": "workspace:*",
-    "@bapm/integration-opencode": "workspace:*",
+    "@b-apm/integration-claude": "workspace:*",
+    "@b-apm/integration-codex": "workspace:*",
+    "@b-apm/integration-cursor": "workspace:*",
+    "@b-apm/integration-opencode": "workspace:*",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "bumpp": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   },
   "feod": {
     "srcRoot": "src",

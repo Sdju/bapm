@@ -2,7 +2,7 @@
  * Policy suite helpers — pickExport for governance/policy APIs (M8 + P4 + P6d status).
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -128,7 +128,7 @@ function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 function pickValue(names: string[], label: string): unknown {
@@ -136,7 +136,7 @@ function pickValue(names: string[], label: string): unknown {
   for (const name of names) {
     if (name in c && c[name] !== undefined) return c[name];
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export function getApmPolicyFile(): string {
@@ -373,7 +373,7 @@ export function expectThrowsMatching(fn: () => unknown, pattern: RegExp): unknow
   }
   if (
     thrown instanceof TypeError &&
-    /is not a function|expected @bapm\/core/i.test(thrown.message)
+    /is not a function|expected @b-apm\/core/i.test(thrown.message)
   ) {
     throw thrown;
   }
@@ -409,7 +409,7 @@ export async function expectRejectsMatching(
   }
   if (
     thrown instanceof TypeError &&
-    /is not a function|expected @bapm\/core/i.test(thrown.message)
+    /is not a function|expected @b-apm\/core/i.test(thrown.message)
   ) {
     throw thrown;
   }

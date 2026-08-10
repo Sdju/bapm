@@ -2,7 +2,7 @@
 
 ### Requirement: Update exposes verbose and parallel-downloads flags
 
-The `update` command MUST accept `-v` / `--verbose` and `--parallel-downloads <n>` (and `--parallel-downloads=<n>`). Verbose MUST enable keep-row plan printing per `lifecycle-update`. `--parallel-downloads` MUST parse a non-negative integer (`0` = serial); when omitted, CLI/core MUST apply default **4**. Invalid or missing values for `--parallel-downloads` MUST fail with non-zero exit and a clear error. Values MUST be forwarded to `@bapm/core` update. Unknown flags MUST remain hard errors. Help for `update` MUST document `-v`/`--verbose` and `--parallel-downloads` (including that `0` means serial). Existing `-y`/`--yes`, `--dry-run`, package scope, `--policy`/`--no-policy`, and non-TTY requiring `-y` MUST remain unchanged.
+The `update` command MUST accept `-v` / `--verbose` and `--parallel-downloads <n>` (and `--parallel-downloads=<n>`). Verbose MUST enable keep-row plan printing per `lifecycle-update`. `--parallel-downloads` MUST parse a non-negative integer (`0` = serial); when omitted, CLI/core MUST apply default **4**. Invalid or missing values for `--parallel-downloads` MUST fail with non-zero exit and a clear error. Values MUST be forwarded to `@b-apm/core` update. Unknown flags MUST remain hard errors. Help for `update` MUST document `-v`/`--verbose` and `--parallel-downloads` (including that `0` means serial). Existing `-y`/`--yes`, `--dry-run`, package scope, `--policy`/`--no-policy`, and non-TTY requiring `-y` MUST remain unchanged.
 
 #### Scenario: Verbose short flag accepted on update
 

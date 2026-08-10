@@ -28,4 +28,4 @@ Bare `bapm lock` still soft-ignores unknown `-…` argv (P6c deferred), so typos
 
 - `packages/cli` Lock module: `parseLockArgs` / `runLock` / help (no new flags advertised).
 - Tests: acceptance + existing `packages/cli/tests/lock/` regressions for known flags and export unknowns.
-- No `@bapm/core` resolve/lock schema changes expected; no CONFORMANCE / claim-table edits.
+- No `@b-apm/core` resolve/lock schema changes expected; no CONFORMANCE / claim-table edits.

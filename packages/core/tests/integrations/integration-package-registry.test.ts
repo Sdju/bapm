@@ -22,15 +22,15 @@ type CursorIntegration = {
 
 describe("published integration package behavior", () => {
   test("exposes integration API and Cursor runtime entry points", async () => {
-    const api = (await import("@bapm/integration-api")) as IntegrationApi;
-    const cursor = (await import("@bapm/integration-cursor")) as CursorIntegration;
+    const api = (await import("@b-apm/integration-api")) as IntegrationApi;
+    const cursor = (await import("@b-apm/integration-cursor")) as CursorIntegration;
 
     expect(typeof api.createIntegrationRegistry).toBe("function");
     expect(cursor.createCursorIntegration().id).toBe("cursor");
   });
 
   test("injects a host-neutral registered integration through the generic registry", async () => {
-    const api = (await import("@bapm/integration-api")) as IntegrationApi;
+    const api = (await import("@b-apm/integration-api")) as IntegrationApi;
     const registry = api.createIntegrationRegistry();
     const integration = {
       id: "example-host",

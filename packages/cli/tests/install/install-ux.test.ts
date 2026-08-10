@@ -70,6 +70,12 @@ function writeLeafWithCursor(cwd: string, name: string): void {
     "---\nname: hello\n---\n# Hello\n",
     "utf8",
   );
+  mkdirSync(join(cwd, "leaf", ".apm", "instructions"), { recursive: true });
+  writeFileSync(
+    join(cwd, "leaf", ".apm", "instructions", "style.md"),
+    "# Style\nPrefer concise answers.\n",
+    "utf8",
+  );
 }
 
 describe("CLI install UX", () => {
@@ -166,7 +172,7 @@ describe("CLI install UX", () => {
     expect(stderr.join("\n")).toMatch(/not-a-host|unknown.*target|unregistered/i);
   });
 
-  test("happy path install with .cursor/ deploys skills", async () => {
+  test("happy path install with .cursor/ deploys Cursor layout + lock + apm_modules", async () => {
     project = createTempProject();
     writeLeafWithCursor(project.cwd, "happy-cursor");
 
@@ -178,6 +184,8 @@ describe("CLI install UX", () => {
       existsSync(join(project.cwd, "bapm.lock.yaml")) ||
       existsSync(join(project.cwd, "apm.lock.yaml"));
     expect(hasLock).toBe(true);
+    // README / quick-start: skills → .agents/skills; instructions → .cursor/rules
     expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(project.cwd, ".cursor", "rules", "style.mdc"))).toBe(true);
   });
 });

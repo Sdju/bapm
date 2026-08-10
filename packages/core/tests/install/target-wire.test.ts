@@ -6,7 +6,7 @@ import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseManifest } from "@bapm/core";
+import { parseManifest } from "@b-apm/core";
 import {
   createFakePorts,
   createTempProject,

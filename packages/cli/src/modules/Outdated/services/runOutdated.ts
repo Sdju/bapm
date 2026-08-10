@@ -1,4 +1,4 @@
-import { runOutdated as coreRunOutdated } from "@bapm/core";
+import { runOutdated as coreRunOutdated } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type OutdatedOptions = { args?: string[]; cwd?: string };

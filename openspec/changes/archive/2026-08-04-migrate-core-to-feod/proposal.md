@@ -7,7 +7,7 @@
 - Реорганизовать `packages/core/src` под **library locked FEOD**: слои `app/`, `modules/`, `common/`, `globals/` плюс пустой stub `pages/` (`.gitkeep`), **не** `commands/`.
 - Выделить модули `Manifest` и `Lockfile` с public API только через `modules/<Name>/index.ts`.
 - Вынести shared YAML safe-subset loader в `common/` (без barrel), чтобы Lockfile **не** deep-import'ил Manifest.
-- Сделать `src/index.ts` тонким фасадом → `app/publicApi`; сохранить **все** текущие named exports `@bapm/core` 1:1 (без **BREAKING**).
+- Сделать `src/index.ts` тонким фасадом → `app/publicApi`; сохранить **все** текущие named exports `@b-apm/core` 1:1 (без **BREAKING**).
 - Добавить `feod` block в `packages/core/package.json` и `@/*` → `src/*` в tsconfig (и alias в vite при необходимости).
 - Зафиксировать capability `core-feod-architecture` (не расширять `cli-feod-architecture`).
 - Документировать library-профиль core в design/tasks (или отдельный note рядом с FEOD skill) **без** изменения locked CLI-правил.
@@ -33,8 +33,8 @@
 
 ## Impact
 
-- **Code:** только `packages/core` (`src/`, `tsconfig.json`, `vite.config.ts` при необходимости alias, `package.json` `feod` block); unit/acceptance импорты через `@bapm/core` / `src/index.ts` должны продолжить работать.
-- **API:** публичные named exports `@bapm/core` — полный 1:1 parity (типы, функции, константы, `getVersion`, `BAPM_NAME`, `loadYamlDocument`).
+- **Code:** только `packages/core` (`src/`, `tsconfig.json`, `vite.config.ts` при необходимости alias, `package.json` `feod` block); unit/acceptance импорты через `@b-apm/core` / `src/index.ts` должны продолжить работать.
+- **API:** публичные named exports `@b-apm/core` — полный 1:1 parity (типы, функции, константы, `getVersion`, `BAPM_NAME`, `loadYamlDocument`).
 - **Deps:** без новых runtime-зависимостей; `yaml` остаётся.
 - **Docs/skills:** note о library-профиле core рядом с FEOD skill; CLI skill locked rules не ломаются.
 - **Verify path:** после migrate — `packages/core` unit + M1/M2 acceptance green; CLI без правок, если exports стабильны.

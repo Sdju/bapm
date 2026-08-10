@@ -36,7 +36,7 @@ Teams commit a shared `bapm.yml` / `apm.yml`, but individuals need personal over
 
 ## Impact
 
-- `@bapm/core` Manifest discover/load/merge; constants for `bapm.local.yml`; callers that load effective project settings (install, compile, MCP bake, target map load)
+- `@b-apm/core` Manifest discover/load/merge; constants for `bapm.local.yml`; callers that load effective project settings (install, compile, MCP bake, target map load)
 - Pack/publish exclude lists; init or docs scaffold for `.gitignore`
 - `bapm doctor` informational/warning check for tracked local overlay
 - VitePress: `guide/config-manifest.md`, quick-start personal overlay section

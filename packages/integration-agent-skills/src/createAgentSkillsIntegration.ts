@@ -9,8 +9,8 @@ import type {
   AttributedPrimitive,
   BapmIntegration,
   MaterializeReport,
-} from "@bapm/integration-api";
-import { materializeSkill, primitivesMaterialize } from "@bapm/integration-api";
+} from "@b-apm/integration-api";
+import { materializeSkill, primitivesMaterialize } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".agents"] as const;
 

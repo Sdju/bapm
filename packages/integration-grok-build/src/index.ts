@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-grok-build — Grok Build runtime host for bapm.
+ * @b-apm/integration-grok-build — Grok Build runtime host for bapm.
  */
 
 export {

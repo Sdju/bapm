@@ -11,7 +11,7 @@ import {
   parseManifestDocument,
   serializeManifest,
   writeProducerManifest,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";

@@ -257,7 +257,7 @@ export async function startMockNpmMetadata(options: {
   packageName?: string;
   latest: string;
 }): Promise<MockNpmMeta> {
-  const packageName = options.packageName ?? "@bapm/cli";
+  const packageName = options.packageName ?? "@b-apm/cli";
   const server: Server = createServer((req, res) => {
     const url = req.url ?? "/";
     if (url === `/${packageName}` || url === `/${packageName}/`) {

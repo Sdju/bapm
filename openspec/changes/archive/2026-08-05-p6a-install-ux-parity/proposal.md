@@ -29,7 +29,7 @@ After OpenAPM floor (S1–S5 / P1–P5), install still lacks APM CLI ergonomics 
 
 ## Impact
 
-- `@bapm/core` Install: `dryRun` option, early preview path, positional add / auto-create manifest helpers, exclude set for MCP, optional MCP sync SHOULD behind explicit flag or deferred default-off.
+- `@b-apm/core` Install: `dryRun` option, early preview path, positional add / auto-create manifest helpers, exclude set for MCP, optional MCP sync SHOULD behind explicit flag or deferred default-off.
 - `bapm` CLI Install: parse/help/run wiring for new flags and package refs.
 - `bapm-target-api` / `bapm-target-cursor`: **unchanged** dry-run surface (no adapter branches).
 - Acceptance/unit tests per DoD in criteria; CONFORMANCE/help soft notes only (no claim-table churn required).

@@ -1,4 +1,4 @@
-import { findPath } from "@bapm/core";
+import { findPath } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type FindCliDeps = LifecycleCliDeps;

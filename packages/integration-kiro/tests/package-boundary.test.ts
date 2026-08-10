@@ -1,5 +1,5 @@
 /**
- * Package identity / registry surface for @bapm/integration-kiro.
+ * Package identity / registry surface for @b-apm/integration-kiro.
  */
 import { describe, expect, test } from "vite-plus/test";
 import { readFileSync } from "node:fs";
@@ -9,16 +9,16 @@ import { loadKiroIntegration } from "./helpers.ts";
 
 const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-describe("@bapm/integration-kiro package boundary", () => {
-  test("package is @bapm/integration-kiro with integration-api only (no core hard-dep)", () => {
+describe("@b-apm/integration-kiro package boundary", () => {
+  test("package is @b-apm/integration-kiro with integration-api only (no core hard-dep)", () => {
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name: string;
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-kiro");
-    expect(pkg.dependencies).toEqual({ "@bapm/integration-api": "workspace:*" });
-    expect(pkg.dependencies).not.toHaveProperty("@bapm/core");
+    expect(pkg.name).toBe("@b-apm/integration-kiro");
+    expect(pkg.dependencies).toEqual({ "@b-apm/integration-api": "workspace:*" });
+    expect(pkg.dependencies).not.toHaveProperty("@b-apm/core");
     expect(pkg.scripts?.test).toMatch(/vp test/);
   });
 
@@ -33,10 +33,10 @@ describe("@bapm/integration-kiro package boundary", () => {
     expect(typeof target.compile).toBe("function");
   });
 
-  test("@bapm/core must not hard-depend on @bapm/integration-kiro", () => {
+  test("@b-apm/core must not hard-depend on @b-apm/integration-kiro", () => {
     const corePkg = JSON.parse(readFileSync(join(pkgRoot, "../core/package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
-    expect(corePkg.dependencies).not.toHaveProperty("@bapm/integration-kiro");
+    expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-kiro");
   });
 });

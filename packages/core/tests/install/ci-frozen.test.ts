@@ -2,7 +2,7 @@
  * Unit: OpenAPM lk-018 CI truthiness + effective frozen precedence.
  */
 import { expect, test, describe } from "vite-plus/test";
-import { isCiEnvTruthy, resolveEffectiveFrozen } from "@bapm/core";
+import { isCiEnvTruthy, resolveEffectiveFrozen } from "@b-apm/core";
 
 describe("isCiEnvTruthy / resolveEffectiveFrozen (lk-018)", () => {
   test("truthy and non-truthy CI values", () => {

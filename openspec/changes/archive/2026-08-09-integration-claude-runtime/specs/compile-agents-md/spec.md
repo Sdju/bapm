@@ -2,7 +2,7 @@
 
 ### Requirement: No multi-host compile outputs in M9
 
-Cursor-default `bapm compile` MUST NOT create `.claude/`, `CLAUDE.md`, `GEMINI.md`, or `.github/copilot-instructions.md` as foreign-host side effects. Multi-host `--target all` behavior remains out of scope for this capability. When the active compile target is Claude and `@bapm/integration-claude` exposes `compile`, that host-owned emitter MAY write `CLAUDE.md` (or the compile output path supplied for that target). Creating `.claude/` trees remains install/materialize’s responsibility, not cursor-default compile.
+Cursor-default `bapm compile` MUST NOT create `.claude/`, `CLAUDE.md`, `GEMINI.md`, or `.github/copilot-instructions.md` as foreign-host side effects. Multi-host `--target all` behavior remains out of scope for this capability. When the active compile target is Claude and `@b-apm/integration-claude` exposes `compile`, that host-owned emitter MAY write `CLAUDE.md` (or the compile output path supplied for that target). Creating `.claude/` trees remains install/materialize’s responsibility, not cursor-default compile.
 
 #### Scenario: Compile does not emit foreign host files
 

@@ -1,5 +1,5 @@
 import type { MarketplaceAuthoringConfig, PackageEntry } from "../Authoring/types.ts";
-import type { MarketplaceOutputRegistry } from "@bapm/integration-api";
+import type { MarketplaceOutputRegistry } from "@b-apm/integration-api";
 
 /** Supported host marketplace output formats. */
 export type MarketplaceOutputFormat = string;

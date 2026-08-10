@@ -1,6 +1,8 @@
 # Init
 
-CLI module for `bapm init` — scaffolds a minimal `bapm.yml` via `@bapm/core` producer APIs.
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
+CLI module for `bapm init` — scaffolds a minimal `bapm.yml` via `@b-apm/core` producer APIs.
 
 ## Public API
 

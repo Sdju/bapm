@@ -1,6 +1,8 @@
 # View
 
-Top-level `bapm view <package>` — offline local package inspect via `@bapm/core` `viewPackage`.
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
+Top-level `bapm view <package>` — offline local package inspect via `@b-apm/core` `viewPackage`.
 
 ## Public API
 

@@ -1,14 +1,14 @@
 ## Context
 
-See proposal.md — Why. Cursor/Claude/Copilot already show the runtime package shape (`create*Integration`, helpers from `@bapm/integration-api`, hooks ownership, `configureMcp`). APM `KNOWN_TARGETS["windsurf"]` uses `root_dir=".windsurf"`, `auto_create=False`, `detect_by_dir=True`, instructions → `.windsurf/rules/*.md` (`windsurf_rules`), commands → `.windsurf/workflows/*.md`, skills under `.agents/skills/` (`deploy_root=".agents"`), hooks merge `.windsurf/hooks.json` with `require_dir=True` and PascalCase events, **no agents primitive** (skills auto-invoke). MCP: home `~/.codeium/windsurf/mcp_config.json` via `WindsurfClientAdapter` (subclasses Copilot JSON `mcpServers`, bake-only env substitution). User-scope / `global_rules.md` are out of this change.
+See proposal.md — Why. Cursor/Claude/Copilot already show the runtime package shape (`create*Integration`, helpers from `@b-apm/integration-api`, hooks ownership, `configureMcp`). APM `KNOWN_TARGETS["windsurf"]` uses `root_dir=".windsurf"`, `auto_create=False`, `detect_by_dir=True`, instructions → `.windsurf/rules/*.md` (`windsurf_rules`), commands → `.windsurf/workflows/*.md`, skills under `.agents/skills/` (`deploy_root=".agents"`), hooks merge `.windsurf/hooks.json` with `require_dir=True` and PascalCase events, **no agents primitive** (skills auto-invoke). MCP: home `~/.codeium/windsurf/mcp_config.json` via `WindsurfClientAdapter` (subclasses Copilot JSON `mcpServers`, bake-only env substitution). User-scope / `global_rules.md` are out of this change.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Greenfield `@bapm/integration-windsurf` with project-scope file primitives + home MCP bake (client-adapter parity).
+- Greenfield `@b-apm/integration-windsurf` with project-scope file primitives + home MCP bake (client-adapter parity).
 - Reuse integration-api helpers without inventing a second contract layer.
-- Document object-map load: `targets: { windsurf: "@bapm/integration-windsurf" }`.
+- Document object-map load: `targets: { windsurf: "@b-apm/integration-windsurf" }`.
 
 **Non-Goals:**
 
@@ -20,7 +20,7 @@ See proposal.md — Why. Cursor/Claude/Copilot already show the runtime package 
 ## Decisions
 
 1. **Change / package naming**  
-   OpenSpec change id: `integration-windsurf-runtime`. Capability id: `integration-windsurf-runtime`. Package: `@bapm/integration-windsurf`.  
+   OpenSpec change id: `integration-windsurf-runtime`. Capability id: `integration-windsurf-runtime`. Package: `@b-apm/integration-windsurf`.  
    _Alternative:_ shorter change `integration-windsurf` — rejected; parent/branch already use `-runtime` suffix.
 
 2. **Default `deployRoots`: `[".windsurf", ".agents"]`**  
@@ -65,7 +65,7 @@ See proposal.md — Why. Cursor/Claude/Copilot already show the runtime package 
 ## Migration Plan
 
 1. Land package + tests + docs.
-2. Users: `pnpm add -D @bapm/integration-windsurf`, declare `targets.windsurf`, `bapm install --target windsurf`.
+2. Users: `pnpm add -D @b-apm/integration-windsurf`, declare `targets.windsurf`, `bapm install --target windsurf`.
 3. Rollback: remove map entry; delete generated `.windsurf/**` / `.agents/skills/**` / sidecar; manually edit `~/.codeium/windsurf/mcp_config.json` if needed.
 
 ## Open Questions

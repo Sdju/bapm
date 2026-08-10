@@ -11,9 +11,9 @@ context: |
   - VitePress for docs (apps/docs)
 
   Packages:
-  - @bapm/core — domain library (manifest, lockfile, resolver, install, adapters, primitives)
-  - bapm — CLI binary (thin wrapper over @bapm/core)
-  - @bapm/docs — VitePress documentation
+  - @b-apm/core — domain library (manifest, lockfile, resolver, install, adapters, primitives)
+  - bapm — CLI binary (thin wrapper over @b-apm/core)
+  - @b-apm/docs — VitePress documentation
 
   Conventions:
   - Prefer vp over raw pnpm/npm for install/add/run/check/pack

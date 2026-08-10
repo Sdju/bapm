@@ -11,10 +11,10 @@ Marketplace models, local `marketplaces.json` registry, fetch/cache client, path
 
 #### Scenario: Marketplace does not reuse Registry HTTP client
 
-- **WHEN** marketplace fetch or registry CRUD runs inside `@bapm/core`
+- **WHEN** marketplace fetch or registry CRUD runs inside `@b-apm/core`
 - **THEN** those code paths MUST NOT import Registry HTTP client/createClient APIs for marketplace.json and MUST NOT require `BAPM_EXPERIMENTAL_REGISTRIES`
 
 #### Scenario: Marketplace symbols exported from package entry
 
-- **WHEN** a consumer imports Marketplace public symbols (names flexible) from `@bapm/core`
+- **WHEN** a consumer imports Marketplace public symbols (names flexible) from `@b-apm/core`
 - **THEN** those named exports MUST resolve from the package entry

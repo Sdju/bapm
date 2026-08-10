@@ -22,7 +22,7 @@ describe("CLI install · canonical detect (no targets map)", () => {
     project = undefined;
   });
 
-  test("without targets:, resolvable @bapm/integration-cursor + sole Cursor detect → install materializes (no --target)", async () => {
+  test("without targets:, resolvable @b-apm/integration-cursor + sole Cursor detect → install materializes (no --target)", async () => {
     project = createTempProject();
     linkCursorIntegration(project.cwd);
     writeNoMapProject(project.cwd, {
@@ -47,7 +47,7 @@ describe("CLI install · canonical detect (no targets map)", () => {
       withCursor: true,
       withLeafSkill: true,
     });
-    // Deliberately do NOT link @bapm/integration-cursor.
+    // Deliberately do NOT link @b-apm/integration-cursor.
 
     const { result, combined } = await runInProject(project.cwd, ["install"]);
     expectKnownFlags(combined);
@@ -55,7 +55,7 @@ describe("CLI install · canonical detect (no targets map)", () => {
     expect(result).not.toBe(0);
     expect(existsSync(skillPath(project.cwd))).toBe(false);
     // Guidance must point at installing the canonical integration — not only generic detect ambiguity.
-    expect(combined).toMatch(/@bapm\/integration-cursor|integration-cursor/i);
+    expect(combined).toMatch(/@b-apm\/integration-cursor|integration-cursor/i);
     expect(combined).toMatch(/install|npm|package|resolv/i);
   });
 });

@@ -7,7 +7,7 @@ import type {
   ConfigureMcpReport,
   MaterializeReport,
   McpServerConfig,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
   compileMarkdownReport,
@@ -17,7 +17,7 @@ import {
   readPrimitiveContent,
   renderPrimitivesMarkdown,
   writeDeployedFile,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".opencode", "."] as const;
 const MCP_JSON_REL = "opencode.json";

@@ -31,7 +31,7 @@ When the running version is undetermined, `0.0.0`, or otherwise documented as un
 
 ### Requirement: Help documents supported upgrade path
 
-Help for `self-update` MUST document the supported upgrade command or path (the primary install path chosen in design, e.g. `npm i -g @bapm/cli@…` or equivalent). `--check` alone satisfies the MUST bar only when help documents that upgrade path as supported.
+Help for `self-update` MUST document the supported upgrade command or path (the primary install path chosen in design, e.g. `npm i -g @b-apm/cli@…` or equivalent). `--check` alone satisfies the MUST bar only when help documents that upgrade path as supported.
 
 #### Scenario: Help lists upgrade path
 

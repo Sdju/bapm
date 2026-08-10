@@ -1,4 +1,6 @@
-# @bapm/integration-gemini
+# @b-apm/integration-gemini
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Gemini CLI **runtime** host for bapm.
 
@@ -37,10 +39,10 @@ MCP is **not** written by materialize — only via `configureMcp` → `.gemini/s
 
 ```yaml
 targets:
-  gemini: "@bapm/integration-gemini"
+  gemini: "@b-apm/integration-gemini"
 active:
   - gemini
 ```
 
-Depends on `@bapm/integration-api` (+ `smol-toml`) among dependencies — not `@bapm/core`.
+Depends on `@b-apm/integration-api` (+ `smol-toml`) among dependencies — not `@b-apm/core`.
 Exports `createGeminiIntegration` / `createIntegration`.

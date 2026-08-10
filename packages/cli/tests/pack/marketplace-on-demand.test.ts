@@ -20,7 +20,7 @@ describe("CLI pack · marketplace on-demand load", () => {
     project = undefined;
   });
 
-  test("pack selecting Claude without resolvable @bapm/integration-claude fails closed with install guidance", async () => {
+  test("pack selecting Claude without resolvable @b-apm/integration-claude fails closed with install guidance", async () => {
     project = createTempProject();
     writeClaudeLocalAuthoring(project.cwd, { linkIntegration: false });
 
@@ -31,7 +31,7 @@ describe("CLI pack · marketplace on-demand load", () => {
     ]);
     expectKnownCommand(combined, "pack");
     expect(result).not.toBe(0);
-    expect(combined).toMatch(/@bapm\/integration-claude|install.*claude|claude.*integration/i);
+    expect(combined).toMatch(/@b-apm\/integration-claude|install.*claude|claude.*integration/i);
     expect(hasClaudeMarketplaceJson(project.cwd)).toBe(false);
   });
 });

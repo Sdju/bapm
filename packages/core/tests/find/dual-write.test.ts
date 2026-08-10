@@ -2,7 +2,7 @@
  * install-pipeline S1 — dual-write deployed_files with hashes.
  */
 import { describe, expect, test } from "vite-plus/test";
-import type { LockfileDocument } from "@bapm/core";
+import type { LockfileDocument } from "@b-apm/core";
 import { getApplyDeployedHashesToLock } from "./helpers.ts";
 
 describe("mp-find install dual-write S1", () => {

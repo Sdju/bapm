@@ -1,11 +1,11 @@
 /**
  * Core helpers for marketplace pack-outputs suite.
- * Soft-resolve Marketplace builder / pack-outputs APIs from @bapm/core.
+ * Soft-resolve Marketplace builder / pack-outputs APIs from @b-apm/core.
  */
-import * as core from "@bapm/core";
-import { createMarketplaceOutputRegistry } from "@bapm/integration-api";
-import { claudeMarketplaceIntegration } from "@bapm/integration-claude";
-import { codexMarketplaceIntegration } from "@bapm/integration-codex";
+import * as core from "@b-apm/core";
+import { createMarketplaceOutputRegistry } from "@b-apm/integration-api";
+import { claudeMarketplaceIntegration } from "@b-apm/integration-claude";
+import { codexMarketplaceIntegration } from "@b-apm/integration-codex";
 import {
   existsSync,
   mkdirSync,
@@ -33,7 +33,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export type TempProject = { cwd: string; cleanup: () => void };

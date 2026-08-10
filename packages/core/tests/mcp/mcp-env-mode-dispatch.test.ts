@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { IntegrationRegistry, McpServerConfig } from "@bapm/integration-api";
+import type { IntegrationRegistry, McpServerConfig } from "@b-apm/integration-api";
 import { bakeMcpStringMap } from "../../src/modules/Mcp/bake.ts";
 import { runInstall } from "../../src/index.ts";
 import {

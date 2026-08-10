@@ -10,7 +10,7 @@ M1–M8 delivered Consumer floor through install, cursor materialize, lifecycle,
 - **Thin `bapm cache`:** `info` (modules-cache root + size/counts) and `clean` (confirm / `-y`); MUST NOT break rs-016 identity isolation
 - **Invariants:** dual-read unchanged; **MUST NOT** add new `bapm-target-*`; FEOD for CLI/core; hard-error unknown flags; M3–M8 regression green without MCP deps
 - **SHOULD (soft, not pass-bar):** thin `mcp` / `approve`/`deny` CLI; sc-011/012; cache prune; compile build-id / `--clean`
-- **HARD:** packages `@bapm/core`, `@bapm/cli`, `bapm-target-cursor` (+ `bapm-target-api` only if MCP configure contract needed)
+- **HARD:** packages `@b-apm/core`, `@b-apm/cli`, `bapm-target-cursor` (+ `bapm-target-api` only if MCP configure contract needed)
 
 ## Capabilities
 
@@ -36,6 +36,6 @@ M1–M8 delivered Consumer floor through install, cursor materialize, lifecycle,
 
 - **`bapm-target-cursor`:** MCP configure path writing `.cursor/mcp.json`; README/detect honesty unchanged for auto-detect
 - **`bapm-target-api`:** optional generic configure/MCP report contract if install must stay host-agnostic
-- **`@bapm/core`:** MCP collect + trust gate + compile AGENTS emit + cache info/clean helpers; install orchestration wires MCP after policy
+- **`@b-apm/core`:** MCP collect + trust gate + compile AGENTS emit + cache info/clean helpers; install orchestration wires MCP after policy
 - **`bapm` CLI:** `compile`, `cache info|clean`; optional SHOULD `mcp` / `approve`/`deny`
 - **Out of scope (explicit DEFER):** marketplace; plugin init; multi-host compile; shared APM git/http cache; `run`/`preview`/`runtime`/`config`/`experimental`/`find`/`view`; publish/self-update (**M10**); claiming a new OpenAPM class solely from M9

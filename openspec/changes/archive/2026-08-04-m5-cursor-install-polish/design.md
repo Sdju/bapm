@@ -59,7 +59,7 @@ M4 left `bapm-target-cursor` skills-only (detect `.cursor/` dir), CLI install so
 
 ### 7. Package allow-list
 
-- **Choice:** Touch only `@bapm/core`, `bapm` (cli), `bapm-target-api`, `bapm-target-cursor`. No new workspace packages.
+- **Choice:** Touch only `@b-apm/core`, `bapm` (cli), `bapm-target-api`, `bapm-target-cursor`. No new workspace packages.
 - **Why:** HARD M5 constraint while api churns.
 
 ## Risks / Trade-offs

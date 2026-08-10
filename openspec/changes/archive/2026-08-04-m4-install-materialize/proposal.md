@@ -4,13 +4,13 @@ After M3 (`resolveAndLock` + modules cache + `bapm lock`), consumers still canno
 
 ## What Changes
 
-- Add FEOD modules **Install** and **Primitives** in `@bapm/core`: discover/attribute/conflict-resolve primitives; orchestrate install (reuse M3 resolve/download); enforce basic `--frozen` (lk-006); invoke deploy only through `bapm-target-api` registration/contracts
+- Add FEOD modules **Install** and **Primitives** in `@b-apm/core`: discover/attribute/conflict-resolve primitives; orchestrate install (reuse M3 resolve/download); enforce basic `--frozen` (lk-006); invoke deploy only through `bapm-target-api` registration/contracts
 - **MUST scaffold** workspace packages:
   - `packages/target-api` → npm name **`bapm-target-api`** (TS + vite-plus) — contracts/types/registration utilities
   - `packages/target-cursor` → npm name **`bapm-target-cursor`** (minimal e2e materialize; depends on `bapm-target-api` only)
 - Wire both into the pnpm workspace at apply via **pnpm CLI + catalog** (not hand-edited manifests in propose)
 - Core **MUST NOT** hard-depend on `bapm-target-cursor` (injection/registration via api only); CLI/workspace MAY depend on cursor for e2e wiring
-- Un-stub `@bapm/cli` `install` for the happy path (thin FEOD command → module → core install); support basic `--frozen`
+- Un-stub `@b-apm/cli` `install` for the happy path (thin FEOD command → module → core install); support basic `--frozen`
 - Preserve M3 invariant: `bapm lock` still does **not** deploy harness files
 - **Non-goals:** in-tree APM adapters; multi-adapter catalog; M5 polish (orphan cleanup, gitignore, richer cursor, extra `bapm-target-*`); policy (M8); compile/MCP/registry (M9/M10); full lk-017/018; producer pr-004/005
 
@@ -32,9 +32,9 @@ After M3 (`resolveAndLock` + modules cache + `bapm lock`), consumers still canno
 
 ## Impact
 
-- **Primary:** `@bapm/core` — `modules/Install`, `modules/Primitives`; depends on **`bapm-target-api` only** among target packages; consumes Resolver / Manifest / Lockfile public APIs
+- **Primary:** `@b-apm/core` — `modules/Install`, `modules/Primitives`; depends on **`bapm-target-api` only** among target packages; consumes Resolver / Manifest / Lockfile public APIs
 - **New packages:** `packages/target-api` (`bapm-target-api`), `packages/target-cursor` (`bapm-target-cursor`) — TS ESM + vite-plus; workspace membership via pnpm CLI at apply
-- **CLI:** `@bapm/cli` — un-stub `modules/Install` + `commands/install.ts`; optional workspace dep on `bapm-target-cursor` for e2e registration without core importing it
+- **CLI:** `@b-apm/cli` — un-stub `modules/Install` + `commands/install.ts`; optional workspace dep on `bapm-target-cursor` for e2e registration without core importing it
 - **Deps (apply):** add workspace packages and any shared libs via **pnpm CLI + catalog only** (pnpm-dependencies skill) — propose does not invent versions
 - **Tests (later):** acceptance from `.samples/apm-knowledge/topics/m4-install-acceptance.md` checklist C — not authored in propose
 - **Out of scope:** adapter catalog, policy, compile, registry, full cleanup/audit, MCP freeze depth beyond stub if MCP out of M4

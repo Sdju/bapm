@@ -1,4 +1,6 @@
-# @bapm/integration-grok-build
+# @b-apm/integration-grok-build
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Grok Build **runtime** host for bapm (APM `KNOWN_TARGETS["grok-build"]`).
 
@@ -34,12 +36,12 @@ Auto-detect without force MUST NOT create `.grok/` solely to opt in. Lone `AGENT
 
 ## Dependencies
 
-Depends only on `@bapm/integration-api` among bapm packages — not `@bapm/core`.
+Depends only on `@b-apm/integration-api` among bapm packages — not `@b-apm/core`.
 Register via object-map:
 
 ```yaml
 targets:
-  grok-build: "@bapm/integration-grok-build"
+  grok-build: "@b-apm/integration-grok-build"
 active:
   - grok-build
 ```

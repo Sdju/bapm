@@ -26,8 +26,8 @@ OpenAPM and microsoft/apm treat **commands** and **hooks** as first-class primit
 
 ## Impact
 
-- **`@bapm/core`:** `Primitives/discover` (+ conflict resolution already generic); Agent Plugins load/mapping for declared commands/hooks; install materialize already type-agnostic once hosts handle types; docs/CONFORMANCE honesty unchanged for executable gates.
-- **`@bapm/integration-cursor`:** Command transform + write; hooks merge/ownership/scripts under `.cursor/`.
-- **`@bapm/integration-opencode`:** Command materialize; hooks skip + diagnostic.
+- **`@b-apm/core`:** `Primitives/discover` (+ conflict resolution already generic); Agent Plugins load/mapping for declared commands/hooks; install materialize already type-agnostic once hosts handle types; docs/CONFORMANCE honesty unchanged for executable gates.
+- **`@b-apm/integration-cursor`:** Command transform + write; hooks merge/ownership/scripts under `.cursor/`.
+- **`@b-apm/integration-opencode`:** Command materialize; hooks skip + diagnostic.
 - **Agent Plugins matrix / docs:** `AGENT_PLUGINS_COMPATIBILITY.md`, `compatibility-cases.json`, VitePress agent-plugins guide.
 - **Tests:** Discovery, Cursor/OpenCode e2e materialize, Agent Plugins declared-path fail-closed + happy path; acceptance suite in later orch phases.

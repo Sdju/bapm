@@ -1,6 +1,6 @@
 ## 1. Core frozen resolution helper
 
-- [x] 1.1 Add `isCiEnvTruthy` / `resolveEffectiveFrozen` (OpenAPM CI truthiness + flag precedence) under `@bapm/core` Install; export from Install public API
+- [x] 1.1 Add `isCiEnvTruthy` / `resolveEffectiveFrozen` (OpenAPM CI truthiness + flag precedence) under `@b-apm/core` Install; export from Install public API
 - [x] 1.2 Unit-test truthy/non-truthy `CI` values and precedence (`--frozen` / `--no-frozen` / conflict / default)
 
 ## 2. CLI wiring

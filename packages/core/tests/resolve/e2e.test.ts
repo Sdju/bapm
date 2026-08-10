@@ -12,7 +12,7 @@ import {
   loadLockfile,
   isSemanticallyEquivalent,
   parseLockfile,
-} from "@bapm/core";
+} from "@b-apm/core";
 import {
   copyMiniMonorepo,
   createTempProject,

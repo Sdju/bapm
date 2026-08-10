@@ -1,7 +1,7 @@
 /**
  * lk-015: audit --ci re-verifies tree_sha256 (hard fail; closes M6 soft).
  */
-import { downloadPackages } from "@bapm/core";
+import { downloadPackages } from "@b-apm/core";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createFakePorts,

@@ -2,7 +2,7 @@
 
 ### Requirement: HookOwnershipSidecar type and read/write helpers
 
-`@bapm/integration-api` MUST export a `HookOwnershipSidecar` type describing a document with an `owned` map whose values MAY include optional `packageName`, `entries` (event/command pairs), `scripts` (cwd-relative paths), `hookFile` (single cwd-relative path), and/or `hookFiles` (cwd-relative paths). The package MUST export `readHookOwnershipSidecar` and `writeHookOwnershipSidecar` for that document shape. Read MUST return `{ owned: {} }` when the path is missing, unreadable, or not an object with an `owned` object. Write MUST serialize `{ owned }` as JSON (pretty-printed with trailing newline consistent with other helpers) after the caller has already asserted deploy-root containment for the sidecar path.
+`@b-apm/integration-api` MUST export a `HookOwnershipSidecar` type describing a document with an `owned` map whose values MAY include optional `packageName`, `entries` (event/command pairs), `scripts` (cwd-relative paths), `hookFile` (single cwd-relative path), and/or `hookFiles` (cwd-relative paths). The package MUST export `readHookOwnershipSidecar` and `writeHookOwnershipSidecar` for that document shape. Read MUST return `{ owned: {} }` when the path is missing, unreadable, or not an object with an `owned` object. Write MUST serialize `{ owned }` as JSON (pretty-printed with trailing newline consistent with other helpers) after the caller has already asserted deploy-root containment for the sidecar path.
 
 #### Scenario: Missing sidecar reads as empty owned
 
@@ -21,7 +21,7 @@
 
 ### Requirement: stripOwnedHookCommands helper
 
-`@bapm/integration-api` MUST export `stripOwnedHookCommands` that, given a host hooks object (event → array of entries with optional `command` string) and a `HookOwnershipSidecar`, removes every entry whose `command` appears in any owned record's `entries`. Non-array event values MUST be left unchanged. The helper MUST NOT delete script files or hook JSON files from disk.
+`@b-apm/integration-api` MUST export `stripOwnedHookCommands` that, given a host hooks object (event → array of entries with optional `command` string) and a `HookOwnershipSidecar`, removes every entry whose `command` appears in any owned record's `entries`. Non-array event values MUST be left unchanged. The helper MUST NOT delete script files or hook JSON files from disk.
 
 #### Scenario: Owned commands removed; unrelated kept
 
@@ -35,7 +35,7 @@
 
 ### Requirement: removeOwnedHookArtifacts helper
 
-`@bapm/integration-api` MUST export `removeOwnedHookArtifacts` that best-effort deletes, under the given `cwd`, every path listed in owned records' `scripts`, optional `hookFile`, and optional `hookFiles`. Missing paths MUST be ignored. The helper MUST NOT mutate host hooks JSON and MUST NOT throw solely because a listed path is already absent.
+`@b-apm/integration-api` MUST export `removeOwnedHookArtifacts` that best-effort deletes, under the given `cwd`, every path listed in owned records' `scripts`, optional `hookFile`, and optional `hookFiles`. Missing paths MUST be ignored. The helper MUST NOT mutate host hooks JSON and MUST NOT throw solely because a listed path is already absent.
 
 #### Scenario: Removes scripts and hook files listed in sidecar
 
@@ -49,7 +49,7 @@
 
 ### Requirement: Simple copyHookScript helper
 
-`@bapm/integration-api` MUST export a simple `copyHookScript` helper for hosts that resolve a script next to the hook source or under `findPackageRoot(hookFile)`, copy it to a caller-supplied cwd-relative `destRel` under deploy roots, and return a rewritten command path. Arguments MUST include at least `cwd`, `deployRoots`, `hookFile`, `command`, `alreadyDeployedNeedle`, and `destRel`, plus an optional flag controlling whether the returned command uses a `./` prefix. When `command` already contains `alreadyDeployedNeedle`, the helper MUST NOT copy and MUST return a normalized command path. When no candidate source file exists, it MUST return the original `command` unchanged. Successful copy MUST assert deploy-root containment, create parent directories, copy the file, and return `{ commandRel, scriptRel }` with `scriptRel` equal to `destRel`.
+`@b-apm/integration-api` MUST export a simple `copyHookScript` helper for hosts that resolve a script next to the hook source or under `findPackageRoot(hookFile)`, copy it to a caller-supplied cwd-relative `destRel` under deploy roots, and return a rewritten command path. Arguments MUST include at least `cwd`, `deployRoots`, `hookFile`, `command`, `alreadyDeployedNeedle`, and `destRel`, plus an optional flag controlling whether the returned command uses a `./` prefix. When `command` already contains `alreadyDeployedNeedle`, the helper MUST NOT copy and MUST return a normalized command path. When no candidate source file exists, it MUST return the original `command` unchanged. Successful copy MUST assert deploy-root containment, create parent directories, copy the file, and return `{ commandRel, scriptRel }` with `scriptRel` equal to `destRel`.
 
 #### Scenario: Copy under deploy roots and rewrite command
 

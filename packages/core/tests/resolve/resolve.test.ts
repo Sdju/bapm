@@ -13,7 +13,7 @@ import {
   resolveDependencyGraph,
   MAX_RESOLVE_DEPTH,
   APM_MODULES_DIR,
-} from "@bapm/core";
+} from "@b-apm/core";
 import {
   createTempProject,
   createFakePorts,

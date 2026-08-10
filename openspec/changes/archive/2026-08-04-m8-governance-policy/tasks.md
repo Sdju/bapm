@@ -42,5 +42,5 @@
 
 - [x] 7.1 Confirm workspace still has only `bapm-target-api` + `bapm-target-cursor` among `bapm-target-*`; no new target package; no core→cursor hard dep
 - [x] 7.2 Keep M3–M7 regressions green without policy files (install/lock/update/audit/pack)
-- [x] 7.3 Run build/test/`vp check` for `@bapm/core` and `bapm`; fix in-scope regressions
+- [x] 7.3 Run build/test/`vp check` for `@b-apm/core` and `bapm`; fix in-scope regressions
 - [x] 7.4 Spot-check: block deny aborts before modules; warn allows; `--no-policy` escapes; dual-conflict errors; explicit `--policy` wins

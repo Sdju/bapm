@@ -11,5 +11,5 @@ MCP collect/deploy orchestration helpers, executable trust (sc-009) evaluation, 
 
 #### Scenario: M9 core modules do not hard-depend on cursor
 
-- **WHEN** compile or MCP orchestration runs inside `@bapm/core`
+- **WHEN** compile or MCP orchestration runs inside `@b-apm/core`
 - **THEN** those modules MUST NOT import `bapm-target-cursor` and MUST NOT require a new `bapm-target-*` package

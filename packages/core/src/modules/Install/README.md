@@ -1,8 +1,10 @@
 # Install
 
-Install orchestration for `@bapm/core` (M5): frozen gate → resolve/download →
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
+Install orchestration for `@b-apm/core` (M5): frozen gate → resolve/download →
 orphan cleanup → primitives discover/conflict → invoke registered targets via
-`@bapm/integration-api` → write `deployed_file_hashes` when not frozen.
+`@b-apm/integration-api` → write `deployed_file_hashes` when not frozen.
 
 ## Public API
 
@@ -40,5 +42,5 @@ Modes: `off` | `warn` | `block`. See `@/modules/Policy`.
 ## Boundaries
 
 - Consumes Manifest / Lockfile / Resolver / Primitives / Pack only through public module APIs
-- Speaks to hosts only through `@bapm/integration-api` — never imports `@bapm/integration-cursor`
+- Speaks to hosts only through `@b-apm/integration-api` — never imports `@b-apm/integration-cursor`
 - Inventory / cleanup helpers live under this module (`deployedInventory.ts`), not as a new top-level module

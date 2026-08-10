@@ -54,11 +54,11 @@ The `common` layer MUST NOT contain any `index.ts` / barrel file. Consumers MUST
 - **WHEN** a module or command needs a shared constant or utility from `common`
 - **THEN** the import path MUST target a concrete file under `src/common/`, not a `common` barrel
 
-### Requirement: External @bapm/core access goes through app integrations
+### Requirement: External @b-apm/core access goes through app integrations
 
-Code in `commands/` MUST NOT import `@bapm/core` directly. Access to `@bapm/core` for CLI adapters MUST be mediated by `app/integrations` (and soft IoC wiring in `app/init` where dependencies are injected into modules).
+Code in `commands/` MUST NOT import `@b-apm/core` directly. Access to `@b-apm/core` for CLI adapters MUST be mediated by `app/integrations` (and soft IoC wiring in `app/init` where dependencies are injected into modules).
 
 #### Scenario: Install stub uses core via integrations
 
 - **WHEN** the Install module needs manifest/lock file names or other core constants for the stub message
-- **THEN** those values MUST be supplied through app integrations / init wiring rather than a direct `@bapm/core` import inside `commands/`
+- **THEN** those values MUST be supplied through app integrations / init wiring rather than a direct `@b-apm/core` import inside `commands/`

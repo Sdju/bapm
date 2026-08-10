@@ -2,7 +2,7 @@
 
 ### Requirement: Lifecycle integrity commands are registered
 
-Invoking `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, and `doctor` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@bapm/core` lifecycle/integrity API. Unknown flags on these commands MUST hard-error with non-zero exit.
+Invoking `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, and `doctor` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@b-apm/core` lifecycle/integrity API. Unknown flags on these commands MUST hard-error with non-zero exit.
 
 #### Scenario: Update is not unknown
 

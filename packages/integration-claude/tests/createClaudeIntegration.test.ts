@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-claude package identity + rules transform helper
+ * @b-apm/integration-claude package identity + rules transform helper
  * (detect/materialize/hooks/mcp/compile live in sibling suites).
  */
 import { describe, expect, test } from "vite-plus/test";
@@ -16,8 +16,8 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 
-describe("@bapm/integration-claude package", () => {
-  test("package is @bapm/integration-claude with vite-plus tooling", () => {
+describe("@b-apm/integration-claude package", () => {
+  test("package is @b-apm/integration-claude with vite-plus tooling", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
@@ -26,10 +26,10 @@ describe("@bapm/integration-claude package", () => {
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-claude");
+    expect(pkg.name).toBe("@b-apm/integration-claude");
     expect(pkg.type).toBe("module");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
     expect(String(pkg.description ?? "")).toMatch(/runtime/i);
   });
@@ -43,14 +43,14 @@ describe("@bapm/integration-claude package", () => {
     expect(target.deployRoots).toEqual(expect.arrayContaining([".claude", "."]));
   });
 
-  test("@bapm/core must not hard-depend on @bapm/integration-claude", () => {
+  test("@b-apm/core must not hard-depend on @b-apm/integration-claude", () => {
     const corePkg = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
-    expect(corePkg.dependencies).not.toHaveProperty("@bapm/integration-claude");
+    expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-claude");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-claude["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-claude["']\s*:/);
   });
 });
 

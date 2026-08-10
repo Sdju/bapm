@@ -14,7 +14,7 @@ import {
   APM_MODULES_DIR,
   BAPM_LOCK_FILE,
   APM_LOCK_FILE,
-} from "@bapm/core";
+} from "@b-apm/core";
 import {
   createTempProject,
   createFakePorts,

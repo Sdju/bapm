@@ -4,7 +4,7 @@ After P6a, bapm install still lacks APM project-scope leftover flags: `--force`,
 
 ## What Changes
 
-- CLI accepts and help-lists `--force`, `--allow-insecure`, repeatable `--allow-insecure-host <hostname>`, `--dev`, `--only <apm|mcp>` (reject other values); wire into `@bapm/core` install options.
+- CLI accepts and help-lists `--force`, `--allow-insecure`, repeatable `--allow-insecure-host <hostname>`, `--dev`, `--only <apm|mcp>` (reject other values); wire into `@b-apm/core` install options.
 - Enforce **dual-gate** for direct `http://` deps: fail-closed unless both manifest `allow_insecure: true` on the object entry **and** `--allow-insecure`; APM-shaped remediation text.
 - Enforce transitive HTTP host allowlist from `--allow-insecure-host` (+ hosts contributed by approved direct insecure URLs); invalid hostname fail-closed at parse.
 - `--dev` + positional package-ref → write `devDependencies.apm` (create block if needed); without positional, no invented side effects.
@@ -31,7 +31,7 @@ After P6a, bapm install still lacks APM project-scope leftover flags: `--force`,
 
 ## Impact
 
-- `@bapm/core` Install options + `runInstall` / `packageRefs`; new insecure policy helper (APM `insecure_policy` intent); Resolver `resolveGraph` root dep union.
+- `@b-apm/core` Install options + `runInstall` / `packageRefs`; new insecure policy helper (APM `insecure_policy` intent); Resolver `resolveGraph` root dep union.
 - `bapm` CLI Install: `parseInstallArgs` / help / wiring.
 - `bapm-target-cursor`: no dry-run/force API growth; collision remains always-overwrite (documented).
 - Tests: unit/CLI for dual-gate, host allowlist, `--dev`, `--only`, `--force` accept + frozen/policy non-bypass.

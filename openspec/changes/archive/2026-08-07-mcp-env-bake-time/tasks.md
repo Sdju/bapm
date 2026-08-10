@@ -1,6 +1,6 @@
 ## 1. Core bake helper
 
-- [x] 1.1 Add `@bapm/core` bake-time resolver for MCP string maps (`env` / `headers`): `${VAR}`, `${env:VAR}`, legacy `<VAR>`; overrides then `process.env`; fail closed naming missing keys (no secret literals in errors)
+- [x] 1.1 Add `@b-apm/core` bake-time resolver for MCP string maps (`env` / `headers`): `${VAR}`, `${env:VAR}`, legacy `<VAR>`; overrides then `process.env`; fail closed naming missing keys (no secret literals in errors)
 - [x] 1.2 Export resolver from Mcp (or Install) public surface used by install; unit-test success + missing-var + multi-placeholder + passthrough literals
 - [x] 1.3 Confirm Agent Plugins `${PLUGIN_*}` / secret-refuse path is untouched (existing tests still pass)
 

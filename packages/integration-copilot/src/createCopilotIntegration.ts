@@ -10,7 +10,7 @@ import type {
   HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
   compileMarkdownReport,
@@ -25,7 +25,7 @@ import {
   sanitizeName,
   writeDeployedFile,
   writeHookOwnershipSidecar,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".github", ".agents"] as const;
 const HOOKS_OWNERSHIP_REL = ".github/bapm-hooks.json";

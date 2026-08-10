@@ -4,7 +4,7 @@ bapm has no Grok Build runtime host, so projects with `.grok/` cannot install AP
 
 ## What Changes
 
-- Add greenfield `@bapm/integration-grok-build` exporting `createGrokBuildIntegration` / `createIntegration` (`id: "grok-build"`).
+- Add greenfield `@b-apm/integration-grok-build` exporting `createGrokBuildIntegration` / `createIntegration` (`id: "grok-build"`).
 - Detect **only** when `.grok/` is a directory (no mkdir for detect; lone `AGENTS.md` is not a signal).
 - Materialize under `.grok/`: instructions → `rules/*.md` (verbatim), agents → `agents/*.md`, commands → `commands/*.md` (shared Claude-subset frontmatter), skills → `skills/<name>/SKILL.md` (never `.agents/skills/`).
 - Explicit non-fatal skip for hooks and prompts (APM N); **no** `configureMcp` (APM N).
@@ -18,7 +18,7 @@ bapm has no Grok Build runtime host, so projects with `.grok/` cannot install AP
 
 ### New Capabilities
 
-- `integration-grok-build-runtime`: Grok Build project-scope runtime on `@bapm/integration-grok-build` — detect `.grok/` only, materialize rules/agents/commands/skills under `.grok/`, skip hooks/prompts/MCP, compile root `AGENTS.md`.
+- `integration-grok-build-runtime`: Grok Build project-scope runtime on `@b-apm/integration-grok-build` — detect `.grok/` only, materialize rules/agents/commands/skills under `.grok/`, skip hooks/prompts/MCP, compile root `AGENTS.md`.
 
 ### Modified Capabilities
 
@@ -26,7 +26,7 @@ bapm has no Grok Build runtime host, so projects with `.grok/` cannot install AP
 
 ## Impact
 
-- New package: `packages/integration-grok-build` (depends on `@bapm/integration-api` only among bapm packages).
+- New package: `packages/integration-grok-build` (depends on `@b-apm/integration-api` only among bapm packages).
 - Docs: `supported-hosts`, architecture index.
 - CLI remains empty-registry / object-map load unchanged.
 - Tests in the new package (+ light docs updates).

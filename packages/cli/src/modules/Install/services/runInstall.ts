@@ -8,7 +8,7 @@ import {
   loadManifest,
   resolveEffectiveFrozen,
   runInstall as coreRunInstall,
-} from "@bapm/core";
+} from "@b-apm/core";
 import type { InstallDeps, InstallOptions, InstallResult } from "../types/install.types.ts";
 import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
 import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";

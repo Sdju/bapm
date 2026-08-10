@@ -1,8 +1,8 @@
 /**
  * Shared helpers for OpenAPM lk-015 tree_sha256 integration tests.
- * Fixture planting only — product algorithm is asserted via @bapm/core public API.
+ * Fixture planting only — product algorithm is asserted via @b-apm/core public API.
  */
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { createHash } from "node:crypto";
 import { lstatSync, readdirSync, readFileSync, readlinkSync } from "node:fs";
 import { join } from "node:path";
@@ -58,7 +58,7 @@ function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 /** Public OpenAPM §5.6.4 tree hash. */

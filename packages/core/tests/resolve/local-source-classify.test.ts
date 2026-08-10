@@ -2,7 +2,7 @@
  * Unit: classify + expand bapm `local`; path: regression.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { classifyDependencyRef, DEFAULT_LOCAL_ROOT, effectiveLocalPath } from "@bapm/core";
+import { classifyDependencyRef, DEFAULT_LOCAL_ROOT, effectiveLocalPath } from "@b-apm/core";
 
 describe("Resolver local source classify", () => {
   test("default forms expand to .agents/local", () => {

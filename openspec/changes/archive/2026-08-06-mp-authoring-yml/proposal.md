@@ -29,7 +29,7 @@ Marketplace track phase 5 (MUST floor) needs a truthful producer **authoring lif
 
 ## Impact
 
-- `@bapm/core`: new authoring submodule (or clearly separated API) under Marketplace / related — **do not** overload consumer `marketplace.json` models; public exports for load/detect/edit/validate/check helpers.
+- `@b-apm/core`: new authoring submodule (or clearly separated API) under Marketplace / related — **do not** overload consumer `marketplace.json` models; public exports for load/detect/edit/validate/check helpers.
 - `bapm` CLI: extend `modules/Marketplace` + `commands/marketplace`; Help Authoring section; `SUPPORTED_SUBCOMMANDS` / parse routes for new verbs.
 - Tests: `tests/acceptance/mp-authoring-yml/` (+ unit under core/cli `**/mp-authoring-yml/`).
 - Docs/design soft notes only; **no** CONFORMANCE.md claim-table edits; **no** pack emitters.

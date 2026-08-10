@@ -2,7 +2,7 @@
  * Core audit structured-format test helpers (p6b).
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -18,7 +18,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export function getRunAuditCi(): (options: Record<string, unknown>) => Promise<unknown> {

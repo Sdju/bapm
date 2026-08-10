@@ -11,7 +11,7 @@ Agent-neutral base-манифест + личный выбор host через `b
 ### Шаги
 
 1. В git — общий `bapm.yml` с `dependencies` (без обязательного `active` под одного человека).
-2. Каждый разработчик ставит свой `@bapm/integration-*`.
+2. Каждый разработчик ставит свой `@b-apm/integration-*`.
 3. Личный overlay (в `.gitignore`):
 
 ```yaml

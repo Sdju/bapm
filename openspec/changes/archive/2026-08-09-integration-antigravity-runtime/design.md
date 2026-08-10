@@ -6,9 +6,9 @@ See proposal.md — Why. APM `KNOWN_TARGETS["antigravity"]` uses shared `root_di
 
 **Goals:**
 
-- Greenfield `@bapm/integration-antigravity` with project-scope file primitives + opt-in project MCP (parity APM antigravity project surface minus user scope).
+- Greenfield `@b-apm/integration-antigravity` with project-scope file primitives + opt-in project MCP (parity APM antigravity project surface minus user scope).
 - Reuse integration-api helpers without inventing a second contract layer.
-- Document object-map load: `targets: { antigravity: "@bapm/integration-antigravity" }`.
+- Document object-map load: `targets: { antigravity: "@b-apm/integration-antigravity" }`.
 
 **Non-Goals:**
 
@@ -17,7 +17,7 @@ See proposal.md — Why. APM `KNOWN_TARGETS["antigravity"]` uses shared `root_di
 ## Decisions
 
 1. **Change / package naming**  
-   OpenSpec change id: `integration-antigravity-runtime`. Capability id: `integration-antigravity-runtime`. Package: `@bapm/integration-antigravity`.  
+   OpenSpec change id: `integration-antigravity-runtime`. Capability id: `integration-antigravity-runtime`. Package: `@b-apm/integration-antigravity`.  
    Branch: `orch/integration-antigravity-runtime`.
 
 2. **Default `deployRoots`: `[".agents", "."]`**  
@@ -60,7 +60,7 @@ See proposal.md — Why. APM `KNOWN_TARGETS["antigravity"]` uses shared `root_di
 ## Migration Plan
 
 1. Land package + tests + docs.
-2. Users: `pnpm add -D @bapm/integration-antigravity`, declare `targets.antigravity`, `bapm install --target antigravity`, optional `bapm compile`.
+2. Users: `pnpm add -D @b-apm/integration-antigravity`, declare `targets.antigravity`, `bapm install --target antigravity`, optional `bapm compile`.
 3. Rollback: remove map entry; delete generated `.agents/rules|skills|hooks*|mcp_config.json` / sidecar / `AGENTS.md` as needed.
 
 ## Open Questions

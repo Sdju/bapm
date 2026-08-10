@@ -24,8 +24,8 @@ Object-map `target` / `targets` already parse and retain `host-id → package sp
 
 ## Impact
 
-- `@bapm/cli`: composition root / install + compile paths; dynamic import + validation helper; error messages
-- `@bapm/core`: possibly thin hooks or shared helpers for “ensure map integrations registered” only if kept host-agnostic; MUST NOT import concrete `@bapm/integration-*`; update comments on `declaredTargetIntegrationMap`
-- `@bapm/integration-api`: document/author contract for loadable runtime packages (factory / `BapmIntegration` shape); no catalog of hosts
+- `@b-apm/cli`: composition root / install + compile paths; dynamic import + validation helper; error messages
+- `@b-apm/core`: possibly thin hooks or shared helpers for “ensure map integrations registered” only if kept host-agnostic; MUST NOT import concrete `@b-apm/integration-*`; update comments on `declaredTargetIntegrationMap`
+- `@b-apm/integration-api`: document/author contract for loadable runtime packages (factory / `BapmIntegration` shape); no catalog of hosts
 - Docs: `apps/docs/guide/config-manifest.md`, `apps/docs/architecture/index.md`, short author how-to if needed
 - Tests: unit (load/validate/fail-closed); CLI/acceptance for map + `--target` custom id with fixture package

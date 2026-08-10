@@ -1,5 +1,5 @@
 /**
- * M9 MUST: @bapm/integration-cursor writes .cursor/mcp.json under registered roots.
+ * M9 MUST: @b-apm/integration-cursor writes .cursor/mcp.json under registered roots.
  * Specs: integration-cursor-runtime, cursor-mcp-deploy. Checklist D §1, 5.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";

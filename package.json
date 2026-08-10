@@ -1,13 +1,13 @@
 {
-  "name": "@bapm/root",
+  "name": "@b-apm/root",
   "version": "0.0.0",
   "private": true,
   "description": "Better Agent Package Manager — TypeScript APM with a clean architecture",
   "type": "module",
   "scripts": {
     "ready": "vp check && vp run -r test && vp run -r build",
-    "dev": "vp run --filter @bapm/docs dev",
-    "docs": "vp run --filter @bapm/docs dev",
+    "dev": "vp run --filter @b-apm/docs dev",
+    "docs": "vp run --filter @b-apm/docs dev",
     "build": "vp run -r build",
     "check": "vp check",
     "test": "vp run -r test",
@@ -16,9 +16,11 @@
     "agent-plugins:gen": "node scripts/gen-agent-plugins-compatibility.mjs",
     "agent-plugins:check": "node scripts/gen-agent-plugins-compatibility.mjs --check",
     "version:bump": "bumpp packages/*/package.json",
+    "publish:meta": "node scripts/sync-package-publish-meta.mjs",
     "prepare": "vp config --no-agent"
   },
   "devDependencies": {
+    "@b-apm/cli": "workspace:*",
     "bumpp": "catalog:",
     "vite-plus": "catalog:"
   },

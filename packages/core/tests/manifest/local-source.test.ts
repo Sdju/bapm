@@ -2,7 +2,7 @@
  * Unit: Manifest parse accept/reject for bapm `local` source.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { ManifestError, parseManifestDocument } from "@bapm/core";
+import { ManifestError, parseManifestDocument } from "@b-apm/core";
 
 function parseApm(dep: Record<string, unknown>) {
   return parseManifestDocument({

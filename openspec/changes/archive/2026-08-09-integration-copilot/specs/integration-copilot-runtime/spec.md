@@ -1,17 +1,17 @@
 ## Purpose
 
-Defines the greenfield `@bapm/integration-copilot` package: GitHub Copilot project-scope detect, materialize under `.github/` and `.agents/`, home-scoped MCP translate configure for Copilot CLI, and thin compile to `.github/copilot-instructions.md`, depending only on `@bapm/integration-api`.
+Defines the greenfield `@b-apm/integration-copilot` package: GitHub Copilot project-scope detect, materialize under `.github/` and `.agents/`, home-scoped MCP translate configure for Copilot CLI, and thin compile to `.github/copilot-instructions.md`, depending only on `@b-apm/integration-api`.
 
 ## ADDED Requirements
 
-### Requirement: Package @bapm/integration-copilot exists and depends only on integration API
+### Requirement: Package @b-apm/integration-copilot exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-copilot` with package name `@bapm/integration-copilot`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@bapm/integration-*` packages. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createCopilotIntegration` as an alias. Runtime integration `id` MUST be `copilot`. The package MUST NOT expose a marketplace-output mapper in this capability.
+The monorepo MUST include package directory `packages/integration-copilot` with package name `@b-apm/integration-copilot`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@b-apm/integration-*` packages. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createCopilotIntegration` as an alias. Runtime integration `id` MUST be `copilot`. The package MUST NOT expose a marketplace-output mapper in this capability.
 
 #### Scenario: Package identity and dependency edge
 
 - **WHEN** inspecting the Copilot package dependencies
-- **THEN** `@bapm/integration-copilot` depends on `@bapm/integration-api` and does not reverse-depend on `@bapm/core` for its host behavior
+- **THEN** `@b-apm/integration-copilot` depends on `@b-apm/integration-api` and does not reverse-depend on `@b-apm/core` for its host behavior
 
 #### Scenario: Runtime factory registers as copilot
 
@@ -107,7 +107,7 @@ When Copilot materialize is actively invoked for the Copilot target (including f
 
 ### Requirement: Home MCP configure with translate placeholders
 
-When install invokes Copilot `configureMcp` with an eligible server set, `@bapm/integration-copilot` MUST create or update the user-home file `~/.copilot/mcp-config.json` (resolved via `COPILOT_HOME` when documented, otherwise the default home `.copilot` directory) under the top-level `mcpServers` object keyed by server name. Env (and headers when present) placeholder values MUST be written in host translate form `${VAR}` without baking secrets from `process.env` into the file for APM-style `${VAR}` / `${env:VAR}` / `<VAR>` tokens. Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys, MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory (absolute or `~/.copilot/mcp-config.json` form is acceptable for this home-scoped host). This capability MUST NOT write project `.vscode/mcp.json`.
+When install invokes Copilot `configureMcp` with an eligible server set, `@b-apm/integration-copilot` MUST create or update the user-home file `~/.copilot/mcp-config.json` (resolved via `COPILOT_HOME` when documented, otherwise the default home `.copilot` directory) under the top-level `mcpServers` object keyed by server name. Env (and headers when present) placeholder values MUST be written in host translate form `${VAR}` without baking secrets from `process.env` into the file for APM-style `${VAR}` / `${env:VAR}` / `<VAR>` tokens. Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys, MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory (absolute or `~/.copilot/mcp-config.json` form is acceptable for this home-scoped host). This capability MUST NOT write project `.vscode/mcp.json`.
 
 #### Scenario: Configure writes mcpServers in home mcp-config.json
 
@@ -149,9 +149,9 @@ Copilot runtime in this capability MUST NOT write canvas/extension trees under `
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `@bapm/integration-copilot`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
+`@b-apm/core` MUST NOT hard-depend on or statically import `@b-apm/integration-copilot`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
 
 #### Scenario: Core package graph excludes copilot
 
-- **WHEN** inspecting `@bapm/core` dependencies
-- **THEN** `@bapm/integration-copilot` MUST NOT appear as a dependency
+- **WHEN** inspecting `@b-apm/core` dependencies
+- **THEN** `@b-apm/integration-copilot` MUST NOT appear as a dependency

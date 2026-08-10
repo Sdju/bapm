@@ -1,8 +1,22 @@
 {
-  "name": "@bapm/integration-kiro",
-  "version": "0.0.0",
+  "name": "@b-apm/integration-kiro",
+  "version": "0.1.1",
   "description": "Kiro IDE/CLI runtime integration for bapm",
+  "keywords": [
+    "b-apm",
+    "bapm",
+    "unstable"
+  ],
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/integration-kiro"
+  },
   "files": [
     "dist"
   ],
@@ -18,15 +32,19 @@
     "build": "vp pack",
     "dev": "vp pack --watch",
     "test": "vp test",
-    "check": "vp check"
+    "check": "vp check",
+    "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@bapm/integration-api": "workspace:*"
+    "@b-apm/integration-api": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

@@ -82,7 +82,7 @@ The repository MUST maintain a dedicated Agent Plugins compatibility status arti
 
 ### Requirement: End-to-end portable regression coverage
 
-Regression coverage MUST exercise producer manifest creation, portable pack, safe extraction, consumer installation, complete skill directory materialization, and target MCP mapping. It MUST also retain unsafe-input rejection coverage. Coverage MUST include at least one path that installs a packed portable plugin into Cursor and one path that installs into OpenCode when `@bapm/integration-opencode` is the active host.
+Regression coverage MUST exercise producer manifest creation, portable pack, safe extraction, consumer installation, complete skill directory materialization, and target MCP mapping. It MUST also retain unsafe-input rejection coverage. Coverage MUST include at least one path that installs a packed portable plugin into Cursor and one path that installs into OpenCode when `@b-apm/integration-opencode` is the active host.
 
 #### Scenario: Packed portable plugin installs into Cursor
 
@@ -91,5 +91,5 @@ Regression coverage MUST exercise producer manifest creation, portable pack, saf
 
 #### Scenario: Packed portable plugin installs into OpenCode
 
-- **WHEN** a portable producer with a skill directory and MCP server is packed, extracted, and installed into an OpenCode project with `@bapm/integration-opencode` active
+- **WHEN** a portable producer with a skill directory and MCP server is packed, extracted, and installed into an OpenCode project with `@b-apm/integration-opencode` active
 - **THEN** the skill auxiliary files are materialized under `.opencode/skills/` and the MCP server is adapted under project `opencode.json` `mcp`

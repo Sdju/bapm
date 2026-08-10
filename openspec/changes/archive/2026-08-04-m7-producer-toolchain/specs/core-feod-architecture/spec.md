@@ -18,11 +18,11 @@ Producer pack/archive, secret-path refusal, archive extract helpers, and release
 
 ### Requirement: Thin package entry preserves named exports
 
-The package root `src/index.ts` MUST be a thin façade that re-exports the public surface from `app` (public API assembly). After migration, `@bapm/core` MUST continue to expose every previously exported named symbol (values and types) with the same export names. New Resolver, Install, Primitives, M6 lifecycle/integrity, and M7 producer (init scaffold / pack / release-check) public symbols MUST be re-exported from the package entry without breaking existing export names.
+The package root `src/index.ts` MUST be a thin façade that re-exports the public surface from `app` (public API assembly). After migration, `@b-apm/core` MUST continue to expose every previously exported named symbol (values and types) with the same export names. New Resolver, Install, Primitives, M6 lifecycle/integrity, and M7 producer (init scaffold / pack / release-check) public symbols MUST be re-exported from the package entry without breaking existing export names.
 
 #### Scenario: Existing named exports remain available
 
-- **WHEN** a consumer imports the set of symbols previously exported from `@bapm/core` (including Manifest/Lockfile/Resolver APIs, `loadYamlDocument`, `BAPM_NAME`, and `getVersion`)
+- **WHEN** a consumer imports the set of symbols previously exported from `@b-apm/core` (including Manifest/Lockfile/Resolver APIs, `loadYamlDocument`, `BAPM_NAME`, and `getVersion`)
 - **THEN** each named export MUST still resolve from the package entry without requiring a new import path
 
 #### Scenario: Unit and acceptance tests import from package entry
@@ -32,20 +32,20 @@ The package root `src/index.ts` MUST be a thin façade that re-exports the publi
 
 #### Scenario: Resolver symbols exported from package entry
 
-- **WHEN** a consumer imports Resolver public symbols such as `resolveAndLock` from `@bapm/core`
+- **WHEN** a consumer imports Resolver public symbols such as `resolveAndLock` from `@b-apm/core`
 - **THEN** those named exports MUST resolve from the package entry
 
 #### Scenario: Install and Primitives symbols exported from package entry
 
-- **WHEN** a consumer imports Install or Primitives public symbols such as `runInstall` / `discoverPrimitives` (names flexible) from `@bapm/core`
+- **WHEN** a consumer imports Install or Primitives public symbols such as `runInstall` / `discoverPrimitives` (names flexible) from `@b-apm/core`
 - **THEN** those named exports MUST resolve from the package entry
 
 #### Scenario: Lifecycle integrity symbols exported from package entry
 
-- **WHEN** a consumer imports M6 lifecycle/integrity public symbols (update/outdated/uninstall/prune/deps/audit/doctor APIs, names flexible) from `@bapm/core`
+- **WHEN** a consumer imports M6 lifecycle/integrity public symbols (update/outdated/uninstall/prune/deps/audit/doctor APIs, names flexible) from `@b-apm/core`
 - **THEN** those named exports MUST resolve from the package entry
 
 #### Scenario: Producer symbols exported from package entry
 
-- **WHEN** a consumer imports M7 producer public symbols (init scaffold / pack archive / check-release APIs, names flexible) from `@bapm/core`
+- **WHEN** a consumer imports M7 producer public symbols (init scaffold / pack archive / check-release APIs, names flexible) from `@b-apm/core`
 - **THEN** those named exports MUST resolve from the package entry

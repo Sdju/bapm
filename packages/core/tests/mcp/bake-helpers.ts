@@ -2,7 +2,7 @@
  * Helpers for public-API MCP env/headers bake tests.
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 
 type AnyFn = (...args: never[]) => unknown;
 
@@ -12,7 +12,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 /**
@@ -91,7 +91,7 @@ export function expectBakeFailure(
     const value = bakeMap(map, options);
     throw new Error(`expected bake to fail, got ${JSON.stringify(value)}`);
   } catch (error) {
-    if (error instanceof TypeError && /expected @bapm\/core to export/i.test(error.message)) {
+    if (error instanceof TypeError && /expected @b-apm\/core to export/i.test(error.message)) {
       throw error;
     }
     if (error instanceof Error && error.message.startsWith("expected bake to fail")) {

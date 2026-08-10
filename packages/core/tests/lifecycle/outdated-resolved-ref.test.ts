@@ -3,7 +3,7 @@
  */
 import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import { loadLockfile, resolveAndLock, serializeLockfile } from "@bapm/core";
+import { loadLockfile, resolveAndLock, serializeLockfile } from "@b-apm/core";
 import {
   createFakePorts,
   createTempProject,

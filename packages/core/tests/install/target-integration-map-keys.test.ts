@@ -18,7 +18,7 @@ import {
 } from "./helpers.ts";
 
 /** Package name that must never be resolved/loaded from the map value alone. */
-const FAKE_INTEGRATION_PKG = "@bapm/integration-DOES-NOT-EXIST-acceptance-map";
+const FAKE_INTEGRATION_PKG = "@b-apm/integration-DOES-NOT-EXIST-acceptance-map";
 
 describe("install target integration map — keys only, no value load", () => {
   let project: TempProject;

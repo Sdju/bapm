@@ -8,7 +8,7 @@ import { asText } from "../asText.ts";
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { join } from "node:path";
 import { readFileSync, mkdirSync } from "node:fs";
-import { resolveDependencyGraph } from "@bapm/core";
+import { resolveDependencyGraph } from "@b-apm/core";
 import {
   createTempProject,
   createFakePorts,

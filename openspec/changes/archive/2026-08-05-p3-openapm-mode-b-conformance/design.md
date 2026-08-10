@@ -10,7 +10,7 @@ OpenAPM “Mode B” here means the **hybrid fixture-anchored + statement-anchor
 
 - Vendor OpenAPM v0.1 seed fixtures into git.
 - Ship a Vitest Mode B harness (or req-ID checklist bound to fixtures + existing tests) covering claimed classes.
-- Prove cf-001 round-trip on seed manifest/lockfile fixtures via `@bapm/core` parse/serialize.
+- Prove cf-001 round-trip on seed manifest/lockfile fixtures via `@b-apm/core` parse/serialize.
 - Publish honest `CONFORMANCE.md` (+ `CONFORMANCE.json`) for Consumer, Producer, Governance floor; Registry N/A.
 - Add a drift check so the statement stays tied to coverage.
 

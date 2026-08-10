@@ -24,7 +24,7 @@ The package build MUST keep pack entry points for the library index and the CLI 
 
 ### Requirement: Version command prints name and version
 
-Invoking `version`, `-V`, or `--version` MUST print a single line containing the product name and version (sourced from `@bapm/core`) and MUST return exit code `0`.
+Invoking `version`, `-V`, or `--version` MUST print a single line containing the product name and version (sourced from `@b-apm/core`) and MUST return exit code `0`.
 
 #### Scenario: version subcommand succeeds
 

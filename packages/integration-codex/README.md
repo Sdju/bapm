@@ -1,4 +1,6 @@
-# @bapm/integration-codex
+# @b-apm/integration-codex
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Codex CLI **runtime** host for bapm, plus Codex **marketplace pack** mapper in the same package.
 
@@ -46,5 +48,5 @@ Cursor and Codex share the `AGENTS.md` compile family: **last writer wins** per 
 
 ## Dependencies
 
-Depends on `@bapm/integration-api` and `smol-toml` — not `@bapm/core`.
-Register via `createIntegrationRegistry().register(createCodexIntegration())` or object-map `targets.codex: "@bapm/integration-codex"`.
+Depends on `@b-apm/integration-api` and `smol-toml` — not `@b-apm/core`.
+Register via `createIntegrationRegistry().register(createCodexIntegration())` or object-map `targets.codex: "@b-apm/integration-codex"`.

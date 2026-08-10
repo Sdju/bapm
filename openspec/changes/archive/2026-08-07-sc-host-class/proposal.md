@@ -4,7 +4,7 @@ Mode B still skips OpenAPM §10.3 host-class IDs after thin marketplace env unlo
 
 ## What Changes
 
-- Shared **credential host-class** in `@bapm/core` (new FEOD `Auth` module): **PSL eTLD+1** (library via pnpm catalog) ∪ typed `registries.*.aliases` host→class union; no CNAME/SAN/redirect collapse for reuse.
+- Shared **credential host-class** in `@b-apm/core` (new FEOD `Auth` module): **PSL eTLD+1** (library via pnpm catalog) ∪ typed `registries.*.aliases` host→class union; no CNAME/SAN/redirect collapse for reuse.
 - **Shared resolve per class** for consumer Authed paths (Registry Bearer scoped to registry host class; Marketplace thin resolve upgraded to shared helpers where attached); never forward class A credentials to class B; diagnostics use **source id** only (sc-007 intact).
 - **Redirect Auth drop** on Registry (and any Authed HTTP using the shared helper): manual / `redirect: 'manual'` follow; on 3xx whose Location host class ≠ origin class, drop originating Authorization / class credential material before the redirected request; MAY re-resolve for destination class.
 - **Operator overlap**: exactly one effective class before resolve; documented deterministic precedence (ADO_HOST / `APM_ADO_HOSTS` before GITHUB_HOST when both claim the same FQDN; GHES∩GitLab fail-closed retained); non-default **port** stays in transport + credential cache key within class.
@@ -38,8 +38,8 @@ Mode B still skips OpenAPM §10.3 host-class IDs after thin marketplace env unlo
 
 ## Impact
 
-- `@bapm/core`: new `modules/Auth/` (FEOD library); Registry `transport` / client; Manifest aliases typing; Marketplace hostClassify/resolveToken; Resolver / Authoring / PackOutputs git spawn env; optional Policy `hostClassOf` unify.
-- Dependencies: add PSL library (`tldts` preferred, or `psl`) to `@bapm/core` **only** via `pnpm add … --save-catalog --filter @bapm/core` (never hand-edit versions).
+- `@b-apm/core`: new `modules/Auth/` (FEOD library); Registry `transport` / client; Manifest aliases typing; Marketplace hostClassify/resolveToken; Resolver / Authoring / PackOutputs git spawn env; optional Policy `hostClassOf` unify.
+- Dependencies: add PSL library (`tldts` preferred, or `psl`) to `@b-apm/core` **only** via `pnpm add … --save-catalog --filter @b-apm/core` (never hand-edit versions).
 - Mode B: `tests/spec-conformance/checklist.yml` → `conformance:gen` / `conformance:check`; Limitations / scope_out.
 - Docs: OpenAPM boundary guide residual security wording.
 - Tests: unit + acceptance under `**/sc-host-class/`; Mode B citation paths for claimed IDs.

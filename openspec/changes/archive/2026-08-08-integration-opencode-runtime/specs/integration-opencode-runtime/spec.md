@@ -1,17 +1,17 @@
 ## Purpose
 
-Defines the `@bapm/integration-opencode` package: OpenCode host detect, skill/agent materialize under `.opencode/`, and MCP adaptation into project `opencode.json`, depending only on `@bapm/integration-api`.
+Defines the `@b-apm/integration-opencode` package: OpenCode host detect, skill/agent materialize under `.opencode/`, and MCP adaptation into project `opencode.json`, depending only on `@b-apm/integration-api`.
 
 ## ADDED Requirements
 
-### Requirement: Package @bapm/integration-opencode exists and depends only on integration API
+### Requirement: Package @b-apm/integration-opencode exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-opencode` with package name `@bapm/integration-opencode`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation.
+The monorepo MUST include package directory `packages/integration-opencode` with package name `@b-apm/integration-opencode`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation.
 
 #### Scenario: Package identity and dependency edge
 
 - **WHEN** inspecting the OpenCode package dependencies
-- **THEN** `@bapm/integration-opencode` depends on `@bapm/integration-api` and does not reverse-depend on `@bapm/core` for its host behavior
+- **THEN** `@b-apm/integration-opencode` depends on `@b-apm/integration-api` and does not reverse-depend on `@b-apm/core` for its host behavior
 
 ### Requirement: Detect uses OpenCode project signals
 
@@ -61,16 +61,16 @@ When the OpenCode integration is activated by an explicit forced-target request 
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `@bapm/integration-opencode`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
+`@b-apm/core` MUST NOT hard-depend on or statically import `@b-apm/integration-opencode`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
 
 #### Scenario: Core package graph excludes opencode
 
-- **WHEN** inspecting `@bapm/core` dependencies
-- **THEN** `@bapm/integration-opencode` MUST NOT appear as a dependency
+- **WHEN** inspecting `@b-apm/core` dependencies
+- **THEN** `@b-apm/integration-opencode` MUST NOT appear as a dependency
 
 ### Requirement: MCP configure merges into project opencode.json
 
-When install invokes OpenCode MCP configure with an eligible server set, `@bapm/integration-opencode` MUST create or update the project-root `opencode.json` under a registered deploy root that covers that path (or an explicitly registered `opencode.json` / `.opencode` containment rule documented by the package). Owned server entries MUST be written under the top-level `mcp` object keyed by server name. Mapping MUST use OpenCode’s documented shapes: portable/`stdio` → `{ type: "local", command: [command, ...args], environment? }`; portable `streamable-http` or host `http` → `{ type: "remote", url, headers? }`. Portable metadata MUST NOT be copied verbatim. Unsupported transports (including portable `sse` when OpenCode has no documented equivalent in this capability) MUST fail closed with a diagnostic and MUST NOT write a partial invented entry. Writes MUST be idempotent overwrites of owned keys, MUST preserve unrelated `opencode.json` keys and unrelated `mcp` server names, MUST NEVER escape registered roots, and MUST report config/deployed paths for lock inventory when the integration-api contract provides a report hook.
+When install invokes OpenCode MCP configure with an eligible server set, `@b-apm/integration-opencode` MUST create or update the project-root `opencode.json` under a registered deploy root that covers that path (or an explicitly registered `opencode.json` / `.opencode` containment rule documented by the package). Owned server entries MUST be written under the top-level `mcp` object keyed by server name. Mapping MUST use OpenCode’s documented shapes: portable/`stdio` → `{ type: "local", command: [command, ...args], environment? }`; portable `streamable-http` or host `http` → `{ type: "remote", url, headers? }`. Portable metadata MUST NOT be copied verbatim. Unsupported transports (including portable `sse` when OpenCode has no documented equivalent in this capability) MUST fail closed with a diagnostic and MUST NOT write a partial invented entry. Writes MUST be idempotent overwrites of owned keys, MUST preserve unrelated `opencode.json` keys and unrelated `mcp` server names, MUST NEVER escape registered roots, and MUST report config/deployed paths for lock inventory when the integration-api contract provides a report hook.
 
 #### Scenario: Configure writes local MCP entry
 

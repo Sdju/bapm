@@ -270,12 +270,12 @@ When `target` or `targets` is a YAML mapping (object), the system MUST treat it 
 
 #### Scenario: targets object map accepted
 
-- **WHEN** a manifest declares `targets: { cursor: "@bapm/integration-cursor", claude: "@bapm/integration-claude" }` with valid mf-005 keys and non-empty string values
+- **WHEN** a manifest declares `targets: { cursor: "@b-apm/integration-cursor", claude: "@b-apm/integration-claude" }` with valid mf-005 keys and non-empty string values
 - **THEN** parse/validate MUST succeed and retain the mapping on the document
 
 #### Scenario: target object map accepted
 
-- **WHEN** a manifest declares `target: { claude: "@bapm/integration-claude" }` with a valid key and non-empty string value
+- **WHEN** a manifest declares `target: { claude: "@b-apm/integration-claude" }` with a valid key and non-empty string value
 - **THEN** parse/validate MUST succeed and retain the mapping
 
 #### Scenario: Legacy string and array still accepted

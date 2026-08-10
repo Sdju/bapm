@@ -12,9 +12,9 @@ import { createCliMarketplaceOutputRegistry } from "../../src/app/integrations/m
 const CLI_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const CONCRETE_INTEGRATIONS = [
-  "@bapm/integration-cursor",
-  "@bapm/integration-claude",
-  "@bapm/integration-codex",
+  "@b-apm/integration-cursor",
+  "@b-apm/integration-claude",
+  "@b-apm/integration-codex",
 ] as const;
 
 function readCliPackageJson(): {
@@ -43,24 +43,24 @@ describe("CLI · empty composition registries (opt-in hosts)", () => {
     expect(registry.get("codex")).toBeUndefined();
   });
 
-  test("CLI package.json has no hard deps on concrete @bapm/integration-* packages", () => {
+  test("CLI package.json has no hard deps on concrete @b-apm/integration-* packages", () => {
     const pkg = readCliPackageJson();
     const deps = { ...pkg.dependencies, ...pkg.optionalDependencies };
     for (const name of CONCRETE_INTEGRATIONS) {
       expect(deps[name], `${name} must not be a CLI hard/optional dependency`).toBeUndefined();
     }
-    expect(deps["@bapm/integration-api"]).toBeTruthy();
+    expect(deps["@b-apm/integration-api"]).toBeTruthy();
   });
 
-  test("runtime registry module does not static-import @bapm/integration-cursor", () => {
+  test("runtime registry module does not static-import @b-apm/integration-cursor", () => {
     const src = readFileSync(join(CLI_ROOT, "src/app/integrations/registry.ts"), "utf8");
-    expect(src).not.toMatch(/@bapm\/integration-cursor/);
+    expect(src).not.toMatch(/@b-apm\/integration-cursor/);
     expect(src).not.toMatch(/createCursorIntegration/);
   });
 
   test("marketplaceOutputs module does not static-import Claude/Codex packages", () => {
     const src = readFileSync(join(CLI_ROOT, "src/app/integrations/marketplaceOutputs.ts"), "utf8");
-    expect(src).not.toMatch(/@bapm\/integration-claude/);
-    expect(src).not.toMatch(/@bapm\/integration-codex/);
+    expect(src).not.toMatch(/@b-apm\/integration-claude/);
+    expect(src).not.toMatch(/@b-apm\/integration-codex/);
   });
 });

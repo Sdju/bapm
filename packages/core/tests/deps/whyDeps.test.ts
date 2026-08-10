@@ -1,7 +1,7 @@
 /**
  * Unit: whyDeps name/repo_url match, short-form resolve, exits, transitive chain.
  */
-import { whyDeps } from "@bapm/core";
+import { whyDeps } from "@b-apm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";

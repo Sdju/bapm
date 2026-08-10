@@ -49,13 +49,13 @@ describe("docs · host happy-path framing", () => {
     expect(text).toMatch(/--target/);
     expect(text).toMatch(/active/);
     expect(text).toMatch(/detect|auto-detect/i);
-    expect(text).toMatch(/canonical|@bapm\/integration-/i);
+    expect(text).toMatch(/canonical|@b-apm\/integration-/i);
     expect(text).toMatch(/fail-closed|ambigu/i);
   });
 
   test("Supported Hosts table lists canonical package column (P1)", () => {
     const text = readDocs("guide/supported-hosts.md");
-    expect(text).toMatch(/Canonical|каноническ|@bapm\/integration-/i);
+    expect(text).toMatch(/Canonical|каноническ|@b-apm\/integration-/i);
     expect(text).toMatch(/Auto-detect|auto-detect|Detect/i);
     // Happy path must not mandate targets: for every host row as the only path.
     expect(text).not.toMatch(/\|\s*\*\*Cursor\*\*\s*\|[^\n]*объявить `targets:`/i);

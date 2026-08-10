@@ -67,7 +67,7 @@ When the object-map form is present, every map entry MUST successfully resolve a
 
 ### Requirement: Loadable package export contract
 
-A package referenced by an object-map value MUST be loadable as a runtime integration by exposing, in documented precedence, a factory or object that produces a `BapmIntegration` conforming to `@bapm/integration-api`: at least `id`, `deployRoots`, `detect`, and `materialize`. Third-party packages SHOULD export a named `createIntegration` factory; a default-export factory or default-export `BapmIntegration` object MUST also be accepted when they satisfy the same contract. Optional `configureMcp` and `compile` capabilities MUST be preserved when present.
+A package referenced by an object-map value MUST be loadable as a runtime integration by exposing, in documented precedence, a factory or object that produces a `BapmIntegration` conforming to `@b-apm/integration-api`: at least `id`, `deployRoots`, `detect`, and `materialize`. Third-party packages SHOULD export a named `createIntegration` factory; a default-export factory or default-export `BapmIntegration` object MUST also be accepted when they satisfy the same contract. Optional `configureMcp` and `compile` capabilities MUST be preserved when present.
 
 #### Scenario: createIntegration factory accepted
 

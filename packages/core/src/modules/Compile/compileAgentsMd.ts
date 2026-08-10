@@ -1,5 +1,5 @@
 import { join, resolve } from "node:path";
-import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
+import type { BapmIntegration, IntegrationRegistry } from "@b-apm/integration-api";
 import { loadManifest } from "@/modules/Manifest";
 import {
   discoverPrimitives,

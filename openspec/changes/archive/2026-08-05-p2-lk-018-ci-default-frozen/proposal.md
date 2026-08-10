@@ -23,7 +23,7 @@ OpenAPM v0.1 **req-lk-018** (SHOULD, Consumer, §5.5) asks a conforming consumer
 
 ## Impact
 
-- `@bapm/core`: small shared helper to interpret OpenAPM CI truthiness and resolve effective `frozen` from flags/env (usable by CLI and library callers).
+- `@b-apm/core`: small shared helper to interpret OpenAPM CI truthiness and resolve effective `frozen` from flags/env (usable by CLI and library callers).
 - `bapm` CLI: `parseInstallArgs` / install runner honor `CI` + `--no-frozen` / `--frozen`; help text.
 - Acceptance/unit tests: CI env → frozen without `--frozen`; `--no-frozen` under CI stays non-frozen; non-CI unchanged; frozen+update still rejected when CI-default applies.
 - Follow-on (out of scope): P3 Mode B, P4 Governance, P5 docs, multi-target.

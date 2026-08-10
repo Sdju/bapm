@@ -30,7 +30,7 @@ Authors who know which host harnesses to materialize still must pass `--target` 
 
 ## Impact
 
-- `@bapm/core` Manifest parse/types; Install `resolveActiveTargets` (and compile selection) consume manifest `active`.
-- `@bapm/cli` thin forwarding already passes force target; may need to load/pass active from discovered manifest or rely on core reading the loaded document.
+- `@b-apm/core` Manifest parse/types; Install `resolveActiveTargets` (and compile selection) consume manifest `active`.
+- `@b-apm/cli` thin forwarding already passes force target; may need to load/pass active from discovered manifest or rely on core reading the loaded document.
 - VitePress `apps/docs` guide/config-manifest + install/compile reference situations.
 - No new runtime packages; OpenAPM wire: `active` is a documented bapm extension (cf. object-map / `local`), not a claimed OpenAPM required field.

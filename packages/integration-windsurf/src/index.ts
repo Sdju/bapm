@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-windsurf — Windsurf/Cascade host integration.
+ * @b-apm/integration-windsurf — Windsurf/Cascade host integration.
  */
 
 export {

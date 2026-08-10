@@ -6,7 +6,7 @@ M3 delivered Resolver + `resolveAndLock` + `bapm lock` with modules under `apm_m
 
 **Goals:**
 
-- FEOD library modules Install + Primitives in `@bapm/core`; speak deploy only via `bapm-target-api`
+- FEOD library modules Install + Primitives in `@b-apm/core`; speak deploy only via `bapm-target-api`
 - Scaffold `packages/target-api` (`bapm-target-api`) and `packages/target-cursor` (`bapm-target-cursor`) with vite-plus; wire pnpm workspace at apply via CLI
 - Thin CLI `install` happy path + basic `--frozen`; keep `lock` non-deploying
 - OpenAPM M4 MUST: pr-001..003, tg-008/004/002, tg-003 if cursor ships skills, lk-006 basic
@@ -23,21 +23,21 @@ M3 delivered Resolver + `resolveAndLock` + `bapm lock` with modules under `apm_m
 
 ### 1. Package names and paths (locked)
 
-- **Choice:** `packages/target-api` → name **`bapm-target-api`**; `packages/target-cursor` → name **`bapm-target-cursor`** (unscoped npm names, matching architecture docs). Not `@bapm/target-api`.
+- **Choice:** `packages/target-api` → name **`bapm-target-api`**; `packages/target-cursor` → name **`bapm-target-cursor`** (unscoped npm names, matching architecture docs). Not `@b-apm/target-api`.
 - **Why:** User/scope lock + `bapm-target-packages.md` / OpenSpec architecture naming.
-- **Alternatives:** `@bapm/target-*` scope — rejected for this change.
+- **Alternatives:** `@b-apm/target-*` scope — rejected for this change.
 
 ### 2. FEOD layout: core Install + Primitives; CLI thin install
 
 - **Choice:**
   - Core library FEOD: `modules/Install/`, `modules/Primitives/` (directories + `index.ts`); soft IoC for target registry injection optional at app/publicApi or Install factory.
-  - CLI: keep `commands/install.ts` thin; replace stub service with call to `@bapm/core` install; register cursor in CLI `app/init` or integrations (not in core).
+  - CLI: keep `commands/install.ts` thin; replace stub service with call to `@b-apm/core` install; register cursor in CLI `app/init` or integrations (not in core).
 - **Why:** Locked library-core + CLI FEOD profiles; domain stays in core; CLI wires host package for e2e.
 - **Alternatives:** Host materialize inside core — rejected (`target-package-architecture`).
 
 ### 3. Core depends only on `bapm-target-api`
 
-- **Choice:** Add workspace dependency `@bapm/core` → `bapm-target-api`. Never add `bapm-target-cursor` to core `package.json`. CLI MAY depend on both `bapm-target-api` (transitive via core) and `bapm-target-cursor` for registration.
+- **Choice:** Add workspace dependency `@b-apm/core` → `bapm-target-api`. Never add `bapm-target-cursor` to core `package.json`. CLI MAY depend on both `bapm-target-api` (transitive via core) and `bapm-target-cursor` for registration.
 - **Why:** Registration/injection boundary; acceptance item “no hard import of concrete target”.
 - **Alternatives:** Core optional peer on cursor — rejected (still a hard coupling risk).
 

@@ -40,7 +40,7 @@ is_background: false
 
 ## VitePress: правила этого сайта
 
-- Пакет: `apps/docs` (`@bapm/docs`), scripts: `dev` / `build` / `preview` (vitepress).
+- Пакет: `apps/docs` (`@b-apm/docs`), scripts: `dev` / `build` / `preview` (vitepress).
 - Контент — Markdown в корне пакета (`guide/`, `architecture/`, …), не в `src/`.
 - Ссылки: VitePress-style absolute от корня сайта (`/guide/quick-start`), не filesystem `../../packages`.
 - Корневые файлы репо (`CONFORMANCE.md`) можно упоминать, но deep-link'и в monorepo вне docs
@@ -106,7 +106,7 @@ apps/docs/
 1. Прочитай текущие `apps/docs/**` + `.vitepress/config.ts`.
 2. Сверь команды/флаги с CLI (help strings / parsers), не с памятью.
 3. Внеси правки в Markdown + sidebar/nav.
-4. Прогони docs package: `vp run -F @bapm/docs build` или `pnpm --filter @bapm/docs build` (что принято в репо); при длинном задании хотя бы `vitepress build` в `apps/docs`.
+4. Прогони docs package: `vp run -F @b-apm/docs build` или `pnpm --filter @b-apm/docs build` (что принято в репо); при длинном задании хотя бы `vitepress build` в `apps/docs`.
 5. В ответе parent'у: список изменённых страниц, что добавлено в sidebar, чем сверено (пути CLI), остаточные gaps.
 
 ## Инварианты продукта (не путать читателя)
@@ -126,7 +126,7 @@ apps/docs/
 - Установка: описывай продуктовый путь (`npx` / `pnpm add -D` / глобально) как **целевой UX**.
   Если публичный npm-пакет ещё не стабилен или имя конфликтует — одна честная оговорка
   («пакет публикуется / имя уточняется»), без увода всего гайда в monorepo.
-- Материализация runtime сегодня **cursor-only** через `@bapm/integration-cursor`.
+- Материализация runtime сегодня **cursor-only** через `@b-apm/integration-cursor`.
 - Claude/Codex — marketplace-output integrations, не обещай их как runtime install targets.
 - OpenAPM wire ≠ полный drop-in microsoft/apm CLI.
 - Domain selector `--target <id>` и поле manifest `target` остаются user-facing; integration registry — деталь реализации, не первый экран how-to.

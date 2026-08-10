@@ -41,7 +41,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build docs
-        run: pnpm --filter @bapm/docs build
+        run: pnpm --filter @b-apm/docs build
         env:
           DOCS_BASE: /${{ github.event.repository.name }}/
 

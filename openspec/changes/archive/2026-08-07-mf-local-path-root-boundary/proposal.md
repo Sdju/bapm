@@ -22,6 +22,6 @@ _None._
 
 ## Impact
 
-- `@bapm/core` Resolver classification, local graph expansion, exported error/type surface, and resolver tests.
+- `@b-apm/core` Resolver classification, local graph expansion, exported error/type surface, and resolver tests.
 - Mode B checklist, fixture/citation evidence, and generated `CONFORMANCE.md` / `CONFORMANCE.json`.
 - No symlink containment, cache-layout redesign, git/registry/marketplace behavioral change, or workspace/monorepo v0.2 work.

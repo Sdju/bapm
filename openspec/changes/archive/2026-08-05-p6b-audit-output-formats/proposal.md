@@ -6,7 +6,7 @@ bapm already implements the OpenAPM integrity CI gate (`audit --ci`: lock presen
 
 - Add `--format` / `-f` ∈ `{text,json,sarif}` (default `text`) and `--output` / `-o <path>` on `bapm audit` (documented with `--ci`).
 - Serialize the **existing** gate into APM-aligned **CIAuditResult-shaped JSON** (`passed` / `checks` / `summary`) and **SARIF 2.1.0** (tool driver `bapm-audit`); no content snippets.
-- Prefer serializers + structured check model in **`@bapm/core`** (public API); thin CLI parse/IO.
+- Prefer serializers + structured check model in **`@b-apm/core`** (public API); thin CLI parse/IO.
 - **IO purity:** json/sarif body on stdout XOR `-o` file; success/diagnostic for file write on stderr; unknown `-f` fail-closed.
 - **SHOULD:** auto-detect format from `-o` extension when `-f` omitted; stable check order; pretty JSON (`indent: 2`).
 - Exit 0/1 semantics unchanged; do **not** weaken lk-015/017.
@@ -26,7 +26,7 @@ bapm already implements the OpenAPM integrity CI gate (`audit --ci`: lock presen
 
 ## Impact
 
-- `@bapm/core` Audit: structured checks from gate results; `formatAuditCiJson` / `formatAuditCiSarif` (names flexible); public API options for format/output path or serialize-after-run.
+- `@b-apm/core` Audit: structured checks from gate results; `formatAuditCiJson` / `formatAuditCiSarif` (names flexible); public API options for format/output path or serialize-after-run.
 - `bapm` CLI Audit: parse/help/run for `-f`/`-o`; mkdir parents on `-o`; stderr success diagnostic when writing file.
 - Tests: core unit + CLI acceptance (clean json, tamper json/sarif + exit 1, `-o` empty stdout body, unknown `-f`).
 - Help strings; optional soft parity/CONFORMANCE note that formats are ergonomics, not a new OpenAPM class.

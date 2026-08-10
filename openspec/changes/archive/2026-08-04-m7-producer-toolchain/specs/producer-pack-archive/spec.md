@@ -56,7 +56,7 @@ When a lockfile is present for the project, pack SHOULD include it (or an enrich
 
 ### Requirement: CLI pack command is registered
 
-Invoking `pack` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@bapm/core` pack APIs. Unknown flags on `pack` MUST hard-error with non-zero exit.
+Invoking `pack` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@b-apm/core` pack APIs. Unknown flags on `pack` MUST hard-error with non-zero exit.
 
 #### Scenario: pack is not unknown
 

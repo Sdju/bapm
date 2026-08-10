@@ -1,4 +1,4 @@
-import { compileAgentsMd } from "@bapm/core";
+import { compileAgentsMd } from "@b-apm/core";
 import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
 import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";

@@ -1,12 +1,12 @@
 ## Purpose
 
-Defines the explicit-only `agent-skills` cross-client skills host on `@bapm/integration-agent-skills`: never auto-detect, skills-only materialize to `.agents/skills/<name>/SKILL.md`, and no MCP/hooks/compile surface.
+Defines the explicit-only `agent-skills` cross-client skills host on `@b-apm/integration-agent-skills`: never auto-detect, skills-only materialize to `.agents/skills/<name>/SKILL.md`, and no MCP/hooks/compile surface.
 
 ## ADDED Requirements
 
 ### Requirement: Package exposes thin runtime factory
 
-`@bapm/integration-agent-skills` MUST export a runtime integration factory usable as `createIntegration` (and MAY export an `createAgentSkillsIntegration` alias). The runtime integration MUST implement `BapmIntegration` with at least `id`, `deployRoots`, `detect`, and `materialize`. Package id for the runtime target MUST be `agent-skills`. The package MUST depend on `@bapm/integration-api` without requiring `@bapm/core` as a hard dependency for host behavior. The integration MUST NOT expose `configureMcp` or `compile`.
+`@b-apm/integration-agent-skills` MUST export a runtime integration factory usable as `createIntegration` (and MAY export an `createAgentSkillsIntegration` alias). The runtime integration MUST implement `BapmIntegration` with at least `id`, `deployRoots`, `detect`, and `materialize`. Package id for the runtime target MUST be `agent-skills`. The package MUST depend on `@b-apm/integration-api` without requiring `@b-apm/core` as a hard dependency for host behavior. The integration MUST NOT expose `configureMcp` or `compile`.
 
 #### Scenario: Runtime factory registers as agent-skills
 
@@ -34,7 +34,7 @@ The agent-skills integration MUST always return false from `detect`, regardless 
 
 ### Requirement: Activation is explicit only
 
-agent-skills MUST activate only when the composition root / install selects it via forced `--target agent-skills`, or via manifest `active` listing `agent-skills` after object-map registration of `@bapm/integration-agent-skills`. Presence of `.agents/` alone MUST NOT activate the host.
+agent-skills MUST activate only when the composition root / install selects it via forced `--target agent-skills`, or via manifest `active` listing `agent-skills` after object-map registration of `@b-apm/integration-agent-skills`. Presence of `.agents/` alone MUST NOT activate the host.
 
 #### Scenario: Forced target activates without detect
 
@@ -99,7 +99,7 @@ Writing skills to `.agents/skills/` MUST be treated as intentional overlap with 
 
 ### Requirement: Docs document object-map load
 
-User-facing docs MUST document that `agent-skills` is an explicit-only target loaded via object-map, for example `targets.agent-skills: "@bapm/integration-agent-skills"`, and that it never auto-detects from `.agents/`.
+User-facing docs MUST document that `agent-skills` is an explicit-only target loaded via object-map, for example `targets.agent-skills: "@b-apm/integration-agent-skills"`, and that it never auto-detects from `.agents/`.
 
 #### Scenario: Supported hosts lists agent-skills
 

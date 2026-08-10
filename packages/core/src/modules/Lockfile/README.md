@@ -1,5 +1,7 @@
 # Lockfile
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Discover, load, validate, serialize, and compare OpenAPM/APM lockfiles (`apm.lock.yaml` / `bapm.lock.yaml`).
 
 ## Public API

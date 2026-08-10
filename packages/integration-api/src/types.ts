@@ -172,7 +172,7 @@ export type ConfigureMcpFn = (
  */
 export type McpEnvMode = "bake" | "translate";
 
-/** Concrete target contract consumed by core only through `@bapm/integration-api`. */
+/** Concrete target contract consumed by core only through `@b-apm/integration-api`. */
 export type BapmIntegration = {
   id: TargetId;
   /** Registered deploy root(s) relative to project cwd (tg-002). */

@@ -12,8 +12,10 @@ import {
   linkCursorIntegration,
   mcpJsonPath,
   readLockText,
+  readMcpJsonRaw,
   readMcpServers,
   runInProject,
+  writeDirectMcpHttpProject,
   writeDirectMcpProject,
   type TempProject,
 } from "./helpers.ts";
@@ -37,6 +39,30 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     expect(servers).toHaveProperty("test-stdio-server");
     const entry = servers["test-stdio-server"] as Record<string, unknown>;
     expect(entry.command === "echo" || entry.type === "stdio").toBe(true);
+  });
+
+  test("README-shaped HTTP MCP + ${API_TOKEN} bake → .cursor/mcp.json", async () => {
+    project = createTempProject();
+    const secret = "readme-http-bake-token";
+    writeDirectMcpHttpProject(project.cwd, {
+      envYaml: `        API_TOKEN: "\${API_TOKEN}"\n`,
+    });
+
+    const { result, combined } = await runInProject(
+      project.cwd,
+      ["install", "--target", "cursor"],
+      { API_TOKEN: secret },
+    );
+    expectKnownFlags(combined);
+    expect(result).toBe(0);
+
+    const servers = readMcpServers(project.cwd);
+    expect(servers).toHaveProperty("github");
+    const entry = servers.github as { type?: string; url?: string; env?: Record<string, string> };
+    expect(entry.type === "http" || entry.url !== undefined).toBe(true);
+    expect(entry.url).toBe("https://api.githubcopilot.com/mcp/");
+    expect(entry.env?.API_TOKEN).toBe(secret);
+    expect(readMcpJsonRaw(project.cwd)).not.toContain("${API_TOKEN}");
   });
 
   test("second install keeps owned mcpServers keys stable (idempotent)", async () => {

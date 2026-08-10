@@ -2,7 +2,7 @@
 
 ### Requirement: Pack module wires marketplace emit flags
 
-Marketplace pack flags (`--marketplace`, `--marketplace-path`, marketplace-aware `--offline`) MUST be parsed and orchestrated inside the existing `src/modules/Pack/` directory module and thin `src/commands/pack.ts` handler — not via a new top-level command module and not by restoring a `marketplace build` verb. Domain resolve/map/write logic MUST live in `@bapm/core` and be reached via `app/integrations` / soft IoC, not via direct `@bapm/core` imports inside `commands/`. Pack module public API MUST remain the CLI entry for both plain-zip and marketplace emit orchestration.
+Marketplace pack flags (`--marketplace`, `--marketplace-path`, marketplace-aware `--offline`) MUST be parsed and orchestrated inside the existing `src/modules/Pack/` directory module and thin `src/commands/pack.ts` handler — not via a new top-level command module and not by restoring a `marketplace build` verb. Domain resolve/map/write logic MUST live in `@b-apm/core` and be reached via `app/integrations` / soft IoC, not via direct `@b-apm/core` imports inside `commands/`. Pack module public API MUST remain the CLI entry for both plain-zip and marketplace emit orchestration.
 
 #### Scenario: Pack marketplace flags go through Pack module
 

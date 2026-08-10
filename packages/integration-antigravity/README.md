@@ -1,4 +1,6 @@
-# `@bapm/integration-antigravity`
+# `@b-apm/integration-antigravity`
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Antigravity CLI (`agy`) project-scope runtime for bapm.
 
@@ -13,7 +15,7 @@ Not part of `--target all` alone (same APM model as `agent-skills`). Load via:
 
 ```yaml
 targets:
-  antigravity: "@bapm/integration-antigravity"
+  antigravity: "@b-apm/integration-antigravity"
 ```
 
 ## Layout

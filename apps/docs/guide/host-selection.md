@@ -39,7 +39,7 @@ fail-closed
 ```
 явный targets: / target: object-map для этого id
     ↓ иначе
-canonical @bapm/integration-<id> (если id известен CLI)
+canonical @b-apm/integration-<id> (если id известен CLI)
     ↓ иначе
 host не регистрируется (custom id без map → unknown target)
 ```
@@ -48,7 +48,7 @@ host не регистрируется (custom id без map → unknown target)
 - Map entry **перекрывает** canonical для этого ключа; остальные известные hosts по-прежнему через fallback.
 - Custom id (`x-acme-…`) — только через object-map (или явная регистрация).
 
-Пакет интеграции — обычная npm-зависимость: bapm **не** бандлит integrations в `@bapm/cli` и **не** песочничит npm. Это отдельно от MCP trust / policy / frozen / hashes.
+Пакет интеграции — обычная npm-зависимость: bapm **не** бандлит integrations в `@b-apm/cli` и **не** песочничит npm. Это отдельно от MCP trust / policy / frozen / hashes. Список canonical-пакетов и оговорка по `@b-apm/integration-kiro` на npm: [supported hosts](/guide/supported-hosts).
 
 ## Типичные сценарии
 

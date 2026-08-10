@@ -30,7 +30,7 @@ Marketplace track phase 6 needs a SHOULD producer: authors already declare `mark
 
 ## Impact
 
-- `@bapm/core`: builder/mappers/profiles under Marketplace (fractal submodule preferred) and/or Pack orchestration that calls Marketplace public API; re-export builder entrypoints from package façade.
+- `@b-apm/core`: builder/mappers/profiles under Marketplace (fractal submodule preferred) and/or Pack orchestration that calls Marketplace public API; re-export builder entrypoints from package façade.
 - `bapm` CLI: `modules/Pack` parse/help/run; Marketplace Authoring help text; integrations wiring.
 - Tests: `**/mp-pack-outputs/` acceptance + unit (mappers, resolve, path jail, dry-run, zip regression, `--marketplace none`).
 - Docs/help only as needed; **no** CONFORMANCE.md / claim-table edits.

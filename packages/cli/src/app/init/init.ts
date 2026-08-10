@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { createMinimalManifest, writeProducerManifest } from "@bapm/core";
+import { createMinimalManifest, writeProducerManifest } from "@b-apm/core";
 import { createInit } from "@/modules/Init";
 import { coreIntegration } from "../integrations/core.ts";
 

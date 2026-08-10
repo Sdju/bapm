@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the library FEOD layer layout and import boundaries for `@bapm/core` so domain modules stay isolated under a profile separate from the CLI, while the package public export surface remains stable.
+Defines the library FEOD layer layout and import boundaries for `@b-apm/core` so domain modules stay isolated under a profile separate from the CLI, while the package public export surface remains stable.
 
 ## ADDED Requirements
 
@@ -52,11 +52,11 @@ Shared YAML safe-subset loading used by both Manifest and Lockfile MUST live und
 
 ### Requirement: Thin package entry preserves named exports
 
-The package root `src/index.ts` MUST be a thin façade that re-exports the public surface from `app` (public API assembly). After migration, `@bapm/core` MUST continue to expose every previously exported named symbol (values and types) with the same export names.
+The package root `src/index.ts` MUST be a thin façade that re-exports the public surface from `app` (public API assembly). After migration, `@b-apm/core` MUST continue to expose every previously exported named symbol (values and types) with the same export names.
 
 #### Scenario: Existing named exports remain available
 
-- **WHEN** a consumer imports the set of symbols previously exported from `@bapm/core` (including Manifest/Lockfile APIs, `loadYamlDocument`, `BAPM_NAME`, and `getVersion`)
+- **WHEN** a consumer imports the set of symbols previously exported from `@b-apm/core` (including Manifest/Lockfile APIs, `loadYamlDocument`, `BAPM_NAME`, and `getVersion`)
 - **THEN** each named export MUST still resolve from the package entry without requiring a new import path
 
 #### Scenario: Unit and acceptance tests import from package entry

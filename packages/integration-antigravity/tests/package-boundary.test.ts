@@ -12,14 +12,14 @@ const pkgRoot = join(here, "..");
 const repoRoot = join(pkgRoot, "../..");
 
 describe("antigravity package boundary", () => {
-  test("package depends on @bapm/integration-api and not @bapm/core", () => {
+  test("package depends on @b-apm/integration-api and not @b-apm/core", () => {
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name: string;
       dependencies?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-antigravity");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.name).toBe("@b-apm/integration-antigravity");
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
   });
 
   test("core package.json does not depend on integration-antigravity", () => {
@@ -27,7 +27,7 @@ describe("antigravity package boundary", () => {
       dependencies?: Record<string, string>;
       devDependencies?: Record<string, string>;
     };
-    expect(core.dependencies?.["@bapm/integration-antigravity"]).toBeUndefined();
-    expect(core.devDependencies?.["@bapm/integration-antigravity"]).toBeUndefined();
+    expect(core.dependencies?.["@b-apm/integration-antigravity"]).toBeUndefined();
+    expect(core.devDependencies?.["@b-apm/integration-antigravity"]).toBeUndefined();
   });
 });

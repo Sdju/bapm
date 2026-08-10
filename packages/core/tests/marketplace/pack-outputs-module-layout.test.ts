@@ -45,7 +45,7 @@ describe("mp-pack-outputs core Marketplace builder layout", () => {
     );
   });
 
-  test("@bapm/core exports marketplace pack-outputs builder", () => {
+  test("@b-apm/core exports marketplace pack-outputs builder", () => {
     const c = core as Record<string, unknown>;
     const hasBuilder = [
       "buildMarketplaceOutputs",

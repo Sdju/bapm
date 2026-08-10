@@ -8,7 +8,7 @@ After p7c, `bapm compile` still exposes only `--validate` while core already has
 - **CLI `--dry-run`:** discover + render preview (path + primitives count); **never write**; exit `0` on success; UX message **distinct** from `--validate`
 - **Keep `--validate`:** no write; if both `--dry-run` and `--validate` are set → **validate-first** (APM early-return)
 - **CLI `-v` / `--verbose`:** thin source attribution (name + type + path when known) on compile/dry-run — not APM optimizer / distributed placement messaging
-- **Core options:** add `dryRun` / `verbose` (or equivalent) so no-write / attribution live in `@bapm/core`, not CLI-only side effects
+- **Core options:** add `dryRun` / `verbose` (or equivalent) so no-write / attribution live in `@b-apm/core`, not CLI-only side effects
 - **Help:** document `-o/--output`, `--dry-run`, `-v/--verbose`, `--validate`; unknown flags stay fail-closed
 - **Foreign hosts:** still MUST NOT emit `CLAUDE.md` / `GEMINI.md` / `.github/copilot-instructions.md`
 - **SHOULD (in scope — thin):** unskip / add CLI acceptance for `--validate`
@@ -37,7 +37,7 @@ After p7c, `bapm compile` still exposes only `--validate` while core already has
 
 ## Impact
 
-- `@bapm/core` Compile: extend `CompileAgentsMdOptions` / result with `dryRun` / `verbose` (and attribution payload or stdout-ready list); skip write when `validate` or `dryRun`; keep existing `outputFile`
+- `@b-apm/core` Compile: extend `CompileAgentsMdOptions` / result with `dryRun` / `verbose` (and attribution payload or stdout-ready list); skip write when `validate` or `dryRun`; keep existing `outputFile`
 - `bapm` CLI Compile: parse `-o/--output`, `--dry-run`, `-v/--verbose`; help text; validate-first precedence; UX messages for dry-run vs validate
 - Tests: acceptance covering output path, dry-run no write, validate no write, verbose attribution, unknown flag, no foreign hosts; unskip existing `--validate` CLI test
 - No CONFORMANCE.md edits; no link-resolver module in this change

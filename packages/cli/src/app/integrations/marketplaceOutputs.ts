@@ -5,10 +5,10 @@ import {
   createMarketplaceOutputRegistry,
   type MarketplaceOutputIntegration,
   type MarketplaceOutputRegistry,
-} from "@bapm/integration-api";
-import { loadMarketplaceAuthoringConfig } from "@bapm/core";
+} from "@b-apm/integration-api";
+import { loadMarketplaceAuthoringConfig } from "@b-apm/core";
 
-/** Known marketplace format ids that follow `@bapm/integration-<id>` packages. */
+/** Known marketplace format ids that follow `@b-apm/integration-<id>` packages. */
 const KNOWN_MARKETPLACE_FORMATS = ["claude", "codex"] as const;
 
 type KnownFormat = (typeof KNOWN_MARKETPLACE_FORMATS)[number];
@@ -19,7 +19,7 @@ export function createCliMarketplaceOutputRegistry(): MarketplaceOutputRegistry 
 }
 
 function packageSpecifierForFormat(format: string): string {
-  return `@bapm/integration-${format}`;
+  return `@b-apm/integration-${format}`;
 }
 
 function isKnownFormat(format: string): format is KnownFormat {
@@ -158,7 +158,7 @@ async function loadMarketplacePackage(
 
 /**
  * Resolve formats needed for this pack run, dynamically load corresponding
- * `@bapm/integration-<format>` packages, and return a populated registry.
+ * `@b-apm/integration-<format>` packages, and return a populated registry.
  * Fail closed with install guidance when a needed package is missing.
  */
 export async function loadCliMarketplaceOutputsForPack(options: {

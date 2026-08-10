@@ -11,7 +11,7 @@
  */
 import { existsSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { BapmIntegration, CompileReport, MaterializeReport } from "@bapm/integration-api";
+import type { BapmIntegration, CompileReport, MaterializeReport } from "@b-apm/integration-api";
 import {
   SHARED_COMMAND_FRONTMATTER_KEYS,
   compileMarkdownReport,
@@ -22,7 +22,7 @@ import {
   readPrimitiveContent,
   renderPrimitivesMarkdown,
   writeDeployedFile,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".grok", "."] as const;
 

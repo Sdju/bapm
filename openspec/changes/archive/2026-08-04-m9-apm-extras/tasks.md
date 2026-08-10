@@ -47,4 +47,4 @@
 - [x] 8.1 Confirm workspace still only `bapm-target-api` + `bapm-target-cursor` among `bapm-target-*`; no core→cursor hard dep
 - [x] 8.2 Dual-read: apm.yml-only and bapm.yml-only still work for install/compile/MCP
 - [x] 8.3 M3–M8 regression green without MCP deps; M8 policy still runs before durable MCP/modules writes
-- [x] 8.4 Run build/test/`vp check` for `@bapm/core`, `bapm`, `bapm-target-api`, `bapm-target-cursor`; fix in-scope regressions
+- [x] 8.4 Run build/test/`vp check` for `@b-apm/core`, `bapm`, `bapm-target-api`, `bapm-target-cursor`; fix in-scope regressions

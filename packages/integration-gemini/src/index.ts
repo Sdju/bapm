@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-gemini — Gemini CLI runtime integration for bapm.
+ * @b-apm/integration-gemini — Gemini CLI runtime integration for bapm.
  */
 
 export {

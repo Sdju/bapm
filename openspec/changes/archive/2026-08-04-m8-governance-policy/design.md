@@ -1,6 +1,6 @@
 ## Context
 
-See `proposal.md` for motivation. Today `@bapm/core` Install calls `resolveAndLock` / `downloadPackages` before primitives and target materialize; there is no Policy module. Dual-read for manifest/lock already exists (`Manifest/discover.ts`, Lockfile twin). Normative acceptance: `.samples/apm-knowledge/topics/m8-governance-acceptance.md`. FEOD: library profile for core (`modules/Policy/`), locked CLI profile for thin command wiring. Packages: `@bapm/core` + CLI only; cursor untouched except incidental install option plumbing.
+See `proposal.md` for motivation. Today `@b-apm/core` Install calls `resolveAndLock` / `downloadPackages` before primitives and target materialize; there is no Policy module. Dual-read for manifest/lock already exists (`Manifest/discover.ts`, Lockfile twin). Normative acceptance: `.samples/apm-knowledge/topics/m8-governance-acceptance.md`. FEOD: library profile for core (`modules/Policy/`), locked CLI profile for thin command wiring. Packages: `@b-apm/core` + CLI only; cursor untouched except incidental install option plumbing.
 
 ## Goals / Non-Goals
 

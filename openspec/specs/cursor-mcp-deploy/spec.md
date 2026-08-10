@@ -22,7 +22,7 @@ On install, the system MUST collect MCP server definitions from the consuming pr
 
 ### Requirement: Write Cursor mcp.json under registered roots
 
-When the cursor target is active (positive detect or forced `--target cursor`) and eligible MCP servers exist after trust gating, install MUST write or update `.cursor/mcp.json` in Cursor `mcpServers` shape (stdio and/or http) via `@bapm/integration-cursor` (or a thin integration-api helper implemented by cursor). Writes MUST stay under the registered `.cursor/` root and MUST NEVER escape registered deploy roots.
+When the cursor target is active (positive detect or forced `--target cursor`) and eligible MCP servers exist after trust gating, install MUST write or update `.cursor/mcp.json` in Cursor `mcpServers` shape (stdio and/or http) via `@b-apm/integration-cursor` (or a thin integration-api helper implemented by cursor). Writes MUST stay under the registered `.cursor/` root and MUST NEVER escape registered deploy roots.
 
 #### Scenario: Direct MCP install writes mcp.json
 
@@ -109,7 +109,7 @@ When install only-mode is `apm`, Cursor MCP deploy MUST NOT write or update `.cu
 
 ### Requirement: Cursor MCP deployment is an integration capability
 
-Cursor MCP configuration MUST be provided by the registered `@bapm/integration-cursor` MCP capability through `@bapm/integration-api`. Install orchestration MUST remain host-neutral and MUST NOT use a legacy package import, alias, or Cursor-specific fallback outside the registered capability report.
+Cursor MCP configuration MUST be provided by the registered `@b-apm/integration-cursor` MCP capability through `@b-apm/integration-api`. Install orchestration MUST remain host-neutral and MUST NOT use a legacy package import, alias, or Cursor-specific fallback outside the registered capability report.
 
 #### Scenario: Cursor config is selected through integration registry
 

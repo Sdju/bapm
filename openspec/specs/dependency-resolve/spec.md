@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines transitive dependency classify, BFS resolve, modules-cache download, and lock populate for `@bapm/core` so `resolveAndLock` matches OpenAPM §7 M3 baseline (git + local) without target deploy or registry HTTP fetch.
+Defines transitive dependency classify, BFS resolve, modules-cache download, and lock populate for `@b-apm/core` so `resolveAndLock` matches OpenAPM §7 M3 baseline (git + local) without target deploy or registry HTTP fetch.
 
 ## Requirements
 

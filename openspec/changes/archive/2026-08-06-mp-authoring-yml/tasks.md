@@ -22,7 +22,7 @@
 
 - [x] 4.1 Extend CLI Marketplace module: register `init`, `package` (add|set|remove), `check`; parse flags (`--force`, `--owner`, `--name`, package flags, `--offline`, `-y`); keep consumer verbs
 - [x] 4.2 Help: Authoring section separate from Consumer; do not claim pack emit / `build` / `outdated` / `audit` as shipped
-- [x] 4.3 Soft IoC: expose new core APIs via `app/integrations`; thin `commands/marketplace.ts` only; no new top-level authoring module; no direct `@bapm/core` in commands/
+- [x] 4.3 Soft IoC: expose new core APIs via `app/integrations`; thin `commands/marketplace.ts` only; no new top-level authoring module; no direct `@b-apm/core` in commands/
 - [x] 4.4 Update tests that previously asserted authoring subcommands absent (e.g. search-help / marketplace FEOD) to match new registration
 
 ## 5. Optional thin migrate (S1 / design D8)

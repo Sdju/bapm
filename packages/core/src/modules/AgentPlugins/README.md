@@ -1,5 +1,7 @@
 # Agent Plugins
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Portable Agent Plugins v1 boundary.
 
 The public module API loads and discovers validated portable roots, and exposes

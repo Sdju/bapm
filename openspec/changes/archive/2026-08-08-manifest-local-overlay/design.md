@@ -75,7 +75,7 @@ Object-map load and `active` activation use the **effective** maps/lists after m
 
 ### 5. Load pipeline placement
 
-Prefer a single `loadEffectiveManifest` (or extend `loadManifest`) in `@bapm/core` Manifest:
+Prefer a single `loadEffectiveManifest` (or extend `loadManifest`) in `@b-apm/core` Manifest:
 
 1. Discover/load/validate base (unchanged dual-read).
 2. Detect `apm.local.yml` conflict → error.

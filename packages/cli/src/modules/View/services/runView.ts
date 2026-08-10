@@ -1,4 +1,4 @@
-import { viewPackage } from "@bapm/core";
+import { viewPackage } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type ViewCliDeps = LifecycleCliDeps;

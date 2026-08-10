@@ -7,7 +7,7 @@
 
 ## 2. Dependencies (pnpm catalog)
 
-- [x] 2.1 Add node-semver-compatible package for `@bapm/core` via pnpm CLI + workspace catalog only (no hand-edited versions)
+- [x] 2.1 Add node-semver-compatible package for `@b-apm/core` via pnpm CLI + workspace catalog only (no hand-edited versions)
 - [x] 2.2 Add any git/download helper deps the chosen default Downloader needs the same way (catalog); prefer minimal surface
 
 ## 3. Classify + identity + semver
@@ -44,4 +44,4 @@
 
 - [x] 7.1 Make M3 acceptance (checklist C in `.samples/apm-knowledge/topics/m3-resolve-lock-acceptance.md`, when present from acceptance phase) pass for core resolve/download/lock and optional CLI cases; do not implement target deploy / frozen / registry HTTP
 - [x] 7.2 Ensure existing M1/M2 acceptance and unit tests still pass; `install` remains stub
-- [x] 7.3 Run `@bapm/core` and `bapm` package build/test/`vp check` (or package-local equivalents) and fix regressions in scope
+- [x] 7.3 Run `@b-apm/core` and `bapm` package build/test/`vp check` (or package-local equivalents) and fix regressions in scope

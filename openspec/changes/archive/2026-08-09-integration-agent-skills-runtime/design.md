@@ -1,12 +1,12 @@
 ## Context
 
-See proposal.md — Why. Cursor/Codex/Copilot already materialize skills to `.agents/skills/<n>/SKILL.md` via `materializeSkill` from `@bapm/integration-api`. APM `KNOWN_TARGETS["agent-skills"]` is skills-only, `detect_by_dir=False`, `root_dir=".agents"`, explicit `--target` / manifest only. bapm already allows the `agent-skills` token in `CANONICAL_TARGET_TOKENS` and activates hosts via object-map + `active` / forced target without needing detect.
+See proposal.md — Why. Cursor/Codex/Copilot already materialize skills to `.agents/skills/<n>/SKILL.md` via `materializeSkill` from `@b-apm/integration-api`. APM `KNOWN_TARGETS["agent-skills"]` is skills-only, `detect_by_dir=False`, `root_dir=".agents"`, explicit `--target` / manifest only. bapm already allows the `agent-skills` token in `CANONICAL_TARGET_TOKENS` and activates hosts via object-map + `active` / forced target without needing detect.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Greenfield `@bapm/integration-agent-skills` as the thinnest possible `BapmIntegration` (detect + materialize).
+- Greenfield `@b-apm/integration-agent-skills` as the thinnest possible `BapmIntegration` (detect + materialize).
 - Parity with APM targets-matrix §agent-skills for project-scope skills deploy.
 - Reuse `materializeSkill` / `primitivesMaterialize` patterns from Cursor/Codex.
 
@@ -21,7 +21,7 @@ See proposal.md — Why. Cursor/Codex/Copilot already materialize skills to `.ag
 
 ### 1. Package id and factory
 
-- **Choice:** Package `@bapm/integration-agent-skills`; runtime `id: "agent-skills"`; export `createAgentSkillsIntegration` + `createIntegration` alias (same pattern as Copilot/Codex).
+- **Choice:** Package `@b-apm/integration-agent-skills`; runtime `id: "agent-skills"`; export `createAgentSkillsIntegration` + `createIntegration` alias (same pattern as Copilot/Codex).
 - **Alt:** Fold into Cursor/Codex — rejected; APM treats agent-skills as its own target for author-time cross-client bundles.
 
 ### 2. Never-detect
@@ -51,7 +51,7 @@ See proposal.md — Why. Cursor/Codex/Copilot already materialize skills to `.ag
 
 ### 7. Workspace scaffold
 
-- **Choice:** Mirror `packages/integration-codex` structure minus MCP/hooks/toml deps: `package.json` (workspace `@bapm/integration-api` only), `tsdown`/`vp` scripts, `src/createAgentSkillsIntegration.ts`, `src/index.ts`, unit tests, README, docs update in `apps/docs/guide/supported-hosts.md`.
+- **Choice:** Mirror `packages/integration-codex` structure minus MCP/hooks/toml deps: `package.json` (workspace `@b-apm/integration-api` only), `tsdown`/`vp` scripts, `src/createAgentSkillsIntegration.ts`, `src/index.ts`, unit tests, README, docs update in `apps/docs/guide/supported-hosts.md`.
 
 ## Risks / Trade-offs
 

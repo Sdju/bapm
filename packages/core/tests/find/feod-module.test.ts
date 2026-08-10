@@ -3,7 +3,7 @@
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { describe, expect, test } from "vite-plus/test";
 import {
   getBuildReverseIndex,
@@ -31,7 +31,7 @@ describe("mp-find FEOD Find module", () => {
     expect(publicApi).not.toMatch(/@\/modules\/Find\/(?!index)/);
   });
 
-  test("Find public symbols resolve from @bapm/core package entry", () => {
+  test("Find public symbols resolve from @b-apm/core package entry", () => {
     // Soft-resolve — throws TypeError (RED) until apply exports them.
     expect(typeof getBuildReverseIndex()).toBe("function");
     expect(typeof getLookupInIndex()).toBe("function");

@@ -4,8 +4,8 @@
 
 Новый проект без манифеста и lockfile: нужно завести `bapm.yml` и первый раз материализовать зависимости в Cursor.
 
-::: warning Пакеты пока не на npm
-Команды `npm i` ниже демонстрационные до первого релиза. См. [быстрый старт](/guide/quick-start).
+::: warning UNSTABLE
+Ранний публичный релиз на npm. Команды `npm i` рабочие, но релиз нестабильный. См. [быстрый старт](/guide/quick-start).
 :::
 
 ### Цель
@@ -18,7 +18,7 @@
 2. В корне проекта:
 
 ```bash
-npm i -D @bapm/integration-cursor
+npm i -D @b-apm/integration-cursor
 mkdir -p .cursor   # если ещё нет маркера Cursor
 # минимальный манифест (или bapm init -y --target cursor — scaffold с pin)
 ```
@@ -53,8 +53,8 @@ bapm install
 
 ### Если не сработало
 
-| Симптом                    | Что сделать                         |
-| -------------------------- | ----------------------------------- |
-| пакет / integration-cursor | `npm i -D @bapm/integration-cursor` |
-| ambiguous detect           | `--target cursor` или `active`      |
-| нет манифеста              | создайте `bapm.yml` или `bapm init` |
+| Симптом                    | Что сделать                          |
+| -------------------------- | ------------------------------------ |
+| пакет / integration-cursor | `npm i -D @b-apm/integration-cursor` |
+| ambiguous detect           | `--target cursor` или `active`       |
+| нет манифеста              | создайте `bapm.yml` или `bapm init`  |

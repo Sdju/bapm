@@ -2,7 +2,7 @@
 
 ### Requirement: Producer CLI modules follow FEOD thin-command pattern
 
-Each M7 producer command (`init`, `pack`) MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/<Name>/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@bapm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
+Each M7 producer command (`init`, `pack`) MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/<Name>/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@b-apm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
 
 #### Scenario: Init command delegates to module API
 

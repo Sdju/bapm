@@ -4,7 +4,7 @@
  */
 import { expect, test, describe } from "vite-plus/test";
 import { existsSync } from "node:fs";
-import { loadYamlDocument, parseLockfile, parseManifest, parsePolicy } from "@bapm/core";
+import { loadYamlDocument, parseLockfile, parseManifest, parsePolicy } from "@b-apm/core";
 import { fixturePath, readFixture } from "./helpers.ts";
 
 function expectRejects(fn: () => unknown, pattern: RegExp): void {

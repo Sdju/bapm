@@ -2,9 +2,9 @@
 
 ### Requirement: Built-in cursor remains without mandatory map entry
 
-**Reason:** Product decision — host integrations (including Cursor) MUST NOT be eagerly registered as CLI built-ins; authors install `@bapm/integration-cursor` (or another package) and declare it via object-map.
+**Reason:** Product decision — host integrations (including Cursor) MUST NOT be eagerly registered as CLI built-ins; authors install `@b-apm/integration-cursor` (or another package) and declare it via object-map.
 
-**Migration:** Declare `targets: { cursor: "@bapm/integration-cursor" }` (or equivalent object-map entry), install the package in the project or alongside the CLI, then use `--target cursor` / `active` / detect as before.
+**Migration:** Declare `targets: { cursor: "@b-apm/integration-cursor" }` (or equivalent object-map entry), install the package in the project or alongside the CLI, then use `--target cursor` / `active` / detect as before.
 
 ## MODIFIED Requirements
 
@@ -55,7 +55,7 @@ After object-map loading attempts (when an object-map is present) and with no ea
 
 ### Requirement: Composition root starts with empty runtime integration registry
 
-The CLI composition root MUST construct the runtime integration registry without eagerly registering `@bapm/integration-cursor` or any other concrete host integration package. Hosts become registered for a run only through successful object-map load (or an equivalent documented non-eager load path used by tests). The CLI distribution MUST NOT hard-depend on concrete `@bapm/integration-*` runtime packages solely to auto-register them at startup.
+The CLI composition root MUST construct the runtime integration registry without eagerly registering `@b-apm/integration-cursor` or any other concrete host integration package. Hosts become registered for a run only through successful object-map load (or an equivalent documented non-eager load path used by tests). The CLI distribution MUST NOT hard-depend on concrete `@b-apm/integration-*` runtime packages solely to auto-register them at startup.
 
 #### Scenario: Empty registry without object-map
 
@@ -64,5 +64,5 @@ The CLI composition root MUST construct the runtime integration registry without
 
 #### Scenario: Cursor registers only via map
 
-- **WHEN** the manifest object-map binds `cursor: "@bapm/integration-cursor"`, that package resolves to a valid runtime integration with `id` `cursor`, and install runs with `--target cursor`
+- **WHEN** the manifest object-map binds `cursor: "@b-apm/integration-cursor"`, that package resolves to a valid runtime integration with `id` `cursor`, and install runs with `--target cursor`
 - **THEN** cursor MUST be registered from the map load and materialize MUST be allowed to proceed through that integration when other install preconditions pass

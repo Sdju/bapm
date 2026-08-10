@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Parses, validates, and serializes OpenAPM/APM lockfile YAML in `@bapm/core` for M2: required container fields, dependency entry shapes, monotonic version policy, sort and semantic equivalence, hash envelopes, unknown/`x-*` round-trip—without resolve, download, install, or target deploy.
+Parses, validates, and serializes OpenAPM/APM lockfile YAML in `@b-apm/core` for M2: required container fields, dependency entry shapes, monotonic version policy, sort and semantic equivalence, hash envelopes, unknown/`x-*` round-trip—without resolve, download, install, or target deploy.
 
 ## Requirements
 

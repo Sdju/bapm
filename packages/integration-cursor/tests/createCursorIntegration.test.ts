@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-cursor package identity and skills materialize unit.
+ * @b-apm/integration-cursor package identity and skills materialize unit.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -10,17 +10,17 @@ import { createCursorIntegration } from "../src/index.ts";
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-describe("@bapm/integration-cursor package", () => {
-  test("package is @bapm/integration-cursor depending on @bapm/integration-api only", () => {
+describe("@b-apm/integration-cursor package", () => {
+  test("package is @b-apm/integration-cursor depending on @b-apm/integration-api only", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-cursor");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.name).toBe("@b-apm/integration-cursor");
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
   });
 });

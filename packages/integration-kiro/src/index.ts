@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-kiro — Kiro IDE/CLI runtime integration for bapm.
+ * @b-apm/integration-kiro — Kiro IDE/CLI runtime integration for bapm.
  */
 
 export {

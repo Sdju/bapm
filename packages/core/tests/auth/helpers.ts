@@ -1,8 +1,8 @@
 /**
  * Auth / credential host-class helpers (promoted from sc-host-class acceptance).
- * Soft-resolve Auth / Registry / Manifest APIs from @bapm/core — missing exports = fail.
+ * Soft-resolve Auth / Registry / Manifest APIs from @b-apm/core — missing exports = fail.
  */
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,7 +19,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 /** PSL eTLD+1 credential host-class classifier (sc-005). */

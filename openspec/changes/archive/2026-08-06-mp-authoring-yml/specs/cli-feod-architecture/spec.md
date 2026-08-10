@@ -2,7 +2,7 @@
 
 ### Requirement: Marketplace authoring stays in existing FEOD Marketplace module
 
-Authoring CLI verbs (`init`, `package`, `check`, optional `migrate`) MUST be implemented inside the existing `src/modules/Marketplace/` directory module and thin `src/commands/marketplace.ts` handler — not as a new top-level command module and not via module-local `commands/` folders. Public exports MUST remain through `modules/Marketplace/index.ts`. Domain authoring logic in the CLI MUST stay thin (argv/orchestration); schema/load/edit/check helpers MUST live in `@bapm/core` and be reached via `app/integrations` / soft IoC, not via direct `@bapm/core` imports inside `commands/`.
+Authoring CLI verbs (`init`, `package`, `check`, optional `migrate`) MUST be implemented inside the existing `src/modules/Marketplace/` directory module and thin `src/commands/marketplace.ts` handler — not as a new top-level command module and not via module-local `commands/` folders. Public exports MUST remain through `modules/Marketplace/index.ts`. Domain authoring logic in the CLI MUST stay thin (argv/orchestration); schema/load/edit/check helpers MUST live in `@b-apm/core` and be reached via `app/integrations` / soft IoC, not via direct `@b-apm/core` imports inside `commands/`.
 
 #### Scenario: Authoring routed through Marketplace module API
 

@@ -54,7 +54,7 @@ describe("CLI integrations · map override + canonical fallback + custom map-onl
       name: "acc-map-override-fallback",
       withLeafSkill: true,
       targets: { cursor: overrideSpec },
-      // no claude map entry — must still resolve @bapm/integration-claude
+      // no claude map entry — must still resolve @b-apm/integration-claude
     });
 
     const registry = createCliIntegrationRegistry();

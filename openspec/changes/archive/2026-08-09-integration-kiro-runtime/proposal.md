@@ -1,10 +1,10 @@
 ## Why
 
-Kiro is a first-class APM target (`kiro`) with project layout under `.kiro/`, but bapm has no `@bapm/integration-kiro` package. Without it, users cannot opt in via `targets:` object-map, detect Kiro projects, materialize steering/agents/skills/hooks, or configure project MCP with runtime `${VAR}` translate.
+Kiro is a first-class APM target (`kiro`) with project layout under `.kiro/`, but bapm has no `@b-apm/integration-kiro` package. Without it, users cannot opt in via `targets:` object-map, detect Kiro projects, materialize steering/agents/skills/hooks, or configure project MCP with runtime `${VAR}` translate.
 
 ## What Changes
 
-- Add greenfield workspace package `@bapm/integration-kiro` implementing `BapmIntegration` (`createKiroIntegration` / `createIntegration`: `detect`, `materialize`, `configureMcp`, thin `compile` → `AGENTS.md`).
+- Add greenfield workspace package `@b-apm/integration-kiro` implementing `BapmIntegration` (`createKiroIntegration` / `createIntegration`: `detect`, `materialize`, `configureMcp`, thin `compile` → `AGENTS.md`).
 - Detect: project `.kiro/` directory (APM `detect_by_dir`; no mkdir / no auto-create).
 - Materialize APM Kiro v3 layouts under `.kiro/`:
   - instructions → `.kiro/steering/<name>.md` (`applyTo` → `inclusion: fileMatch` + `fileMatchPattern`; missing → `inclusion: always`)
@@ -14,7 +14,7 @@ Kiro is a first-class APM target (`kiro`) with project layout under `.kiro/`, bu
   - **skip** prompts / commands (APM matrix **N** for kiro)
 - `configureMcp` → project `.kiro/settings/mcp.json` `mcpServers` with **translate** placeholders (`${VAR}`), opt-in when `.kiro/` exists (APM `kiro.py` / Copilot-class translate); `mcpEnvMode: "translate"`.
 - `deployRoots`: `[".kiro"]` (plus `"."` only if thin `AGENTS.md` compile requires it).
-- Docs + object-map load note (`targets.kiro: "@bapm/integration-kiro"`); package depends on `@bapm/integration-api` only.
+- Docs + object-map load note (`targets.kiro: "@b-apm/integration-kiro"`); package depends on `@b-apm/integration-api` only.
 
 **Non-goals:** user-scope `~/.kiro/` deploy; prompts/commands materialize; rich / non-v3 hook layouts (`when`/`then` legacy); marketplace mapper; canvas; eager CLI registration.
 
@@ -22,7 +22,7 @@ Kiro is a first-class APM target (`kiro`) with project layout under `.kiro/`, bu
 
 ### New Capabilities
 
-- `integration-kiro-runtime`: Kiro IDE/CLI v3 project-scope runtime on `@bapm/integration-kiro` — `.kiro/` detect, steering/agents/skills/hooks materialize (incl. agent tools fail-closed), project MCP translate configure, thin `AGENTS.md` compile, package boundary and docs load path.
+- `integration-kiro-runtime`: Kiro IDE/CLI v3 project-scope runtime on `@b-apm/integration-kiro` — `.kiro/` detect, steering/agents/skills/hooks materialize (incl. agent tools fail-closed), project MCP translate configure, thin `AGENTS.md` compile, package boundary and docs load path.
 
 ### Modified Capabilities
 

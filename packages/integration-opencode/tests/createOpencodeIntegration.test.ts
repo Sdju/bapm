@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-opencode package identity
+ * @b-apm/integration-opencode package identity
  * (detect/materialize/mcp/compile live in sibling suites).
  */
 import { expect, test, describe } from "vite-plus/test";
@@ -10,8 +10,8 @@ import { createIntegration, createOpencodeIntegration } from "../src/index.ts";
 
 const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-describe("@bapm/integration-opencode package", () => {
-  test("package is @bapm/integration-opencode with vite-plus tooling", () => {
+describe("@b-apm/integration-opencode package", () => {
+  test("package is @b-apm/integration-opencode with vite-plus tooling", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
@@ -19,10 +19,10 @@ describe("@bapm/integration-opencode package", () => {
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-opencode");
+    expect(pkg.name).toBe("@b-apm/integration-opencode");
     expect(pkg.type).toBe("module");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
   });
 

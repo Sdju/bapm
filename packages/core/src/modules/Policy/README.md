@@ -1,6 +1,8 @@
 # Policy
 
-OpenAPM-shaped governance for `@bapm/core` (P4): local dual-read + minimal
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
+OpenAPM-shaped governance for `@b-apm/core` (P4): local dual-read + minimal
 remote discovery, `extends` resolve/merge with host-class pin, rule evaluate,
 and install/lock/update gate helpers.
 

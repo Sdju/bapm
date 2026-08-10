@@ -1,4 +1,4 @@
-import { runUninstall as coreRunUninstall } from "@bapm/core";
+import { runUninstall as coreRunUninstall } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type UninstallOptions = { args?: string[]; cwd?: string };

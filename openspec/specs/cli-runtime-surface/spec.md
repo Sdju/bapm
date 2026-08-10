@@ -26,7 +26,7 @@ The package build MUST keep pack entry points for the library index and the CLI 
 
 ### Requirement: Version command prints name and version
 
-Invoking `version`, `-V`, or `--version` MUST print a single line containing the product name and version (sourced from `@bapm/core`) and MUST return exit code `0`.
+Invoking `version`, `-V`, or `--version` MUST print a single line containing the product name and version (sourced from `@b-apm/core`) and MUST return exit code `0`.
 
 #### Scenario: version subcommand succeeds
 
@@ -54,7 +54,7 @@ Invoking `help`, `-h`, `--help`, or omitting the command (default `help`) MUST p
 
 ### Requirement: Install command runs core install happy path
 
-Invoking `install` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@bapm/core` install orchestration (not a permanent not-implemented stub). On a valid project fixture happy path it MUST exit `0` with modules and lock present; when a cursor target is wired via object-map registration and detect/force/`active` applies, deploy files under registered roots MAY/MUST appear per cursor and install-pipeline specs. The command MUST accept `--frozen` and `--no-frozen`, MUST apply CI-default frozen per the CI opt-out requirement, and MUST mirror core frozen failure/success semantics including deployed-hash re-verify when hashes exist whenever effective frozen is on. The command MUST hard-reject unknown flags and MUST reject effective frozen combined with mutation flags such as `--update` when exposed. The CLI distribution MUST NOT hard-depend on `@bapm/integration-cursor` for eager registration; fixtures that need Cursor MUST register it via object-map load of a resolvable package. `@bapm/core` MUST NOT import that package.
+Invoking `install` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@b-apm/core` install orchestration (not a permanent not-implemented stub). On a valid project fixture happy path it MUST exit `0` with modules and lock present; when a cursor target is wired via object-map registration and detect/force/`active` applies, deploy files under registered roots MAY/MUST appear per cursor and install-pipeline specs. The command MUST accept `--frozen` and `--no-frozen`, MUST apply CI-default frozen per the CI opt-out requirement, and MUST mirror core frozen failure/success semantics including deployed-hash re-verify when hashes exist whenever effective frozen is on. The command MUST hard-reject unknown flags and MUST reject effective frozen combined with mutation flags such as `--update` when exposed. The CLI distribution MUST NOT hard-depend on `@b-apm/integration-cursor` for eager registration; fixtures that need Cursor MUST register it via object-map load of a resolvable package. `@b-apm/core` MUST NOT import that package.
 
 #### Scenario: bapm install happy path
 
@@ -158,7 +158,7 @@ Invoking an unrecognized command MUST print an error naming that command, MUST p
 
 ### Requirement: Lock command is registered and runnable
 
-Invoking `lock` MUST be recognized by CLI dispatch and MUST invoke the lock command handler (thin FEOD command → module → `@bapm/core` `resolveAndLock`). Success and failure exit codes MUST follow the `lock-command` capability.
+Invoking `lock` MUST be recognized by CLI dispatch and MUST invoke the lock command handler (thin FEOD command → module → `@b-apm/core` `resolveAndLock`). Success and failure exit codes MUST follow the `lock-command` capability.
 
 #### Scenario: lock subcommand is not unknown
 
@@ -176,7 +176,7 @@ The `lock` command MUST reject unrecognized flags on the bare resolve+write path
 
 ### Requirement: Lifecycle integrity commands are registered
 
-Invoking `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, and `doctor` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@bapm/core` lifecycle/integrity API. Unknown flags on these commands MUST hard-error with non-zero exit.
+Invoking `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, and `doctor` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@b-apm/core` lifecycle/integrity API. Unknown flags on these commands MUST hard-error with non-zero exit.
 
 #### Scenario: Update is not unknown
 
@@ -303,7 +303,7 @@ The `audit` command MUST accept `--format` / `-f` with values `text`, `json`, or
 
 ### Requirement: Producer commands init and pack are registered
 
-Invoking `init` and `pack` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@bapm/core` producer API. Unknown flags on these commands MUST hard-error with non-zero exit. Help text for install MUST mention that a local pack archive path is an accepted install source when that path is implemented.
+Invoking `init` and `pack` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@b-apm/core` producer API. Unknown flags on these commands MUST hard-error with non-zero exit. Help text for install MUST mention that a local pack archive path is an accepted install source when that path is implemented.
 
 #### Scenario: init and pack are not unknown
 
@@ -354,7 +354,7 @@ The CLI MAY register a thin `policy` / `policy status` command that reports whet
 
 ### Requirement: Compile command emits AGENTS.md
 
-Invoking `compile` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@bapm/core` compile orchestration (not a permanent stub). On a valid cursor-oriented fixture it MUST write the configured output file (default `AGENTS.md`) unless `--validate` or `--dry-run` applies, and exit `0` on success. The CLI MUST accept `-o` / `--output`, `--dry-run`, `-v` / `--verbose`, and `--validate` per compile-agents-md. Unknown flags MUST be hard-rejected.
+Invoking `compile` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@b-apm/core` compile orchestration (not a permanent stub). On a valid cursor-oriented fixture it MUST write the configured output file (default `AGENTS.md`) unless `--validate` or `--dry-run` applies, and exit `0` on success. The CLI MUST accept `-o` / `--output`, `--dry-run`, `-v` / `--verbose`, and `--validate` per compile-agents-md. Unknown flags MUST be hard-rejected.
 
 #### Scenario: bapm compile happy path
 
@@ -410,7 +410,7 @@ Install help/flag surface MUST document MCP deploy behavior for cursor and MUST 
 
 ### Requirement: Publish command is registered
 
-Invoking `publish` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@bapm/core` publish APIs (subject to experimental gate). Unknown flags MUST hard-error with non-zero exit.
+Invoking `publish` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@b-apm/core` publish APIs (subject to experimental gate). Unknown flags MUST hard-error with non-zero exit.
 
 #### Scenario: publish is not unknown
 
@@ -438,7 +438,7 @@ Invoking `self-update` MUST be recognized by CLI dispatch and MUST invoke a thin
 
 ### Requirement: Install command supports dry-run flag
 
-The install command MUST accept `--dry-run`. When set, CLI MUST pass dry-run into `@bapm/core` install and MUST exit `0` on a successful preview path with messaging that no durable project changes were made (or equivalent). Project durable paths MUST remain unchanged per install-pipeline dry-run rules. Help MUST document `--dry-run`.
+The install command MUST accept `--dry-run`. When set, CLI MUST pass dry-run into `@b-apm/core` install and MUST exit `0` on a successful preview path with messaging that no durable project changes were made (or equivalent). Project durable paths MUST remain unchanged per install-pipeline dry-run rules. Help MUST document `--dry-run`.
 
 #### Scenario: bapm install --dry-run previews without writes
 
@@ -566,7 +566,7 @@ The `outdated` command MUST accept `-v` and `--verbose` as equivalent flags enab
 
 ### Requirement: outdated accepts parallel-checks and json flags
 
-The `outdated` command MUST accept `-j <n>` and `--parallel-checks <n>` (and `=<n>` forms consistent with other parallel CLI flags) as equivalent ways to set remote-check concurrency. When the flag is omitted, CLI MUST apply default **4**. Value **`0` MUST mean serial**. Invalid or missing numeric values MUST fail with non-zero exit and a clear error. Parsed concurrency MUST be forwarded to `@bapm/core` outdated. The command MUST also accept `--json` (long form only): when set, success MUST write stable JSON of existing outdated rows to stdout and MUST NOT print the human table/text; errors MUST go to stderr (same posture as `deps why --json` / `policy status --json`). Combining `--json` with `-j` / `-v` MUST be allowed; JSON wins over human text. **`-j` MUST NOT enable JSON** (APM binds `-j` to parallel-checks only). Help MUST document `-j` / `--parallel-checks` (default 4 / `0` serial) and `--json` as bapm machine output of real rows — MUST NOT claim APM has `outdated --json`. Unknown flags MUST remain fail-closed. Exit policy from `lifecycle-outdated` MUST remain unchanged. JSON MUST use only fields already computed on rows (`name`, `status`, `current`, `latest`, optional `repo_url` / `tip_ref` / `detail`); inventing APM-only keys such as marketplace/registry `source` is FORBIDDEN.
+The `outdated` command MUST accept `-j <n>` and `--parallel-checks <n>` (and `=<n>` forms consistent with other parallel CLI flags) as equivalent ways to set remote-check concurrency. When the flag is omitted, CLI MUST apply default **4**. Value **`0` MUST mean serial**. Invalid or missing numeric values MUST fail with non-zero exit and a clear error. Parsed concurrency MUST be forwarded to `@b-apm/core` outdated. The command MUST also accept `--json` (long form only): when set, success MUST write stable JSON of existing outdated rows to stdout and MUST NOT print the human table/text; errors MUST go to stderr (same posture as `deps why --json` / `policy status --json`). Combining `--json` with `-j` / `-v` MUST be allowed; JSON wins over human text. **`-j` MUST NOT enable JSON** (APM binds `-j` to parallel-checks only). Help MUST document `-j` / `--parallel-checks` (default 4 / `0` serial) and `--json` as bapm machine output of real rows — MUST NOT claim APM has `outdated --json`. Unknown flags MUST remain fail-closed. Exit policy from `lifecycle-outdated` MUST remain unchanged. JSON MUST use only fields already computed on rows (`name`, `status`, `current`, `latest`, optional `repo_url` / `tip_ref` / `detail`); inventing APM-only keys such as marketplace/registry `source` is FORBIDDEN.
 
 #### Scenario: -j and --parallel-checks are recognized
 
@@ -605,7 +605,7 @@ The `outdated` command MUST accept `-j <n>` and `--parallel-checks <n>` (and `=<
 
 ### Requirement: Update exposes verbose and parallel-downloads flags
 
-The `update` command MUST accept `-v` / `--verbose` and `--parallel-downloads <n>` (and `--parallel-downloads=<n>`). Verbose MUST enable keep-row plan printing per `lifecycle-update`. `--parallel-downloads` MUST parse a non-negative integer (`0` = serial); when omitted, CLI/core MUST apply default **4**. Invalid or missing values for `--parallel-downloads` MUST fail with non-zero exit and a clear error. Values MUST be forwarded to `@bapm/core` update. Unknown flags MUST remain hard errors. Help for `update` MUST document `-v`/`--verbose` and `--parallel-downloads` (including that `0` means serial). Existing `-y`/`--yes`, `--dry-run`, package scope, `--policy`/`--no-policy`, and non-TTY requiring `-y` MUST remain unchanged.
+The `update` command MUST accept `-v` / `--verbose` and `--parallel-downloads <n>` (and `--parallel-downloads=<n>`). Verbose MUST enable keep-row plan printing per `lifecycle-update`. `--parallel-downloads` MUST parse a non-negative integer (`0` = serial); when omitted, CLI/core MUST apply default **4**. Invalid or missing values for `--parallel-downloads` MUST fail with non-zero exit and a clear error. Values MUST be forwarded to `@b-apm/core` update. Unknown flags MUST remain hard errors. Help for `update` MUST document `-v`/`--verbose` and `--parallel-downloads` (including that `0` means serial). Existing `-y`/`--yes`, `--dry-run`, package scope, `--policy`/`--no-policy`, and non-TTY requiring `-y` MUST remain unchanged.
 
 #### Scenario: Verbose short flag accepted on update
 
@@ -634,7 +634,7 @@ The `update` command MUST accept `-v` / `--verbose` and `--parallel-downloads <n
 
 ### Requirement: Install exposes force insecure dev and only flags
 
-The install command MUST accept `--force`, `--allow-insecure`, repeatable `--allow-insecure-host <hostname>`, `--dev`, and `--only <apm|mcp>`. Parsed values MUST be forwarded to `@bapm/core` install options. `--only` values other than `apm` or `mcp` MUST fail closed with a clear usage error. Invalid `--allow-insecure-host` hostnames MUST fail closed at parse. Unknown flags remain hard errors. Help MUST document these flags and MUST state that `--force` does not refresh refs and does not bypass frozen or policy. Help MUST NOT document `--refresh` in this change (deferred). Help MUST NOT conflate `--force` with `--target` / forced-target activation.
+The install command MUST accept `--force`, `--allow-insecure`, repeatable `--allow-insecure-host <hostname>`, `--dev`, and `--only <apm|mcp>`. Parsed values MUST be forwarded to `@b-apm/core` install options. `--only` values other than `apm` or `mcp` MUST fail closed with a clear usage error. Invalid `--allow-insecure-host` hostnames MUST fail closed at parse. Unknown flags remain hard errors. Help MUST document these flags and MUST state that `--force` does not refresh refs and does not bypass frozen or policy. Help MUST NOT document `--refresh` in this change (deferred). Help MUST NOT conflate `--force` with `--target` / forced-target activation.
 
 #### Scenario: New project-scope flags accepted
 
@@ -804,7 +804,7 @@ The CLI `compile` command MUST accept `--target <id>` and `--target=<id>`, forwa
 
 ### Requirement: Install and compile load manifest integration map before core
 
-When the project manifest uses object-map `target` / `targets`, the CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry before invoking `@bapm/core` install or compile orchestration. The registry MUST start without eagerly registered built-in hosts. Map values MAY be npm package specifiers or local filesystem paths as defined by that capability. Legacy string/array manifests MUST NOT receive built-in-only host registration; without an object-map, no concrete host integrations are registered by the composition root. Help text MAY mention that object-map bindings load integration packages or local modules; it MUST continue to document `--target <id>` as the forced-host selector and MUST NOT claim that map keys alone activate hosts when `active` is absent. Help MUST NOT claim Cursor ships built into the CLI.
+When the project manifest uses object-map `target` / `targets`, the CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry before invoking `@b-apm/core` install or compile orchestration. The registry MUST start without eagerly registered built-in hosts. Map values MAY be npm package specifiers or local filesystem paths as defined by that capability. Legacy string/array manifests MUST NOT receive built-in-only host registration; without an object-map, no concrete host integrations are registered by the composition root. Help text MAY mention that object-map bindings load integration packages or local modules; it MUST continue to document `--target <id>` as the forced-host selector and MUST NOT claim that map keys alone activate hosts when `active` is absent. Help MUST NOT claim Cursor ships built into the CLI.
 
 #### Scenario: Install loads map then forces custom target
 

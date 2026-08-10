@@ -1,28 +1,28 @@
 ## MODIFIED Requirements
 
-### Requirement: Package @bapm/integration-api exists with vite-plus TypeScript toolchain
+### Requirement: Package @b-apm/integration-api exists with vite-plus TypeScript toolchain
 
-The monorepo MUST include package directory `packages/integration-api` with package name `@bapm/integration-api`. The package MUST be TypeScript ESM and MUST use vite-plus scripts/tooling consistent with `packages/core` and `packages/cli`.
+The monorepo MUST include package directory `packages/integration-api` with package name `@b-apm/integration-api`. The package MUST be TypeScript ESM and MUST use vite-plus scripts/tooling consistent with `packages/core` and `packages/cli`.
 
 #### Scenario: Package identity and toolchain
 
 - **WHEN** inspecting the workspace after migration
-- **THEN** `packages/integration-api` exists with name `@bapm/integration-api` and exposes vite-plus build, test, and check scripts as applicable
+- **THEN** `packages/integration-api` exists with name `@b-apm/integration-api` and exposes vite-plus build, test, and check scripts as applicable
 
 ### Requirement: Boundary-only dependency for core
 
-`@bapm/core` MUST depend on `@bapm/integration-api` for speaking to integrations and MUST NOT import concrete `@bapm/integration-*` package internals through this boundary.
+`@b-apm/core` MUST depend on `@b-apm/integration-api` for speaking to integrations and MUST NOT import concrete `@b-apm/integration-*` package internals through this boundary.
 
 #### Scenario: Core speaks only through integration api package
 
-- **WHEN** `@bapm/core` needs to describe or invoke a host capability
-- **THEN** it MUST do so through `@bapm/integration-api` contracts and registration only
+- **WHEN** `@b-apm/core` needs to describe or invoke a host capability
+- **THEN** it MUST do so through `@b-apm/integration-api` contracts and registration only
 
 ## ADDED Requirements
 
 ### Requirement: Integration API exposes generic optional capabilities
 
-`@bapm/integration-api` MUST expose capability contracts for runtime deployment, MCP configuration, compile emission, and marketplace-output emission without encoding a fixed host catalog. Capability discovery and invocation MUST permit an integration to implement any supported subset.
+`@b-apm/integration-api` MUST expose capability contracts for runtime deployment, MCP configuration, compile emission, and marketplace-output emission without encoding a fixed host catalog. Capability discovery and invocation MUST permit an integration to implement any supported subset.
 
 #### Scenario: Marketplace-only integration is usable
 

@@ -7,7 +7,7 @@
 
 ## 2. Core Pack module (zip + secrets)
 
-- [x] 2.1 Add zip library to pnpm catalog via CLI (pnpm-dependencies skill); wire into `@bapm/core` only through Pack adapters
+- [x] 2.1 Add zip library to pnpm catalog via CLI (pnpm-dependencies skill); wire into `@b-apm/core` only through Pack adapters
 - [x] 2.2 Add `modules/Pack` (directory + `index.ts`): collect pack set (manifest, optional lock/primitives); default excludes (`.git`, `node_modules`, prior artifacts)
 - [x] 2.3 Implement sc-007 secret-pattern refuse (`.env`, `.env.*`, `*.pem`, `*.key`, `id_rsa`, `id_ed25519`); fail closed before durable zip finalize
 - [x] 2.4 Implement `runPack` plain-zip create (`--archive`); validate manifest first; `--dry-run` leaves no durable artifact
@@ -38,5 +38,5 @@
 
 - [x] 6.1 Confirm workspace still has only `bapm-target-api` + `bapm-target-cursor` among `bapm-target-*`; no new target package; no core→cursor hard dep
 - [x] 6.2 Keep M1–M6 consumer regressions green (install/lock/update/audit/cursor)
-- [x] 6.3 Run build/test/`vp check` for `@bapm/core` and `bapm`; fix in-scope regressions
+- [x] 6.3 Run build/test/`vp check` for `@b-apm/core` and `bapm`; fix in-scope regressions
 - [x] 6.4 Spot-check: init→pack zip→install archive round-trip; pack refuses `.env`; `--check-release` align/mismatch/bad-tag

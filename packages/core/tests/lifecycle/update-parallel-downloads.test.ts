@@ -2,7 +2,7 @@
  * Core update parallelDownloads default 4 / 0 = serial (lifecycle-update).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { DEFAULT_PARALLEL_DOWNLOADS } from "@bapm/core";
+import { DEFAULT_PARALLEL_DOWNLOADS } from "@b-apm/core";
 import {
   createFakePorts,
   createTempProject,

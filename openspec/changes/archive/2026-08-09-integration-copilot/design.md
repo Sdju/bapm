@@ -1,14 +1,14 @@
 ## Context
 
-See proposal.md — Why. Cursor/Claude/Codex/OpenCode already show the runtime package shape (`create*Integration`, helpers from `@bapm/integration-api`, hooks ownership, `configureMcp`, optional `compile`). APM `KNOWN_TARGETS["copilot"]` uses `root_dir=".github"`, prompts-native (no commands mapping), skills under `.agents/skills/`, per-file hooks, MCP at `~/.copilot/mcp-config.json` with translate-mode placeholders, compile → `.github/copilot-instructions.md`. Today install always runs `bakeMcpServerMaps` before every `configureMcp`, which would break Copilot translate parity unless dispatch is host-policy-aware.
+See proposal.md — Why. Cursor/Claude/Codex/OpenCode already show the runtime package shape (`create*Integration`, helpers from `@b-apm/integration-api`, hooks ownership, `configureMcp`, optional `compile`). APM `KNOWN_TARGETS["copilot"]` uses `root_dir=".github"`, prompts-native (no commands mapping), skills under `.agents/skills/`, per-file hooks, MCP at `~/.copilot/mcp-config.json` with translate-mode placeholders, compile → `.github/copilot-instructions.md`. Today install always runs `bakeMcpServerMaps` before every `configureMcp`, which would break Copilot translate parity unless dispatch is host-policy-aware.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Greenfield `@bapm/integration-copilot` with project-scope file primitives + home MCP translate (parity A).
+- Greenfield `@b-apm/integration-copilot` with project-scope file primitives + home MCP translate (parity A).
 - Reuse integration-api helpers (`primitivesList`, `sanitizeName`, `assertUnderDeployRoots`, `readPrimitiveContent`, skill directory copy patterns) without inventing a second contract layer.
-- Document object-map load: `targets: { copilot: "@bapm/integration-copilot" }` (CLI already maps `--target <id>` → package when declared).
+- Document object-map load: `targets: { copilot: "@b-apm/integration-copilot" }` (CLI already maps `--target <id>` → package when declared).
 
 **Non-Goals:**
 
@@ -19,7 +19,7 @@ See proposal.md — Why. Cursor/Claude/Codex/OpenCode already show the runtime p
 ## Decisions
 
 1. **Change / package naming**  
-   OpenSpec change id: `integration-copilot`. Capability id: `integration-copilot-runtime` (matches sibling `integration-*-runtime` specs). Package: `@bapm/integration-copilot` (greenfield; no marketplace dual-surface).  
+   OpenSpec change id: `integration-copilot`. Capability id: `integration-copilot-runtime` (matches sibling `integration-*-runtime` specs). Package: `@b-apm/integration-copilot` (greenfield; no marketplace dual-surface).  
    _Alternative:_ change folder `integration-copilot-runtime` — rejected; shorter change name is enough when capability carries `-runtime`.
 
 2. **Default `deployRoots`: `[".github", ".agents"]`**  
@@ -70,7 +70,7 @@ See proposal.md — Why. Cursor/Claude/Codex/OpenCode already show the runtime p
 ## Migration Plan
 
 1. Land package + api `mcpEnvMode` + install bake dispatch + tests.
-2. Users: `pnpm add -D @bapm/integration-copilot`, declare `targets.copilot`, `bapm install --target copilot`, optional `bapm compile`.
+2. Users: `pnpm add -D @b-apm/integration-copilot`, declare `targets.copilot`, `bapm install --target copilot`, optional `bapm compile`.
 3. Rollback: remove map entry; delete generated `.github/**` / `.agents/skills/**` / sidecar; manually edit `~/.copilot/mcp-config.json` if needed.
 
 ## Open Questions

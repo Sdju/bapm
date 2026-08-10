@@ -1,20 +1,20 @@
 ## Context
 
-See `proposal.md` for motivation. Current `packages/cli` is flat: `src/cli.ts` boots `runCli` from `src/run.ts`; `src/index.ts` re-exports `runCli`. All command logic and direct `@bapm/core` imports live in `run.ts`. Locked FEOD profile and `feod` block in `package.json` already exist; `tsconfig` has no `@/*` paths yet. Scope is only `packages/cli`.
+See `proposal.md` for motivation. Current `packages/cli` is flat: `src/cli.ts` boots `runCli` from `src/run.ts`; `src/index.ts` re-exports `runCli`. All command logic and direct `@b-apm/core` imports live in `run.ts`. Locked FEOD profile and `feod` block in `package.json` already exist; `tsconfig` has no `@/*` paths yet. Scope is only `packages/cli`.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
 - Map existing CLI surface onto locked FEOD layers without changing observable command behavior.
-- Wire `@bapm/core` only through `app/integrations` + soft IoC in `app/init`.
+- Wire `@b-apm/core` only through `app/integrations` + soft IoC in `app/init`.
 - Keep `vp pack` entries and public `runCli` compatible.
 
 **Non-Goals:**
 
 - Changing FEOD profile parameters or adding feod ESLint plugin.
 - Implementing real install / lock / resolver flows.
-- Touching `@bapm/core` or `apps/docs`.
+- Touching `@b-apm/core` or `apps/docs`.
 
 ## Decisions
 
@@ -27,7 +27,7 @@ packages/cli/src/
     registry.ts       # manual command map
     run.ts            # runCli(argv) dispatch via registry
     init/             # soft IoC: createHelp / createVersion / createInstall
-    integrations/     # adapters to @bapm/core (constants, getVersion, …)
+    integrations/     # adapters to @b-apm/core (constants, getVersion, …)
   commands/
     help.ts
     version.ts
@@ -57,11 +57,11 @@ packages/cli/src/
 ### D3 — Install stub as module adapter over core
 
 - `modules/Install` exposes `createInstall(deps?)` (soft IoC) with `run(options) → { ok, … }`.
-- Stub messages use manifest/lock/name values injected from `app/integrations` (wrapping `@bapm/core`), assembled in `app/init/install.ts`.
+- Stub messages use manifest/lock/name values injected from `app/integrations` (wrapping `@b-apm/core`), assembled in `app/init/install.ts`.
 - `commands/install.ts` only parses argv and maps result to exit code.
 
-**Rationale:** Explicit adapter boundary for future real install; commands never import `@bapm/core`.  
-**Alternatives considered:** Direct `@bapm/core` import inside `modules/Install` — weaker boundary; allowed only if one-way and stable, but locked guidance prefers integrations + init for external packages. Commands importing core — forbidden by proposal.
+**Rationale:** Explicit adapter boundary for future real install; commands never import `@b-apm/core`.  
+**Alternatives considered:** Direct `@b-apm/core` import inside `modules/Install` — weaker boundary; allowed only if one-way and stable, but locked guidance prefers integrations + init for external packages. Commands importing core — forbidden by proposal.
 
 ### D4 — Soft IoC wiring
 

@@ -2,7 +2,7 @@
  * lk-015: record tree_sha256 on git lock write (resolveAndLock).
  */
 import { asText } from "../asText.ts";
-import { loadLockfile, resolveAndLock } from "@bapm/core";
+import { loadLockfile, resolveAndLock } from "@b-apm/core";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {

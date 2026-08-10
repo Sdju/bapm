@@ -28,7 +28,7 @@ Users cannot answer “which installed package owns this deployed path?” witho
 
 ## Impact
 
-- `@bapm/core`: new Find (or Lockfile/Find) helpers — `buildReverseIndex`, `lookup`, find orchestration; public API; optional Install dual-write in `deployedInventory`.
+- `@b-apm/core`: new Find (or Lockfile/Find) helpers — `buildReverseIndex`, `lookup`, find orchestration; public API; optional Install dual-write in `deployedInventory`.
 - `bapm` CLI: new `Find` FEOD module + command; Help/registry wiring.
 - Tests: acceptance under `tests/acceptance/mp-find/`; unit coverage for reverse index + CLI smoke.
 - Docs/design soft note only; **no** CONFORMANCE.md / marketplace dependency for find path.

@@ -1,6 +1,6 @@
 ## 1. Package scaffold
 
-- [x] 1.1 Create `packages/integration-antigravity` (package.json, tsconfig, vite.config, README) mirroring sibling integration packages; depend on `@bapm/integration-api` only
+- [x] 1.1 Create `packages/integration-antigravity` (package.json, tsconfig, vite.config, README) mirroring sibling integration packages; depend on `@b-apm/integration-api` only
 - [x] 1.2 Export `createAntigravityIntegration` and `createIntegration` from `src/index.ts` with `id: "antigravity"` and deployRoots `[".agents", "."]`
 
 ## 2. Runtime behavior

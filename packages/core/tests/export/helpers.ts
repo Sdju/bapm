@@ -2,7 +2,7 @@
  * Helpers for Export / SBOM suite.
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -15,7 +15,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export function getExportSbom(): (options: Record<string, unknown>) => unknown {

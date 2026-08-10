@@ -26,4 +26,4 @@
 - [x] 5.1 Unit tests for detect, each materialize kind (skill/agent/skip), hooks sidecar idempotence, MCP write/SSE/malformed skip, compile include-instructions / no-write
 - [x] 5.2 Keep marketplace mapper tests green; add/adjust any core/cli shim expectations if dual exports require it
 - [x] 5.3 Update user docs (`supported-hosts`, architecture index, marketplace-pack situations, compile notes) so Codex is opt-in runtime + marketplace, not marketplace-only; note shared `AGENTS.md` last-writer policy
-- [x] 5.4 Run package/workspace checks (`vp check` / targeted tests) for `@bapm/integration-codex` and affected docs/tests
+- [x] 5.4 Run package/workspace checks (`vp check` / targeted tests) for `@b-apm/integration-codex` and affected docs/tests

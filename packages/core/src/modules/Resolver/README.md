@@ -1,6 +1,8 @@
 # Resolver
 
-Transitive dependency classify, BFS resolve, modules-cache download, and lock populate for `@bapm/core`.
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
+Transitive dependency classify, BFS resolve, modules-cache download, and lock populate for `@b-apm/core`.
 
 ## Public API
 

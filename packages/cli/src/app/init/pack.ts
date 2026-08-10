@@ -1,4 +1,4 @@
-import { checkReleaseTag, runPack } from "@bapm/core";
+import { checkReleaseTag, runPack } from "@b-apm/core";
 import { createPack } from "@/modules/Pack";
 import { coreIntegration } from "../integrations/core.ts";
 import { loadCliMarketplaceOutputsForPack } from "../integrations/marketplaceOutputs.ts";

@@ -1,5 +1,5 @@
 /**
- * Package identity / thin surface for @bapm/integration-agent-skills
+ * Package identity / thin surface for @b-apm/integration-agent-skills
  * .
  */
 import { describe, expect, test } from "vite-plus/test";
@@ -12,8 +12,8 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 
-describe("@bapm/integration-agent-skills package boundary", () => {
-  test("package is @bapm/integration-agent-skills with integration-api only (no core hard-dep)", () => {
+describe("@b-apm/integration-agent-skills package boundary", () => {
+  test("package is @b-apm/integration-agent-skills with integration-api only (no core hard-dep)", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
@@ -22,10 +22,10 @@ describe("@bapm/integration-agent-skills package boundary", () => {
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-agent-skills");
+    expect(pkg.name).toBe("@b-apm/integration-agent-skills");
     expect(pkg.type).toBe("module");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
     expect(String(pkg.description ?? "")).toMatch(/agent-skills|skills/i);
   });
@@ -41,13 +41,13 @@ describe("@bapm/integration-agent-skills package boundary", () => {
     expect(target.deployRoots).toEqual([".agents"]);
   });
 
-  test("@bapm/core must not hard-depend on @bapm/integration-agent-skills", () => {
+  test("@b-apm/core must not hard-depend on @b-apm/integration-agent-skills", () => {
     const corePkg = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
-    expect(corePkg.dependencies).not.toHaveProperty("@bapm/integration-agent-skills");
+    expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-agent-skills");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-agent-skills["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-agent-skills["']\s*:/);
   });
 });

@@ -3,7 +3,7 @@ import {
   createDefaultGitRemote,
   createDefaultTagLister,
   runUpdate as coreRunUpdate,
-} from "@bapm/core";
+} from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 import { createInterface } from "node:readline";
 

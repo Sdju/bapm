@@ -1,5 +1,7 @@
 # Mcp
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Collect MCP server definitions, bake env/header placeholders, and update lock `mcp_*` inventory.
 
 ## Public API

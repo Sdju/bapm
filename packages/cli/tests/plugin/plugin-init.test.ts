@@ -7,7 +7,7 @@ import {
   extractPackArchive,
   loadManifest,
   runPack,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, test } from "vite-plus/test";

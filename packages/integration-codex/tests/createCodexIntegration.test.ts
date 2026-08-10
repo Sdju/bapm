@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-codex package identity + factory surface
+ * @b-apm/integration-codex package identity + factory surface
  * (detect/materialize/hooks/mcp/compile live in sibling suites;
  * promoted from integration-codex-runtime acceptance).
  */
@@ -14,8 +14,8 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 
-describe("@bapm/integration-codex package", () => {
-  test("package is @bapm/integration-codex with integration-api dep and no core hard-dep", () => {
+describe("@b-apm/integration-codex package", () => {
+  test("package is @b-apm/integration-codex with integration-api dep and no core hard-dep", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
@@ -24,10 +24,10 @@ describe("@bapm/integration-codex package", () => {
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-codex");
+    expect(pkg.name).toBe("@b-apm/integration-codex");
     expect(pkg.type).toBe("module");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
     expect(String(pkg.description ?? "")).toMatch(/runtime/i);
   });
@@ -43,13 +43,13 @@ describe("@bapm/integration-codex package", () => {
     expect(target.deployRoots).toEqual(expect.arrayContaining([".codex", ".agents", "."]));
   });
 
-  test("@bapm/core must not hard-depend on @bapm/integration-codex", () => {
+  test("@b-apm/core must not hard-depend on @b-apm/integration-codex", () => {
     const corePkg = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
-    expect(corePkg.dependencies).not.toHaveProperty("@bapm/integration-codex");
+    expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-codex");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-codex["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-codex["']\s*:/);
   });
 });

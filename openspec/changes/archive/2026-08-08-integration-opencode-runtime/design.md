@@ -1,6 +1,6 @@
 ## Context
 
-See proposal.md — Why. Today only `@bapm/integration-cursor` is a full runtime host; Claude/Codex are marketplace-output only. Canonical token `opencode` is already valid in `Manifest/targets.ts`. OpenCode (v1.x docs matching the local `opencode` CLI) discovers skills from `.opencode/skills`, agents from `.opencode/agents`, and MCP from project `opencode.json` under top-level `mcp` with `type: "local" | "remote"`. Dynamic load via object-map `targets:` is already implemented (`target-integration-dynamic-load`); `bapm init --target <id>` already writes `@bapm/integration-<id>`.
+See proposal.md — Why. Today only `@b-apm/integration-cursor` is a full runtime host; Claude/Codex are marketplace-output only. Canonical token `opencode` is already valid in `Manifest/targets.ts`. OpenCode (v1.x docs matching the local `opencode` CLI) discovers skills from `.opencode/skills`, agents from `.opencode/agents`, and MCP from project `opencode.json` under top-level `mcp` with `type: "local" | "remote"`. Dynamic load via object-map `targets:` is already implemented (`target-integration-dynamic-load`); `bapm init --target <id>` already writes `@b-apm/integration-<id>`.
 
 ## Goals / Non-Goals
 
@@ -51,7 +51,7 @@ See proposal.md — Why. Today only `@bapm/integration-cursor` is a full runtime
 ## Migration Plan
 
 1. Land package + unit tests; no default manifest change in this repo.
-2. Users: `npm i -D @bapm/integration-opencode`, set `targets.opencode`, `bapm install --target opencode`, run `opencode`.
+2. Users: `npm i -D @b-apm/integration-opencode`, set `targets.opencode`, `bapm install --target opencode`, run `opencode`.
 3. Rollback: remove map entry / uninstall package; delete generated `.opencode/**` and owned `mcp` keys manually if desired.
 
 ## Open Questions

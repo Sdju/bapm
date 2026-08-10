@@ -24,6 +24,6 @@ User docs (`config-manifest.md`) are an apply-task deliverable via doc-expert �
 
 ## Impact
 
-- `@bapm/core` Manifest parse validation for `env` (type + overlay merge already present on master — do not re-invent); `Mcp/bake` lookup; Install wire passes effective `document.env` into `bakeMcpServerMaps`
+- `@b-apm/core` Manifest parse validation for `env` (type + overlay merge already present on master — do not re-invent); `Mcp/bake` lookup; Install wire passes effective `document.env` into `bakeMcpServerMaps`
 - Tests: parse + bake + install Cursor
 - Docs: `config-manifest.md`

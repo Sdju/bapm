@@ -1,6 +1,6 @@
 ## 1. Core Registry HTTP client
 
-- [x] 1.1 Add `@bapm/core` directory module `Registry` (FEOD): injectable HTTP transport port; default real fetch
+- [x] 1.1 Add `@b-apm/core` directory module `Registry` (FEOD): injectable HTTP transport port; default real fetch
 - [x] 1.2 Implement list versions `GET /v1/packages/{owner}/{repo}/versions` with JSON parse, ~10 MiB cap, fail-closed diagnostics
 - [x] 1.3 Implement download `GET …/versions/{version}/download` returning archive bytes/stream handle
 - [x] 1.4 Implement publish PUT `…/versions/{version}` with zip body; map 401/403/409/422 to actionable errors
@@ -55,4 +55,4 @@
 - [x] 8.1 Confirm workspace still only `bapm-target-api` + `bapm-target-cursor` among `bapm-target-*`; prefer zero target edits; no core→cursor hard dep
 - [x] 8.2 Dual-read: apm.yml-only and bapm.yml-only work for resolve/install/publish preflight; both present → error
 - [x] 8.3 Regression: non-registry projects (M3–M9) green; pack unchanged; marketplace still deferred
-- [x] 8.4 Run build/test/`vp check` for `@bapm/core` and `bapm`; fix in-scope regressions
+- [x] 8.4 Run build/test/`vp check` for `@b-apm/core` and `bapm`; fix in-scope regressions

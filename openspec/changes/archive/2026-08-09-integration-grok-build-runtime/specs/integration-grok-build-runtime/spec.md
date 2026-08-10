@@ -1,12 +1,12 @@
 ## Purpose
 
-Defines Grok Build project-scope runtime on `@bapm/integration-grok-build`: detect `.grok/` only, materialize instructions/agents/commands/skills under `.grok/`, skip hooks/prompts and MCP, and compile project-root `AGENTS.md`.
+Defines Grok Build project-scope runtime on `@b-apm/integration-grok-build`: detect `.grok/` only, materialize instructions/agents/commands/skills under `.grok/`, skip hooks/prompts and MCP, and compile project-root `AGENTS.md`.
 
 ## ADDED Requirements
 
 ### Requirement: Package exposes grok-build runtime factory
 
-`@bapm/integration-grok-build` MUST export a runtime integration factory usable as `createIntegration` (and MAY export a named alias such as `createGrokBuildIntegration`). The runtime integration MUST implement `BapmIntegration` (`id`, `deployRoots`, `detect`, `materialize`) and MUST depend on `@bapm/integration-api` without requiring `@bapm/core` as a hard dependency for host behavior. Package id for the runtime target MUST be `grok-build`. The integration MUST NOT expose `configureMcp` (APM matrix: MCP unsupported for grok-build).
+`@b-apm/integration-grok-build` MUST export a runtime integration factory usable as `createIntegration` (and MAY export a named alias such as `createGrokBuildIntegration`). The runtime integration MUST implement `BapmIntegration` (`id`, `deployRoots`, `detect`, `materialize`) and MUST depend on `@b-apm/integration-api` without requiring `@b-apm/core` as a hard dependency for host behavior. Package id for the runtime target MUST be `grok-build`. The integration MUST NOT expose `configureMcp` (APM matrix: MCP unsupported for grok-build).
 
 #### Scenario: Runtime factory registers as grok-build
 

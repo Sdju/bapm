@@ -1,4 +1,4 @@
-import { persistUserExecutableGrant, type SaveUserExecutableGrantsOptions } from "@bapm/core";
+import { persistUserExecutableGrant, type SaveUserExecutableGrantsOptions } from "@b-apm/core";
 import type { LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type DenyCliDeps = {

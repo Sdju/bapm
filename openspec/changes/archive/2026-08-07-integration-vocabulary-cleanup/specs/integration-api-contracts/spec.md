@@ -6,7 +6,7 @@ Defines the integration-neutral public API through which consumers register and 
 
 ### Requirement: Public API uses integration-neutral registration vocabulary
 
-`@bapm/integration-api` MUST export `BapmIntegration`, `IntegrationRegistry`, and `createIntegrationRegistry` as its public integration registration vocabulary. The registry MUST preserve the existing capability registration, listing, lookup, detection, and invocation behavior for integrations.
+`@b-apm/integration-api` MUST export `BapmIntegration`, `IntegrationRegistry`, and `createIntegrationRegistry` as its public integration registration vocabulary. The registry MUST preserve the existing capability registration, listing, lookup, detection, and invocation behavior for integrations.
 
 #### Scenario: Consumer registers an integration with the renamed API
 
@@ -15,7 +15,7 @@ Defines the integration-neutral public API through which consumers register and 
 
 ### Requirement: Legacy public API aliases are unavailable
 
-`@bapm/integration-api` MUST NOT resolve or export `BapmTarget`, `TargetRegistry`, `createTargetRegistry`, `createRegistry`, or another alias that preserves the retired target-era public registration API.
+`@b-apm/integration-api` MUST NOT resolve or export `BapmTarget`, `TargetRegistry`, `createTargetRegistry`, `createRegistry`, or another alias that preserves the retired target-era public registration API.
 
 #### Scenario: Consumer imports a retired API name
 

@@ -13,7 +13,7 @@ import {
   loadLockfile,
   parseLockfile,
   serializeLockfile,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { depsOf, expectThrowsMatching, fixturePath, lockOf, readFixture } from "./helpers.ts";
 
 function loadFixture(name: string) {

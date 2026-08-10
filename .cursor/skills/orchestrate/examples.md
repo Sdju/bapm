@@ -5,7 +5,7 @@
 Пользователь:
 
 ```
-/orchestrate добавить парсинг bapm.yml из файла на диске в @bapm/core
+/orchestrate добавить парсинг bapm.yml из файла на диске в @b-apm/core
 ```
 
 Parent:

@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-antigravity — Antigravity CLI (agy) runtime integration for bapm.
+ * @b-apm/integration-antigravity — Antigravity CLI (agy) runtime integration for bapm.
  */
 
 export {

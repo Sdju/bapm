@@ -5,7 +5,7 @@ import {
   formatAuditCiSarif,
   runAuditCi as coreRunAuditCi,
   type AuditCiFormat,
-} from "@bapm/core";
+} from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type AuditOptions = { args?: string[]; cwd?: string };

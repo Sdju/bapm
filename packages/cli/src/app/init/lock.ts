@@ -1,4 +1,4 @@
-import { exportSbom, resolveAndLock } from "@bapm/core";
+import { exportSbom, resolveAndLock } from "@b-apm/core";
 import { createLock } from "@/modules/Lock";
 
 export const lock = createLock({

@@ -1,12 +1,12 @@
 ## Purpose
 
-Defines Claude Code runtime behavior on `@bapm/integration-claude`: project detect, `.claude/` materialize for skills/instructions/agents/commands/hooks, project `.mcp.json` configure, optional `CLAUDE.md` compile, while marketplace pack mapping remains available from the same package.
+Defines Claude Code runtime behavior on `@b-apm/integration-claude`: project detect, `.claude/` materialize for skills/instructions/agents/commands/hooks, project `.mcp.json` configure, optional `CLAUDE.md` compile, while marketplace pack mapping remains available from the same package.
 
 ## ADDED Requirements
 
 ### Requirement: Package exposes runtime factory and retains marketplace mapper
 
-`@bapm/integration-claude` MUST continue to provide Claude marketplace-output mapping (including the documented default marketplace path) and MUST also export a runtime integration factory usable as `createIntegration` (and MAY export a Claude-named factory alias). The runtime integration MUST implement `BapmIntegration` (`id`, `deployRoots`, `detect`, `materialize`) and MUST depend on `@bapm/integration-api` without requiring `@bapm/core` as a hard dependency for host behavior. Package id for the runtime target MUST be `claude`.
+`@b-apm/integration-claude` MUST continue to provide Claude marketplace-output mapping (including the documented default marketplace path) and MUST also export a runtime integration factory usable as `createIntegration` (and MAY export a Claude-named factory alias). The runtime integration MUST implement `BapmIntegration` (`id`, `deployRoots`, `detect`, `materialize`) and MUST depend on `@b-apm/integration-api` without requiring `@b-apm/core` as a hard dependency for host behavior. Package id for the runtime target MUST be `claude`.
 
 #### Scenario: Runtime factory registers as claude
 
@@ -15,7 +15,7 @@ Defines Claude Code runtime behavior on `@bapm/integration-claude`: project dete
 
 #### Scenario: Marketplace mapper remains available
 
-- **WHEN** pack loads Claude marketplace-output capability from `@bapm/integration-claude`
+- **WHEN** pack loads Claude marketplace-output capability from `@b-apm/integration-claude`
 - **THEN** the Claude marketplace document mapping and default output path MUST still be available without requiring runtime activation
 
 ### Requirement: Detect uses Claude project signals
@@ -156,9 +156,9 @@ Claude runtime MUST expose `compile` that renders project-root `CLAUDE.md` by de
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `@bapm/integration-claude` for Claude runtime behavior. Registration MUST occur through the integration API registry after object-map / dynamic load (or test harness registration).
+`@b-apm/core` MUST NOT hard-depend on or statically import `@b-apm/integration-claude` for Claude runtime behavior. Registration MUST occur through the integration API registry after object-map / dynamic load (or test harness registration).
 
 #### Scenario: Core package graph excludes claude runtime hard-dep
 
-- **WHEN** inspecting `@bapm/core` production dependencies
-- **THEN** `@bapm/integration-claude` MUST NOT appear as a required runtime dependency of core
+- **WHEN** inspecting `@b-apm/core` production dependencies
+- **THEN** `@b-apm/integration-claude` MUST NOT appear as a required runtime dependency of core

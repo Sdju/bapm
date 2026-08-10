@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import {
   createTempProject,
   getBuildMarketplaceOutputs,

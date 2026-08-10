@@ -6,9 +6,9 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createIntegrationRegistry } from "@bapm/integration-api";
-import { createOpencodeIntegration } from "@bapm/integration-opencode";
-import { extractPackArchive, runInstall, runPack, writeAgentPluginManifest } from "@bapm/core";
+import { createIntegrationRegistry } from "@b-apm/integration-api";
+import { createOpencodeIntegration } from "@b-apm/integration-opencode";
+import { extractPackArchive, runInstall, runPack, writeAgentPluginManifest } from "@b-apm/core";
 
 describe("Agent Plugins · OpenCode install e2e", () => {
   let project: string | undefined;
@@ -50,7 +50,7 @@ describe("Agent Plugins · OpenCode install e2e", () => {
         "name: consumer",
         'version: "1.0.0"',
         "targets:",
-        '  opencode: "@bapm/integration-opencode"',
+        '  opencode: "@b-apm/integration-opencode"',
         "dependencies:",
         "  apm:",
         "    - path: ./plugin",

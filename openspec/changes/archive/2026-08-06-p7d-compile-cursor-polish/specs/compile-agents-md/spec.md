@@ -48,7 +48,7 @@ When `-v` / `--verbose` is provided on a successful compile or dry-run path, the
 
 ### Requirement: Core compile options support dry-run and verbose
 
-`@bapm/core` compile orchestration MUST accept options equivalent to `dryRun` and `verbose` (in addition to existing `validate` and `outputFile`) so no-write preview and attribution are not CLI-only side effects. When `dryRun` is true and `validate` is false, core MUST compute content and MUST set `wrote` false without durable write. When `validate` is true, core MUST NOT write regardless of `dryRun`.
+`@b-apm/core` compile orchestration MUST accept options equivalent to `dryRun` and `verbose` (in addition to existing `validate` and `outputFile`) so no-write preview and attribution are not CLI-only side effects. When `dryRun` is true and `validate` is false, core MUST compute content and MUST set `wrote` false without durable write. When `validate` is true, core MUST NOT write regardless of `dryRun`.
 
 #### Scenario: Core dryRun does not write
 

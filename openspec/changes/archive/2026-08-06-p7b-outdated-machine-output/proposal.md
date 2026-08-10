@@ -26,7 +26,7 @@ After P6e (algorithm + `-v`) and p7a, `outdated` still lacks APM `--parallel-che
 
 ## Impact
 
-- `@bapm/core` Outdated: `RunOutdatedOptions.parallelChecks`, concurrent map with order restore (reuse pool pattern akin to Resolver download).
+- `@b-apm/core` Outdated: `RunOutdatedOptions.parallelChecks`, concurrent map with order restore (reuse pool pattern akin to Resolver download).
 - `bapm` CLI Outdated: `parseOutdatedArgs` / help / stdout JSON vs human text.
 - Tests: CLI parse/help + core concurrency/order stubs; existing P6e outdated suites remain green.
 - No CONFORMANCE.md edits; no `--global`; algorithm files stay semantics-stable aside from concurrency wiring.

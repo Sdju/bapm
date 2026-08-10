@@ -17,7 +17,7 @@
 
 ## 4. Verify
 
-- [x] 4.1 `vp run --filter @bapm/integration-api test` and build affected integration packages / relevant host tests
+- [x] 4.1 `vp run --filter @b-apm/integration-api test` and build affected integration packages / relevant host tests
 - [x] 4.2 Mark tasks complete; note residual host-local wrappers if any
 
 ### Residual host-local wrappers (intentional)

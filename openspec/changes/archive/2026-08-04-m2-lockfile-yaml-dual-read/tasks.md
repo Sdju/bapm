@@ -25,7 +25,7 @@
 
 - [x] 4.1 Make acceptance suite for M2 pass (checklist C in `.samples/apm-knowledge/topics/m2-lockfile-acceptance.md`: parse/serialize/discovery cases; ported OpenAPM lock fixtures; dual conflict; write-back / fresh create; real APM lock bytes when sample present with CI-safe copied fixtures). Do not expand into resolve/install/targets.
 - [x] 4.2 Update core unit/smoke tests for the new lockfile public API without asserting resolve/download/install/frozen/targets
-- [x] 4.3 Run `@bapm/core` build/test/`vp check` (or package-local equivalents) and fix regressions in core only
+- [x] 4.3 Run `@b-apm/core` build/test/`vp check` (or package-local equivalents) and fix regressions in core only
 
 ## 5. Docs touch-up (minimal)
 

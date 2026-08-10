@@ -1,4 +1,4 @@
-import { runDoctor as coreRunDoctor } from "@bapm/core";
+import { runDoctor as coreRunDoctor } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type DoctorOptions = { args?: string[]; cwd?: string };

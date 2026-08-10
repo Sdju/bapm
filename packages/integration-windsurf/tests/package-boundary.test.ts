@@ -1,5 +1,5 @@
 /**
- * Package identity / registry surface for @bapm/integration-windsurf.
+ * Package identity / registry surface for @b-apm/integration-windsurf.
  */
 import { describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -11,8 +11,8 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 
-describe("@bapm/integration-windsurf package boundary", () => {
-  test("package is @bapm/integration-windsurf with integration-api only (no core hard-dep)", () => {
+describe("@b-apm/integration-windsurf package boundary", () => {
+  test("package is @b-apm/integration-windsurf with integration-api only (no core hard-dep)", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
@@ -21,10 +21,10 @@ describe("@bapm/integration-windsurf package boundary", () => {
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-windsurf");
+    expect(pkg.name).toBe("@b-apm/integration-windsurf");
     expect(pkg.type).toBe("module");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
     expect(String(pkg.description ?? "")).toMatch(/windsurf|runtime/i);
   });
@@ -41,13 +41,13 @@ describe("@bapm/integration-windsurf package boundary", () => {
     expect((target as { mcpEnvMode?: string }).mcpEnvMode).not.toBe("translate");
   });
 
-  test("@bapm/core must not hard-depend on @bapm/integration-windsurf", () => {
+  test("@b-apm/core must not hard-depend on @b-apm/integration-windsurf", () => {
     const corePkg = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
-    expect(corePkg.dependencies).not.toHaveProperty("@bapm/integration-windsurf");
+    expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-windsurf");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-windsurf["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-windsurf["']\s*:/);
   });
 });

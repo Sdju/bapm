@@ -2,18 +2,18 @@
 
 ## Purpose
 
-Defines the greenfield `@bapm/integration-antigravity` package: explicit-only Antigravity CLI project-scope runtime under `.agents/` (rules, skills, hooks, opt-in MCP), thin `AGENTS.md` compile with rules dedup, depending only on `@bapm/integration-api`.
+Defines the greenfield `@b-apm/integration-antigravity` package: explicit-only Antigravity CLI project-scope runtime under `.agents/` (rules, skills, hooks, opt-in MCP), thin `AGENTS.md` compile with rules dedup, depending only on `@b-apm/integration-api`.
 
 ## Requirements
 
-### Requirement: Package @bapm/integration-antigravity exists and depends only on integration API
+### Requirement: Package @b-apm/integration-antigravity exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-antigravity` with package name `@bapm/integration-antigravity`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@bapm/integration-*` packages. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createAntigravityIntegration` as an alias. Runtime integration `id` MUST be `antigravity`. The package MUST NOT expose a marketplace-output mapper in this capability.
+The monorepo MUST include package directory `packages/integration-antigravity` with package name `@b-apm/integration-antigravity`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@b-apm/integration-*` packages. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createAntigravityIntegration` as an alias. Runtime integration `id` MUST be `antigravity`. The package MUST NOT expose a marketplace-output mapper in this capability.
 
 #### Scenario: Package identity and dependency edge
 
 - **WHEN** inspecting the Antigravity package dependencies
-- **THEN** `@bapm/integration-antigravity` depends on `@bapm/integration-api` and does not reverse-depend on `@bapm/core` for its host behavior
+- **THEN** `@b-apm/integration-antigravity` depends on `@b-apm/integration-api` and does not reverse-depend on `@b-apm/core` for its host behavior
 
 #### Scenario: Runtime factory registers as antigravity
 
@@ -100,7 +100,7 @@ When Antigravity materialize is actively invoked for the Antigravity target (inc
 
 ### Requirement: Project MCP configure is opt-in under .agents/mcp_config.json
 
-When install invokes Antigravity `configureMcp` with an eligible server set, `@bapm/integration-antigravity` MUST create or update project `.agents/mcp_config.json` under the top-level `mcpServers` object keyed by server name **only when** project `.agents/` already exists as a directory. When `.agents/` is absent, configure MUST skip writing with a diagnostic and MUST NOT create `.agents/` solely for MCP. Remote/HTTP server URL fields MUST be written using `serverUrl` (not bare `url` / `httpUrl` alone) when a remote endpoint is configured. Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys, MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory. This capability MUST NOT write user-scope `~/.gemini/config/mcp_config.json`.
+When install invokes Antigravity `configureMcp` with an eligible server set, `@b-apm/integration-antigravity` MUST create or update project `.agents/mcp_config.json` under the top-level `mcpServers` object keyed by server name **only when** project `.agents/` already exists as a directory. When `.agents/` is absent, configure MUST skip writing with a diagnostic and MUST NOT create `.agents/` solely for MCP. Remote/HTTP server URL fields MUST be written using `serverUrl` (not bare `url` / `httpUrl` alone) when a remote endpoint is configured. Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys, MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory. This capability MUST NOT write user-scope `~/.gemini/config/mcp_config.json`.
 
 #### Scenario: Configure writes mcpServers when .agents exists
 
@@ -147,9 +147,9 @@ Antigravity runtime in this capability MUST NOT write user-scope paths under `~/
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `@bapm/integration-antigravity`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
+`@b-apm/core` MUST NOT hard-depend on or statically import `@b-apm/integration-antigravity`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
 
 #### Scenario: Core package graph excludes antigravity
 
-- **WHEN** inspecting `@bapm/core` dependencies
-- **THEN** `@bapm/integration-antigravity` MUST NOT appear as a dependency
+- **WHEN** inspecting `@b-apm/core` dependencies
+- **THEN** `@b-apm/integration-antigravity` MUST NOT appear as a dependency

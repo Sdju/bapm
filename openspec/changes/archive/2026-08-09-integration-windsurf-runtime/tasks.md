@@ -1,6 +1,6 @@
 ## 1. Package scaffold
 
-- [x] 1.1 Create `packages/integration-windsurf` (package.json workspace dep on `@bapm/integration-api` only, vite.config.ts, tsconfig, README) matching other integration-* scaffolding; ensure workspace discovery
+- [x] 1.1 Create `packages/integration-windsurf` (package.json workspace dep on `@b-apm/integration-api` only, vite.config.ts, tsconfig, README) matching other integration-* scaffolding; ensure workspace discovery
 - [x] 1.2 Export `createWindsurfIntegration` + `createIntegration` alias from `src/index.ts` with `id: "windsurf"` and `deployRoots: [".windsurf", ".agents"]` (no `mcpEnvMode: "translate"`)
 
 ## 2. Detect and materialize
@@ -20,5 +20,5 @@
 
 - [x] 4.1 Unit tests: detect, each materialize kind, agents skip diagnostic, hooks sidecar idempotence + PascalCase, MCP home write (temp `CODEIUM_HOME`)
 - [x] 4.2 Acceptance suite under `packages/integration-windsurf/tests/acceptance/integration-windsurf-runtime/` covering package boundary, detect, materialize, agents skip, hooks, MCP, no global_rules
-- [x] 4.3 Update docs (`supported-hosts`, architecture index, manifest-hosts / object-map notes) for Windsurf opt-in runtime load via `targets: { windsurf: "@bapm/integration-windsurf" }`
-- [x] 4.4 Run package/workspace checks (`vp check` / targeted tests) for `@bapm/integration-windsurf`
+- [x] 4.3 Update docs (`supported-hosts`, architecture index, manifest-hosts / object-map notes) for Windsurf opt-in runtime load via `targets: { windsurf: "@b-apm/integration-windsurf" }`
+- [x] 4.4 Run package/workspace checks (`vp check` / targeted tests) for `@b-apm/integration-windsurf`

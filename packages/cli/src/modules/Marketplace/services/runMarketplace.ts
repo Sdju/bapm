@@ -19,7 +19,7 @@ import {
   urlNamesRemoteManifest,
   validateMarketplace,
   type MarketplaceSource,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { existsSync, statSync } from "node:fs";
 import { basename, resolve as pathResolve } from "node:path";
 import { createInterface } from "node:readline";

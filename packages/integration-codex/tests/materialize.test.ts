@@ -7,7 +7,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { MaterializeReport } from "@bapm/integration-api";
+import type { MaterializeReport } from "@b-apm/integration-api";
 import { createCodexIntegration } from "../src/createCodexIntegration.ts";
 
 function reportDiagnostics(

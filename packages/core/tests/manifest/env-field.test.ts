@@ -2,7 +2,7 @@
  * Unit: top-level manifest `env` validation (env-safe keys, string values).
  */
 import { describe, expect, test } from "vite-plus/test";
-import { ManifestError, parseManifestDocument } from "@bapm/core";
+import { ManifestError, parseManifestDocument } from "@b-apm/core";
 
 function base(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return { name: "env-field", version: "0.0.1", ...overrides };

@@ -33,7 +33,7 @@ Mode B still skips OpenAPM consumer MUSTs `req-sc-010` / `req-sc-011` / `req-sc-
 
 ## Impact
 
-- `@bapm/core`: `ExecutableTrust` (resolver + user store helpers), `Policy` parse/merge types for `executables`, Audit (or twin classifier API) for require↔lock↔withheld + shared resolve.
+- `@b-apm/core`: `ExecutableTrust` (resolver + user store helpers), `Policy` parse/merge types for `executables`, Audit (or twin classifier API) for require↔lock↔withheld + shared resolve.
 - `bapm` CLI: new Approve/Deny modules (FEOD), app registry/help, install path wires layered grants (project + user + org).
 - Mode B: `tests/spec-conformance/checklist.yml` → `conformance:gen` / `conformance:check`; Limitations / scope_out.
 - Docs: conformance boundary residual security wording.

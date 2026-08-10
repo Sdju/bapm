@@ -1,6 +1,6 @@
 ## 1. Package scaffold
 
-- [x] 1.1 Create `packages/integration-opencode` (package.json, tsconfig, vite config, exports) mirroring `@bapm/integration-cursor`, depending only on `@bapm/integration-api`
+- [x] 1.1 Create `packages/integration-opencode` (package.json, tsconfig, vite config, exports) mirroring `@b-apm/integration-cursor`, depending only on `@b-apm/integration-api`
 - [x] 1.2 Export `createOpencodeIntegration` / `createIntegration` from package entry; `vp pack` / `vp check` succeed
 
 ## 2. Runtime detect and materialize
@@ -25,5 +25,5 @@
 
 ## 5. Docs and verify
 
-- [x] 5.1 Document OpenCode on `supported-hosts`, `agent-plugins`, and architecture index (opt-in `@bapm/integration-opencode` + `targets:`)
+- [x] 5.1 Document OpenCode on `supported-hosts`, `agent-plugins`, and architecture index (opt-in `@b-apm/integration-opencode` + `targets:`)
 - [x] 5.2 Run package/workspace checks (`vp check` / targeted tests) for the new package and updated compatibility suite

@@ -6,7 +6,7 @@ See `proposal.md` for motivation. Current `packages/core/src` is flat folders `m
 
 **Goals:**
 
-- Map existing Manifest/Lockfile code onto library FEOD layers without changing observable `@bapm/core` behavior or export names.
+- Map existing Manifest/Lockfile code onto library FEOD layers without changing observable `@b-apm/core` behavior or export names.
 - Break Lockfile → Manifest deep imports by moving shared YAML to `common`.
 - Keep `vp pack` / `vp test` / `vp check` green; M1/M2 acceptance stay green.
 - Document the library profile without rewriting CLI locked FEOD rules.

@@ -23,7 +23,7 @@ OpenAPM v0.1 **req-lk-015** (MUST, Consumer) requires every git-sourced lock ent
 
 ## Impact
 
-- `@bapm/core`: finish/export WIP `Lockfile/treeSha256.ts`; wire `resolveAndLock` / install lock write; `runAuditCi`; frozen install verify.
+- `@b-apm/core`: finish/export WIP `Lockfile/treeSha256.ts`; wire `resolveAndLock` / install lock write; `runAuditCi`; frozen install verify.
 - Unit/acceptance tests that currently assert “missing tree_sha256 does not fail” must invert.
 - CLI surface unchanged (behavior of `install --frozen` / `audit --ci` tightens).
 - Follow-on stages (not this change): P2 lk-018, P3 Mode B/CONFORMANCE, P4 Governance remote/extends, P5 docs boundary; multi-target later.

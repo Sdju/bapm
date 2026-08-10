@@ -4,7 +4,7 @@ Authors want to declare not only _which_ OpenAPM host ids a project targets, but
 
 ## What Changes
 
-- Accept **object-map** forms for top-level `target` and `targets` on `bapm.yml` / dual-read `apm.yml`: keys are mf-005 host tokens; values are non-empty npm package specifier strings (e.g. `@bapm/integration-claude`).
+- Accept **object-map** forms for top-level `target` and `targets` on `bapm.yml` / dual-read `apm.yml`: keys are mf-005 host tokens; values are non-empty npm package specifier strings (e.g. `@b-apm/integration-claude`).
 - Keep **legacy** forms: `target: <string>`, `targets: [<string>, …]`.
 - Keep **mutual exclusion**: both `target` and `targets` present → parse fail (unchanged).
 - Surface host ids from map keys via existing `declaredTargetIds` (intersection / tg-008 consumers keep working).
@@ -25,7 +25,7 @@ Authors want to declare not only _which_ OpenAPM host ids a project targets, but
 
 ## Impact
 
-- `@bapm/core` Manifest types / `parse.ts` / target helpers; Install `declaredTargetIds`; producer emit/validate path that reuses parse
+- `@b-apm/core` Manifest types / `parse.ts` / target helpers; Install `declaredTargetIds`; producer emit/validate path that reuses parse
 - Unit tests: parse accept/reject; `declaredTargetIds` for map form
 - Docs: `apps/docs/guide/config-manifest.md` (and any short cross-links if needed)
 - No new workspace packages; no CLI registration changes in this slice

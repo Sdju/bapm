@@ -2,7 +2,7 @@
 
 ### Requirement: M9 extras CLI wiring follows FEOD thin-command pattern
 
-`compile`, `cache` (info/clean), install MCP/trust flag passthrough, and `approve` / `deny` MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain logic MUST live in `@bapm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@bapm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
+`compile`, `cache` (info/clean), install MCP/trust flag passthrough, and `approve` / `deny` MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain logic MUST live in `@b-apm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@b-apm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
 
 #### Scenario: Compile command uses module API
 

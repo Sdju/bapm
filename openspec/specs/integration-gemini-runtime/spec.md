@@ -2,18 +2,18 @@
 
 ## Purpose
 
-Defines the greenfield `@bapm/integration-gemini` package: Gemini CLI project-scope detect, materialize of commands/skills/hooks, MCP configure into `.gemini/settings.json`, and thin instruction-only compile to `GEMINI.md`, depending only on `@bapm/integration-api` among bapm packages.
+Defines the greenfield `@b-apm/integration-gemini` package: Gemini CLI project-scope detect, materialize of commands/skills/hooks, MCP configure into `.gemini/settings.json`, and thin instruction-only compile to `GEMINI.md`, depending only on `@b-apm/integration-api` among bapm packages.
 
 ## Requirements
 
-### Requirement: Package @bapm/integration-gemini exists and depends only on integration API
+### Requirement: Package @b-apm/integration-gemini exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-gemini` with package name `@bapm/integration-gemini`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@bapm/integration-*` packages. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createGeminiIntegration` as an alias. Runtime integration `id` MUST be `gemini`. The package MUST NOT expose a marketplace-output mapper in this capability.
+The monorepo MUST include package directory `packages/integration-gemini` with package name `@b-apm/integration-gemini`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@b-apm/integration-*` packages. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createGeminiIntegration` as an alias. Runtime integration `id` MUST be `gemini`. The package MUST NOT expose a marketplace-output mapper in this capability.
 
 #### Scenario: Package identity and dependency edge
 
 - **WHEN** inspecting the Gemini package dependencies
-- **THEN** `@bapm/integration-gemini` depends on `@bapm/integration-api` and does not reverse-depend on `@bapm/core` for its host behavior
+- **THEN** `@b-apm/integration-gemini` depends on `@b-apm/integration-api` and does not reverse-depend on `@b-apm/core` for its host behavior
 
 #### Scenario: Runtime factory registers as gemini
 
@@ -100,7 +100,7 @@ When Gemini materialize is actively invoked for the Gemini target (including for
 
 ### Requirement: Project MCP configure into .gemini/settings.json mcpServers
 
-When install invokes Gemini `configureMcp` with an eligible server set and project `.gemini/` exists, `@bapm/integration-gemini` MUST create or update `.gemini/settings.json` under the top-level `mcpServers` object keyed by server name. Gemini entries MUST NOT require a Copilot-style `type` field; stdio uses `command`/`args`/`env`, SSE uses `url`, HTTP/streamable-http uses `httpUrl`. Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys (including `hooks`), MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory. When `.gemini/` is absent, configure MUST skip the write with a non-fatal diagnostic (opt-in) and MUST NOT create `.gemini/` solely for MCP.
+When install invokes Gemini `configureMcp` with an eligible server set and project `.gemini/` exists, `@b-apm/integration-gemini` MUST create or update `.gemini/settings.json` under the top-level `mcpServers` object keyed by server name. Gemini entries MUST NOT require a Copilot-style `type` field; stdio uses `command`/`args`/`env`, SSE uses `url`, HTTP/streamable-http uses `httpUrl`. Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys (including `hooks`), MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory. When `.gemini/` is absent, configure MUST skip the write with a non-fatal diagnostic (opt-in) and MUST NOT create `.gemini/` solely for MCP.
 
 #### Scenario: Configure writes mcpServers when .gemini exists
 
@@ -142,9 +142,9 @@ Gemini runtime in this capability MUST NOT write user-scope paths under `~/.gemi
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `@bapm/integration-gemini`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
+`@b-apm/core` MUST NOT hard-depend on or statically import `@b-apm/integration-gemini`. Registration for CLI or e2e MUST occur through the integration API registry after object-map load (or an equivalent test harness registration).
 
 #### Scenario: Core package graph excludes gemini
 
-- **WHEN** inspecting `@bapm/core` dependencies
-- **THEN** `@bapm/integration-gemini` MUST NOT appear as a dependency
+- **WHEN** inspecting `@b-apm/core` dependencies
+- **THEN** `@b-apm/integration-gemini` MUST NOT appear as a dependency

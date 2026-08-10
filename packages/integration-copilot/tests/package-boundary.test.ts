@@ -1,5 +1,5 @@
 /**
- * Package identity / registry surface for @bapm/integration-copilot.
+ * Package identity / registry surface for @b-apm/integration-copilot.
  */
 import { describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -11,8 +11,8 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = resolve(pkgRoot, "../..");
 const coreRoot = join(repoRoot, "packages/core");
 
-describe("@bapm/integration-copilot package boundary", () => {
-  test("package is @bapm/integration-copilot with integration-api only (no core hard-dep)", () => {
+describe("@b-apm/integration-copilot package boundary", () => {
+  test("package is @b-apm/integration-copilot with integration-api only (no core hard-dep)", () => {
     expect(existsSync(pkgRoot)).toBe(true);
     const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
       name?: string;
@@ -21,10 +21,10 @@ describe("@bapm/integration-copilot package boundary", () => {
       dependencies?: Record<string, string>;
       scripts?: Record<string, string>;
     };
-    expect(pkg.name).toBe("@bapm/integration-copilot");
+    expect(pkg.name).toBe("@b-apm/integration-copilot");
     expect(pkg.type).toBe("module");
-    expect(pkg.dependencies?.["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.dependencies?.["@bapm/core"]).toBeUndefined();
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
     expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
     expect(String(pkg.description ?? "")).toMatch(/copilot|runtime/i);
   });
@@ -42,13 +42,13 @@ describe("@bapm/integration-copilot package boundary", () => {
     expect((target as { mcpEnvMode?: string }).mcpEnvMode).toBe("translate");
   });
 
-  test("@bapm/core must not hard-depend on @bapm/integration-copilot", () => {
+  test("@b-apm/core must not hard-depend on @b-apm/integration-copilot", () => {
     const corePkg = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
       dependencies?: Record<string, string>;
     };
-    expect(corePkg.dependencies).not.toHaveProperty("@bapm/integration-copilot");
+    expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-copilot");
 
     const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
-    expect(viteConfig).not.toMatch(/["']@bapm\/integration-copilot["']\s*:/);
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-copilot["']\s*:/);
   });
 });

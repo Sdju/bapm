@@ -6,7 +6,7 @@ Defines the active Cursor integration runtime contract under the canonical integ
 
 ### Requirement: Cursor integration retains runtime behavior after specification rename
 
-The active Cursor integration specification MUST describe `@bapm/integration-cursor` using integration-neutral terminology and retain its documented detection, primitive deployment, MCP configuration, compile-emission, path-safety, and inventory-report behavior.
+The active Cursor integration specification MUST describe `@b-apm/integration-cursor` using integration-neutral terminology and retain its documented detection, primitive deployment, MCP configuration, compile-emission, path-safety, and inventory-report behavior.
 
 #### Scenario: Cursor capability remains observable through integration API
 

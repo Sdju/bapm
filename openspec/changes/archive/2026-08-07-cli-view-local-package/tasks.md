@@ -1,6 +1,6 @@
 ## 1. Core local view API
 
-- [x] 1.1 Add `@bapm/core` FEOD `View` module (directory + `index.ts`) with types for view result (ok, exitCode, identity, version/pin, modulesPath?, summary?, text, error?)
+- [x] 1.1 Add `@b-apm/core` FEOD `View` module (directory + `index.ts`) with types for view result (ok, exitCode, identity, version/pin, modulesPath?, summary?, text, error?)
 - [x] 1.2 Implement lock load + package query resolve (reuse/share Deps why exact + owner/repo + basename forms; exact wins; ambiguous / not_installed / no_lockfile)
 - [x] 1.3 Locate modules path via existing tree locator; read optional package-manifest `summary`/`description`; build human text + pin fallback chain
 - [x] 1.4 Export public view orchestration from module `index.ts` and `app/publicApi` (no deep imports; no network)
