@@ -30,7 +30,7 @@ bapm install
 
 ## Почему не APM?
 
-Кратко vs [microsoft/apm](https://github.com/microsoft/apm): нет привязки к одному агенту; отдельные integration packages; кастомные агенты; акцент на командной работе и личных vs командных артефактах. Подробнее о границе OpenAPM / APM CLI: [Совместимость](/guide/conformance).
+Кратко vs [microsoft/apm](https://github.com/microsoft/apm): нет привязки к встроенным агентам; акцент на командной работе и личных vs командных артефактах. Подробнее о границе OpenAPM / APM CLI: [Совместимость](/guide/conformance).
 
 **SOON:** кастомные артефакты / паттерны; плагины bapm.
 
