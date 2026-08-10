@@ -6,9 +6,9 @@ See proposal.md — Why. Cursor/Claude/Codex/Copilot already show the runtime pa
 
 **Goals:**
 
-- Greenfield `@bapm/integration-gemini` with project-scope file primitives + project MCP (parity with APM project install).
+- Greenfield `@b-apm/integration-gemini` with project-scope file primitives + project MCP (parity with APM project install).
 - Reuse integration-api helpers without inventing a second contract layer.
-- Document object-map load: `targets: { gemini: "@bapm/integration-gemini" }`.
+- Document object-map load: `targets: { gemini: "@b-apm/integration-gemini" }`.
 
 **Non-Goals:**
 
@@ -20,7 +20,7 @@ See proposal.md — Why. Cursor/Claude/Codex/Copilot already show the runtime pa
 ## Decisions
 
 1. **Change / package naming**  
-   OpenSpec change id: `integration-gemini-runtime`. Capability: `integration-gemini-runtime`. Package: `@bapm/integration-gemini`.
+   OpenSpec change id: `integration-gemini-runtime`. Capability: `integration-gemini-runtime`. Package: `@b-apm/integration-gemini`.
 
 2. **Default `deployRoots`: `[".gemini", ".agents", "."]`**  
    Commands/hooks under `.gemini/`, skills under `.agents/`, compile `GEMINI.md` at project root needs `.`.
@@ -52,7 +52,7 @@ See proposal.md — Why. Cursor/Claude/Codex/Copilot already show the runtime pa
 ## Migration Plan
 
 1. Land package + tests + docs.
-2. Users: install `@bapm/integration-gemini`, declare `targets.gemini`, `bapm install --target gemini`, optional `bapm compile`.
+2. Users: install `@b-apm/integration-gemini`, declare `targets.gemini`, `bapm install --target gemini`, optional `bapm compile`.
 3. Rollback: remove map entry; delete generated `.gemini/**` / `.agents/skills/**` / `GEMINI.md` / sidecar as needed.
 
 ## Open Questions

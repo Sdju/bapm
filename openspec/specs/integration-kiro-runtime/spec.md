@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Project-scope Kiro IDE/CLI v3 runtime for bapm via `@bapm/integration-kiro`: detect `.kiro/`, materialize steering/agents/skills/hooks, configure translate MCP, and thin-compile `AGENTS.md`.
+Project-scope Kiro IDE/CLI v3 runtime for bapm via `@b-apm/integration-kiro`: detect `.kiro/`, materialize steering/agents/skills/hooks, configure translate MCP, and thin-compile `AGENTS.md`.
 
 ## Requirements
 
 ### Requirement: Package exposes createIntegration factory
 
-The system MUST provide workspace package `@bapm/integration-kiro` that exports `createKiroIntegration` and `createIntegration` (alias) returning a `BapmIntegration` with `id` defaulting to `kiro`, `deployRoots` including `.kiro`, and `mcpEnvMode` equal to `translate`. The package MUST depend on `@bapm/integration-api` for the runtime contract and MUST NOT hard-depend on `@bapm/core`.
+The system MUST provide workspace package `@b-apm/integration-kiro` that exports `createKiroIntegration` and `createIntegration` (alias) returning a `BapmIntegration` with `id` defaulting to `kiro`, `deployRoots` including `.kiro`, and `mcpEnvMode` equal to `translate`. The package MUST depend on `@b-apm/integration-api` for the runtime contract and MUST NOT hard-depend on `@b-apm/core`.
 
 #### Scenario: Factory registers as kiro with translate MCP mode
 

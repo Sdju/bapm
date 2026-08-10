@@ -3,7 +3,7 @@ import {
   getMarketplace,
   MarketplaceNotFoundError,
   type MarketplacePlugin,
-} from "@bapm/core";
+} from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type SearchCliDeps = LifecycleCliDeps;

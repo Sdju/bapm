@@ -16,9 +16,9 @@ SBOM inventory export logic MUST live under `src/modules/Export` as a FEOD direc
 
 ### Requirement: Export symbols re-exported from package entry
 
-`@bapm/core` package public API assembly MUST re-export Export public symbols (values and types) used by CLI and tests so consumers import them from the package entry without deep paths.
+`@b-apm/core` package public API assembly MUST re-export Export public symbols (values and types) used by CLI and tests so consumers import them from the package entry without deep paths.
 
 #### Scenario: Consumer imports exportSbom from package entry
 
-- **WHEN** a consumer imports the primary SBOM export function (name flexible, e.g. `exportSbom`) from `@bapm/core`
+- **WHEN** a consumer imports the primary SBOM export function (name flexible, e.g. `exportSbom`) from `@b-apm/core`
 - **THEN** that named export MUST resolve from the package entry

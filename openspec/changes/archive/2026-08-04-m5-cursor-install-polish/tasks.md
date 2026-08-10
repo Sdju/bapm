@@ -2,7 +2,7 @@
 
 - [x] 1.1 Extend `bapm-target-api` types so `materialize` can report deployed relative paths (and optional hashes) without adding host-catalog/MCP APIs
 - [x] 1.2 Export updated types from package entry; document the report shape in `packages/target-api` README
-- [x] 1.3 Confirm `@bapm/core` still depends only on `bapm-target-api` among `bapm-target-*`
+- [x] 1.3 Confirm `@b-apm/core` still depends only on `bapm-target-api` among `bapm-target-*`
 
 ## 2. Cursor detect + materialize polish
 
@@ -36,6 +36,6 @@
 ## 6. Verification (apply; acceptance authored separately)
 
 - [x] 6.1 Keep M1–M4 regressions green; `bapm lock` still does not deploy harness files
-- [x] 6.2 Run build/test/`vp check` for `@bapm/core`, `bapm`, `bapm-target-api`, `bapm-target-cursor` and fix in-scope regressions
+- [x] 6.2 Run build/test/`vp check` for `@b-apm/core`, `bapm`, `bapm-target-api`, `bapm-target-cursor` and fix in-scope regressions
 - [x] 6.3 Spot-check package graph: only api+cursor among `bapm-target-*`; no core→cursor hard dep; no vite cursor alias
 - [ ] 6.4 (Optional MAY) CI-default frozen lk-018 — only if cheap; not required to close M5 tasks

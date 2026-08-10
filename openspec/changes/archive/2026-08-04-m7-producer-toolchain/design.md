@@ -1,6 +1,6 @@
 ## Context
 
-Consumer surface (M1–M6) is in place: Manifest already has `serializeManifest` / `writeManifest` and parse rejects `workspaces`; CLI has lifecycle commands under locked FEOD. No pack/init/release-check yet; no zip dependency in the workspace catalog. Normative bar: `.samples/apm-knowledge/topics/m7-producer-acceptance.md`. See `proposal.md` for motivation; behavior in delta specs. FEOD: locked CLI profile + library-core for `@bapm/core`. No new `bapm-target-*`.
+Consumer surface (M1–M6) is in place: Manifest already has `serializeManifest` / `writeManifest` and parse rejects `workspaces`; CLI has lifecycle commands under locked FEOD. No pack/init/release-check yet; no zip dependency in the workspace catalog. Normative bar: `.samples/apm-knowledge/topics/m7-producer-acceptance.md`. See `proposal.md` for motivation; behavior in delta specs. FEOD: locked CLI profile + library-core for `@b-apm/core`. No new `bapm-target-*`.
 
 ## Goals / Non-Goals
 

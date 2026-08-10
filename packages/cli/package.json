@@ -1,10 +1,10 @@
 {
-  "name": "@bapm/cli",
-  "version": "0.0.0",
+  "name": "@b-apm/cli",
+  "version": "0.1.0",
   "description": "bapm CLI — Better Agent Package Manager",
   "license": "MIT",
   "bin": {
-    "cli": "./dist/cli.mjs"
+    "bapm": "./dist/cli.mjs"
   },
   "files": [
     "dist"
@@ -26,11 +26,11 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@bapm/core": "workspace:*",
-    "@bapm/integration-api": "workspace:*"
+    "@b-apm/core": "workspace:*",
+    "@b-apm/integration-api": "workspace:*"
   },
   "devDependencies": {
-    "@bapm/integration-cursor": "workspace:*",
+    "@b-apm/integration-cursor": "workspace:*",
     "@types/node": "catalog:",
     "bumpp": "catalog:",
     "typescript": "catalog:",
@@ -60,5 +60,22 @@
       "modulePages": false,
       "privateModulesPrefix": null
     }
-  }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
+  "keywords": [
+    "unstable",
+    "bapm",
+    "b-apm"
+  ]
 }

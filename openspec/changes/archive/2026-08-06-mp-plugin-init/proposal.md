@@ -30,7 +30,7 @@ Marketplace track phase 4 (SHOULD author) needs a thin producer entry point afte
 
 ## Impact
 
-- `@bapm/core`: extend Manifest create/write helpers (plugin-mode option + `plugin.json` / name validation) or thin related helpers; public API export.
+- `@b-apm/core`: extend Manifest create/write helpers (plugin-mode option + `plugin.json` / name validation) or thin related helpers; public API export.
 - `bapm` CLI: new `Plugin` FEOD module + `commands/plugin`; Help/registry/`COMMAND_PLUGIN`; `app/init/plugin`.
 - Tests: acceptance under `tests/acceptance/mp-plugin-init/`; unit tests for name validate + writers.
 - Docs/design soft note only; **no** CONFORMANCE.md / marketplace consumer / authoring-yml / pack output changes.

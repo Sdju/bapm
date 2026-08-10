@@ -18,7 +18,7 @@ Invoking `help`, `-h`, `--help`, or omitting the command (default `help`) MUST p
 
 ### Requirement: Publish command is registered
 
-Invoking `publish` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@bapm/core` publish APIs (subject to experimental gate). Unknown flags MUST hard-error with non-zero exit.
+Invoking `publish` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@b-apm/core` publish APIs (subject to experimental gate). Unknown flags MUST hard-error with non-zero exit.
 
 #### Scenario: publish is not unknown
 

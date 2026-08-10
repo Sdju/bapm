@@ -1,4 +1,6 @@
-# @bapm/integration-api
+# @b-apm/integration-api
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Shared **contracts, registry, and materialize helpers** for bapm integrations.
 
@@ -6,8 +8,8 @@ Shared **contracts, registry, and materialize helpers** for bapm integrations.
 
 | Package                                             | May depend on                                                    |
 | --------------------------------------------------- | ---------------------------------------------------------------- |
-| `@bapm/core`                                        | `@bapm/integration-api` only (no concrete `@bapm/integration-*`) |
-| `@bapm/integration-cursor` (and other integrations) | `@bapm/integration-api`                                          |
+| `@b-apm/core`                                        | `@b-apm/integration-api` only (no concrete `@b-apm/integration-*`) |
+| `@b-apm/integration-cursor` (and other integrations) | `@b-apm/integration-api`                                          |
 | CLI / tests                                         | Register concrete integrations into a registry created here      |
 
 Core Install discovers primitives and calls `materialize` on registered integrations through this package. Integration packages implement detection, deploy roots, and disk writes — core never imports them.
@@ -22,7 +24,7 @@ When a project manifest uses object-map `target` / `targets`, the CLI loads each
 
 The loaded instance MUST have non-empty `id`, `deployRoots` array, `detect`, and `materialize` (`configureMcp` / `compile` optional). Optional `mcpEnvMode: "bake" | "translate"` tells install whether to bake APM `${VAR}` placeholders before `configureMcp` (omitted ⇒ bake-compatible, Cursor default). `id` MUST equal the map key. Marketplace-output-only packages (no runtime hooks) are rejected. A successful `configureMcp` report MUST include a non-empty `configPath` (project-relative, absolute, or home-tilde form for home-scoped hosts).
 
-See `@bapm/integration-cursor` for a built-in reference and the VitePress architecture guide for the author how-to.
+See `@b-apm/integration-cursor` for a built-in reference and the VitePress architecture guide for the author how-to.
 
 ## Helpers
 
@@ -71,4 +73,4 @@ type MaterializeReport = { deployedFiles: DeployedFile[] };
 - `path` — project-/cwd-relative harness path (e.g. `.agents/skills/hello/SKILL.md`)
 - `hash` — optional; when omitted, core computes a stable content hash for lock inventory
 
-Core uses this report only via `@bapm/integration-api` to write `deployed_file_hashes` and drive orphan cleanup / frozen re-verify. There is no adapter catalog or MCP configure surface in this package.
+Core uses this report only via `@b-apm/integration-api` to write `deployed_file_hashes` and drive orphan cleanup / frozen re-verify. There is no adapter catalog or MCP configure surface in this package.

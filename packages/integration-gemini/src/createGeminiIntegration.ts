@@ -10,7 +10,7 @@ import type {
   HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
   compileMarkdownReport,
@@ -25,7 +25,7 @@ import {
   stripOwnedHookCommands,
   writeDeployedFile,
   writeHookOwnershipSidecar,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".gemini", ".agents", "."] as const;
 const SETTINGS_JSON_REL = ".gemini/settings.json";

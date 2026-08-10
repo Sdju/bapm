@@ -1,5 +1,7 @@
 # Export
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Read-only SBOM inventory export from a recorded lockfile (`exportSbom`).
 
 ## Public API

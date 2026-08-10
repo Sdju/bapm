@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines Consumer-facing primitives discovery and conflict resolution in `@bapm/core`: source attribution, local override, first-declared dependency wins, and the M4 discovery floor for skills and typed `.apm/` content.
+Defines Consumer-facing primitives discovery and conflict resolution in `@b-apm/core`: source attribution, local override, first-declared dependency wins, and the M4 discovery floor for skills and typed `.apm/` content.
 
 ## ADDED Requirements
 

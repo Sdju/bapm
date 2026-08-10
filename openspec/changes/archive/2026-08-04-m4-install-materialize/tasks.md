@@ -2,8 +2,8 @@
 
 - [x] 1.1 Create `packages/target-api` as TypeScript ESM + vite-plus package named **`bapm-target-api`** (mirror `packages/core` toolchain: build/test/check scripts, `exports`, `type: module`)
 - [x] 1.2 Create `packages/target-cursor` as TypeScript ESM + vite-plus package named **`bapm-target-cursor`** (same toolchain pattern)
-- [x] 1.3 Wire workspace membership: `packages/*` glob already covers new dirs; add workspace dependencies via **pnpm CLI + catalog only** (pnpm-dependencies skill) — `bapm-target-cursor` → `bapm-target-api`; `@bapm/core` → `bapm-target-api` only; CLI MAY add `bapm-target-cursor` for e2e — never hand-edit invented versions
-- [x] 1.4 Confirm `@bapm/core` `package.json` does **not** list `bapm-target-cursor`
+- [x] 1.3 Wire workspace membership: `packages/*` glob already covers new dirs; add workspace dependencies via **pnpm CLI + catalog only** (pnpm-dependencies skill) — `bapm-target-cursor` → `bapm-target-api`; `@b-apm/core` → `bapm-target-api` only; CLI MAY add `bapm-target-cursor` for e2e — never hand-edit invented versions
+- [x] 1.4 Confirm `@b-apm/core` `package.json` does **not** list `bapm-target-cursor`
 
 ## 2. `bapm-target-api` contracts
 
@@ -37,11 +37,11 @@
 
 - [x] 6.1 Implement `createCursorTarget` (name flexible) against `bapm-target-api`: detect `.cursor/` (or documented predicate), declare registered deploy roots
 - [x] 6.2 Materialize skills under registered roots only; prefer `.agents/skills/<name>/SKILL.md` (tg-003) or document cursor-native registered root
-- [x] 6.3 Ensure package depends on `bapm-target-api` only among bapm packages for materialize logic (no hard dep on `@bapm/core`)
+- [x] 6.3 Ensure package depends on `bapm-target-api` only among bapm packages for materialize logic (no hard dep on `@b-apm/core`)
 
 ## 7. CLI install un-stub (FEOD)
 
-- [x] 7.1 Replace Install stub service with thin wrapper calling `@bapm/core` install; keep `commands/install.ts` thin
+- [x] 7.1 Replace Install stub service with thin wrapper calling `@b-apm/core` install; keep `commands/install.ts` thin
 - [x] 7.2 Parse `--frozen` (and reject combo with update/re-resolve if exposed); map core success/failure to exit codes
 - [x] 7.3 Optionally register `bapm-target-cursor` in CLI `app/init` / integrations for e2e (workspace dep via pnpm CLI)
 - [x] 7.4 Update Help text: install is real install (not stub); preserve lock non-deploy messaging
@@ -51,4 +51,4 @@
 
 - [x] 8.1 Satisfy M4 acceptance checklist C in `.samples/apm-knowledge/topics/m4-install-acceptance.md` once acceptance suite exists (TDD phase) — do not author acceptance in apply unless already present
 - [x] 8.2 Keep existing M1–M3 unit/acceptance green; `lock` still leaves harness dirs unchanged
-- [x] 8.3 Run build/test/`vp check` for `@bapm/core`, `bapm`, `bapm-target-api`, `bapm-target-cursor` and fix in-scope regressions
+- [x] 8.3 Run build/test/`vp check` for `@b-apm/core`, `bapm`, `bapm-target-api`, `bapm-target-cursor` and fix in-scope regressions

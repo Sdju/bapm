@@ -22,7 +22,7 @@ describe("CLI install · canonical detect (no targets map)", () => {
     project = undefined;
   });
 
-  test("without targets:, resolvable @bapm/integration-cursor + sole Cursor detect → install materializes (no --target)", async () => {
+  test("without targets:, resolvable @b-apm/integration-cursor + sole Cursor detect → install materializes (no --target)", async () => {
     project = createTempProject();
     linkCursorIntegration(project.cwd);
     writeNoMapProject(project.cwd, {
@@ -47,7 +47,7 @@ describe("CLI install · canonical detect (no targets map)", () => {
       withCursor: true,
       withLeafSkill: true,
     });
-    // Deliberately do NOT link @bapm/integration-cursor.
+    // Deliberately do NOT link @b-apm/integration-cursor.
 
     const { result, combined } = await runInProject(project.cwd, ["install"]);
     expectKnownFlags(combined);

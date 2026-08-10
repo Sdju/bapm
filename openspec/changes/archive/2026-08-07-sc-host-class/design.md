@@ -8,7 +8,7 @@ See proposal.md — Why. Today:
 - Resolver / Authoring / PackOutputs `spawn("git", …)` inherit ambient env — **sc-013 hole**.
 - Mode B: `req-sc-003` / `005` / `008` / `013` skipped; soft-security + governance actives must not regress.
 
-Criteria: `.samples/apm-knowledge/topics/sc-host-class-criteria.md` (G1–G9). FEOD library profile for `@bapm/core` (`modules/<Name>/index.ts` public API; no deep imports). Deps: pnpm catalog CLI only.
+Criteria: `.samples/apm-knowledge/topics/sc-host-class-criteria.md` (G1–G9). FEOD library profile for `@b-apm/core` (`modules/<Name>/index.ts` public API; no deep imports). Deps: pnpm catalog CLI only.
 
 ## Goals / Non-Goals
 
@@ -35,7 +35,7 @@ Criteria: `.samples/apm-knowledge/topics/sc-host-class-criteria.md` (G1–G9). F
 
 ### D2: PSL library = `tldts` via catalog
 
-- **Choice:** Prefer `tldts` (`getDomain` / eTLD+1). Add with `pnpm add tldts --save-catalog --filter @bapm/core` (or `vp`-wrapped equivalent). Never hand-edit `package.json` / catalog versions.
+- **Choice:** Prefer `tldts` (`getDomain` / eTLD+1). Add with `pnpm add tldts --save-catalog --filter @b-apm/core` (or `vp`-wrapped equivalent). Never hand-edit `package.json` / catalog versions.
 - **Why:** Maintained PSL parsing; criteria D3. Fallback `psl` only if `tldts` blocked.
 - **Alternatives:** Hand-rolled last-2 — rejected (not claimable for sc-005).
 

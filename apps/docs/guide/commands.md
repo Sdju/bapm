@@ -21,7 +21,7 @@ bapm outdated
 | `uninstall` | Убрать пакеты из манифеста, modules, deploy, lock | [uninstall](/reference/uninstall) |
 | `prune`     | Удалить orphan-модули вне графа                   | [prune](/reference/prune)         |
 
-Deploy в Cursor — после установки `@bapm/integration-cursor` и объявления `targets:` / `--target cursor`. Свой host — [поддерживаемые hosts](/guide/supported-hosts).
+Deploy в Cursor — после установки `@b-apm/integration-cursor` и объявления `targets:` / `--target cursor`. Свой host — [поддерживаемые hosts](/guide/supported-hosts).
 
 ## Инспекция и проверка
 

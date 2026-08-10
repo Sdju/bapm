@@ -14,7 +14,7 @@
 
 - [x] 3.1 Update `apps/docs/guide/config-manifest.md`: object-map values load/register before selection; selection still `--target` → detect → fail; built-in cursor optional in map; remove absolute “не авто-загружаются”
 - [x] 3.2 Update `apps/docs/architecture/index.md` (and a short author how-to subsection or linked guide): publish package, export contract, add as project npm dep, declare map, `bapm install --target <id>`; note Claude/Codex remain marketplace-output
-- [x] 3.3 Document the loadable export contract in `@bapm/integration-api` and/or `@bapm/integration-cursor` README cross-link for third-party authors
+- [x] 3.3 Document the loadable export contract in `@b-apm/integration-api` and/or `@b-apm/integration-cursor` README cross-link for third-party authors
 
 ## 4. Verification
 

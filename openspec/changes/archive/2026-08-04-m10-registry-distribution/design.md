@@ -1,6 +1,6 @@
 ## Context
 
-See `proposal.md` for motivation. Post-M9: `registries:` parse OK (M1); classify marks `registry` then fails with `RESOLVE_REGISTRY_DEFERRED` (M3); M7 pack is plain zip (not registry flat publish); no `publish` / `self-update` CLI. Normative acceptance: `.samples/apm-knowledge/topics/m10-registry-acceptance.md`. Packages: `@bapm/core` + `@bapm/cli` only; cursor-only — no new `bapm-target-*`. FEOD: core library modules + CLI thin commands.
+See `proposal.md` for motivation. Post-M9: `registries:` parse OK (M1); classify marks `registry` then fails with `RESOLVE_REGISTRY_DEFERRED` (M3); M7 pack is plain zip (not registry flat publish); no `publish` / `self-update` CLI. Normative acceptance: `.samples/apm-knowledge/topics/m10-registry-acceptance.md`. Packages: `@b-apm/core` + `@b-apm/cli` only; cursor-only — no new `bapm-target-*`. FEOD: core library modules + CLI thin commands.
 
 ## Goals / Non-Goals
 
@@ -25,7 +25,7 @@ See `proposal.md` for motivation. Post-M9: `registries:` parse OK (M1); classify
 
 ### D1: Core `Registry` module owns HTTP client + resolve helpers
 
-- **Choice:** Directory module(s) under `@bapm/core` (e.g. `Registry`, optionally split `Publish` archive builder / `SelfUpdate` check). Resolver calls Registry public API instead of throwing `RESOLVE_REGISTRY_DEFERRED`. Install reuses the same materialize path after policy gate.
+- **Choice:** Directory module(s) under `@b-apm/core` (e.g. `Registry`, optionally split `Publish` archive builder / `SelfUpdate` check). Resolver calls Registry public API instead of throwing `RESOLVE_REGISTRY_DEFERRED`. Install reuses the same materialize path after policy gate.
 - **Why:** FEOD; keeps HTTP + integrity out of CLI; matches M3 Resolver / M8 Policy pattern.
 - **Alternatives:** HTTP only in CLI — rejected (lock/resolve must work from core APIs/tests).
 

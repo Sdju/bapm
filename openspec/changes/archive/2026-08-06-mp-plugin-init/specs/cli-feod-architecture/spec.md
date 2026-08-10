@@ -2,7 +2,7 @@
 
 ### Requirement: Plugin CLI module follows FEOD thin-command pattern
 
-The `plugin` command MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/Plugin/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring via `app/init` and `app/integrations`. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Commands MUST obtain `@bapm/core` scaffold APIs only through app integrations / injected deps, not via direct `@bapm/core` imports inside `commands/`.
+The `plugin` command MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/Plugin/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring via `app/init` and `app/integrations`. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Commands MUST obtain `@b-apm/core` scaffold APIs only through app integrations / injected deps, not via direct `@b-apm/core` imports inside `commands/`.
 
 #### Scenario: Plugin command delegates to module API
 

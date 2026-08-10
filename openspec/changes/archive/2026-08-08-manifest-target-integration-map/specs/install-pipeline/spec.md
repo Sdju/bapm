@@ -6,8 +6,8 @@ When the project manifest uses the object-map form of `target` or `targets`, ins
 
 #### Scenario: Map values ignored for activation
 
-- **WHEN** install runs with `targets: { cursor: "@bapm/integration-cursor" }` and cursor is already registered by the CLI the usual way
-- **THEN** install MUST treat `cursor` as a declared host id for intersection and MUST NOT attempt to install or dynamically load `@bapm/integration-cursor` from the map value alone
+- **WHEN** install runs with `targets: { cursor: "@b-apm/integration-cursor" }` and cursor is already registered by the CLI the usual way
+- **THEN** install MUST treat `cursor` as a declared host id for intersection and MUST NOT attempt to install or dynamically load `@b-apm/integration-cursor` from the map value alone
 
 #### Scenario: Declared ids from map keys
 

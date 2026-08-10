@@ -10,7 +10,7 @@ describe("local overlay merge helpers", () => {
       name: "u",
       version: "1.0.0",
       active: ["cursor"],
-      targets: { cursor: "@bapm/integration-cursor" },
+      targets: { cursor: "@b-apm/integration-cursor" },
       env: { FOO: "base", BAR: "keep" },
       registries: {
         keep: { url: "https://keep.example/r" },
@@ -32,7 +32,7 @@ describe("local overlay merge helpers", () => {
     const doc = mergeLocalOverlay(base, overlay);
     expect(doc.active).toEqual(["x-acme-editor"]);
     expect(doc.targets).toMatchObject({
-      cursor: "@bapm/integration-cursor",
+      cursor: "@b-apm/integration-cursor",
       "x-acme-editor": "@scope/acme",
     });
     expect(doc.env).toMatchObject({ FOO: "local", BAR: "keep" });

@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-claude — Claude Code runtime + marketplace pack mapper.
+ * @b-apm/integration-claude — Claude Code runtime + marketplace pack mapper.
  */
 
 export {
@@ -8,7 +8,7 @@ export {
   transformClaudeRulesMarkdown,
 } from "./createClaudeIntegration.ts";
 
-import type { MarketplaceOutputIntegration } from "@bapm/integration-api";
+import type { MarketplaceOutputIntegration } from "@b-apm/integration-api";
 
 type PackageEntry = Record<string, unknown>;
 type ResolvedPackage = Record<string, unknown> & { entry: PackageEntry };

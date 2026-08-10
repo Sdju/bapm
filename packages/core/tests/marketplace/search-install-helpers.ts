@@ -1,8 +1,8 @@
 /**
- * Helpers for marketplace search/install suite (core). Soft-resolve @bapm/core APIs.
+ * Helpers for marketplace search/install suite (core). Soft-resolve @b-apm/core APIs.
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -19,7 +19,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export type TempConfig = { configDir: string; root: string; cleanup: () => void };

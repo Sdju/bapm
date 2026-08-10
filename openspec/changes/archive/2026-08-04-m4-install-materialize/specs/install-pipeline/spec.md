@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines `@bapm/core` install orchestration after M3 resolve/download: modules placement, lock write-back unless frozen, target intersection and deploy only through registered `bapm-target-api` contracts, and basic OpenAPM frozen gate (lk-006).
+Defines `@b-apm/core` install orchestration after M3 resolve/download: modules placement, lock write-back unless frozen, target intersection and deploy only through registered `bapm-target-api` contracts, and basic OpenAPM frozen gate (lk-006).
 
 ## ADDED Requirements
 
@@ -48,7 +48,7 @@ Core install MUST invoke host materialization only through `bapm-target-api` reg
 
 #### Scenario: No hard dependency on concrete target
 
-- **WHEN** inspecting `@bapm/core` package dependencies
+- **WHEN** inspecting `@b-apm/core` package dependencies
 - **THEN** it MUST list `bapm-target-api` (or workspace equivalent) and MUST NOT list `bapm-target-cursor` or other concrete `bapm-target-*` packages
 
 #### Scenario: Integrate without registered target

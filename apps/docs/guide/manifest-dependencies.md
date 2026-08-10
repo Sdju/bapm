@@ -31,7 +31,7 @@ dependencies:
 
 ## Формы `dependencies.apm`
 
-1. **Строка** (shorthand): `org/repo`, `org/repo/path`, `org/repo#v1.0.0`.
+1. **Строка** (shorthand): `org/repo`, `org/repo#v1.0.0` (и host-qualified вроде `github.com/org/repo`). Многосегментная строка `org/repo/subdir` **не** режется на repo + virtual path — это URL `https://github.com/org/repo/subdir`. Подкаталог задавайте объектом `git` + `path`.
 2. **Объект** ровно с **одним** source kind: `git` \| `id` \| `path` \| `registry` \| `marketplace` \| `local`.
 
 Особые пары (не второй source kind):

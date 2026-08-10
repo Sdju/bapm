@@ -1,12 +1,12 @@
 ## Context
 
-`@bapm/core` already has M1 manifest dual-discovery + YAML safe-subset validate, and exports `BAPM_LOCK_FILE`. There is no lockfile parse/serialize model, no `apm.lock.yaml` discovery, and no OpenAPM §5 R/W surface. Motivation: see `proposal.md`. Normative checklist: `.samples/apm-knowledge/topics/m2-lockfile-acceptance.md`. Behavior: delta specs `lockfile-dual-file-discovery` and `lockfile-yaml-rw`. Targets remain out of band per `target-package-architecture` — M2 does not scaffold or call adapters.
+`@b-apm/core` already has M1 manifest dual-discovery + YAML safe-subset validate, and exports `BAPM_LOCK_FILE`. There is no lockfile parse/serialize model, no `apm.lock.yaml` discovery, and no OpenAPM §5 R/W surface. Motivation: see `proposal.md`. Normative checklist: `.samples/apm-knowledge/topics/m2-lockfile-acceptance.md`. Behavior: delta specs `lockfile-dual-file-discovery` and `lockfile-yaml-rw`. Targets remain out of band per `target-package-architecture` — M2 does not scaffold or call adapters.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Implement dual-discovery + parse/validate/serialize/round-trip in `@bapm/core` as the M2 public surface for later acceptance
+- Implement dual-discovery + parse/validate/serialize/round-trip in `@b-apm/core` as the M2 public surface for later acceptance
 - Prefer OpenAPM wire rules where APM diverges (sort `(repo_url, virtual_path)`; monotonic `"2"`; hash envelopes)
 - Reuse M1 YAML safe-subset loader; mirror M1 discovery matrix pattern for lock filenames
 - Preserve unknown fields (including APM `deployments` / `lsp_*` / MCP top-level lists) without first-class M2 modeling
@@ -22,9 +22,9 @@
 
 ## Decisions
 
-### 1. Primary surface is `@bapm/core` API, not CLI
+### 1. Primary surface is `@b-apm/core` API, not CLI
 
-- **Choice:** Export discovery + load/parse/serialize/write from `@bapm/core`. Acceptance calls core (fixtures under `packages/core/tests/acceptance/…` in a later phase). Thin CLI dump/load is optional and not required to close M2.
+- **Choice:** Export discovery + load/parse/serialize/write from `@b-apm/core`. Acceptance calls core (fixtures under `packages/core/tests/acceptance/…` in a later phase). Thin CLI dump/load is optional and not required to close M2.
 - **Why:** Matches M1 “core first”; avoids FEOD CLI work in M2.
 - **Alternatives:** CLI-only lock doctor — rejected (harder TDD, unnecessary for R/W library).
 
@@ -104,7 +104,7 @@
 
 ## Migration Plan
 
-- Additive APIs in `@bapm/core`; existing `BAPM_LOCK_FILE` remains; add `APM_LOCK_FILE`.
+- Additive APIs in `@b-apm/core`; existing `BAPM_LOCK_FILE` remains; add `APM_LOCK_FILE`.
 - No on-disk migration of user projects in M2 (no rename `apm`↔`bapm`; no legacy `apm.lock`).
 - Rollback: remove/stop exporting new lockfile APIs; no schema migration required.
 

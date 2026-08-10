@@ -68,7 +68,7 @@ export function parseInitArgs(argv: string[]): {
 }
 
 /**
- * Prefer object-map `targets: { <id>: "@bapm/integration-<id>" }` + `active`
+ * Prefer object-map `targets: { <id>: "@b-apm/integration-<id>" }` + `active`
  * for conventional published host packages (e.g. cursor).
  */
 function scaffoldTargetFields(targetId: string): {
@@ -77,7 +77,7 @@ function scaffoldTargetFields(targetId: string): {
 } {
   const id = targetId.trim();
   return {
-    targets: { [id]: `@bapm/integration-${id}` },
+    targets: { [id]: `@b-apm/integration-${id}` },
     active: [id],
   };
 }

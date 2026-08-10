@@ -5,7 +5,7 @@ import {
   loadManifest,
   resolveRegistryBaseUrl,
   type RegistryEntry,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { createPublish } from "@/modules/Publish";
 import { coreIntegration } from "../integrations/core.ts";
 

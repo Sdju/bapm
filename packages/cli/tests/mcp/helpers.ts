@@ -185,6 +185,47 @@ export function writeDirectMcpProject(
   );
 }
 
+/** Direct MCP HTTP server (README-shaped) with optional env bake YAML. */
+export function writeDirectMcpHttpProject(
+  cwd: string,
+  options?: {
+    name?: string;
+    serverName?: string;
+    url?: string;
+    envYaml?: string;
+    withCursorDir?: boolean;
+  },
+): void {
+  const name = options?.name ?? "mcp-http-direct";
+  const serverName = options?.serverName ?? "github";
+  const url = options?.url ?? "https://api.githubcopilot.com/mcp/";
+  if (options?.withCursorDir !== false) {
+    mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  }
+
+  const envBlock =
+    options?.envYaml !== undefined
+      ? `      env:
+${options.envYaml}`
+      : "";
+
+  writeFileSync(
+    join(cwd, "bapm.yml"),
+    `name: ${name}
+version: 0.0.1
+${cursorMapYaml(linkCursorIntegration(cwd))}dependencies:
+  apm: []
+  mcp:
+    - name: ${serverName}
+      registry: false
+      transport: http
+      url: ${url}
+${envBlock}
+`,
+    "utf8",
+  );
+}
+
 /** Direct MCP stdio server with custom env YAML block (bake-time placeholders). */
 export function writeDirectMcpEnvProject(
   cwd: string,

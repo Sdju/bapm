@@ -1,7 +1,7 @@
 /**
  * CLI helpers for `bapm view` behavioural suite (promoted from cli-view-local-package).
  */
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -110,7 +110,7 @@ export function writeInstalledSharedUtilsTree(cwd: string, description?: string)
     (core as Record<string, unknown>).toLockRepoUrl;
   const toDir = (core as Record<string, unknown>).identityToCacheDir;
   if (typeof normalize !== "function" || typeof toDir !== "function") {
-    throw new TypeError("expected @bapm/core identity helpers for modules fixture");
+    throw new TypeError("expected @b-apm/core identity helpers for modules fixture");
   }
   const repo = "https://example.com/acme-org/shared-utils.git";
   const identity = String((normalize as (r: string) => string)(repo));

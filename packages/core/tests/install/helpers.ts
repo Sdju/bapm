@@ -6,7 +6,7 @@ import { asText } from "../asText.ts";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 
 export {
   createFakePorts,
@@ -47,7 +47,7 @@ export function getRunInstall(): (options: Record<string, unknown>) => Promise<u
   const fn = c.runInstall ?? c.installProject;
   if (typeof fn !== "function") {
     throw new TypeError(
-      "expected @bapm/core to export runInstall or installProject (M4 Install public API)",
+      "expected @b-apm/core to export runInstall or installProject (M4 Install public API)",
     );
   }
   return async (options) => {
@@ -79,7 +79,7 @@ const legacyIntegrationRegistry = {
 export function getDiscoverPrimitives(): (options: Record<string, unknown>) => unknown {
   const fn = (core as Record<string, unknown>).discoverPrimitives;
   if (typeof fn !== "function") {
-    throw new TypeError("expected @bapm/core to export discoverPrimitives");
+    throw new TypeError("expected @b-apm/core to export discoverPrimitives");
   }
   return fn as (options: Record<string, unknown>) => unknown;
 }
@@ -89,7 +89,7 @@ export function getResolvePrimitiveConflicts(): (options: Record<string, unknown
   const fn = c.resolvePrimitiveConflicts ?? c.resolveConflicts ?? c.resolvePrimitiveConflict;
   if (typeof fn !== "function") {
     throw new TypeError(
-      "expected @bapm/core to export resolvePrimitiveConflicts (or resolveConflicts)",
+      "expected @b-apm/core to export resolvePrimitiveConflicts (or resolveConflicts)",
     );
   }
   return fn as (options: Record<string, unknown>) => unknown;
@@ -175,13 +175,13 @@ function listUnder(root: string): string[] {
   return out;
 }
 
-/** Load @bapm/integration-api. */
+/** Load @b-apm/integration-api. */
 export async function importIntegrationApi(): Promise<Record<string, unknown>> {
   try {
-    return (await import("@bapm/integration-api")) as Record<string, unknown>;
+    return (await import("@b-apm/integration-api")) as Record<string, unknown>;
   } catch (e) {
     throw new TypeError(
-      `expected package @bapm/integration-api to resolve (packages/integration-api): ${
+      `expected package @b-apm/integration-api to resolve (packages/integration-api): ${
         e instanceof Error ? e.message : asText(e)
       }`,
     );
@@ -191,7 +191,7 @@ export async function importIntegrationApi(): Promise<Record<string, unknown>> {
 export function getCreateIntegrationRegistry(api: Record<string, unknown>): () => unknown {
   const fn = api.createIntegrationRegistry;
   if (typeof fn !== "function") {
-    throw new TypeError("expected @bapm/integration-api to export createIntegrationRegistry");
+    throw new TypeError("expected @b-apm/integration-api to export createIntegrationRegistry");
   }
   return fn as () => unknown;
 }
@@ -209,7 +209,7 @@ export function getRegisterIntegration(
   const fn = api.registerTarget ?? api.register;
   if (typeof fn !== "function") {
     throw new TypeError(
-      "expected @bapm/integration-api registry.register or registerTarget export",
+      "expected @b-apm/integration-api registry.register or registerTarget export",
     );
   }
   return fn as (target: unknown) => unknown;

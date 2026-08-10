@@ -4,8 +4,8 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { APM_MODULES_DIR, loadLockfile } from "@bapm/core";
-import { createIntegrationRegistry } from "@bapm/integration-api";
+import { APM_MODULES_DIR, loadLockfile } from "@b-apm/core";
+import { createIntegrationRegistry } from "@b-apm/integration-api";
 import {
   createFakePorts,
   createTempProject,
@@ -105,18 +105,18 @@ describe("install pipeline — modules + lock", () => {
     expect(listFilesRecursive(modulesDir(project.cwd)).length).toBeGreaterThan(0);
   });
 
-  test("core runtime package graph depends only on @bapm/integration-api", () => {
+  test("core runtime package graph depends only on @b-apm/integration-api", () => {
     const pkg = readCorePackageJson();
     const runtimeDependencies = pkg.dependencies ?? {};
 
-    expect(runtimeDependencies["@bapm/integration-cursor"]).toBeUndefined();
+    expect(runtimeDependencies["@b-apm/integration-cursor"]).toBeUndefined();
     for (const key of Object.keys(runtimeDependencies)) {
-      if (key.startsWith("@bapm/integration-") && key !== "@bapm/integration-api") {
+      if (key.startsWith("@b-apm/integration-") && key !== "@b-apm/integration-api") {
         expect.fail(`core must not have a runtime dependency on concrete integration ${key}`);
       }
     }
-    expect(runtimeDependencies["@bapm/integration-api"]).toBeTruthy();
-    expect(pkg.devDependencies?.["@bapm/integration-cursor"]).toBe("workspace:*");
+    expect(runtimeDependencies["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.devDependencies?.["@b-apm/integration-cursor"]).toBe("workspace:*");
   });
 
   test("direct install without target selection fails before target harness writes", async () => {

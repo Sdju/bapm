@@ -6,12 +6,12 @@ Defines the minimal `bapm-target-cursor` package at `packages/target-cursor`: fi
 
 ### Requirement: Package bapm-target-cursor exists and depends only on target-api
 
-The monorepo MUST include package directory `packages/target-cursor` with package name `bapm-target-cursor`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `bapm-target-api` for types/contracts and MUST NOT require `@bapm/core` as a hard dependency for materialize logic.
+The monorepo MUST include package directory `packages/target-cursor` with package name `bapm-target-cursor`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `bapm-target-api` for types/contracts and MUST NOT require `@b-apm/core` as a hard dependency for materialize logic.
 
 #### Scenario: Package identity and dependency edge
 
 - **WHEN** inspecting `bapm-target-cursor` package dependencies after implementation
-- **THEN** it MUST depend on `bapm-target-api` and MUST NOT reverse-depend on `@bapm/core` for its host materialize implementation
+- **THEN** it MUST depend on `bapm-target-api` and MUST NOT reverse-depend on `@b-apm/core` for its host materialize implementation
 
 ### Requirement: Minimal detect and skills materialize under registered roots
 
@@ -24,9 +24,9 @@ The cursor target MUST provide a documented detection predicate (for example pre
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `bapm-target-cursor`. Registration for CLI/e2e MAY occur in the CLI or test harness via the target-api registry.
+`@b-apm/core` MUST NOT hard-depend on or statically import `bapm-target-cursor`. Registration for CLI/e2e MAY occur in the CLI or test harness via the target-api registry.
 
 #### Scenario: Core package graph excludes cursor
 
-- **WHEN** inspecting `@bapm/core` dependencies
+- **WHEN** inspecting `@b-apm/core` dependencies
 - **THEN** `bapm-target-cursor` MUST NOT appear as a dependency

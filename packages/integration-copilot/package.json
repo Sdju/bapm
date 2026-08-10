@@ -1,6 +1,6 @@
 {
-  "name": "@bapm/integration-copilot",
-  "version": "0.0.0",
+  "name": "@b-apm/integration-copilot",
+  "version": "0.1.0",
   "description": "GitHub Copilot runtime integration for bapm",
   "license": "MIT",
   "files": [
@@ -18,15 +18,33 @@
     "build": "vp pack",
     "dev": "vp pack --watch",
     "test": "vp test",
-    "check": "vp check"
+    "check": "vp check",
+    "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@bapm/integration-api": "workspace:*"
+    "@b-apm/integration-api": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/integration-copilot"
+  },
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
+  "keywords": [
+    "unstable",
+    "bapm",
+    "b-apm"
+  ]
 }

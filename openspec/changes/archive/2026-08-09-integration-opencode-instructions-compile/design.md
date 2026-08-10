@@ -1,6 +1,6 @@
 ## Context
 
-`@bapm/integration-opencode` already implements detect, skill/agent/command materialize under `.opencode/`, hooks skip (`OPENCODE_HOOKS_UNSUPPORTED`), and MCP → project `opencode.json`. Instruction primitives are silently skipped today; Cursor/Codex already share project-root `AGENTS.md` via `compile`. See proposal.md for motivation. Spec delta: `specs/integration-opencode-runtime/spec.md`.
+`@b-apm/integration-opencode` already implements detect, skill/agent/command materialize under `.opencode/`, hooks skip (`OPENCODE_HOOKS_UNSUPPORTED`), and MCP → project `opencode.json`. Instruction primitives are silently skipped today; Cursor/Codex already share project-root `AGENTS.md` via `compile`. See proposal.md for motivation. Spec delta: `specs/integration-opencode-runtime/spec.md`.
 
 ## Goals / Non-Goals
 
@@ -43,5 +43,5 @@
 
 ## Migration Plan
 
-- No lockfile/schema migration. Existing projects gain `compile` when they upgrade `@bapm/integration-opencode`.
+- No lockfile/schema migration. Existing projects gain `compile` when they upgrade `@b-apm/integration-opencode`.
 - Rollback: omit `compile` / revert package version; materialize/MCP unchanged.

@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the `bapm-target-api` package at `packages/target-api`: shared TypeScript contracts and registration utilities that form the only boundary between `@bapm/core` and concrete host target packages.
+Defines the `bapm-target-api` package at `packages/target-api`: shared TypeScript contracts and registration utilities that form the only boundary between `@b-apm/core` and concrete host target packages.
 
 ## ADDED Requirements
 
@@ -29,9 +29,9 @@ The monorepo MUST include package directory `packages/target-api` with package n
 
 ### Requirement: Boundary-only dependency for core
 
-`@bapm/core` MUST depend on `bapm-target-api` for speaking to targets and MUST NOT import concrete `bapm-target-*` package internals through this boundary.
+`@b-apm/core` MUST depend on `bapm-target-api` for speaking to targets and MUST NOT import concrete `bapm-target-*` package internals through this boundary.
 
 #### Scenario: Core speaks only through api package
 
-- **WHEN** `@bapm/core` needs to describe or invoke target materialization
+- **WHEN** `@b-apm/core` needs to describe or invoke target materialization
 - **THEN** it MUST do so via `bapm-target-api` contracts/registration only

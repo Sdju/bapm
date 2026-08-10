@@ -28,7 +28,7 @@ Mode B still skips `req-sc-002` (zip-slip depth) and `req-sc-006` (`registries.*
 
 ## Impact
 
-- `@bapm/core`: Pack extract, Registry `materializeRegistryArchive`, shared archive helper; Manifest `validateRegistries` / RegistryEntry typing.
+- `@b-apm/core`: Pack extract, Registry `materializeRegistryArchive`, shared archive helper; Manifest `validateRegistries` / RegistryEntry typing.
 - Mode B: `tests/spec-conformance/checklist.yml` → `conformance:gen` / `conformance:check`; Limitations / Scope-out soft §10.
 - Docs: conformance guide residual security wording if Limitations change.
 - Tests: unit + acceptance under `**/sc-soft-security/`; Mode B citation paths for sc-002/sc-006.

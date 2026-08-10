@@ -26,7 +26,7 @@
 
 ## Impact
 
-- `@bapm/core` `Doctor` module: `RunDoctorOptions.verbose`, richer probe messages, optional network/auth checks.
+- `@b-apm/core` `Doctor` module: `RunDoctorOptions.verbose`, richer probe messages, optional network/auth checks.
 - `bapm` CLI Doctor module: `parseDoctorArgs` / `formatDoctorHelp` / pass `verbose` to core.
 - Tests: acceptance (default + verbose + unknown-flag) + extend core doctor / CLI doctor suites; no harness deploy from doctor.
 - No CONFORMANCE / claim-table edits; no marketplace diagnostics.

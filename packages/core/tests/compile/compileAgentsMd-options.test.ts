@@ -5,8 +5,8 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { compileAgentsMd } from "@bapm/core";
-import { createIntegrationRegistry } from "@bapm/integration-api";
+import { compileAgentsMd } from "@b-apm/core";
+import { createIntegrationRegistry } from "@b-apm/integration-api";
 
 type TempProject = { cwd: string; cleanup: () => void };
 

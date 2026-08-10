@@ -1,6 +1,6 @@
 ## Context
 
-See `proposal.md` for motivation. Post-M8: install materializes cursor skills/rules/agents; lock already preserves `mcp_*` keys on serialize but target-cursor **never** writes `.cursor/mcp.json`; no `compile` / `cache` CLI. Normative acceptance: `.samples/apm-knowledge/topics/m9-apm-extras-acceptance.md`. FEOD: core library modules + CLI thin commands. Packages: `@bapm/core`, `@bapm/cli`, `bapm-target-cursor` (+ optional `bapm-target-api` contract). Cursor-only — no new `bapm-target-*`.
+See `proposal.md` for motivation. Post-M8: install materializes cursor skills/rules/agents; lock already preserves `mcp_*` keys on serialize but target-cursor **never** writes `.cursor/mcp.json`; no `compile` / `cache` CLI. Normative acceptance: `.samples/apm-knowledge/topics/m9-apm-extras-acceptance.md`. FEOD: core library modules + CLI thin commands. Packages: `@b-apm/core`, `@b-apm/cli`, `bapm-target-cursor` (+ optional `bapm-target-api` contract). Cursor-only — no new `bapm-target-*`.
 
 ## Goals / Non-Goals
 

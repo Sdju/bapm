@@ -1,6 +1,6 @@
 ## 1. Shared hook helpers in integration-api
 
-- [x] 1.1 Add `HookOwnershipSidecar` type plus `readHookOwnershipSidecar` / `writeHookOwnershipSidecar` in `@bapm/integration-api` (export from package root)
+- [x] 1.1 Add `HookOwnershipSidecar` type plus `readHookOwnershipSidecar` / `writeHookOwnershipSidecar` in `@b-apm/integration-api` (export from package root)
 - [x] 1.2 Add `stripOwnedHookCommands` (filter event arrays by owned entry commands; no disk deletes)
 - [x] 1.3 Add `removeOwnedHookArtifacts` (best-effort rm of `scripts` + optional `hookFile` / `hookFiles` under cwd)
 - [x] 1.4 Add simple `copyHookScript({ cwd, deployRoots, hookFile, command, alreadyDeployedNeedle, destRel, commandAsDotSlash? })`

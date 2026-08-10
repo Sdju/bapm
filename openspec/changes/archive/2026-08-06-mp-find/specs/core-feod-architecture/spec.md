@@ -11,7 +11,7 @@ Offline reverse-index helpers for deployed inventory lookup (`buildReverseIndex`
 
 #### Scenario: Find symbols exported from package entry
 
-- **WHEN** a consumer imports Find public symbols (names flexible) from `@bapm/core`
+- **WHEN** a consumer imports Find public symbols (names flexible) from `@b-apm/core`
 - **THEN** the import MUST resolve via the package public API surface
 
 #### Scenario: Find does not depend on Marketplace

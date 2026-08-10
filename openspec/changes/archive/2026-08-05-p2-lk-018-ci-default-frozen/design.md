@@ -1,6 +1,6 @@
 ## Context
 
-See proposal.md — Why. Today `bapm install` is non-frozen unless `--frozen` is passed (`packages/cli/.../parseInstallArgs`, `options.frozen === true` in `@bapm/core` `runInstall`). OpenAPM §5.5 **req-lk-018** (SHOULD) defaults to frozen when `CI` is truthy, with explicit non-frozen override. Reference APM CLI documents `apm install --frozen` as the CI pattern but does **not** auto-apply lk-018 from `CI` alone — bapm intentionally implements the OpenAPM SHOULD (stricter/safer than current APM UX). P1 lk-015 is archived and must not be reopened.
+See proposal.md — Why. Today `bapm install` is non-frozen unless `--frozen` is passed (`packages/cli/.../parseInstallArgs`, `options.frozen === true` in `@b-apm/core` `runInstall`). OpenAPM §5.5 **req-lk-018** (SHOULD) defaults to frozen when `CI` is truthy, with explicit non-frozen override. Reference APM CLI documents `apm install --frozen` as the CI pattern but does **not** auto-apply lk-018 from `CI` alone — bapm intentionally implements the OpenAPM SHOULD (stricter/safer than current APM UX). P1 lk-015 is archived and must not be reopened.
 
 ## Goals / Non-Goals
 
@@ -21,7 +21,7 @@ See proposal.md — Why. Today `bapm install` is non-frozen unless `--frozen` is
 1. **Truthiness:** Follow OpenAPM literally — `CI` present and not `""` / `"0"` / `"false"` (case-insensitive). Alternative: treat any non-empty `CI` as truthy — rejected (would freeze on `CI=false`).
 2. **Opt-out flag:** `--no-frozen` as the explicit non-frozen invocation. Alternative: treat bare `--update` as implicit opt-out — rejected (OpenAPM wants explicit non-frozen; silent unlock under CI is unsafe).
 3. **Flag precedence:** `--frozen` and `--no-frozen` together → hard error. Else `--no-frozen` → effective frozen false (even if `CI` truthy). Else `--frozen` OR truthy `CI` → effective frozen true. Else false.
-4. **Where to resolve:** Export a small pure helper from `@bapm/core` Install (e.g. `isCiEnvTruthy(env)` + `resolveEffectiveFrozen({ frozen?, noFrozen?, env })`). CLI parses flags and passes resolved `frozen: boolean` into `runInstall`. Library callers that omit flags but run under `CI` SHOULD get the same default when using the helper (document in Install README); raw `runInstall({ frozen: false })` remains an explicit opt-out for tests/tools.
+4. **Where to resolve:** Export a small pure helper from `@b-apm/core` Install (e.g. `isCiEnvTruthy(env)` + `resolveEffectiveFrozen({ frozen?, noFrozen?, env })`). CLI parses flags and passes resolved `frozen: boolean` into `runInstall`. Library callers that omit flags but run under `CI` SHOULD get the same default when using the helper (document in Install README); raw `runInstall({ frozen: false })` remains an explicit opt-out for tests/tools.
 5. **Env source:** Prefer `process.env` at CLI boundary; helper accepts `Record<string, string | undefined>` for tests. Do not read other CI vendor vars.
 6. **APM divergence (intentional):** APM still requires `--frozen` in CI docs; bapm implements OpenAPM SHOULD. Note only in design/help — not a product bug vs APM.
 

@@ -10,7 +10,7 @@ import {
   lookupInIndex,
   normalizeFindPath,
   type LockfileDocument,
-} from "@bapm/core";
+} from "@b-apm/core";
 
 const sample: LockfileDocument = {
   lockfile_version: "1",

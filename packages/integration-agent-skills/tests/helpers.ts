@@ -1,10 +1,10 @@
 /**
- * Shared helpers for @bapm/integration-agent-skills runtime tests.
+ * Shared helpers for @b-apm/integration-agent-skills runtime tests.
  */
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import type { BapmIntegration, MaterializeReport } from "@bapm/integration-api";
+import type { BapmIntegration, MaterializeReport } from "@b-apm/integration-api";
 import { createAgentSkillsIntegration, createIntegration } from "../src/index.ts";
 
 export function createTempProject(prefix = "bapm-agent-skills-"): {

@@ -6,7 +6,7 @@ See proposal.md — Why. Today `runAuditCi` returns `{ ok, exitCode, violations[
 
 **Goals:**
 
-- Stable three-check taxonomy + JSON/SARIF serializers in `@bapm/core` (public API).
+- Stable three-check taxonomy + JSON/SARIF serializers in `@b-apm/core` (public API).
 - Thin CLI: parse `-f`/`-o`, extension auto-detect (SHOULD), IO (stdout XOR file).
 - Preserve exit 0/1 and fail-closed integrity (lk-015/017).
 

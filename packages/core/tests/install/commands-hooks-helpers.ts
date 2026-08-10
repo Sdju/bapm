@@ -3,9 +3,9 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createIntegrationRegistry } from "@bapm/integration-api";
-import { createCursorIntegration } from "@bapm/integration-cursor";
-import { createOpencodeIntegration } from "@bapm/integration-opencode";
+import { createIntegrationRegistry } from "@b-apm/integration-api";
+import { createCursorIntegration } from "@b-apm/integration-cursor";
+import { createOpencodeIntegration } from "@b-apm/integration-opencode";
 import {
   createTempProject,
   getDiscoverPrimitives,

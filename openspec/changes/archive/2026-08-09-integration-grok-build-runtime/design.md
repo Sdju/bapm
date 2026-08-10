@@ -1,13 +1,13 @@
 ## Context
 
-See proposal.md — Why. Cursor/Claude/Codex/OpenCode/Copilot already show the runtime package shape (`create*Integration`, helpers from `@bapm/integration-api`, optional `compile`). APM `KNOWN_TARGETS["grok-build"]` uses `root_dir=".grok"`, `auto_create=False`, detect signal **only** `.grok/`, instructions as `.grok/rules/*.md` (`grok_rules` identity), agents `.grok/agents/*.md`, commands `.grok/commands/*.md` (`claude_command`), skills `.grok/skills/<n>/SKILL.md`, no hooks/MCP, compile family `agents` → project `AGENTS.md`. Experimental `grok-cloud` is out of scope.
+See proposal.md — Why. Cursor/Claude/Codex/OpenCode/Copilot already show the runtime package shape (`create*Integration`, helpers from `@b-apm/integration-api`, optional `compile`). APM `KNOWN_TARGETS["grok-build"]` uses `root_dir=".grok"`, `auto_create=False`, detect signal **only** `.grok/`, instructions as `.grok/rules/*.md` (`grok_rules` identity), agents `.grok/agents/*.md`, commands `.grok/commands/*.md` (`claude_command`), skills `.grok/skills/<n>/SKILL.md`, no hooks/MCP, compile family `agents` → project `AGENTS.md`. Experimental `grok-cloud` is out of scope.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
 - New greenfield package owning Grok Build project-scope runtime.
-- Mirror Claude/OpenCode helper patterns from `@bapm/integration-api`, with Grok-native paths under `.grok/`.
+- Mirror Claude/OpenCode helper patterns from `@b-apm/integration-api`, with Grok-native paths under `.grok/`.
 - Explicit skip diagnostics for hooks/prompts; omit `configureMcp`.
 
 **Non-Goals:**
@@ -20,7 +20,7 @@ See proposal.md — Why. Cursor/Claude/Codex/OpenCode/Copilot already show the r
 
 ## Decisions
 
-1. **New package `@bapm/integration-grok-build`**  
+1. **New package `@b-apm/integration-grok-build`**  
    No marketplace skeleton exists; greenfield package with `createGrokBuildIntegration` / `createIntegration`.  
    _Alternative:_ fold into another package — rejected (wrong host id / deploy roots).
 
@@ -76,7 +76,7 @@ See proposal.md — Why. Cursor/Claude/Codex/OpenCode/Copilot already show the r
 
 ## Migration Plan
 
-1. Land package + tests; document object-map `targets: { grok-build: "@bapm/integration-grok-build" }`.
+1. Land package + tests; document object-map `targets: { grok-build: "@b-apm/integration-grok-build" }`.
 2. Users: install package, declare targets, `bapm install` / optional `bapm compile`.
 3. Rollback: remove map entry; delete generated `.grok/**` and project `AGENTS.md` manually if desired.
 

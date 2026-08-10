@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { createIntegrationRegistry } from "@bapm/integration-api";
-import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
+import { createIntegrationRegistry } from "@b-apm/integration-api";
+import type { BapmIntegration, IntegrationRegistry } from "@b-apm/integration-api";
 import { runCli } from "../../src/index.ts";
 import { linkCursorIntegration } from "../install/helpers.ts";
 
@@ -76,10 +76,10 @@ describe("integration vocabulary public API and CLI", () => {
   });
 
   test.each([
-    ["BapmTarget", 'import { BapmTarget } from "@bapm/integration-api";'],
-    ["TargetRegistry", 'import { TargetRegistry } from "@bapm/integration-api";'],
-    ["createTargetRegistry", 'import { createTargetRegistry } from "@bapm/integration-api";'],
-    ["createRegistry", 'import { createRegistry } from "@bapm/integration-api";'],
+    ["BapmTarget", 'import { BapmTarget } from "@b-apm/integration-api";'],
+    ["TargetRegistry", 'import { TargetRegistry } from "@b-apm/integration-api";'],
+    ["createTargetRegistry", 'import { createTargetRegistry } from "@b-apm/integration-api";'],
+    ["createRegistry", 'import { createRegistry } from "@b-apm/integration-api";'],
     ["bapm-target-cursor", 'import "bapm-target-cursor";'],
   ])("retired public surface %s fails module loading", (_name, source) => {
     expect(importExitStatus(source)).not.toBe(0);

@@ -10,7 +10,7 @@ M4 delivered install wire, primitives discovery, `bapm-target-api`, and a minima
 - **Install UX (CLI):** accurate help (supported flags subset); **hard-error** unknown flags; reject `--frozen` + conflicting mutation flags (APM-like mutex); SHOULD support `--target cursor` / clear reject of unknown target ids
 - **SHOULD:** orphan cleanup of previously recorded deployed files for removed deps + write `deployed_file_hashes` (lk-017 lite) so frozen can re-verify when hashes exist
 - Remove **test-only vite alias** for `bapm-target-cursor` in core; use workspace resolve / CLI wiring only
-- **HARD:** packages ONLY `@bapm/core`, CLI (`bapm`), `bapm-target-api`, `bapm-target-cursor` — **MUST NOT** add any other `bapm-target-*`
+- **HARD:** packages ONLY `@b-apm/core`, CLI (`bapm`), `bapm-target-api`, `bapm-target-cursor` — **MUST NOT** add any other `bapm-target-*`
 - **Non-goals:** second host package; multi-adapter catalog; MCP `.cursor/mcp.json` (M9); full hooks / tg-010; `--legacy-skill-paths`; M6 lifecycle commands; policy/compile/registry; commands/hooks depth beyond thin MAY
 
 ## Capabilities
@@ -32,7 +32,7 @@ M4 delivered install wire, primitives discovery, `bapm-target-api`, and a minima
 
 - **`bapm-target-cursor`:** materialize instructions/agents; detect polish; README documents forced-target vs auto-detect rule
 - **`bapm-target-api`:** optional materialize result / deployed-file report types; registry unchanged in spirit
-- **`@bapm/core`:** Install path records deployed inventory, orphan cleanup, frozen hash re-verify; still **no** hard dep on `bapm-target-cursor`; remove `vite.config` path alias for cursor in tests
+- **`@b-apm/core`:** Install path records deployed inventory, orphan cleanup, frozen hash re-verify; still **no** hard dep on `bapm-target-cursor`; remove `vite.config` path alias for cursor in tests
 - **`bapm` CLI:** install arg parsing (hard unknown flags, `--target`, frozen mutex); help text; registers cursor via workspace dep as today
 - **Lockfile:** use existing `deployed_file_hashes` / related fields (M2 already models them) — write on install when deploy occurs
 - **Out of scope:** any second `bapm-target-*`; MCP client adapter; multi-target `all`; acceptance/production code authored in this propose phase

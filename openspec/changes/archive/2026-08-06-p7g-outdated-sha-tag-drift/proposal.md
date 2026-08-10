@@ -24,7 +24,7 @@ After P6e (tip-of-`resolved_ref`) and p7b (`-j` / `--json`), full-SHA lock pins 
 
 ## Impact
 
-- `@bapm/core` Outdated: gate + revision-pin check; likely extend tag-list transport / `FakeTag` (or Outdated-local port) with annotated peel evidence; semver pattern helper for annotated-only max pick.
+- `@b-apm/core` Outdated: gate + revision-pin check; likely extend tag-list transport / `FakeTag` (or Outdated-local port) with annotated peel evidence; semver pattern helper for annotated-only max pick.
 - `bapm` CLI: no new flags expected; help/docs only if they mention SHA pins — stay truthful (outdated reporting, not update rewrite).
 - Tests: acceptance for SHA drift / match / no-candidate / lightweight fence / abbreviated-SHA non-entry; P6e/p7b regressions green.
 - Knowledge criteria: `.samples/apm-knowledge/topics/p7g-outdated-sha-tag-drift-criteria.md` (gitignored; not committed with this change).

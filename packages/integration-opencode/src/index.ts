@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-opencode — OpenCode host integration.
+ * @b-apm/integration-opencode — OpenCode host integration.
  */
 
 export {

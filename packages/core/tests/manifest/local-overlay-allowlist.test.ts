@@ -31,7 +31,7 @@ describe("manifest-local-overlay — allowlist", () => {
         "active:",
         "  - cursor",
         "targets:",
-        '  cursor: "@bapm/integration-cursor"',
+        '  cursor: "@b-apm/integration-cursor"',
         "env:",
         '  FOO: "bar"',
         "registries:",
@@ -43,7 +43,7 @@ describe("manifest-local-overlay — allowlist", () => {
 
     const doc = documentOf(getLoadEffectiveManifest()({ cwd: project.cwd }));
     expect(doc.active).toEqual(["cursor"]);
-    expect(doc.targets).toMatchObject({ cursor: "@bapm/integration-cursor" });
+    expect(doc.targets).toMatchObject({ cursor: "@b-apm/integration-cursor" });
     expect(doc.env).toMatchObject({ FOO: "bar" });
     expect(doc.registries).toBeTruthy();
   });

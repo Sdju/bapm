@@ -51,7 +51,7 @@ After object-map loading attempts (when an object-map is present) and with no ea
 
 ### Requirement: Composition root starts with empty runtime integration registry
 
-The CLI composition root MUST construct the runtime integration registry without eagerly registering `@bapm/integration-cursor` or any other concrete host integration package. Hosts become registered for a run only through successful object-map load (or an equivalent documented non-eager load path used by tests). The CLI distribution MUST NOT hard-depend on concrete `@bapm/integration-*` runtime packages solely to auto-register them at startup.
+The CLI composition root MUST construct the runtime integration registry without eagerly registering `@b-apm/integration-cursor` or any other concrete host integration package. Hosts become registered for a run only through successful object-map load (or an equivalent documented non-eager load path used by tests). The CLI distribution MUST NOT hard-depend on concrete `@b-apm/integration-*` runtime packages solely to auto-register them at startup.
 
 #### Scenario: Empty registry without object-map
 
@@ -60,7 +60,7 @@ The CLI composition root MUST construct the runtime integration registry without
 
 #### Scenario: Cursor registers only via map
 
-- **WHEN** the manifest object-map binds `cursor: "@bapm/integration-cursor"`, that package resolves to a valid runtime integration with `id` `cursor`, and install runs with `--target cursor`
+- **WHEN** the manifest object-map binds `cursor: "@b-apm/integration-cursor"`, that package resolves to a valid runtime integration with `id` `cursor`, and install runs with `--target cursor`
 - **THEN** cursor MUST be registered from the map load and materialize MUST be allowed to proceed through that integration when other install preconditions pass
 
 ### Requirement: Fail-closed for unresolvable or invalid mapped packages
@@ -89,7 +89,7 @@ When the object-map form is present, every map entry MUST successfully resolve a
 
 ### Requirement: Loadable package export contract
 
-A package referenced by an object-map value MUST be loadable as a runtime integration by exposing, in documented precedence, a factory or object that produces a `BapmIntegration` conforming to `@bapm/integration-api`: at least `id`, `deployRoots`, `detect`, and `materialize`. Third-party packages SHOULD export a named `createIntegration` factory; a default-export factory or default-export `BapmIntegration` object MUST also be accepted when they satisfy the same contract. Optional `configureMcp` and `compile` capabilities MUST be preserved when present.
+A package referenced by an object-map value MUST be loadable as a runtime integration by exposing, in documented precedence, a factory or object that produces a `BapmIntegration` conforming to `@b-apm/integration-api`: at least `id`, `deployRoots`, `detect`, and `materialize`. Third-party packages SHOULD export a named `createIntegration` factory; a default-export factory or default-export `BapmIntegration` object MUST also be accepted when they satisfy the same contract. Optional `configureMcp` and `compile` capabilities MUST be preserved when present.
 
 #### Scenario: createIntegration factory accepted
 

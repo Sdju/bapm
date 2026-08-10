@@ -1,4 +1,4 @@
-import { checkSelfUpdate } from "@bapm/core";
+import { checkSelfUpdate } from "@b-apm/core";
 import { createSelfUpdate } from "@/modules/SelfUpdate";
 import { coreIntegration } from "../integrations/core.ts";
 

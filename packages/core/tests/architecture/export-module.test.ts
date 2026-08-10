@@ -5,7 +5,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test, describe } from "vite-plus/test";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { getExportSbom } from "../export/helpers.ts";
 
 const coreRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -48,10 +48,10 @@ describe("Export FEOD module", () => {
     }
   });
 
-  test("exportSbom is a named export of @bapm/core package entry", () => {
+  test("exportSbom is a named export of @b-apm/core package entry", () => {
     expect(
       "exportSbom" in core || "exportLockSbom" in core || "exportLockfileSbom" in core,
-      "missing SBOM export on @bapm/core",
+      "missing SBOM export on @b-apm/core",
     ).toBe(true);
     expect(typeof getExportSbom()).toBe("function");
   });

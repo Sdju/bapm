@@ -1,6 +1,8 @@
 # Marketplace
 
-Consumer marketplace registry for `@bapm/core`: models + parse, `~/.bapm/marketplaces.json` CRUD, fetch/cache (`github` | `url` | `local`), thin validate.
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
+Consumer marketplace registry for `@b-apm/core`: models + parse, `~/.bapm/marketplaces.json` CRUD, fetch/cache (`github` | `url` | `local`), thin validate.
 
 ## Public API
 

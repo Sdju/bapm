@@ -30,7 +30,7 @@ After P3, bapm publishes Consumer + Producer claimed and Governance as a **floor
 
 ## Impact
 
-- `@bapm/core` `modules/Policy/`: new resolve/merge + remote provider + host-class helpers; gate/load wiring; README deferred list shrinks.
+- `@b-apm/core` `modules/Policy/`: new resolve/merge + remote provider + host-class helpers; gate/load wiring; README deferred list shrinks.
 - Unit tests under `packages/core/tests/policy/`; Mode B / seed-oracle tests activate extends fixtures; CONFORMANCE.md/json regenerated (no hand-edit).
 - CLI unchanged in surface (`--policy` / `--no-policy`); behavior gains remote discovery when providers enabled.
 - Acceptance suite (orchestrate TDD) covers chain merge + mocked remote fetch; no multi-target work.

@@ -48,7 +48,7 @@ Alternative considered: infer ownership later from path prefixes such as `.curso
 
 ### Register targets in one CLI composition root
 
-The CLI will create its registry through a composition-root helper that registers each target package shipped by the CLI. Both `compile` and `install` receive that registry. `@bapm/core` continues accepting injected registries and imports only `bapm-target-api`; unit tests register target doubles directly.
+The CLI will create its registry through a composition-root helper that registers each target package shipped by the CLI. Both `compile` and `install` receive that registry. `@b-apm/core` continues accepting injected registries and imports only `bapm-target-api`; unit tests register target doubles directly.
 
 Alternative considered: make `target-api` auto-import known targets. Rejected because it reverses the dependency boundary and would force every consumer to ship every host package.
 

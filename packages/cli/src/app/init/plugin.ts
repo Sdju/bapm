@@ -6,7 +6,7 @@ import {
   validateProjectName,
   writePluginJson,
   writeProducerManifest,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { createPlugin } from "@/modules/Plugin";
 import { coreIntegration } from "../integrations/core.ts";
 

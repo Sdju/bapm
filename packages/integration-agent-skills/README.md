@@ -1,4 +1,6 @@
-# @bapm/integration-agent-skills
+# @b-apm/integration-agent-skills
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Cross-client **agent-skills** runtime for bapm: skills-only deploy to `.agents/skills/`.
 
@@ -35,7 +37,7 @@ Shared path with Cursor/Codex/Copilot/antigravity under `.agents/skills/` is int
 
 ```yaml
 targets:
-  agent-skills: "@bapm/integration-agent-skills"
+  agent-skills: "@b-apm/integration-agent-skills"
 active:
   - agent-skills
 ```

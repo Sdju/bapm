@@ -1,7 +1,7 @@
 /**
  * Unit: cacheClean dryRun preview + refuse-without-yes.
  */
-import { cacheClean } from "@bapm/core";
+import { cacheClean } from "@b-apm/core";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

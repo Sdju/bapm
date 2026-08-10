@@ -29,7 +29,7 @@ active:
 
 Local `active` **заменяет** base `active` целиком (не merge списков). Общий манифест остаётся нейтральным; Cursor у Vasya и Claude у Masha не спорят в PR.
 
-Нужны пакеты `@bapm/integration-cursor` / `@bapm/integration-claude` у соответствующего разработчика (project или global).
+Нужны пакеты `@b-apm/integration-cursor` / `@b-apm/integration-claude` у соответствующего разработчика (project или global).
 
 ## Пример
 

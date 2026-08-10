@@ -1,8 +1,8 @@
 /**
- * Helpers for Find suite (core). Soft-resolve @bapm/core Find APIs.
+ * Helpers for Find suite (core). Soft-resolve @b-apm/core Find APIs.
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import {
   existsSync,
   mkdirSync,
@@ -16,7 +16,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { LockedDependency, LockfileDocument } from "@bapm/core";
+import type { LockedDependency, LockfileDocument } from "@b-apm/core";
 
 export const suiteDir = dirname(fileURLToPath(import.meta.url));
 export const coreRoot = resolve(suiteDir, "../..");
@@ -30,7 +30,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export type TempProject = { cwd: string; cleanup: () => void };

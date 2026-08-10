@@ -4,7 +4,7 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadManifest } from "@bapm/core";
+import { loadManifest } from "@b-apm/core";
 import {
   createTempProject,
   expectKnownCommand,
@@ -62,7 +62,7 @@ describe("CLI init", () => {
     expect(targets).toBeTruthy();
     expect(typeof targets).toBe("object");
     expect(Array.isArray(targets)).toBe(false);
-    expect((targets as Record<string, string>).cursor).toBe("@bapm/integration-cursor");
+    expect((targets as Record<string, string>).cursor).toBe("@b-apm/integration-cursor");
     expect(doc.active).toEqual(["cursor"]);
   });
 

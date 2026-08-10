@@ -4,10 +4,10 @@ M1–M5 delivered manifest/lock dual-read, resolve, install materialize, and cur
 
 ## What Changes
 
-- **`@bapm/core`:** domain APIs for update (rs-011/rs-012 + lk-010 purge), outdated reporting, uninstall (manifest + modules + deploy cleanup + lock rewrite), prune (orphan modules not in resolved graph), deps inspect (list + tree; why SHOULD), audit CI gate (lock present + deployed presence + lk-017/sc-001 hash re-verify; exit 0/1), doctor basics (git + project artifact sanity)
+- **`@b-apm/core`:** domain APIs for update (rs-011/rs-012 + lk-010 purge), outdated reporting, uninstall (manifest + modules + deploy cleanup + lock rewrite), prune (orphan modules not in resolved graph), deps inspect (list + tree; why SHOULD), audit CI gate (lock present + deployed presence + lk-017/sc-001 hash re-verify; exit 0/1), doctor basics (git + project artifact sanity)
 - **`bapm` CLI (FEOD):** thin `commands/` handlers + `modules/` for `update`, `outdated`, `uninstall`, `prune`, `deps` (list|tree), `audit` (`--ci`), `doctor`; manual registry; help lists real commands (not stubs); unknown flags hard-error
 - **Defaults for gaps:** `outdated` exit **0** even when outdated found (CI gate = `audit --ci`); `audit --ci` = lock + deployed presence + hashes (sc-001 subset); `lk-015` `tree_sha256` = SHOULD/soft, not blocking M6 accept; `deps why` = SHOULD if cheap else explicit defer note; `update` supports `--dry-run` and `-y` / minimal confirm path
-- **HARD:** packages primarily `@bapm/core` + CLI; touch `bapm-target-api` / `bapm-target-cursor` only if needed for hashes/cleanup; **MUST NOT** add new `bapm-target-*`
+- **HARD:** packages primarily `@b-apm/core` + CLI; touch `bapm-target-api` / `bapm-target-cursor` only if needed for hashes/cleanup; **MUST NOT** add new `bapm-target-*`
 - **Non-goals:** Producer (M7), Governance/policy (M8), compile/MCP/marketplace (M9), registry/self-update (M10), rich audit scanners/SARIF/`--strip`, second host, range-widening aggressive update
 
 ## Capabilities
@@ -32,7 +32,7 @@ M1–M5 delivered manifest/lock dual-read, resolve, install materialize, and cur
 
 ## Impact
 
-- **`@bapm/core`:** new public symbols for update/outdated/uninstall/prune/deps/audit/doctor; Resolver/Install may gain scoped-update + purge hooks; Lockfile/Manifest edit helpers for uninstall; hash verify reused from Install inventory
+- **`@b-apm/core`:** new public symbols for update/outdated/uninstall/prune/deps/audit/doctor; Resolver/Install may gain scoped-update + purge hooks; Lockfile/Manifest edit helpers for uninstall; hash verify reused from Install inventory
 - **`bapm` CLI:** new commands, constants, registry entries, help text; soft IoC via `app/init` + `app/integrations`
 - **Targets:** incidental only (cleanup/hash paths already present); no new packages
 - **Consumer claim:** lifecycle/integrity fixtures largely green; `lk-015` and rich audit deferred explicitly

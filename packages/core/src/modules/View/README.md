@@ -1,5 +1,7 @@
 # View
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Offline local inspect of one installed lock package: identity, pin, modules path, optional summary.
 
 ## Public API
@@ -11,7 +13,7 @@ Offline local inspect of one installed lock package: identity, pin, modules path
 ## Example
 
 ```ts
-import { viewPackage } from "@bapm/core";
+import { viewPackage } from "@b-apm/core";
 
 const result = viewPackage({ cwd: process.cwd(), package: "acme/shared-utils" });
 // result.exitCode: 0 | 1 | 2

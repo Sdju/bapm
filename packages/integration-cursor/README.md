@@ -1,4 +1,6 @@
-# @bapm/integration-cursor
+# @b-apm/integration-cursor
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Minimal **Cursor** host for bapm (M5 polish + M9 MCP configure).
 
@@ -30,7 +32,7 @@ Thin copy/write from source content (minimal frontmatter only when content is mi
 
 **Skills / rules / agents materialize does not write `.cursor/mcp.json`.** MCP config is written only via the separate `configureMcp` path when install requests it.
 
-`materialize` returns a `MaterializeReport` (`deployedFiles: { path }[]`) via `@bapm/integration-api` for lock inventory.
+`materialize` returns a `MaterializeReport` (`deployedFiles: { path }[]`) via `@b-apm/integration-api` for lock inventory.
 
 ## MCP configure (`configureMcp`)
 
@@ -43,8 +45,8 @@ When install invokes `configureMcp` with eligible servers:
 
 ## Dependencies
 
-Depends only on `@bapm/integration-api` among bapm packages — not `@bapm/core`.
-Shared materialize helpers (`sanitizeName`, `assertUnderDeployRoots`, `readPrimitiveContent`, …) come from `@bapm/integration-api`; this package keeps Cursor detect and path routing only.
+Depends only on `@b-apm/integration-api` among bapm packages — not `@b-apm/core`.
+Shared materialize helpers (`sanitizeName`, `assertUnderDeployRoots`, `readPrimitiveContent`, …) come from `@b-apm/integration-api`; this package keeps Cursor detect and path routing only.
 Register via `createIntegrationRegistry().register(createCursorIntegration())` in CLI or tests.
 
-Third-party authors publishing a custom host for object-map `targets` should prefer a named `createIntegration` factory (see `@bapm/integration-api` README — loadable export contract). This package’s `createCursorIntegration` remains the Cursor-specific factory accepted by the CLI loader.
+Third-party authors publishing a custom host for object-map `targets` should prefer a named `createIntegration` factory (see `@b-apm/integration-api` README — loadable export contract). This package’s `createCursorIntegration` remains the Cursor-specific factory accepted by the CLI loader.

@@ -9,10 +9,10 @@ import {
   ManifestError,
   parseManifestDocument,
   type BapmManifest,
-} from "@bapm/core";
+} from "@b-apm/core";
 
-const CURSOR_PKG = "@bapm/integration-cursor";
-const CLAUDE_PKG = "@bapm/integration-claude";
+const CURSOR_PKG = "@b-apm/integration-cursor";
+const CLAUDE_PKG = "@b-apm/integration-claude";
 
 function parse(overrides: Record<string, unknown>): BapmManifest {
   return parseManifestDocument({
@@ -54,8 +54,8 @@ describe("target/targets object-map parse", () => {
     expect(parse({ targets: { "x-acme-editor": "@acme/integration-editor" } }).targets).toEqual({
       "x-acme-editor": "@acme/integration-editor",
     });
-    expect(parse({ targets: { cursor: "@bapm/integration-cursor@1.2.3" } }).targets).toEqual({
-      cursor: "@bapm/integration-cursor@1.2.3",
+    expect(parse({ targets: { cursor: "@b-apm/integration-cursor@1.2.3" } }).targets).toEqual({
+      cursor: "@b-apm/integration-cursor@1.2.3",
     });
   });
 

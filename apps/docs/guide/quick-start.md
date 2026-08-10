@@ -2,8 +2,8 @@
 
 Цель: поставить CLI и пакет интеграции, затем `bapm install` — агент находится сам, артефакты попадают в layout Cursor.
 
-::: warning Пакеты пока не на npm
-На данный момент пакеты **не опубликованы** в npm. Команды ниже демонстрационные и станут рабочими после первого релиза.
+::: warning UNSTABLE
+Ранний публичный релиз на npm. API и layout могут меняться без major bump. **Не для production.**
 :::
 
 ## Happy path (Cursor, без `targets:`)
@@ -13,12 +13,12 @@
 **1. CLI + интеграция** (глобально или в проекте):
 
 ```bash
-npm i -g @bapm/cli @bapm/integration-cursor
-# или: pnpm add -g @bapm/cli @bapm/integration-cursor
-# или в проекте: npm i -D @bapm/cli @bapm/integration-cursor
+npm i -g @b-apm/cli @b-apm/integration-cursor
+# или: pnpm add -g @b-apm/cli @b-apm/integration-cursor
+# или в проекте: npm i -D @b-apm/cli @b-apm/integration-cursor
 ```
 
-Вместо `@bapm/integration-cursor` можно взять другой `@bapm/integration-*` или свой пакет интеграции. См. [поддерживаемые hosts](/guide/supported-hosts), [выбор host](/guide/host-selection).
+Вместо `@b-apm/integration-cursor` можно взять другой `@b-apm/integration-*` или свой пакет интеграции. См. [поддерживаемые hosts](/guide/supported-hosts), [выбор host](/guide/host-selection).
 
 **2. Проект с `.cursor/` и `bapm.yml`:**
 
@@ -37,17 +37,17 @@ EOF
 bapm install
 ```
 
-И всё. Артефакты раскладываются в `.cursor/` и `apm_modules/`.
+И всё. Артефакты материализуются в `apm_modules/`, пишется lock; для Cursor skills обычно уходят в `.agents/skills/`, rules / agents / MCP — в `.cursor/`.
 
 Что происходит:
 
 1. CLI находит агента (**detect**: каталог `.cursor/` или legacy `.cursorrules`).
-2. Для известного host id подтягивается **стандартный** пакет `@bapm/integration-cursor` (canonical fallback; object-map `targets:` не обязателен).
+2. Для известного host id подтягивается **стандартный** пакет `@b-apm/integration-cursor` (canonical fallback; object-map `targets:` не обязателен).
 3. Зависимости материализуются в layout агента.
 
 Object-map `targets:` — только чтобы **подменить** стандартный пакет или добавить свой host. Не prerequisite для Cursor.
 
-Pin CLI в проекте: `npm i -D @bapm/cli` → `npx bapm`. Force host: `bapm install --target cursor`.
+Pin CLI в проекте: `npm i -D @b-apm/cli` → `npx bapm`. Force host: `bapm install --target cursor`.
 
 ## Альтернативы выбору host
 
@@ -78,7 +78,7 @@ Pin CLI в проекте: `npm i -D @bapm/cli` → `npx bapm`. Force host: `bap
 | Симптом                                     | Что проверить                                                                      |
 | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `No manifest found`                         | В cwd нет `bapm.yml` (или backcompat `apm.yml`)                                    |
-| пакет / `@bapm/integration-cursor` в ошибке | Установите интеграцию в проект или глобально (`npm i -D @bapm/integration-cursor`) |
+| пакет / `@b-apm/integration-cursor` в ошибке | Установите интеграцию в проект или глобально (`npm i -D @b-apm/integration-cursor`) |
 | `Target detection is missing or ambiguous`  | Несколько маркеров (`.cursor` + `.claude`) или ни одного — `--target` / `active`   |
 | `frozen` / lock error при `--frozen`        | Сначала обычный `install` или `lock`                                               |
 | Свой / кастомный агент                      | Object-map `targets:` — [hosts](/guide/supported-hosts#advanced-custom-targets)    |

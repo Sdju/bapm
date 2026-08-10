@@ -2,7 +2,7 @@
 
 ### Requirement: Producer commands init and pack are registered
 
-Invoking `init` and `pack` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@bapm/core` producer API. Unknown flags on these commands MUST hard-error with non-zero exit. Help text for install MUST mention that a local pack archive path is an accepted install source when that path is implemented.
+Invoking `init` and `pack` MUST be recognized by CLI dispatch (not treated as unknown commands). Each MUST invoke a thin FEOD command → module path that calls the corresponding `@b-apm/core` producer API. Unknown flags on these commands MUST hard-error with non-zero exit. Help text for install MUST mention that a local pack archive path is an accepted install source when that path is implemented.
 
 #### Scenario: init and pack are not unknown
 

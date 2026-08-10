@@ -1,4 +1,6 @@
-# @bapm/core
+# @b-apm/core
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Domain library for **bapm** (Better Agent Package Manager): manifest, lockfile, resolver, install, adapters.
 
@@ -58,6 +60,6 @@ Public API for project lockfiles (`apm.lock.yaml` / `bapm.lock.yaml`):
 
 ### Out of M2
 
-M2 does **not** resolve, download, install, run frozen CI, materialize integrations, or invoke `@bapm/integration-*` adapters.
+M2 does **not** resolve, download, install, run frozen CI, materialize integrations, or invoke `@b-apm/integration-*` adapters.
 
 See OpenSpec change `m2-lockfile-yaml-dual-read`.

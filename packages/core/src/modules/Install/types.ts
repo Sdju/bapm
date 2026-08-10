@@ -1,5 +1,5 @@
 import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
-import type { IntegrationRegistry } from "@bapm/integration-api";
+import type { IntegrationRegistry } from "@b-apm/integration-api";
 
 export type InstallOnlyMode = "apm" | "mcp";
 
@@ -52,7 +52,7 @@ export type RunInstallOptions = {
   forcedTarget?: string;
   /** Alias for `forcedTarget`. */
   forceTarget?: string;
-  /** Injected target registry (from @bapm/integration-api). */
+  /** Injected target registry (from @b-apm/integration-api). */
   integrationRegistry?: IntegrationRegistry;
   /** Alias accepted by acceptance helpers. */
   registry?: IntegrationRegistry;

@@ -20,18 +20,18 @@ function listBapmIntegrationPackageNames(): string[] {
     const pkgPath = join(dir, "package.json");
     if (!existsSync(pkgPath)) continue;
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { name?: string };
-    if (typeof pkg.name === "string" && pkg.name.startsWith("@bapm/integration-")) {
+    if (typeof pkg.name === "string" && pkg.name.startsWith("@b-apm/integration-")) {
       names.push(pkg.name);
     }
   }
   return names.sort();
 }
 
-test("workspace @bapm/integration-* packages stay in that namespace", () => {
+test("workspace @b-apm/integration-* packages stay in that namespace", () => {
   const names = listBapmIntegrationPackageNames();
   expect(names.length).toBeGreaterThanOrEqual(2);
-  expect(names).toContain("@bapm/integration-api");
-  expect(names.every((n) => n.startsWith("@bapm/integration-"))).toBe(true);
+  expect(names).toContain("@b-apm/integration-api");
+  expect(names.every((n) => n.startsWith("@b-apm/integration-"))).toBe(true);
 });
 
 test("core uses Cursor and OpenCode integrations only as development dependencies", () => {
@@ -40,11 +40,11 @@ test("core uses Cursor and OpenCode integrations only as development dependencie
     devDependencies?: Record<string, string>;
   };
 
-  expect(coreManifest.dependencies).not.toHaveProperty("@bapm/integration-cursor");
-  expect(coreManifest.dependencies).not.toHaveProperty("@bapm/integration-opencode");
+  expect(coreManifest.dependencies).not.toHaveProperty("@b-apm/integration-cursor");
+  expect(coreManifest.dependencies).not.toHaveProperty("@b-apm/integration-opencode");
   expect(coreManifest.devDependencies).toMatchObject({
-    "@bapm/integration-cursor": "workspace:*",
-    "@bapm/integration-opencode": "workspace:*",
+    "@b-apm/integration-cursor": "workspace:*",
+    "@b-apm/integration-opencode": "workspace:*",
   });
 });
 

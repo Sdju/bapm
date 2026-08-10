@@ -1,12 +1,12 @@
 ## 1. API + install bake dispatch
 
-- [x] 1.1 Add optional `mcpEnvMode?: "bake" | "translate"` (or equivalent documented field) on `BapmIntegration` in `@bapm/integration-api`; export/type-check; document default = bake-compatible when omitted
-- [x] 1.2 Update install MCP path in `@bapm/core` so APM `${VAR}` / `${env:VAR}` / `<VAR>` bake runs only for bake-mode (or omitted) targets; translate-mode targets receive pass-through placeholders; keep Cursor bake behavior and fail-closed `{bake:NAME}` policy
+- [x] 1.1 Add optional `mcpEnvMode?: "bake" | "translate"` (or equivalent documented field) on `BapmIntegration` in `@b-apm/integration-api`; export/type-check; document default = bake-compatible when omitted
+- [x] 1.2 Update install MCP path in `@b-apm/core` so APM `${VAR}` / `${env:VAR}` / `<VAR>` bake runs only for bake-mode (or omitted) targets; translate-mode targets receive pass-through placeholders; keep Cursor bake behavior and fail-closed `{bake:NAME}` policy
 - [x] 1.3 Adjust/add focused core (or CLI) tests proving Cursor still bakes and a translate-mode double skips bake
 
 ## 2. Package scaffold
 
-- [x] 2.1 Create `packages/integration-copilot` (package.json workspace dep on `@bapm/integration-api` only, vite.config.ts, tsconfig, README) matching other integration-* scaffolding; ensure workspace discovery
+- [x] 2.1 Create `packages/integration-copilot` (package.json workspace dep on `@b-apm/integration-api` only, vite.config.ts, tsconfig, README) matching other integration-* scaffolding; ensure workspace discovery
 - [x] 2.2 Export `createCopilotIntegration` + `createIntegration` alias from `src/index.ts` with `id: "copilot"`, `deployRoots: [".github", ".agents"]`, and `mcpEnvMode: "translate"`
 
 ## 3. Detect and materialize
@@ -26,5 +26,5 @@
 
 - [x] 5.1 Unit tests: detect matrix, each materialize kind, hooks sidecar idempotence, MCP translate home write (temp `COPILOT_HOME`), compile omit-deployed-instructions / no canvas
 - [x] 5.2 Acceptance suite under `packages/integration-copilot/tests/acceptance/integration-copilot-runtime/` covering package boundary, detect, materialize, hooks, MCP, compile
-- [x] 5.3 Update docs (`supported-hosts`, architecture index, manifest-hosts / object-map notes) for Copilot opt-in runtime load via `targets: { copilot: "@bapm/integration-copilot" }`
-- [x] 5.4 Run package/workspace checks (`vp check` / targeted tests) for `@bapm/integration-copilot`, integration-api, and affected core bake dispatch
+- [x] 5.3 Update docs (`supported-hosts`, architecture index, manifest-hosts / object-map notes) for Copilot opt-in runtime load via `targets: { copilot: "@b-apm/integration-copilot" }`
+- [x] 5.4 Run package/workspace checks (`vp check` / targeted tests) for `@b-apm/integration-copilot`, integration-api, and affected core bake dispatch

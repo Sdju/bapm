@@ -1,4 +1,6 @@
-# @bapm/integration-opencode
+# @b-apm/integration-opencode
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Minimal **OpenCode** host for bapm (detect, materialize skills/agents/commands, MCP configure, compile).
 
@@ -48,18 +50,18 @@ Skills stay under `.opencode/skills/` (not APM `.agents/skills/`). Writes never 
 
 ```yaml
 targets:
-  opencode: "@bapm/integration-opencode"
+  opencode: "@b-apm/integration-opencode"
 active:
   - opencode
 ```
 
 ```bash
-npm i -D @bapm/integration-opencode
+npm i -D @b-apm/integration-opencode
 bapm install --target opencode
 ```
 
 ## Dependencies
 
-Depends only on `@bapm/integration-api` among bapm packages — not `@bapm/core`.
+Depends only on `@b-apm/integration-api` among bapm packages — not `@b-apm/core`.
 Register via `createIntegrationRegistry().register(createOpencodeIntegration())` in CLI or tests.
 Named `createIntegration` is also exported for object-map load.

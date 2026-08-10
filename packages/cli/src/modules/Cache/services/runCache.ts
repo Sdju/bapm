@@ -1,4 +1,4 @@
-import { cacheClean, cacheInfo } from "@bapm/core";
+import { cacheClean, cacheInfo } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type CacheOptions = { args?: string[]; cwd?: string };

@@ -1,12 +1,12 @@
 ## Context
 
-See proposal.md — Why. APM reference: `KNOWN_TARGETS["kiro"]` in `integration/targets.py`, `adapters/client/kiro.py` (MCP translate + opt-in `.kiro/`), `integration/kiro_hook_integrator.py` (v1 per-file hooks), agent tools vocabulary in `agent_integrator.KIRO_AGENT_ALLOWED_TOOLS`. bapm patterns: `@bapm/integration-copilot` (translate MCP / `mcpEnvMode`), `@bapm/integration-claude` (native skills under host root, project MCP opt-in).
+See proposal.md — Why. APM reference: `KNOWN_TARGETS["kiro"]` in `integration/targets.py`, `adapters/client/kiro.py` (MCP translate + opt-in `.kiro/`), `integration/kiro_hook_integrator.py` (v1 per-file hooks), agent tools vocabulary in `agent_integrator.KIRO_AGENT_ALLOWED_TOOLS`. bapm patterns: `@b-apm/integration-copilot` (translate MCP / `mcpEnvMode`), `@b-apm/integration-claude` (native skills under host root, project MCP opt-in).
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Greenfield `@bapm/integration-kiro` with detect / materialize / configureMcp / thin compile.
+- Greenfield `@b-apm/integration-kiro` with detect / materialize / configureMcp / thin compile.
 - APM Kiro v3 path parity for supported primitives (steering, agents, skills, hooks, MCP).
 - Fail-closed agent tools gate; skip prompts/commands.
 
@@ -19,7 +19,7 @@ See proposal.md — Why. APM reference: `KNOWN_TARGETS["kiro"]` in `integration/
 
 ## Decisions
 
-1. **Package shape** — Mirror `integration-copilot`: `createKiroIntegration` + `createIntegration` alias, vite-plus pack, dependency only `@bapm/integration-api`.
+1. **Package shape** — Mirror `integration-copilot`: `createKiroIntegration` + `createIntegration` alias, vite-plus pack, dependency only `@b-apm/integration-api`.
    - _Alternative:_ extend an existing package — rejected (no shared host root).
 
 2. **Detect** — `existsSync(.kiro) && isDirectory()` only (APM `detect_by_dir` / `auto_create=False`).

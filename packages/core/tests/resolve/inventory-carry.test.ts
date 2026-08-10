@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadLockfile, resolveAndLock, serializeLockfile } from "@bapm/core";
+import { loadLockfile, resolveAndLock, serializeLockfile } from "@b-apm/core";
 import { createTempProject, writeText, type TempProject } from "./helpers.ts";
 
 const MCP_MARKER = "carry-server";

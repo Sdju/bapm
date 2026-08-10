@@ -1,6 +1,6 @@
 ## Context
 
-M5 closed cursor polish and lk-017 lite on frozen install (`deployedInventory` / hash verify inside `modules/Install`). CLI today exposes only `help`, `version`, `install`, `lock`. Normative M6 bar: `.samples/apm-knowledge/topics/m6-lifecycle-acceptance.md`. See `proposal.md` for motivation; behavior contracts in delta specs. FEOD: locked CLI profile + library-core for `@bapm/core`. No new `bapm-target-*`.
+M5 closed cursor polish and lk-017 lite on frozen install (`deployedInventory` / hash verify inside `modules/Install`). CLI today exposes only `help`, `version`, `install`, `lock`. Normative M6 bar: `.samples/apm-knowledge/topics/m6-lifecycle-acceptance.md`. See `proposal.md` for motivation; behavior contracts in delta specs. FEOD: locked CLI profile + library-core for `@b-apm/core`. No new `bapm-target-*`.
 
 ## Goals / Non-Goals
 
@@ -77,7 +77,7 @@ M5 closed cursor polish and lk-017 lite on frozen install (`deployedInventory` /
 
 ### 10. Package allow-list
 
-- **Choice:** Touch `@bapm/core`, `bapm` primarily; `bapm-target-api` / `bapm-target-cursor` only if cleanup/hash report gaps appear. No new workspace packages.
+- **Choice:** Touch `@b-apm/core`, `bapm` primarily; `bapm-target-api` / `bapm-target-cursor` only if cleanup/hash report gaps appear. No new workspace packages.
 - **Why:** HARD constraint.
 
 ## Risks / Trade-offs

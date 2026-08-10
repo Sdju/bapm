@@ -2,7 +2,7 @@
 
 ### Requirement: Install command runs core install happy path
 
-Invoking `install` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@bapm/core` install orchestration (not a permanent not-implemented stub). On a valid project fixture happy path it MUST exit `0` with modules and lock present; when a cursor target is wired via registration, deploy files MAY be present under registered roots. The command MUST accept basic `--frozen` and mirror core frozen failure/success semantics. CLI/workspace MAY depend on `bapm-target-cursor` for e2e registration without `@bapm/core` importing that package.
+Invoking `install` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@b-apm/core` install orchestration (not a permanent not-implemented stub). On a valid project fixture happy path it MUST exit `0` with modules and lock present; when a cursor target is wired via registration, deploy files MAY be present under registered roots. The command MUST accept basic `--frozen` and mirror core frozen failure/success semantics. CLI/workspace MAY depend on `bapm-target-cursor` for e2e registration without `@b-apm/core` importing that package.
 
 #### Scenario: bapm install happy path
 

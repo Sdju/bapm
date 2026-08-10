@@ -7,20 +7,20 @@ import {
   createIntegrationRegistry,
   type MarketplaceOutputIntegration,
   type MarketplaceOutputRegistry,
-} from "@bapm/integration-api";
-import { createCursorIntegration } from "@bapm/integration-cursor";
+} from "@b-apm/integration-api";
+import { createCursorIntegration } from "@b-apm/integration-cursor";
 import {
   buildMarketplaceOutputs,
   resolveEffectiveOutputPath,
   type MarketplaceAuthoringConfig,
-} from "@bapm/core";
+} from "@b-apm/core";
 
 async function loadMarketplaceIntegrations(): Promise<{
   claude: MarketplaceOutputIntegration;
   codex: MarketplaceOutputIntegration;
 }> {
-  const claudeSpecifier = "@bapm/integration-claude";
-  const codexSpecifier = "@bapm/integration-codex";
+  const claudeSpecifier = "@b-apm/integration-claude";
+  const codexSpecifier = "@b-apm/integration-codex";
   const claude = (await import(claudeSpecifier)) as {
     claudeMarketplaceIntegration: MarketplaceOutputIntegration;
   };

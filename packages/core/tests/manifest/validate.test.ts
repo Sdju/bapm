@@ -3,7 +3,7 @@
  * delta spec `manifest-yaml-validate`). Rewrite/mf-006 is OUT of M1.
  */
 import { expect, test, describe } from "vite-plus/test";
-import { loadManifest } from "@bapm/core";
+import { loadManifest } from "@b-apm/core";
 import { documentOf, expectThrowsMatching, fixturePath } from "./helpers.ts";
 
 function loadFixture(name: string) {

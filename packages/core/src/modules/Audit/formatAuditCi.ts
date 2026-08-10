@@ -4,11 +4,11 @@ import type {
   AuditCiStructuredReport,
   AuditCiSummary,
 } from "./types.ts";
+import { getVersion } from "@/common/packageVersion.ts";
 
 const SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json";
 const SARIF_VERSION = "2.1.0";
 const DRIVER_NAME = "bapm-audit";
-const DRIVER_VERSION = "0.0.0";
 
 function publicCheck(check: AuditCiCheck): AuditCiCheck {
   return {
@@ -138,7 +138,7 @@ export function formatAuditCiSarif(result: AuditCiResult): string {
         tool: {
           driver: {
             name: DRIVER_NAME,
-            version: DRIVER_VERSION,
+            version: getVersion(),
             rules,
           },
         },

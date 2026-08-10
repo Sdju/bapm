@@ -2,11 +2,11 @@
  * Unit: viewPackage identity/pin, basename, modules path, summary, exits.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { viewPackage } from "@bapm/core";
+import { viewPackage } from "@b-apm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 
 type Temp = { cwd: string; cleanup: () => void };
 

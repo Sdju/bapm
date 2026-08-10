@@ -12,18 +12,18 @@ bapm — как npm / pip для AI-агента: объявили зависи�
 
 ## Happy path
 
-::: warning Пакеты пока не на npm
-Примеры `npm i` демонстрационные до первого релиза.
+::: warning UNSTABLE
+Ранний публичный релиз на npm. Примеры `npm i` рабочие, но API/layout могут меняться. **Не для production.**
 :::
 
 ```bash
-npm i -g @bapm/cli @bapm/integration-cursor
+npm i -g @b-apm/cli @b-apm/integration-cursor
 # cwd с .cursor/ и bapm.yml
 bapm install
 ```
 
 1. В корне лежит `bapm.yml`.
-2. `install` находит агента (detect / `active` / `--target`), подтягивает стандартный `@bapm/integration-*` при необходимости и копирует skills / rules / agents / MCP в layout host.
+2. `install` находит агента (detect / `active` / `--target`), подтягивает стандартный `@b-apm/integration-*` при необходимости и копирует skills / rules / agents / MCP в layout host.
 3. Дальше — `update`, `outdated`, `compile`, marketplace-pack.
 
 Первый проход: [быстрый старт](/guide/quick-start). Выбор host: [host selection](/guide/host-selection). Свой агент: [supported hosts](/guide/supported-hosts).
@@ -50,6 +50,6 @@ bapm install
 
 ## Ограничения (коротко)
 
-- Hosts — отдельные пакеты `@bapm/integration-*` (не бандл CLI). Canonical fallback без `targets:`; map — override/custom.
+- Hosts — отдельные пакеты `@b-apm/integration-*` (не бандл CLI). Canonical fallback без `targets:`; map — override/custom.
 - Claude/Codex также эмитят marketplace JSON при `pack`; Cursor, Codex и OpenCode делят `AGENTS.md` (last-writer-wins на compile).
 - Граница OpenAPM / APM: [Совместимость](/guide/conformance).

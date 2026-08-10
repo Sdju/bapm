@@ -26,4 +26,4 @@
 - [x] 5.1 Unit tests for detect, each materialize kind, hooks sidecar idempotence, MCP opt-in/skip/rewrite, compile omit-instructions / no-write
 - [x] 5.2 Keep marketplace mapper tests green; add/adjust any core/cli shim expectations if dual exports require it
 - [x] 5.3 Update user docs (`supported-hosts`, architecture index, marketplace-pack situations) so Claude is opt-in runtime + marketplace, not marketplace-only
-- [x] 5.4 Run package/workspace checks (`vp check` / targeted tests) for `@bapm/integration-claude` and affected docs/tests
+- [x] 5.4 Run package/workspace checks (`vp check` / targeted tests) for `@b-apm/integration-claude` and affected docs/tests

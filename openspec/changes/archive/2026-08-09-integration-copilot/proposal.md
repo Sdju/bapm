@@ -1,10 +1,10 @@
 ## Why
 
-GitHub Copilot is a first-class APM target (`copilot`) with project file conventions under `.github/` / `.agents/`, but bapm has no `@bapm/integration-copilot` package. Without it, users cannot opt in via `targets:` object-map, detect Copilot projects, materialize instructions/prompts/agents/skills/hooks, configure Copilot CLI MCP, or thin-compile `.github/copilot-instructions.md`.
+GitHub Copilot is a first-class APM target (`copilot`) with project file conventions under `.github/` / `.agents/`, but bapm has no `@b-apm/integration-copilot` package. Without it, users cannot opt in via `targets:` object-map, detect Copilot projects, materialize instructions/prompts/agents/skills/hooks, configure Copilot CLI MCP, or thin-compile `.github/copilot-instructions.md`.
 
 ## What Changes
 
-- Add greenfield workspace package `@bapm/integration-copilot` implementing `BapmIntegration` (`createCopilotIntegration` / `createIntegration`: `detect`, `materialize`, `configureMcp`, thin `compile`).
+- Add greenfield workspace package `@b-apm/integration-copilot` implementing `BapmIntegration` (`createCopilotIntegration` / `createIntegration`: `detect`, `materialize`, `configureMcp`, thin `compile`).
 - Detect using APM `SIGNAL_WHITELIST` (any one): `.github/copilot-instructions.md`, `.github/instructions/`, `.github/agents/`, `.github/prompts/`, `.github/hooks/`.
 - Materialize project-scope layouts aligned with APM Copilot:
   - instructions → `.github/instructions/<name>.instructions.md` (preserve Copilot FM / `applyTo` when present)
@@ -15,7 +15,7 @@ GitHub Copilot is a first-class APM target (`copilot`) with project file convent
 - `configureMcp` → home `~/.copilot/mcp-config.json` `mcpServers` with **translate** placeholders (`${VAR}`), parity with APM Copilot CLI (documented home-scope exception vs project MCP hosts).
 - Thin `compile` → `.github/copilot-instructions.md`, omitting instruction primitives already deployed under `.github/instructions/`.
 - `deployRoots`: at least `[".github", ".agents"]` (plus `"."` only if compile/helpers require it — decided in design).
-- Docs + CLI object-map load note (`targets.copilot: "@bapm/integration-copilot"`); package depends on `@bapm/integration-api` only.
+- Docs + CLI object-map load note (`targets.copilot: "@b-apm/integration-copilot"`); package depends on `@b-apm/integration-api` only.
 - Install/core MCP bake path: skip bake for translate-mode hosts so Copilot does not receive Cursor-style literals.
 
 **Non-goals:** canvas / `.github/extensions/`; user-scope file deploy (`~/.copilot/prompts`, concat user instructions, `-g` `AGENTS.md`); vscode project MCP (`.vscode/mcp.json`); marketplace mapper; rich APM compile / `apm run` Copilot runtime; cowork/app experimental targets; full hook-IR dialect beyond existing Cursor/Claude reuse.
@@ -24,7 +24,7 @@ GitHub Copilot is a first-class APM target (`copilot`) with project file convent
 
 ### New Capabilities
 
-- `integration-copilot-runtime`: GitHub Copilot project-scope runtime on `@bapm/integration-copilot` — whitelist detect, materialize paths (incl. prompts-native commands), per-file hooks + ownership, home MCP translate configure, thin compile to `copilot-instructions.md`, package boundary and docs load path.
+- `integration-copilot-runtime`: GitHub Copilot project-scope runtime on `@b-apm/integration-copilot` — whitelist detect, materialize paths (incl. prompts-native commands), per-file hooks + ownership, home MCP translate configure, thin compile to `copilot-instructions.md`, package boundary and docs load path.
 
 ### Modified Capabilities
 
@@ -35,6 +35,6 @@ GitHub Copilot is a first-class APM target (`copilot`) with project file convent
 ## Impact
 
 - New package: `packages/integration-copilot` (scaffold like cursor/claude/codex/opencode).
-- Likely small updates: `@bapm/integration-api` (optional `mcpEnvMode`), `@bapm/core` install MCP bake dispatch, docs (`supported-hosts`, architecture index, manifest-hosts object-map examples).
+- Likely small updates: `@b-apm/integration-api` (optional `mcpEnvMode`), `@b-apm/core` install MCP bake dispatch, docs (`supported-hosts`, architecture index, manifest-hosts object-map examples).
 - CLI remains empty-registry / object-map load only (`createIntegration` first).
 - Tests: unit + `packages/integration-copilot/tests/acceptance/integration-copilot/` (or `…-runtime/`) covering detect, materialize kinds, hooks ownership, MCP translate home write, compile omit-deployed-instructions.

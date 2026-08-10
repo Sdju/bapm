@@ -1,6 +1,6 @@
 ## Context
 
-After shipping the full opt-in host matrix, `@bapm/integration-api` already provides `primitivesMaterialize` and `materializeSkill`. Large hosts still paste assert+mkdir+write+`DeployedFile`, AGENTS.md compile loops, and identical Claude-subset frontmatter allowlists.
+After shipping the full opt-in host matrix, `@b-apm/integration-api` already provides `primitivesMaterialize` and `materializeSkill`. Large hosts still paste assert+mkdir+write+`DeployedFile`, AGENTS.md compile loops, and identical Claude-subset frontmatter allowlists.
 
 ## Goals / Non-Goals
 

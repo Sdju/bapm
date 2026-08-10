@@ -9,7 +9,7 @@ See `proposal.md` for motivation. After `manifest-target-integration-load`, CLI 
 
 Parse still treats map values as opaque non-empty strings (`manifest-target-integration-map`). Active-host selection unchanged. Local filesystem values were explicitly out of scope for dedicated grammar; Node already resolves `./` relative to the require root when passed as opaque strings, but without path classification, containment, or docs.
 
-Project-root containment for APM `path:` / `local` dependencies already exists in `@bapm/core` Resolver (`resolveLocalPath` / `LOCAL_PATH_ESCAPES_PROJECT_ROOT`). This change applies the same **policy** at the CLI integration loader (may reuse a small shared helper or duplicate the lexical check — prefer reuse if importable without coupling Core to CLI load semantics).
+Project-root containment for APM `path:` / `local` dependencies already exists in `@b-apm/core` Resolver (`resolveLocalPath` / `LOCAL_PATH_ESCAPES_PROJECT_ROOT`). This change applies the same **policy** at the CLI integration loader (may reuse a small shared helper or duplicate the lexical check — prefer reuse if importable without coupling Core to CLI load semantics).
 
 ## Goals / Non-Goals
 
@@ -51,7 +51,7 @@ Project-root containment for APM `path:` / `local` dependencies already exists i
 ### 3. Cwd = project / manifest dual-read root
 
 - **Choice:** Relative paths resolve against the same `cwd` already used by `registerManifestIntegrationsFromCwd` / `loadManifest({ cwd })` (consumer project root where `bapm.yml` / `apm.yml` is discovered).
-- **Why:** Authors write paths relative to the project, not the CLI install location. CLI fallback resolve for `@bapm/*` MUST NOT apply to path-classified values (path miss → fail-closed, no “resolve from CLI package”).
+- **Why:** Authors write paths relative to the project, not the CLI install location. CLI fallback resolve for `@b-apm/*` MUST NOT apply to path-classified values (path miss → fail-closed, no “resolve from CLI package”).
 
 ### 4. Security: fail-closed project-root containment
 

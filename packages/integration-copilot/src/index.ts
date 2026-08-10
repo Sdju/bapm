@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-copilot — GitHub Copilot runtime integration for bapm.
+ * @b-apm/integration-copilot — GitHub Copilot runtime integration for bapm.
  */
 
 export {

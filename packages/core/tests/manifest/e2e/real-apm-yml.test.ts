@@ -8,7 +8,7 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { cpSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { discoverManifestPath, loadManifest } from "@bapm/core";
+import { discoverManifestPath, loadManifest } from "@b-apm/core";
 import {
   createTempProject,
   documentOf,

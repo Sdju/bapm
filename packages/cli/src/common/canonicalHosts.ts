@@ -1,11 +1,11 @@
 /**
- * Known published host ids → default `@bapm/integration-<id>` specifier.
+ * Known published host ids → default `@b-apm/integration-<id>` specifier.
  * Used when object-map `targets:` omits a host (canonical fallback load).
  */
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-/** Host ids with a published `@bapm/integration-*` package in this monorepo. */
+/** Host ids with a published `@b-apm/integration-*` package in this monorepo. */
 export const CANONICAL_HOST_IDS = [
   "cursor",
   "opencode",
@@ -28,7 +28,7 @@ export function isCanonicalHostId(id: string): id is CanonicalHostId {
 
 /** Default npm specifier for a known host id. */
 export function canonicalPackageSpecifier(hostId: string): string {
-  return `@bapm/integration-${hostId}`;
+  return `@b-apm/integration-${hostId}`;
 }
 
 function isDir(cwd: string, rel: string): boolean {

@@ -6,8 +6,8 @@ import {
   loadManifest,
   ManifestError,
   type BapmManifest,
-} from "@bapm/core";
-import type { BapmIntegration, IntegrationRegistry } from "@bapm/integration-api";
+} from "@b-apm/core";
+import type { BapmIntegration, IntegrationRegistry } from "@b-apm/integration-api";
 import { CANONICAL_HOST_IDS, canonicalPackageSpecifier } from "@/common/canonicalHosts.ts";
 import { isLocalPathSpecifier, resolveContainedLocalPath } from "./localPathSpecifier.ts";
 
@@ -284,7 +284,7 @@ export async function loadIntegrationFromPackage(
 }
 
 /**
- * Try to resolve+register a canonical `@bapm/integration-<id>` package.
+ * Try to resolve+register a canonical `@b-apm/integration-<id>` package.
  * Soft-fails when the package is missing or unloadable so other hosts still work.
  */
 async function tryRegisterCanonicalHost(

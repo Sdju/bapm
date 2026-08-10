@@ -1,6 +1,6 @@
 ## Context
 
-See proposal. Governance gate already exists in `@bapm/core` Policy (`discoverPolicyWithProviders`, `loadPolicy`, `resolvePolicyChain`, `runPolicyGate`). CLI has no `policy` command. APM reference: `apm policy status` with always-exit-0 default and structured JSON. Criteria: `.samples/apm-knowledge/topics/p6d-policy-status-criteria.md`; deep-dive: `command-deep-dive-policy.md`.
+See proposal. Governance gate already exists in `@b-apm/core` Policy (`discoverPolicyWithProviders`, `loadPolicy`, `resolvePolicyChain`, `runPolicyGate`). CLI has no `policy` command. APM reference: `apm policy status` with always-exit-0 default and structured JSON. Criteria: `.samples/apm-knowledge/topics/p6d-policy-status-criteria.md`; deep-dive: `command-deep-dive-policy.md`.
 
 ## Goals / Non-Goals
 

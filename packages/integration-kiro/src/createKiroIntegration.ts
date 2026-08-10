@@ -9,7 +9,7 @@ import type {
   HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
   compileMarkdownReport,
@@ -24,7 +24,7 @@ import {
   sanitizeName,
   writeDeployedFile,
   writeHookOwnershipSidecar,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".kiro", "."] as const;
 const MCP_JSON_REL = ".kiro/settings/mcp.json";

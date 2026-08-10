@@ -46,7 +46,7 @@ describe("mp-plugin-init CLI FEOD Plugin wiring", () => {
     expect(constants).toMatch(/COMMAND_PLUGIN|["']plugin["']/);
   });
 
-  test("commands/plugin.ts does not import @bapm/core directly", () => {
+  test("commands/plugin.ts does not import @b-apm/core directly", () => {
     const body = readSrc("commands/plugin.ts");
     expect(body).not.toMatch(/from\s+["']@bapm\/core["']/);
   });

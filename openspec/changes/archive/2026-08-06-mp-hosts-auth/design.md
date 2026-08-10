@@ -1,6 +1,6 @@
 ## Context
 
-See `proposal.md` for motivation. Baseline today: `packages/core` Marketplace `fetch.ts` supports github|url|local, hardcodes `https://api.github.com/...`, and `refuseUnsupported` for gitlab/ado/git; tokens are ambient `GITHUB_TOKEN`|`GH_TOKEN` only. Models already classify gitlab/ado/`*.ghe.com` as kinds, but CLI `runMarketplace.ts` still refuses non-github.com remotes. No Auth module in core. APM reference: `_FETCHERS` with gitlab REST, ado Items REST (+ git fallback), github Contents via `HostInfo.api_base`. Product defaults D1–D7 locked in criteria. FEOD: domain logic in `@bapm/core` Marketplace (library profile); CLI remains thin handlers + module services.
+See `proposal.md` for motivation. Baseline today: `packages/core` Marketplace `fetch.ts` supports github|url|local, hardcodes `https://api.github.com/...`, and `refuseUnsupported` for gitlab/ado/git; tokens are ambient `GITHUB_TOKEN`|`GH_TOKEN` only. Models already classify gitlab/ado/`*.ghe.com` as kinds, but CLI `runMarketplace.ts` still refuses non-github.com remotes. No Auth module in core. APM reference: `_FETCHERS` with gitlab REST, ado Items REST (+ git fallback), github Contents via `HostInfo.api_base`. Product defaults D1–D7 locked in criteria. FEOD: domain logic in `@b-apm/core` Marketplace (library profile); CLI remains thin handlers + module services.
 
 ## Goals / Non-Goals
 
@@ -19,8 +19,8 @@ See `proposal.md` for motivation. Baseline today: `packages/core` Marketplace `f
 
 ### D1 — Module placement (FEOD)
 
-- Put host classification + `resolveTokenForHost` inside `@bapm/core` `Marketplace` as a small submodule or sibling files exported from `Marketplace/index.ts` (e.g. `hostClassify.ts`, `resolveToken.ts`), **not** a top-level `Auth` package and **not** Registry HTTP.
-- CLI consumes via `@bapm/core` public API / existing Marketplace exports; no deep imports.
+- Put host classification + `resolveTokenForHost` inside `@b-apm/core` `Marketplace` as a small submodule or sibling files exported from `Marketplace/index.ts` (e.g. `hostClassify.ts`, `resolveToken.ts`), **not** a top-level `Auth` package and **not** Registry HTTP.
+- CLI consumes via `@b-apm/core` public API / existing Marketplace exports; no deep imports.
 - **Alternatives:** standalone `modules/Auth` — deferred until broader sc claim / AuthResolver work needs a shared home.
 
 ### D2 — ADO transport: REST Items API (locked)

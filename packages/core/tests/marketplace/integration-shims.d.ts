@@ -1,5 +1,5 @@
 /** Ambient types for marketplace-output packages that ship JS-only dist. */
-declare module "@bapm/integration-claude" {
+declare module "@b-apm/integration-claude" {
   export const claudeMarketplaceIntegration: {
     id: string;
     marketplaceOutput: {
@@ -14,7 +14,7 @@ declare module "@bapm/integration-claude" {
   ): Record<string, unknown>;
 }
 
-declare module "@bapm/integration-codex" {
+declare module "@b-apm/integration-codex" {
   export const codexMarketplaceIntegration: {
     id: string;
     marketplaceOutput: {

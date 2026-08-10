@@ -21,7 +21,7 @@ APM reference: `commands/find.py` (`build_reverse_index`, `_lookup_in_index`, `_
 
 ### D1 — Core module location: `modules/Find`
 
-- **Choice:** New `@bapm/core` FEOD module `Find` (not buried only inside Install).
+- **Choice:** New `@b-apm/core` FEOD module `Find` (not buried only inside Install).
 - **Why:** Reverse lookup is a read-only lock query surface, orthogonal to Install mutation and to Marketplace. Keeps public API clear (`buildReverseIndex`, `lookupInIndex`, `findPath` / `runFind`-style orchestration).
 - **Alternatives:** Helpers under Lockfile (inventory is lock-shaped but find UX/formatting is product behavior); under Deps (why reuse only) — rejected to avoid bloating those modules.
 
@@ -54,7 +54,7 @@ APM reference: `commands/find.py` (`build_reverse_index`, `_lookup_in_index`, `_
 
 ### D7 — CLI FEOD: `modules/Find` + `commands/find`
 
-- **Choice:** Mirror Search: thin command → `createFind` module → `@bapm/core` find API. Register in app registry; Help lists `find`.
+- **Choice:** Mirror Search: thin command → `createFind` module → `@b-apm/core` find API. Register in app registry; Help lists `find`.
 - **Flags:** `--source`, `--path` only for v1 (`--json` OOS).
 
 ### D8 — S1 dual-write in same change

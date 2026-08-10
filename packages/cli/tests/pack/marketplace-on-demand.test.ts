@@ -20,7 +20,7 @@ describe("CLI pack · marketplace on-demand load", () => {
     project = undefined;
   });
 
-  test("pack selecting Claude without resolvable @bapm/integration-claude fails closed with install guidance", async () => {
+  test("pack selecting Claude without resolvable @b-apm/integration-claude fails closed with install guidance", async () => {
     project = createTempProject();
     writeClaudeLocalAuthoring(project.cwd, { linkIntegration: false });
 

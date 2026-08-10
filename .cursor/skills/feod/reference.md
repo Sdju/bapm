@@ -119,4 +119,4 @@ ModuleName/
 
 ## Дополнительно
 
-- Library-профиль `@bapm/core` — [library-core.md](library-core.md) (не меняет CLI locked rules)
+- Library-профиль `@b-apm/core` — [library-core.md](library-core.md) (не меняет CLI locked rules)

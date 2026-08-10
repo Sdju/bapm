@@ -4,7 +4,7 @@ bapm has no consumer marketplace surface: users cannot register `marketplace.jso
 
 ## What Changes
 
-- Add `@bapm/core` domain module `Marketplace/` (models, `~/.bapm` paths, local registry CRUD, fetch/cache for **github | url | local** only) — **not** an extension of `Registry/` HTTP.
+- Add `@b-apm/core` domain module `Marketplace/` (models, `~/.bapm` paths, local registry CRUD, fetch/cache for **github | url | local** only) — **not** an extension of `Registry/` HTTP.
 - Introduce user-config root **`~/.bapm`**: `marketplaces.json` + sidecar cache under `cache/marketplace/` (TTL ~1h; force refresh on `update` / probe).
 - Parse Copilot (`repository`) + Claude (`source`) `marketplace.json`; skip npm source entries; keep plugin `registry` field parsed but unused until install.
 - Wire CLI FEOD `marketplace` group: **`add` | `list` | `browse` | `update` | `remove` | thin `validate`** (schema + duplicate plugin names; `--check-refs` OOS).
@@ -30,7 +30,7 @@ bapm has no consumer marketplace surface: users cannot register `marketplace.jso
 
 ## Impact
 
-- `@bapm/core`: new `modules/Marketplace/**`, `app/publicApi` re-exports, unit fixtures for parse/registry/fetch.
+- `@b-apm/core`: new `modules/Marketplace/**`, `app/publicApi` re-exports, unit fixtures for parse/registry/fetch.
 - `bapm` CLI: `modules/Marketplace`, `commands/marketplace.ts`, `app/init/marketplace.ts`, `app/registry.ts`, Help listing, constants.
 - Tests: acceptance under `tests/acceptance/mp-consumer-registry/` (RED→GREEN later); core/CLI unit coverage for G3–G10.
 - Docs: design documents `~/.bapm` paths; no CONFORMANCE.md edits.

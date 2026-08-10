@@ -56,14 +56,14 @@ The `common` layer MUST NOT contain any `index.ts` / barrel file. Consumers MUST
 - **WHEN** a module or command needs a shared constant or utility from `common`
 - **THEN** the import path MUST target a concrete file under `src/common/`, not a `common` barrel
 
-### Requirement: External @bapm/core access goes through app integrations
+### Requirement: External @b-apm/core access goes through app integrations
 
-Code in `commands/` MUST NOT import `@bapm/core` directly. Access to `@bapm/core` for CLI adapters MUST be mediated by `app/integrations` (and soft IoC wiring in `app/init` where dependencies are injected into modules).
+Code in `commands/` MUST NOT import `@b-apm/core` directly. Access to `@b-apm/core` for CLI adapters MUST be mediated by `app/integrations` (and soft IoC wiring in `app/init` where dependencies are injected into modules).
 
 #### Scenario: Install stub uses core via integrations
 
 - **WHEN** the Install module needs manifest/lock file names or other core constants for the stub message
-- **THEN** those values MUST be supplied through app integrations / init wiring rather than a direct `@bapm/core` import inside `commands/`
+- **THEN** those values MUST be supplied through app integrations / init wiring rather than a direct `@b-apm/core` import inside `commands/`
 
 ### Requirement: Lifecycle CLI modules follow FEOD thin-command pattern
 
@@ -81,7 +81,7 @@ Each M6 lifecycle/integrity command (`update`, `outdated`, `uninstall`, `prune`,
 
 ### Requirement: Producer CLI modules follow FEOD thin-command pattern
 
-Each M7 producer command (`init`, `pack`) MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/<Name>/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@bapm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
+Each M7 producer command (`init`, `pack`) MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/<Name>/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@b-apm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
 
 #### Scenario: Init command delegates to module API
 
@@ -95,7 +95,7 @@ Each M7 producer command (`init`, `pack`) MUST have a thin handler under `src/co
 
 ### Requirement: Policy CLI wiring follows FEOD thin-command pattern
 
-Policy-related CLI behavior (install/lock/update flag passthrough, and optional `policy status`) MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain parse/evaluate logic MUST live in `@bapm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@bapm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
+Policy-related CLI behavior (install/lock/update flag passthrough, and optional `policy status`) MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain parse/evaluate logic MUST live in `@b-apm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@b-apm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
 
 #### Scenario: Install policy flags delegate via module
 
@@ -109,7 +109,7 @@ Policy-related CLI behavior (install/lock/update flag passthrough, and optional 
 
 ### Requirement: M9 extras CLI wiring follows FEOD thin-command pattern
 
-`compile`, `cache` (info/clean), install MCP/trust flag passthrough, and `approve` / `deny` MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain logic MUST live in `@bapm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@bapm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
+`compile`, `cache` (info/clean), install MCP/trust flag passthrough, and `approve` / `deny` MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain logic MUST live in `@b-apm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@b-apm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
 
 #### Scenario: Compile command uses module API
 
@@ -133,7 +133,7 @@ Policy-related CLI behavior (install/lock/update flag passthrough, and optional 
 
 ### Requirement: M10 registry CLI wiring follows FEOD thin-command pattern
 
-`publish` and `self-update` MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API (names flexible, e.g. `Publish`, `SelfUpdate`). Domain logic MUST live in `@bapm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@bapm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
+`publish` and `self-update` MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API (names flexible, e.g. `Publish`, `SelfUpdate`). Domain logic MUST live in `@b-apm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@b-apm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
 
 #### Scenario: Publish command uses module API
 
@@ -147,7 +147,7 @@ Policy-related CLI behavior (install/lock/update flag passthrough, and optional 
 
 ### Requirement: Marketplace CLI module follows FEOD thin-command pattern
 
-The `marketplace` command MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/Marketplace/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring via `app/init` and `app/integrations`. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Commands MUST obtain `@bapm/core` marketplace APIs only through app integrations / injected deps, not via direct `@bapm/core` imports inside `commands/`.
+The `marketplace` command MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/Marketplace/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring via `app/init` and `app/integrations`. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Commands MUST obtain `@b-apm/core` marketplace APIs only through app integrations / injected deps, not via direct `@b-apm/core` imports inside `commands/`.
 
 #### Scenario: Marketplace command delegates to module API
 
@@ -161,7 +161,7 @@ The `marketplace` command MUST have a thin handler under `src/commands/` that de
 
 ### Requirement: Plugin CLI module follows FEOD thin-command pattern
 
-The `plugin` command MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/Plugin/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring via `app/init` and `app/integrations`. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Commands MUST obtain `@bapm/core` scaffold APIs only through app integrations / injected deps, not via direct `@bapm/core` imports inside `commands/`.
+The `plugin` command MUST have a thin handler under `src/commands/` that delegates to a directory module under `src/modules/Plugin/` with `index.ts` public API. Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring via `app/init` and `app/integrations`. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Commands MUST obtain `@b-apm/core` scaffold APIs only through app integrations / injected deps, not via direct `@b-apm/core` imports inside `commands/`.
 
 #### Scenario: Plugin command delegates to module API
 
@@ -175,7 +175,7 @@ The `plugin` command MUST have a thin handler under `src/commands/` that delegat
 
 ### Requirement: Marketplace authoring stays in existing FEOD Marketplace module
 
-Authoring CLI verbs (`init`, `package`, `check`, optional `migrate`) MUST be implemented inside the existing `src/modules/Marketplace/` directory module and thin `src/commands/marketplace.ts` handler — not as a new top-level command module and not via module-local `commands/` folders. Public exports MUST remain through `modules/Marketplace/index.ts`. Domain authoring logic in the CLI MUST stay thin (argv/orchestration); schema/load/edit/check helpers MUST live in `@bapm/core` and be reached via `app/integrations` / soft IoC, not via direct `@bapm/core` imports inside `commands/`.
+Authoring CLI verbs (`init`, `package`, `check`, optional `migrate`) MUST be implemented inside the existing `src/modules/Marketplace/` directory module and thin `src/commands/marketplace.ts` handler — not as a new top-level command module and not via module-local `commands/` folders. Public exports MUST remain through `modules/Marketplace/index.ts`. Domain authoring logic in the CLI MUST stay thin (argv/orchestration); schema/load/edit/check helpers MUST live in `@b-apm/core` and be reached via `app/integrations` / soft IoC, not via direct `@b-apm/core` imports inside `commands/`.
 
 #### Scenario: Authoring routed through Marketplace module API
 
@@ -189,7 +189,7 @@ Authoring CLI verbs (`init`, `package`, `check`, optional `migrate`) MUST be imp
 
 ### Requirement: Pack module wires marketplace emit flags
 
-Marketplace pack flags (`--marketplace`, `--marketplace-path`, marketplace-aware `--offline`) MUST be parsed and orchestrated inside the existing `src/modules/Pack/` directory module and thin `src/commands/pack.ts` handler — not via a new top-level command module and not by restoring a `marketplace build` verb. Domain resolve/map/write logic MUST live in `@bapm/core` and be reached via `app/integrations` / soft IoC, not via direct `@bapm/core` imports inside `commands/`. Pack module public API MUST remain the CLI entry for both plain-zip and marketplace emit orchestration.
+Marketplace pack flags (`--marketplace`, `--marketplace-path`, marketplace-aware `--offline`) MUST be parsed and orchestrated inside the existing `src/modules/Pack/` directory module and thin `src/commands/pack.ts` handler — not via a new top-level command module and not by restoring a `marketplace build` verb. Domain resolve/map/write logic MUST live in `@b-apm/core` and be reached via `app/integrations` / soft IoC, not via direct `@b-apm/core` imports inside `commands/`. Pack module public API MUST remain the CLI entry for both plain-zip and marketplace emit orchestration.
 
 #### Scenario: Pack marketplace flags go through Pack module
 

@@ -2,7 +2,7 @@
 
 ### Requirement: Install exposes force insecure dev and only flags
 
-The install command MUST accept `--force`, `--allow-insecure`, repeatable `--allow-insecure-host <hostname>`, `--dev`, and `--only <apm|mcp>`. Parsed values MUST be forwarded to `@bapm/core` install options. `--only` values other than `apm` or `mcp` MUST fail closed with a clear usage error. Invalid `--allow-insecure-host` hostnames MUST fail closed at parse. Unknown flags remain hard errors. Help MUST document these flags and MUST state that `--force` does not refresh refs and does not bypass frozen or policy. Help MUST NOT document `--refresh` in this change (deferred). Help MUST NOT conflate `--force` with `--target` / forced-target activation.
+The install command MUST accept `--force`, `--allow-insecure`, repeatable `--allow-insecure-host <hostname>`, `--dev`, and `--only <apm|mcp>`. Parsed values MUST be forwarded to `@b-apm/core` install options. `--only` values other than `apm` or `mcp` MUST fail closed with a clear usage error. Invalid `--allow-insecure-host` hostnames MUST fail closed at parse. Unknown flags remain hard errors. Help MUST document these flags and MUST state that `--force` does not refresh refs and does not bypass frozen or policy. Help MUST NOT document `--refresh` in this change (deferred). Help MUST NOT conflate `--force` with `--target` / forced-target activation.
 
 #### Scenario: New project-scope flags accepted
 

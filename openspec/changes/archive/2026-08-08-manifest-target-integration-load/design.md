@@ -1,6 +1,6 @@
 ## Context
 
-See `proposal.md` for motivation. After `manifest-target-integration-map`, Manifest parse accepts object-map `target` / `targets`, retains values, and exposes `declaredTargetIntegrationMap`. Install uses map **keys** only for tg-008 intersection; active host selection is still `--target` / registry detect. CLI composition (`createCliIntegrationRegistry`) hard-registers only `@bapm/integration-cursor`. Core speaks solely through `@bapm/integration-api` and MUST NOT import concrete integrations. Cursor exports `createCursorIntegration()` → `BapmIntegration`; Claude/Codex packages are marketplace-output only and are **not** valid runtime load targets.
+See `proposal.md` for motivation. After `manifest-target-integration-map`, Manifest parse accepts object-map `target` / `targets`, retains values, and exposes `declaredTargetIntegrationMap`. Install uses map **keys** only for tg-008 intersection; active host selection is still `--target` / registry detect. CLI composition (`createCliIntegrationRegistry`) hard-registers only `@b-apm/integration-cursor`. Core speaks solely through `@b-apm/integration-api` and MUST NOT import concrete integrations. Cursor exports `createCursorIntegration()` → `BapmIntegration`; Claude/Codex packages are marketplace-output only and are **not** valid runtime load targets.
 
 ## Goals / Non-Goals
 
@@ -19,7 +19,7 @@ See `proposal.md` for motivation. After `manifest-target-integration-map`, Manif
 - Multi-active-host materialize in one run.
 - Marketplace-only packages as install/compile targets.
 - New first-class `path:` / `workspace:` / file URI grammar for map values (follow-up); relative/`file:` strings that ordinary Node resolution already accepts MAY work as opaque strings without new parse rules.
-- Core importing `@bapm/integration-*`.
+- Core importing `@b-apm/integration-*`.
 
 ## Decisions
 
@@ -49,14 +49,14 @@ The map never activates a host solely because a key exists. Without `--target`, 
 
 ### 4. Resolve model (v1)
 
-- **Choice:** Treat map values as opaque package specifiers resolved with Node ESM resolution rooted at the **project cwd** (consumer `node_modules` / workspace links). Optionally fall back to resolving from the CLI package location for well-known `@bapm/integration-*` already shipped with the CLI distribution. Do **not** network-install the integration as part of this path.
+- **Choice:** Treat map values as opaque package specifiers resolved with Node ESM resolution rooted at the **project cwd** (consumer `node_modules` / workspace links). Optionally fall back to resolving from the CLI package location for well-known `@b-apm/integration-*` already shipped with the CLI distribution. Do **not** network-install the integration as part of this path.
 - **Why:** Matches “publish `@acme/...` and depend on it in the project”; keeps trust/supply-chain explicit (user installed the package). Avoids inventing a second package manager inside bapm for integrations.
 - **Alternatives:** Auto `npm install` into a bapm cache — out of scope (trust + lock complexity).
 - **`path:` / file / workspace:** No new YAML grammar. Follow-up if authors need first-class local integration paths beyond Node-resolvable opaque strings (e.g. `file:../pkgs/my-integration` when Node accepts it). Document as out of scope for v1 dedicated schemes.
 
 ### 5. Package export contract
 
-Aligned with `@bapm/integration-api` + cursor package:
+Aligned with `@b-apm/integration-api` + cursor package:
 
 A loadable runtime integration package MUST export (first match wins, documented order):
 

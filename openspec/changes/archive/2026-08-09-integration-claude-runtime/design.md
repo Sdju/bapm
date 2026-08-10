@@ -1,13 +1,13 @@
 ## Context
 
-See proposal.md — Why. Today `@bapm/integration-claude` exports only `claudeMarketplaceIntegration` / `mapClaudeMarketplace`. Cursor/OpenCode already show the runtime package shape (`create*Integration`, `primitivesMaterialize`, `configureMcp`, optional `compile`). APM `KNOWN_TARGETS["claude"]` uses root `.claude/`, native skills under `.claude/skills/`, hooks merge into `.claude/settings.json`, project MCP at `.mcp.json` when `.claude/` exists, detect via `.claude/` or `CLAUDE.md`, `auto_create=False`, compile → `CLAUDE.md` with rules-dedup.
+See proposal.md — Why. Today `@b-apm/integration-claude` exports only `claudeMarketplaceIntegration` / `mapClaudeMarketplace`. Cursor/OpenCode already show the runtime package shape (`create*Integration`, `primitivesMaterialize`, `configureMcp`, optional `compile`). APM `KNOWN_TARGETS["claude"]` uses root `.claude/`, native skills under `.claude/skills/`, hooks merge into `.claude/settings.json`, project MCP at `.mcp.json` when `.claude/` exists, detect via `.claude/` or `CLAUDE.md`, `auto_create=False`, compile → `CLAUDE.md` with rules-dedup.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
 - One package owns both marketplace pack mapping and Claude Code runtime without splitting packages.
-- Mirror Cursor materialize/hooks/MCP patterns and helpers from `@bapm/integration-api`, with Claude-native paths (especially skills not under `.agents/skills/`).
+- Mirror Cursor materialize/hooks/MCP patterns and helpers from `@b-apm/integration-api`, with Claude-native paths (especially skills not under `.agents/skills/`).
 - Decide hooks ownership so reinstall is idempotent without polluting Claude’s native settings schema.
 
 **Non-Goals:**
@@ -19,9 +19,9 @@ See proposal.md — Why. Today `@bapm/integration-claude` exports only `claudeMa
 
 ## Decisions
 
-1. **Extend `@bapm/integration-claude` (not a new package)**  
+1. **Extend `@b-apm/integration-claude` (not a new package)**  
    Knowledge priority and skeleton already exist; keep marketplace mapper exports and add `createClaudeIntegration` / `createIntegration`.  
-   _Alternative:_ new `@bapm/integration-claude-code` — rejected (duplicate token/`targets.claude` confusion).
+   _Alternative:_ new `@b-apm/integration-claude-code` — rejected (duplicate token/`targets.claude` confusion).
 
 2. **Default `deployRoots`: `[".claude", "."]`**  
    Materialize stays under `.claude/**`. Project MCP and optional compile output live at repo root (`.mcp.json`, `CLAUDE.md`), so `"."` is registered like OpenCode’s `opencode.json` case. Writers MUST hard-limit root writes to those known relative files (never arbitrary paths under `.`).  
@@ -68,8 +68,8 @@ See proposal.md — Why. Today `@bapm/integration-claude` exports only `claudeMa
 
 ## Migration Plan
 
-1. Land runtime + tests in `@bapm/integration-claude`; marketplace tests keep passing.
-2. Users: ensure `@bapm/integration-claude` installed, `targets.claude` (or `--target claude`), `bapm install`, optional `bapm compile` when Claude is active.
+1. Land runtime + tests in `@b-apm/integration-claude`; marketplace tests keep passing.
+2. Users: ensure `@b-apm/integration-claude` installed, `targets.claude` (or `--target claude`), `bapm install`, optional `bapm compile` when Claude is active.
 3. Rollback: remove map entry / stop using factory; delete generated `.claude/**`, owned settings hooks, `.mcp.json` servers, and `CLAUDE.md` manually if desired. Marketplace pack path remains.
 
 ## Open Questions

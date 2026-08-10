@@ -36,8 +36,8 @@ After P6f, `deps why` resolves only exact lock `name` or exact `repo_url`. Opera
 
 ## Impact
 
-- `@bapm/core` Deps: extend `findExactMatches` / query resolve in `whyDeps` with `owner/repo` + basename helpers; keep `DepsWhyResult.matches` object shape
-- `@bapm/core` Cache: optional `dryRun` on `cacheClean` / result fields for would-remove preview
+- `@b-apm/core` Deps: extend `findExactMatches` / query resolve in `whyDeps` with `owner/repo` + basename helpers; keep `DepsWhyResult.matches` object shape
+- `@b-apm/core` Cache: optional `dryRun` on `cacheClean` / result fields for would-remove preview
 - `bapm` CLI Deps: help + parse `--dry-run` on clean; no change to why `--json` stream/exit wiring beyond richer resolve
 - Acceptance: unique basename; unique owner/repo; ambiguous basename; `.git` strip; P6f exact + `--json` + exits regressions; dry-run no-delete if shipped
 - No CONFORMANCE.md edits; no `--global`

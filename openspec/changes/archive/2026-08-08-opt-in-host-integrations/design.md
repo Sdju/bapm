@@ -4,7 +4,7 @@ See `proposal.md` for motivation. Today:
 
 - `packages/cli/src/app/integrations/registry.ts` imports `createCursorIntegration` and eagerly `register`s it in `createCliIntegrationRegistry()`.
 - `marketplaceOutputs.ts` statically registers Claude and Codex marketplace-output integrations.
-- `@bapm/cli` hard-depends on `@bapm/integration-cursor|claude|codex`.
+- `@b-apm/cli` hard-depends on `@b-apm/integration-cursor|claude|codex`.
 - Object-map load (`loadManifestIntegrations`) already resolves npm/local packages and registers them; map override can replace built-in cursor.
 - Selection (`--target` → `active` → sole detect → fail) is correct and must stay.
 
@@ -14,7 +14,7 @@ See `proposal.md` for motivation. Today:
 
 - Empty runtime registry at composition-root construction; populate only via object-map load.
 - Empty marketplace-output registry at construction; populate on demand when pack selects formats and packages resolve.
-- Remove hard CLI deps on concrete `@bapm/integration-*` (keep `@bapm/integration-api`).
+- Remove hard CLI deps on concrete `@b-apm/integration-*` (keep `@b-apm/integration-api`).
 - Align docs/README with CLI-separate + integration-package-separate UX.
 - Keep fail-closed selection and map-does-not-activate semantics.
 
@@ -32,20 +32,20 @@ See `proposal.md` for motivation. Today:
 
 - **Choice:** `createCliIntegrationRegistry()` returns `createIntegrationRegistry()` with **zero** concrete registrations. Install/compile continue to call object-map load when `declaredTargetIntegrationMap` is present; otherwise the registry stays empty and `--target` / `active` / detect fail closed as today for missing ids.
 - **Why:** Matches “install integration independently + declare in `targets:`.” Removes the special case that made Cursor first-class inside the CLI.
-- **Alternatives:** Keep built-in + optional map override — rejected (product bug). Implicit resolve of `@bapm/integration-<id>` from legacy string `target: cursor` without a map — rejected for this change (would reintroduce magic; authors use object-map).
+- **Alternatives:** Keep built-in + optional map override — rejected (product bug). Implicit resolve of `@b-apm/integration-<id>` from legacy string `target: cursor` without a map — rejected for this change (would reintroduce magic; authors use object-map).
 
 ### 2. Canonical Cursor UX
 
 Documented happy path:
 
 ```bash
-npm i -g @bapm/cli @bapm/integration-cursor
-# or project: npm i -D @bapm/integration-cursor
+npm i -g @b-apm/cli @b-apm/integration-cursor
+# or project: npm i -D @b-apm/integration-cursor
 ```
 
 ```yaml
 targets:
-  cursor: "@bapm/integration-cursor"
+  cursor: "@b-apm/integration-cursor"
 active:
   - cursor
 ```
@@ -58,19 +58,19 @@ Legacy string-only `target: cursor` **without** object-map MUST NOT register Cur
 
 ### 3. Init template emits object-map when `--target` is set
 
-- **Choice:** When `bapm init` records a host id (e.g. `--target cursor`), write object-map `targets: { <id>: "@bapm/integration-<id>" }` (and preferably `active: [<id>]`) instead of only legacy string `target: <id>`, for ids that follow the published `@bapm/integration-<id>` convention. Unknown third-party ids MAY still record preference without inventing a package name—or require the user to supply a map later; prefer documenting Cursor as the worked example.
+- **Choice:** When `bapm init` records a host id (e.g. `--target cursor`), write object-map `targets: { <id>: "@b-apm/integration-<id>" }` (and preferably `active: [<id>]`) instead of only legacy string `target: <id>`, for ids that follow the published `@b-apm/integration-<id>` convention. Unknown third-party ids MAY still record preference without inventing a package name—or require the user to supply a map later; prefer documenting Cursor as the worked example.
 - **Why:** Otherwise `init -y --target cursor` immediately produces a non-working install path.
 - **Alternatives:** Leave init writing string form and rely on docs only — weaker UX.
 
 ### 4. CLI package dependencies
 
-- **Choice:** Remove `@bapm/integration-cursor`, `@bapm/integration-claude`, `@bapm/integration-codex` from `@bapm/cli` `dependencies`. Keep `@bapm/integration-api`. Retain project-cwd-first Node resolve; keep optional CLI-adjacent resolve fallback **only when** the package is already installed next to the CLI (no hard dep).
+- **Choice:** Remove `@b-apm/integration-cursor`, `@b-apm/integration-claude`, `@b-apm/integration-codex` from `@b-apm/cli` `dependencies`. Keep `@b-apm/integration-api`. Retain project-cwd-first Node resolve; keep optional CLI-adjacent resolve fallback **only when** the package is already installed next to the CLI (no hard dep).
 - **Why:** Hard deps force “bundled” semantics and static import pressure.
 - **Alternatives:** `optionalDependencies` — still implies distribution affinity; prefer pure external install.
 
 ### 5. Marketplace outputs: on-demand load by format
 
-- **Choice:** `createCliMarketplaceOutputRegistry()` starts empty. When pack’s effective format selection includes `claude` / `codex` (or other registered format names owned by known packages), the CLI composition path dynamically resolves a documented package specifier (e.g. `@bapm/integration-claude`), loads the marketplace-output export, and registers it for that run. If the package cannot be resolved or lacks marketplace-output capability, fail closed with install guidance. Do **not** static-import those packages in the composition root.
+- **Choice:** `createCliMarketplaceOutputRegistry()` starts empty. When pack’s effective format selection includes `claude` / `codex` (or other registered format names owned by known packages), the CLI composition path dynamically resolves a documented package specifier (e.g. `@b-apm/integration-claude`), loads the marketplace-output export, and registers it for that run. If the package cannot be resolved or lacks marketplace-output capability, fail closed with install guidance. Do **not** static-import those packages in the composition root.
 - **Why:** Parallel to runtime opt-in: package install is the explicit enablement; no new manifest field required for v1.
 - **Alternatives:** Manifest map for marketplace packages — deferred. Keep static register — rejected.
 
@@ -81,7 +81,7 @@ Legacy string-only `target: cursor` **without** object-map MUST NOT register Cur
 
 ### 7. Tests and fixtures
 
-- CLI/core fixtures that assumed built-in Cursor MUST add object-map bindings (and resolve `@bapm/integration-cursor` via workspace/devDependency in the **test** package or fixture node_modules—not via CLI hard dep).
+- CLI/core fixtures that assumed built-in Cursor MUST add object-map bindings (and resolve `@b-apm/integration-cursor` via workspace/devDependency in the **test** package or fixture node_modules—not via CLI hard dep).
 - Invert / remove “built-in cursor works without a map entry.”
 - Pack tests that assumed static Claude/Codex MUST install/resolve those packages in the test environment.
 

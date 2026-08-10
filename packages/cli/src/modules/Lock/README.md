@@ -1,5 +1,7 @@
 # Lock
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 CLI lock group: bare `bapm lock` (resolve + write lockfile, no deploy) and
 `bapm lock export` (read-only SBOM via core `exportSbom`).
 

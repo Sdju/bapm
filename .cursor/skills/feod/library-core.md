@@ -1,6 +1,6 @@
 # FEOD — library profile (`packages/core`)
 
-> Отдельный профиль для `@bapm/core`. **Не** заменяет locked CLI-профиль в [SKILL.md](SKILL.md).
+> Отдельный профиль для `@b-apm/core`. **Не** заменяет locked CLI-профиль в [SKILL.md](SKILL.md).
 
 ## Профиль (library)
 

@@ -1,12 +1,12 @@
 ## Context
 
-`@bapm/core` has FEOD modules Manifest (M1) and Lockfile (M2) with dual-read discovery and OpenAPM-preferring R/W. `@bapm/cli` has FEOD commands help/version/install-stub. There is no resolver, no modules cache materialization, and no `lock` command. Motivation: see `proposal.md`. Normative checklist: `.samples/apm-knowledge/topics/m3-resolve-lock-acceptance.md`. Behavior: delta specs `dependency-resolve`, `lock-command`, plus FEOD/CLI surface deltas.
+`@b-apm/core` has FEOD modules Manifest (M1) and Lockfile (M2) with dual-read discovery and OpenAPM-preferring R/W. `@b-apm/cli` has FEOD commands help/version/install-stub. There is no resolver, no modules cache materialization, and no `lock` command. Motivation: see `proposal.md`. Normative checklist: `.samples/apm-knowledge/topics/m3-resolve-lock-acceptance.md`. Behavior: delta specs `dependency-resolve`, `lock-command`, plus FEOD/CLI surface deltas.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Implement Resolver as a library FEOD module in `@bapm/core` with injectable ports for git/tag/download so acceptance can use fakes
+- Implement Resolver as a library FEOD module in `@b-apm/core` with injectable ports for git/tag/download so acceptance can use fakes
 - Prefer OpenAPM diamond policy (intersection-pick) and document APM first-wins as a known gap
 - Materialize into `apm_modules`; write locks only via Lockfile public API
 - Thin CLI `lock` wrapping `resolveAndLock`; skip policy until M8

@@ -1,16 +1,18 @@
-# @bapm/integration-windsurf
+# @b-apm/integration-windsurf
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Windsurf/Cascade **runtime** host for bapm (project-scope file primitives + home MCP bake).
 
 ## Opt-in load
 
 ```bash
-npm i -D @bapm/integration-windsurf
+npm i -D @b-apm/integration-windsurf
 ```
 
 ```yaml
 targets:
-  windsurf: "@bapm/integration-windsurf"
+  windsurf: "@b-apm/integration-windsurf"
 active:
   - windsurf
 ```

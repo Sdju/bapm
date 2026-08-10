@@ -1,5 +1,7 @@
 # Primitives
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Discover attributed agentic primitives and resolve name/type conflicts (OpenAPM pr-001..003).
 
 ## Public API

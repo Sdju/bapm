@@ -81,7 +81,7 @@ src/
     entry.ts           # или cli.ts — точка входа процесса
     registry.ts        # ручная регистрация команд
     config/
-    integrations/      # внешние сервисы, адаптеры к @bapm/core и т.п.
+    integrations/      # внешние сервисы, адаптеры к @b-apm/core и т.п.
     init/              # soft IoC: сборка зависимостей
   commands/
     help.ts
@@ -248,4 +248,4 @@ export async function installCommand(argv: string[]): Promise<number> {
 
 - Матрица импортов и дерево решений — [reference.md](reference.md)
 - Шаблоны scaffold — [examples.md](examples.md)
-- Library-профиль `@bapm/core` — [library-core.md](library-core.md) (отдельно от CLI locked)
+- Library-профиль `@b-apm/core` — [library-core.md](library-core.md) (отдельно от CLI locked)

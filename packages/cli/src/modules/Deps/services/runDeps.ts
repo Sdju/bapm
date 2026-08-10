@@ -1,4 +1,4 @@
-import { cacheClean, listDeps, treeDeps, whyDeps } from "@bapm/core";
+import { cacheClean, listDeps, treeDeps, whyDeps } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type DepsOptions = { args?: string[]; cwd?: string };

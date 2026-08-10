@@ -1,4 +1,6 @@
-# @bapm/integration-claude
+# @b-apm/integration-claude
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Claude Code **runtime** host for bapm, plus Anthropic **marketplace pack** mapper in the same package.
 
@@ -43,5 +45,5 @@ MCP is **not** written by materialize — only via `configureMcp` → project `.
 
 ## Dependencies
 
-Depends only on `@bapm/integration-api` among bapm packages — not `@bapm/core`.
-Register via `createIntegrationRegistry().register(createClaudeIntegration())` or object-map `targets.claude: "@bapm/integration-claude"`.
+Depends only on `@b-apm/integration-api` among bapm packages — not `@b-apm/core`.
+Register via `createIntegrationRegistry().register(createClaudeIntegration())` or object-map `targets.claude: "@b-apm/integration-claude"`.

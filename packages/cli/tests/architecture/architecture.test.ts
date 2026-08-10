@@ -84,7 +84,7 @@ test("package root and binary entries stay thin façades into app runCli", () =>
   expect(cliSrc).toMatch(/process\.argv/);
 });
 
-test("commands must not import @bapm/core directly", () => {
+test("commands must not import @b-apm/core directly", () => {
   const commandsDir = join(srcRoot, "commands");
   expect(existsSync(commandsDir)).toBe(true);
   const offenders = listFilesRecursive(commandsDir)
@@ -110,4 +110,17 @@ test("pack entries remain src/index.ts and src/cli.ts", () => {
   const viteConfig = readText("vite.config.ts");
   expect(viteConfig).toMatch(/index:\s*["']src\/index\.ts["']/);
   expect(viteConfig).toMatch(/cli:\s*["']src\/cli\.ts["']/);
+});
+
+test("package.json bin exposes bapm → dist/cli.mjs with node shebang", () => {
+  const pkg = JSON.parse(readText("package.json")) as {
+    bin?: string | Record<string, string>;
+  };
+  const bin = typeof pkg.bin === "string" ? { bapm: pkg.bin } : (pkg.bin ?? {});
+  expect(bin.bapm).toMatch(/^\.?\/?dist\/cli\.mjs$/);
+  expect(bin).not.toHaveProperty("cli");
+  expect(readText("src/cli.ts").startsWith("#!/usr/bin/env node")).toBe(true);
+
+  const viteConfig = readText("vite.config.ts");
+  expect(viteConfig).toMatch(/bapm:\s*["']\.\/src\/cli\.ts["']/);
 });

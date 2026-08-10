@@ -1,6 +1,6 @@
 {
-  "name": "@bapm/integration-cursor",
-  "version": "0.0.0",
+  "name": "@b-apm/integration-cursor",
+  "version": "0.1.0",
   "description": "Cursor integration for bapm",
   "license": "MIT",
   "files": [
@@ -22,12 +22,29 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@bapm/integration-api": "workspace:*"
+    "@b-apm/integration-api": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
-  }
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/integration-cursor"
+  },
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
+  "keywords": [
+    "unstable",
+    "bapm",
+    "b-apm"
+  ]
 }

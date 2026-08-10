@@ -42,7 +42,7 @@ describe("mp-authoring-yml core Marketplace authoring layout", () => {
     expect(surface).toMatch(/detectAuthoringConfigSource|detectMarketplaceAuthoring/);
   });
 
-  test("@bapm/core exports authoring entry points", () => {
+  test("@b-apm/core exports authoring entry points", () => {
     const c = core as Record<string, unknown>;
     const hasLoad = [
       "loadMarketplaceFromBapmYml",

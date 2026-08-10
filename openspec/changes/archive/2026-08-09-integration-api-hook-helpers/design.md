@@ -57,7 +57,7 @@ Simple script copy (candidate resolve under hook dir / package root, skip when c
 
 ## Migration Plan
 
-1. Land helpers + unit tests in `@bapm/integration-api`.
+1. Land helpers + unit tests in `@b-apm/integration-api`.
 2. Replace local duplicates in matching hosts; keep existing host hook tests green.
 3. Rollback: revert host imports to local helpers or pin previous api package version; on-disk sidecars unchanged.
 

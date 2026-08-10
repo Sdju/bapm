@@ -2,7 +2,7 @@
 
 Как bapm выбирает, **куда** материализовать пакеты. Полный приоритет: [Как выбирается host](/guide/host-selection). How-to по пакетам: [Поддерживаемые hosts](/guide/supported-hosts).
 
-Из коробки CLI **не** бандлит runtime hosts. Стандартные агенты — отдельные пакеты `@bapm/integration-*`. Object-map не обязателен для канонических hosts.
+Из коробки CLI **не** бандлит runtime hosts. Стандартные агенты — отдельные пакеты `@b-apm/integration-*`. Object-map не обязателен для канонических hosts.
 
 ## Три понятия (громко)
 
@@ -12,12 +12,12 @@
 | **active**  | Explicit choose: какие host id активны (base и/или `bapm.local.yml`)          |
 | **targets** | Replace/add **пакет реализации** (host id → npm/path). **Не активирует** host |
 
-`targets:` сами по себе не активируют hosts и не нужны, чтобы «разрешить» cursor/claude/… — для известных id CLI пробует `@bapm/integration-<id>`.
+`targets:` сами по себе не активируют hosts и не нужны, чтобы «разрешить» cursor/claude/… — для известных id CLI пробует `@b-apm/integration-<id>`.
 
 ## Обычно достаточно (без map)
 
 ```bash
-npm i -D @bapm/integration-cursor
+npm i -D @b-apm/integration-cursor
 # в проекте есть .cursor/  →
 bapm install
 ```
@@ -43,7 +43,7 @@ targets:
 | `./…`, `../…`, абсолютный путь               | Локальный path относительно project root |
 | всё остальное (`@scope/name`, `pkg@version`) | npm package specifier                    |
 
-Map entries загружаются **fail-closed**. Canonical hosts без ключа в map — soft resolve `@bapm/integration-*`.
+Map entries загружаются **fail-closed**. Canonical hosts без ключа в map — soft resolve `@b-apm/integration-*`.
 
 ## Поля манифеста
 
@@ -57,7 +57,7 @@ Map entries загружаются **fail-closed**. Canonical hosts без кл�
 
 | Симптом                                        | Что проверить                                                                    |
 | ---------------------------------------------- | -------------------------------------------------------------------------------- |
-| `Target detection is missing or ambiguous`     | `--target` / `active`; при маркере без пакета — установите `@bapm/integration-*` |
+| `Target detection is missing or ambiguous`     | `--target` / `active`; при маркере без пакета — установите `@b-apm/integration-*` |
 | `Unknown or unregistered target`               | Пакет не установлен / custom id без map                                          |
 | `Manifest "active" must be a non-empty array`  | Уберите `active: []`                                                             |
 | `must not declare both "target" and "targets"` | Оставьте одно поле                                                               |

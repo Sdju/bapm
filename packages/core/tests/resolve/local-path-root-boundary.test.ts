@@ -7,7 +7,7 @@ import {
   resolveAndLock,
   resolveDependencyGraph,
   type ResolverError,
-} from "@bapm/core";
+} from "@b-apm/core";
 
 type TempProject = {
   cwd: string;

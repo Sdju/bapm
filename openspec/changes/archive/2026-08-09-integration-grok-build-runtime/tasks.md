@@ -1,6 +1,6 @@
 ## 1. Package scaffold
 
-- [x] 1.1 Create `packages/integration-grok-build` (package.json workspace dep on `@bapm/integration-api` only, vite.config.ts, tsconfig, README) matching other integration-* scaffolding; ensure workspace discovery
+- [x] 1.1 Create `packages/integration-grok-build` (package.json workspace dep on `@b-apm/integration-api` only, vite.config.ts, tsconfig, README) matching other integration-* scaffolding; ensure workspace discovery
 - [x] 1.2 Export `createGrokBuildIntegration` + `createIntegration` alias from `src/index.ts` with `id: "grok-build"`, `deployRoots: [".grok", "."]`, and no `configureMcp`
 
 ## 2. Detect, materialize, compile
@@ -15,5 +15,5 @@
 
 - [x] 3.1 Unit tests: detect matrix, each materialize kind, hooks/prompts skip, compile write/preview, package boundary (no configureMcp / no core dep)
 - [x] 3.2 Acceptance suite under `packages/integration-grok-build/tests/acceptance/integration-grok-build-runtime/` covering the same behaviors
-- [x] 3.3 Update docs (`supported-hosts`, architecture index) for Grok Build opt-in runtime load via `targets: { grok-build: "@bapm/integration-grok-build" }`
-- [x] 3.4 Run package checks (`vp check` / targeted tests) for `@bapm/integration-grok-build`
+- [x] 3.3 Update docs (`supported-hosts`, architecture index) for Grok Build opt-in runtime load via `targets: { grok-build: "@b-apm/integration-grok-build" }`
+- [x] 3.4 Run package checks (`vp check` / targeted tests) for `@b-apm/integration-grok-build`

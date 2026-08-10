@@ -18,7 +18,7 @@
 - [x] 3.2 Preserve plain-zip path, sc-007 refuse, and `--check-release` / `--tag` without regression
 - [x] 3.3 FEOD Pack CLI: parse `--marketplace`, `--marketplace-path FORMAT=PATH` (repeatable), marketplace-aware `--offline`; unknown flags still fail-closed
 - [x] 3.4 Update Pack help for marketplace mode; remove Authoring “pack host outputs not shipped”; do not register `marketplace build`
-- [x] 3.5 Wire soft IoC / integrations for builder APIs; no direct `@bapm/core` imports from `commands/`
+- [x] 3.5 Wire soft IoC / integrations for builder APIs; no direct `@b-apm/core` imports from `commands/`
 
 ## 4. Unit tests (G1–G4, G7)
 

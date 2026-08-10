@@ -27,7 +27,7 @@ export function linkPackageDir(projectCwd: string, packageRoot: string): string 
   return name;
 }
 
-/** Workspace `@bapm/integration-cursor` for object-map keys that must include cursor. */
+/** Workspace `@b-apm/integration-cursor` for object-map keys that must include cursor. */
 export function linkCursorIntegration(projectCwd: string): string {
   const root = join(HERE, "..", "..", "..", "integration-cursor");
   return linkPackageDir(projectCwd, root);

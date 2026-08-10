@@ -1,12 +1,12 @@
 ## Context
 
-See `proposal.md` for motivation. Today install collects MCP servers and `@bapm/integration-cursor` `toCursorServerEntry` copies `server.env` verbatim into `.cursor/mcp.json`. APM Cursor uses legacy bake (`_supports_runtime_env_substitution = False`) via shared placeholder regexes in its client base adapter. Agent Plugins portable MCP already substitutes only `${PLUGIN_ROOT|PLUGIN_DATA}` and refuses secret-like keys — keep that path separate.
+See `proposal.md` for motivation. Today install collects MCP servers and `@b-apm/integration-cursor` `toCursorServerEntry` copies `server.env` verbatim into `.cursor/mcp.json`. APM Cursor uses legacy bake (`_supports_runtime_env_substitution = False`) via shared placeholder regexes in its client base adapter. Agent Plugins portable MCP already substitutes only `${PLUGIN_ROOT|PLUGIN_DATA}` and refuses secret-like keys — keep that path separate.
 
 ## Goals / Non-Goals
 
 **Goals:**
 
-- Shared bake helper in `@bapm/core` for string maps (`env`, `headers`).
+- Shared bake helper in `@b-apm/core` for string maps (`env`, `headers`).
 - Wire bake into the install → Cursor configureMcp path so durable mcp.json never keeps unresolved `${…}` / `<VAR>` placeholders.
 - Fail closed with named missing vars; unit + install/integration tests.
 

@@ -18,7 +18,7 @@
 
 ### Requirement: Compile command emits AGENTS.md
 
-Invoking `compile` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@bapm/core` compile orchestration (not a permanent stub). On a valid cursor-oriented fixture it MUST write the configured output file (default `AGENTS.md`) unless `--validate` or `--dry-run` applies, and exit `0` on success. The CLI MUST accept `-o` / `--output`, `--dry-run`, `-v` / `--verbose`, and `--validate` per compile-agents-md. Unknown flags MUST be hard-rejected.
+Invoking `compile` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that calls `@b-apm/core` compile orchestration (not a permanent stub). On a valid cursor-oriented fixture it MUST write the configured output file (default `AGENTS.md`) unless `--validate` or `--dry-run` applies, and exit `0` on success. The CLI MUST accept `-o` / `--output`, `--dry-run`, `-v` / `--verbose`, and `--validate` per compile-agents-md. Unknown flags MUST be hard-rejected.
 
 #### Scenario: bapm compile happy path
 

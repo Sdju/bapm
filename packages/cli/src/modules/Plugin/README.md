@@ -1,5 +1,7 @@
 # Plugin
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Producer-oriented CLI module for `bapm plugin`.
 
 ## Public API

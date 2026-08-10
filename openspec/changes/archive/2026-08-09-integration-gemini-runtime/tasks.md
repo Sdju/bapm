@@ -1,7 +1,7 @@
 ## 1. Package scaffold
 
 - [x] 1.1 Create `packages/integration-gemini` with vite-plus `package.json`, `tsconfig.json`, `vite.config.ts`, README (detect/materialize/MCP/compile + object-map example)
-- [x] 1.2 Wire workspace dependency on `@bapm/integration-api` and catalog `smol-toml` via pnpm CLI; export `createGeminiIntegration` / `createIntegration`
+- [x] 1.2 Wire workspace dependency on `@b-apm/integration-api` and catalog `smol-toml` via pnpm CLI; export `createGeminiIntegration` / `createIntegration`
 
 ## 2. Runtime implementation
 
@@ -17,4 +17,4 @@
 ## 4. Tests
 
 - [x] 4.1 Acceptance suite under `tests/acceptance/integration-gemini-runtime/` (RED then GREEN): package boundary, detect, commands TOML, skills, hooks ownership, MCP, compile
-- [x] 4.2 Promote acceptance into package unit tests; ensure `@bapm/core` does not depend on gemini
+- [x] 4.2 Promote acceptance into package unit tests; ensure `@b-apm/core` does not depend on gemini

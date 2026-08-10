@@ -9,7 +9,7 @@ import {
   resolveAndLock,
   resolveDependencyGraph,
   type ResolverError,
-} from "@bapm/core";
+} from "@b-apm/core";
 import { createTempProject, writeManifest, writeText, type TempProject } from "./helpers.ts";
 
 function writePackageAt(cwd: string, relDir: string, name: string): void {

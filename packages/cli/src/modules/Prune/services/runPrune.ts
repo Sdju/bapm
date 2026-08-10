@@ -1,4 +1,4 @@
-import { runPrune as coreRunPrune } from "@bapm/core";
+import { runPrune as coreRunPrune } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type PruneOptions = { args?: string[]; cwd?: string };

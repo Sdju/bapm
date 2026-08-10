@@ -2,18 +2,18 @@
 
 ## Purpose
 
-Defines the `@bapm/integration-cursor` package at `packages/integration-cursor`: Cursor host implementation that materializes skills into registered Cursor-related deploy roots, depending only on `@bapm/integration-api`.
+Defines the `@b-apm/integration-cursor` package at `packages/integration-cursor`: Cursor host implementation that materializes skills into registered Cursor-related deploy roots, depending only on `@b-apm/integration-api`.
 
 ## Requirements
 
-### Requirement: Package @bapm/integration-cursor exists and depends only on integration API
+### Requirement: Package @b-apm/integration-cursor exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-cursor` with package name `@bapm/integration-cursor`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation.
+The monorepo MUST include package directory `packages/integration-cursor` with package name `@b-apm/integration-cursor`. The package MUST be TypeScript ESM with vite-plus tooling. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation.
 
 #### Scenario: Package identity and dependency edge
 
 - **WHEN** inspecting the Cursor package dependencies after migration
-- **THEN** `@bapm/integration-cursor` depends on `@bapm/integration-api` and does not reverse-depend on `@bapm/core` for its host behavior
+- **THEN** `@b-apm/integration-cursor` depends on `@b-apm/integration-api` and does not reverse-depend on `@b-apm/core` for its host behavior
 
 ### Requirement: Minimal detect and skills materialize under registered roots
 
@@ -81,12 +81,12 @@ When the Cursor integration is activated by an explicit forced-target request (f
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `@bapm/integration-cursor`. Registration for CLI or e2e MUST occur in a composition root or test harness through the integration API registry.
+`@b-apm/core` MUST NOT hard-depend on or statically import `@b-apm/integration-cursor`. Registration for CLI or e2e MUST occur in a composition root or test harness through the integration API registry.
 
 #### Scenario: Core package graph excludes cursor
 
-- **WHEN** inspecting `@bapm/core` dependencies
-- **THEN** `@bapm/integration-cursor` MUST NOT appear as a dependency
+- **WHEN** inspecting `@b-apm/core` dependencies
+- **THEN** `@b-apm/integration-cursor` MUST NOT appear as a dependency
 
 ### Requirement: Commands deploy to cursor commands markdown
 
@@ -123,7 +123,7 @@ When the Cursor integration is active and the conflict-resolved primitive set co
 
 ### Requirement: MCP configure writes cursor mcp.json
 
-When install invokes Cursor MCP configure with an eligible server set, `@bapm/integration-cursor` MUST write or update `.cursor/mcp.json` in Cursor `mcpServers` shape (stdio/http) under the registered `.cursor/` root only. Writes MUST be idempotent overwrites of owned keys, MUST NEVER escape registered roots, and MUST report deployed/config paths for lock inventory when the integration-api contract provides a report hook.
+When install invokes Cursor MCP configure with an eligible server set, `@b-apm/integration-cursor` MUST write or update `.cursor/mcp.json` in Cursor `mcpServers` shape (stdio/http) under the registered `.cursor/` root only. Writes MUST be idempotent overwrites of owned keys, MUST NEVER escape registered roots, and MUST report deployed/config paths for lock inventory when the integration-api contract provides a report hook.
 
 #### Scenario: Configure writes mcpServers entry
 
@@ -137,7 +137,7 @@ When install invokes Cursor MCP configure with an eligible server set, `@bapm/in
 
 ### Requirement: Cursor integration retains runtime behavior after specification rename
 
-The active Cursor integration specification MUST describe `@bapm/integration-cursor` using integration-neutral terminology and retain its documented detection, primitive deployment, MCP configuration, compile-emission, path-safety, and inventory-report behavior.
+The active Cursor integration specification MUST describe `@b-apm/integration-cursor` using integration-neutral terminology and retain its documented detection, primitive deployment, MCP configuration, compile-emission, path-safety, and inventory-report behavior.
 
 #### Scenario: Cursor capability remains observable through integration API
 

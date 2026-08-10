@@ -22,7 +22,7 @@ Authors need an **explicit** bapm signal that a MCP `env`/`headers` value must b
 
 ## Impact
 
-- `@bapm/core` `Mcp/bake.ts` (+ tests in `packages/core/tests/mcp/`)
+- `@b-apm/core` `Mcp/bake.ts` (+ tests in `packages/core/tests/mcp/`)
 - Install path already calls `bakeMcpServerMaps` — no new wire if regex covers the directive
 - Docs: `apps/docs/guide/config-manifest.md`
 - OpenSpec main `mcp-env-bake` after archive

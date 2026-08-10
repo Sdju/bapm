@@ -1,5 +1,5 @@
 /**
- * Package public API assembly for @bapm/core.
+ * Package public API assembly for @b-apm/core.
  * Re-exports Manifest + Lockfile + Resolver + Install + lifecycle module surfaces.
  */
 
@@ -776,6 +776,4 @@ export {
 
 export const BAPM_NAME = "bapm";
 
-export function getVersion(): string {
-  return "0.0.0";
-}
+export { getVersion } from "@/common/packageVersion.ts";

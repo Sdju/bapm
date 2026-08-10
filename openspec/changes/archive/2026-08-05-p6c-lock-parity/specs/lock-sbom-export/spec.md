@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines read-only SBOM inventory export from an existing lockfile document in `@bapm/core`: CycloneDX 1.5 (default) and SPDX 2.3 JSON built only from recorded lock fields—no resolve, network, re-hash, or filesystem mutation of the project.
+Defines read-only SBOM inventory export from an existing lockfile document in `@b-apm/core`: CycloneDX 1.5 (default) and SPDX 2.3 JSON built only from recorded lock fields—no resolve, network, re-hash, or filesystem mutation of the project.
 
 ## ADDED Requirements
 

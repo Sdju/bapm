@@ -1,9 +1,9 @@
 /**
- * Lifecycle / integrity test helpers for @bapm/core domain APIs.
+ * Lifecycle / integrity test helpers for @b-apm/core domain APIs.
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
-import { loadLockfile } from "@bapm/core";
+import * as core from "@b-apm/core";
+import { loadLockfile } from "@b-apm/core";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -56,7 +56,7 @@ function pickExport(names: string[]): AnyFn {
     if (typeof fn === "function") return fn as AnyFn;
   }
   throw new TypeError(
-    `expected @bapm/core to export one of [${names.join(", ")}] (lifecycle/integrity public API)`,
+    `expected @b-apm/core to export one of [${names.join(", ")}] (lifecycle/integrity public API)`,
   );
 }
 

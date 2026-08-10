@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Defines Codex CLI project-scope runtime on `@bapm/integration-codex`: detect `.codex/` only, materialize skills under `.agents/skills/` and agents/hooks under `.codex/`, configure MCP in `.codex/config.toml`, compile root `AGENTS.md` including instructions, while marketplace pack mapping remains available from the same package.
+Defines Codex CLI project-scope runtime on `@b-apm/integration-codex`: detect `.codex/` only, materialize skills under `.agents/skills/` and agents/hooks under `.codex/`, configure MCP in `.codex/config.toml`, compile root `AGENTS.md` including instructions, while marketplace pack mapping remains available from the same package.
 
 ## Requirements
 
 ### Requirement: Package exposes runtime factory and retains marketplace mapper
 
-`@bapm/integration-codex` MUST continue to provide Codex marketplace-output mapping (including the documented default marketplace path `.agents/plugins/marketplace.json`) and MUST also export a runtime integration factory usable as `createIntegration` (and MAY export a Codex-named factory alias such as `createCodexIntegration`). The runtime integration MUST implement `BapmIntegration` (`id`, `deployRoots`, `detect`, `materialize`) and MUST depend on `@bapm/integration-api` without requiring `@bapm/core` as a hard dependency for host behavior. Package id for the runtime target MUST be `codex`.
+`@b-apm/integration-codex` MUST continue to provide Codex marketplace-output mapping (including the documented default marketplace path `.agents/plugins/marketplace.json`) and MUST also export a runtime integration factory usable as `createIntegration` (and MAY export a Codex-named factory alias such as `createCodexIntegration`). The runtime integration MUST implement `BapmIntegration` (`id`, `deployRoots`, `detect`, `materialize`) and MUST depend on `@b-apm/integration-api` without requiring `@b-apm/core` as a hard dependency for host behavior. Package id for the runtime target MUST be `codex`.
 
 #### Scenario: Runtime factory registers as codex
 
@@ -17,7 +17,7 @@ Defines Codex CLI project-scope runtime on `@bapm/integration-codex`: detect `.c
 
 #### Scenario: Marketplace mapper remains available
 
-- **WHEN** pack loads Codex marketplace-output capability from `@bapm/integration-codex`
+- **WHEN** pack loads Codex marketplace-output capability from `@b-apm/integration-codex`
 - **THEN** the Codex marketplace document mapping and default output path MUST still be available without requiring runtime activation
 
 ### Requirement: Detect uses .codex directory only
@@ -163,9 +163,9 @@ Codex runtime MUST expose `compile` that renders project-root `AGENTS.md` by def
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on or statically import `@bapm/integration-codex` for Codex runtime behavior. Registration MUST occur through the integration API registry after object-map / dynamic load (or test harness registration).
+`@b-apm/core` MUST NOT hard-depend on or statically import `@b-apm/integration-codex` for Codex runtime behavior. Registration MUST occur through the integration API registry after object-map / dynamic load (or test harness registration).
 
 #### Scenario: Core package graph excludes codex runtime hard-dep
 
-- **WHEN** inspecting `@bapm/core` production dependencies
-- **THEN** `@bapm/integration-codex` MUST NOT appear as a required runtime dependency of core
+- **WHEN** inspecting `@b-apm/core` production dependencies
+- **THEN** `@b-apm/integration-codex` MUST NOT appear as a required runtime dependency of core

@@ -1,6 +1,6 @@
 ## Context
 
-See proposal.md for motivation. Baseline: `bapm marketplace` is consumer-only (`add|list|browse|update|remove|validate`); `@bapm/core` Marketplace owns consumer registry/`marketplace.json` models; Manifest parses dependency kind `marketplace` but not a top-level authoring `marketplace:` block; pack is plain zip; `plugin init` writes plugin-mode `bapm.yml` without `marketplace:`. Criteria lock D1–D9; deep-dive cuts XL APM surface to floor (schema + init + package CRUD + check). FEOD CLI profile locked: extend existing Marketplace module.
+See proposal.md for motivation. Baseline: `bapm marketplace` is consumer-only (`add|list|browse|update|remove|validate`); `@b-apm/core` Marketplace owns consumer registry/`marketplace.json` models; Manifest parses dependency kind `marketplace` but not a top-level authoring `marketplace:` block; pack is plain zip; `plugin init` writes plugin-mode `bapm.yml` without `marketplace:`. Criteria lock D1–D9; deep-dive cuts XL APM surface to floor (schema + init + package CRUD + check). FEOD CLI profile locked: extend existing Marketplace module.
 
 ## Goals / Non-Goals
 

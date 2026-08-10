@@ -2,7 +2,7 @@
 
 ### Requirement: Install command supports dry-run flag
 
-The install command MUST accept `--dry-run`. When set, CLI MUST pass dry-run into `@bapm/core` install and MUST exit `0` on a successful preview path with messaging that no durable project changes were made (or equivalent). Project durable paths MUST remain unchanged per install-pipeline dry-run rules. Help MUST document `--dry-run`.
+The install command MUST accept `--dry-run`. When set, CLI MUST pass dry-run into `@b-apm/core` install and MUST exit `0` on a successful preview path with messaging that no durable project changes were made (or equivalent). Project durable paths MUST remain unchanged per install-pipeline dry-run rules. Help MUST document `--dry-run`.
 
 #### Scenario: bapm install --dry-run previews without writes
 

@@ -1,5 +1,7 @@
 # Pack
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Plain-zip producer archive for OpenAPM Producer (M7): pack, extract, sc-007 secret refuse, pr-004 release tag gate.
 
 ## Public API

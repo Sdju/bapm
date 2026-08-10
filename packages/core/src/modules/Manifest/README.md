@@ -1,5 +1,7 @@
 # Manifest
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Discover, load, and validate OpenAPM/APM project manifests (`apm.yml` / `bapm.yml`).
 
 ## Public API

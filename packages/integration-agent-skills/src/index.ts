@@ -1,5 +1,5 @@
 /**
- * @bapm/integration-agent-skills — cross-client agent-skills runtime for bapm.
+ * @b-apm/integration-agent-skills — cross-client agent-skills runtime for bapm.
  */
 
 export {

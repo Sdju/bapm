@@ -1,7 +1,9 @@
 # Marketplace (CLI)
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 Consumer registry (`add|list|browse|update|remove|validate`) and authoring
-(`init|package|check|migrate`) over `@bapm/core` Marketplace APIs.
+(`init|package|check|migrate`) over `@b-apm/core` Marketplace APIs.
 
 ## Public API
 

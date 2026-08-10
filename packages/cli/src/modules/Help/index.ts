@@ -1,3 +1,4 @@
+import { getVersion } from "@b-apm/core";
 import { formatHelp, formatInstallTopicHelp, type HelpContentDeps } from "./services/formatHelp.ts";
 import { formatPublishHelp } from "@/modules/Publish";
 import { formatSelfUpdateHelp } from "@/modules/SelfUpdate";
@@ -39,11 +40,11 @@ export function createHelp(deps: HelpDeps) {
       if (topic === "self-update") {
         return formatSelfUpdateHelp({
           name: deps.name,
-          getVersion: () => "0.0.0",
+          getVersion,
           checkSelfUpdate: async () => ({
-            currentVersion: "0.0.0",
+            currentVersion: getVersion(),
             updateAvailable: false,
-            unknownVersion: true,
+            unknownVersion: false,
             message: "",
           }),
         });

@@ -34,8 +34,8 @@ Authors often keep WIP / machine-local APM packages beside the project without w
 
 ## Impact
 
-- `@bapm/core` Manifest parse/types: `local` on `ObjectDependency`; validation of source kinds.
-- `@bapm/core` Resolver classify/graph: map `local` → local path (default `.agents/local`); reuse existing root containment.
-- `@bapm/core` Install/resolve consume path (or small shared helper): gitignore ensure + tracked-file fail guidance for effective local roots.
+- `@b-apm/core` Manifest parse/types: `local` on `ObjectDependency`; validation of source kinds.
+- `@b-apm/core` Resolver classify/graph: map `local` → local path (default `.agents/local`); reuse existing root containment.
+- `@b-apm/core` Install/resolve consume path (or small shared helper): gitignore ensure + tracked-file fail guidance for effective local roots.
 - `apps/docs` manifest guide (+ conformance boundary mention).
 - Acceptance: parse shapes, default vs custom path resolve, gitignore ensure, tracked fail, `path:` unchanged regression.

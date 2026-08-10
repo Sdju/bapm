@@ -33,7 +33,7 @@ Phase 1 (`mp-consumer-registry`) shipped `~/.bapm` registry, fetch/cache, and co
 
 ## Impact
 
-- `@bapm/core`: `Marketplace/` resolver + errors; `Resolver/classify.ts` + `resolveGraph.ts`; `Lockfile` typed/provenance fields + serialize/parse; Install lock write path; public API re-exports.
+- `@b-apm/core`: `Marketplace/` resolver + errors; `Resolver/classify.ts` + `resolveGraph.ts`; `Lockfile` typed/provenance fields + serialize/parse; Install lock write path; public API re-exports.
 - `bapm` CLI: new Search FEOD module + command; Install positional intercept; Help/registry wiring.
 - Tests: acceptance under `tests/acceptance/mp-search-install/`; unit coverage for parse/resolve/classify/lock/search.
 - Docs/design only for soft OpenAPM non-normative note; **no** CONFORMANCE.md / `req-sc-*` edits.

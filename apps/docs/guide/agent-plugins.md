@@ -23,7 +23,7 @@ Cursor-integration адаптирует portable MCP в `.cursor/mcp.json`: `std
 
 ## В OpenCode
 
-Пакет `@bapm/integration-opencode` (opt-in через `targets:`) адаптирует portable MCP в project `opencode.json` под `mcp`: `stdio` → `type: "local"` + `command` array, `streamable-http` → `type: "remote"` + `url`. Portable `sse` **не** мапится молча (fail-closed). Skills копируются в `.opencode/skills/`. Commands → `.opencode/commands/`; hooks явно пропускаются с diagnostic (не supported).
+Пакет `@b-apm/integration-opencode` (opt-in через `targets:`) адаптирует portable MCP в project `opencode.json` под `mcp`: `stdio` → `type: "local"` + `command` array, `streamable-http` → `type: "remote"` + `url`. Portable `sse` **не** мапится молча (fail-closed). Skills копируются в `.opencode/skills/`. Commands → `.opencode/commands/`; hooks явно пропускаются с diagnostic (не supported).
 
 ## Граница
 

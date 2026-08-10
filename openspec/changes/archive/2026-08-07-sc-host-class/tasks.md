@@ -1,6 +1,6 @@
 ## 1. Auth module scaffold + PSL dep (G1, G4)
 
-- [x] 1.1 Add `tldts` to `@bapm/core` via `pnpm add tldts --save-catalog --filter @bapm/core` (never hand-edit versions)
+- [x] 1.1 Add `tldts` to `@b-apm/core` via `pnpm add tldts --save-catalog --filter @b-apm/core` (never hand-edit versions)
 - [x] 1.2 Create FEOD `packages/core/src/modules/Auth/` with `index.ts` public API (classifier, resolve, redirect fetch, git env)
 - [x] 1.3 Implement `credentialHostClassOf(hostname)` using PSL eTLD+1; unit tests for same/distinct eTLD+1 (no CNAME collapse)
 - [x] 1.4 Implement shared `resolveCredentialsForHost` (port in cache key; source-id diagnostics; no cross-class forward)

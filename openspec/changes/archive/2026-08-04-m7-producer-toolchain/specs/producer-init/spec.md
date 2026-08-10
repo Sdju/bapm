@@ -52,7 +52,7 @@ When init records a host target, it MUST use cursor (or detect `.cursor/`) rathe
 
 ### Requirement: CLI init command is registered
 
-Invoking `init` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that performs scaffold via `@bapm/core`. Unknown flags on `init` MUST hard-error with non-zero exit.
+Invoking `init` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD command → module path that performs scaffold via `@b-apm/core`. Unknown flags on `init` MUST hard-error with non-zero exit.
 
 #### Scenario: init is not unknown
 

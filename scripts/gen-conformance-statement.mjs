@@ -21,7 +21,7 @@ const checklistPath = join(repoRoot, "tests/spec-conformance/checklist.yml");
 const outMd = join(repoRoot, "CONFORMANCE.md");
 const outJson = join(repoRoot, "CONFORMANCE.json");
 
-// Resolve `yaml` via @bapm/core (catalog dep) so root scripts need no extra install.
+// Resolve `yaml` via @b-apm/core (catalog dep) so root scripts need no extra install.
 const requireFromCore = createRequire(join(repoRoot, "packages/core/package.json"));
 const { parse: parseYaml } = requireFromCore("yaml");
 

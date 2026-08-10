@@ -25,7 +25,7 @@ See proposal.md for motivation. Baseline: consumer `bapm init` writes only `bapm
 
 ### D2 — Scaffold helpers live in Manifest (not new core Plugin module)
 
-- **Choice:** Add `validatePluginName`, project-name path checks, `createPluginJsonDocument` / `writePluginJson`, and `pluginMode?: boolean` (or `devDependencies`) on `createMinimalManifest` / write helpers inside `@bapm/core` `Manifest`. Re-export from `app/publicApi`.
+- **Choice:** Add `validatePluginName`, project-name path checks, `createPluginJsonDocument` / `writePluginJson`, and `pluginMode?: boolean` (or `devDependencies`) on `createMinimalManifest` / write helpers inside `@b-apm/core` `Manifest`. Re-export from `app/publicApi`.
 - **Why:** Thin slice; fields are producer metadata already owned by Manifest; avoids a one-purpose core Plugin module.
 - **Alternatives:** New core `Plugin` module — deferred until pack/authoring needs grow.
 

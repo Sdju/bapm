@@ -10,7 +10,7 @@
  * - Deployed inventory helpers (hash verify / orphan cleanup) for Audit / Uninstall
  * - Types / `InstallError`
  *
- * Target interaction is only via `@bapm/integration-api` (no concrete host imports).
+ * Target interaction is only via `@b-apm/integration-api` (no concrete host imports).
  * Deployed inventory uses SHA-256 of file bytes (see `deployedInventory.ts`).
  */
 

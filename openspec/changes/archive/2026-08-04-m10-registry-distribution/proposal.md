@@ -9,7 +9,7 @@ M1–M9 delivered Consumer/Producer floor through install, cursor materialize, l
 - **Thin `bapm publish`:** require `owner/repo` + version from dual-read manifest; build **flat** registry zip (recommend emit `apm.yml` at zip root for wire compatibility + `.apm/` + optional root docs)—not M7 plugin/pack wrapper; PUT upload; `--dry-run` / `--zip`; surface 409 immutability, 422 validation, 401/403 auth; **opt-in experimental gate** (flag or env) to avoid accidental publishes
 - **Thin `bapm self-update --check`:** compare running CLI version to latest published channel; refuse false “latest” on unknown/`0.0.0`; help documents upgrade path; **SHOULD** one install/upgrade path (pick one primary metadata source: npm vs GitHub—design decides)
 - **Invariants:** dual-read unchanged (`apm.yml` **or** `bapm.yml`, not both); **MUST NOT** add new `bapm-target-*` (cursor-only); FEOD; hard-error unknown flags; M7 `pack` reused for zip I/O only (not rewritten); marketplace deps still fail closed / deferred; OpenAPM Registry class (**rg-001 host claim**) N/A unless host ships
-- **HARD packages:** `@bapm/core`, `@bapm/cli` only; target packages only if unavoidable—prefer zero touch
+- **HARD packages:** `@b-apm/core`, `@b-apm/cli` only; target packages only if unavoidable—prefer zero touch
 
 ## Capabilities
 
@@ -33,7 +33,7 @@ M1–M9 delivered Consumer/Producer floor through install, cursor materialize, l
 
 ## Impact
 
-- **`@bapm/core`:** Registry HTTP client + resolver path; integrity before extract; lock registry fields on resolve; publish archive builder (flat layout); self-update check helpers (version compare / metadata fetch port)
+- **`@b-apm/core`:** Registry HTTP client + resolver path; integrity before extract; lock registry fields on resolve; publish archive builder (flat layout); self-update check helpers (version compare / metadata fetch port)
 - **`bapm` CLI:** `publish`, `self-update` (`--check` MUST; upgrade path SHOULD); experimental registries/publish gate; help updates
 - **Targets:** prefer **no** changes; MUST NOT add `bapm-target-*`
 - **Acceptance tests:** mock HTTP registry fixture server (not a product host)

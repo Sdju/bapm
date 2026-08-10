@@ -52,7 +52,7 @@ ${cases.boundary}
 ${rows}
 
 ## Target behavior
-Portable MCP is an input contract, not a host configuration format. The Cursor target maps supported transports into \`.cursor/mcp.json\`: \`stdio\` → \`stdio\`, \`streamable-http\` → \`http\`, and \`sse\` → \`sse\`. The OpenCode target (\`@bapm/integration-opencode\`) maps portable \`stdio\` → OpenCode \`local\` and \`streamable-http\` → \`remote\` under project \`opencode.json\` \`mcp\`; portable \`sse\` is fail-closed. Other targets must explicitly implement their own adapter; absence of one is not a portable-plugin failure.
+Portable MCP is an input contract, not a host configuration format. The Cursor target maps supported transports into \`.cursor/mcp.json\`: \`stdio\` → \`stdio\`, \`streamable-http\` → \`http\`, and \`sse\` → \`sse\`. The OpenCode target (\`@b-apm/integration-opencode\`) maps portable \`stdio\` → OpenCode \`local\` and \`streamable-http\` → \`remote\` under project \`opencode.json\` \`mcp\`; portable \`sse\` is fail-closed. Other targets must explicitly implement their own adapter; absence of one is not a portable-plugin failure.
 
 ## Product boundary
 Portable Agent Plugins are separate from bapm/OpenAPM manifests, lockfiles, producer claims, and the bapm marketplace. \`plugin.json\` is not \`bapm.yml\` or \`apm.yml\`; portable archive production does not publish to, resolve through, or imply support by a marketplace.

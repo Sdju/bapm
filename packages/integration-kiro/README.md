@@ -1,16 +1,18 @@
-# @bapm/integration-kiro
+# @b-apm/integration-kiro
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 Kiro IDE/CLI **runtime** host for bapm (project-scope `.kiro/` primitives + translate MCP).
 
 ## Opt-in load
 
 ```bash
-npm i -D @bapm/integration-kiro
+npm i -D @b-apm/integration-kiro
 ```
 
 ```yaml
 targets:
-  kiro: "@bapm/integration-kiro"
+  kiro: "@b-apm/integration-kiro"
 active:
   - kiro
 ```

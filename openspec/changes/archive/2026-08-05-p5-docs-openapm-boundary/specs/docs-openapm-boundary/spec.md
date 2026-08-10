@@ -54,7 +54,7 @@ Landing, guide introduction, and architecture overview pages MUST NOT imply that
 #### Scenario: Architecture describes target packages not in-tree adapters
 
 - **WHEN** a reader opens the architecture overview
-- **THEN** the page MUST describe host materialization via target packages (cursor-only today) and MUST NOT claim in-tree multi-client adapters inside `@bapm/core` as the current design
+- **THEN** the page MUST describe host materialization via target packages (cursor-only today) and MUST NOT claim in-tree multi-client adapters inside `@b-apm/core` as the current design
 
 ### Requirement: CONFORMANCE discoverability without coverage hand-edits
 

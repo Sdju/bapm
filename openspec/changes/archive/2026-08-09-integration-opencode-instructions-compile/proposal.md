@@ -28,4 +28,4 @@ OpenCode already materializes skills/agents/commands and configures MCP, but ins
 - Docs: `apps/docs` supported-hosts / architecture / compile reference note OpenCode in the `AGENTS.md` family.
 - Specs: delta on `openspec/specs/integration-opencode-runtime`.
 - Tests: acceptance suite for compile (and regression that detect/hooks/MCP stay intact), then promote into general package tests.
-- No new runtime dependencies; `@bapm/integration-api` contracts only.
+- No new runtime dependencies; `@b-apm/integration-api` contracts only.

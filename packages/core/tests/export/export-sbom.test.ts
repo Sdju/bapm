@@ -3,7 +3,7 @@
  * Full SBOM IO lives in sbom-io.test.ts; inventory serialize carry in resolve/inventory-carry.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { buildPurl, scrubUrl } from "@bapm/core";
+import { buildPurl, scrubUrl } from "@b-apm/core";
 
 describe("Export purl / scrub", () => {
   test("scrubUrl drops userinfo and query", () => {

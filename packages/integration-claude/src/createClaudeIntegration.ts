@@ -9,7 +9,7 @@ import type {
   HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 import {
   SHARED_COMMAND_FRONTMATTER_KEYS,
   assertUnderDeployRoots,
@@ -26,7 +26,7 @@ import {
   stripOwnedHookCommands,
   writeDeployedFile,
   writeHookOwnershipSidecar,
-} from "@bapm/integration-api";
+} from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".claude", "."] as const;
 const MCP_JSON_REL = ".mcp.json";

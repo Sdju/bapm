@@ -2,7 +2,7 @@
 
 ### Requirement: Lock command is registered and runnable
 
-Invoking `lock` MUST be recognized by CLI dispatch and MUST invoke the lock command handler (thin FEOD command → module → `@bapm/core` `resolveAndLock`). Success and failure exit codes MUST follow the `lock-command` capability.
+Invoking `lock` MUST be recognized by CLI dispatch and MUST invoke the lock command handler (thin FEOD command → module → `@b-apm/core` `resolveAndLock`). Success and failure exit codes MUST follow the `lock-command` capability.
 
 #### Scenario: lock subcommand is not unknown
 

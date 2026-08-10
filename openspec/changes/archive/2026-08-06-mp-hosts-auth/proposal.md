@@ -32,7 +32,7 @@ Marketplace v1 only fetches `github.com|url|local` and hardcodes `api.github.com
 
 ## Impact
 
-- `@bapm/core` Marketplace: `fetch.ts`, `models.ts`, new thin Auth/host helpers (FEOD library module or Marketplace submodule — not Registry HTTP client).
+- `@b-apm/core` Marketplace: `fetch.ts`, `models.ts`, new thin Auth/host helpers (FEOD library module or Marketplace submodule — not Registry HTTP client).
 - `bapm` CLI: `runMarketplace.ts` add/`--host`/help; authoring check wiring via core.
 - PackOutputs `resolve.ts`, Authoring `check.ts`.
 - `tests/spec-conformance/checklist.yml` rationale tweaks only (no active flips); regenerate CONFORMANCE if rationales change.

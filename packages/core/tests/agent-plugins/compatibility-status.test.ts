@@ -7,7 +7,7 @@ import {
   discoverAgentPluginMcp,
   discoverAgentPluginSkills,
   loadAgentPluginManifest,
-} from "@bapm/core";
+} from "@b-apm/core";
 
 type CompatibilityCase = {
   id: string;

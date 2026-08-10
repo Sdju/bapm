@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createOpencodeIntegration } from "@bapm/integration-opencode";
+import { createOpencodeIntegration } from "@b-apm/integration-opencode";
 import {
   createOpencodeRegistry,
   createTempProject,

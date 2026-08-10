@@ -3,7 +3,7 @@
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { describe, expect, test } from "vite-plus/test";
 import { listFilesRecursive, pickExport, srcRoot } from "./helpers.ts";
 

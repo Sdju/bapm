@@ -2,18 +2,18 @@
 
 ## Purpose
 
-Defines the greenfield `@bapm/integration-windsurf` package: Windsurf project-scope detect, materialize under `.windsurf/` and `.agents/`, skip agents, and home-scoped MCP bake configure with Copilot-client-adapter JSON parity, depending only on `@bapm/integration-api`.
+Defines the greenfield `@b-apm/integration-windsurf` package: Windsurf project-scope detect, materialize under `.windsurf/` and `.agents/`, skip agents, and home-scoped MCP bake configure with Copilot-client-adapter JSON parity, depending only on `@b-apm/integration-api`.
 
 ## Requirements
 
-### Requirement: Package @bapm/integration-windsurf exists and depends only on integration API
+### Requirement: Package @b-apm/integration-windsurf exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-windsurf` with package name `@bapm/integration-windsurf`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@bapm/integration-*` packages. Among bapm packages it MUST depend on `@bapm/integration-api` for types and contracts and MUST NOT require `@bapm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createWindsurfIntegration` as an alias. Runtime integration `id` MUST be `windsurf`. The package MUST NOT expose a marketplace-output mapper in this capability.
+The monorepo MUST include package directory `packages/integration-windsurf` with package name `@b-apm/integration-windsurf`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@b-apm/integration-*` packages. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createWindsurfIntegration` as an alias. Runtime integration `id` MUST be `windsurf`. The package MUST NOT expose a marketplace-output mapper in this capability.
 
 #### Scenario: Package identity and dependency edge
 
 - **WHEN** inspecting the Windsurf package dependencies
-- **THEN** `@bapm/integration-windsurf` depends on `@bapm/integration-api` and does not reverse-depend on `@bapm/core` for its host behavior
+- **THEN** `@b-apm/integration-windsurf` depends on `@b-apm/integration-api` and does not reverse-depend on `@b-apm/core` for its host behavior
 
 #### Scenario: Runtime factory registers as windsurf
 
@@ -109,7 +109,7 @@ When Windsurf materialize is actively invoked for the Windsurf target (including
 
 ### Requirement: Home MCP configure with client-adapter parity (bake)
 
-When install invokes Windsurf `configureMcp` with an eligible server set, `@bapm/integration-windsurf` MUST create or update the user-home file `~/.codeium/windsurf/mcp_config.json` (resolved via `CODEIUM_HOME` when set as `<CODEIUM_HOME>/windsurf/mcp_config.json`, otherwise default home `.codeium/windsurf`) under the top-level `mcpServers` object keyed by server name. The JSON shape MUST match Copilot-client-adapter parity (`command`/`args`/`env`/`url` as applicable). The integration MUST NOT set `mcpEnvMode: "translate"` (install bake remains the default). Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys, MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory. This capability MUST NOT write project-scoped Windsurf MCP files.
+When install invokes Windsurf `configureMcp` with an eligible server set, `@b-apm/integration-windsurf` MUST create or update the user-home file `~/.codeium/windsurf/mcp_config.json` (resolved via `CODEIUM_HOME` when set as `<CODEIUM_HOME>/windsurf/mcp_config.json`, otherwise default home `.codeium/windsurf`) under the top-level `mcpServers` object keyed by server name. The JSON shape MUST match Copilot-client-adapter parity (`command`/`args`/`env`/`url` as applicable). The integration MUST NOT set `mcpEnvMode: "translate"` (install bake remains the default). Writes MUST preserve unrelated `mcpServers` names and unrelated top-level keys, MUST be idempotent overwrites of owned server keys, and MUST report a non-empty configuration path for lock inventory. This capability MUST NOT write project-scoped Windsurf MCP files.
 
 #### Scenario: Configure writes mcpServers in home mcp_config.json
 
@@ -132,9 +132,9 @@ Windsurf runtime in this capability MUST NOT deploy user-scope file primitives u
 
 ### Requirement: Not imported by core
 
-`@bapm/core` MUST NOT hard-depend on `@bapm/integration-windsurf`. Windsurf remains an opt-in host package loaded via object-map / dynamic import.
+`@b-apm/core` MUST NOT hard-depend on `@b-apm/integration-windsurf`. Windsurf remains an opt-in host package loaded via object-map / dynamic import.
 
 #### Scenario: Core package.json omits windsurf integration
 
-- **WHEN** inspecting `@bapm/core` dependencies
-- **THEN** `@bapm/integration-windsurf` is not a required dependency of core
+- **WHEN** inspecting `@b-apm/core` dependencies
+- **THEN** `@b-apm/integration-windsurf` is not a required dependency of core

@@ -3,7 +3,7 @@
  * (promoted from manifest-local-overlay acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { createIntegrationRegistry } from "@bapm/integration-api";
+import { createIntegrationRegistry } from "@b-apm/integration-api";
 import {
   conformingBase,
   createTempProject,

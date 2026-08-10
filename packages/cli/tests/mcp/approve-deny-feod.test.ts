@@ -29,7 +29,7 @@ describe("CLI FEOD Approve/Deny wiring", () => {
     expect(existsSync(join(modDir, "index.ts"))).toBe(true);
   });
 
-  test("thin commands/approve.ts and commands/deny.ts do not import @bapm/core directly", () => {
+  test("thin commands/approve.ts and commands/deny.ts do not import @b-apm/core directly", () => {
     expect(existsSync(join(srcRoot, "commands", "approve.ts"))).toBe(true);
     expect(existsSync(join(srcRoot, "commands", "deny.ts"))).toBe(true);
     const approve = readSrc("commands/approve.ts");

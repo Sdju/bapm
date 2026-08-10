@@ -1,6 +1,6 @@
 ## 1. Package scaffold
 
-- [x] 1.1 Create `packages/integration-kiro` (`package.json`, `vite.config.ts`, `tsconfig.json`, `README.md`) mirroring `@bapm/integration-copilot` with dep `@bapm/integration-api` only
+- [x] 1.1 Create `packages/integration-kiro` (`package.json`, `vite.config.ts`, `tsconfig.json`, `README.md`) mirroring `@b-apm/integration-copilot` with dep `@b-apm/integration-api` only
 - [x] 1.2 Export `createKiroIntegration` / `createIntegration` from `src/index.ts`; wire workspace install (`vp` / pnpm) so the package resolves
 
 ## 2. Runtime implementation

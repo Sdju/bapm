@@ -2,7 +2,7 @@
 
 ### Requirement: writeDeployedFile helper
 
-`@bapm/integration-api` MUST export `writeDeployedFile` that writes content under registered deploy roots and returns a `DeployedFile` inventory row.
+`@b-apm/integration-api` MUST export `writeDeployedFile` that writes content under registered deploy roots and returns a `DeployedFile` inventory row.
 
 #### Scenario: Write under deploy roots
 
@@ -16,7 +16,7 @@
 
 ### Requirement: renderPrimitivesMarkdown helper
 
-`@bapm/integration-api` MUST export `renderPrimitivesMarkdown` that builds a deterministic markdown document from attributed primitives for host compile hooks.
+`@b-apm/integration-api` MUST export `renderPrimitivesMarkdown` that builds a deterministic markdown document from attributed primitives for host compile hooks.
 
 #### Scenario: Default AGENTS-style document
 
@@ -30,7 +30,7 @@
 
 ### Requirement: compileMarkdownReport helper
 
-`@bapm/integration-api` MUST export `compileMarkdownReport` that turns markdown content into a `CompileReport` with optional durable write.
+`@b-apm/integration-api` MUST export `compileMarkdownReport` that turns markdown content into a `CompileReport` with optional durable write.
 
 #### Scenario: Preview without write
 
@@ -49,7 +49,7 @@
 
 ### Requirement: filterFrontmatterKeys helper
 
-`@bapm/integration-api` MUST export `filterFrontmatterKeys` that drops YAML frontmatter keys not in a caller-supplied allowlist while preserving body text.
+`@b-apm/integration-api` MUST export `filterFrontmatterKeys` that drops YAML frontmatter keys not in a caller-supplied allowlist while preserving body text.
 
 #### Scenario: Drop non-preserved keys
 
@@ -63,7 +63,7 @@
 
 ### Requirement: Shared command frontmatter allowlist constant
 
-`@bapm/integration-api` MUST export a frozen allowlist constant covering at least `description`, `allowed-tools`, `model`, `argument-hint`, and `input` for hosts that share the same command frontmatter policy. The constant's **exported identifier** MUST NOT embed concrete host product names (so the package stays host-neutral in source).
+`@b-apm/integration-api` MUST export a frozen allowlist constant covering at least `description`, `allowed-tools`, `model`, `argument-hint`, and `input` for hosts that share the same command frontmatter policy. The constant's **exported identifier** MUST NOT embed concrete host product names (so the package stays host-neutral in source).
 
 #### Scenario: Constant usable with filterFrontmatterKeys
 

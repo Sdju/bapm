@@ -34,7 +34,7 @@ describe("mp-pack-outputs CLI FEOD Pack marketplace wiring", () => {
     expect(existsSync(join(modDir, "index.ts"))).toBe(true);
   });
 
-  test("thin commands/pack.ts does not import @bapm/core directly", () => {
+  test("thin commands/pack.ts does not import @b-apm/core directly", () => {
     const body = readSrc("commands/pack.ts");
     expect(body).not.toMatch(/from\s+["']@bapm\/core["']/);
     expect(body.length).toBeLessThan(4000);

@@ -1,16 +1,18 @@
-# @bapm/integration-copilot
+# @b-apm/integration-copilot
+
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
 
 GitHub Copilot **runtime** host for bapm (project-scope file primitives + home MCP translate).
 
 ## Opt-in load
 
 ```bash
-npm i -D @bapm/integration-copilot
+npm i -D @b-apm/integration-copilot
 ```
 
 ```yaml
 targets:
-  copilot: "@bapm/integration-copilot"
+  copilot: "@b-apm/integration-copilot"
 active:
   - copilot
 ```

@@ -1,4 +1,7 @@
 import { expect, test } from "vite-plus/test";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   APM_LOCK_FILE,
   APM_MANIFEST_FILE,
@@ -18,10 +21,17 @@ import {
 } from "../src/index.ts";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+
+const pkgVersion = (
+  createRequire(import.meta.url)(
+    join(dirname(fileURLToPath(import.meta.url)), "../package.json"),
+  ) as {
+    version: string;
+  }
+).version;
 
 test("getVersion", () => {
-  expect(getVersion()).toBe("0.0.0");
+  expect(getVersion()).toBe(pkgVersion);
 });
 
 test("manifest filename constants", () => {

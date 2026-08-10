@@ -44,7 +44,7 @@ describe("manifest-local-overlay — merge rules", () => {
       project.cwd,
       conformingBase({
         name: "targets-merge",
-        extraYaml: ["targets:", '  cursor: "@bapm/integration-cursor"', ""].join("\n"),
+        extraYaml: ["targets:", '  cursor: "@b-apm/integration-cursor"', ""].join("\n"),
       }),
     );
     writeLocalOverlay(
@@ -54,7 +54,7 @@ describe("manifest-local-overlay — merge rules", () => {
 
     const doc = documentOf(getLoadEffectiveManifest()({ cwd: project.cwd }));
     expect(doc.targets).toMatchObject({
-      cursor: "@bapm/integration-cursor",
+      cursor: "@b-apm/integration-cursor",
       "x-acme-editor": "@scope/acme-integration",
     });
   });

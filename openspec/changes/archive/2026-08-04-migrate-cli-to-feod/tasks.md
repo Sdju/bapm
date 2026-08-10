@@ -6,7 +6,7 @@
 
 ## 2. Integrations and soft IoC
 
-- [x] 2.1 Add `app/integrations` wrapper over `@bapm/core` (name, version getter, manifest/lock file constants) — no `@bapm/core` imports outside app integrations / init wiring
+- [x] 2.1 Add `app/integrations` wrapper over `@b-apm/core` (name, version getter, manifest/lock file constants) — no `@b-apm/core` imports outside app integrations / init wiring
 - [x] 2.2 Implement `modules/Help` (directory + `index.ts` public API) with help text logic moved from `run.ts`
 - [x] 2.3 Implement `modules/Version` (directory + `index.ts`) using injected core name/version deps
 - [x] 2.4 Implement `modules/Install` (directory + `index.ts`) with `createInstall(deps?)` soft IoC and install-stub behavior equivalent to current `run.ts`
@@ -27,4 +27,4 @@
 - [x] 4.2 Run `vp check` in `packages/cli` and fix type/lint issues from the move
 - [x] 4.3 Run `vp test` in `packages/cli` — existing version test and any new acceptance tests must pass
 - [x] 4.4 Run `vp pack` (or `vp run build`) in `packages/cli` and confirm `dist` entries build
-- [x] 4.5 FEOD checklist: no deep module imports, no `common/index.ts`, no single-file modules, no `@bapm/core` in `commands/`, commands stay thin
+- [x] 4.5 FEOD checklist: no deep module imports, no `common/index.ts`, no single-file modules, no `@b-apm/core` in `commands/`, commands stay thin

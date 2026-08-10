@@ -1,5 +1,7 @@
 # ExecutableTrust
 
+> **UNSTABLE:** Early public release. APIs and on-disk layouts may change without a major bump. Not production-ready.
+
 OpenAPM **sc-009** executable trust for MCP deploy.
 
 ## Public API

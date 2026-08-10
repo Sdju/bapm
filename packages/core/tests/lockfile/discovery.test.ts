@@ -8,7 +8,7 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { discoverLockfilePath, loadLockfile, loadLockfileOrNull, writeLockfile } from "@bapm/core";
+import { discoverLockfilePath, loadLockfile, loadLockfileOrNull, writeLockfile } from "@b-apm/core";
 import {
   copyFixtureAs,
   createTempProject,

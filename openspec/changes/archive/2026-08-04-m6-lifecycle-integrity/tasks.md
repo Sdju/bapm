@@ -37,5 +37,5 @@
 
 - [x] 6.1 Confirm workspace still has only `bapm-target-api` + `bapm-target-cursor` among `bapm-target-*`; no core→cursor hard dep
 - [x] 6.2 Keep M1–M5 install/lock/cursor regressions green
-- [x] 6.3 Run build/test/`vp check` for `@bapm/core` and `bapm`; fix in-scope regressions
+- [x] 6.3 Run build/test/`vp check` for `@b-apm/core` and `bapm`; fix in-scope regressions
 - [x] 6.4 Spot-check: `outdated` exit 0 with outdated rows; `audit --ci` exit 1 on hash mismatch / missing lock / missing deployed file

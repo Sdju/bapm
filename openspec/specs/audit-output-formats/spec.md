@@ -60,11 +60,11 @@ When format is `sarif`, the system MUST emit SARIF version `2.1.0` with a `$sche
 
 ### Requirement: Serializers live in core public API
 
-`@bapm/core` MUST expose a way to obtain the structured CI report and to serialize it to JSON and SARIF strings (or equivalent public helpers) so callers need not depend on the CLI. Serialization MUST be pure with respect to the project tree (no lock rewrite, install, network resolve, or target materialize). Format selection MUST NOT alter the underlying gate's pass/fail outcome for the same tree.
+`@b-apm/core` MUST expose a way to obtain the structured CI report and to serialize it to JSON and SARIF strings (or equivalent public helpers) so callers need not depend on the CLI. Serialization MUST be pure with respect to the project tree (no lock rewrite, install, network resolve, or target materialize). Format selection MUST NOT alter the underlying gate's pass/fail outcome for the same tree.
 
 #### Scenario: core can serialize without CLI
 
-- **WHEN** a library consumer obtains an audit CI result from `@bapm/core` and requests JSON or SARIF serialization
+- **WHEN** a library consumer obtains an audit CI result from `@b-apm/core` and requests JSON or SARIF serialization
 - **THEN** the consumer MUST receive the document body without invoking the `bapm` CLI binary
 
 ### Requirement: IO purity for structured bodies

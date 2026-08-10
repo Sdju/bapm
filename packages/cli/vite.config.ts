@@ -18,7 +18,12 @@ export default defineConfig({
     dts: {
       tsgo: true,
     },
-    exports: true,
+    // Scoped name @b-apm/cli would auto-bin as `cli`; publish command must be `bapm`.
+    exports: {
+      bin: {
+        bapm: "./src/cli.ts",
+      },
+    },
   },
   lint: {
     options: {

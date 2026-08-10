@@ -2,7 +2,7 @@
  * Registry distribution test helpers — mock HTTP registry + pickExport.
  */
 import { asText } from "../asText.ts";
-import * as core from "@bapm/core";
+import * as core from "@b-apm/core";
 import { createHash } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import {
@@ -263,7 +263,7 @@ export function pickExport(names: string[], label: string): AnyFn {
     const fn = c[name];
     if (typeof fn === "function") return fn as AnyFn;
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 export function pickValue(names: string[], label: string): unknown {
@@ -271,7 +271,7 @@ export function pickValue(names: string[], label: string): unknown {
   for (const name of names) {
     if (name in c && c[name] !== undefined) return c[name];
   }
-  throw new TypeError(`expected @bapm/core to export one of [${names.join(", ")}] (${label})`);
+  throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
 /** Registry HTTP client factory (M10). */

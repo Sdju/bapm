@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { createCursorIntegration } from "@bapm/integration-cursor";
+import { createCursorIntegration } from "@b-apm/integration-cursor";
 import {
   createCursorRegistry,
   createTempProject,

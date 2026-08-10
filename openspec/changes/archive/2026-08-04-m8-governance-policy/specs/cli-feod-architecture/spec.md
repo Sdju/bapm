@@ -2,7 +2,7 @@
 
 ### Requirement: Policy CLI wiring follows FEOD thin-command pattern
 
-Policy-related CLI behavior (install/lock/update flag passthrough, and optional `policy status`) MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain parse/evaluate logic MUST live in `@bapm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@bapm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
+Policy-related CLI behavior (install/lock/update flag passthrough, and optional `policy status`) MUST use thin handlers under `src/commands/` that delegate to directory module(s) under `src/modules/` with `index.ts` public API. Domain parse/evaluate logic MUST live in `@b-apm/core` (or CLI modules only as thin adapters). Domain logic MUST NOT live in `commands/` or `app/` beyond argv/exit mapping and soft IoC wiring. Module-local `commands/` folders and private `commands/_name/` MUST NOT be used. Single-file modules MUST NOT be used. Access to `@b-apm/core` MUST go through `app/integrations` / `app/init`, not direct imports from `commands/`.
 
 #### Scenario: Install policy flags delegate via module
 

@@ -1,4 +1,4 @@
-import { runPolicyStatus, type PolicyStatusReport } from "@bapm/core";
+import { runPolicyStatus, type PolicyStatusReport } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
 export type PolicyCliOptions = { args?: string[]; cwd?: string };

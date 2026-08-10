@@ -14,7 +14,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createIntegrationRegistry } from "@bapm/integration-api";
+import { createIntegrationRegistry } from "@b-apm/integration-api";
 import {
   loadIntegrationFromPackage,
   ManifestIntegrationLoadError,

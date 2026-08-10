@@ -2,7 +2,7 @@
 
 ### Requirement: Install and compile load manifest integration map before core
 
-When the project manifest uses object-map `target` / `targets`, the CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry after built-in registration and before invoking `@bapm/core` install or compile orchestration. Legacy string/array manifests MUST keep today’s built-in-only registration behavior. Help text MAY mention that object-map bindings load integration packages; it MUST continue to document `--target <id>` as the forced-host selector.
+When the project manifest uses object-map `target` / `targets`, the CLI `install` and `compile` composition paths MUST apply `target-integration-dynamic-load` (resolve, validate, register) against the CLI integration registry after built-in registration and before invoking `@b-apm/core` install or compile orchestration. Legacy string/array manifests MUST keep today’s built-in-only registration behavior. Help text MAY mention that object-map bindings load integration packages; it MUST continue to document `--target <id>` as the forced-host selector.
 
 #### Scenario: Install loads map then forces custom target
 
