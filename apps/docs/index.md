@@ -2,6 +2,8 @@
 
 **Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов: объявляете пакеты в `bapm.yml`, `bapm install` разрешает граф, пишет lock и раскладывает skills, rules, agents и MCP туда, где их подхватит агент. Воспринимайте его как npm / pip для вашего агента.
 
+Репозиторий: [github.com/Sdju/bapm](https://github.com/Sdju/bapm)
+
 ::: warning UNSTABLE
 Ранний публичный релиз на npm. API и on-disk layout могут меняться без major bump. **Не для production.**
 :::

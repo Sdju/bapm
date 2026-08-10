@@ -4,6 +4,8 @@
 
 **Better Agent Package Manager** — менеджер зависимостей для конфигурации AI-агентов: объявляете пакеты в `bapm.yml`, `bapm install` разрешает граф, пишет lock и раскладывает skills, rules, agents и MCP туда, где их подхватит агент. Воспринимайте его как npm / pip для вашего агента.
 
+**Документация:** [sdju.github.io/bapm](https://sdju.github.io/bapm/)
+
 Зачем?
 
 - Устанавливайте легко и быстро зависимости для вашего агента
@@ -33,7 +35,7 @@ dependencies:
 
 После `bapm install` выбранный host получает поддерживаемые примитивы. То, чего host не умеет, **пропускается с диагностикой** (без тихой «замены» на другой тип). Сводку instructions / skills в markdown даёт отдельно `bapm compile` (например `AGENTS.md` у Cursor).
 
-CLI и host-интеграции ставятся **отдельно**. Для известных hosts достаточно установить `@b-apm/integration-<id>` — object-map `targets:` не обязателен (canonical fallback). Map — чтобы подменить пакет или добавить свой host. Возможности hosts различаются — см. [supported-hosts](apps/docs/guide/supported-hosts.md).
+CLI и host-интеграции ставятся **отдельно**. Для известных hosts достаточно установить `@b-apm/integration-<id>` — object-map `targets:` не обязателен (canonical fallback). Map — чтобы подменить пакет или добавить свой host. Возможности hosts различаются — см. [supported-hosts](https://sdju.github.io/bapm/guide/supported-hosts).
 
 ## Установка
 
@@ -50,7 +52,7 @@ npm i -g @b-apm/cli @b-apm/integration-cursor
 
 Вместо `@b-apm/integration-cursor` можно взять другой `@b-apm/integration-*` (например `@b-apm/integration-claude`) или свой пакет интеграции — набор поддерживаемых артефактов у hosts разный.
 
-Подробности: [поддерживаемые hosts](apps/docs/guide/supported-hosts.md), [выбор host](apps/docs/guide/host-selection.md).
+Подробности: [поддерживаемые hosts](https://sdju.github.io/bapm/guide/supported-hosts), [выбор host](https://sdju.github.io/bapm/guide/host-selection).
 
 **2. Happy path** — в проекте с `.cursor/` и `bapm.yml`:
 
@@ -81,24 +83,26 @@ bapm install --target cursor
 
 ## Документация
 
-| Раздел               | Ссылка                                                      |
-| -------------------- | ----------------------------------------------------------- |
-| Быстрый старт        | [guide/quick-start](apps/docs/guide/quick-start.md)         |
-| Как выбирается host  | [guide/host-selection](apps/docs/guide/host-selection.md)   |
-| Поддерживаемые hosts | [guide/supported-hosts](apps/docs/guide/supported-hosts.md) |
-| Что умеет bapm       | [guide/](apps/docs/guide/index.md)                          |
-| Команды              | [guide/commands](apps/docs/guide/commands.md)               |
-| Манифест `bapm.yml`  | [guide/config-manifest](apps/docs/guide/config-manifest.md) |
-| Lock-файл            | [guide/lockfile](apps/docs/guide/lockfile.md)               |
-| Сценарии             | [guide/situations/](apps/docs/guide/situations/index.md)    |
-| Справка по флагам    | [reference/](apps/docs/reference/index.md)                  |
-| Agent Plugins        | [guide/agent-plugins](apps/docs/guide/agent-plugins.md)     |
-| Архитектура          | [architecture/](apps/docs/architecture/index.md)            |
+Сайт: [https://sdju.github.io/bapm/](https://sdju.github.io/bapm/)
+
+| Раздел               | Ссылка                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| Быстрый старт        | [guide/quick-start](https://sdju.github.io/bapm/guide/quick-start)                       |
+| Как выбирается host  | [guide/host-selection](https://sdju.github.io/bapm/guide/host-selection)                 |
+| Поддерживаемые hosts | [guide/supported-hosts](https://sdju.github.io/bapm/guide/supported-hosts)               |
+| Что умеет bapm       | [guide/](https://sdju.github.io/bapm/guide/)                                             |
+| Команды              | [guide/commands](https://sdju.github.io/bapm/guide/commands)                             |
+| Манифест `bapm.yml`  | [guide/config-manifest](https://sdju.github.io/bapm/guide/config-manifest)               |
+| Lock-файл            | [guide/lockfile](https://sdju.github.io/bapm/guide/lockfile)                             |
+| Сценарии             | [guide/situations/](https://sdju.github.io/bapm/guide/situations/)                       |
+| Справка по флагам    | [reference/](https://sdju.github.io/bapm/reference/)                                     |
+| Agent Plugins        | [guide/agent-plugins](https://sdju.github.io/bapm/guide/agent-plugins)                   |
+| Архитектура          | [architecture/](https://sdju.github.io/bapm/architecture/)                               |
 
 ## Связанные проекты
 
 - [microsoft/apm](https://github.com/microsoft/apm) — исходный APM; bapm — совместимый менеджер с другим UX и архитектурой
-- [Agent Plugins](https://github.com/Sdju/agent-plugins) — runtime/плагины агента; пересечение с bapm описано в [guide/agent-plugins](apps/docs/guide/agent-plugins.md)
+- [Agent Plugins](https://github.com/Sdju/agent-plugins) — runtime/плагины агента; пересечение с bapm описано в [guide/agent-plugins](https://sdju.github.io/bapm/guide/agent-plugins)
 
 ## Предупреждение
 

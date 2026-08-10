@@ -19,6 +19,11 @@ export default defineConfig({
       { text: "Сценарии", link: "/guide/situations/" },
       { text: "Архитектура", link: "/architecture/" },
     ],
+    socialLinks: [{ icon: "github", link: "https://github.com/Sdju/bapm" }],
+    editLink: {
+      pattern: "https://github.com/Sdju/bapm/edit/master/apps/docs/:path",
+      text: "Редактировать на GitHub",
+    },
     sidebar: [
       {
         text: "Руководство",
