@@ -85,19 +85,19 @@ bapm install --target cursor
 
 Сайт: [https://sdju.github.io/bapm/](https://sdju.github.io/bapm/)
 
-| Раздел               | Ссылка                                                                                   |
-| -------------------- | ---------------------------------------------------------------------------------------- |
-| Быстрый старт        | [guide/quick-start](https://sdju.github.io/bapm/guide/quick-start)                       |
-| Как выбирается host  | [guide/host-selection](https://sdju.github.io/bapm/guide/host-selection)                 |
-| Поддерживаемые hosts | [guide/supported-hosts](https://sdju.github.io/bapm/guide/supported-hosts)               |
-| Что умеет bapm       | [guide/](https://sdju.github.io/bapm/guide/)                                             |
-| Команды              | [guide/commands](https://sdju.github.io/bapm/guide/commands)                             |
-| Манифест `bapm.yml`  | [guide/config-manifest](https://sdju.github.io/bapm/guide/config-manifest)               |
-| Lock-файл            | [guide/lockfile](https://sdju.github.io/bapm/guide/lockfile)                             |
-| Сценарии             | [guide/situations/](https://sdju.github.io/bapm/guide/situations/)                       |
-| Справка по флагам    | [reference/](https://sdju.github.io/bapm/reference/)                                     |
-| Agent Plugins        | [guide/agent-plugins](https://sdju.github.io/bapm/guide/agent-plugins)                   |
-| Архитектура          | [architecture/](https://sdju.github.io/bapm/architecture/)                               |
+| Раздел               | Ссылка                                                                     |
+| -------------------- | -------------------------------------------------------------------------- |
+| Быстрый старт        | [guide/quick-start](https://sdju.github.io/bapm/guide/quick-start)         |
+| Как выбирается host  | [guide/host-selection](https://sdju.github.io/bapm/guide/host-selection)   |
+| Поддерживаемые hosts | [guide/supported-hosts](https://sdju.github.io/bapm/guide/supported-hosts) |
+| Что умеет bapm       | [guide/](https://sdju.github.io/bapm/guide/)                               |
+| Команды              | [guide/commands](https://sdju.github.io/bapm/guide/commands)               |
+| Манифест `bapm.yml`  | [guide/config-manifest](https://sdju.github.io/bapm/guide/config-manifest) |
+| Lock-файл            | [guide/lockfile](https://sdju.github.io/bapm/guide/lockfile)               |
+| Сценарии             | [guide/situations/](https://sdju.github.io/bapm/guide/situations/)         |
+| Справка по флагам    | [reference/](https://sdju.github.io/bapm/reference/)                       |
+| Agent Plugins        | [guide/agent-plugins](https://sdju.github.io/bapm/guide/agent-plugins)     |
+| Архитектура          | [architecture/](https://sdju.github.io/bapm/architecture/)                 |
 
 ## Связанные проекты
 
