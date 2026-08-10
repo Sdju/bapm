@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
-import { execFileSync } from "node:child_process";
-import { join, relative, resolve, isAbsolute } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { basename, dirname, join, relative, resolve, isAbsolute, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   declaredTargetIntegrationMap,
@@ -55,30 +55,51 @@ function isContainedUnderRoot(absoluteTarget: string, projectRoot: string): bool
 type ResolveNpmOptions = {
   /** Map entries may resolve from the CLI package; canonical entries must not. */
   allowCliFallback?: boolean;
-  /** Overrides package-manager global roots for an embedding or isolated test. */
+  /** Overrides discovered global roots for an embedding or isolated test. */
   globalRoots?: readonly string[];
 };
 
 let cachedGlobalModuleRoots: readonly string[] | undefined;
 
-/** Locate package-manager global module roots without consulting CLI dev dependencies. */
+/**
+ * Return the node_modules root only when the invoked entrypoint is this CLI
+ * package. Resolving the symlink handles npm and pnpm global bin shims without
+ * spawning a package manager during every CLI process.
+ */
+export function globalModuleRootForCliEntry(entryPath: string | undefined): string | undefined {
+  if (!entryPath) return undefined;
+
+  let entry = resolve(entryPath);
+  try {
+    entry = realpathSync(entry);
+  } catch {
+    // Keep the resolved path for embedders and tests with a synthetic entrypoint.
+  }
+
+  for (let directory = dirname(entry); ; directory = dirname(directory)) {
+    if (basename(directory) === "node_modules") {
+      const packagePath = relative(directory, entry).split(sep);
+      return packagePath[0] === "@b-apm" && packagePath[1] === "cli" ? directory : undefined;
+    }
+    const parent = dirname(directory);
+    if (parent === directory) return undefined;
+  }
+}
+
+function isWorkspaceModuleRoot(moduleRoot: string): boolean {
+  for (let directory = dirname(moduleRoot); ; directory = dirname(directory)) {
+    if (existsSync(join(directory, "pnpm-workspace.yaml"))) return true;
+    const parent = dirname(directory);
+    if (parent === directory) return false;
+  }
+}
+
+/** Locate the global module root of the invoked CLI without consulting dev dependencies. */
 export function globalModuleRoots(): readonly string[] {
   if (cachedGlobalModuleRoots) return cachedGlobalModuleRoots;
 
-  const roots = new Set<string>();
-  for (const command of ["npm", "pnpm"]) {
-    try {
-      const root = execFileSync(command, ["root", "-g"], {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      }).trim();
-      if (root) roots.add(resolve(root));
-    } catch {
-      // A missing package manager must not prevent project-local resolution.
-    }
-  }
-
-  cachedGlobalModuleRoots = [...roots];
+  const root = globalModuleRootForCliEntry(process.argv[1]);
+  cachedGlobalModuleRoots = root && !isWorkspaceModuleRoot(root) ? [root] : [];
   return cachedGlobalModuleRoots;
 }
 
@@ -94,7 +115,9 @@ function resolveNpmProjectOrGlobal(
   } catch (cwdErr) {
     // `module.globalPaths` exists at runtime; default ESM type export may omit it.
     const mod = createRequire(import.meta.url)("node:module") as { globalPaths?: string[] };
-    const globalPaths = Array.isArray(mod.globalPaths) ? mod.globalPaths : [];
+    const globalPaths = Array.isArray(mod.globalPaths)
+      ? mod.globalPaths.filter((path) => !isWorkspaceModuleRoot(path))
+      : [];
     const searchRoots = [...globalPaths, ...globalRoots];
     if (searchRoots.length === 0) throw cwdErr;
     try {
@@ -211,7 +234,7 @@ export type LoadIntegrationOptions = {
    * Canonical fallback sets this false to use project and global roots only.
    */
   allowCliFallback?: boolean;
-  /** Overrides package-manager global roots for an embedding or isolated test. */
+  /** Overrides discovered global roots for an embedding or isolated test. */
   globalRoots?: readonly string[];
 };
 

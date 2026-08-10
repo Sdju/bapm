@@ -18,6 +18,7 @@ import { createIntegrationRegistry } from "@b-apm/integration-api";
 import {
   loadIntegrationFromPackage,
   ManifestIntegrationLoadError,
+  globalModuleRootForCliEntry,
   registerManifestIntegrations,
 } from "../../src/app/integrations/loadManifestIntegrations.ts";
 import { isLocalPathSpecifier } from "../../src/app/integrations/localPathSpecifier.ts";
@@ -124,6 +125,16 @@ describe("loadManifestIntegrations", () => {
     });
 
     expect(integration.id).toBe("x-acme-editor");
+  });
+
+  test("derives a global module root only from the installed CLI entrypoint", () => {
+    temp = createTemp();
+    const entry = join(temp.cwd, "global", "node_modules", "@b-apm", "cli", "dist", "cli.mjs");
+
+    expect(globalModuleRootForCliEntry(entry)).toBe(join(temp.cwd, "global", "node_modules"));
+    expect(
+      globalModuleRootForCliEntry(join(temp.cwd, "node_modules", "vite-plus", "bin", "vp.mjs")),
+    ).toBe(undefined);
   });
 
   test("fails closed on unresolvable specifier", async () => {
