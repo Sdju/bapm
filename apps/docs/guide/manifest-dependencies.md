@@ -54,6 +54,32 @@ dependencies:
 
 Allowlist meta-ключей объекта: `version`, `ref`, `alias`, `skills`, `targets`, `allow_insecure`, `type`, `prerelease`, `name` (marketplace), companions `path` / `registry`. Ключи `x-*` допускаются.
 
+### Object-form `skills:` / `targets:` (subset install)
+
+На объектной записи `- id:` или `- git:` можно задать consumer-side subset:
+
+| Поле | Смысл |
+| ---- | ----- |
+| `skills:` | Непустой список имён skills (или относительных path-алиасов). Install материализует **только** эти skills; другие типы примитивов пакета не отбрасываются из‑за `skills:`. Пустой список — ошибка parse. |
+| `targets:` | Непустой список mf-005 host-токенов. Примитивы этой зависимости деплоятся только на пересечении active install targets с этим списком (и с package/consumer intersection). |
+
+Опущенные поля = без сужения («все selectable skills / все eligible targets»). Полный пакет всё равно скачивается; subset применяется на materialize.
+
+**Не путать** с top-level `target:` / `targets:` пакета (предпочтения хостов / package-declared intersection в манифесте самого пакета). Per-dep `targets:` на dependency entry — дополнительный conjunct со стороны consumer.
+
+```yaml
+dependencies:
+  apm:
+    - id: acme/toolkit
+      version: "1.0.0"
+      skills: [keep-me]
+      targets: [cursor]
+    - git: https://github.com/acme/toolkit.git
+      skills: [keep-me]
+```
+
+Registry-форма `- id:` round-trip'ится как object-form (не схлопывается в `git:`). Structured rewrite, который пытается заменить `id:` на git-shaped entry с той же identity, отклоняется.
+
 Marketplace-форма: непустые `marketplace` и `name` (опционально `version`).
 
 ```yaml

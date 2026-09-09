@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import {
   APM_MANIFEST_FILE,
   createMinimalManifest,
+  entryIdentity,
   writeProducerManifest,
   type BapmManifest,
   type DependencyEntry,
@@ -89,6 +90,11 @@ function entryMatchesRef(entry: DependencyEntry, ref: string, asEntry: Dependenc
   if (typeof entry === "string" && typeof asEntry === "string") {
     return entry === asEntry;
   }
+
+  const entryId = entryIdentity(entry);
+  const refId = entryIdentity(ref) ?? entryIdentity(asEntry);
+  if (entryId && refId && entryId === refId) return true;
+
   if (
     typeof entry === "object" &&
     entry !== null &&

@@ -585,6 +585,8 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     registry_owner: e.registry_owner,
     registry_repo: e.registry_repo,
     personalLockScope: e.classified.personalLockScope === true,
+    skillSubset: e.classified.skillSubset,
+    targetSubset: e.classified.targetSubset,
     ...e.marketplaceProvenance,
   };
 }

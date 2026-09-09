@@ -48,6 +48,14 @@ export {
 } from "./localOverlay.ts";
 export type { LocalOverlayFields } from "./localOverlay.ts";
 export { parseManifest, parseManifestDocument, validateManifestEnv } from "./parse.ts";
+export { parseDepSkillSubset, parseDepTargetSubset, applyDepSubsetFields } from "./depSubset.ts";
+export {
+  mergeApmDependencyUpdate,
+  isRegistrySourced,
+  isGitShaped,
+  entryIdentity,
+  registryOrPackageIdentity,
+} from "./mergeApmDependency.ts";
 export { parseActiveField, activeEntriesToEmitShape } from "./active.ts";
 export { parsePresetsField } from "./presets.ts";
 export {

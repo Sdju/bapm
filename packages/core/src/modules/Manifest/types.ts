@@ -30,7 +30,10 @@ export type ObjectDependency = {
   version?: string;
   ref?: string;
   alias?: string;
-  skills?: unknown;
+  /** Consumer skill subset (validated string list; omit = all skills). */
+  skills?: string[];
+  /** Consumer per-dep target subset (mf-005 tokens; omit = all eligible targets). */
+  targets?: string[];
   [key: string]: unknown;
 };
 

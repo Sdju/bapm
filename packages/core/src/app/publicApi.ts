@@ -81,6 +81,14 @@ export {
   VENDOR_TARGET_RE,
   isValidTargetToken,
   isExemptInsecureHost,
+  parseDepSkillSubset,
+  parseDepTargetSubset,
+  applyDepSubsetFields,
+  mergeApmDependencyUpdate,
+  isRegistrySourced,
+  isGitShaped,
+  entryIdentity,
+  registryOrPackageIdentity,
 } from "@/modules/Manifest";
 export type {
   DiscoverLockfileOptions,

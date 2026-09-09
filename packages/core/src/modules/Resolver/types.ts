@@ -56,6 +56,10 @@ export type ClassifiedDependency = {
    * Drives personal lock partition.
    */
   personalLockScope?: boolean;
+  /** Consumer skill subset from object-form `skills:` (materialize-time only). */
+  skillSubset?: string[];
+  /** Consumer per-dep target subset from object-form `targets:`. */
+  targetSubset?: string[];
 };
 
 export type MarketplaceLockProvenance = {
@@ -102,6 +106,10 @@ export type ResolvedNode = {
    * Emitted as `x-bapm-lock-scope: local` on lock rows.
    */
   personalLockScope?: boolean;
+  /** Consumer skill subset carried from classifying object-form entry. */
+  skillSubset?: string[];
+  /** Consumer per-dep target subset carried from classifying object-form entry. */
+  targetSubset?: string[];
 };
 
 export type ResolveGraphResult = {

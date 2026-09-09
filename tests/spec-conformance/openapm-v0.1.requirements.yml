@@ -115,6 +115,11 @@ requirements:
     keyword: MUST
     section: "4.5"
     conformance_class: consumer
+  - id: req-mf-024
+    keyword: MUST
+    section: "4.3.2"
+    conformance_class: consumer
+    notes: "registry object-form id: identity preserved on serialize/rewrite (APM #2166)"
   - id: req-ext-001
     keyword: MUST
     section: "4.1"
