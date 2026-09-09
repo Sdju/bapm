@@ -15,8 +15,8 @@ import {
 } from "@/modules/Manifest";
 import {
   collectTreeSha256Violations,
-  loadLockfileOrNull,
-  writeLockfile,
+  loadEffectiveLockfileOrNull,
+  partitionAndWriteLockfiles,
   type LockfileDocument,
 } from "@/modules/Lockfile";
 import {
@@ -189,7 +189,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   }
 
   const { document: rootManifest } = loadManifest({ cwd });
-  const previousLock = loadLockfileOrNull({ cwd });
+  const previousLock = loadEffectiveLockfileOrNull({ cwd });
 
   const insecureGate = gateInsecureBeforeFetch({
     cwd,
@@ -284,7 +284,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       lockPath = result.lockPath;
       nodes = result.nodes;
       policyDiagnostics = result.policyDiagnostics ?? [];
-      const reloaded = loadLockfileOrNull({ cwd });
+      const reloaded = loadEffectiveLockfileOrNull({ cwd });
       lockDocument = reloaded?.document;
       if (reloaded) {
         lockPath = reloaded.sourcePath;
@@ -425,11 +425,11 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       primitives: materializedPrimitives.length > 0 ? materializedPrimitives : resolved.primitives,
     });
     if (wrote) {
-      lockPath = writeLockfile(lockDocument, {
+      lockPath = partitionAndWriteLockfiles(lockDocument, {
         cwd,
         sourcePath: lockPath,
         sourceFilename: previousLock?.sourceFilename,
-      });
+      }).sharedPath;
     }
   }
 
@@ -925,11 +925,11 @@ async function deployMcpAfterPolicy(args: {
       configPath,
       targetId: configuredTargetId,
     });
-    lockPath = writeLockfile(lockDocument, {
+    lockPath = partitionAndWriteLockfiles(lockDocument, {
       cwd: args.cwd,
       sourcePath: lockPath,
       sourceFilename: args.previousLockFilename,
-    });
+    }).sharedPath;
   }
 
   return {

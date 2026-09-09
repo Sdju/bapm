@@ -45,13 +45,16 @@ env:
 
 ```text
 bapm.local.yml
+bapm.local.lock.yaml
 ```
+
+Personal lock pins from the `local` dependency discriminator live in `bapm.local.lock.yaml` (see [lockfile](/guide/lockfile)) — same unpublished surface as this overlay.
 
 ## Правила
 
 - Имя строго `bapm.local.yml` (рядом с базовым манифестом, без walk-up).
 - `apm.local.yml` в v1 **отклонён**.
-- Это **не** source `local:` у зависимостей (каталог `.agents/local`). Overlay — настройки; `local:` — источник пакета.
+- Это **не** source `local:` у зависимостей (каталог `.agents/local`). Overlay — настройки; `local:` — источник пакета (pins → `bapm.local.lock.yaml`).
 
 ## Allowlist
 

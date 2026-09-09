@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import { APM_MODULES_DIR, identityToCacheDir, normalizeRepoIdentity } from "@/modules/Resolver";
 import type { RunPruneOptions, PruneResult } from "./types.ts";
 
@@ -11,7 +11,7 @@ export async function runPrune(options: RunPruneOptions = {}): Promise<PruneResu
   const cwd = resolve(options.cwd ?? process.cwd());
   const dryRun = options.dryRun === true || options["dry-run"] === true;
   const modulesRoot = join(cwd, APM_MODULES_DIR);
-  const loaded = loadLockfileOrNull({ cwd });
+  const loaded = loadEffectiveLockfileOrNull({ cwd });
   const allowed = new Set<string>();
 
   for (const dep of loaded?.document.dependencies ?? []) {

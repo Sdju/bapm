@@ -1,10 +1,10 @@
 import { resolve } from "node:path";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import type { DepsListResult, RunDepsOptions } from "./types.ts";
 
 export function listDeps(options: RunDepsOptions = {}): DepsListResult {
   const cwd = resolve(options.cwd ?? process.cwd());
-  const loaded = loadLockfileOrNull({ cwd });
+  const loaded = loadEffectiveLockfileOrNull({ cwd });
   const packages = (loaded?.document.dependencies ?? []).map((d) => ({
     name: d.name ?? d.repo_url,
     version: d.version ?? d.resolved_tag ?? d.resolved_commit,

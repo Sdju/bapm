@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { loadLockfileOrNull, type LockedDependency } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull, type LockedDependency } from "@/modules/Lockfile";
 import { resolvePackageQuery } from "./resolvePackageQuery.ts";
 import type {
   DepsWhyPackage,
@@ -19,7 +19,7 @@ export function whyDeps(options: RunDepsOptions = {}): DepsWhyResult {
 
   let loaded;
   try {
-    loaded = loadLockfileOrNull({ cwd });
+    loaded = loadEffectiveLockfileOrNull({ cwd });
   } catch {
     return failNoLockfile(query);
   }

@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { zipSync } from "fflate";
 import { loadBaseManifest, serializeManifest, type BapmManifest } from "@/modules/Manifest";
+import { BAPM_PERSONAL_LOCK_FILE } from "@/modules/Lockfile";
 import { RegistryError } from "./errors.ts";
 import type { BuildPublishArchiveOptions, BuildPublishArchiveResult } from "./types.ts";
 
@@ -11,7 +12,7 @@ const OPTIONAL_ROOT_DOCS = ["README.md", "CHANGELOG.md", "LICENSE", "LICENSE.md"
  * Build flat registry publish zip: `apm.yml` at root + `.apm/**` (+ optional docs).
  * Does NOT call M7 pack product API — zip I/O only via fflate.
  * Wire `apm.yml` is serialized from the **dual-read base** only (no `bapm.local.yml` merge).
- * Never includes personal overlay `bapm.local.yml` as a zip member.
+ * Never includes personal overlay `bapm.local.yml` or personal lock `bapm.local.lock.yaml`.
  */
 export function buildPublishArchive(
   options: BuildPublishArchiveOptions = {},
@@ -69,6 +70,7 @@ export function buildPublishArchive(
 
 function collectDir(absDir: string, zipPrefix: string, out: Record<string, Uint8Array>): void {
   for (const name of readdirSync(absDir)) {
+    if (name === BAPM_PERSONAL_LOCK_FILE) continue;
     const abs = join(absDir, name);
     const rel = join(zipPrefix, name).replace(/\\/g, "/");
     if (statSync(abs).isDirectory()) {

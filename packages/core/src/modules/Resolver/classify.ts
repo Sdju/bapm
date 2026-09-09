@@ -40,6 +40,7 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
         raw: input,
         path: effectiveLocalPath(obj.local),
         alias,
+        personalLockScope: true,
       };
     }
 
@@ -120,7 +121,12 @@ function classifyString(spec: string): ClassifiedDependency {
 
   // Bare shorthand `- local` → bapm default `.agents/local` (not a relative dir named "local").
   if (trimmed === "local") {
-    return { kind: "local", raw: spec, path: effectiveLocalPath(true) };
+    return {
+      kind: "local",
+      raw: spec,
+      path: effectiveLocalPath(true),
+      personalLockScope: true,
+    };
   }
 
   // Local path forms: explicit POSIX/Windows relative, absolute, home, or path: prefix.

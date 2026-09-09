@@ -3,8 +3,9 @@ import { resolve } from "node:path";
 import { loadManifest } from "@/modules/Manifest";
 import {
   computeCanonicalTreeSha256,
-  loadLockfileOrNull,
-  writeLockfile,
+  loadEffectiveLockfileOrNull,
+  partitionAndWriteLockfiles,
+  stampPersonalScope,
   type LockedDependency,
   type LockfileDocument,
 } from "@/modules/Lockfile";
@@ -41,8 +42,8 @@ export async function resolveAndLock(
   const parallelDownloads = options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS;
   const scope = options.scope ?? options.updatePackageNames;
 
-  // Dual-conflict surfaces via loadLockfileOrNull / discover
-  const loaded = loadLockfileOrNull({ cwd });
+  // Dual-conflict surfaces via shared discover; merge includes personal when present
+  const loaded = loadEffectiveLockfileOrNull({ cwd });
   const existingLock = loaded?.document ?? null;
   const sourcePath = loaded?.sourcePath;
   const sourceFilename = loaded?.sourceFilename;
@@ -139,11 +140,12 @@ export async function resolveAndLock(
   });
 
   const document = buildLockDocument(graph.nodes, existingLock);
-  const lockPath = writeLockfile(document, {
+  const written = partitionAndWriteLockfiles(document, {
     cwd,
     sourcePath,
     sourceFilename,
   });
+  const lockPath = written.sharedPath;
 
   return {
     document: document as unknown as Record<string, unknown>,
@@ -316,7 +318,11 @@ function buildLockDocument(
         (entry as Record<string, unknown>).path = n.path;
       }
       applyMarketplaceProvenance(entry, n);
-      deps.push(entry);
+      if (n.personalLockScope) {
+        deps.push(stampPersonalScope(entry as Record<string, unknown>) as LockedDependency);
+      } else {
+        deps.push(entry);
+      }
       continue;
     }
 

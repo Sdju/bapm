@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { loadManifest } from "@/modules/Manifest";
 import { loadAgentPluginManifest } from "@/modules/AgentPlugins";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
 import { resolveMarketplacePlugin, type MarketplaceProvenance } from "@/modules/Marketplace";
 import {
@@ -178,7 +178,7 @@ export async function resolveDependencyGraph(
   const warmLock =
     options.existingLock !== undefined
       ? options.existingLock
-      : (loadLockfileOrNull({ cwd })?.document ?? null);
+      : (loadEffectiveLockfileOrNull({ cwd })?.document ?? null);
   const warmByIdentity = indexWarmPins(warmLock);
 
   const queue: QueueItem[] = [];
@@ -355,6 +355,7 @@ function nodeToLockRow(n: ResolvedNode): Record<string, unknown> {
   if (n.marketplace_plugin_name) row.marketplace_plugin_name = n.marketplace_plugin_name;
   if (n.source_url) row.source_url = n.source_url;
   if (n.source_digest) row.source_digest = n.source_digest;
+  if (n.personalLockScope) row["x-bapm-lock-scope"] = "local";
   return row;
 }
 
@@ -581,6 +582,7 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     registry_base_url: e.registry_base_url,
     registry_owner: e.registry_owner,
     registry_repo: e.registry_repo,
+    personalLockScope: e.classified.personalLockScope === true,
     ...e.marketplaceProvenance,
   };
 }

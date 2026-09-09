@@ -8,7 +8,9 @@ export type LockfileErrorCode =
   | "LOCKFILE_YAML_SAFE_SUBSET"
   | "LOCKFILE_FORMAT"
   | "LOCKFILE_UNSUPPORTED_VERSION"
-  | "LOCKFILE_VALIDATION";
+  | "LOCKFILE_VALIDATION"
+  | "LOCKFILE_UNSUPPORTED_PERSONAL_BRAND"
+  | "LOCKFILE_MERGE_CONFLICT";
 
 export class LockfileError extends Error {
   readonly code: LockfileErrorCode;

@@ -6,7 +6,11 @@ import {
   type DependencyEntry,
   type ObjectDependency,
 } from "@/modules/Manifest";
-import { loadLockfileOrNull, writeLockfile, type LockedDependency } from "@/modules/Lockfile";
+import {
+  loadEffectiveLockfileOrNull,
+  partitionAndWriteLockfiles,
+  type LockedDependency,
+} from "@/modules/Lockfile";
 import { cleanupOrphanDeployedFiles } from "@/modules/Install";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
 import { UninstallError } from "./errors.ts";
@@ -27,7 +31,7 @@ export async function runUninstall(options: RunUninstallOptions = {}): Promise<U
   }
 
   const loadedManifest = loadManifest({ cwd });
-  const loadedLock = loadLockfileOrNull({ cwd });
+  const loadedLock = loadEffectiveLockfileOrNull({ cwd });
   const lockDeps = loadedLock?.document.dependencies ?? [];
 
   const toRemove = new Set<string>();
@@ -95,7 +99,7 @@ export async function runUninstall(options: RunUninstallOptions = {}): Promise<U
       previous: loadedLock.document,
       currentDepNames,
     });
-    writeLockfile(
+    partitionAndWriteLockfiles(
       {
         ...loadedLock.document,
         dependencies: remaining,

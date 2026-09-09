@@ -2,7 +2,7 @@
  * Read-only SBOM export from a lockfile document or project cwd.
  */
 
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import { formatUnsupportedMessage, normalizeFormat, serializeSbom } from "./serialize.ts";
 import {
   FIXED_EPOCH_TIMESTAMP,
@@ -34,7 +34,7 @@ function loadDocument(
   if (options.document) {
     return { ok: true, document: options.document };
   }
-  const loaded = loadLockfileOrNull({ cwd: options.cwd });
+  const loaded = loadEffectiveLockfileOrNull({ cwd: options.cwd });
   if (!loaded) {
     return {
       ok: false,
