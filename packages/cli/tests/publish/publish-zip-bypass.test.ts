@@ -1,7 +1,7 @@
 /**
- * bapmignore — CLI publish --zip bypass (acceptance).
+ * CLI publish --zip bypass: prebuilt archive MUST NOT re-filter via .bapmignore.
  *
- * Spec: producer-publish — prebuilt --zip MUST NOT re-filter via .bapmignore.
+ * Spec: producer-publish.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { writeFileSync } from "node:fs";
@@ -14,9 +14,9 @@ import {
   writeText,
   type MockPublishRegistry,
   type TempProject,
-} from "../../registry/helpers.ts";
+} from "../registry/helpers.ts";
 
-/** Minimal store-only ZIP with optional README member (local to acceptance). */
+/** Minimal store-only ZIP with optional README member. */
 function buildPrebuiltZipWithReadme(name: string, version: string): Uint8Array {
   const enc = new TextEncoder();
   const files: Record<string, Uint8Array> = {

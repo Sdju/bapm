@@ -1,8 +1,8 @@
 /**
- * Helpers for bapmignore acceptance (RED → GREEN).
+ * Helpers for project-root `.bapmignore` pack/publish membership suites.
  * Specs: pack-bapmignore, producer-pack-archive, producer-publish.
  */
-import { asText } from "../../asText.ts";
+import { asText } from "../asText.ts";
 import * as core from "@b-apm/core";
 import {
   chmodSync,

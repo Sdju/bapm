@@ -1,5 +1,5 @@
 /**
- * bapmignore — publish archive acceptance (RED).
+ * Publish archive membership with project-root `.bapmignore`.
  *
  * Specs: pack-bapmignore, producer-publish.
  */
@@ -18,7 +18,7 @@ import {
   writeText,
   zipHas,
   type TempProject,
-} from "./helpers.ts";
+} from "../pack/bapmignore-helpers.ts";
 
 describe("bapmignore — publish archive membership", () => {
   let project: TempProject | undefined;

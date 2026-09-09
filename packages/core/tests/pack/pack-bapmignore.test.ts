@@ -1,5 +1,5 @@
 /**
- * bapmignore — pack collection acceptance (RED).
+ * Pack archive membership with project-root `.bapmignore`.
  *
  * Specs: pack-bapmignore, producer-pack-archive.
  */
@@ -21,7 +21,7 @@ import {
   writeText,
   zipHas,
   type TempProject,
-} from "./helpers.ts";
+} from "./bapmignore-helpers.ts";
 
 describe("bapmignore — pack archive membership", () => {
   let project: TempProject | undefined;
