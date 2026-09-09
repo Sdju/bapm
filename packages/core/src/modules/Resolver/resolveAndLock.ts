@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { loadManifest } from "@/modules/Manifest";
+import { loadManifest, withEffectiveDirectDeps } from "@/modules/Manifest";
 import {
   computeCanonicalTreeSha256,
   loadLockfileOrNull,
@@ -48,7 +48,8 @@ export async function resolveAndLock(
   const sourceFilename = loaded?.sourceFilename;
 
   // Ensure manifest exists (throws ManifestError if missing)
-  const { document: manifest } = loadManifest({ cwd });
+  const { document: loadedManifest } = loadManifest({ cwd });
+  const manifest = withEffectiveDirectDeps(loadedManifest);
 
   // Plan only — no durable modules for local path deps (pl-002).
   const graph = await resolveDependencyGraph({

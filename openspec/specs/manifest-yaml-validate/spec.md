@@ -340,43 +340,67 @@ When `target` or `targets` is present on emit/validate, every host token MUST be
 - **WHEN** emit/validate runs with an object-map `targets` whose key is not a valid mf-005 token
 - **THEN** the system MUST reject with a diagnostic that names the invalid token
 
-### Requirement: active field is a non-empty mf-005 token list
+### Requirement: active field is structured preset and target selection
 
-When top-level `active` is present on a project manifest, the system MUST accept only a YAML sequence of non-empty strings, each a valid OpenAPM mf-005 target token (canonical host id, documented alias, or `x-<vendor>-<name>`). Successful parse MUST retain `active` on the in-memory document. An empty sequence `active: []`, non-array shapes, empty string elements, or invalid tokens MUST be rejected with a diagnostic naming the path or bad token. Dual-read `apm.yml` MUST use the same rules as `bapm.yml`. Absence of `active` MUST remain valid.
+When top-level `active` is present on a project manifest, the system MUST accept only the structured forms defined by `manifest-presets`: a non-empty sequence of single-key `{ preset: … }` / `{ target: … }` mappings, or a non-empty mapping with `preset` and/or `target` keys whose values are a non-empty string or non-empty string sequence. Each preset/target string MAY begin with `!` for negation; the id after an optional `!` for `target` MUST be a valid OpenAPM mf-005 host token; the id for `preset` MUST be a non-empty name token. Successful parse MUST retain structured `active` on the in-memory document. Empty `active: []`, empty `active: {}`, legacy bare string sequences such as `active: [cursor]`, scalars, multi-key map entries in the list form, empty string elements, or invalid target tokens MUST be rejected with a diagnostic naming the path or bad token. Dual-read `apm.yml` MUST use the same rules as `bapm.yml`. Absence of `active` MUST remain valid.
 
-#### Scenario: Non-empty active list accepted
+#### Scenario: List-of-maps active accepted
 
-- **WHEN** a manifest declares `active: [cursor, x-acme-editor]` with valid tokens
-- **THEN** parse/validate MUST succeed and retain the list on the document
+- **WHEN** a manifest declares `active` as `[{ preset: developer }, { target: cursor }]` with a defined preset `developer`
+- **THEN** parse/validate MUST succeed and retain structured `active`
 
-#### Scenario: Empty active list rejected
+#### Scenario: Object-form active accepted
 
-- **WHEN** a manifest declares `active: []`
-- **THEN** the system MUST reject the manifest fail-closed
+- **WHEN** a manifest declares `active: { preset: developer, target: [cursor] }`
+- **THEN** parse/validate MUST succeed
 
-#### Scenario: Invalid active token rejected
+#### Scenario: Empty active rejected
 
-- **WHEN** a manifest declares `active: [not-a-host]`
-- **THEN** the system MUST reject with a diagnostic that names the invalid token
+- **WHEN** a manifest declares `active: []` or `active: {}`
+- **THEN** validation MUST fail closed
 
-#### Scenario: Non-array active rejected
+#### Scenario: Legacy bare host list rejected
 
-- **WHEN** a manifest declares `active: cursor` (scalar) or `active: { cursor: true }`
-- **THEN** the system MUST reject the manifest
+- **WHEN** a manifest declares `active: [cursor]`
+- **THEN** validation MUST fail closed
 
-#### Scenario: Dual-read apm.yml accepts active
+#### Scenario: Invalid target token rejected
 
-- **WHEN** only `apm.yml` is present and declares a valid non-empty `active` list
-- **THEN** parse/validate MUST succeed under the same rules as `bapm.yml`
+- **WHEN** a manifest declares `active: { target: not-a-host }`
+- **THEN** validation MUST fail closed naming the bad token
 
-### Requirement: active validated on producer emit
+#### Scenario: Dual-read apm.yml accepts structured active
 
-When `active` is present on producer emit/validate, every element MUST satisfy mf-005 token rules. Invalid tokens or an empty list MUST fail closed before durable emit.
+- **WHEN** only `apm.yml` is present and declares a valid structured `active` with `target: cursor`
+- **THEN** parse/validate MUST succeed
 
-#### Scenario: Emit rejects empty active
+### Requirement: presets field validates named entries
 
-- **WHEN** emit/validate runs with `active: []`
-- **THEN** the write/validate MUST fail closed
+When top-level `presets` is present, validation MUST enforce the shapes required by `manifest-presets` (non-empty sequence, unique `name`, optional dependency maps and nested `active`). Nested `active` MUST use the same structured grammar as top-level `active`. Invalid nested shapes MUST fail with a path under the offending preset.
+
+#### Scenario: Preset nested active validated
+
+- **WHEN** a preset declares nested `active: { target: cursor }` with a valid token
+- **THEN** validation MUST accept the nested field
+
+#### Scenario: Preset nested legacy active rejected
+
+- **WHEN** a preset declares nested `active: [cursor]`
+- **THEN** validation MUST fail closed at that nested path
+
+### Requirement: active validated on producer emit uses structured form
+
+When `active` is present on producer emit/validate, it MUST satisfy the structured preset/target grammar. Legacy bare host-token lists, empty structures, or invalid tokens MUST fail closed before durable emit.
+
+#### Scenario: Emit rejects legacy bare active list
+
+- **WHEN** emit/validate runs with `active: [cursor]`
+- **THEN** emit MUST fail closed before writing
+
+#### Scenario: Emit accepts structured target active
+
+- **WHEN** emit/validate runs with `active: { target: cursor }`
+- **THEN** emit MUST accept the field when other emit rules pass
 
 ### Requirement: Non-semver version warns on producer write
 

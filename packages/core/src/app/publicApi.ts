@@ -4,17 +4,21 @@
  */
 
 export type {
+  ActiveEntry,
   BapmManifest,
   BapmDependency,
   DependencyEntry,
   DependencyLists,
   DiscoverManifestOptions,
   DiscoveredManifest,
+  EffectiveDirectDeps,
   LoadManifestOptions,
   LoadManifestResult,
   ManifestFilename,
+  ManifestPreset,
   ObjectDependency,
   RegistryEntry,
+  ResolvedActive,
   TargetIntegrationMap,
   ManifestErrorCode,
   ManifestWarning,
@@ -42,6 +46,16 @@ export {
   parseLocalOverlayDocument,
   parseManifest,
   parseManifestDocument,
+  parseActiveField,
+  parsePresetsField,
+  resolveActive,
+  expandActive,
+  resolveManifestActive,
+  resolveActiveSelection,
+  effectiveDirectDeps,
+  effectiveManifestDeps,
+  unionPresetDependencies,
+  withEffectiveDirectDeps,
   validateManifestEnv,
   loadYamlDocument,
   serializeManifest,
@@ -68,7 +82,6 @@ export {
   isValidTargetToken,
   isExemptInsecureHost,
 } from "@/modules/Manifest";
-
 export type {
   DiscoverLockfileOptions,
   DiscoveredLockfile,

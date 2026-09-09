@@ -6,7 +6,7 @@ export interface InitDeps {
     version?: string;
     target?: string;
     targets?: string[] | Record<string, string>;
-    active?: string[];
+    active?: Record<string, unknown> | Array<Record<string, unknown>>;
   }) => Record<string, unknown>;
   writeProducerManifest: (
     document: Record<string, unknown>,

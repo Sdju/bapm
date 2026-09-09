@@ -140,11 +140,17 @@ export type NoMapProjectOptions = {
   withCursor?: boolean;
   withClaude?: boolean;
   withLeafSkill?: boolean;
-  active?: string[];
+  active?: string[] | { target: string | string[] };
   /** Object-map host→package (omit for happy-path-without-map). */
   targets?: Record<string, string>;
   localActive?: string[];
 };
+
+function normalizeHostIds(active: string[] | { target: string | string[] }): string[] {
+  if (Array.isArray(active)) return active;
+  const t = active.target;
+  return Array.isArray(t) ? t : [t];
+}
 
 /**
  * Minimal project. By default: no `targets:` object-map (canonical fallback under test).
@@ -153,9 +159,17 @@ export function writeNoMapProject(cwd: string, options: NoMapProjectOptions = {}
   const name = options.name ?? "canonical-host";
   const lines: string[] = [`name: ${name}`, "version: 0.0.1"];
 
-  if (options.active?.length) {
-    lines.push("active:");
-    for (const id of options.active) lines.push(`  - ${id}`);
+  if (options.active) {
+    const ids = normalizeHostIds(options.active);
+    if (ids.length) {
+      lines.push("active:");
+      if (ids.length === 1) {
+        lines.push(`  target: ${ids[0]}`);
+      } else {
+        lines.push("  target:");
+        for (const id of ids) lines.push(`    - ${id}`);
+      }
+    }
   }
 
   if (options.targets && Object.keys(options.targets).length > 0) {
@@ -186,7 +200,10 @@ export function writeNoMapProject(cwd: string, options: NoMapProjectOptions = {}
   }
 
   if (options.localActive?.length) {
-    const localLines = ["active:", ...options.localActive.map((id) => `  - ${id}`), ""];
+    const localLines =
+      options.localActive.length === 1
+        ? ["active:", `  target: ${options.localActive[0]}`, ""]
+        : ["active:", "  target:", ...options.localActive.map((id) => `    - ${id}`), ""];
     writeText(cwd, "bapm.local.yml", localLines.join("\n"));
   }
 }

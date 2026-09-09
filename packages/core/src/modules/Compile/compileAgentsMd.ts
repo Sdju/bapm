@@ -1,6 +1,6 @@
 import { join, resolve } from "node:path";
 import type { BapmIntegration, IntegrationRegistry } from "@b-apm/integration-api";
-import { loadManifest } from "@/modules/Manifest";
+import { loadManifest, resolveActive } from "@/modules/Manifest";
 import {
   discoverPrimitives,
   resolvePrimitiveConflicts,
@@ -78,7 +78,8 @@ function sortPrimitives(primitives: AttributedPrimitive[]): AttributedPrimitive[
 function readManifestActive(cwd: string): string[] | undefined {
   try {
     const { document } = loadManifest({ cwd });
-    return document.active;
+    const { targetIds } = resolveActive(document);
+    return targetIds.length > 0 ? targetIds : undefined;
   } catch {
     return undefined;
   }

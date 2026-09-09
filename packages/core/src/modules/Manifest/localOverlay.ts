@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { ManifestError } from "./errors.ts";
 import { parseManifestDocument, validateManifestEnv } from "./parse.ts";
-import type { BapmManifest, RegistryEntry, TargetIntegrationMap } from "./types.ts";
+import type { ActiveEntry, BapmManifest, RegistryEntry, TargetIntegrationMap } from "./types.ts";
 import { loadYamlDocument } from "./yaml-load.ts";
 
 export const BAPM_LOCAL_MANIFEST_FILE = "bapm.local.yml";
@@ -15,7 +15,7 @@ export const APM_LOCAL_MANIFEST_FILE = "apm.local.yml";
 const OVERLAY_ALLOWLIST = new Set(["active", "target", "targets", "env", "registries"]);
 
 export type LocalOverlayFields = {
-  active?: string[];
+  active?: ActiveEntry[];
   target?: string | TargetIntegrationMap;
   targets?: string[] | TargetIntegrationMap;
   env?: Record<string, string>;

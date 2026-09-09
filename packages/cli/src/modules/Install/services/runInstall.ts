@@ -53,7 +53,7 @@ Notes:
   a minimal manifest when missing). Frozen rejects positional package-ref add.
   --exclude filters MCP/runtime configure only — not a full skip-install.
   --force is distinct from --target (forced-target activation).
-  Host selection: --target <id> → manifest active: [<id>, …] → sole auto-detect → fail.
+  Host selection: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
   Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
   When cursor is active, eligible MCP servers write .cursor/mcp.json (direct mcp by default).
 `;

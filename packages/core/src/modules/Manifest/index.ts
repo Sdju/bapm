@@ -3,32 +3,19 @@
  *
  * ## Public API
  *
- * - Types: `BapmManifest`, `BapmDependency`, `DependencyEntry`, `DependencyLists`,
- *   `DiscoverManifestOptions`, `DiscoveredManifest`, `LoadManifestOptions`,
- *   `LoadManifestResult`, `ManifestFilename`, `ObjectDependency`, `RegistryEntry`,
- *   `TargetIntegrationMap`, `ManifestErrorCode`, `ManifestWarning`,
- *   `CreateMinimalManifestOptions`, `WriteProducerManifestOptions`,
- *   `WriteProducerManifestResult`
- * - Errors: `ManifestError`
- * - Constants: `APM_MANIFEST_FILE`, `BAPM_MANIFEST_FILE`,
- *   `BAPM_LOCAL_MANIFEST_FILE`, `APM_LOCAL_MANIFEST_FILE`
- * - Functions: `discoverManifestPath`, `loadBaseManifest`, `loadManifest`,
- *   `loadEffectiveManifest`, `parseManifest`, `parseManifestDocument`,
- *   `validateManifestEnv`,
- *   `loadYamlDocument`, `serializeManifest`, `writeManifest`,
- *   `writeProducerManifest`, `createMinimalManifest`, `validatePluginName`,
- *   `validateProjectName`, `createPluginJson`, `writePluginJson`,
- *   `isValidTargetToken`, `mergeLocalOverlay`, `parseLocalOverlayDocument`
+ * - Types: `BapmManifest`, `ActiveEntry`, `ManifestPreset`, `ResolvedActive`, …
+ * - Functions: `parseManifestDocument`, `resolveActive`, `effectiveDirectDeps`, …
  *
  * ## Example
  *
  * ```ts
- * import { loadEffectiveManifest, createMinimalManifest } from "@/modules/Manifest";
+ * import { loadEffectiveManifest, resolveActive, createMinimalManifest } from "@/modules/Manifest";
  * const { document, localPath } = loadEffectiveManifest({ cwd: process.cwd() });
- * const scaffold = createMinimalManifest({ name: "my-pkg" });
+ * const { presetIds, targetIds } = resolveActive(document);
  * ```
  */
 export type {
+  ActiveEntry,
   BapmManifest,
   BapmDependency,
   DependencyEntry,
@@ -38,8 +25,10 @@ export type {
   LoadManifestOptions,
   LoadManifestResult,
   ManifestFilename,
+  ManifestPreset,
   ObjectDependency,
   RegistryEntry,
+  ResolvedActive,
   TargetIntegrationMap,
 } from "./types.ts";
 
@@ -59,6 +48,21 @@ export {
 } from "./localOverlay.ts";
 export type { LocalOverlayFields } from "./localOverlay.ts";
 export { parseManifest, parseManifestDocument, validateManifestEnv } from "./parse.ts";
+export { parseActiveField, activeEntriesToEmitShape } from "./active.ts";
+export { parsePresetsField } from "./presets.ts";
+export {
+  resolveActive,
+  expandActive,
+  resolveManifestActive,
+  resolveActiveSelection,
+} from "./resolveActive.ts";
+export {
+  effectiveDirectDeps,
+  effectiveManifestDeps,
+  unionPresetDependencies,
+  withEffectiveDirectDeps,
+} from "./effectiveDirectDeps.ts";
+export type { EffectiveDirectDeps } from "./effectiveDirectDeps.ts";
 export { loadYamlDocument } from "./yaml-load.ts";
 export {
   serializeManifest,

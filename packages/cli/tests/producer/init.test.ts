@@ -63,7 +63,7 @@ describe("CLI init", () => {
     expect(typeof targets).toBe("object");
     expect(Array.isArray(targets)).toBe(false);
     expect((targets as Record<string, string>).cursor).toBe("@b-apm/integration-cursor");
-    expect(doc.active).toEqual(["cursor"]);
+    expect(doc.active).toEqual([{ kind: "target", id: "cursor", negate: false }]);
   });
 
   test("§15 existing bapm.yml blocks init — non-zero, no overwrite", async () => {

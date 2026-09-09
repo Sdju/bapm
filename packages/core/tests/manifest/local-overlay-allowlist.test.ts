@@ -29,7 +29,7 @@ describe("manifest-local-overlay — allowlist", () => {
       project.cwd,
       [
         "active:",
-        "  - cursor",
+        "  target: cursor",
         "targets:",
         '  cursor: "@b-apm/integration-cursor"',
         "env:",
@@ -42,7 +42,7 @@ describe("manifest-local-overlay — allowlist", () => {
     );
 
     const doc = documentOf(getLoadEffectiveManifest()({ cwd: project.cwd }));
-    expect(doc.active).toEqual(["cursor"]);
+    expect(doc.active).toEqual([{ kind: "target", id: "cursor", negate: false }]);
     expect(doc.targets).toMatchObject({ cursor: "@b-apm/integration-cursor" });
     expect(doc.env).toMatchObject({ FOO: "bar" });
     expect(doc.registries).toBeTruthy();
@@ -65,7 +65,7 @@ describe("manifest-local-overlay — allowlist", () => {
   test("forbidden name key is rejected", () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "forbid-name" }));
-    writeLocalOverlay(project.cwd, "name: hijacked\nactive:\n  - cursor\n");
+    writeLocalOverlay(project.cwd, "name: hijacked\nactive:\n  target: cursor\n");
 
     expectThrowsMatching(
       () => getLoadEffectiveManifest()({ cwd: project!.cwd }),

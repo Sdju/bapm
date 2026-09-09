@@ -31,7 +31,7 @@ describe("install active selection", () => {
         "name: sole-active",
         "version: 0.0.1",
         "active:",
-        "  - cursor",
+        "  target: cursor",
         "dependencies:",
         "  apm: []",
         "",
@@ -66,8 +66,9 @@ describe("install active selection", () => {
         "name: multi-active",
         "version: 0.0.1",
         "active:",
-        "  - cursor",
-        "  - x-acme-editor",
+        "  target:",
+        "    - cursor",
+        "    - x-acme-editor",
         "dependencies:",
         "  apm: []",
         "",
@@ -108,8 +109,9 @@ describe("install active selection", () => {
         "name: force-over-active",
         "version: 0.0.1",
         "active:",
-        "  - cursor",
-        "  - x-acme-editor",
+        "  target:",
+        "    - cursor",
+        "    - x-acme-editor",
         "dependencies:",
         "  apm: []",
         "",
@@ -140,6 +142,51 @@ describe("install active selection", () => {
 
     expect(result).toMatchObject({ ok: true, activeTargets: ["cursor"] });
     expect(materialized).toEqual(["cursor"]);
+  });
+
+  test("preset-only active does not invent host activation", async () => {
+    project = createProject(
+      [
+        "name: preset-only-hosts",
+        "version: 0.0.1",
+        "presets:",
+        "  - name: developer",
+        "    dependencies:",
+        "      apm: []",
+        "active:",
+        "  preset: developer",
+        "dependencies:",
+        "  apm: []",
+        "",
+      ].join("\n"),
+    );
+
+    const registry = createIntegrationRegistry();
+    const materialized: string[] = [];
+    registry.register({
+      id: "cursor",
+      deployRoots: [".agents"],
+      detect: () => false,
+      materialize: async () => {
+        materialized.push("cursor");
+        return { targetId: "cursor", deployedFiles: [] };
+      },
+    });
+
+    try {
+      const result = await runInstall({
+        cwd: project.cwd,
+        integrationRegistry: registry,
+        noPolicy: true,
+      });
+      expect(result.activeTargets ?? []).not.toContain("developer");
+      expect(materialized).not.toContain("developer");
+      expect(materialized).toEqual([]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      expect(message).toMatch(/target|detect|host|active|ambiguous|no .+selected/i);
+      expect(materialized).toEqual([]);
+    }
   });
 
   test("absent active keeps detect-or-fail path (no invent from targets alone)", async () => {
@@ -182,7 +229,7 @@ describe("install active selection", () => {
         "name: unknown-active",
         "version: 0.0.1",
         "active:",
-        "  - x-missing",
+        "  target: x-missing",
         "dependencies:",
         "  apm: []",
         "",
@@ -216,8 +263,9 @@ describe("install active selection", () => {
         "name: partial-active",
         "version: 0.0.1",
         "active:",
-        "  - cursor",
-        "  - x-missing",
+        "  target:",
+        "    - cursor",
+        "    - x-missing",
         "dependencies:",
         "  apm: []",
         "",
