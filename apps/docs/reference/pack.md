@@ -32,5 +32,6 @@ Claude/Codex здесь — **marketplace-output** emit. Runtime install/compile
 - При `marketplace:` в манифесте и выбранных outputs pack эмитит Claude/Codex `marketplace.json`.
 - Marketplace-only проекты (без `dependencies:`) эмитят JSON и пропускают пустой zip.
 - Gate-only: `--check-release` без `--archive` и без marketplace emit intent.
+- Из архива опускаются `bapm.local.yml` и `bapm.local.lock.yaml` (unpublished surface).
 
-См. также: [marketplace](/reference/marketplace), [plugin](/reference/plugin), [US-06 Marketplace pack](/guide/situations/marketplace-pack).
+См. также: [marketplace](/reference/marketplace), [plugin](/reference/plugin), [US-06 Marketplace pack](/guide/situations/marketplace-pack), [lock-файл](/guide/lockfile).

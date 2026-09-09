@@ -48,7 +48,7 @@ bapm.local.yml
 bapm.local.lock.yaml
 ```
 
-Personal lock pins from the `local` dependency discriminator live in `bapm.local.lock.yaml` (see [lockfile](/guide/lockfile)) — same unpublished surface as this overlay.
+Пины от дискриминатора `local` живут в `bapm.local.lock.yaml` (см. [lock-файл](/guide/lockfile) и [личный local lock](/guide/situations/personal-local-lock)) — та же unpublished-поверхность, что и у overlay: gitignore, doctor WARN если tracked, pack/publish опускают.
 
 ## Правила
 

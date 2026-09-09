@@ -34,6 +34,8 @@ active:
 
 Подробнее: [Personal overlay](/guide/manifest-overlay), [host selection](/guide/host-selection).
 
+Личный WIP-пакет через `local` (отдельный personal lock, не overlay): [личный local lock](/guide/situations/personal-local-lock).
+
 ### Если не сработало
 
 Несколько detect без `active` → fail-closed; задайте local `active` или `--target`.

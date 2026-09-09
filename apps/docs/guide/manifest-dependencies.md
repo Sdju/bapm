@@ -50,6 +50,8 @@ dependencies:
 
 Если в графе есть `local`, bapm ensure `.gitignore` и fail-closed при tracked файлах под этим корнем. Обычный `path:` этот gate не включает.
 
+Пины `local` уходят в `bapm.local.lock.yaml` (personal); `path:` — в shared lock. См. [lock-файл](/guide/lockfile), [личный local lock](/guide/situations/personal-local-lock).
+
 Allowlist meta-ключей объекта: `version`, `ref`, `alias`, `skills`, `targets`, `allow_insecure`, `type`, `prerelease`, `name` (marketplace), companions `path` / `registry`. Ключи `x-*` допускаются.
 
 Marketplace-форма: непустые `marketplace` и `name` (опционально `version`).

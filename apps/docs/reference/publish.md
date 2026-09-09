@@ -18,4 +18,6 @@ Experimental PUT flat registry zip. Требует `BAPM_EXPERIMENTAL_REGISTRIES
 | `--zip`        | `<path>` | Загрузить готовый archive (без rebuild) | —       |
 | `--help`, `-h` | —        | Показать help                           | —       |
 
-См. также: [pack](/reference/pack) (producer zip / marketplace.json), карта [команд](/guide/commands).
+Архив **не** включает `bapm.local.yml` и `bapm.local.lock.yaml` (как pack).
+
+См. также: [pack](/reference/pack) (producer zip / marketplace.json), [lock-файл](/guide/lockfile), карта [команд](/guide/commands).
