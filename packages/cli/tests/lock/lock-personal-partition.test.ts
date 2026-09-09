@@ -1,5 +1,6 @@
 /**
- * separate-local-lockfile — CLI `bapm lock` partition write (acceptance RED).
+ * CLI `bapm lock` dual-writes shared + personal lockfiles
+ * (promoted from separate-local-lockfile acceptance).
  *
  * Spec: lock-command.
  */
@@ -7,7 +8,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCli } from "../../../src/index.ts";
+import { runCli } from "../../src/index.ts";
 
 const PERSONAL_LOCK_FILE = "bapm.local.lock.yaml";
 
@@ -53,7 +54,7 @@ async function withCwd<T>(cwd: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
-describe("separate-local-lockfile — CLI lock partition", () => {
+describe("CLI lock — personal lock partition", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

@@ -1,7 +1,8 @@
 /**
- * Helpers for separate-local-lockfile acceptance (RED → GREEN).
+ * Helpers for separate-local-lockfile integration suites
+ * (promoted from acceptance).
  */
-import { asText } from "../../asText.ts";
+import { asText } from "../asText.ts";
 import * as core from "@b-apm/core";
 import {
   existsSync,

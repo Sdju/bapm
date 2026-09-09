@@ -1,5 +1,6 @@
 /**
- * separate-local-lockfile — partition write / migrate / gitignore (acceptance RED).
+ * Integration: resolveAndLock dual-writes shared + personal lockfiles
+ * (promoted from separate-local-lockfile acceptance).
  *
  * Specs: lockfile-local-shared-split, local-path-source, dependency-resolve.
  */
@@ -21,7 +22,7 @@ import {
   writeRootWithApmDeps,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "../lockfile/separate-local-lockfile-helpers.ts";
 
 describe("separate-local-lockfile — partition write", () => {
   let project: TempProject | undefined;
