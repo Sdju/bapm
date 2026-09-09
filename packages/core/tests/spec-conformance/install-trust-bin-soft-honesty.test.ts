@@ -2,8 +2,21 @@
  * Soft honesty: bin gated via ExecutableTrust + trust-bin consent;
  * hooks/canvas remain ungated soft (executable-mcp-trust MODIFIED).
  */
+import { existsSync } from "node:fs";
 import { describe, expect, test } from "vite-plus/test";
-import { checklistPath, limitationsHonestyBlob, loadChecklist, scopeOutBlob } from "./helpers.ts";
+import {
+  checklistPath,
+  limitationsBlob,
+  loadChecklist,
+  scopeOutBlob,
+} from "./sc-claims-helpers.ts";
+import { conformanceMdPath, readText as readConformanceText } from "./helpers.ts";
+
+function limitationsHonestyBlob(): string {
+  const doc = loadChecklist();
+  const md = existsSync(conformanceMdPath) ? readConformanceText(conformanceMdPath) : "";
+  return `${limitationsBlob(doc)}\n${scopeOutBlob(doc)}\n${md}`;
+}
 
 describe("install-trust-bin — soft honesty (hooks/canvas vs bin)", () => {
   test("limitations MUST NOT claim bin remains ungated soft debt with hooks/canvas", () => {

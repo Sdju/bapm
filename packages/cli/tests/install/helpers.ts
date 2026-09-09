@@ -26,6 +26,17 @@ export { parseInstallArgs, formatInstallHelp, runCli };
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
+export type TrustBinMode = "allow" | "deny" | "default";
+
+/** Normalize install parse result to trust-bin consent mode. */
+export function trustBinOf(parsed: Record<string, unknown>): TrustBinMode | undefined {
+  const raw = parsed.trustBin ?? parsed.trust_bin ?? parsed.binTrust;
+  if (raw === "allow" || raw === "deny" || raw === "default") return raw;
+  if (parsed.trustBin === true || parsed.trustBinAllow === true) return "allow";
+  if (parsed.noTrustBin === true || parsed.trustBinDeny === true) return "deny";
+  return undefined;
+}
+
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PACKAGES_ROOT = join(HERE, "../../..");
 

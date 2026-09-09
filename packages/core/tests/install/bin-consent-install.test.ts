@@ -28,7 +28,7 @@ import {
   writeOrgDenyPolicy,
   type MockRegistry,
   type TempProject,
-} from "./helpers.ts";
+} from "./trust-bin-helpers.ts";
 
 describe("install-trust-bin — non-interactive default skips bin", () => {
   let project: TempProject | undefined;

@@ -1,9 +1,8 @@
 /**
- * Helpers for install-trust-bin acceptance (RED → GREEN).
+ * Helpers for install trust-bin / bin consent deploy gates.
  * Specs: install-trust-bin, install-pipeline, executable-mcp-trust.
  */
-import { asText } from "../../asText.ts";
-import * as core from "@b-apm/core";
+import { asText } from "../asText.ts";
 import {
   existsSync,
   mkdirSync,
@@ -23,24 +22,14 @@ import {
   importIntegrationApi,
   modulesDir,
   type TempProject,
-} from "../../install/helpers.ts";
+} from "./helpers.ts";
 import {
   buildFlatPackageZip,
   listModulesFiles,
   startMockRegistry,
   withExperimentalRegistries,
   type MockRegistry,
-} from "../../registry/helpers.ts";
-import {
-  checklistPath,
-  limitationsBlob,
-  loadChecklist,
-  scopeOutBlob,
-} from "../../spec-conformance/sc-claims-helpers.ts";
-import {
-  conformanceMdPath,
-  readText as readConformanceText,
-} from "../../spec-conformance/helpers.ts";
+} from "../registry/helpers.ts";
 
 export {
   createFakePorts,
@@ -50,12 +39,6 @@ export {
   modulesDir,
   startMockRegistry,
   withExperimentalRegistries,
-  checklistPath,
-  limitationsBlob,
-  loadChecklist,
-  scopeOutBlob,
-  conformanceMdPath,
-  readConformanceText,
 };
 export type { MockRegistry, TempProject };
 
@@ -347,36 +330,6 @@ export async function installRegistryBinPlugin(
       ...options,
     }),
   );
-}
-
-/** Optional pure helper apply may export; acceptance prefers install observability. */
-export function tryGetResolveBinDeployConsent():
-  | ((options: Record<string, unknown>) => {
-      deploy?: boolean;
-      allowed?: boolean;
-      withhold?: boolean;
-      warn?: boolean;
-      outcome?: string;
-      [key: string]: unknown;
-    })
-  | undefined {
-  const c = core as Record<string, unknown>;
-  for (const name of [
-    "resolveBinDeployConsent",
-    "resolveEffectiveBinDeploy",
-    "evaluateBinDeployConsent",
-  ]) {
-    if (typeof c[name] === "function") {
-      return c[name] as ReturnType<typeof tryGetResolveBinDeployConsent>;
-    }
-  }
-  return undefined;
-}
-
-export function limitationsHonestyBlob(): string {
-  const doc = loadChecklist();
-  const md = existsSync(conformanceMdPath) ? readConformanceText(conformanceMdPath) : "";
-  return `${limitationsBlob(doc)}\n${scopeOutBlob(doc)}\n${md}`;
 }
 
 export function writeOrgDenyPolicy(cwd: string, packageName = PKG_ID): string {
