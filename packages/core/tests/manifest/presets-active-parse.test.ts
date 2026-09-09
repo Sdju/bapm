@@ -1,7 +1,6 @@
 /**
- * Acceptance (RED): structured `active` parse/validate + dual-read.
- * OpenSpec change: manifest-presets
- * Specs: manifest-yaml-validate, manifest-presets
+ * Structured `active` parse/validate + dual-read (incl. presets)
+ * (promoted from manifest-presets acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -13,9 +12,9 @@ import {
   parseOk,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./presets-helpers.ts";
 
-describe("manifest-presets parse — structured active accepted", () => {
+describe("manifest presets parse — structured active accepted", () => {
   test("list-of-maps active with preset + target retained", () => {
     const doc = parseOk({
       presets: [{ name: "developer", dependencies: { apm: [] } }],
@@ -74,7 +73,7 @@ describe("manifest-presets parse — structured active accepted", () => {
   });
 });
 
-describe("manifest-presets parse — structured active rejected", () => {
+describe("manifest presets parse — structured active rejected", () => {
   test("legacy bare host-token list rejected fail-closed", () => {
     const { message } = expectParseReject({ active: ["cursor"] });
     expect(message).toMatch(/active/i);
@@ -112,7 +111,7 @@ describe("manifest-presets parse — structured active rejected", () => {
   });
 });
 
-describe("manifest-presets parse — dual-read apm.yml", () => {
+describe("manifest presets parse — dual-read apm.yml", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

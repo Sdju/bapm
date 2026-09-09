@@ -1,7 +1,6 @@
 /**
- * Acceptance (RED): top-level `presets` field + nested active.
- * OpenSpec change: manifest-presets
- * Specs: manifest-presets, manifest-yaml-validate
+ * Top-level `presets` field + nested active
+ * (promoted from manifest-presets acceptance).
  */
 import { describe, expect, test } from "vite-plus/test";
 import {
@@ -10,9 +9,9 @@ import {
   parseOk,
   presetNamesOf,
   resolvedIdsOf,
-} from "./helpers.ts";
+} from "./presets-helpers.ts";
 
-describe("manifest-presets parse — presets field", () => {
+describe("manifest presets parse — presets field", () => {
   test("named presets with dependencies accepted and retained", () => {
     const doc = parseOk({
       presets: [

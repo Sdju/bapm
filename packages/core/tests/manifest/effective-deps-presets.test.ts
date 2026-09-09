@@ -1,7 +1,6 @@
 /**
- * Acceptance (RED): effective deps = base ∪ included presets; conflicts; target-only.
- * OpenSpec change: manifest-presets
- * Specs: manifest-presets, dependency-resolve
+ * Effective deps = base ∪ included presets; conflicts; resolve/lock wiring
+ * (promoted from manifest-presets acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -21,9 +20,9 @@ import {
   writePackageAt,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./presets-helpers.ts";
 
-describe("manifest-presets effective deps — pure helpers", () => {
+describe("manifest effective deps — pure helpers", () => {
   test("effectiveDirectDeps unions base with included preset packages", () => {
     const doc = parseOk({
       dependencies: {
@@ -100,7 +99,7 @@ describe("manifest-presets effective deps — pure helpers", () => {
   });
 });
 
-describe("manifest-presets effective deps — resolve / lock wiring", () => {
+describe("manifest effective deps — resolve / lock wiring", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

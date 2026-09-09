@@ -1,12 +1,16 @@
 /**
- * Acceptance (RED): resolveActive expansion — negation, nested, cycles.
- * OpenSpec change: manifest-presets
- * Spec: manifest-presets
+ * resolveActive expansion — negation, nested, cycles
+ * (promoted from manifest-presets acceptance).
  */
 import { describe, expect, test } from "vite-plus/test";
-import { expectThrowsMatching, getResolveActive, parseOk, resolvedIdsOf } from "./helpers.ts";
+import {
+  expectThrowsMatching,
+  getResolveActive,
+  parseOk,
+  resolvedIdsOf,
+} from "./presets-helpers.ts";
 
-describe("manifest-presets resolveActive — include / negate", () => {
+describe("manifest resolveActive — include / negate", () => {
   test("include then negate drops preset from included set", () => {
     const doc = parseOk({
       presets: [{ name: "developer", dependencies: { apm: [] } }],
@@ -39,7 +43,7 @@ describe("manifest-presets resolveActive — include / negate", () => {
   });
 });
 
-describe("manifest-presets resolveActive — nested active + cycles", () => {
+describe("manifest resolveActive — nested active + cycles", () => {
   test("acyclic nested preset expands both team and developer", () => {
     const doc = parseOk({
       presets: [

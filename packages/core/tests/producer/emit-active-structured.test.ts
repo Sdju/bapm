@@ -1,7 +1,6 @@
 /**
- * Acceptance (RED): producer emit validates structured `active` only.
- * OpenSpec change: manifest-presets
- * Spec: manifest-yaml-validate (emit)
+ * Producer emit validates structured `active` only
+ * (promoted from manifest-presets acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { readFileSync } from "node:fs";
@@ -12,9 +11,9 @@ import {
   getWriteProducerManifest,
   join,
   type TempProject,
-} from "./helpers.ts";
+} from "../manifest/presets-helpers.ts";
 
-describe("manifest-presets emit — structured active", () => {
+describe("producer emit — structured active", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

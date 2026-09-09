@@ -1,7 +1,6 @@
 /**
- * Acceptance (RED): overlay structured `active`, presets disallowed, local preset pick.
- * OpenSpec change: manifest-presets
- * Specs: manifest-local-overlay, manifest-active-targets
+ * Overlay structured `active`, presets disallowed, local preset pick
+ * (promoted from manifest-presets acceptance).
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -18,9 +17,9 @@ import {
   writeLocalOverlay,
   writePackageAt,
   type TempProject,
-} from "./helpers.ts";
+} from "./presets-helpers.ts";
 
-describe("manifest-presets overlay — structured active", () => {
+describe("manifest overlay presets — structured active", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

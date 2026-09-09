@@ -1,8 +1,8 @@
 /**
- * Acceptance helpers for manifest-presets (RED → GREEN).
- * Behavioural contract only — no production source inspection.
+ * Helpers for manifest presets / structured active suites
+ * (promoted from manifest-presets acceptance).
  */
-import { asText } from "../../asText.ts";
+import { asText } from "../asText.ts";
 import * as core from "@b-apm/core";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,7 +21,7 @@ export function pickExport(names: string[], label: string): AnyFn {
   throw new TypeError(`expected @b-apm/core to export one of [${names.join(", ")}] (${label})`);
 }
 
-export function createTempProject(prefix = "bapm-acc-presets-"): TempProject {
+export function createTempProject(prefix = "bapm-presets-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
   return {
     cwd,
@@ -55,7 +55,7 @@ export function writePackageAt(cwd: string, relDir: string, name: string): void 
 
 export function baseManifest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
-    name: "acceptance-presets",
+    name: "presets-suite",
     version: "0.0.1",
     ...overrides,
   };
