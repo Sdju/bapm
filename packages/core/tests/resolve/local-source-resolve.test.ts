@@ -5,12 +5,16 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import {
+  loadEffectiveLockfile,
   loadLockfile,
+  loadPersonalLockfileOrNull,
   resolveAndLock,
   resolveDependencyGraph,
   type ResolverError,
 } from "@b-apm/core";
 import { createTempProject, writeManifest, writeText, type TempProject } from "./helpers.ts";
+
+const PERSONAL_LOCK_FILE = "bapm.local.lock.yaml";
 
 function writePackageAt(cwd: string, relDir: string, name: string): void {
   writeText(
@@ -98,17 +102,24 @@ describe("Resolver local source resolve", () => {
 
     await resolveAndLock({ cwd: project.cwd });
 
-    const lock = loadLockfile({ cwd: project.cwd });
-    const deps = lock.document.dependencies ?? [];
-    const local = deps.find(
+    expect(existsSync(join(project.cwd, PERSONAL_LOCK_FILE))).toBe(true);
+    const personal = loadPersonalLockfileOrNull({ cwd: project.cwd });
+    expect(personal).toBeTruthy();
+    const personalDep = (personal!.document.dependencies ?? []).find(
       (d) =>
         d.name === "pkg-a" ||
         d.source === "local" ||
         String(d.repo_url ?? "").includes("pkg-a") ||
-        String((d as { path?: string }).path ?? "").includes("pkgs/a"),
+        String(d.repo_url ?? "").includes("pkgs/a"),
     );
-    expect(local).toBeTruthy();
-    expect(local!.source).toBe("local");
+    expect(personalDep).toBeTruthy();
+    expect(personalDep!.source).toBe("local");
+
+    const shared = loadLockfile({ cwd: project.cwd });
+    expect(shared.document.dependencies?.some((d) => d.name === "pkg-a")).toBe(false);
+
+    const effective = loadEffectiveLockfile({ cwd: project.cwd });
+    expect(effective.document.dependencies?.some((d) => d.name === "pkg-a")).toBe(true);
   });
 
   test("path: resolveAndLock remains unchanged (no local key)", async () => {
