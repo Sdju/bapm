@@ -1,4 +1,5 @@
 import { parseActiveField } from "./active.ts";
+import { applyDepSubsetFields } from "./depSubset.ts";
 import type { ManifestWarning } from "./errors.ts";
 import { ManifestError } from "./errors.ts";
 import { parsePresetsField } from "./presets.ts";
@@ -378,7 +379,7 @@ function validateApmEntry(entry: unknown, path: string): DependencyEntry {
     );
   }
 
-  return { ...obj } as ObjectDependency;
+  return applyDepSubsetFields(obj, path) as ObjectDependency;
 }
 
 function validateRegistries(value: unknown): Record<string, RegistryEntry | string> {

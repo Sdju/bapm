@@ -512,7 +512,7 @@
         "tests/fixtures/spec-conformance/manifest/invalid-registry-scheme.yml",
         "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
       ],
-      "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+      "citation": "packages/core/tests/install/deps-object-subset-install.test.ts (empty skill-subset / stale skill pin diagnostic, req-mf-022); packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
     },
     {
       "id": "req-mf-023",
@@ -528,6 +528,14 @@
         "tests/fixtures/spec-conformance/manifest/invalid-registries-typo.yml"
       ],
       "citation": "packages/core/tests/spec-conformance/seed-oracles.test.ts; packages/core/tests/manifest/validate.test.ts"
+    },
+    {
+      "id": "req-mf-024",
+      "keyword": "MUST",
+      "section": "4.3.2",
+      "conformance_class": "consumer",
+      "status": "active",
+      "citation": "packages/core/tests/manifest/deps-object-subset-identity.test.ts (registry id: object-form serialize + refuse git-shaped rewrite, req-mf-024); packages/core/src/modules/Manifest/mergeApmDependency.ts"
     },
     {
       "id": "req-pl-001",

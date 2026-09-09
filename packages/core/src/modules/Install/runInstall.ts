@@ -400,18 +400,21 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
+  const subsetDiagnostics: unknown[] = [];
 
   if (!skipApmMaterialize && registry && activeTargets.length > 0) {
     const packageTargets = collectPackageDeclaredTargets(nodes, raw);
+    const afterSkillFilter = applySkillSubsets(resolved.primitives, nodes, subsetDiagnostics);
     for (const targetId of activeTargets) {
       const target = findTarget(registry, targetId);
       if (!target) continue;
 
       const filtered = filterByIntersection(
-        resolved.primitives,
+        afterSkillFilter,
         targetId,
         packageTargets,
         rootManifest,
+        nodes,
       );
       materializedPrimitives.push(...filtered);
       const report = (await target.materialize(filtered, {
@@ -481,6 +484,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ...insecureDiagnostics,
       ...policyDiagnostics,
       ...resolved.diagnostics,
+      ...subsetDiagnostics,
       ...mcpDiagnostics,
     ],
     policyDiagnostics,
@@ -1374,22 +1378,116 @@ function filterByIntersection(
   activeTargetId: string,
   packageTargets: Map<string, string[]>,
   rootManifest: BapmManifest,
+  nodes: ResolvedNode[] = [],
 ): AttributedPrimitive[] {
   const rootDeclared = declaredTargetIds(rootManifest);
   const consumerAuth = new Set(rootDeclared.length > 0 ? rootDeclared : [activeTargetId]);
   if (!consumerAuth.has(activeTargetId)) return [];
+
+  const perDepTargets = new Map<string, string[]>();
+  for (const n of nodes) {
+    if (n.targetSubset && n.targetSubset.length > 0) {
+      perDepTargets.set(n.name, n.targetSubset);
+    }
+  }
 
   return primitives.filter((p) => {
     if (p.source === "local") {
       return consumerAuth.has(activeTargetId);
     }
     const pkgName = p.packageName ?? p.source.slice("dependency:".length);
+    const depSubset = perDepTargets.get(pkgName);
+    if (depSubset && depSubset.length > 0 && !depSubset.includes(activeTargetId)) {
+      return false;
+    }
     const declared = packageTargets.get(pkgName);
     if (!declared || declared.length === 0) {
       return true;
     }
     return declared.includes(activeTargetId);
   });
+}
+
+/**
+ * Filter skill primitives by per-dep `skillSubset` (req-mf-022 empty-match warn).
+ * Non-skill primitives are never dropped solely because a skill subset is set.
+ */
+function applySkillSubsets(
+  primitives: AttributedPrimitive[],
+  nodes: ResolvedNode[],
+  diagnostics: unknown[],
+): AttributedPrimitive[] {
+  const subsetByPkg = new Map<string, string[]>();
+  for (const n of nodes) {
+    if (n.skillSubset && n.skillSubset.length > 0) {
+      subsetByPkg.set(n.name, n.skillSubset);
+    }
+  }
+  if (subsetByPkg.size === 0) return primitives;
+
+  const out: AttributedPrimitive[] = [];
+  const keptSkillsByPkg = new Map<string, string[]>();
+  const availableSkillsByPkg = new Map<string, string[]>();
+
+  for (const p of primitives) {
+    const pkgName = p.packageName ?? (p.source.startsWith("dependency:") ? p.source.slice(11) : "");
+    const subset = pkgName ? subsetByPkg.get(pkgName) : undefined;
+    if (!subset) {
+      out.push(p);
+      continue;
+    }
+    if (!isSkillPrimitive(p)) {
+      out.push(p);
+      continue;
+    }
+    const avail = availableSkillsByPkg.get(pkgName) ?? [];
+    avail.push(p.name);
+    availableSkillsByPkg.set(pkgName, avail);
+    if (skillMatchesSubset(p, subset)) {
+      out.push(p);
+      const kept = keptSkillsByPkg.get(pkgName) ?? [];
+      kept.push(p.name);
+      keptSkillsByPkg.set(pkgName, kept);
+    }
+  }
+
+  for (const [pkgName, subset] of subsetByPkg) {
+    const kept = keptSkillsByPkg.get(pkgName) ?? [];
+    if (kept.length > 0) continue;
+    const available = availableSkillsByPkg.get(pkgName) ?? [];
+    const node = nodes.find((n) => n.name === pkgName);
+    const depLabel =
+      node?.repo_url ??
+      (typeof node?.identity === "string" ? node.identity : undefined) ??
+      (node?.kind.startsWith("git") ? `git:${pkgName}` : pkgName);
+    diagnostics.push({
+      code: "EMPTY_SKILL_SUBSET",
+      message: `Skill subset matched zero skills for ${depLabel}: requested [${subset.join(", ")}]; available [${available.join(", ") || "(none)"}]`,
+      dependency: depLabel,
+      packageName: pkgName,
+      requested: subset,
+      available,
+    });
+  }
+
+  return out;
+}
+
+function isSkillPrimitive(p: AttributedPrimitive): boolean {
+  const t = String(p.type ?? "").toLowerCase();
+  return !t || t === "skill";
+}
+
+function skillMatchesSubset(p: AttributedPrimitive, subset: string[]): boolean {
+  if (subset.includes(p.name)) return true;
+  const dir = typeof p.skillDirectory === "string" ? p.skillDirectory.replaceAll("\\", "/") : "";
+  for (const item of subset) {
+    const normalized = item.replaceAll("\\", "/");
+    if (normalized === p.name) return true;
+    if (dir && (dir === normalized || dir.endsWith(`/${normalized}`))) return true;
+    if (normalized.includes("/") && normalized.split("/").pop() === p.name) return true;
+  }
+  return false;
 }
 
 function extractDeclarationOrder(manifest: BapmManifest): string[] {

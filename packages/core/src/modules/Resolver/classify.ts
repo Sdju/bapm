@@ -19,6 +19,7 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
 
   if (typeof input === "object" && !Array.isArray(input)) {
     const obj = input as Record<string, unknown>;
+    const subsets = objectFormSubsets(obj);
 
     // BapmDependency-like { spec }
     if (typeof obj.spec === "string" && !hasSourceKey(obj)) {
@@ -41,6 +42,7 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
         path: effectiveLocalPath(obj.local),
         alias,
         personalLockScope: true,
+        ...subsets,
       };
     }
 
@@ -51,6 +53,7 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
         raw: input,
         path,
         alias,
+        ...subsets,
       };
     }
 
@@ -63,6 +66,7 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
         registry,
         alias,
         path,
+        ...subsets,
       };
     }
 
@@ -76,6 +80,7 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
         path,
         alias,
         prerelease,
+        ...subsets,
       };
     }
 
@@ -95,6 +100,7 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
         pluginName,
         marketplaceName: obj.marketplace,
         versionSpec,
+        ...subsets,
       };
     }
   }
@@ -103,6 +109,21 @@ export function classifyDependencyRef(input: unknown): ClassifiedDependency {
     "CLASSIFY_INVALID",
     `Cannot classify dependency ref: ${summarize(input)}`,
   );
+}
+
+/** Copy validated consumer subsets from object-form raw (string lists only). */
+function objectFormSubsets(obj: Record<string, unknown>): {
+  skillSubset?: string[];
+  targetSubset?: string[];
+} {
+  const out: { skillSubset?: string[]; targetSubset?: string[] } = {};
+  if (Array.isArray(obj.skills) && obj.skills.every((s) => typeof s === "string")) {
+    out.skillSubset = obj.skills as string[];
+  }
+  if (Array.isArray(obj.targets) && obj.targets.every((s) => typeof s === "string")) {
+    out.targetSubset = obj.targets as string[];
+  }
+  return out;
 }
 
 function hasSourceKey(obj: Record<string, unknown>): boolean {
