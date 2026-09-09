@@ -17,6 +17,8 @@ Notes:
   Requires BAPM_EXPERIMENTAL_REGISTRIES=1 (experimental registries gate).
   Auth: set BAPM_REGISTRY_TOKEN (Bearer) for protected registries.
   Archive layout: apm.yml + .apm/ at zip root (distinct from M7 pack).
+  Optional project-root .bapmignore omits matching docs and .apm members (wire apm.yml always kept);
+  ignoring all of .apm fails closed. --zip uploads prebuilt bytes without re-applying .bapmignore.
   Unknown flags are rejected.
 `;
 }

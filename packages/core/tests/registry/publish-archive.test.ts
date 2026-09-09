@@ -108,4 +108,27 @@ describe("M10 core flat publish archive", () => {
     expect(wire).not.toMatch(/LEAK_MARKER/);
     expect(wire).not.toMatch(/\bactive\b/);
   });
+
+  test(".bapmignore omits README and fails when .apm is emptied", async () => {
+    project = createTempProject();
+    writeManifest(
+      project.cwd,
+      "bapm.yml",
+      `name: contoso/ignore-demo\nversion: "1.0.0"\ndependencies:\n  apm: []\n  mcp: []\n`,
+    );
+    writeText(join(project.cwd, ".bapmignore"), "README.md\n");
+    writeText(join(project.cwd, "README.md"), "# authoring\n");
+    writeText(join(project.cwd, ".apm", "instructions.md"), "# hello\n");
+
+    const ok = await getBuildPublishArchive()({ cwd: project.cwd, dryRun: true });
+    const paths = listZipPaths(resolveArchiveBytes(project.cwd, ok));
+    expect(paths.some((p) => p === "README.md" || p.endsWith("/README.md"))).toBe(false);
+    expect(paths.some((p) => p === "apm.yml" || p.endsWith("/apm.yml"))).toBe(true);
+    expect(paths.some((p) => p.includes(".apm/"))).toBe(true);
+
+    writeText(join(project.cwd, ".bapmignore"), ".apm/**\n");
+    expect(() => getBuildPublishArchive()({ cwd: project!.cwd, dryRun: true })).toThrow(
+      /\.apm|empty|bapmignore|ignore/i,
+    );
+  });
 });

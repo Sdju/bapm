@@ -8,6 +8,8 @@
  * - `safeExtractZip` / `parseZipCentralDirectory` — shared archive-safe extract (sc-002)
  * - `checkReleaseTag` / `checkRelease` / `runCheckRelease` — pr-004 tag↔version gate
  * - `isSecretPackPath` — sc-007 matcher
+ * - `loadBapmIgnore` / `isBapmIgnored` — project-root `.bapmignore`
+ * - `collectPackFiles` — pack file set (hard excludes + ignore + secrets)
  * - Types / `PackError`
  *
  * ## Example
@@ -47,3 +49,7 @@ export {
 export type { SafeExtractZipResult, ZipCdEntry } from "./safeExtract.ts";
 export { checkReleaseTag, checkRelease, runCheckRelease } from "./checkRelease.ts";
 export { isSecretPackPath, describeSecretRefuse } from "./secrets.ts";
+export { BAPM_IGNORE_FILE, loadBapmIgnore, isBapmIgnored, isBapmIgnoredDir } from "./bapmIgnore.ts";
+export type { BapmIgnoreRules } from "./bapmIgnore.ts";
+export { collectPackFiles, assertProjectHasContent, defaultArchiveName } from "./collect.ts";
+export type { PackFileEntry } from "./collect.ts";

@@ -38,6 +38,7 @@
   "dependencies": {
     "@b-apm/integration-api": "workspace:*",
     "fflate": "catalog:",
+    "ignore": "catalog:",
     "semver": "catalog:",
     "tldts": "catalog:",
     "yaml": "catalog:"

@@ -23,6 +23,8 @@ Options:
 Notes:
   Unknown flags are rejected. --check-release never creates or pushes tags.
   Pack refuses secret-pattern paths (.env, *.pem, …) per sc-007.
+  Optional project-root .bapmignore (gitignore syntax) omits matching files from the zip;
+  root bapm.yml/apm.yml stay included; .gitignore is not used as a fallback.
   When marketplace: is present with outputs selected, pack emits Claude/Codex marketplace.json.
   Marketplace-only projects (no dependencies:) emit JSON and skip empty zip.
   --agent-plugins never emits marketplace output and requires root plugin.json.
