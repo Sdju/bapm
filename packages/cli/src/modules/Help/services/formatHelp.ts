@@ -41,6 +41,7 @@ Install flags (see also: bapm help install):
   --no-frozen              Opt out of frozen (including when CI defaults to frozen)
   --target <id>            Force a registered host target (overrides manifest active)
   --trust-transitive-mcp   Deploy dependency MCP (default: direct dependencies.mcp only)
+  --trust-bin / --no-trust-bin   Per-invocation bin/ consent (non-interactive defaults to skip)
 
 Experimental registries:
   Set BAPM_EXPERIMENTAL_REGISTRIES=1 to enable registry resolve/install and publish.
@@ -69,6 +70,8 @@ Options:
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
   --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
+  --trust-bin              Consent to deploy dependency/plugin bin/ for this run (when policy allows)
+  --no-trust-bin           Skip bin/ deploy for this run (even when policy would allow)
   --help, -h               Show this help
 
 Host selection:
@@ -81,7 +84,12 @@ MCP / Cursor:
   (or an executables.allow / allowExecutables grant for that package — sc-009).
   Auto-detect without .cursor/ does not mkdir solely for MCP.
 
+Bin consent:
+  Non-interactive (CI / frozen / non-TTY) installs skip dependency bin/ unless --trust-bin or a
+  persisted executables.allow bin grant applies. Flags cannot override org/project deny.
+
 Unknown flags are rejected. --frozen and --no-frozen cannot be combined.
+--trust-bin and --no-trust-bin cannot be combined.
 Frozen (explicit or when CI is truthy) cannot be combined with --update.
 When the CI environment variable is truthy (not "", "0", or "false"), install
 defaults to frozen unless --no-frozen is passed (OpenAPM req-lk-018).

@@ -110,6 +110,24 @@ export type RunInstallOptions = {
    * (`--trust-transitive-mcp`). Direct `dependencies.mcp` always eligible.
    */
   trustTransitiveMcp?: boolean;
+  /**
+   * Per-invocation bin deploy consent (`--trust-bin` / `--no-trust-bin`).
+   * `allow` | `deny` | `default` (neither flag). Overlay on ExecutableTrust type `bin`.
+   */
+  trustBin?: "allow" | "deny" | "default";
+  /**
+   * Explicit interactive signal for bin consent defaults. When unset, derived from
+   * CI / BAPM_NON_INTERACTIVE / frozen / stdin TTY.
+   */
+  isInteractive?: boolean;
+  /** Env overlay for CI / BAPM_NON_INTERACTIVE (defaults to `process.env`). */
+  env?: Record<string, string | undefined>;
+  /** Injectable stdin TTY for bin consent (defaults to `process.stdin.isTTY`). */
+  stdinIsTTY?: boolean;
+  /**
+   * Destination for gated dependency `bin/` materialize (default: `<cwd>/.agents/bin`).
+   */
+  binDeployRoot?: string;
   experimentalRegistries?: boolean;
   registryBaseUrl?: string;
   mirrorUrl?: string;

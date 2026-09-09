@@ -31,12 +31,17 @@ describe("sc-executable-governance Limitations honesty", () => {
     ).toBe(false);
   });
 
-  test("soft zip residual still named; MCP-only soft honesty for hooks/bin/canvas; §10.3 floor acknowledged", () => {
+  test("soft zip residual still named; hooks/canvas soft honesty; bin gated; §10.3 floor acknowledged", () => {
     const doc = loadChecklist();
     const blob = `${limitationsBlob(doc)}\n${scopeOutBlob(doc)}`;
 
     expect(blob).toMatch(/host.?class|AuthResolver|§\s*10\.3|PSL|ambient|redirect Auth/i);
     expect(blob).toMatch(/tar\.?gz|zip|caps?|container/i);
-    expect(blob).toMatch(/hooks|bin|canvas|MCP-only|mcp.?only|ungated/i);
+    expect(blob).toMatch(/hooks/i);
+    expect(blob).toMatch(/canvas/i);
+    expect(blob).toMatch(/ungated|soft|MCP-only|mcp.?only/i);
+    expect(/hooks\s*\/\s*bin\s*\/\s*canvas/i.test(blob) || /hooks\/bin\/canvas/i.test(blob)).toBe(
+      false,
+    );
   });
 });

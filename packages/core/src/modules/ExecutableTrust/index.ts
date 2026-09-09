@@ -10,6 +10,7 @@
  * - `loadUserExecutableGrants` / `saveUserExecutableGrants` — `~/.bapm/config.json`
  * - `evaluateRequiredPackagePresence` — lock presence + distinct withheld (sc-012)
  * - `hasGrantSurface` — non-absent grant surface detection
+ * - `resolveBinDeployConsent` — invocation `--trust-bin` overlay on type `bin`
  *
  * ## Example
  *
@@ -53,6 +54,12 @@ export type {
   UserExecutableStoreOptions,
 } from "./userStore.ts";
 
+export type {
+  BinDeployConsentDecision,
+  ResolveBinDeployConsentOptions,
+  TrustBinMode,
+} from "./binConsent.ts";
+
 export {
   evaluateExecutableTrust,
   evaluateMcpExecutableTrust,
@@ -64,6 +71,14 @@ export {
   classifyExecutableTrust,
   normalizeSurface,
 } from "./evaluate.ts";
+
+export {
+  resolveBinDeployConsent,
+  resolveEffectiveBinDeploy,
+  evaluateBinDeployConsent,
+  normalizeTrustBin,
+  resolveIsInteractive,
+} from "./binConsent.ts";
 
 export {
   loadUserExecutableGrants,

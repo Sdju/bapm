@@ -50,7 +50,9 @@ import {
 import { extractPackArchive } from "@/modules/Pack";
 import {
   loadUserExecutableGrants,
+  normalizeTrustBin,
   parseExecutableGrants,
+  resolveBinDeployConsent,
   resolveExecutableTrust,
   userGrantsToSurface,
 } from "@/modules/ExecutableTrust";
@@ -60,6 +62,7 @@ import {
   collectMcpServers,
   McpEnvBakeError,
 } from "@/modules/Mcp";
+import { defaultBinDeployRoot, discoverPackageBinFiles, materializeBinFiles } from "./binDeploy.ts";
 import {
   applyDeployedHashesToLock,
   cleanupOrphanDeployedFiles,
@@ -98,6 +101,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const policyPath = options.policyPath ?? options.policy;
   const noPolicy = options.noPolicy === true;
   const trustTransitiveMcp = options.trustTransitiveMcp === true;
+  const trustBin = normalizeTrustBin(options.trustBin);
   const packageRefs = normalizePackageRefs(options.packageRefs);
   const excludeIds = normalizeExcludeIds(options);
   const excludeSet = new Set(excludeIds);
@@ -441,6 +445,27 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     }
   }
 
+  const binDiagnostics: unknown[] = [];
+  if (!skipApmMaterialize) {
+    binDiagnostics.push(
+      ...deployBinsAfterConsent({
+        cwd,
+        rootManifest,
+        nodes,
+        trustBin,
+        frozen,
+        isInteractive: options.isInteractive,
+        env: options.env,
+        stdinIsTTY: options.stdinIsTTY,
+        binDeployRoot: options.binDeployRoot,
+        configDir: options.configDir ?? options.marketplaceConfigDir,
+        policyPath,
+        noPolicy,
+        policyPorts,
+      }),
+    );
+  }
+
   const mcpDiagnostics: unknown[] = [];
   if (!skipMcpConfigure) {
     const mcpResult = await deployMcpAfterPolicy({
@@ -485,6 +510,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ...policyDiagnostics,
       ...resolved.diagnostics,
       ...subsetDiagnostics,
+      ...binDiagnostics,
       ...mcpDiagnostics,
     ],
     policyDiagnostics,
@@ -948,6 +974,109 @@ async function deployMcpAfterPolicy(args: {
     withholdMessage,
     withheldPackages: uniqueWithheld,
   };
+}
+
+/** Discover + gate + materialize dependency package-root `bin/` (install-trust-bin). */
+function deployBinsAfterConsent(args: {
+  cwd: string;
+  rootManifest: BapmManifest;
+  nodes: ResolvedNode[];
+  trustBin: "allow" | "deny" | "default";
+  frozen: boolean;
+  isInteractive?: boolean;
+  env?: Record<string, string | undefined>;
+  stdinIsTTY?: boolean;
+  binDeployRoot?: string;
+  configDir?: string;
+  policyPath?: string;
+  noPolicy: boolean;
+  policyPorts?: {
+    policyProviders?: string[];
+    providers?: string[];
+    listGitRemotes?: RunInstallOptions["listGitRemotes"];
+    remotes?: RunInstallOptions["remotes"];
+    fetchPolicyUrl?: RunInstallOptions["fetchPolicyUrl"];
+    httpGet?: RunInstallOptions["httpGet"];
+    fetchAncestor?: RunInstallOptions["fetchAncestor"];
+    defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
+    implementationDefaultHost?: string;
+  };
+}): unknown[] {
+  const diagnostics: unknown[] = [];
+  const projectSurface = parseExecutableGrants({
+    manifest: args.rootManifest as Record<string, unknown>,
+  });
+  const userLoaded = loadUserExecutableGrants({
+    configDir: args.configDir,
+    configRoot: args.configDir,
+  });
+  const userSurface = userGrantsToSurface(userLoaded);
+  const orgExecutables = loadOrgExecutablesForTrust({
+    cwd: args.cwd,
+    policyPath: args.policyPath,
+    noPolicy: args.noPolicy,
+    policyPorts: args.policyPorts,
+  });
+  const deployRoot = args.binDeployRoot
+    ? resolve(args.binDeployRoot)
+    : defaultBinDeployRoot(args.cwd);
+  let trustPostureWarned = false;
+
+  for (const node of args.nodes) {
+    const packageRoot = dependencyPackageRoot(node);
+    if (!packageRoot) continue;
+    const files = discoverPackageBinFiles(packageRoot);
+    if (files.length === 0) continue;
+
+    const consent = resolveBinDeployConsent({
+      packageName: node.name,
+      trustBin: args.trustBin,
+      isInteractive: args.isInteractive,
+      frozen: args.frozen,
+      env: args.env,
+      stdinIsTTY: args.stdinIsTTY,
+      orgExecutables,
+      projectSurface,
+      userSurface,
+    });
+
+    if (!consent.deploy) {
+      diagnostics.push({
+        code: "BIN_TRUST_WITHHOLD",
+        message:
+          consent.reason ?? `bin deploy withheld for "${node.name}" (consent / ExecutableTrust)`,
+        packageName: node.name,
+        withhold: true,
+        skip: true,
+        trustBin: args.trustBin,
+        ladderOutcome: consent.ladderOutcome,
+        outcome: consent.outcome,
+      });
+      continue;
+    }
+
+    materializeBinFiles({ files, deployRoot });
+    if (consent.warn && !trustPostureWarned) {
+      trustPostureWarned = true;
+      diagnostics.push({
+        code: "BIN_TRUST_POSTURE_WARN",
+        message:
+          "Trust posture warning: dependency bin/ deployed under interactive default; pass --trust-bin for explicit consent (or approve / project executables.allow with bin: true for persistence)",
+        warn: true,
+        trustPosture: true,
+        packageName: node.name,
+      });
+    }
+  }
+
+  return diagnostics;
+}
+
+function dependencyPackageRoot(node: ResolvedNode): string | undefined {
+  for (const candidate of [node.packageRoot, node.path]) {
+    if (candidate && existsSync(candidate)) return candidate;
+  }
+  return undefined;
 }
 
 /** Load effective org `executables` for MCP trust (best-effort; absent → empty). */
