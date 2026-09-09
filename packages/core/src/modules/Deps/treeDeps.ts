@@ -1,12 +1,12 @@
 import { resolve } from "node:path";
-import { loadLockfileOrNull, type LockedDependency } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull, type LockedDependency } from "@/modules/Lockfile";
 import type { DepsTreeResult, RunDepsOptions } from "./types.ts";
 
 type TreeNode = { name: string; children: TreeNode[] };
 
 export function treeDeps(options: RunDepsOptions = {}): DepsTreeResult {
   const cwd = resolve(options.cwd ?? process.cwd());
-  const loaded = loadLockfileOrNull({ cwd });
+  const loaded = loadEffectiveLockfileOrNull({ cwd });
   const deps = loaded?.document.dependencies ?? [];
   const byName = new Map<string, LockedDependency>();
   for (const d of deps) {

@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import {
   BAPM_LOCK_FILE,
-  loadLockfileOrNull,
+  loadEffectiveLockfileOrNull,
   type LockedDependency,
   type LockfileDocument,
 } from "@/modules/Lockfile";
@@ -23,7 +23,7 @@ export function findPath(options: FindPathOptions = {}): FindPathResult {
 
   let loaded;
   try {
-    loaded = loadLockfileOrNull({ cwd });
+    loaded = loadEffectiveLockfileOrNull({ cwd });
   } catch {
     return lockError();
   }

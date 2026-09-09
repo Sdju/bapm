@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import { loadManifest } from "@/modules/Manifest";
 import {
   createDefaultTagLister,
@@ -31,7 +31,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
     );
   }
 
-  const before = loadLockfileOrNull({ cwd });
+  const before = loadEffectiveLockfileOrNull({ cwd });
   const beforePins = pinMap(before?.document?.dependencies);
 
   const ports: ResolvePorts = {
@@ -96,7 +96,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
     // Install compose may fail without targets registered; lock rewrite already done.
   }
 
-  const after = loadLockfileOrNull({ cwd });
+  const after = loadEffectiveLockfileOrNull({ cwd });
   const plan = buildPlan(beforePins, nodesFromLock(after?.document?.dependencies));
   const text = formatPlan(plan, { verbose });
 

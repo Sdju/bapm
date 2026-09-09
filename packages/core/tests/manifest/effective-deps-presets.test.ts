@@ -244,10 +244,12 @@ describe("manifest effective deps — resolve / lock wiring", () => {
     await getResolveAndLock()({ cwd: project.cwd, noPolicy: true });
 
     const { readFileSync, existsSync } = await import("node:fs");
-    const lockPath = existsSync(join(project.cwd, "bapm.lock.yaml"))
-      ? join(project.cwd, "bapm.lock.yaml")
-      : join(project.cwd, "apm.lock.yaml");
-    expect(existsSync(lockPath)).toBe(true);
-    expect(readFileSync(lockPath, "utf8")).toMatch(/analyst-skill/);
+    const { loadEffectiveLockfile } = await import("@b-apm/core");
+    const personalPath = join(project.cwd, "bapm.local.lock.yaml");
+    expect(existsSync(personalPath), "local preset pin must land in personal lock").toBe(true);
+    expect(readFileSync(personalPath, "utf8")).toMatch(/analyst-skill/);
+
+    const effective = loadEffectiveLockfile({ cwd: project.cwd });
+    expect(effective.document.dependencies?.some((d) => d.name === "analyst-skill")).toBe(true);
   });
 });

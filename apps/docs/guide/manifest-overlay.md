@@ -47,13 +47,16 @@ env:
 
 ```text
 bapm.local.yml
+bapm.local.lock.yaml
 ```
+
+Пины от дискриминатора `local` живут в `bapm.local.lock.yaml` (см. [lock-файл](/guide/lockfile) и [личный local lock](/guide/situations/personal-local-lock)) — та же unpublished-поверхность, что и у overlay: gitignore, doctor WARN если tracked, pack/publish опускают.
 
 ## Правила
 
 - Имя строго `bapm.local.yml` (рядом с базовым манифестом, без walk-up).
 - `apm.local.yml` в v1 **отклонён**.
-- Это **не** source `local:` у зависимостей (каталог `.agents/local`). Overlay — настройки; `local:` — источник пакета.
+- Это **не** source `local:` у зависимостей (каталог `.agents/local`). Overlay — настройки; `local:` — источник пакета (pins → `bapm.local.lock.yaml`).
 
 ## Allowlist
 

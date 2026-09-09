@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { resolvePackageQuery } from "@/modules/Deps";
 import {
-  loadLockfileOrNull,
+  loadEffectiveLockfileOrNull,
   locateGitPackageTree,
   type LockedDependency,
 } from "@/modules/Lockfile";
@@ -19,7 +19,7 @@ export function viewPackage(options: ViewPackageOptions = {}): ViewPackageResult
 
   let loaded;
   try {
-    loaded = loadLockfileOrNull({ cwd });
+    loaded = loadEffectiveLockfileOrNull({ cwd });
   } catch {
     return failNoLockfile(query);
   }

@@ -1,5 +1,5 @@
 import { basename, relative, resolve } from "node:path";
-import { collectTreeSha256Violations, loadLockfileOrNull } from "@/modules/Lockfile";
+import { collectTreeSha256Violations, loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import { collectDeployedHashViolations } from "@/modules/Install";
 import { formatAuditCiJson, formatAuditCiSarif, summarizeChecks } from "./formatAuditCi.ts";
 import type { AuditCiCheck, AuditCiResult, RunAuditCiOptions } from "./types.ts";
@@ -49,7 +49,7 @@ function buildResult(args: {
 export async function runAuditCi(options: RunAuditCiOptions = {}): Promise<AuditCiResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
 
-  const loaded = loadLockfileOrNull({ cwd });
+  const loaded = loadEffectiveLockfileOrNull({ cwd });
   if (!loaded) {
     const checks: AuditCiCheck[] = [
       {

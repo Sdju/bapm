@@ -37,4 +37,6 @@ bapm lock export [-f|--format cyclonedx|spdx] [-o|--output <file>] [--timestamp 
 | `--timestamp`    | `<iso>`               | Явная метка времени в отчёте | —                       |
 | `--help`, `-h`   | —                     | Показать help lock           | —                       |
 
-Связанные команды: [install](/reference/install), [update](/reference/update), [Lockfile](/guide/lockfile).
+При записи с `local`-источниками dual-write shared + `bapm.local.lock.yaml` (механика: [lock-файл](/guide/lockfile)).
+
+Связанные команды: [install](/reference/install), [update](/reference/update).

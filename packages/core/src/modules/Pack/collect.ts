@@ -1,12 +1,13 @@
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { BAPM_LOCAL_MANIFEST_FILE } from "@/modules/Manifest";
+import { BAPM_PERSONAL_LOCK_FILE } from "@/modules/Lockfile";
 import { PackError } from "./errors.ts";
 import { describeSecretRefuse, isSecretPackPath } from "./secrets.ts";
 
 const EXCLUDED_DIR_NAMES = new Set([".git", "node_modules"]);
-/** Personal overlay — omit from pack (not a secret-refuse abort). */
-const EXCLUDED_BASENAMES = new Set([BAPM_LOCAL_MANIFEST_FILE]);
+/** Personal overlay / personal lock — omit from pack (not a secret-refuse abort). */
+const EXCLUDED_BASENAMES = new Set([BAPM_LOCAL_MANIFEST_FILE, BAPM_PERSONAL_LOCK_FILE]);
 
 export type PackFileEntry = {
   /** Path relative to project root using `/` separators. */

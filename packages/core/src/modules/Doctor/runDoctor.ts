@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull, BAPM_PERSONAL_LOCK_FILE } from "@/modules/Lockfile";
 import { BAPM_LOCAL_MANIFEST_FILE, loadManifest } from "@/modules/Manifest";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
 import type { DoctorCheck, DoctorResult, RunDoctorOptions } from "./types.ts";
@@ -62,7 +62,7 @@ export async function runDoctor(options: RunDoctorOptions = {}): Promise<DoctorR
 
   // Lock if present
   try {
-    const lock = loadLockfileOrNull({ cwd });
+    const lock = loadEffectiveLockfileOrNull({ cwd });
     if (lock) {
       const depCount = lock.document.dependencies.length;
       checks.push({
@@ -124,6 +124,12 @@ export async function runDoctor(options: RunDoctorOptions = {}): Promise<DoctorR
     checks.push(overlayTracked);
   }
 
+  // Personal lock tracked in git — non-critical warning only
+  const personalLockTracked = probePersonalLockTracked(cwd, git.ok);
+  if (personalLockTracked) {
+    checks.push(personalLockTracked);
+  }
+
   // Auth-env: always-on informational (names only, never secrets)
   checks.push(probeAuthEnv());
 
@@ -151,26 +157,55 @@ export const checkDoctor = runDoctor;
  * Untracked overlay → no check row (must not claim tracked).
  */
 function probeLocalOverlayTracked(cwd: string, gitOk: boolean): DoctorCheck | undefined {
-  const localPath = join(cwd, BAPM_LOCAL_MANIFEST_FILE);
+  return probeGitTrackedPersonalFile({
+    cwd,
+    gitOk,
+    filename: BAPM_LOCAL_MANIFEST_FILE,
+    checkName: "local-overlay",
+    kindLabel: "personal overlay",
+  });
+}
+
+/**
+ * When `bapm.local.lock.yaml` exists and is git-indexed, warn (ok=true, non-critical).
+ */
+function probePersonalLockTracked(cwd: string, gitOk: boolean): DoctorCheck | undefined {
+  return probeGitTrackedPersonalFile({
+    cwd,
+    gitOk,
+    filename: BAPM_PERSONAL_LOCK_FILE,
+    checkName: "local-lock",
+    kindLabel: "personal lock",
+  });
+}
+
+function probeGitTrackedPersonalFile(args: {
+  cwd: string;
+  gitOk: boolean;
+  filename: string;
+  checkName: string;
+  kindLabel: string;
+}): DoctorCheck | undefined {
+  const localPath = join(args.cwd, args.filename);
   if (!existsSync(localPath)) return undefined;
-  if (!gitOk) return undefined;
-  if (!existsSync(join(cwd, ".git"))) return undefined;
+  if (!args.gitOk) return undefined;
+  if (!existsSync(join(args.cwd, ".git"))) return undefined;
 
   try {
-    const r = spawnSync("git", ["ls-files", "--", BAPM_LOCAL_MANIFEST_FILE], {
-      cwd,
+    const r = spawnSync("git", ["ls-files", "--", args.filename], {
+      cwd: args.cwd,
       encoding: "utf8",
     });
     if (r.status !== 0) return undefined;
     const tracked = (r.stdout ?? "").trim().length > 0;
     if (!tracked) return undefined;
     return {
-      name: "local-overlay",
+      name: args.checkName,
       ok: true,
       critical: false,
       message:
-        `${BAPM_LOCAL_MANIFEST_FILE} is git-tracked (personal overlay should stay unpublished). ` +
-        `Untrack with \`git rm --cached ${BAPM_LOCAL_MANIFEST_FILE}\` and add it to .gitignore.`,
+        `${args.filename} is git-tracked (${args.kindLabel} should stay unpublished). ` +
+        `Untrack with \`git rm --cached ${args.filename}\` and add it to .gitignore.`,
     };
   } catch {
     return undefined;

@@ -76,6 +76,7 @@ export default defineConfig({
           { text: "Оглавление", link: "/guide/situations/" },
           { text: "Свежий install", link: "/guide/situations/install-fresh" },
           { text: "Команда / local active", link: "/guide/situations/team-local-active" },
+          { text: "Личный local lock", link: "/guide/situations/personal-local-lock" },
           { text: "CI / frozen", link: "/guide/situations/ci-frozen" },
           { text: "Обновление зависимостей", link: "/guide/situations/update-deps" },
           { text: "Политика и MCP", link: "/guide/situations/policy-mcp" },

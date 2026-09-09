@@ -45,15 +45,17 @@ bapm install --frozen --target cursor
 ### Ожидаемый результат
 
 - `doctor` сообщает о проблемах окружения/проекта; network probe с `-v` не critical.
+- Tracked `bapm.local.yml` / `bapm.local.lock.yaml` → WARN, не critical.
 - `audit --ci` падает при отсутствии lock, missing deploy или hash mismatch.
 - `prune` удаляет только orphans вне resolved graph; `--dry-run` только превью.
-- После `install --frozen` диск снова согласован с закоммиченным lock (если пины валидны).
+- После `install --frozen` диск снова согласован с закоммиченным **shared** lock (если пины валидны).
 
-Справка: [doctor](/reference/doctor), [audit](/reference/audit), [prune](/reference/prune).
+Справка: [doctor](/reference/doctor), [audit](/reference/audit), [prune](/reference/prune). Shared vs personal: [lock-файл](/guide/lockfile).
 
 ### Если не сработало
 
 - `audit` без `--ci` → для CI-gate path флаг обязателен (см. help/reference).
 - Prune не трогает «лишние» файлы вне modules graph (ручной мусор в `.cursor/` может остаться) → переinstall / ручная чистка deploy + frozen install.
 - Doctor «зелёный», audit красный → смотрите lock/hashes, не только env tokens.
-- Не правите lock вручную «чтобы сходится» — перегенерируйте через install/update ([lockfile](/guide/lockfile)).
+- Doctor WARN про personal lock tracked → `git rm --cached bapm.local.lock.yaml`.
+- Не правите lock вручную «чтобы сходится» — перегенерируйте через install/update ([lock-файл](/guide/lockfile)).

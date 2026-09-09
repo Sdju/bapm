@@ -51,6 +51,11 @@ export type ClassifiedDependency = {
   pluginName?: string;
   marketplaceName?: string;
   versionSpec?: string;
+  /**
+   * True when this edge originated from bapm `local` discriminator (not OpenAPM `path:`).
+   * Drives personal lock partition.
+   */
+  personalLockScope?: boolean;
 };
 
 export type MarketplaceLockProvenance = {
@@ -92,6 +97,11 @@ export type ResolvedNode = {
   marketplace_plugin_name?: string;
   source_url?: string;
   source_digest?: string;
+  /**
+   * Personal lock scope: true when originating from bapm `local` discriminator.
+   * Emitted as `x-bapm-lock-scope: local` on lock rows.
+   */
+  personalLockScope?: boolean;
 };
 
 export type ResolveGraphResult = {

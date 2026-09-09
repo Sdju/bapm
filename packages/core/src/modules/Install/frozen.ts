@@ -5,7 +5,7 @@ import {
   type DependencyEntry,
   type ObjectDependency,
 } from "@/modules/Manifest";
-import { loadLockfileOrNull, type LockedDependency } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull, type LockedDependency } from "@/modules/Lockfile";
 import { normalizeRepoIdentity, toLockRepoUrl } from "@/modules/Resolver";
 import { InstallError } from "./errors.ts";
 import type { EnforceFrozenOptions } from "./types.ts";
@@ -25,7 +25,7 @@ export function enforceFrozen(options: EnforceFrozenOptions = {}): void {
     );
   }
 
-  const loaded = loadLockfileOrNull({ cwd });
+  const loaded = loadEffectiveLockfileOrNull({ cwd });
   if (!loaded) {
     throw new InstallError(
       "INSTALL_FROZEN_NO_LOCK",

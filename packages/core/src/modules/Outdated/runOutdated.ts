@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 import type { LockedDependency } from "@/modules/Lockfile";
-import { loadLockfileOrNull } from "@/modules/Lockfile";
+import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import { loadManifest } from "@/modules/Manifest";
 import type { DependencyEntry } from "@/modules/Manifest";
 import {
@@ -35,7 +35,7 @@ import {
  */
 export async function runOutdated(options: RunOutdatedOptions = {}): Promise<OutdatedResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
-  const loaded = loadLockfileOrNull({ cwd });
+  const loaded = loadEffectiveLockfileOrNull({ cwd });
   if (!loaded) {
     throw new OutdatedError(
       "OUTDATED_NO_LOCK",
