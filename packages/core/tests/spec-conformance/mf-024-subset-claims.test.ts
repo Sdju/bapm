@@ -13,11 +13,13 @@ import {
   loadJsonFile,
   loadYamlFile,
   repoRoot,
-} from "../../spec-conformance/helpers.ts";
-import { byId, citationPaths, pathExistsInRepo } from "../../spec-conformance/sc-claims-helpers.ts";
+} from "./helpers.ts";
+import { byId, citationPaths, pathExistsInRepo } from "./sc-claims-helpers.ts";
 
-const EMPTY_SUBSET_CITE = /empty.?skill|skill.?subset|stale skill|gone|req-mf-022|install-subset/i;
-const IDENTITY_CITE = /mf-024|id:|registry.?to.?git|object-form|identity-merge|serialize/i;
+const EMPTY_SUBSET_CITE =
+  /empty.?skill|skill.?subset|stale skill|gone|req-mf-022|deps-object-subset-install/i;
+const IDENTITY_CITE =
+  /mf-024|id:|registry.?to.?git|object-form|deps-object-subset-identity|serialize/i;
 
 function loadRows() {
   const path = findExistingPath(checklistCandidates);
@@ -81,7 +83,7 @@ describe("Mode B req-mf-024 / req-mf-022 after subset-identity slice", () => {
   test("checklist citation files for this slice live under the repo", () => {
     const expected = join(
       repoRoot,
-      "packages/core/tests/acceptance/deps-object-skills-targets-subset/identity-merge.test.ts",
+      "packages/core/tests/manifest/deps-object-subset-identity.test.ts",
     );
     expect(existsSync(expected)).toBe(true);
   });

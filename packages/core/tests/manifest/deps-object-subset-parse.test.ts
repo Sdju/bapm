@@ -3,7 +3,12 @@
  */
 import { expect, test, describe } from "vite-plus/test";
 import { parseManifest } from "@b-apm/core";
-import { apmObjectEntries, baseManifest, expectThrowsMatching, stringList } from "./helpers.ts";
+import {
+  apmObjectEntries,
+  baseManifest,
+  expectThrowsMatching,
+  stringList,
+} from "./deps-subset-helpers.ts";
 
 function parseApmEntry(entry: Record<string, unknown>): Record<string, unknown> {
   const document = parseManifest(

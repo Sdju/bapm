@@ -1,9 +1,9 @@
 /**
- * Helpers for deps-object-skills-targets-subset acceptance (RED → GREEN).
+ * Helpers for object-form skills/targets subset tests (promoted from acceptance).
  * Specs: deps-object-subset, manifest-yaml-validate, dependency-resolve,
  * install-pipeline, openapm-conformance-statement.
  */
-import { asText } from "../../asText.ts";
+import { asText } from "../asText.ts";
 import * as core from "@b-apm/core";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -16,15 +16,15 @@ import {
   importIntegrationApi,
   modulesDir,
   type TempProject,
-} from "../../install/helpers.ts";
+} from "../install/helpers.ts";
 import {
   buildFlatPackageZip,
   listModulesFiles,
   startMockRegistry,
   withExperimentalRegistries,
   type MockRegistry,
-} from "../../registry/helpers.ts";
-import { listFilesRecursive } from "../../resolve/helpers.ts";
+} from "../registry/helpers.ts";
+import { listFilesRecursive } from "../resolve/helpers.ts";
 
 export {
   createFakePorts,

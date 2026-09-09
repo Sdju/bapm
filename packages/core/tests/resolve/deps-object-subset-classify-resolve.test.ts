@@ -15,7 +15,7 @@ import {
   listModulesFiles,
   writeManifestYaml,
   type TempProject,
-} from "./helpers.ts";
+} from "../manifest/deps-subset-helpers.ts";
 
 type SubsetCarrier = {
   kind?: string;

@@ -18,7 +18,7 @@ import {
   stringList,
   writeManifestYaml,
   type TempProject,
-} from "./helpers.ts";
+} from "./deps-subset-helpers.ts";
 
 function roundTrip(document: BapmManifest): {
   yaml: string;

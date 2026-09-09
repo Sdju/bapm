@@ -23,7 +23,7 @@ import {
   writeManifestYaml,
   type MockRegistry,
   type TempProject,
-} from "./helpers.ts";
+} from "../manifest/deps-subset-helpers.ts";
 
 describe("install materializes only the declared subset", () => {
   let project: TempProject | undefined;
