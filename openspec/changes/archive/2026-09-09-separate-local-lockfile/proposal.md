@@ -12,6 +12,7 @@ Today the project has a single lockfile (`bapm.lock.yaml` / `apm.lock.yaml`). Pi
 - Docs: lockfile guide + overlay/local-source callouts describing the split and commit rules.
 
 Non-goals:
+
 - Allowing `dependencies` in `bapm.local.yml` (still settings-only overlay).
 - Changing OpenAPM lock schema version or inventing a second lock schema for the personal file (same YAML schema, different filename + partition rules).
 - Dual-brand `apm.local.lock.yaml` / APM parity for the personal lock in v1.

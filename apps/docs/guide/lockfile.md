@@ -6,10 +6,10 @@ Discovery — **только cwd**.
 
 ## Shared vs personal
 
-| Файл | Scope | Commit? |
-| ---- | ----- | ------- |
+| Файл                               | Scope                                             | Commit?                 |
+| ---------------------------------- | ------------------------------------------------- | ----------------------- |
 | `bapm.lock.yaml` / `apm.lock.yaml` | Shared team pins (git, registry, OpenAPM `path:`) | Да, вместе с манифестом |
-| `bapm.local.lock.yaml` | Personal pins from bapm `local` discriminator | Нет — gitignore |
+| `bapm.local.lock.yaml`             | Personal pins from bapm `local` discriminator     | Нет — gitignore         |
 
 Resolve/install merge both into one **effective** graph. Only the `local` discriminator goes into the personal file; OpenAPM `path:` stays shared even though the lock wire may say `source: local`. Inventory bags (`local_deployed_*`, MCP lists) stay on the shared document.
 
