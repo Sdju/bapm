@@ -89,12 +89,12 @@ npx bapm doctor
 
 ## 5. Если host нужно выбрать явно
 
-| Способ                             | Когда                                                                      |
-| ---------------------------------- | -------------------------------------------------------------------------- |
-| Auto-detect (как выше)             | Один явный маркер агента в cwd                                             |
-| `active: { target: cursor }` в манифесте     | Pin без detect / политика команды                                          |
-| `bapm.local.yml` → `active`        | Личный агент поверх общего `bapm.yml` — [overlay](/guide/manifest-overlay) |
-| `npx bapm install --target cursor` | Force поверх detect / `active`                                             |
+| Способ                                   | Когда                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| Auto-detect (как выше)                   | Один явный маркер агента в cwd                                             |
+| `active: { target: cursor }` в манифесте | Pin без detect / политика команды                                          |
+| `bapm.local.yml` → `active`              | Личный агент поверх общего `bapm.yml` — [overlay](/guide/manifest-overlay) |
+| `npx bapm install --target cursor`       | Force поверх detect / `active`                                             |
 
 `npx bapm init -y --target cursor` по-прежнему может записать `targets:` + `active` (pin) — это удобный scaffold, не единственный путь.
 

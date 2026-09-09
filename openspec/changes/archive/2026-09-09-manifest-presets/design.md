@@ -25,8 +25,7 @@ Today `@b-apm/core` Manifest parse treats `active` as `string[]` of mf-005 host 
 Normalize every accepted YAML form into:
 
 ```ts
-type ActiveEntry =
-  | { kind: "preset" | "target"; id: string; negate: boolean };
+type ActiveEntry = { kind: "preset" | "target"; id: string; negate: boolean };
 // document.active: ActiveEntry[] (declaration order preserved)
 ```
 

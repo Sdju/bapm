@@ -24,15 +24,15 @@ dependencies:
 bapm init -y --target cursor
 ```
 
-| Поле               | Зачем                                                         |
-| ------------------ | ------------------------------------------------------------- |
-| `name` / `version` | Обязательны                                                   |
-| `target`           | Предпочитаемый host (`cursor`); **сам по себе не активирует** |
+| Поле               | Зачем                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `name` / `version` | Обязательны                                                                         |
+| `target`           | Предпочитаемый host (`cursor`); **сам по себе не активирует**                       |
 | `active`           | Structured selection: `preset` / `target` (object или list-of-maps; `!` — negation) |
-| `presets`          | Named dependency bundles (base-only; not in overlay)          |
-| `env`              | Bake-defaults для MCP placeholders (**bapm-расширение**)      |
-| `dependencies.apm` | Пакеты агента                                                 |
-| `dependencies.mcp` | MCP; в Cursor по умолчанию деплоятся **прямые** записи        |
+| `presets`          | Named dependency bundles (base-only; not in overlay)                                |
+| `env`              | Bake-defaults для MCP placeholders (**bapm-расширение**)                            |
+| `dependencies.apm` | Пакеты агента                                                                       |
+| `dependencies.mcp` | MCP; в Cursor по умолчанию деплоятся **прямые** записи                              |
 
 Подробнее формы deps и MCP bake: [Зависимости](/guide/manifest-dependencies).
 
@@ -61,6 +61,7 @@ active:
 2. List-of-maps: `[{ preset: developer }, { target: cursor }]`.
 
 Legacy bare list (`active: [cursor]`) **отвергается**. Effective deps = base ∪ included presets; циклы preset→active fail-closed.
+
 ## Top-level `env:` (bake defaults) {#manifest-env}
 
 Опциональная карта **строка → строка** на корне `bapm.yml` / `apm.yml`. Это **bapm-расширение** (не требование OpenAPM): подставляет значения в MCP placeholders при install bake, когда в process env имени нет.
@@ -157,12 +158,12 @@ Precedence: CLI flags (`--target`, …) → `bapm.local.yml` → base `bapm.yml`
 
 ## Типичные ошибки
 
-| Симптом                                        | Что проверить                             |
-| ---------------------------------------------- | ----------------------------------------- |
-| `No manifest found`                            | Нет `bapm.yml` / `apm.yml` в cwd → `init` |
-| `Manifest requires "name"` / `"version"`       | Добавьте оба поля                         |
-| `Target detection is missing or ambiguous`     | `--target cursor` или `active: { target: cursor }`  |
+| Симптом                                        | Что проверить                                      |
+| ---------------------------------------------- | -------------------------------------------------- |
+| `No manifest found`                            | Нет `bapm.yml` / `apm.yml` в cwd → `init`          |
+| `Manifest requires "name"` / `"version"`       | Добавьте оба поля                                  |
+| `Target detection is missing or ambiguous`     | `--target cursor` или `active: { target: cursor }` |
 | `Manifest "active" … empty / legacy`           | Structured `active` (не `[]` и не bare `[cursor]`) |
-| `must not declare both "target" and "targets"` | Оставьте одно из полей                    |
+| `must not declare both "target" and "targets"` | Оставьте одно из полей                             |
 
 Lock рядом: [Lock-файл](/guide/lockfile). Init: [init](/reference/init).
