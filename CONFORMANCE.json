@@ -21,7 +21,7 @@
     "Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names",
     "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
     "ADO / multi-candidate policy cascades are out of scope",
-    "Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) and hooks/bin/canvas executable gates remain soft (MCP-only trust surface)",
+    "Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) remains soft; bin is gated via ExecutableTrust (type bin) plus install --trust-bin / --no-trust-bin consent; hooks/canvas executable gates remain soft (ungated relative to the MCP trust surface)",
     "Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft",
     "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)",
     "P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install"
@@ -32,7 +32,7 @@
     "full ADO cascade",
     "residual Auth depth (gh CLI / az bearer / credential-helper / try_with_fallback)",
     "soft §10 tar.gz-only container (zip + caps shipped)",
-    "hooks/bin/canvas executable gates (MCP-only)",
+    "hooks/canvas executable gates (soft / ungated; bin gated via ExecutableTrust + trust-bin consent)",
     "full Python Mode B port"
   ],
   "requirements": [

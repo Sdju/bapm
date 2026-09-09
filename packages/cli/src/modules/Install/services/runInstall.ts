@@ -40,14 +40,20 @@ Options:
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
   --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
+  --trust-bin              Consent to deploy dependency/plugin bin/ for this run (when policy allows)
+  --no-trust-bin           Skip bin/ deploy for this run (even when policy would allow)
   --help, -h               Show this help
 
 Notes:
   Unknown flags are rejected. Combining --frozen with --no-frozen is an error.
+  Combining --trust-bin with --no-trust-bin is an error.
   Combining frozen (explicit or CI-default) with --update is an error.
   Frozen integrity (lk-015/017/018) is kept; MCP config sync vs pins is optional/default-off.
   When the CI environment variable is truthy (not "", "0", or "false"), install
   defaults to frozen unless --no-frozen is passed (OpenAPM req-lk-018).
+  Non-interactive installs (CI, BAPM_NON_INTERACTIVE, non-TTY, or frozen) do not deploy
+  dependency bin/ by default without --trust-bin or a persisted executables.allow bin grant;
+  --trust-bin / --no-trust-bin are per-invocation consent and cannot override org/project deny.
   A local .zip path is consumed as a pack archive (install-from-archive).
   Non-zip positionals are package refs added to dependencies.apm (auto-creates
   a minimal manifest when missing). Frozen rejects positional package-ref add.
@@ -83,6 +89,8 @@ export type ParsedInstallArgs = {
   policyPath?: string;
   noPolicy: boolean;
   trustTransitiveMcp: boolean;
+  /** Invocation bin consent: allow | deny | default. */
+  trustBin: "allow" | "deny" | "default";
   help?: boolean;
   error?: string;
 };
@@ -109,6 +117,8 @@ export function parseInstallArgs(
   let policyPath: string | undefined;
   let noPolicy = false;
   let trustTransitiveMcp = false;
+  let trustBinAllow = false;
+  let trustBinDeny = false;
   let help = false;
 
   const partial = (): ParsedInstallArgs => ({
@@ -130,6 +140,7 @@ export function parseInstallArgs(
     policyPath,
     noPolicy,
     trustTransitiveMcp,
+    trustBin: trustBinAllow ? "allow" : trustBinDeny ? "deny" : "default",
   });
 
   for (let i = 0; i < argv.length; i++) {
@@ -176,6 +187,14 @@ export function parseInstallArgs(
     }
     if (arg === "--trust-transitive-mcp") {
       trustTransitiveMcp = true;
+      continue;
+    }
+    if (arg === "--trust-bin") {
+      trustBinAllow = true;
+      continue;
+    }
+    if (arg === "--no-trust-bin") {
+      trustBinDeny = true;
       continue;
     }
     if (arg === "--allow-insecure-host") {
@@ -369,19 +388,33 @@ export function parseInstallArgs(
     };
   }
 
+  if (trustBinAllow && trustBinDeny) {
+    return {
+      ...partial(),
+      error: "Cannot combine --trust-bin and --no-trust-bin (mutually exclusive flags conflict)",
+    };
+  }
+
+  const trustBin: "allow" | "deny" | "default" = trustBinAllow
+    ? "allow"
+    : trustBinDeny
+      ? "deny"
+      : "default";
+
   const env = options.env ?? (process.env as Record<string, string | undefined>);
   let frozen: boolean;
   try {
     frozen = resolveEffectiveFrozen({ frozen: frozenFlag, noFrozen, env });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { ...partial(), error: message };
+    return { ...partial(), trustBin, error: message };
   }
 
   if (frozen && update) {
     return {
       ...partial(),
       frozen,
+      trustBin,
       error: "Frozen mode rejects --update (frozen+update mutation rejected)",
     };
   }
@@ -405,6 +438,7 @@ export function parseInstallArgs(
     policyPath,
     noPolicy,
     trustTransitiveMcp,
+    trustBin,
     help,
   };
 }
@@ -524,6 +558,8 @@ async function runCoreInstall(
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
       trustTransitiveMcp: parsed.trustTransitiveMcp,
+      trustBin: parsed.trustBin,
+      env: options.env ?? (process.env as Record<string, string | undefined>),
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),

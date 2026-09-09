@@ -32,6 +32,7 @@ export {
   type ResolveEffectiveFrozenOptions,
 } from "./ciFrozen.ts";
 export { runInstall, installProject } from "./runInstall.ts";
+export { defaultBinDeployRoot, discoverPackageBinFiles, materializeBinFiles } from "./binDeploy.ts";
 export { declaredTargetIds, declaredTargetIntegrationMap } from "./targets.ts";
 export {
   DEPLOYED_HASH_ALGO,

@@ -554,6 +554,9 @@ export type {
   SaveUserExecutableGrantsOptions,
   UserExecutableGrants,
   UserExecutableStoreOptions,
+  BinDeployConsentDecision,
+  ResolveBinDeployConsentOptions,
+  TrustBinMode,
 } from "@/modules/ExecutableTrust";
 
 export {
@@ -565,6 +568,11 @@ export {
   parseExecutableGrants,
   resolveExecutableTrust,
   classifyExecutableTrust,
+  resolveBinDeployConsent,
+  resolveEffectiveBinDeploy,
+  evaluateBinDeployConsent,
+  normalizeTrustBin,
+  resolveIsInteractive,
   loadUserExecutableGrants,
   loadUserExecutables,
   loadExecutableUserGrants,
