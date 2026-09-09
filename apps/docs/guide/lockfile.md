@@ -6,11 +6,11 @@ Discovery — **только cwd** (без walk-up по родителям).
 
 ## Какие файлы и зачем
 
-| Файл                               | Назначение                                                         | В git?                          |
-| ---------------------------------- | ------------------------------------------------------------------ | ------------------------------- |
-| `bapm.lock.yaml` / `apm.lock.yaml` | Shared: командные пины (git, registry, OpenAPM `path:`, …)         | Да, вместе с манифестом         |
-| `bapm.local.lock.yaml`             | Personal: только пины от bapm-дискриминатора `local`               | Нет — в `.gitignore`            |
-| `apm.local.lock.yaml`              | **Не поддерживается**                                              | Присутствие → fail-closed       |
+| Файл                               | Назначение                                                 | В git?                    |
+| ---------------------------------- | ---------------------------------------------------------- | ------------------------- |
+| `bapm.lock.yaml` / `apm.lock.yaml` | Shared: командные пины (git, registry, OpenAPM `path:`, …) | Да, вместе с манифестом   |
+| `bapm.local.lock.yaml`             | Personal: только пины от bapm-дискриминатора `local`       | Нет — в `.gitignore`      |
+| `apm.local.lock.yaml`              | **Не поддерживается**                                      | Присутствие → fail-closed |
 
 Новый shared lock пишется как `bapm.lock.yaml`. Если уже есть только `apm.lock.yaml` — write-back в него. Оба shared сразу — ошибка `LOCKFILE_DUAL_CONFLICT`. Legacy `apm.lock` (без `.yaml`) игнорируется. Personal всегда только `bapm.local.lock.yaml`.
 
@@ -20,11 +20,11 @@ Discovery — **только cwd** (без walk-up по родителям).
 
 Решает **форма зависимости в манифесте**, не строка `source:` в lock wire.
 
-| Источник в манифесте                         | Куда уходит pin        |
-| -------------------------------------------- | ---------------------- |
-| Bapm `local` / `local: true` / `local: ./…`  | **Personal**           |
-| OpenAPM `path:` (и path-like строки)         | **Shared**             |
-| `git`, registry, marketplace, …              | **Shared**             |
+| Источник в манифесте                        | Куда уходит pin |
+| ------------------------------------------- | --------------- |
+| Bapm `local` / `local: true` / `local: ./…` | **Personal**    |
+| OpenAPM `path:` (и path-like строки)        | **Shared**      |
+| `git`, registry, marketplace, …             | **Shared**      |
 
 Важно: у `path:` в lock часто тоже стоит `source: local` — это **не** personal-scope. В personal попадает только дискриминатор `local` (маркер scope на записи).
 
@@ -55,11 +55,11 @@ Inventory bags на shared-документе (имя не значит «лич
 - shared — всё, кроме personal-scope строк;
 - personal — только personal-scope.
 
-| Ситуация                                      | Поведение                                              |
-| --------------------------------------------- | ------------------------------------------------------ |
-| Есть хотя бы один `local` в графе             | Создаётся / обновляется `bapm.local.lock.yaml`         |
-| Personal-scope пуст                           | Personal **не** создаётся; устаревший файл **удаляется** |
-| Убрали все `local` из манифеста               | Ghost-пины в personal очищаются (файл может исчезнуть) |
+| Ситуация                          | Поведение                                                |
+| --------------------------------- | -------------------------------------------------------- |
+| Есть хотя бы один `local` в графе | Создаётся / обновляется `bapm.local.lock.yaml`           |
+| Personal-scope пуст               | Personal **не** создаётся; устаревший файл **удаляется** |
+| Убрали все `local` из манифеста   | Ghost-пины в personal очищаются (файл может исчезнуть)   |
 
 При записи personal bapm **дописывает** в `.gitignore` строку `bapm.local.lock.yaml`, если её ещё нет (по аналогии с игнором `.agents/local/`).
 
@@ -74,11 +74,11 @@ Inventory bags на shared-документе (имя не значит «лич
 
 ## Gitignore, doctor, pack / publish
 
-| Действие                         | Поведение                                                                 |
-| -------------------------------- | ------------------------------------------------------------------------- |
-| Запись personal                  | Ensure `.gitignore` покрывает `bapm.local.lock.yaml`                      |
-| `bapm doctor`                    | Если файл уже **tracked** в git — WARN (не critical, exit 0 возможен)     |
-| `bapm pack` / `bapm publish`     | Personal lock **опускают** (как `bapm.local.yml`)                         |
+| Действие                     | Поведение                                                             |
+| ---------------------------- | --------------------------------------------------------------------- |
+| Запись personal              | Ensure `.gitignore` покрывает `bapm.local.lock.yaml`                  |
+| `bapm doctor`                | Если файл уже **tracked** в git — WARN (не critical, exit 0 возможен) |
+| `bapm pack` / `bapm publish` | Personal lock **опускают** (как `bapm.local.yml`)                     |
 
 Если personal уже попал в индекс: `git rm --cached bapm.local.lock.yaml` и убедитесь, что он в `.gitignore`.
 
@@ -88,11 +88,11 @@ Inventory bags на shared-документе (имя не значит «лич
 
 В CI при truthy env `CI` (не `""`, `"0"`, `"false"`) `install` по умолчанию **frozen**. Явный выход: `--no-frozen`. Frozen нельзя сочетать с `--update`.
 
-| Что критично для frozen / CI      | Комментарий                                                         |
-| --------------------------------- | ------------------------------------------------------------------- |
-| Shared lock                       | Должен быть закоммичен; без любого lock — fail closed               |
-| Personal lock                     | Не обязателен, если в манифесте **нет** `local`-источников          |
-| `local` в командном манифесте     | Pin должен быть в effective graph (обычно в personal на машине dev) |
+| Что критично для frozen / CI  | Комментарий                                                         |
+| ----------------------------- | ------------------------------------------------------------------- |
+| Shared lock                   | Должен быть закоммичен; без любого lock — fail closed               |
+| Personal lock                 | Не обязателен, если в манифесте **нет** `local`-источников          |
+| `local` в командном манифесте | Pin должен быть в effective graph (обычно в personal на машине dev) |
 
 Типичный CI: закоммиченный shared + `bapm install --frozen` (или `install` при `CI=1`). Личный WIP на `local` лучше не класть в CI-критичный shared-манифест.
 
@@ -128,14 +128,14 @@ bapm update                    # переразрешить refs и перепи
 
 ## Частые ошибки
 
-| Симптом / ошибка                         | Что сделать                                                                 |
-| ---------------------------------------- | --------------------------------------------------------------------------- |
-| `LOCKFILE_DUAL_CONFLICT`                 | Оставьте один shared: `bapm.lock.yaml` **или** `apm.lock.yaml`, не оба      |
-| `LOCKFILE_UNSUPPORTED_PERSONAL_BRAND`    | Удалите `apm.local.lock.yaml`; используйте только `bapm.local.lock.yaml`    |
-| `LOCKFILE_MERGE_CONFLICT`                | Один пакет в shared и personal с разными пинами — выровняйте / переlock     |
-| Doctor WARN: personal lock tracked       | `git rm --cached bapm.local.lock.yaml`, строка в `.gitignore`               |
-| Frozen / CI без shared                   | Локально `bapm lock` или `install`, закоммитьте shared, снова CI            |
-| Путаница `path:` vs `local`              | `path:` → shared; bapm `local` → personal ([зависимости](/guide/manifest-dependencies)) |
+| Симптом / ошибка                      | Что сделать                                                                             |
+| ------------------------------------- | --------------------------------------------------------------------------------------- |
+| `LOCKFILE_DUAL_CONFLICT`              | Оставьте один shared: `bapm.lock.yaml` **или** `apm.lock.yaml`, не оба                  |
+| `LOCKFILE_UNSUPPORTED_PERSONAL_BRAND` | Удалите `apm.local.lock.yaml`; используйте только `bapm.local.lock.yaml`                |
+| `LOCKFILE_MERGE_CONFLICT`             | Один пакет в shared и personal с разными пинами — выровняйте / переlock                 |
+| Doctor WARN: personal lock tracked    | `git rm --cached bapm.local.lock.yaml`, строка в `.gitignore`                           |
+| Frozen / CI без shared                | Локально `bapm lock` или `install`, закоммитьте shared, снова CI                        |
+| Путаница `path:` vs `local`           | `path:` → shared; bapm `local` → personal ([зависимости](/guide/manifest-dependencies)) |
 
 ## Чего не делать
 

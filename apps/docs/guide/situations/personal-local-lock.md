@@ -52,11 +52,11 @@ bapm.local.lock.yaml    # только local-пины
 
 ### Если не сработало
 
-| Симптом                                      | Что проверить                                                              |
-| -------------------------------------------- | -------------------------------------------------------------------------- |
-| Личный pin всё ещё в shared                  | Форма в манифесте — `local`, не `path:`; затем снова `bapm lock`           |
-| Legacy pin в shared, personal пуст           | Нормально на чтении; следующий успешный lock/install мигрирует             |
-| `apm.local.lock.yaml` → ошибка               | Удалите файл; поддерживается только `bapm.local.lock.yaml`                 |
-| Doctor WARN: personal tracked                | `git rm --cached bapm.local.lock.yaml` + строка в `.gitignore`             |
-| CI frozen падает из‑за `local`               | Уберите `local` из CI-манифеста или обеспечьте pin в effective graph       |
-| Pack/publish «утащил» personal               | Не должен: pack/publish опускают `bapm.local.lock.yaml`                    |
+| Симптом                            | Что проверить                                                        |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| Личный pin всё ещё в shared        | Форма в манифесте — `local`, не `path:`; затем снова `bapm lock`     |
+| Legacy pin в shared, personal пуст | Нормально на чтении; следующий успешный lock/install мигрирует       |
+| `apm.local.lock.yaml` → ошибка     | Удалите файл; поддерживается только `bapm.local.lock.yaml`           |
+| Doctor WARN: personal tracked      | `git rm --cached bapm.local.lock.yaml` + строка в `.gitignore`       |
+| CI frozen падает из‑за `local`     | Уберите `local` из CI-манифеста или обеспечьте pin в effective graph |
+| Pack/publish «утащил» personal     | Не должен: pack/publish опускают `bapm.local.lock.yaml`              |
