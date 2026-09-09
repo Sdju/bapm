@@ -27,7 +27,7 @@ bapm install
 ```yaml
 # bapm.yml
 active:
-  - cursor
+  target: cursor
 ```
 
 ## Object-map — когда нужен
@@ -51,7 +51,7 @@ Map entries загружаются **fail-closed**. Canonical hosts без кл�
 | --------- | ------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `target`  | строка **или** object-map | Legacy: один host id. Object-map (**bapm-расширение**): host → пакет/путь. Нельзя вместе с `targets` |
 | `targets` | список **или** object-map | Legacy: несколько id. Object-map — override/add impl                                                 |
-| `active`  | список строк              | Какие host id **активировать**. Пустой `active: []` — отказ                                          |
+| `active`  | object / list-of-maps | Structured `preset` / `target` (+ `!` negation). Пустой `active: []` / `{}` и bare `[cursor]` — отказ |
 
 ## Типичные ошибки
 
@@ -59,7 +59,7 @@ Map entries загружаются **fail-closed**. Canonical hosts без кл�
 | ---------------------------------------------- | --------------------------------------------------------------------------------- |
 | `Target detection is missing or ambiguous`     | `--target` / `active`; при маркере без пакета — установите `@b-apm/integration-*` |
 | `Unknown or unregistered target`               | Пакет не установлен / custom id без map                                           |
-| `Manifest "active" must be a non-empty array`  | Уберите `active: []`                                                              |
+| `Manifest "active" … empty / legacy`           | Structured form; уберите `[]` / bare list                                 |
 | `must not declare both "target" and "targets"` | Оставьте одно поле                                                                |
 
 Personal overlay: [Overlay](/guide/manifest-overlay).

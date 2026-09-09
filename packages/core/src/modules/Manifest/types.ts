@@ -84,16 +84,43 @@ export type BapmManifest = {
    */
   targets?: string[] | TargetIntegrationMap;
   /**
-   * Bapm extension: non-empty list of mf-005 host ids to activate for
-   * materialize/MCP (multi) or compile (sole). Distinct from `target`/`targets`.
+   * Bapm extension: structured preset/target selection (normalized ActiveEntry[]).
+   * Distinct from `target`/`targets` preference maps.
    */
-  active?: string[];
+  active?: ActiveEntry[];
+  /**
+   * Named dependency bundles selectable via `active` preset entries.
+   * Base manifest only — rejected on `bapm.local.yml` overlay.
+   */
+  presets?: ManifestPreset[];
   /**
    * Optional bake / placeholder defaults (string map). Deep-merged from
    * `bapm.local.yml` when present (local keys win).
    */
   env?: Record<string, string>;
   [key: string]: unknown;
+};
+
+/** Normalized structured `active` entry (preset or host target). */
+export type ActiveEntry = {
+  kind: "preset" | "target";
+  id: string;
+  negate: boolean;
+};
+
+/** Named preset: optional deps + optional nested structured `active`. */
+export type ManifestPreset = {
+  name: string;
+  dependencies?: DependencyLists;
+  devDependencies?: DependencyLists;
+  active?: ActiveEntry[];
+  [key: string]: unknown;
+};
+
+/** Result of expanding document `active` (+ nested preset `active`). */
+export type ResolvedActive = {
+  presetIds: string[];
+  targetIds: string[];
 };
 
 export type DiscoverManifestOptions = {

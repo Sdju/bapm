@@ -92,7 +92,7 @@ describe("M10 core flat publish archive", () => {
     );
     writeText(
       join(project.cwd, "bapm.local.yml"),
-      `active:\n  - cursor\nenv:\n  LEAK_MARKER: "nope"\n`,
+      `active:\n  target: cursor\nenv:\n  LEAK_MARKER: "nope"\n`,
     );
     writeText(join(project.cwd, ".apm", "instructions.md"), "# hello\n");
 

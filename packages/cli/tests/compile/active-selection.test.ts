@@ -27,7 +27,7 @@ describe("CLI compile · manifest active selection", () => {
     project = createTempProject();
     writeActiveProject(project.cwd, {
       name: "cli-compile-sole",
-      active: ["cursor"],
+      active: { target: "cursor" },
       withInstruction: true,
     });
 
@@ -44,7 +44,7 @@ describe("CLI compile · manifest active selection", () => {
     const acmeSpec = linkFixturePackage(project.cwd, "create-integration-pkg");
     writeActiveProject(project.cwd, {
       name: "cli-compile-multi",
-      active: ["cursor", "x-acme-editor"],
+      active: { target: ["cursor", "x-acme-editor"] },
       targets: { cursor: cursorSpec, "x-acme-editor": acmeSpec },
       withInstruction: true,
       // Sole cursor detect would succeed today; multi `active` must still require --target.
@@ -65,7 +65,7 @@ describe("CLI compile · manifest active selection", () => {
     const acmeSpec = linkFixturePackage(project.cwd, "create-integration-pkg");
     writeActiveProject(project.cwd, {
       name: "cli-compile-force",
-      active: ["cursor", "x-acme-editor"],
+      active: { target: ["cursor", "x-acme-editor"] },
       targets: { cursor: cursorSpec, "x-acme-editor": acmeSpec },
       withInstruction: true,
     });

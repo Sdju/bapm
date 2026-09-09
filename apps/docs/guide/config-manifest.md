@@ -11,7 +11,7 @@ name: my-project
 version: 0.1.0
 target: cursor
 active:
-  - cursor
+  target: cursor
 dependencies:
   apm:
     - path: ./packages/hello-skill
@@ -28,13 +28,39 @@ bapm init -y --target cursor
 | ------------------ | ------------------------------------------------------------- |
 | `name` / `version` | Обязательны                                                   |
 | `target`           | Предпочитаемый host (`cursor`); **сам по себе не активирует** |
-| `active`           | Явный список host id для активации                            |
+| `active`           | Structured selection: `preset` / `target` (object или list-of-maps; `!` — negation) |
+| `presets`          | Named dependency bundles (base-only; not in overlay)          |
 | `env`              | Bake-defaults для MCP placeholders (**bapm-расширение**)      |
 | `dependencies.apm` | Пакеты агента                                                 |
 | `dependencies.mcp` | MCP; в Cursor по умолчанию деплоятся **прямые** записи        |
 
 Подробнее формы deps и MCP bake: [Зависимости](/guide/manifest-dependencies).
 
+## Presets и structured `active` {#manifest-presets}
+
+**Presets** — именованные наборы `dependencies` / `devDependencies` (опционально с nested `active`) на **базовом** манифесте. Выбрать preset или host можно через structured `active`; личный выбор — через `bapm.local.yml` `active` (overlay **не** может объявлять `presets`).
+
+```yaml
+presets:
+  - name: developer
+    dependencies:
+      apm:
+        - local: ./pkgs/dev-skill
+  - name: analyst
+    dependencies:
+      apm:
+        - local: ./pkgs/analyst-skill
+active:
+  preset: developer
+  target: cursor
+```
+
+Формы `active`:
+
+1. Object: `preset` / `target` — скаляр или список (`!id` — negation).
+2. List-of-maps: `[{ preset: developer }, { target: cursor }]`.
+
+Legacy bare list (`active: [cursor]`) **отвергается**. Effective deps = base ∪ included presets; циклы preset→active fail-closed.
 ## Top-level `env:` (bake defaults) {#manifest-env}
 
 Опциональная карта **строка → строка** на корне `bapm.yml` / `apm.yml`. Это **bapm-расширение** (не требование OpenAPM): подставляет значения в MCP placeholders при install bake, когда в process env имени нет.
@@ -92,7 +118,7 @@ dependencies:
 
 ```yaml
 active:
-  - cursor
+  target: cursor
 ```
 
 Пустой `active: []` — отказ parse. Поле `target` / `targets` **не само по себе активирует** hosts — без `--target`, без `active` и без detect команда попросит указать host.
@@ -111,7 +137,7 @@ targets:
 
 ## Personal overlay: `bapm.local.yml`
 
-Опциональный персональный файл рядом с манифестом (не в git). Allowlist: `active`, `target` / `targets`, `env`, `registries`.
+Опциональный персональный файл рядом с манифестом (не в git). Allowlist: `active`, `target` / `targets`, `env`, `registries`. Ключ `presets` на overlay **запрещён** — определения presets только в base; local выбирает их через structured `active` (`preset:` / `target:`).
 
 Precedence: CLI flags (`--target`, …) → `bapm.local.yml` → base `bapm.yml` / `apm.yml`.
 
@@ -135,8 +161,8 @@ Precedence: CLI flags (`--target`, …) → `bapm.local.yml` → base `bapm.yml`
 | ---------------------------------------------- | ----------------------------------------- |
 | `No manifest found`                            | Нет `bapm.yml` / `apm.yml` в cwd → `init` |
 | `Manifest requires "name"` / `"version"`       | Добавьте оба поля                         |
-| `Target detection is missing or ambiguous`     | `--target cursor` или `active: [cursor]`  |
-| `Manifest "active" must be a non-empty array`  | Уберите пустой `active: []`               |
+| `Target detection is missing or ambiguous`     | `--target cursor` или `active: { target: cursor }`  |
+| `Manifest "active" … empty / legacy`           | Structured `active` (не `[]` и не bare `[cursor]`) |
 | `must not declare both "target" and "targets"` | Оставьте одно из полей                    |
 
 Lock рядом: [Lock-файл](/guide/lockfile). Init: [init](/reference/init).

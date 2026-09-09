@@ -27,10 +27,10 @@ describe("manifest-local-overlay — install precedence", () => {
       project.cwd,
       conformingBase({
         name: "local-over-base",
-        extraYaml: "active:\n  - cursor\n",
+        extraYaml: "active:\n  target: cursor\n",
       }),
     );
-    writeLocalOverlay(project.cwd, "active:\n  - x-acme-editor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: x-acme-editor\n");
 
     const registry = createIntegrationRegistry();
     const materialized: string[] = [];
@@ -62,10 +62,10 @@ describe("manifest-local-overlay — install precedence", () => {
       project.cwd,
       conformingBase({
         name: "flag-over-local",
-        extraYaml: "active:\n  - cursor\n",
+        extraYaml: "active:\n  target: cursor\n",
       }),
     );
-    writeLocalOverlay(project.cwd, "active:\n  - x-acme-editor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: x-acme-editor\n");
 
     const registry = createIntegrationRegistry();
     const materialized: string[] = [];
@@ -95,7 +95,7 @@ describe("manifest-local-overlay — install precedence", () => {
   test("local active used when base omits active", async () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "local-only-active" }));
-    writeLocalOverlay(project.cwd, "active:\n  - cursor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: cursor\n");
 
     const registry = createIntegrationRegistry();
     const materialized: string[] = [];

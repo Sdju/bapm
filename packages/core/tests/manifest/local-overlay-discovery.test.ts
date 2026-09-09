@@ -41,14 +41,14 @@ describe("manifest-local-overlay — discovery", () => {
       project.cwd,
       conformingBase({
         name: "with-local",
-        extraYaml: "active:\n  - cursor\n",
+        extraYaml: "active:\n  target: cursor\n",
       }),
     );
-    writeLocalOverlay(project.cwd, "active:\n  - x-acme-editor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: x-acme-editor\n");
 
     const loaded = getLoadEffectiveManifest()({ cwd: project.cwd });
     const doc = documentOf(loaded);
-    expect(doc.active).toEqual(["x-acme-editor"]);
+    expect(doc.active).toEqual([{ kind: "target", id: "x-acme-editor", negate: false }]);
     const localPath = localPathOf(loaded);
     expect(localPath, "load metadata should expose local overlay path").toBeTruthy();
     expect(String(localPath).replace(/\\/g, "/")).toMatch(/bapm\.local\.yml$/);
@@ -59,25 +59,25 @@ describe("manifest-local-overlay — discovery", () => {
     const parent = project.cwd;
     const child = join(parent, "nested-project");
     writeBaseManifest(parent, conformingBase({ name: "parent-only" }));
-    writeLocalOverlay(parent, "active:\n  - x-acme-editor\n");
+    writeLocalOverlay(parent, "active:\n  target: x-acme-editor\n");
     writeBaseManifest(
       child,
       conformingBase({
         name: "child",
-        extraYaml: "active:\n  - cursor\n",
+        extraYaml: "active:\n  target: cursor\n",
       }),
     );
 
     const loaded = getLoadEffectiveManifest()({ cwd: child });
     const doc = documentOf(loaded);
-    expect(doc.active).toEqual(["cursor"]);
+    expect(doc.active).toEqual([{ kind: "target", id: "cursor", negate: false }]);
     expect(localPathOf(loaded)).toBeUndefined();
   });
 
   test("apm.local.yml alone fails closed naming the unsupported file", () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "apm-local-refuse" }));
-    writeText(join(project.cwd, "apm.local.yml"), "active:\n  - cursor\n");
+    writeText(join(project.cwd, "apm.local.yml"), "active:\n  target: cursor\n");
 
     expectThrowsMatching(
       () => getLoadEffectiveManifest()({ cwd: project!.cwd }),
@@ -88,8 +88,8 @@ describe("manifest-local-overlay — discovery", () => {
   test("apm.local.yml with bapm.local.yml still fails closed", () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "dual-local-refuse" }));
-    writeLocalOverlay(project.cwd, "active:\n  - cursor\n");
-    writeText(join(project.cwd, "apm.local.yml"), "active:\n  - x-acme-editor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: cursor\n");
+    writeText(join(project.cwd, "apm.local.yml"), "active:\n  target: x-acme-editor\n");
 
     expectThrowsMatching(
       () => getLoadEffectiveManifest()({ cwd: project!.cwd }),

@@ -72,7 +72,7 @@ Options:
   --help, -h               Show this help
 
 Host selection:
-  Priority: --target <id> → manifest active: [<id>, …] → sole auto-detect → fail.
+  Priority: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
   Use active in bapm.yml / apm.yml when detect is missing or ambiguous.
 
 MCP / Cursor:

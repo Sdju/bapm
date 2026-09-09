@@ -92,7 +92,7 @@ npx bapm doctor
 | Способ                             | Когда                                                                      |
 | ---------------------------------- | -------------------------------------------------------------------------- |
 | Auto-detect (как выше)             | Один явный маркер агента в cwd                                             |
-| `active: [cursor]` в манифесте     | Pin без detect / политика команды                                          |
+| `active: { target: cursor }` в манифесте     | Pin без detect / политика команды                                          |
 | `bapm.local.yml` → `active`        | Личный агент поверх общего `bapm.yml` — [overlay](/guide/manifest-overlay) |
 | `npx bapm install --target cursor` | Force поверх detect / `active`                                             |
 

@@ -9,7 +9,7 @@ describe("local overlay merge helpers", () => {
     const base = parseManifest({
       name: "u",
       version: "1.0.0",
-      active: ["cursor"],
+      active: { target: "cursor" },
       targets: { cursor: "@b-apm/integration-cursor" },
       env: { FOO: "base", BAR: "keep" },
       registries: {
@@ -20,7 +20,7 @@ describe("local overlay merge helpers", () => {
     });
 
     const overlay = parseLocalOverlayDocument({
-      active: ["x-acme-editor"],
+      active: { target: "x-acme-editor" },
       targets: { "x-acme-editor": "@scope/acme" },
       env: { FOO: "local" },
       registries: {
@@ -30,7 +30,7 @@ describe("local overlay merge helpers", () => {
     });
 
     const doc = mergeLocalOverlay(base, overlay);
-    expect(doc.active).toEqual(["x-acme-editor"]);
+    expect(doc.active).toEqual([{ kind: "target", id: "x-acme-editor", negate: false }]);
     expect(doc.targets).toMatchObject({
       cursor: "@b-apm/integration-cursor",
       "x-acme-editor": "@scope/acme",
@@ -49,8 +49,8 @@ describe("local overlay merge helpers", () => {
   });
 
   test("forbidden overlay key rejected", () => {
-    expect(() => parseLocalOverlayDocument({ name: "hijack", active: ["cursor"] })).toThrow(
-      /name|not allowed|allowlist/i,
-    );
+    expect(() =>
+      parseLocalOverlayDocument({ name: "hijack", active: { target: "cursor" } }),
+    ).toThrow(/name|not allowed|allowlist/i);
   });
 });
