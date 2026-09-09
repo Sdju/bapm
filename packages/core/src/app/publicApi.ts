@@ -408,7 +408,16 @@ export {
   runCheckRelease,
   isSecretPackPath,
   describeSecretRefuse,
+  BAPM_IGNORE_FILE,
+  loadBapmIgnore,
+  isBapmIgnored,
+  isBapmIgnoredDir,
+  collectPackFiles,
+  assertProjectHasContent,
+  defaultArchiveName,
 } from "@/modules/Pack";
+
+export type { BapmIgnoreRules, PackFileEntry } from "@/modules/Pack";
 
 export type {
   DiscoverPolicyOptions,

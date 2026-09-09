@@ -2,6 +2,13 @@ import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { BAPM_LOCAL_MANIFEST_FILE } from "@/modules/Manifest";
 import { BAPM_PERSONAL_LOCK_FILE } from "@/modules/Lockfile";
+import {
+  BAPM_IGNORE_FILE,
+  isBapmIgnored,
+  isBapmIgnoredDir,
+  loadBapmIgnore,
+  type BapmIgnoreRules,
+} from "./bapmIgnore.ts";
 import { PackError } from "./errors.ts";
 import { describeSecretRefuse, isSecretPackPath } from "./secrets.ts";
 
@@ -18,15 +25,16 @@ export type PackFileEntry = {
 
 /**
  * Collect packable project files: manifest, lock, primitives, sources.
- * Excludes `.git`, `node_modules`, and prior `*.zip` artifacts.
+ * Excludes `.git`, `node_modules`, prior `*.zip` artifacts, and `.bapmignore` matches.
  * Fails closed when a secret-pattern path would be included (sc-007).
  */
 export function collectPackFiles(cwd: string): PackFileEntry[] {
   const root = resolve(cwd);
   const entries: PackFileEntry[] = [];
   const secrets: string[] = [];
+  const ignoreRules = loadBapmIgnore(root);
 
-  walk(root, root, entries, secrets);
+  walk(root, root, entries, secrets, ignoreRules);
 
   if (secrets.length > 0) {
     throw new PackError("PACK_SECRET_REFUSED", describeSecretRefuse(secrets[0]!), {
@@ -38,7 +46,13 @@ export function collectPackFiles(cwd: string): PackFileEntry[] {
   return entries;
 }
 
-function walk(root: string, dir: string, out: PackFileEntry[], secrets: string[]): void {
+function walk(
+  root: string,
+  dir: string,
+  out: PackFileEntry[],
+  secrets: string[],
+  ignoreRules: BapmIgnoreRules,
+): void {
   let names: string[];
   try {
     names = readdirSync(dir);
@@ -63,8 +77,12 @@ function walk(root: string, dir: string, out: PackFileEntry[], secrets: string[]
         { path: relative(root, abs) },
       );
     }
+
+    const rel = relative(root, abs).split("\\").join("/");
+
     if (st.isDirectory()) {
-      walk(root, abs, out, secrets);
+      if (isBapmIgnoredDir(rel, ignoreRules)) continue;
+      walk(root, abs, out, secrets, ignoreRules);
       continue;
     }
     if (!st.isFile()) continue;
@@ -73,8 +91,11 @@ function walk(root: string, dir: string, out: PackFileEntry[], secrets: string[]
     if (name.endsWith(".zip")) continue;
     // Personal overlay stays unpublished (silent omit, not secret-refuse).
     if (EXCLUDED_BASENAMES.has(name)) continue;
+    // Ignore file itself is never shipped.
+    if (name === BAPM_IGNORE_FILE) continue;
 
-    const rel = relative(root, abs).split("\\").join("/");
+    if (isBapmIgnored(rel, ignoreRules)) continue;
+
     if (isSecretPackPath(rel) || isSecretPackPath(name)) {
       secrets.push(rel);
       continue;

@@ -76,7 +76,8 @@ describe("bapmignore — publish archive membership", () => {
     writeBapmIgnore(project.cwd, "*.md\n!LICENSE.md\n");
     writeText(join(project.cwd, "CHANGELOG.md"), "notes\n");
     writeText(join(project.cwd, "LICENSE.md"), "MIT\n");
-    writeText(join(project.cwd, ".apm", "instructions.md"), "# hello\n");
+    // Non-.md under .apm so `*.md` does not empty the required publish payload.
+    writeText(join(project.cwd, ".apm", "instructions.txt"), "# hello\n");
 
     const result = await getBuildPublishArchive()({
       cwd: project.cwd,
