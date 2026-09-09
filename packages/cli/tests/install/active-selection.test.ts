@@ -30,7 +30,7 @@ describe("CLI install · manifest active selection", () => {
     project = createTempProject();
     writeActiveProject(project.cwd, {
       name: "cli-sole-active",
-      active: ["cursor"],
+      active: { target: "cursor" },
       withLeafSkill: true,
     });
 
@@ -47,7 +47,7 @@ describe("CLI install · manifest active selection", () => {
     const acmeSpec = linkFixturePackage(project.cwd, "create-integration-pkg");
     writeActiveProject(project.cwd, {
       name: "cli-multi-active",
-      active: ["cursor", "x-acme-editor"],
+      active: { target: ["cursor", "x-acme-editor"] },
       // Both ids declared so intersection does not empty-filter either host.
       targets: { cursor: cursorSpec, "x-acme-editor": acmeSpec },
       withLeafSkill: true,
@@ -68,7 +68,7 @@ describe("CLI install · manifest active selection", () => {
     const acmeSpec = linkFixturePackage(project.cwd, "create-integration-pkg");
     writeActiveProject(project.cwd, {
       name: "cli-force-over-active",
-      active: ["cursor", "x-acme-editor"],
+      active: { target: ["cursor", "x-acme-editor"] },
       targets: { cursor: cursorSpec, "x-acme-editor": acmeSpec },
       withLeafSkill: true,
     });
@@ -116,7 +116,7 @@ describe("CLI install · manifest active selection", () => {
     project = createTempProject();
     writeActiveProject(project.cwd, {
       name: "cli-unknown-active",
-      active: ["cursor", "x-missing"],
+      active: { target: ["cursor", "x-missing"] },
       withLeafSkill: true,
       // Detect alone would activate cursor — unknown `active` peer must abort all.
       withCursor: true,
@@ -133,7 +133,7 @@ describe("CLI install · manifest active selection", () => {
     project = createTempProject();
     writeActiveProject(project.cwd, {
       name: "cli-apm-active",
-      active: ["cursor"],
+      active: { target: "cursor" },
       filename: "apm.yml",
       withLeafSkill: true,
     });

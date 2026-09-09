@@ -40,7 +40,7 @@ describe("CLI install · selection precedence (canonical, no map)", () => {
     writeNoMapProject(project.cwd, {
       name: "acc-flag-wins",
       withLeafSkill: true,
-      active: ["claude"],
+      active: { target: "claude" },
       localActive: ["claude"],
       withCursor: true,
     });
@@ -59,7 +59,7 @@ describe("CLI install · selection precedence (canonical, no map)", () => {
     writeNoMapProject(project.cwd, {
       name: "acc-local-replaces-base",
       withLeafSkill: true,
-      active: ["cursor"],
+      active: { target: "cursor" },
       localActive: ["claude"],
     });
 
@@ -80,7 +80,7 @@ describe("CLI install · selection precedence (canonical, no map)", () => {
     writeNoMapProject(project.cwd, {
       name: "acc-base-over-detect",
       withLeafSkill: true,
-      active: ["claude"],
+      active: { target: "claude" },
       withCursor: true, // detect would prefer cursor if active ignored
     });
 

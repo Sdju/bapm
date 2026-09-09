@@ -35,7 +35,8 @@ export function linkCursorIntegration(projectCwd: string): string {
 
 export type ActiveProjectOptions = {
   name?: string;
-  active: string[];
+  /** Host ids to activate (helper emits structured YAML). */
+  active: string[] | { target: string | string[] };
   /** Object-map host→package bindings (optional). */
   targets?: Record<string, string>;
   /** Legacy string/array targets preference. */
@@ -47,13 +48,23 @@ export type ActiveProjectOptions = {
   withCursor?: boolean;
 };
 
+function normalizeActiveIds(active: ActiveProjectOptions["active"]): string[] {
+  if (Array.isArray(active)) return active;
+  const t = active.target;
+  return Array.isArray(t) ? t : [t];
+}
+
 export function writeActiveProject(cwd: string, options: ActiveProjectOptions): void {
   const name = options.name ?? "active-root";
   const filename = options.filename ?? "bapm.yml";
-  const activeLines = options.active.map((id) => `  - ${id}`).join("\n");
+  const activeIds = normalizeActiveIds(options.active);
+  const activeLines =
+    activeIds.length === 1
+      ? `  target: ${activeIds[0]}`
+      : ["  target:", ...activeIds.map((id) => `    - ${id}`)].join("\n");
 
   let targets = options.targets ? { ...options.targets } : undefined;
-  if (options.active.includes("cursor") && (!targets || !targets.cursor)) {
+  if (activeIds.includes("cursor") && (!targets || !targets.cursor)) {
     const cursorSpec = linkCursorIntegration(cwd);
     targets = { ...targets, cursor: cursorSpec };
   }

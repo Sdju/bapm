@@ -73,12 +73,12 @@ export function parseInitArgs(argv: string[]): {
  */
 function scaffoldTargetFields(targetId: string): {
   targets: Record<string, string>;
-  active: string[];
+  active: { target: string };
 } {
   const id = targetId.trim();
   return {
     targets: { [id]: `@b-apm/integration-${id}` },
-    active: [id],
+    active: { target: id },
   };
 }
 

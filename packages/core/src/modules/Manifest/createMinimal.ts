@@ -11,8 +11,11 @@ export type CreateMinimalManifestOptions = {
   target?: string;
   /** Multi host targets or object-map (mutually exclusive with `target`). */
   targets?: string[] | TargetIntegrationMap;
-  /** Optional active host ids for materialize/compile selection. */
-  active?: string[];
+  /**
+   * Structured `active` (object / list-of-maps / normalized ActiveEntry[]).
+   * Parsed via the same rules as document `active`.
+   */
+  active?: unknown;
   description?: string;
   author?: string;
   /**

@@ -18,16 +18,18 @@ dependencies:
 ```yaml
 # bapm.local.yml у Vasya (не коммитить)
 active:
-  - cursor
+  target: cursor
 ```
 
 ```yaml
 # bapm.local.yml у Masha
 active:
-  - claude
+  target: claude
 ```
 
-Local `active` **заменяет** base `active` целиком (не merge списков). Общий манифест остаётся нейтральным; Cursor у Vasya и Claude у Masha не спорят в PR.
+Local `active` **заменяет** base `active` целиком (не merge). Общий манифест остаётся нейтральным; Cursor у Vasya и Claude у Masha не спорят в PR.
+
+Если в base объявлены `presets`, local может выбрать их через structured `active` (`preset: developer`) — определения presets остаются только в base (`presets` на overlay запрещён).
 
 Нужны пакеты `@b-apm/integration-cursor` / `@b-apm/integration-claude` у соответствующего разработчика (project или global).
 
@@ -36,7 +38,7 @@ Local `active` **заменяет** base `active` целиком (не merge с�
 ```yaml
 # bapm.local.yml
 active:
-  - cursor
+  target: cursor
 env:
   FOO: "personal"
 ```
@@ -60,12 +62,12 @@ bapm.local.lock.yaml
 
 | Ключ                 | Merge                                                                               |
 | -------------------- | ----------------------------------------------------------------------------------- |
-| `active`             | replace всего списка                                                                |
+| `active`             | replace всей structured selection (`preset` / `target`)                             |
 | `target` / `targets` | object-map + object-map → deep-merge (local wins); иначе replace + mutual exclusion |
 | `env`                | deep-merge строк (local wins per key)                                               |
 | `registries`         | deep-merge по имени registry                                                        |
 
-Всё остальное (`name`, `version`, `dependencies`, `x-*`, …) — отказ.
+Всё остальное (`name`, `version`, `dependencies`, `presets`, `x-*`, …) — отказ.
 
 ## Precedence
 

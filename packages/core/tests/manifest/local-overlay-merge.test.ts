@@ -29,13 +29,13 @@ describe("manifest-local-overlay — merge rules", () => {
       project.cwd,
       conformingBase({
         name: "active-replace",
-        extraYaml: "active:\n  - cursor\n",
+        extraYaml: "active:\n  target: cursor\n",
       }),
     );
-    writeLocalOverlay(project.cwd, "active:\n  - x-acme-editor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: x-acme-editor\n");
 
     const doc = documentOf(getLoadEffectiveManifest()({ cwd: project.cwd }));
-    expect(doc.active).toEqual(["x-acme-editor"]);
+    expect(doc.active).toEqual([{ kind: "target", id: "x-acme-editor", negate: false }]);
   });
 
   test("targets object-map keys deep-merge with local winning per key", () => {

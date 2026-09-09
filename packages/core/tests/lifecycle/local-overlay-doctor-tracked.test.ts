@@ -26,7 +26,7 @@ describe("manifest-local-overlay — doctor tracked warning", () => {
   test("tracked bapm.local.yml warns without forcing non-zero exit", async () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "doctor-tracked" }));
-    writeLocalOverlay(project.cwd, "active:\n  - cursor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: cursor\n");
     initGitRepo(project.cwd, { trackLocal: true });
 
     const result = await getRunDoctor()({
@@ -43,7 +43,7 @@ describe("manifest-local-overlay — doctor tracked warning", () => {
   test("untracked bapm.local.yml does not report tracked-overlay warning", async () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "doctor-untracked" }));
-    writeLocalOverlay(project.cwd, "active:\n  - cursor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: cursor\n");
     initGitRepo(project.cwd, { trackLocal: false });
 
     const result = await getRunDoctor()({

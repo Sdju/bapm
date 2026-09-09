@@ -48,7 +48,7 @@ bapm compile --target cursor -o path/to/OUT.md
 
 ### Если не сработало
 
-- `Target detection is missing or ambiguous; pass --target <id>` → укажите `--target cursor` или sole `active: [cursor]`.
+- `Target detection is missing or ambiguous; pass --target <id>` → укажите `--target cursor` или sole `active: { target: cursor }`.
 - Multi-`active` без `--target` → укажите `--target <id>`.
 - Unknown target id → для известного host установите `@b-apm/integration-<id>`; custom id зарегистрируйте через object-map `targets:`.
 - Пустой / неожиданный вывод → проверьте, что примитивы лежат там, где target их ищет; сначала сделайте install в Cursor.

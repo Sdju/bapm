@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { loadManifest } from "@/modules/Manifest";
+import { loadManifest, withEffectiveDirectDeps } from "@/modules/Manifest";
 import { loadAgentPluginManifest } from "@/modules/AgentPlugins";
 import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
@@ -163,7 +163,9 @@ export async function resolveDependencyGraph(
   });
   const marketplaceConfigDir = options.marketplaceConfigDir ?? options.configDir;
 
-  const { document: manifest } = loadManifest({ cwd });
+  const { document: loadedManifest } = loadManifest({ cwd });
+  // Expand presets into effective direct deps before classify/BFS.
+  const manifest = withEffectiveDirectDeps(loadedManifest);
   const rootName = manifest.name;
 
   const conflictResolution = (manifest.dependencies as Record<string, unknown> | undefined)

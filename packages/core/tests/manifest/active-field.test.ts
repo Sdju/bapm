@@ -1,6 +1,5 @@
 /**
- * Unit: manifest `active` parse/validate + serialize + dual-read + declared ids.
- * Promoted coverage from manifest-active-targets acceptance.
+ * Unit: manifest structured `active` parse/validate + serialize + dual-read.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -26,14 +25,17 @@ function writeText(path: string, contents: string): void {
 }
 
 describe("manifest active field", () => {
-  test("accepts non-empty mf-005 list", () => {
-    const doc = parseManifest(base({ active: ["cursor", "x-acme-editor"] }));
-    expect(doc.active).toEqual(["cursor", "x-acme-editor"]);
+  test("accepts structured object-form targets", () => {
+    const doc = parseManifest(base({ active: { target: ["cursor", "x-acme-editor"] } }));
+    expect(doc.active).toEqual([
+      { kind: "target", id: "cursor", negate: false },
+      { kind: "target", id: "x-acme-editor", negate: false },
+    ]);
   });
 
-  test("accepts sole active entry", () => {
-    const doc = parseManifest(base({ active: ["cursor"] }));
-    expect(doc.active).toEqual(["cursor"]);
+  test("accepts sole structured target", () => {
+    const doc = parseManifest(base({ active: { target: "cursor" } }));
+    expect(doc.active).toEqual([{ kind: "target", id: "cursor", negate: false }]);
   });
 
   test("rejects empty active array", () => {
@@ -52,19 +54,19 @@ describe("manifest active field", () => {
     expect(() => parseManifest(base({ active: "cursor" }))).toThrow(/active/i);
   });
 
-  test("rejects object-map active", () => {
+  test("rejects invalid object-map active keys", () => {
     expect(() => parseManifest(base({ active: { cursor: true } }))).toThrow(/active/i);
   });
 
-  test("rejects empty string element", () => {
-    expect(() => parseManifest(base({ active: ["cursor", ""] }))).toThrow(
-      /active|empty|non-empty/i,
+  test("rejects legacy bare host-token list", () => {
+    expect(() => parseManifest(base({ active: ["cursor"] }))).toThrow(
+      /legacy|bare|structured|preset|target/i,
     );
   });
 
   test("rejects invalid token with named diagnostic", () => {
     try {
-      parseManifest(base({ active: ["not-a-host"] }));
+      parseManifest(base({ active: { target: "not-a-host" } }));
       throw new Error("expected reject");
     } catch (e) {
       const err = e as ManifestError;
@@ -74,17 +76,18 @@ describe("manifest active field", () => {
     }
   });
 
-  test("serialize / producer write preserves active", () => {
-    const doc = parseManifest(base({ active: ["cursor"] }));
+  test("serialize / producer write preserves structured active", () => {
+    const doc = parseManifest(base({ active: { target: "cursor" } }));
     const yaml = serializeManifest(doc);
     expect(yaml).toMatch(/active:/);
+    expect(yaml).toMatch(/target:/);
     expect(yaml).toMatch(/cursor/);
 
     const cwd = mkdtempSync(join(tmpdir(), "bapm-active-write-"));
     try {
       const { path } = writeProducerManifest(doc, { cwd, path: join(cwd, "bapm.yml") });
-      const round = parseManifestDocument(base({ active: ["cursor"] }));
-      expect(round.document.active).toEqual(["cursor"]);
+      const round = parseManifestDocument(base({ active: { target: "cursor" } }));
+      expect(round.document.active).toEqual([{ kind: "target", id: "cursor", negate: false }]);
       expect(readFileSync(path, "utf8")).toMatch(/active:[\s\S]*cursor/);
     } finally {
       rmSync(cwd, { recursive: true, force: true });
@@ -100,7 +103,7 @@ describe("manifest active — dual-read apm.yml", () => {
     cwd = undefined;
   });
 
-  test("apm.yml with valid active loads under same rules as bapm.yml", () => {
+  test("apm.yml with structured active loads under same rules as bapm.yml", () => {
     cwd = mkdtempSync(join(tmpdir(), "bapm-active-apm-"));
     writeText(
       join(cwd, "apm.yml"),
@@ -108,7 +111,7 @@ describe("manifest active — dual-read apm.yml", () => {
         "name: dual-active",
         "version: 0.0.1",
         "active:",
-        "  - cursor",
+        "  target: cursor",
         "dependencies:",
         "  apm: []",
         "",
@@ -117,7 +120,7 @@ describe("manifest active — dual-read apm.yml", () => {
 
     const loaded = loadManifest({ cwd });
     expect(loaded.sourceFilename).toMatch(/apm\.yml/);
-    expect(loaded.document.active).toEqual(["cursor"]);
+    expect(loaded.document.active).toEqual([{ kind: "target", id: "cursor", negate: false }]);
   });
 
   test("apm.yml with empty active rejected", () => {
@@ -143,7 +146,7 @@ describe("manifest active vs target/targets roles", () => {
     const doc = parseManifest(
       base({
         targets: ["cursor"],
-        active: ["cursor", "x-acme-editor"],
+        active: { target: ["cursor", "x-acme-editor"] },
       }),
     );
 
@@ -153,7 +156,7 @@ describe("manifest active vs target/targets roles", () => {
   });
 
   test("active alone does not invent declared preference ids", () => {
-    const doc = parseManifest(base({ active: ["cursor"] }));
+    const doc = parseManifest(base({ active: { target: "cursor" } }));
     expect(declaredTargetIds(doc)).toEqual([]);
   });
 });

@@ -9,6 +9,8 @@ import type {
 import { getConfigureMcp } from "@b-apm/integration-api";
 import {
   loadManifest,
+  resolveActive,
+  withEffectiveDirectDeps,
   type BapmManifest,
   type DependencyEntry,
   type ObjectDependency,
@@ -188,7 +190,10 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     });
   }
 
-  const { document: rootManifest } = loadManifest({ cwd });
+  const { document: loadedRoot } = loadManifest({ cwd });
+  // Preset expansion for deps; host selection uses resolved target ids only.
+  const rootManifest = withEffectiveDirectDeps(loadedRoot);
+  const { targetIds: resolvedTargetIds } = resolveActive(loadedRoot);
   const previousLock = loadEffectiveLockfileOrNull({ cwd });
 
   const insecureGate = gateInsecureBeforeFetch({
@@ -389,7 +394,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     registry,
     override: options.activeTargets,
     forcedTargetId,
-    manifestActive: rootManifest.active,
+    manifestActive: resolvedTargetIds,
   });
   assertActiveTargetsRegistered(activeTargets, registry);
 

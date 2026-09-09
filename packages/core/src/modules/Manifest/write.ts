@@ -1,10 +1,11 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { stringify } from "yaml";
+import { activeEntriesToEmitShape } from "./active.ts";
 import { discoverManifestPath } from "./discover.ts";
 import type { ManifestWarning } from "./errors.ts";
 import { parseManifestDocument } from "./parse.ts";
-import type { BapmManifest } from "./types.ts";
+import type { ActiveEntry, BapmManifest } from "./types.ts";
 
 export type WriteManifestOptions = {
   cwd?: string;
@@ -26,11 +27,57 @@ export type WriteProducerManifestResult = {
   warnings: ManifestWarning[];
 };
 
+function prepareForSerialize(
+  document: BapmManifest | Record<string, unknown>,
+): Record<string, unknown> {
+  const copy = { ...(document as Record<string, unknown>) };
+  const active = copy.active;
+  if (Array.isArray(active) && active.length > 0) {
+    const entries = active as ActiveEntry[];
+    if (
+      entries.every(
+        (e) =>
+          e &&
+          typeof e === "object" &&
+          (e.kind === "preset" || e.kind === "target") &&
+          typeof e.id === "string",
+      )
+    ) {
+      copy.active = activeEntriesToEmitShape(entries);
+    }
+  }
+  const presets = copy.presets;
+  if (Array.isArray(presets)) {
+    copy.presets = presets.map((p) => {
+      if (!p || typeof p !== "object") return p;
+      const preset = { ...(p as Record<string, unknown>) };
+      const nested = preset.active;
+      if (Array.isArray(nested) && nested.length > 0) {
+        const entries = nested as ActiveEntry[];
+        if (
+          entries.every(
+            (e) =>
+              e &&
+              typeof e === "object" &&
+              (e.kind === "preset" || e.kind === "target") &&
+              typeof e.id === "string",
+          )
+        ) {
+          preset.active = activeEntriesToEmitShape(entries);
+        }
+      }
+      return preset;
+    });
+  }
+  return copy;
+}
+
 /**
  * Serialize a manifest document to YAML (round-trip best-effort).
+ * Normalized `active` / nested preset `active` emit as list-of-maps.
  */
 export function serializeManifest(document: BapmManifest | Record<string, unknown>): string {
-  return stringify(document, {
+  return stringify(prepareForSerialize(document), {
     lineWidth: 0,
     defaultStringType: "PLAIN",
     defaultKeyType: "PLAIN",

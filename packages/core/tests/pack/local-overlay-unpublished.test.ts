@@ -43,7 +43,7 @@ describe("manifest-local-overlay — unpublished surfaces", () => {
   test("pack archive omits bapm.local.yml", async () => {
     project = createTempProject();
     writeBaseManifest(project.cwd, conformingBase({ name: "pack-omit", version: "1.0.0" }));
-    writeLocalOverlay(project.cwd, "active:\n  - cursor\n");
+    writeLocalOverlay(project.cwd, "active:\n  target: cursor\n");
     writeText(join(project.cwd, ".apm", "note.txt"), "primitive\n");
 
     const result = await getRunPack()({
@@ -78,7 +78,7 @@ describe("manifest-local-overlay — unpublished surfaces", () => {
       project.cwd,
       [
         "active:",
-        "  - cursor",
+        "  target: cursor",
         "env:",
         '  OVERLAY_ONLY_SECRET: "must-not-leak"',
         "registries:",
