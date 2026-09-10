@@ -4,7 +4,7 @@
 import { describe, expect, test } from "vite-plus/test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { repoRoot } from "./helpers.ts";
+import { repoRoot } from "./copilot-native-helpers.ts";
 
 describe("agent-plugins compatibility — Copilot native registration", () => {
   test("compatibility-cases.json lists a Copilot-native registration case", () => {

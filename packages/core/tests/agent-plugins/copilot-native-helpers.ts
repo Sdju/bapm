@@ -1,5 +1,5 @@
 /**
- * Helpers for copilot-native-agent-plugins acceptance (RED → GREEN).
+ * Helpers for Copilot native Agent Plugins registration tests.
  * Specs: copilot-native-agent-plugins, install-pipeline, integration-copilot-runtime,
  * lifecycle-uninstall-prune, agent-plugins-compatibility.
  */
@@ -30,8 +30,8 @@ import {
   modulesDir,
   repoRoot,
   type TempProject,
-} from "../../install/helpers.ts";
-import { getRunPrune, getRunUninstall } from "../../lifecycle/helpers.ts";
+} from "../install/helpers.ts";
+import { getRunPrune, getRunUninstall } from "../lifecycle/helpers.ts";
 
 export {
   expectRejectsMatching,

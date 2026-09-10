@@ -64,7 +64,7 @@
       "status": "target-specific",
       "summary": "Copilot native Agent Plugins registration writes owned catalog+ledger under apm_modules/.github/plugin/ and merges settings.local.json (@apm); live load from modules with no copy or --plugin-dir; loose skill/MCP projection skipped for admitted roots.",
       "fixture": "tests/fixtures/agent-plugins/v1-portable",
-      "test": "packages/core/tests/acceptance/copilot-native-agent-plugins/install-registration.test.ts"
+      "test": "packages/core/tests/agent-plugins/copilot-native-install-registration.test.ts"
     },
     {
       "id": "unsupported-components",

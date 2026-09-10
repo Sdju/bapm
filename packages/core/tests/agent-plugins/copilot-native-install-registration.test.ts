@@ -20,7 +20,7 @@ import {
   writePortablePlugin,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./copilot-native-helpers.ts";
 
 describe("copilot native registration happy path", () => {
   let project: TempProject | undefined;

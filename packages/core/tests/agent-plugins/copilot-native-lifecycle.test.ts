@@ -21,7 +21,7 @@ import {
   writePortablePlugin,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./copilot-native-helpers.ts";
 
 describe("copilot native registration precedence and lifecycle", () => {
   let project: TempProject | undefined;
