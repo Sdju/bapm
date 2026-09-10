@@ -200,7 +200,7 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
     );
   });
 
-  test("repo identity — host case / trailing .git same; path-case distinct (rs-016)", async () => {
+  test("repo identity — host case / trailing .git / path-case fold on github (rs-016)", async () => {
     project = createTempProject();
     const ports = createFakePorts({
       commitsByRef: {
@@ -222,17 +222,20 @@ describe("M3 resolveDependencyGraph — nest / BFS / depth / cycle / identity", 
     const identities = nodes
       .map((n) => asText(n.identity ?? n.repo_identity ?? n.repo_url ?? ""))
       .filter(Boolean);
-    // Host-case + trailing .git MUST share identity for example/repo.
-    const lowerPath = identities.filter((s) => /example\/repo(?!\/)/i.test(s) && !/REPO/.test(s));
-    const uniqueLower = new Set(
-      lowerPath.map((s) => s.replace(/^https?:\/\//i, "").replace(/\.git$/i, "")),
+    // Host-case, trailing .git, and GitHub path-case MUST share one identity (req-rs-016 §3).
+    const githubExample = identities.filter((s) => /example\/repo/i.test(s));
+    expect(githubExample.length).toBeGreaterThanOrEqual(1);
+    const uniqueKeys = new Set(
+      githubExample.map((s) =>
+        s
+          .replace(/^https?:\/\//i, "")
+          .replace(/\.git$/i, "")
+          .toLowerCase(),
+      ),
     );
-    // After host-case normalize, both lower-path URLs collapse to one key.
-    expect(uniqueLower.size).toBe(1);
-    // Path-case REPO remains a distinct identity by default.
-    const upperPath = identities.filter((s) => /example\/REPO/.test(s));
-    expect(upperPath.length).toBeGreaterThanOrEqual(1);
-    expect(upperPath[0]).not.toBe([...uniqueLower][0]);
+    expect(uniqueKeys.size).toBe(1);
+    // No preserved mixed path-case key for github.com (folded).
+    expect(identities.some((s) => /example\/REPO/.test(s))).toBe(false);
   });
 
   test("local transitive — root → local → local appears with depth / resolved_by", async () => {
