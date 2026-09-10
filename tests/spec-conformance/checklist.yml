@@ -563,13 +563,11 @@ requirements:
     keyword: MUST
     section: "6.5"
     status: active
-    citation:
-      packages/core/tests/policy/identity-casing.test.ts;
+    citation: packages/core/tests/policy/identity-casing.test.ts;
       packages/core/tests/acceptance/policy-canonical-identity-casing/evaluate-casing.test.ts;
       packages/core/tests/acceptance/policy-canonical-identity-casing/gate-fail-closed.test.ts;
       packages/core/tests/acceptance/policy-canonical-identity-casing/merge-byte-exact.test.ts
-    notes:
-      match-time ASCII fold of repository coordinates for disclosed hosts/registry; merge stays byte-exact
+    notes: match-time ASCII fold of repository coordinates for disclosed hosts/registry; merge stays byte-exact
   - id: req-rs-001
     class: consumer
     keyword: MUST
