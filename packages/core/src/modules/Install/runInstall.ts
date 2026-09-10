@@ -47,6 +47,11 @@ import {
   discoverAgentPluginDeclaredPaths,
   AgentPluginsError,
 } from "@/modules/AgentPlugins";
+import {
+  admitCopilotNativePlugins,
+  filterPrimitivesForCopilotNative,
+  rebuildCopilotNativeRegistration,
+} from "@/modules/CopilotNativeRegistration";
 import { extractPackArchive } from "@/modules/Pack";
 import {
   loadUserExecutableGrants,
@@ -360,28 +365,11 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
             ? String((error as { code: unknown }).code)
             : "";
       if (
-        (code === "AGENT_PLUGIN_DECLARED_PATH_INVALID" ||
-          code === "AGENT_PLUGIN_SKILL_DECLARED_INVALID") &&
-        !previousLock &&
-        lockPath &&
-        existsSync(lockPath)
+        code === "AGENT_PLUGIN_DECLARED_PATH_INVALID" ||
+        code === "AGENT_PLUGIN_SKILL_DECLARED_INVALID" ||
+        code === "AGENT_PLUGIN_MANIFEST_INVALID"
       ) {
-        try {
-          unlinkSync(lockPath);
-        } catch {
-          /* best-effort rollback */
-        }
-        // Also clear common lock filenames if resolve wrote a different path.
-        for (const name of ["bapm.lock.yaml", "apm.lock.yaml"]) {
-          const candidate = join(cwd, name);
-          if (existsSync(candidate)) {
-            try {
-              unlinkSync(candidate);
-            } catch {
-              /* best-effort */
-            }
-          }
-        }
+        rollbackFreshLock({ previousLock, lockPath, cwd });
       }
       throw error;
     }
@@ -406,6 +394,20 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   });
   assertActiveTargetsRegistered(activeTargets, registry);
 
+  const copilotActive = activeTargets.includes("copilot");
+  let admittedNativePackages = new Set<string>();
+  let admittedNativePlugins: ReturnType<typeof admitCopilotNativePlugins> = [];
+
+  if (copilotActive && !skipApmMaterialize) {
+    try {
+      admittedNativePlugins = admitCopilotNativePlugins(nodes, { cwd });
+      admittedNativePackages = new Set(admittedNativePlugins.map((p) => p.packageName));
+    } catch (error) {
+      rollbackFreshLock({ previousLock, lockPath, cwd });
+      throw error;
+    }
+  }
+
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
   const subsetDiagnostics: unknown[] = [];
@@ -417,20 +419,37 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       const target = findTarget(registry, targetId);
       if (!target) continue;
 
-      const filtered = filterByIntersection(
+      let filtered = filterByIntersection(
         afterSkillFilter,
         targetId,
         packageTargets,
         rootManifest,
         nodes,
       );
+      if (targetId === "copilot" && admittedNativePackages.size > 0) {
+        filtered = filterPrimitivesForCopilotNative(filtered, admittedNativePackages);
+      }
       materializedPrimitives.push(...filtered);
       const report = (await target.materialize(filtered, {
         cwd,
         targetId,
         deployRoots: [...target.deployRoots],
+        skipNativeRegisteredPackages: [...admittedNativePackages],
       })) as void | MaterializeReport;
       allDeployed.push(...collectTargetDeployedHashes(cwd, target, report));
+    }
+  }
+
+  if (copilotActive && !skipApmMaterialize) {
+    try {
+      rebuildCopilotNativeRegistration({
+        cwd,
+        admitted: admittedNativePlugins,
+        dryRun: false,
+      });
+    } catch (error) {
+      rollbackFreshLock({ previousLock, lockPath, cwd });
+      throw error;
     }
   }
 
@@ -578,6 +597,32 @@ function portablePluginRoot(node: ResolvedNode): string | undefined {
     if (candidate && existsSync(join(candidate, "plugin.json"))) return candidate;
   }
   return undefined;
+}
+
+/** Best-effort: drop a lock written by this install when a later gate fails closed. */
+function rollbackFreshLock(args: {
+  previousLock: ReturnType<typeof loadEffectiveLockfileOrNull>;
+  lockPath?: string;
+  cwd: string;
+}): void {
+  if (args.previousLock) return;
+  if (args.lockPath && existsSync(args.lockPath)) {
+    try {
+      unlinkSync(args.lockPath);
+    } catch {
+      /* best-effort */
+    }
+  }
+  for (const name of ["bapm.lock.yaml", "apm.lock.yaml"]) {
+    const candidate = join(args.cwd, name);
+    if (existsSync(candidate)) {
+      try {
+        unlinkSync(candidate);
+      } catch {
+        /* best-effort */
+      }
+    }
+  }
 }
 
 function normalizeOnlyMode(only: InstallOnlyMode | undefined): InstallOnlyMode | undefined {

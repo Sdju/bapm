@@ -81,6 +81,11 @@ export function createCopilotIntegration(options?: {
     async materialize(primitives, ctx): Promise<MaterializeReport> {
       const cwd = resolve(ctx?.cwd ?? process.cwd());
       const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
+      const skipPackages = new Set(
+        Array.isArray(ctx?.skipNativeRegisteredPackages)
+          ? (ctx.skipNativeRegisteredPackages as unknown[]).map(String)
+          : [],
+      );
 
       const deployedFiles: MaterializeReport["deployedFiles"] = [];
       const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
@@ -88,6 +93,7 @@ export function createCopilotIntegration(options?: {
 
       await primitivesMaterialize(primitives, {
         skill(p, { name }) {
+          if (skipPackages.has(String(p.packageName ?? ""))) return;
           deployedFiles.push(
             ...materializeSkill({
               primitive: p,
