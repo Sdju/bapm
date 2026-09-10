@@ -16,7 +16,7 @@ import {
   writeSkill,
   writeText,
   type TempProject,
-} from "./helpers.ts";
+} from "./skills-exclusive-helpers.ts";
 import { join } from "node:path";
 
 describe("exclusive plugin skills vs consumer dep skills subset", () => {

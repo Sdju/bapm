@@ -75,6 +75,24 @@ describe("plugin.json skills declaration (unit)", () => {
       }),
     ).toThrow(AgentPluginsError);
 
+    expect(() =>
+      validateAgentPluginManifest({
+        $schema: AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+        name: "bad-obj",
+        skills: { hello: true },
+      }),
+    ).toThrow(AgentPluginsError);
+
+    for (const skills of [[1], [null], [true], [""]] as unknown[][]) {
+      expect(() =>
+        validateAgentPluginManifest({
+          $schema: AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+          name: "bad-elem",
+          skills,
+        }),
+      ).toThrow(AgentPluginsError);
+    }
+
     const loaded = loadAgentPluginManifest({
       root: createPlugin({ skills: ["hello"], futureField: true }),
     });
@@ -127,7 +145,64 @@ describe("plugin.json skills declaration (unit)", () => {
     expect(discoverAgentPluginSkills({ root: plugin }).skills.map((s) => s.name)).toEqual(["keep"]);
   });
 
-  test("container expand and nested-depth / unknown / traversal fail-closed", () => {
+  test("omit with no skills dir is empty; empty array without entries needs no shadow", () => {
+    const bare = createPlugin();
+    expect(discoverAgentPluginSkills({ root: bare }).skills).toEqual([]);
+
+    writeFileSync(
+      join(bare, "plugin.json"),
+      JSON.stringify({
+        $schema: AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+        name: "skills-decl",
+        skills: [],
+      }),
+      "utf8",
+    );
+    const result = discoverAgentPluginSkills({ root: bare });
+    expect(result.skills).toEqual([]);
+    expect(result.diagnostics.some((d) => d.code === "AGENT_PLUGIN_SKILLS_EMPTY_SHADOWS")).toBe(
+      false,
+    );
+  });
+
+  test("path form, ./skills container, and duplicate declarations", () => {
+    const plugin = createPlugin({ skills: ["skills/keep"] });
+    writeSkill(plugin, "keep");
+    writeSkill(plugin, "drop");
+    expect(discoverAgentPluginSkills({ root: plugin }).skills.map((s) => s.name)).toEqual(["keep"]);
+
+    writeFileSync(
+      join(plugin, "plugin.json"),
+      JSON.stringify({
+        $schema: AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+        name: "skills-decl",
+        skills: ["./skills"],
+      }),
+      "utf8",
+    );
+    writeSkill(plugin, "a");
+    writeSkill(plugin, "b");
+    expect(
+      discoverAgentPluginSkills({ root: plugin })
+        .skills.map((s) => s.name)
+        .sort(),
+    ).toEqual(["a", "b", "drop", "keep"]);
+
+    writeFileSync(
+      join(plugin, "plugin.json"),
+      JSON.stringify({
+        $schema: AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+        name: "skills-decl",
+        skills: ["keep", "skills/keep", "keep"],
+      }),
+      "utf8",
+    );
+    const dup = discoverAgentPluginSkills({ root: plugin });
+    expect(dup.skills.map((s) => s.name)).toEqual(["keep"]);
+    expect(dup.skills).toHaveLength(1);
+  });
+
+  test("container expand and nested-depth / unknown / traversal / absolute fail-closed", () => {
     const plugin = createPlugin({ skills: ["skills"] });
     writeSkill(plugin, "a");
     writeSkill(plugin, "b");
@@ -172,5 +247,18 @@ describe("plugin.json skills declaration (unit)", () => {
       "utf8",
     );
     expect(() => discoverAgentPluginSkills({ root: plugin })).toThrow(/traversal|escape/i);
+
+    writeFileSync(
+      join(plugin, "plugin.json"),
+      JSON.stringify({
+        $schema: AGENT_PLUGIN_MANIFEST_SCHEMA_V1,
+        name: "skills-decl",
+        skills: ["/tmp/abs-skill"],
+      }),
+      "utf8",
+    );
+    expect(() => discoverAgentPluginSkills({ root: plugin })).toThrow(
+      /absolute|escape|invalid|declared/i,
+    );
   });
 });

@@ -14,7 +14,7 @@ import {
   writePluginJson,
   writeSkill,
   type TempProject,
-} from "./helpers.ts";
+} from "./skills-exclusive-helpers.ts";
 
 describe("install respects exclusive plugin.json skills", () => {
   let project: TempProject | undefined;

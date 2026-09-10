@@ -21,7 +21,7 @@ const cases = JSON.parse(
   await import("node:fs").then(({ readFileSync }) =>
     readFileSync(join(repoRoot, "tests/agent-plugins/compatibility-cases.json"), "utf8"),
   ),
-) as { components: CompatibilityCase[] };
+) as { components: CompatibilityCase[]; boundary?: string };
 
 describe("Agent Plugins v1 compatibility status fixtures", () => {
   test("every published status row cites a checked-in fixture and regression test", () => {
@@ -30,6 +30,13 @@ describe("Agent Plugins v1 compatibility status fixtures", () => {
       expect(existsSync(join(repoRoot, component.fixture)), `${component.id} fixture`).toBe(true);
       expect(existsSync(join(repoRoot, component.test)), `${component.id} test`).toBe(true);
     }
+  });
+
+  test("compatibility matrix lists skills as supported portable component", () => {
+    const skills = cases.components.find((c) => c.id === "skills");
+    expect(skills).toBeTruthy();
+    expect(["supported", "target-specific"]).toContain(skills!.status);
+    expect(cases.boundary ?? "").toMatch(/portable|not an Agent Plugins certification|boundary/i);
   });
 
   test("portable fixture validates manifest, skills, and MCP transports", () => {

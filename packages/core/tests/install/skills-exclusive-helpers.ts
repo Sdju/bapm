@@ -1,6 +1,5 @@
 /**
- * Helpers for plugin-skills-declaration-exclusive acceptance (RED → GREEN).
- * Specs: plugin-skills-declaration, agent-plugins-compatibility, install-pipeline.
+ * Helpers for exclusive plugin.json skills install / composition suites.
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,25 +12,11 @@ import {
   expectThrowsMatching,
   expectRejectsMatching,
   type TempProject,
-} from "../../install/helpers.ts";
+} from "./helpers.ts";
 
 export { getRunInstall, expectThrowsMatching, expectRejectsMatching, type TempProject };
 
 export const AGENT_PLUGIN_SCHEMA = AGENT_PLUGIN_MANIFEST_SCHEMA_V1;
-
-/** Diagnostic shape from AgentPlugins load/discover (skills may not be typed yet). */
-export type PluginDiagnostic = {
-  code: string;
-  message: string;
-  path?: string;
-  severity?: string;
-};
-
-export type ManifestWithSkills = {
-  skills?: string[];
-  name?: string;
-  [key: string]: unknown;
-};
 
 export function createTempProject(prefix = "bapm-pskills-"): TempProject {
   const cwd = mkdtempSync(join(tmpdir(), prefix));
@@ -39,14 +24,6 @@ export function createTempProject(prefix = "bapm-pskills-"): TempProject {
     cwd,
     cleanup: () => rmSync(cwd, { recursive: true, force: true }),
   };
-}
-
-export function createPluginRoot(prefix = "bapm-plugin-skills-"): string {
-  return mkdtempSync(join(tmpdir(), prefix));
-}
-
-export function cleanupRoot(root: string | undefined): void {
-  if (root) rmSync(root, { recursive: true, force: true });
 }
 
 export function writeText(path: string, contents: string): void {
@@ -74,28 +51,6 @@ export function writePluginJson(pluginRoot: string, fields: Record<string, unkno
     "utf8",
   );
   return path;
-}
-
-export function skillNames(result: { skills: Array<{ name: string }> }): string[] {
-  return result.skills.map((s) => s.name).sort();
-}
-
-export function diagnosticCodes(diagnostics: PluginDiagnostic[]): string[] {
-  return diagnostics.map((d) => d.code);
-}
-
-/** True when a diagnostic is the empty-skills shadow warning (code or message). */
-export function hasEmptySkillsShadowDiagnostic(diagnostics: PluginDiagnostic[]): boolean {
-  return diagnostics.some((d) => {
-    if (/SKILLS_EMPTY|EMPTY_SHADOWS|SKILLS_SHADOW/i.test(d.code)) return true;
-    return /shadow|empty.*skills|omit.*(key|skills)|declare.*skills/i.test(d.message);
-  });
-}
-
-export function manifestSkills(manifest: unknown): string[] | undefined {
-  if (!manifest || typeof manifest !== "object") return undefined;
-  const skills = (manifest as ManifestWithSkills).skills;
-  return Array.isArray(skills) ? (skills as string[]) : skills === undefined ? undefined : [];
 }
 
 export function createCursorRegistry() {
