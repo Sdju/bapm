@@ -22,6 +22,12 @@ export type AgentPluginManifest = {
   commands?: string[];
   /** Declared hook JSON paths relative to the plugin root. */
   hooks?: string[];
+  /**
+   * Exclusive skill declaration when present.
+   * Omit → conventional `skills/<name>/SKILL.md` discovery;
+   * `[]` → zero skills; non-empty → only resolved declared entries.
+   */
+  skills?: string[];
   extensions?: Record<string, Record<string, unknown>>;
 };
 
@@ -47,6 +53,8 @@ export type CreateAgentPluginManifestOptions = {
   repository?: string;
   license?: string;
   keywords?: string[];
+  /** Exclusive skill names/paths/containers when producing a portable plugin. */
+  skills?: string[];
   extensions?: Record<string, Record<string, unknown>>;
 };
 

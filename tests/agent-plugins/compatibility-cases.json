@@ -13,7 +13,7 @@
     {
       "id": "skills",
       "status": "supported",
-      "summary": "Immediate skills/<name>/ directories with SKILL.md are discovered and copied as complete safe directories.",
+      "summary": "Skills from conventional immediate skills/<name>/SKILL.md when plugin.json omits skills, or from exclusive plugin.json skills declaration (omit vs [] vs list; fail-closed) when present.",
       "fixture": "tests/fixtures/agent-plugins/v1-portable",
       "test": "packages/core/tests/agent-plugins/compatibility-status.test.ts"
     },
