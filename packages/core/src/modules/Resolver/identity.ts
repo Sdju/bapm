@@ -2,9 +2,12 @@
  * Minimum-safe repo identity for resolve/cache (req-rs-016).
  * - Host case folded to lowercase
  * - Trailing `.git` stripped
- * - Path case preserved (example/REPO ≠ example/repo)
+ * - Path case: ASCII-folded for disclosed case-insensitive hosts (github.com,
+ *   *.ghe.com, GITHUB_HOST); preserved for all other hosts
  * - Cache keys MUST NOT isolate solely by ref
  */
+
+import { asciiLower, isCaseInsensitiveGitHost } from "@/common/repoIdentityCase.ts";
 
 export function normalizeRepoIdentity(repoUrl: string): string {
   const trimmed = repoUrl.trim();
@@ -13,7 +16,7 @@ export function normalizeRepoIdentity(repoUrl: string): string {
 
   if (/^git@([^:]+):(.+)$/.test(trimmed)) {
     const m = trimmed.match(/^git@([^:]+):(.+)$/)!;
-    host = m[1]!.toLowerCase();
+    host = asciiLower(m[1]!);
     path = m[2]!;
   } else if (/^https?:\/\//i.test(trimmed)) {
     try {
@@ -21,13 +24,13 @@ export function normalizeRepoIdentity(repoUrl: string): string {
       host = u.hostname.toLowerCase();
       path = u.pathname.replace(/^\//, "");
     } catch {
-      return stripGitSuffix(trimmed.toLowerCase());
+      return stripGitSuffix(asciiLower(trimmed));
     }
   } else {
     // host/owner/repo or owner/repo
     const parts = trimmed.split("/");
     if (parts.length >= 3 && parts[0]!.includes(".")) {
-      host = parts[0]!.toLowerCase();
+      host = asciiLower(parts[0]!);
       path = parts.slice(1).join("/");
     } else if (parts.length >= 2) {
       host = "github.com";
@@ -40,6 +43,9 @@ export function normalizeRepoIdentity(repoUrl: string): string {
   path = stripGitSuffix(path);
   // Drop query/fragment leftovers
   path = path.split("?")[0]!.split("#")[0]!;
+  if (isCaseInsensitiveGitHost(host)) {
+    path = asciiLower(path);
+  }
   return `${host}/${path}`.replace(/\/+$/, "");
 }
 

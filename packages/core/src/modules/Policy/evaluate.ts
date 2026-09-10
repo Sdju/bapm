@@ -1,5 +1,5 @@
 import type { PolicyWarning } from "./errors.ts";
-import { anyIdentityMatches, identityMatchesPattern, isPinnedConstraint } from "./match.ts";
+import { identityMatchesPattern, identitySatisfiesRequire, isPinnedConstraint } from "./match.ts";
 import type {
   EvaluatePolicyOptions,
   EvaluatePolicyResult,
@@ -32,7 +32,6 @@ export function evaluateInstallPolicy(options: EvaluatePolicyOptions): EvaluateP
   }
 
   const entries = normalizeEntries(options);
-  const identities = entries.map((e) => e.id);
   const violations: PolicyViolation[] = [];
   const warnings: PolicyWarning[] = [];
 
@@ -42,7 +41,7 @@ export function evaluateInstallPolicy(options: EvaluatePolicyOptions): EvaluateP
   if (deps?.deny && Array.isArray(deps.deny)) {
     for (const pattern of deps.deny) {
       for (const entry of entries) {
-        if (identityMatchesPattern(entry.id, pattern)) {
+        if (identityMatchesPattern(entry.id, pattern, matchOpts(entry))) {
           violations.push({
             code: "POLICY_DENY",
             message: `Dependency "${entry.id}" denied by policy pattern "${pattern}"`,
@@ -59,9 +58,13 @@ export function evaluateInstallPolicy(options: EvaluatePolicyOptions): EvaluateP
   if (deps && "allow" in deps && deps.allow !== undefined && deps.allow !== null) {
     const allow = deps.allow;
     for (const entry of entries) {
-      const denied = deps.deny?.some((p) => identityMatchesPattern(entry.id, p)) === true;
+      const denied =
+        deps.deny?.some((p) => identityMatchesPattern(entry.id, p, matchOpts(entry))) === true;
       if (denied) continue;
-      if (allow.length === 0 || !allow.some((p) => identityMatchesPattern(entry.id, p))) {
+      if (
+        allow.length === 0 ||
+        !allow.some((p) => identityMatchesPattern(entry.id, p, matchOpts(entry)))
+      ) {
         violations.push({
           code: "POLICY_ALLOW",
           message: `Dependency "${entry.id}" is not allowed by policy allow list`,
@@ -72,10 +75,13 @@ export function evaluateInstallPolicy(options: EvaluatePolicyOptions): EvaluateP
     }
   }
 
-  // Require missing
+  // Require missing — exact match only (`*` literal); fold per req-pl-018
   if (deps?.require && Array.isArray(deps.require)) {
     for (const pattern of deps.require) {
-      if (!anyIdentityMatches(identities, pattern)) {
+      const satisfied = entries.some((entry) =>
+        identitySatisfiesRequire(entry.id, pattern, matchOpts(entry)),
+      );
+      if (!satisfied) {
         violations.push({
           code: "POLICY_REQUIRE",
           message: `Required dependency "${pattern}" is missing from install candidates`,
@@ -167,7 +173,15 @@ type NormalizedEntry = {
   path?: string;
   source?: string;
   kind?: string;
+  host?: string;
 };
+
+function matchOpts(entry: NormalizedEntry) {
+  return {
+    host: entry.host,
+    source: entry.source,
+  };
+}
 
 function normalizeEntries(options: EvaluatePolicyOptions): NormalizedEntry[] {
   const out: NormalizedEntry[] = [];
@@ -206,6 +220,7 @@ function fromCandidate(c: PolicyCandidate): NormalizedEntry {
     path: c.path,
     source: c.source,
     kind: c.kind,
+    host: c.host,
   };
 }
 
@@ -222,5 +237,6 @@ function fromDependency(d: PolicyDependencyInput): NormalizedEntry {
     direct: d.direct,
     path: d.path,
     source: d.source,
+    host: d.host,
   };
 }

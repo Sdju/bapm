@@ -103,4 +103,12 @@ export { isPolicyDisabled } from "./escape.ts";
 export { runPolicyGate, assertPolicyGateAllows } from "./gate.ts";
 export { runPolicyStatus } from "./status.ts";
 export { redactPolicyRef } from "./redact.ts";
-export { identityMatchesPattern, isPinnedConstraint } from "./match.ts";
+export { identityMatchesPattern, identitySatisfiesRequire, isPinnedConstraint } from "./match.ts";
+export type { IdentityMatchOptions } from "./match.ts";
+export {
+  asciiLower,
+  foldRepoCoordinatePath,
+  isCaseInsensitiveGitHost,
+  isCaseInsensitivePackageIdentity,
+  normalizePackageRepoPath,
+} from "@/common/repoIdentityCase.ts";

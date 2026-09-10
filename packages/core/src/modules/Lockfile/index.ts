@@ -82,6 +82,7 @@ export {
 export { parseLockfile, parseLockfileDocument } from "./parse.ts";
 export { serializeLockfile } from "./serialize.ts";
 export { isSemanticallyEquivalent } from "./equivalence.ts";
+export { normalizePackageRepoUrl, normalizeLockPackageRepoUrl } from "./identity.ts";
 export type { TreeSha256Violation } from "./treeSha256.ts";
 export {
   computeCanonicalTreeSha256,

@@ -102,6 +102,8 @@ function buildJson({ doc, requirements }) {
     optional_features: Array.isArray(doc.optional_features) ? doc.optional_features : [],
     limitations: Array.isArray(doc.limitations) ? doc.limitations : [],
     scope_out: Array.isArray(doc.scope_out) ? doc.scope_out : [],
+    repository_case_rules:
+      doc.repository_case_rules != null ? String(doc.repository_case_rules).trim() : undefined,
     requirements: rows,
   };
 }
@@ -186,6 +188,17 @@ function buildMarkdown(json) {
     lines.push("");
     for (const item of json.scope_out) {
       lines.push(`- ${item}`);
+    }
+  }
+  if (json.repository_case_rules) {
+    lines.push("");
+    lines.push("## Repository case rules");
+    lines.push("");
+    for (const para of String(json.repository_case_rules)
+      .split(/\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean)) {
+      lines.push(para);
     }
   }
   lines.push("");

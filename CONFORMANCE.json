@@ -35,6 +35,7 @@
     "hooks/canvas executable gates (soft / ungated; bin gated via ExecutableTrust + trust-bin consent)",
     "full Python Mode B port"
   ],
+  "repository_case_rules": "Repository identity and dependency-policy matching (req-rs-016 clause 3, req-pl-018)\nASCII-fold (A–Z → a–z only) repository-coordinate path segments for:\n- github.com\n- hosts ending in .ghe.com\n- the literal GITHUB_HOST GHES host when set\n- every source: registry dependency (including registry prefixes), regardless of host\nAll other hosts, local paths, and marketplace identities remain path case-sensitive.\nVirtual in-repository paths and # refs stay byte-exact. Policy merge compares authored\nentries byte-exactly (fold at match time only).",
   "requirements": [
     {
       "id": "req-cf-001",
@@ -690,6 +691,22 @@
       "citation": "packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts"
     },
     {
+      "id": "req-pl-017",
+      "keyword": "MUST",
+      "section": "6.3",
+      "conformance_class": "governance",
+      "status": "n/a",
+      "rationale": "ADO org-policy discovery / multi-candidate cascades are out of scope (see scope_out)"
+    },
+    {
+      "id": "req-pl-018",
+      "keyword": "MUST",
+      "section": "6.5",
+      "conformance_class": "governance",
+      "status": "active",
+      "citation": "packages/core/tests/policy/identity-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/evaluate-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/gate-fail-closed.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/merge-byte-exact.test.ts"
+    },
+    {
       "id": "req-pr-001",
       "keyword": "MUST",
       "section": "8.2",
@@ -869,7 +886,7 @@
       "section": "7.2",
       "conformance_class": "consumer",
       "status": "active",
-      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts"
+      "citation": "packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts; packages/core/tests/policy/identity-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/identity-keys.test.ts"
     },
     {
       "id": "req-sc-001",
