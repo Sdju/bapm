@@ -69,8 +69,14 @@ describe("pack-check-versions-plugin-json — strategy evaluation", () => {
     expect(reportOk(report)).toBe(false);
     const bad = reportPackages(report).filter((p) => p.ok === false);
     expect(bad.length).toBeGreaterThanOrEqual(1);
-    expect(String(bad[0]!.path ?? "")).toMatch(/plugins\/b|b$/);
-    expect(String(bad[0]!.reason ?? bad[0]!.error ?? "")).toMatch(/drift|expected|1\.0\.0/i);
+    expect(String((bad[0]!.path as string | undefined | null) ?? "")).toMatch(/plugins\/b|b$/);
+    expect(
+      String(
+        (bad[0]!.reason as string | undefined | null) ??
+          (bad[0]!.error as string | undefined | null) ??
+          "",
+      ),
+    ).toMatch(/drift|expected|1\.0\.0/i);
   });
 
   test("per_package accepts divergent versions", async () => {
@@ -111,7 +117,7 @@ describe("pack-check-versions-plugin-json — strategy evaluation", () => {
         `    - name: local`,
         `      source: ./plugins/local`,
         `    - name: remote`,
-        `      source: github/some-org/some-repo`,
+        `      source: github.com/some-org/some-repo`,
         `      version: ">=1.0.0"`,
         ``,
       ].join("\n"),
@@ -120,7 +126,9 @@ describe("pack-check-versions-plugin-json — strategy evaluation", () => {
 
     const report = await runAlignment(project.cwd);
     expect(reportOk(report)).toBe(true);
-    const paths = reportPackages(report).map((p) => String(p.path ?? ""));
+    const paths = reportPackages(report).map((p) =>
+      String((p.path as string | undefined | null) ?? ""),
+    );
     expect(paths.some((p) => /local/.test(p))).toBe(true);
     expect(paths.some((p) => /remote|some-repo/.test(p))).toBe(false);
   });
