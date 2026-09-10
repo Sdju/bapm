@@ -151,6 +151,12 @@ describe("Resolver / Lockfile identity keys", () => {
     expect(mixed).toBe(mixed.toLowerCase());
   });
 
+  test("github.com shorthand owner/repo folds path case", () => {
+    expect(normalizeRepoIdentity("DevExpGbb/Secure-Baseline")).toBe(
+      normalizeRepoIdentity("devexpgbb/secure-baseline"),
+    );
+  });
+
   test("unknown host path case remains distinct; host case folds", () => {
     expect(normalizeRepoIdentity("https://gitlab.com/DevExpGbb/Secure-Baseline")).not.toBe(
       normalizeRepoIdentity("https://gitlab.com/devexpgbb/secure-baseline"),

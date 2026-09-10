@@ -1,10 +1,15 @@
 /**
  * Section 6.4 merge stays byte-exact — folding MUST NOT run during merge (req-pl-018).
+ * Promoted from acceptance/policy-canonical-identity-casing.
  */
 import { describe, expect, test } from "vite-plus/test";
-import { allowListOf, denyListOf, getMergePolicies, parsePolicyDoc, policyOf } from "./helpers.ts";
+import { allowListOf, denyListOf, getMergePolicies, getParsePolicy, policyOf } from "./helpers.ts";
 
-describe("policy-canonical-identity-casing — merge byte-exact", () => {
+function parsePolicyDoc(doc: Record<string, unknown>): Record<string, unknown> {
+  return policyOf(getParsePolicy()(doc));
+}
+
+describe("merge — identity casing byte-exact", () => {
   test("deny union keeps authored case variants distinct (no fold-dedupe)", () => {
     const parent = parsePolicyDoc({
       name: "parent",

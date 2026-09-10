@@ -1,17 +1,23 @@
 /**
  * req-pl-018 — policy allow/deny/require match under canonical identity casing.
- * Spec: openspec/.../specs/policy-rule-evaluate (Dependency policy identity casing).
+ * Spec: policy-rule-evaluate (Dependency policy identity casing).
+ * Promoted from acceptance/policy-canonical-identity-casing.
  */
 import { describe, expect, test } from "vite-plus/test";
 import {
   getEvaluatePolicy,
+  getParsePolicy,
   hasRuleViolation,
   isBlocking,
-  parsePolicyDoc,
+  policyOf,
   violationsOf,
 } from "./helpers.ts";
 
-describe("policy-canonical-identity-casing — evaluate (req-pl-018)", () => {
+function parsePolicyDoc(doc: Record<string, unknown>): Record<string, unknown> {
+  return policyOf(getParsePolicy()(doc));
+}
+
+describe("evaluate — identity casing (req-pl-018)", () => {
   test("lowercase deny matches mixed-case GitHub identity (fail-closed)", () => {
     const policy = parsePolicyDoc({
       name: "org",

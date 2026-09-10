@@ -1,6 +1,7 @@
 /**
- * Install/lock gate fails closed on mixed-case deny vs mixed-case identity (task 3.3).
+ * Install/lock gate fails closed on mixed-case deny vs mixed-case identity.
  * Spec: policy-rule-evaluate + policy-install-gate under enforcement: block.
+ * Promoted from acceptance/policy-canonical-identity-casing.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -26,7 +27,7 @@ dependencies:
     - DevExpGbb/**
 `;
 
-describe("policy-canonical-identity-casing — gate fail-closed", () => {
+describe("gate — identity casing fail-closed", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
