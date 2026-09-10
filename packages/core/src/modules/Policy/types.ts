@@ -68,6 +68,8 @@ export type PolicyCandidate = {
   kind?: string;
   path?: string;
   source?: string;
+  /** Git host for req-pl-018 case fold (default inferred / github.com). */
+  host?: string;
 };
 
 export type PolicyDependencyInput =
@@ -81,6 +83,7 @@ export type PolicyDependencyInput =
       depth?: number;
       path?: string;
       source?: string;
+      host?: string;
     };
 
 export type EvaluatePolicyOptions = {

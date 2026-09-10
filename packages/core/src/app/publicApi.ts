@@ -143,6 +143,8 @@ export {
   collectTreeSha256Violations,
   stampPersonalScope,
   isPersonalScopeDependency,
+  normalizePackageRepoUrl,
+  normalizeLockPackageRepoUrl,
 } from "@/modules/Lockfile";
 
 export type {
@@ -517,6 +519,14 @@ export {
   assertPolicyGateAllows,
   runPolicyStatus,
   redactPolicyRef,
+  identityMatchesPattern,
+  identitySatisfiesRequire,
+  isPinnedConstraint,
+  foldRepoCoordinatePath,
+  isCaseInsensitiveGitHost,
+  isCaseInsensitivePackageIdentity,
+  normalizePackageRepoPath,
+  asciiLower,
 } from "@/modules/Policy";
 
 export type {

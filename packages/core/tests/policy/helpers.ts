@@ -469,6 +469,29 @@ export function violationsOf(result: unknown): unknown[] {
   return [];
 }
 
+export function hasRuleViolation(result: unknown, rule: RegExp | string): boolean {
+  const needle = typeof rule === "string" ? new RegExp(rule, "i") : rule;
+  for (const v of violationsOf(result)) {
+    const text = typeof v === "string" ? v : JSON.stringify(v);
+    if (needle.test(text)) return true;
+  }
+  return needle.test(JSON.stringify(result));
+}
+
+export function allowListOf(doc: Record<string, unknown>): string[] {
+  const deps = doc.dependencies;
+  if (!deps || typeof deps !== "object" || Array.isArray(deps)) return [];
+  const allow = (deps as Record<string, unknown>).allow;
+  return Array.isArray(allow) ? allow.map(String) : [];
+}
+
+export function denyListOf(doc: Record<string, unknown>): string[] {
+  const deps = doc.dependencies;
+  if (!deps || typeof deps !== "object" || Array.isArray(deps)) return [];
+  const deny = (deps as Record<string, unknown>).deny;
+  return Array.isArray(deny) ? deny.map(String) : [];
+}
+
 export function discoveredPathOf(result: unknown): string | undefined {
   if (typeof result === "string") return result;
   if (!result || typeof result !== "object") return undefined;

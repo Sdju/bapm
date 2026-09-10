@@ -7,6 +7,16 @@ claim_posture:
   producer: claimed
   governance: claimed
   registry: n/a
+repository_case_rules: |
+  Repository identity and dependency-policy matching (req-rs-016 clause 3, req-pl-018)
+  ASCII-fold (A–Z → a–z only) repository-coordinate path segments for:
+  - github.com
+  - hosts ending in .ghe.com
+  - the literal GITHUB_HOST GHES host when set
+  - every source: registry dependency (including registry prefixes), regardless of host
+  All other hosts, local paths, and marketplace identities remain path case-sensitive.
+  Virtual in-repository paths and # refs stay byte-exact. Policy merge compares authored
+  entries byte-exactly (fold at match time only).
 limitations:
   - Multi-target adapters beyond cursor are out of scope
   - Registry host / rg-001 not claimed (N/A)
@@ -542,6 +552,22 @@ requirements:
     notes:
       a canonical deployment-ledger owner absent from apm.lock.yaml is a hard integrity failure independent of security.audit.fail_on_drift;
       audit exits non-zero in both default and CI modes and refuses to mutate deployed bytes while ownership is invalid
+  - id: req-pl-017
+    class: governance
+    keyword: MUST
+    section: "6.3"
+    status: n/a
+    rationale: ADO org-policy discovery / multi-candidate cascades are out of scope (see scope_out)
+  - id: req-pl-018
+    class: governance
+    keyword: MUST
+    section: "6.5"
+    status: active
+    citation: packages/core/tests/policy/identity-casing.test.ts;
+      packages/core/tests/acceptance/policy-canonical-identity-casing/evaluate-casing.test.ts;
+      packages/core/tests/acceptance/policy-canonical-identity-casing/gate-fail-closed.test.ts;
+      packages/core/tests/acceptance/policy-canonical-identity-casing/merge-byte-exact.test.ts
+    notes: match-time ASCII fold of repository coordinates for disclosed hosts/registry; merge stays byte-exact
   - id: req-rs-001
     class: consumer
     keyword: MUST
@@ -639,8 +665,11 @@ requirements:
     keyword: MUST
     section: "7.2"
     status: active
-    citation: packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts
-    notes: minimum repository identity binds every cache layer; distinct identities must not share source material
+    citation:
+      packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts;
+      packages/core/tests/policy/identity-casing.test.ts;
+      packages/core/tests/acceptance/policy-canonical-identity-casing/identity-keys.test.ts
+    notes: minimum repository identity binds every cache layer; distinct identities must not share source material; path case folds for disclosed hosts/registry
   - id: req-pr-001
     class: consumer
     keyword: MUST

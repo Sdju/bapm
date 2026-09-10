@@ -28,7 +28,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 |-------|-------:|--------:|----:|
 | Producer | 12 | 0 | 0 |
 | Consumer | 73 | 9 | 0 |
-| Governance | 16 | 0 | 0 |
+| Governance | 17 | 0 | 1 |
 | Registry | 0 | 0 | 1 |
 
 ## Limitations / non-conformance
@@ -52,6 +52,18 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - soft §10 tar.gz-only container (zip + caps shipped)
 - hooks/canvas executable gates (soft / ungated; bin gated via ExecutableTrust + trust-bin consent)
 - full Python Mode B port
+
+## Repository case rules
+
+Repository identity and dependency-policy matching (req-rs-016 clause 3, req-pl-018)
+ASCII-fold (A–Z → a–z only) repository-coordinate path segments for:
+- github.com
+- hosts ending in .ghe.com
+- the literal GITHUB_HOST GHES host when set
+- every source: registry dependency (including registry prefixes), regardless of host
+All other hosts, local paths, and marketplace identities remain path case-sensitive.
+Virtual in-repository paths and # refs stay byte-exact. Policy merge compares authored
+entries byte-exactly (fold at match time only).
 
 ## Per-requirement coverage
 
@@ -123,6 +135,8 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-pl-014 | MUST | 6.8 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/policy/security-integrity.yml |
 | req-pl-015 | MUST | 6.3.5 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-016 | MUST | 6.8 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
+| req-pl-017 | MUST | 6.3 | governance | n/a |  — ADO org-policy discovery / multi-candidate cascades are out of scope (see scope_out) |
+| req-pl-018 | MUST | 6.5 | governance | active | packages/core/tests/policy/identity-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/evaluate-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/gate-fail-closed.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/merge-byte-exact.test.ts |
 | req-pr-001 | MUST | 8.2 | consumer | active | packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts |
 | req-pr-002 | MUST | 8.3 | consumer | active | packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts |
 | req-pr-003 | MUST | 8.3 | consumer | active | packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts |
@@ -144,7 +158,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 | req-rs-013 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
 | req-rs-014 | MUST | 7.3.1 | consumer | active | packages/core/tests/spec-conformance/semver-dialect.test.ts; packages/core/tests/resolve/intersection-pick.test.ts · tests/fixtures/spec-conformance/resolution/semver-dialect.json |
 | req-rs-015 | MUST | 7.5 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
-| req-rs-016 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts |
+| req-rs-016 | MUST | 7.2 | consumer | active | packages/core/tests/resolve/resolve.test.ts; packages/core/tests/resolve/download-lock.test.ts; packages/core/tests/resolve/e2e.test.ts; packages/core/tests/policy/identity-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/identity-keys.test.ts |
 | req-sc-001 | MUST | 10.4 | consumer | active | packages/core/tests/extras/public-api.test.ts |
 | req-sc-002 | MUST | 10.9 | consumer | active | packages/core/tests/pack/safe-extract-pack.test.ts; packages/core/tests/registry/safe-extract-registry.test.ts |
 | req-sc-003 | MUST | 10.3 | consumer | active | packages/core/tests/auth/redirect-auth-drop.test.ts; packages/core/tests/auth/resolve-per-class.test.ts |
@@ -171,6 +185,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 
 ## Waivers
 
+- **req-pl-017** (n/a): ADO org-policy discovery / multi-candidate cascades are out of scope (see scope_out)
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
 - **req-sc-004** (skipped): Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)
 - **req-tg-002** (skipped): Out of scope for P3: multi-target adapters beyond cursor
