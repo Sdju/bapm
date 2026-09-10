@@ -12,7 +12,8 @@ import {
   type LockedDependency,
 } from "@/modules/Lockfile";
 import { cleanupOrphanDeployedFiles } from "@/modules/Install";
-import { APM_MODULES_DIR } from "@/modules/Resolver";
+import { APM_MODULES_DIR, identityToCacheDir } from "@/modules/Resolver";
+import { syncCopilotNativeRegistrationFromLock } from "@/modules/CopilotNativeRegistration";
 import { UninstallError } from "./errors.ts";
 import type { RunUninstallOptions, UninstallResult } from "./types.ts";
 
@@ -83,10 +84,20 @@ export async function runUninstall(options: RunUninstallOptions = {}): Promise<U
     sourceFilename: loadedManifest.sourceFilename,
   });
 
-  // Modules dirs
+  // Modules dirs (by lock name and local_/git cache identity)
   for (const name of removeLockNames) {
     const dir = join(cwd, APM_MODULES_DIR, name);
     if (existsSync(dir)) rmSync(dir, { recursive: true, force: true });
+  }
+  for (const d of lockDeps) {
+    const name = String(d.name ?? "");
+    if (!name || !removeLockNames.has(name)) continue;
+    const repo = String(d.repo_url ?? "");
+    if (repo.startsWith("local:")) {
+      const localId = repo.replace(/^local:/, "local_");
+      const localDir = join(cwd, APM_MODULES_DIR, identityToCacheDir(localId));
+      if (existsSync(localDir)) rmSync(localDir, { recursive: true, force: true });
+    }
   }
 
   // Lock rewrite + deploy cleanup
@@ -112,6 +123,8 @@ export async function runUninstall(options: RunUninstallOptions = {}): Promise<U
       },
     );
   }
+
+  syncCopilotNativeRegistrationFromLock({ cwd, dryRun: false });
 
   return {
     ok: true,

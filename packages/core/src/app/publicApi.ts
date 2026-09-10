@@ -245,6 +245,29 @@ export {
 } from "@/modules/AgentPlugins";
 
 export type {
+  AdmittedCopilotNativePlugin,
+  CopilotNativeLedger,
+  CopilotNativeLedgerPlugin,
+  RebuildCopilotNativeRegistrationOptions,
+  SyncCopilotNativeRegistrationOptions,
+  CopilotNativeRegistrationErrorCode,
+} from "@/modules/CopilotNativeRegistration";
+export {
+  CopilotNativeRegistrationError,
+  COPILOT_NATIVE_ENABLE_SUFFIX,
+  COPILOT_NATIVE_LEDGER_REL,
+  COPILOT_NATIVE_MARKETPLACE_ID,
+  COPILOT_NATIVE_MARKETPLACE_REL,
+  COPILOT_NATIVE_MODULES_PATH,
+  COPILOT_NATIVE_SETTINGS_REL,
+  admitCopilotNativePlugins,
+  rebuildCopilotNativeRegistration,
+  rebuildCopilotNativeRegistrationFromNodes,
+  syncCopilotNativeRegistrationFromLock,
+  filterPrimitivesForCopilotNative,
+} from "@/modules/CopilotNativeRegistration";
+
+export type {
   EnforceFrozenOptions,
   InstallOptions,
   InstallResult,

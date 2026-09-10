@@ -2,6 +2,7 @@ import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import { APM_MODULES_DIR, identityToCacheDir, normalizeRepoIdentity } from "@/modules/Resolver";
+import { syncCopilotNativeRegistrationFromLock } from "@/modules/CopilotNativeRegistration";
 import type { RunPruneOptions, PruneResult } from "./types.ts";
 
 /**
@@ -31,6 +32,8 @@ export async function runPrune(options: RunPruneOptions = {}): Promise<PruneResu
   const orphans: string[] = [];
   if (existsSync(modulesRoot) && statSync(modulesRoot).isDirectory()) {
     for (const entry of readdirSync(modulesRoot)) {
+      // Owned Copilot native catalog lives under apm_modules/.github/plugin/
+      if (entry === ".github") continue;
       const abs = join(modulesRoot, entry);
       if (!statSync(abs).isDirectory()) continue;
       if (allowed.has(entry)) continue;
@@ -57,6 +60,8 @@ export async function runPrune(options: RunPruneOptions = {}): Promise<PruneResu
     rmSync(abs, { recursive: true, force: true });
     removed.push(name);
   }
+
+  syncCopilotNativeRegistrationFromLock({ cwd, dryRun: false });
 
   return {
     ok: true,
