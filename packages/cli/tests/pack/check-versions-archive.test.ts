@@ -10,9 +10,9 @@ import {
   runInProject,
   writeConformingManifest,
   type TempProject,
-} from "./helpers.ts";
+} from "./check-versions-helpers.ts";
 
-describe("pack-check-versions-plugin-json — archive without gate", () => {
+describe("CLI pack archive without --check-versions", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

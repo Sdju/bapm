@@ -12,9 +12,9 @@ import {
   withCapturedIo,
   runCli,
   type TempProject,
-} from "./helpers.ts";
+} from "./check-versions-helpers.ts";
 
-describe("pack-check-versions-plugin-json — CLI help / parse", () => {
+describe("CLI pack --check-versions help / parse", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

@@ -1,5 +1,5 @@
 /**
- * CLI helpers for pack-check-versions-plugin-json acceptance (RED → GREEN).
+ * CLI helpers for pack --check-versions suites.
  * Specs: producer-pack-check-versions, producer-pack-archive.
  */
 import {
@@ -13,8 +13,8 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { runCli } from "../../../src/index.ts";
-import { formatPackHelp, parsePackArgs } from "../../../src/modules/Pack/services/runPack.ts";
+import { runCli } from "../../src/index.ts";
+import { formatPackHelp, parsePackArgs } from "../../src/modules/Pack/services/runPack.ts";
 
 export { formatPackHelp, parsePackArgs, runCli };
 

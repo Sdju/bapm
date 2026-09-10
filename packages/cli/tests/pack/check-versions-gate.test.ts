@@ -14,9 +14,9 @@ import {
   writeText,
   writeYamlPackage,
   type TempProject,
-} from "./helpers.ts";
+} from "./check-versions-helpers.ts";
 
-describe("pack-check-versions-plugin-json — CLI gate", () => {
+describe("CLI pack --check-versions gate", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {

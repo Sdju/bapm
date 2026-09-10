@@ -14,9 +14,9 @@ import {
   writeYamlPackage,
   join,
   type TempProject,
-} from "./helpers.ts";
+} from "./version-alignment-helpers.ts";
 
-describe("pack-check-versions-plugin-json — local version source", () => {
+describe("checkVersionAlignment — local version source", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -149,5 +149,22 @@ describe("pack-check-versions-plugin-json — local version source", () => {
     const report = await runAlignment(project.cwd);
     expect(reportOk(report)).toBe(true);
     expect(reportPackages(report)[0]!.version).toBe("3.1.4");
+  });
+
+  test("oversized plugin.json fails closed", async () => {
+    project = createTempProject();
+    writeBapmYml(
+      project.cwd,
+      buildMarketplaceBapmYml({
+        packages: [{ name: "demo", source: "./plugins/demo" }],
+      }),
+    );
+    const huge = `{"name":"demo","version":"1.0.0","pad":"${"x".repeat(1024 * 1024)}"}`;
+    writeText(join(project.cwd, "plugins/demo/plugin.json"), huge);
+
+    const report = await runAlignment(project.cwd);
+    expect(reportOk(report)).toBe(false);
+    const row = reportPackages(report)[0]!;
+    expect(String(row.reason ?? row.error ?? "")).toMatch(/invalid_plugin_json|malformed|json/i);
   });
 });

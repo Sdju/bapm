@@ -1,5 +1,5 @@
 /**
- * Core helpers for pack-check-versions-plugin-json acceptance (RED → GREEN).
+ * Core helpers for marketplace version-alignment suites.
  * Soft-resolve version-alignment + authoring APIs from @b-apm/core.
  * Specs: producer-pack-check-versions, marketplace-authoring-schema.
  */

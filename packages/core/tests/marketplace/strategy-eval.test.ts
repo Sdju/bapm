@@ -15,9 +15,9 @@ import {
   writePluginPackage,
   writeYamlPackage,
   type TempProject,
-} from "./helpers.ts";
+} from "./version-alignment-helpers.ts";
 
-describe("pack-check-versions-plugin-json — strategy evaluation", () => {
+describe("checkVersionAlignment — strategy evaluation", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
