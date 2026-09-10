@@ -21,6 +21,7 @@ const TOP_LEVEL_FIELDS = new Set([
   "keywords",
   "commands",
   "hooks",
+  "skills",
   "extensions",
 ]);
 const AUTHOR_FIELDS = new Set(["name", "email", "url"]);
@@ -136,11 +137,15 @@ export function validateAgentPluginManifest(
   if ("author" in document) validateAuthor(document.author, manifestPath);
   let manifestCommands: string[] | undefined;
   let manifestHooks: string[] | undefined;
+  let manifestSkills: string[] | undefined;
   if ("commands" in document) {
     manifestCommands = requirePathList(document.commands, "commands", manifestPath);
   }
   if ("hooks" in document) {
     manifestHooks = requirePathList(document.hooks, "hooks", manifestPath);
+  }
+  if ("skills" in document) {
+    manifestSkills = requireSkillsList(document.skills, manifestPath);
   }
   if ("extensions" in document && !isPlainObject(document.extensions)) {
     diagnostics.push({
@@ -163,6 +168,7 @@ export function validateAgentPluginManifest(
     manifest.author = document.author as AgentPluginManifest["author"];
   if (manifestCommands) manifest.commands = manifestCommands;
   if (manifestHooks) manifest.hooks = manifestHooks;
+  if (manifestSkills !== undefined) manifest.skills = manifestSkills;
   if (isPlainObject(document.extensions)) {
     manifest.extensions = document.extensions as AgentPluginManifest["extensions"];
   }
@@ -190,6 +196,22 @@ function requirePathList(
 ): string[] {
   if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
     invalid(manifestPath, `"${field}" must be an array of path strings`);
+  }
+  return value as string[];
+}
+
+/** Validate present `skills` as string[] (empty array allowed; empty strings rejected). */
+function requireSkillsList(value: unknown, manifestPath: string): string[] {
+  if (!Array.isArray(value)) {
+    invalid(manifestPath, '"skills" must be an array of non-empty strings');
+  }
+  for (const item of value) {
+    if (typeof item !== "string") {
+      invalid(manifestPath, '"skills" must be an array of non-empty strings');
+    }
+    if (item.length === 0 || item.trim().length === 0) {
+      invalid(manifestPath, '"skills" entries must be non-empty strings');
+    }
   }
   return value as string[];
 }

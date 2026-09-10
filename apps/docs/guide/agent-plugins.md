@@ -1,10 +1,10 @@
 # Portable Agent Plugins v1
 
-Узкая portable-граница: корневой `plugin.json`, `skills/<name>/SKILL.md`, корневой `mcp.json`, плюс объявленные в `plugin.json` пути `commands` / `hooks` (fail-closed).
+Узкая portable-граница: корневой `plugin.json`, skills (conventional или exclusive declaration), корневой `mcp.json`, плюс объявленные в `plugin.json` пути `commands` / `hooks` (fail-closed).
 
 ```text
 my-plugin/
-  plugin.json
+  plugin.json          # optional skills: omit | [] | ["name", "skills/x", "skills"]
   mcp.json
   skills/
     hello/
@@ -14,6 +14,16 @@ my-plugin/
   hooks/
     session.json     # если указано в plugin.json → hooks
 ```
+
+## `plugin.json` `skills:` (exclusive)
+
+| Форма             | Поведение                                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ключ **опущен**   | Conventional discovery: только immediate `skills/<name>/SKILL.md`                                                                                             |
+| `"skills": []`    | **Ноль** skills, даже если каталог есть; shadow-диагностика, если conventional entries существуют                                                             |
+| `"skills": ["…"]` | Exclusive list: только разрешённые имена / `skills/<name>` / контейнер `skills` или `./skills`; missing / traversal / escape → **fail-closed** до deploy/lock |
+
+Это **не** то же самое, что consumer object-form dep `skills:` (deps-object-subset): на стороне зависимости пустой список — parse error; на стороне плагина пустой список — намеренный zero deploy.
 
 Матрица поддержки: [AGENT_PLUGINS_COMPATIBILITY.md](../../../AGENT_PLUGINS_COMPATIBILITY.md) (fixtures + тесты, не сертификация).
 
@@ -30,7 +40,7 @@ Cursor-integration адаптирует portable MCP в `.cursor/mcp.json`: `std
 - `plugin.json` ≠ `bapm.yml` / `apm.yml`
 - Упаковка portable-плагина — архив, не публикация в marketplace
 - OpenAPM в [CONFORMANCE.md](../../../CONFORMANCE.md) ≠ conformance Agent Plugins
-- Объявленные `commands` / `hooks` — требования: missing/escape → fail-closed до deploy/lock
+- Объявленные `commands` / `hooks` / exclusive `skills` — требования: missing/escape → fail-closed до deploy/lock
 
 Marketplace-output и portable-архивы независимы от Cursor/OpenCode runtime install.
 

@@ -344,12 +344,15 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const raw = nativeRaw.filter(
     (primitive) => !nodes.some((node) => isPortablePluginPrimitive(node, primitive.path)),
   );
+  const portablePluginDiagnostics: unknown[] = [];
   if (!skipApmMaterialize) {
     try {
-      raw.push(...discoverPortablePluginPrimitives(nodes));
+      const portable = discoverPortablePluginPrimitives(nodes);
+      raw.push(...portable.primitives);
+      portablePluginDiagnostics.push(...portable.diagnostics);
     } catch (error) {
-      // Declared Agent Plugins paths are requirements: fail closed before deploy
-      // and do not leave a freshly written lock from this install.
+      // Declared Agent Plugins paths/skills are requirements: fail closed before
+      // deploy and do not leave a freshly written lock from this install.
       const code =
         error instanceof AgentPluginsError
           ? error.code
@@ -357,7 +360,8 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
             ? String((error as { code: unknown }).code)
             : "";
       if (
-        code === "AGENT_PLUGIN_DECLARED_PATH_INVALID" &&
+        (code === "AGENT_PLUGIN_DECLARED_PATH_INVALID" ||
+          code === "AGENT_PLUGIN_SKILL_DECLARED_INVALID") &&
         !previousLock &&
         lockPath &&
         existsSync(lockPath)
@@ -509,6 +513,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ...insecureDiagnostics,
       ...policyDiagnostics,
       ...resolved.diagnostics,
+      ...portablePluginDiagnostics,
       ...subsetDiagnostics,
       ...binDiagnostics,
       ...mcpDiagnostics,
@@ -521,12 +526,17 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
  * Portable plugins are discovered only from resolver-materialized package roots.
  * The resolver remains the sole source of local/git/registry provenance.
  */
-function discoverPortablePluginPrimitives(nodes: ResolvedNode[]): AttributedPrimitive[] {
+function discoverPortablePluginPrimitives(nodes: ResolvedNode[]): {
+  primitives: AttributedPrimitive[];
+  diagnostics: unknown[];
+} {
   const primitives: AttributedPrimitive[] = [];
+  const diagnostics: unknown[] = [];
   for (const node of nodes) {
     const root = portablePluginRoot(node);
     if (!root) continue;
     const discovered = discoverAgentPluginSkills({ root, packageName: node.name });
+    diagnostics.push(...discovered.diagnostics);
     for (const skill of discovered.skills) {
       primitives.push({
         name: skill.name,
@@ -540,6 +550,7 @@ function discoverPortablePluginPrimitives(nodes: ResolvedNode[]): AttributedPrim
       });
     }
     const declared = discoverAgentPluginDeclaredPaths({ root, packageName: node.name });
+    diagnostics.push(...declared.diagnostics);
     for (const item of [...declared.commands, ...declared.hooks]) {
       primitives.push({
         name: item.name,
@@ -552,7 +563,7 @@ function discoverPortablePluginPrimitives(nodes: ResolvedNode[]): AttributedPrim
       });
     }
   }
-  return primitives;
+  return { primitives, diagnostics };
 }
 
 function isPortablePluginPrimitive(node: ResolvedNode, primitivePath: string): boolean {

@@ -27,6 +27,7 @@ export function createAgentPluginManifest(
   }
   if (options.author !== undefined) candidate.author = options.author;
   if (options.keywords !== undefined) candidate.keywords = options.keywords;
+  if (options.skills !== undefined) candidate.skills = options.skills;
   if (options.extensions !== undefined) candidate.extensions = options.extensions;
 
   return validateAgentPluginManifest(candidate).manifest;
