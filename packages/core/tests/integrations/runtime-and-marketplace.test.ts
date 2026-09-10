@@ -93,6 +93,7 @@ describe("integration runtime and marketplace behavior", () => {
     const config: MarketplaceAuthoringConfig = {
       name: "acme",
       owner: "Acme",
+      versioning: { strategy: "lockstep" },
       packages: [
         {
           name: "demo",
@@ -169,6 +170,7 @@ describe("integration runtime and marketplace behavior", () => {
       config: {
         name: "codex-only",
         owner: "Acme",
+        versioning: { strategy: "lockstep" },
         packages: [
           {
             name: "demo",

@@ -12,6 +12,13 @@ export type MarketplaceAuthoringBuild = {
   tagPattern?: string;
 };
 
+/** Release-time version-alignment strategies for `pack --check-versions`. */
+export type MarketplaceVersioningStrategy = "lockstep" | "tag_pattern" | "per_package";
+
+export type MarketplaceAuthoringVersioning = {
+  strategy: MarketplaceVersioningStrategy;
+};
+
 export type MarketplaceAuthoringOutputs = Record<string, unknown>;
 
 export type PackageEntry = {
@@ -49,7 +56,11 @@ export type MarketplaceAuthoringConfig = {
   claude?: unknown;
   codex?: unknown;
   metadata?: Record<string, unknown>;
-  versioning?: unknown;
+  /**
+   * Present after authoring load (defaults to `{ strategy: "lockstep" }` when omitted in YAML).
+   * Callers that construct configs by hand may omit it; gates treat missing as lockstep.
+   */
+  versioning?: MarketplaceAuthoringVersioning;
   packages: PackageEntry[];
 };
 

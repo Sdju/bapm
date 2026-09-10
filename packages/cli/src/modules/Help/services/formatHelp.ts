@@ -16,7 +16,7 @@ Commands:
   plugin       Scaffold a thin plugin project (plugin init)
   lock         Resolve dependencies and write the lockfile (no host deploy)
   install      Install agentic dependencies from ${deps.manifestFile} (or a pack .zip)
-  pack         Build a plain-zip producer archive (--archive / --check-release)
+  pack         Build a plain-zip producer archive (--archive / --check-release / --check-versions)
   publish      Publish flat registry zip via PUT (experimental; BAPM_EXPERIMENTAL_REGISTRIES=1)
   self-update  Check / apply CLI updates from npm (--check)
   update       Re-resolve pins (rs-011/rs-012); --dry-run / -y

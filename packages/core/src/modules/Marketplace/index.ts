@@ -47,6 +47,8 @@ export {
   runMarketplaceMigrate,
   type PackageEntry,
   type MarketplaceAuthoringConfig,
+  type MarketplaceVersioningStrategy,
+  type MarketplaceAuthoringVersioning,
   type LoadMarketplaceResult,
   type DetectAuthoringConfigSourceResult,
   type CheckMarketplaceAuthoringResult,
@@ -54,6 +56,24 @@ export {
   type EditorResult,
   type SourceValidationResult,
 } from "./modules/Authoring/index.ts";
+
+export {
+  checkVersionAlignment,
+  checkMarketplaceVersionAlignment,
+  runVersionAlignmentCheck,
+  checkVersions,
+  versionAlignmentErrorMessages,
+  findPluginJson,
+  PLUGIN_JSON_CANDIDATES,
+  renderTag,
+  readLocalVersion,
+  MAX_PLUGIN_JSON_BYTES,
+  type PackageVersionRow,
+  type VersionAlignmentReport,
+  type CheckVersionAlignmentOptions,
+  type LocalVersionStatus,
+  type LocalVersionRead,
+} from "./modules/VersionCheck/index.ts";
 
 export type {
   MarketplaceConfigOptions,

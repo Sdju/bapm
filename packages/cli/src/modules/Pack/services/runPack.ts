@@ -11,6 +11,8 @@ Options:
   --agent-plugins              Pack a validated Agent Plugins v1 portable root
   --dry-run                    Validate / collect without durable zip or marketplace.json
   --check-release              pr-004 tag↔manifest version gate
+  --check-versions             Marketplace local-package version alignment (lockstep /
+                               tag_pattern / per_package); plugin.json fallback when no YAML
   --tag <name>                 Tag under check (optional with --check-release; else HEAD)
   --marketplace <all|none|list>
                                Filter host marketplace emit (claude,codex); default: all configured
@@ -22,6 +24,7 @@ Options:
 
 Notes:
   Unknown flags are rejected. --check-release never creates or pushes tags.
+  --check-versions is distinct from --check-release (marketplace alignment vs tag↔root version).
   Pack refuses secret-pattern paths (.env, *.pem, …) per sc-007.
   Optional project-root .bapmignore (gitignore syntax) omits matching files from the zip;
   root bapm.yml/apm.yml stay included; .gitignore is not used as a fallback.
@@ -36,6 +39,7 @@ export type ParsedPackArgs = {
   agentPlugins: boolean;
   dryRun: boolean;
   checkRelease: boolean;
+  checkVersions: boolean;
   tag?: string;
   marketplace?: string;
   marketplacePaths: string[];
@@ -50,6 +54,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
   let agentPlugins = false;
   let dryRun = false;
   let checkRelease = false;
+  let checkVersions = false;
   let tag: string | undefined;
   let marketplace: string | undefined;
   const marketplacePaths: string[] = [];
@@ -62,6 +67,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     agentPlugins,
     dryRun,
     checkRelease,
+    checkVersions,
     tag,
     marketplace,
     marketplacePaths,
@@ -89,6 +95,10 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     }
     if (arg === "--check-release") {
       checkRelease = true;
+      continue;
+    }
+    if (arg === "--check-versions") {
+      checkVersions = true;
       continue;
     }
     if (arg === "--offline") {
@@ -162,6 +172,77 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
   return { ...base(), help };
 }
 
+const VERSION_ALIGNMENT_EXIT = 3;
+
+function runCheckVersionsGate(deps: PackDeps, cwd: string | undefined): PackResult {
+  const root = cwd ?? process.cwd();
+  const detect = deps.detectAuthoringConfigSource;
+  const load = deps.loadMarketplaceAuthoringConfig;
+  const check = deps.checkVersionAlignment;
+  const formatErrors = deps.versionAlignmentErrorMessages;
+  if (!detect || !load || !check || !formatErrors) {
+    const message = "Internal error: --check-versions deps not wired";
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, message, exitCode: 1 };
+  }
+
+  const detected = detect({ cwd: root });
+  if (!detected.ok || detected.kind === "none") {
+    console.log(
+      `${deps.name}: Version alignment check skipped: no marketplace block; nothing to check.`,
+    );
+    return { ok: true, exitCode: 0 };
+  }
+
+  let config: unknown;
+  try {
+    config = load({ cwd: root }).config;
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "object" && error !== null && "message" in error
+          ? String((error as { message: unknown }).message)
+          : String(error);
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, message, exitCode: 1 };
+  }
+
+  const report = check({
+    config,
+    cwd: root,
+    projectRoot: root,
+    root,
+  });
+
+  if (report.ok) {
+    if (report.expected !== null) {
+      console.log(
+        `${deps.name}: Version alignment OK [strategy=${report.strategy}, expected=${report.expected}]`,
+      );
+    } else {
+      console.log(`${deps.name}: Version alignment OK [strategy=${report.strategy}]`);
+    }
+    return { ok: true, exitCode: 0 };
+  }
+
+  if (report.expected !== null) {
+    console.error(
+      `${deps.name}: Version alignment failed [strategy=${report.strategy}, expected=${report.expected}]`,
+    );
+  } else {
+    console.error(`${deps.name}: Version alignment failed [strategy=${report.strategy}]`);
+  }
+  for (const msg of formatErrors(report)) {
+    console.error(`${deps.name}: ${msg}`);
+  }
+  return {
+    ok: false,
+    message: "Version alignment check failed",
+    exitCode: VERSION_ALIGNMENT_EXIT,
+  };
+}
+
 export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<PackResult> {
   const parsed = parsePackArgs(options.args ?? []);
   if (parsed.help) {
@@ -176,6 +257,18 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
   const cwd = options.cwd;
 
   try {
+    // Gate-only when --check-versions without --archive and without marketplace emit intent
+    if (parsed.checkVersions && !parsed.archive && parsed.marketplace === undefined) {
+      // Still allow combining with check-release gate-only in the same invocation
+      if (parsed.checkRelease) {
+        const gate = await deps.checkReleaseTag({ cwd, tag: parsed.tag });
+        for (const w of gate.warnings ?? []) {
+          console.error(`${deps.name}: warning: ${w}`);
+        }
+      }
+      return runCheckVersionsGate(deps, cwd);
+    }
+
     // Gate-only when --check-release without --archive and without marketplace emit intent
     if (parsed.checkRelease && !parsed.archive && parsed.marketplace === undefined) {
       const gate = await deps.checkReleaseTag({ cwd, tag: parsed.tag });
@@ -185,9 +278,14 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
       return { ok: true };
     }
 
-    if (!parsed.archive && !parsed.checkRelease) {
+    if (!parsed.archive && !parsed.checkRelease && !parsed.checkVersions) {
       // Default to archive mode for bare `pack` convenience (marketplace-only may skip zip in core)
       parsed.archive = true;
+    }
+
+    if (parsed.checkVersions) {
+      const versionGate = runCheckVersionsGate(deps, cwd);
+      if (!versionGate.ok) return versionGate;
     }
 
     const result = await deps.runPack({

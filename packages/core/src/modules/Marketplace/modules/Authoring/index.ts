@@ -8,6 +8,8 @@ export { MarketplaceAuthoringError } from "./errors.ts";
 export type {
   MarketplaceAuthoringOwner,
   MarketplaceAuthoringBuild,
+  MarketplaceVersioningStrategy,
+  MarketplaceAuthoringVersioning,
   MarketplaceAuthoringOutputs,
   PackageEntry,
   MarketplaceAuthoringConfig,

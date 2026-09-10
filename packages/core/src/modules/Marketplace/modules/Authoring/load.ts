@@ -10,6 +10,8 @@ import type {
   MarketplaceAuthoringBuild,
   MarketplaceAuthoringConfig,
   MarketplaceAuthoringOwner,
+  MarketplaceAuthoringVersioning,
+  MarketplaceVersioningStrategy,
   PackageEntry,
 } from "./types.ts";
 
@@ -48,6 +50,14 @@ const PACKAGE_ENTRY_KEYS = new Set([
 ]);
 
 const BUILD_KEYS = new Set(["tagPattern", "tag_pattern"]);
+
+const VERSIONING_KEYS = new Set(["strategy"]);
+
+const VERSIONING_STRATEGIES = new Set<MarketplaceVersioningStrategy>([
+  "lockstep",
+  "tag_pattern",
+  "per_package",
+]);
 
 function asRecord(value: unknown, ctx: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -97,6 +107,26 @@ function parseBuild(raw: unknown): MarketplaceAuthoringBuild | undefined {
     throw new MarketplaceAuthoringError("'build.tagPattern' must be a string");
   }
   return tag !== undefined ? { tagPattern: tag } : {};
+}
+
+function parseVersioning(raw: unknown): MarketplaceAuthoringVersioning {
+  if (raw === undefined || raw === null) {
+    return { strategy: "lockstep" };
+  }
+  const obj = asRecord(raw, "versioning");
+  checkUnknownKeys(obj, VERSIONING_KEYS, "versioning");
+  const strategyRaw = obj.strategy ?? "lockstep";
+  if (typeof strategyRaw !== "string" || !strategyRaw.trim()) {
+    throw new MarketplaceAuthoringError("'versioning.strategy' must be a non-empty string");
+  }
+  const strategy = strategyRaw.trim();
+  if (!VERSIONING_STRATEGIES.has(strategy as MarketplaceVersioningStrategy)) {
+    throw new MarketplaceAuthoringError(
+      `'versioning.strategy' must be one of: ${[...VERSIONING_STRATEGIES].sort().join(", ")}; ` +
+        `got unknown/invalid strategy ${JSON.stringify(strategy)}`,
+    );
+  }
+  return { strategy: strategy as MarketplaceVersioningStrategy };
 }
 
 function parsePackageEntry(raw: unknown, index: number): PackageEntry {
@@ -167,7 +197,10 @@ function parseMarketplaceBlock(
     packages = packagesRaw.map((p, i) => parsePackageEntry(p, i));
   }
 
-  const config: MarketplaceAuthoringConfig = { packages };
+  const config: MarketplaceAuthoringConfig = {
+    packages,
+    versioning: parseVersioning(rawBlock.versioning),
+  };
 
   const name =
     (typeof rawBlock.name === "string" ? rawBlock.name : undefined) ??
@@ -203,7 +236,6 @@ function parseMarketplaceBlock(
   if (rawBlock.metadata !== undefined) {
     config.metadata = asRecord(rawBlock.metadata, "metadata");
   }
-  if (rawBlock.versioning !== undefined) config.versioning = rawBlock.versioning;
 
   return config;
 }
