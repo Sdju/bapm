@@ -17,15 +17,15 @@ is_background: false
 
 ## Задача
 
-1. Следуй `.cursor/skills/openspec-apply-change/SKILL.md` для `changeName` от parent.
+1. Следуй `.agents/skills/openspec-apply-change/SKILL.md` для `changeName` от parent.
 2. Acceptance уже в `tests/acceptance/<changeName>/` — **не ослабляй и не удаляй**.
 3. Доведи acceptance до **GREEN**; unit рядом с кодом по необходимости.
-4. FEOD: `.cursor/skills/feod/SKILL.md` (cli + core library). Deps: `.cursor/skills/pnpm-dependencies/SKILL.md`. Проверки: `vp`.
+4. FEOD: `.agents/skills/feod/SKILL.md` (cli + core library). Deps: `.agents/skills/pnpm-dependencies/SKILL.md`. Проверки: `vp`.
 5. Не openspec archive. Не promote.
 
 ## Self-commit
 
-После GREEN, **до** отчёта: `.cursor/skills/orchestrate/self-commit.md`.
+После GREEN, **до** отчёта: `.agents/skills/orchestrate/self-commit.md`.
 
 - Allowlist: production + unit тесты вне acceptance + `openspec/changes/<changeName>/tasks.md` (и design/conformance notes change, если правил).
 - Не стейджи уже закоммиченные acceptance без необходимости; правки acceptance только если чинят import/path под реализацию (минимально).

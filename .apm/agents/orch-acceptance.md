@@ -13,7 +13,7 @@ is_background: false
 
 ## Ветка
 
-Работай на `branchName` от parent (см. `branching.md` / `self-commit.md`). Не коммить в `master`/`main`. Не push.
+Работай на `branchName` от parent (см. `.agents/skills/orchestrate/branching.md` / `.agents/skills/orchestrate/self-commit.md`). Не коммить в `master`/`main`. Не push.
 
 ## Задача
 
@@ -30,7 +30,7 @@ is_background: false
 
 ## Self-commit
 
-После RED подтверждён, **до** отчёта: `.cursor/skills/orchestrate/self-commit.md`.
+После RED подтверждён, **до** отчёта: `.agents/skills/orchestrate/self-commit.md`.
 
 - Allowlist: `packages/*/tests/acceptance/<changeName>/**` (и новые helpers только там).
 - Type: `test(<scopes>): add <changeName> acceptance suite (RED)`.

@@ -34,6 +34,24 @@ jobs:
       - name: Build packages
         run: vp run -r build
 
+      # Generated agent files are gitignored, so CI materializes them unfrozen.
+      - name: Agent config
+        run: |
+          pnpm run agents:install
+          pnpm run agents:check
+
+      - name: Ensure generated agent artifacts are not tracked
+        run: |
+          tracked=$(git ls-files \
+            .agents/skills .agents/rules .agents/mcp_config.json \
+            .cursor/agents .cursor/commands .cursor/rules .cursor/hooks \
+            .cursor/hooks.json .cursor/bapm-hooks.json .cursor/mcp.json)
+          if [ -n "$tracked" ]; then
+            echo "Generated agent artifacts must not be tracked:"
+            echo "$tracked"
+            exit 1
+          fi
+
       - name: Check
         run: vp check
 

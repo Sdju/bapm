@@ -24,7 +24,7 @@ Parent = диспетчер. Вся работа — в **Task** с `subagent_ty
 
 ## Ветки и PR
 
-Канон: `.cursor/skills/orchestrate/branching.md`.
+Канон: `branching.md`.
 
 - Работа и self-commit — только на feature-ветке (`orch/<changeName>` или уже открытая PR-ветка).
 - Прямой push/commit в `master`/`main` запрещён (hooks + branch protection).
@@ -71,7 +71,7 @@ Parent = диспетчер. Вся работа — в **Task** с `subagent_ty
 
 ## Self-commit
 
-Канон: `.cursor/skills/orchestrate/self-commit.md` (агенты обязаны следовать).
+Канон: `self-commit.md` (агенты обязаны следовать).
 
 | Фаза          | type                   |
 | ------------- | ---------------------- |
@@ -117,8 +117,8 @@ Parent → user: `summary` + `status` + commit refs + `branchName`/`prUrl`; де
 ```
 Фаза plan. Режим: propose|explore. Задача: {{TASK}}
 Workspace: <repo root>
-Ensure feature branch (branching.md); не коммить в master/main.
-Следуй своему агент-промпту orch-plan + skills openspec-*. Self-commit по self-commit.md.
+Ensure feature branch (`branching.md`); не коммить в master/main.
+Следуй своему агент-промпту orch-plan + skills openspec-*. Self-commit по `self-commit.md`.
 В report обязателен branchName.
 ```
 

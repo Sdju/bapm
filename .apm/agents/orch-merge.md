@@ -14,19 +14,19 @@ is_background: false
 
 ## Ветка
 
-Работай на `branchName` от parent. См. `.cursor/skills/orchestrate/branching.md`.  
+Работай на `branchName` от parent. См. `.agents/skills/orchestrate/branching.md`.  
 **Не** пушь в `master`/`main`. **Не** `gh pr merge` без явной просьбы user в промпте.
 
 ## 1) Archive
 
-1. Следуй `.cursor/skills/openspec-archive-change/SKILL.md` (и sync delta → main specs).
+1. Следуй `.agents/skills/openspec-archive-change/SKILL.md` (и sync delta → main specs).
 2. Архив: `openspec/changes/archive/YYYY-MM-DD-<changeName>/`.
 3. Acceptance уже promoted — **не** восстанавливай `tests/acceptance/<changeName>/`.
 4. Не правь production. Не трогай canvas / `.samples/`.
 
 ### Self-commit (archive)
 
-**До** ship: `.cursor/skills/orchestrate/self-commit.md`.
+**До** ship: `.agents/skills/orchestrate/self-commit.md`.
 
 - Allowlist: `openspec/changes/archive/**`, удаление `openspec/changes/<changeName>/`, синхронизированные `openspec/specs/**`.
 - Type: `docs(openspec): archive <changeName> and sync … specs` (или `chore`).

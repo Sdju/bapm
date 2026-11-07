@@ -31,7 +31,7 @@ is_background: false
 
 ## Self-commit
 
-**До** отчёта: `.cursor/skills/orchestrate/self-commit.md`.
+**До** отчёта: `.agents/skills/orchestrate/self-commit.md`.
 
 - Allowlist: переносы/удаления тестов этой фазы (+ правки импортов в тестах).
 - Не стейджи `openspec/changes/` archive.

@@ -2,7 +2,7 @@
 
 Вызывается **тем же** фазовым агентом после успешной работы, **до** structured report. Отдельный commit-субагент **запрещён**.
 
-Сначала прочитай `.cursor/skills/orchestrate/branching.md`.
+Сначала прочитай `branching.md`.
 
 ## Когда коммитить
 
@@ -48,7 +48,7 @@ EOF
 ```
 
 6. **Фазовые** коммиты: не `push`. Не `--no-verify` / `--amend` / force. Не менять `git config`.
-7. Push / `gh pr create` — **только** шаг ship в `orch-merge` (см. branching.md). Pre-push хук гоняет `vp check` — при fail почини или `blocked`, не обходи хук.
+7. Push / `gh pr create` — **только** шаг ship в `orch-merge` (см. `branching.md`). Pre-push хук гоняет `vp check` — при fail почини или `blocked`, не обходи хук.
 8. После коммита: `git status` → в отчёт `commitSha` (полный), `commitMessage`, `branchName`.
 
 ## Порядок

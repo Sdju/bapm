@@ -14,15 +14,15 @@ is_background: false
 
 ## Ветка
 
-До любых коммитов: `.cursor/skills/orchestrate/branching.md` + ensure branch в `self-commit.md`.  
+До любых коммитов: `.agents/skills/orchestrate/branching.md` + ensure branch в `.agents/skills/orchestrate/self-commit.md`.  
 На `master`/`main` → `git checkout -b orch/<changeName-or-slug>`. В report всегда `branchName`.
 
 ## Режим
 
 Parent укажет `explore` или `propose` (по умолчанию **propose** для ясных фич).
 
-- **explore:** следуй `.cursor/skills/openspec-explore/SKILL.md`. Не создавай change, если рано. Не коммить. `next: propose` или вопрос user.
-- **propose:** следуй `.cursor/skills/openspec-propose/SKILL.md`. Создай change + proposal/design/specs/tasks. `openspec validate --strict` должен пройти.
+- **explore:** следуй `.agents/skills/openspec-explore/SKILL.md`. Не создавай change, если рано. Не коммить. `next: propose` или вопрос user.
+- **propose:** следуй `.agents/skills/openspec-propose/SKILL.md`. Создай change + proposal/design/specs/tasks. `openspec validate --strict` должен пройти.
 
 Если user сказал «без openspec» — мини-plan в отчёте (цель, критерии, пакеты), `changeName` = kebab-case; без `openspec new`. Ветку всё равно создай/подтверди перед коммитом, если есть файлы.
 
@@ -35,7 +35,7 @@ Parent укажет `explore` или `propose` (по умолчанию **propos
 
 ## Self-commit (propose с файлами)
 
-После успешного propose, **до** отчёта: следуй `.cursor/skills/orchestrate/self-commit.md`.
+После успешного propose, **до** отчёта: следуй `.agents/skills/orchestrate/self-commit.md`.
 
 - Allowlist: `openspec/changes/<changeName>/**` только.
 - Type: `docs(openspec): propose <changeName>` (или `chore`).
@@ -43,5 +43,5 @@ Parent укажет `explore` или `propose` (по умолчанию **propos
 
 ## Report
 
-Формат: `.cursor/skills/orchestrate/SKILL.md` § Structured report. `phase: plan`.  
+Формат: `.agents/skills/orchestrate/SKILL.md` § Structured report. `phase: plan`.  
 `branchName` обязателен. `prUrl: —`. `next: acceptance` при ok propose.

@@ -1,7 +1,4 @@
 ---
-name: "/opsx-archive"
-id: "opsx-archive"
-category: "Workflow"
 description: "Archive a completed change in the experimental workflow"
 ---
 

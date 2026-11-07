@@ -8,7 +8,8 @@
 - **vite-plus** (`vp`): tsdown / `vp pack`, oxlint, oxfmt, vitest, Vite Task
 - **pnpm** workspaces + catalog
 - **VitePress** — `apps/docs`
-- **OpenSpec** — spec-driven workflow (`.cursor` + `openspec/`)
+- **OpenSpec** — spec-driven workflow (`.apm/` + `openspec/`)
+- **bapm** — the repo manages its own agent skills, agents and commands with bapm
 
 ## Структура
 
@@ -20,6 +21,9 @@ packages/integration-api     @b-apm/integration-api      контракты core
 packages/integration-cursor  @b-apm/integration-cursor   runtime Cursor
 packages/integration-claude  @b-apm/integration-claude   marketplace-only Claude
 packages/integration-codex   @b-apm/integration-codex    marketplace-only Codex
+.apm/                                                   источник skills, agents и prompts
+bapm.yml / bapm.lock.yaml                               манифест и lock конфигурации агентов
+.agents/ .cursor/                                       генерируются bapm install (gitignore)
 openspec/                                               спецификации и изменения
 .samples/                                               внешние референсы (gitignore)
 ```
@@ -34,6 +38,8 @@ vp check            # format + lint + types
 vp run -r test      # тесты
 vp run -r build     # сборка пакетов
 vp run docs#dev     # VitePress
+pnpm run agents:install  # разложить .apm/ в .agents/skills и .cursor/
+pnpm run agents:check    # проверить развёрнутые файлы по lock
 pnpm run ready      # check + test + build
 ```
 
@@ -46,6 +52,51 @@ node packages/cli/dist/cli.mjs --help
 ```
 
 OpenSpec: `/opsx-propose`, `/opsx-apply`, `/opsx-archive`.
+
+## Конфигурация агентов
+
+Репозиторий использует bapm для собственных skills, субагентов и команд. Источник истины — `.apm/`:
+
+| Что       | Где                             |
+| --------- | ------------------------------- |
+| skills    | `.apm/skills/<name>/SKILL.md`   |
+| субагенты | `.apm/agents/<name>.md`         |
+| команды   | `.apm/prompts/<name>.prompt.md` |
+| MCP       | `dependencies.mcp` в `bapm.yml` |
+
+`bapm.yml` выбирает Cursor как агента по умолчанию. `bapm install` раскладывает примитивы в `.agents/skills/`, `.cursor/agents/` и `.cursor/commands/` и обновляет `bapm.lock.yaml`. В git коммитятся только `.apm/`, `bapm.yml` и `bapm.lock.yaml`; всё, что материализует bapm, перечислено в `.gitignore`. После клона агентские файлы нужно создать локально:
+
+```bash
+pnpm install
+pnpm run -r build
+pnpm run agents:install
+```
+
+Правьте `.apm/`, затем выполните (CLI должен быть собран — `dist/` не в git):
+
+```bash
+pnpm run -r build
+pnpm run agents:install
+pnpm run agents:check
+```
+
+Не редактируйте `.agents/skills/` и `.cursor/agents|commands/` вручную: следующий `bapm install` перезапишет файлы. Для skills из `.apm/skills/<name>/` и `skills/<name>/` bapm копирует в `.agents/skills/<name>/` весь каталог skill: `SKILL.md`, вспомогательные `.md`, скрипты и вложенные ассеты. Поэтому ссылки внутри `SKILL.md` можно писать относительно (`reference.md`, `branching.md`) — они работают и в `.apm/`, и в развёрнутой копии. Исключение — `SKILL.md` в корне пакета: там копируется только сам файл, иначе bapm разложил бы весь пакет.
+
+Другой агент подключается без изменения общего `bapm.yml`:
+
+```bash
+pnpm add -Dw @b-apm/integration-claude
+```
+
+```yaml
+# bapm.local.yml (не в git)
+active:
+  target: claude
+```
+
+MCP-серверы и другие артефакты описываются в `bapm.yml`; bapm сам пишет конфиги выбранного агента (например, `.cursor/mcp.json`), и они не коммитятся.
+
+CI выполняет `bapm install --no-frozen` и `bapm audit --ci`: развёрнутые файлы в git отсутствуют, поэтому frozen-режим на чистом checkout не подходит. Отдельный CI-шаг проверяет, что сгенерированные артефакты не попали в индекс.
 
 ## Релизы
 

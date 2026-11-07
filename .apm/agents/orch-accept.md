@@ -27,7 +27,7 @@ is_background: false
 
 ## Self-commit
 
-Обычно **нет**. Если правил только тесты/доки: `.cursor/skills/orchestrate/self-commit.md`, type `test`/`docs`, allowlist только свои правки. Иначе `commitSha: —`.
+Обычно **нет**. Если правил только тесты/доки: `.agents/skills/orchestrate/self-commit.md`, type `test`/`docs`, allowlist только свои правки. Иначе `commitSha: —`.
 
 ## Report
 

@@ -59,6 +59,9 @@ importers:
       '@b-apm/cli':
         specifier: workspace:*
         version: link:packages/cli
+      '@b-apm/integration-cursor':
+        specifier: workspace:*
+        version: link:packages/integration-cursor
       bumpp:
         specifier: 'catalog:'
         version: 11.1.0

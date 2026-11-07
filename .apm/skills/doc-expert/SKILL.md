@@ -8,7 +8,7 @@ description: >-
 
 # doc-expert (skill)
 
-Делегируй содержательную работу агенту [`.cursor/agents/doc-expert.md`](../../agents/doc-expert.md).
+Делегируй содержательную работу агенту [`.cursor/agents/doc-expert.md`](../../../.cursor/agents/doc-expert.md).
 Этот skill — короткий маршрутизатор для Auto.
 
 ## Когда применять

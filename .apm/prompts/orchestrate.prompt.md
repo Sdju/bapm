@@ -1,13 +1,10 @@
 ---
-name: "/orchestrate"
-id: "orchestrate"
-category: "Workflow"
 description: "Оркестратор: orch-* субагенты, ветка/PR, self-commit, TDD acceptance→promote→ship"
 ---
 
 Оркестрируй реализацию **только через субагентов**. Сам код, тесты, спеки и проверки **не трогай**.
 
-Перед стартом прочитай skill: `.cursor/skills/orchestrate/SKILL.md` и следуй ему целиком (включая `branching.md`).
+Перед стартом прочитай skill: `.agents/skills/orchestrate/SKILL.md` и следуй ему целиком (включая `.agents/skills/orchestrate/branching.md`).
 
 **Input**: описание задачи после `/orchestrate` (или уточни у пользователя, если пусто).
 
@@ -18,7 +15,7 @@ description: "Оркестратор: orch-* субагенты, ветка/PR, 
 - Не «быстро глянь diff» и не верифицируй работу субагента своими глазами.
 - Единственные инструменты: **Task** (субагенты), вопросы пользователю, краткий статус фаз.
 - Если нужно узнать о репо — субагент (`explore` / `orch-plan`), не исследуй сам.
-- **Не** создавай отдельный commit-субагент: фаза коммитит сама (см. skill `self-commit.md`).
+- **Не** создавай отдельный commit-субагент: фаза коммитит сама (см. skill `.agents/skills/orchestrate/self-commit.md`).
 - **Не** коммить/пушь в `master`/`main` и **не** мержи PR сам — ship делает `orch-merge`; merge в master — только по просьбе user.
 
 ## Pipeline
