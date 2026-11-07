@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
-import { createCliIntegrationRegistry } from "../../src/app/integrations/registry.ts";
+import { createCliIntegrationRegistry } from "../../src/modules/Integrations/index.ts";
 import { createCliMarketplaceOutputRegistry } from "../../src/app/integrations/marketplaceOutputs.ts";
 
 const CLI_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -53,7 +53,7 @@ describe("CLI · empty composition registries (opt-in hosts)", () => {
   });
 
   test("runtime registry module does not static-import @b-apm/integration-cursor", () => {
-    const src = readFileSync(join(CLI_ROOT, "src/app/integrations/registry.ts"), "utf8");
+    const src = readFileSync(join(CLI_ROOT, "src/modules/Integrations/registry.ts"), "utf8");
     expect(src).not.toMatch(/@b-apm\/integration-cursor/);
     expect(src).not.toMatch(/createCursorIntegration/);
   });

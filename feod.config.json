@@ -1,0 +1,40 @@
+{
+  "$schema": "https://feod.dev/feod.schema.json",
+  "rootDefault": {
+    "layerDirs": { "global": "globals" },
+    "ignore": [
+      "**/node_modules/**",
+      "**/dist/**",
+      "packages/*/tests/**",
+      "packages/cli/src/index.ts",
+      "packages/cli/src/cli.ts",
+      "packages/core/src/index.ts"
+    ],
+    "layerAliases": {
+      "@b-apm/core": "packages/core/src",
+      "@b-apm/cli": "packages/cli/src"
+    },
+    "imports": { "unresolved": "forbid" },
+    "submodules": {
+      "visibility": "parent-only",
+      "parentImports": "public",
+      "childImportsParent": "implementation"
+    },
+    "globals": { "allowedFiles": ["**/*.d.ts"], "localImports": "forbid" },
+    "modules": {
+      "publicEntries": ["index.ts"],
+      "requirePublicEntry": true,
+      "forbiddenNames": ["common", "shared", "utils"]
+    },
+    "inventory": { "uncovered": true }
+  },
+  "roots": {
+    "packages/cli/src": {
+      "layerDirs": { "pages": "commands" },
+      "dependencies": ["packages/core/src"]
+    },
+    "packages/core/src": {
+      "layerDirs": { "pages": "pages" }
+    }
+  }
+}

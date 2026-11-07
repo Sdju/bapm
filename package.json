@@ -5,11 +5,11 @@
   "description": "Better Agent Package Manager — TypeScript APM with a clean architecture",
   "type": "module",
   "scripts": {
-    "ready": "vp check && vp run -r test && vp run -r build",
+    "ready": "vp check && node scripts/check-feod.mjs && vp run -r test && vp run -r build",
     "dev": "vp run --filter @b-apm/docs dev",
     "docs": "vp run --filter @b-apm/docs dev",
     "build": "vp run -r build",
-    "check": "vp check",
+    "check": "vp check && node scripts/check-feod.mjs",
     "test": "vp run -r test",
     "conformance:gen": "node scripts/gen-conformance-statement.mjs",
     "conformance:check": "node scripts/check-conformance-drift.mjs",
@@ -19,11 +19,14 @@
     "agents:check": "bapm audit --ci",
     "version:bump": "bumpp packages/*/package.json",
     "publish:meta": "node scripts/sync-package-publish-meta.mjs",
-    "prepare": "vp config --no-agent"
+    "prepare": "vp config --no-agent",
+    "architecture": "node scripts/check-feod.mjs"
   },
   "devDependencies": {
     "@b-apm/cli": "workspace:*",
     "@b-apm/integration-cursor": "workspace:*",
+    "@o-feod/eslint-structure-plugin": "catalog:",
+    "@o-feod/oxlint-structure-plugin": "catalog:",
     "bumpp": "catalog:",
     "vite-plus": "catalog:"
   },

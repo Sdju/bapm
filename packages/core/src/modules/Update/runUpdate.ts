@@ -8,7 +8,7 @@ import {
   type ResolvePorts,
 } from "@/modules/Resolver";
 import { runInstall } from "@/modules/Install";
-import { asText } from "@/util/asText.ts";
+import { asText } from "@/common/asText.ts";
 import { UpdateError } from "./errors.ts";
 import type { RunUpdateOptions, UpdatePlanEntry, UpdateResult } from "./types.ts";
 

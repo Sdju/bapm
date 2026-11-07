@@ -21,6 +21,9 @@ catalog:
   bumpp: ^11.1.0
   smol-toml: ^1.7.1
   ignore: ^7.0.8
+  oxlint: ^1.92.0
+  "@o-feod/oxlint-structure-plugin": ^0.1.7
+  "@o-feod/eslint-structure-plugin": ^0.1.7
 overrides:
   # Do not force vite → vite-plus-core globally: VitePress needs stock vite
   # (vite-plus-core rolldown bindings are not linked by plain CI installs).

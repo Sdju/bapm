@@ -1,251 +1,79 @@
 ---
 name: feod
 description: >-
-  FEOD для packages/cli (профиль locked через feod-init). Уровни
-  app/commands/modules/common/global, public API модулей, фрактальные подмодули,
-  soft IoC. Используй при структуре CLI, добавлении модулей и команд, feod.config,
-  или когда упоминают FEOD / Fractal Entity Oriented Design в этом проекте.
-  Правила закреплены — не предлагай другие модификации без явной смены профиля.
+  Structures projects with FEOD (Fractal Entity Oriented Design): layers
+  app/pages/modules/common/global, import rules, modules with a public API.
+  Use when creating or reorganizing project structure, adding modules or pages,
+  deciding where code belongs, reviewing imports, or setting up and fixing
+  FEOD ESLint/Oxlint plugins. Reads the project profile (feod.profile.md).
 ---
 
-# FEOD — правила проекта (CLI)
+# FEOD
 
-> **Locked.** Профиль задан для `@bapm` CLI (`packages/cli`). Не предлагай Vue/SPA,
-> pages, multiapp, commonless и прочие вариации. Смена профиля — только по явной просьбе.
+`$SKILL_DIR` is the absolute path of this skill (the directory with `SKILL.md`, `references/` and
+`scripts/`). Set it from the loaded path before shell commands; it is not created automatically.
 
-## Профиль проекта (locked)
+Center of FEOD is the **module**. Layers are tools for modularity, not abstraction layers.
+Pillars: **modularity** and **fractality** (submodules in `modules/<Name>/modules/`).
+FEOD ≠ FSD: `common` is a staging area for entities that are not yet a module;
+entities routinely move between layers as the project grows.
 
-| Параметр                 | Значение                                          |
-| ------------------------ | ------------------------------------------------- |
-| scope                    | `packages/cli` (`apps/docs` вне FEOD)             |
-| modification             | base                                              |
-| multiapp                 | no                                                |
-| framework                | none / CLI (TypeScript)                           |
-| srcRoot                  | `src`                                             |
-| alias                    | `@` → `src`                                       |
-| layerDirs                | `app`, `commands`, `modules`, `common`, `globals` |
-| commands                 | верхний `commands/` обязателен                    |
-| moduleCommands           | no                                                |
-| commandRegistry          | manual в `app`                                    |
-| privateCommands          | forbid                                            |
-| common.allowIndex        | false (index в common запрещён полностью)         |
-| modules.allowDeepImports | false                                             |
-| singleFileModules        | no (запрещены)                                    |
-| transit                  | none                                              |
-| IoC                      | soft                                              |
-| DDD in modules           | no                                                |
-| ESLint feod-plugin       | no                                                |
+## Step 0 — project profile
 
-## Суть
+1. Look for `feod.profile.md` in the project root.
+2. Found: it **overrides every default** in this skill. Follow it, do not offer other variants.
+3. Not found and the task depends on a variant (structure, layer names, pages/common
+   policy): run [init.md](references/init.md). Otherwise use the defaults below (base modification).
 
-FEOD сочетает **модульный** и **слоистый** подходы: центр — **modules**; уровни (app/commands/common/global) — инструменты для модульности, а не слои абстракции как в FSD.
+To see the project as FEOD sees it (config source, layers, modules, public entries, profile
+and drift between them), run `node "$SKILL_DIR/scripts/feod.mjs" info --json` from the project
+root instead of scanning the tree by hand. Needs Node ≥ 20.19, no install.
 
-Три столпа: **модульность**, **фрактальность** (подмодули в `modules/<Name>/modules/`), **сущность-ориентированность** (роль файла/папки).
+Never edit files of this skill to fit a project; the profile is the only project-specific file.
 
-FEOD ≠ FSD. `common` ≠ `shared` из FSD: common — перевалочный пункт для сущностей, ещё не ставших модулем. Сущности нормально **переезжают** между уровнями.
-
-## Уровни и импорты
+## Layers and imports (base)
 
 ```
-common → modules → commands → app
-global — нигде не импортируется в коде (доступ без import; .d.ts через tsconfig)
+common → modules → pages → app
+global — never imported (available without import; .d.ts via tsconfig)
 ```
 
-| Уровень      | Назначение                                       | Импортирует                         | Кем импортируется                      |
-| ------------ | ------------------------------------------------ | ----------------------------------- | -------------------------------------- |
-| **global**   | shim, полифиллы, `.d.ts`                         | —                                   | никем (редкий init в app — исключение) |
-| **common**   | мелкие переиспользуемые сущности, обычно 1 файл  | common                              | modules, commands, app                 |
-| **modules**  | доменная/CLI-логика, изолированные модули        | common, modules (только `index.ts`) | modules, commands, app                 |
-| **commands** | CLI-команда → тонкий handler                     | common, modules                     | только app                             |
-| **app**      | bootstrap, registry команд, config, integrations | common, modules, commands           | никем                                  |
+| Layer | Purpose | Imports | Imported by |
+|-------|---------|---------|-------------|
+| **global** | shims, polyfills, `.d.ts` | — | nobody |
+| **common** | small reusable entities, usually 1 file | common | modules, pages, app |
+| **modules** | business logic, isolated modules | common, modules (public API only) | modules, pages, app |
+| **pages** | URL → component, thin | common, modules | app |
+| **app** | bootstrap, router, layouts, integrations | everything below | nobody |
 
-**Жёсткие правила:**
+## Hard rules
 
-- `index.ts` / barrel — **только** публичный API модуля (`modules/<Name>/index.ts`).
-- В `common` **запрещён любой** `index.ts` / barrel — импорт конкретного файла: `@/common/utilities/formatDate`.
-- Межмодульные импорты — **только** через `@/modules/<Name>` → `index.ts`. Deep imports запрещены.
-- Однофайловые модули (`modules/foo.ts`) запрещены — только директория с `index.ts`.
-- Cross-level импорты — через alias `@/` (не `../../`).
-- In-level / in-module — относительные пути допустимы.
-- Подмодули: из подмодуля можно импортировать родителя (исключение, избегать); снаружи — только public API. Не глубже ~3 уровней вложенности.
-- Zigzag-импорты между модулями — запрещены.
-- `common` → modules — только через **IoC** (интерфейс + внедрение из app), не прямым импортом.
-- Module commands (`modules/<Name>/commands/`) — **не использовать**.
-- Private command-модули (`commands/_name/`) — **запрещены**.
+- `index.ts` is **only** the module public API. No barrels in `common` by default.
+- Cross-module imports: only `@/modules/<Name>` → `index.ts`. No zigzag between modules.
+- Cross-level imports use the alias (`@/`); in-level / in-module imports are relative.
+- `common` → modules only via **IoC** (interface + injection from app).
+- Pages are thin; no business logic in pages or app.
+- A module is not created "for one utility": use common or a submodule.
 
-## Структура (`packages/cli/src`)
+Full matrix, path rules, nested levels, modifications and anti-patterns — [rules.md](references/rules.md).
 
-```
-src/
-  app/
-    entry.ts           # или cli.ts — точка входа процесса
-    registry.ts        # ручная регистрация команд
-    config/
-    integrations/      # внешние сервисы, адаптеры к @b-apm/core и т.п.
-    init/              # soft IoC: сборка зависимостей
-  commands/
-    help.ts
-    version.ts
-    install.ts         # тонкий handler: parse args → вызвать module API
-  modules/
-    FeatureName/
-      services/        # или api/, lib/ — по домену
-      types/
-      modules/         # подмодули (фрактал)
-      index.ts         # public API
-      README.md
-  common/
-    utilities/
-    types/
-    constants/
-    # нет index.ts
-  globals/
-    node.d.ts          # при необходимости
-```
+## Where to go for a task
 
-## feod.config
+| Task | Read |
+|------|------|
+| Where does this entity belong? Create/reorganize structure, migrate | [structure.md](references/structure.md) |
+| Add a module or page, finish-up checklist, new project | [workflows.md](references/workflows.md) |
+| Exact import legality, modifications (commonless / multiapp / …), anti-patterns | [rules.md](references/rules.md) |
+| Install/configure plugins, lint errors, plugin bugs | [lint.md](references/lint.md) |
+| Lock a project variant, generate the profile | [init.md](references/init.md) |
+| Code samples for a framework | [templates/](references/templates/) (`vue-spa.md`) |
 
-В `packages/cli/package.json`:
+## Before finishing
 
-```json
-{
-  "feod": {
-    "srcRoot": "src",
-    "aliasPrefix": "@",
-    "layerDirs": {
-      "app": "app",
-      "pages": "commands",
-      "modules": "modules",
-      "common": "common",
-      "global": "globals"
-    },
-    "common": { "allowIndex": false },
-    "modules": {
-      "publicEntry": "index.ts",
-      "allowDeepImports": false,
-      "singleFileModules": false
-    },
-    "pages": {
-      "useFileBasedRouting": false,
-      "modulePages": false,
-      "privateModulesPrefix": null
-    }
-  }
-}
-```
+- Imports follow the matrix (and the profile).
+- Modules export only through `index.ts`; pages and app hold no business logic.
+- If lint is configured, relevant checks pass — see the checklist in [workflows.md](references/workflows.md).
 
-`layerDirs.pages` = `commands`: роль «тонкий entry слоя» сохраняется, имя папки — `commands`.
+## More
 
-### Alias (tsconfig)
-
-```json
-{
-  "compilerOptions": {
-    "paths": { "@/*": ["./src/*"] }
-  }
-}
-```
-
-## Workflow: добавить модуль
-
-1. Создать `src/modules/<PascalCase>/` (директория, не одиночный файл).
-2. Экспортировать **только нужное** из `index.ts`.
-3. Внутренние файлы снаружи не импортировать.
-4. При росте — `modules/<Name>/modules/<Sub>/`.
-5. Кросс-модульные зависимости — soft IoC: опциональная зависимость в API модуля, сборка в `app/init/` или `app/integrations/`.
-6. Документировать: `README.md` (назначение, public API, пример).
-
-### Шаблон index.ts
-
-```ts
-export { installDeps } from "./services/installDeps";
-export type { InstallOptions, InstallResult } from "./types/install.types";
-```
-
-### Soft IoC
-
-```ts
-// modules/Install/index.ts
-export interface Logger {
-  info(message: string): void;
-  error(message: string): void;
-}
-
-export function createInstall(deps?: { logger?: Logger }) {
-  const log = deps?.logger ?? { info: console.log, error: console.error };
-  return {
-    async run(options: InstallOptions): Promise<InstallResult> {
-      log.info("install…");
-      // …
-    },
-  };
-}
-
-// app/init/install.ts — внедрение из app при необходимости
-import { createInstall } from "@/modules/Install";
-import { cliLogger } from "../integrations/logger";
-
-export const install = createInstall({ logger: cliLogger });
-```
-
-Жёсткая связанность без IoC допустима слабо (soft): предпочитай IoC, но не блокируй простой импорт public API другого модуля, если зависимость односторонняя и стабильная.
-
-## Workflow: добавить команду
-
-1. Создать тонкий handler в `src/commands/<name>.ts`.
-2. Handler: разбор argv/флагов → вызов `@/modules/<Name>` → код выхода. Без доменной логики.
-3. Зарегистрировать вручную в `app/registry.ts` (или аналоге).
-4. Имена команд — при необходимости `common/constants/commands.ts`.
-
-### Шаблон команды
-
-```ts
-// commands/install.ts
-import { createInstall } from "@/modules/Install";
-
-export async function installCommand(argv: string[]): Promise<number> {
-  const install = createInstall();
-  const result = await install.run({ args: argv });
-  return result.ok ? 0 : 1;
-}
-```
-
-## Куда положить сущность
-
-| Сущность                                           | Уровень      |
-| -------------------------------------------------- | ------------ |
-| Точка входа, registry команд, config, integrations | **app**      |
-| CLI-команда (тонкий handler)                       | **commands** |
-| Доменная логика, сервисы, работа с манифестом/lock | **modules**  |
-| `formatPath`, константы, мелкий тип без домена     | **common**   |
-| Ambient types, shim Node                           | **global**   |
-
-Подробнее — [reference.md](reference.md).
-
-## Антипаттерны
-
-- ❌ Импорт внутренностей модуля (`@/modules/Install/services/x`) — только `@/modules/Install`
-- ❌ Любой `common/index.ts` или barrel в common
-- ❌ Однофайловый модуль `modules/foo.ts`
-- ❌ Бизнес-логика в `commands/` или `app/`
-- ❌ `modules/<Name>/commands/` (module commands выключены)
-- ❌ `commands/_name/` (private command modules запрещены)
-- ❌ Модуль «ради одной утилиты» — положить в common или подмодуль
-- ❌ >3 уровней вложенности подмодулей без обоснования
-- ❌ Путать common FEOD со shared FSD
-
-## Чеклист перед завершением
-
-- [ ] Импорты соблюдают матрицу уровней
-- [ ] Модули — директории с `index.ts`; deep imports нет
-- [ ] Commands тонкие; логика в modules
-- [ ] Common без index/barrel
-- [ ] Global только для shim/polyfill/ambient types
-- [ ] App без бизнес-логики; registry команд ручной
-- [ ] feod.config в `packages/cli/package.json` актуален
-
-## Дополнительно
-
-- Матрица импортов и дерево решений — [reference.md](reference.md)
-- Шаблоны scaffold — [examples.md](examples.md)
-- Library-профиль `@b-apm/core` — [library-core.md](library-core.md) (отдельно от CLI locked)
+FEOD docs, examples and plugin sources: https://github.com/Sdju/feod (`docs/`, `examples/`, `packages/`).

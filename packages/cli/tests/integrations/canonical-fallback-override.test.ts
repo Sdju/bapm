@@ -3,8 +3,10 @@
  * Promoted from docs-host-happy-path acceptance.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
-import { createCliIntegrationRegistry } from "../../src/app/integrations/registry.ts";
-import { registerManifestIntegrationsFromCwd } from "../../src/app/integrations/loadManifestIntegrations.ts";
+import {
+  createCliIntegrationRegistry,
+  registerManifestIntegrationsFromCwd,
+} from "../../src/modules/Integrations/index.ts";
 import {
   createTempProject,
   cursorOverrideMarker,

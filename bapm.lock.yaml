@@ -1,5 +1,5 @@
 lockfile_version: "1"
-generated_at: 2026-11-07T22:32:45.620Z
+generated_at: 2026-11-07T23:04:46.808Z
 dependencies: []
 local_deployed_files:
   - .agents/skills/doc-expert/SKILL.md
@@ -29,15 +29,21 @@ local_deployed_files:
   - .cursor/commands/opsx-sync.md
   - .cursor/commands/opsx-update.md
   - .cursor/commands/orchestrate.md
-  - .agents/skills/feod/examples.md
-  - .agents/skills/feod/library-core.md
-  - .agents/skills/feod/reference.md
   - .agents/skills/orchestrate/branching.md
   - .agents/skills/orchestrate/examples.md
   - .agents/skills/orchestrate/self-commit.md
+  - .agents/skills/feod/VERSION.json
+  - .agents/skills/feod/references/init.md
+  - .agents/skills/feod/references/lint.md
+  - .agents/skills/feod/references/profile.template.md
+  - .agents/skills/feod/references/rules.md
+  - .agents/skills/feod/references/structure.md
+  - .agents/skills/feod/references/templates/vue-spa.md
+  - .agents/skills/feod/references/workflows.md
+  - .agents/skills/feod/scripts/feod.mjs
 local_deployed_file_hashes:
   .agents/skills/doc-expert/SKILL.md: 0be761383d127ede96088a873237f4965822e5b494fbe88386587fced5d456f1
-  .agents/skills/feod/SKILL.md: b1b35d1c216ca7660a0f6bc9c5a2e4f2cac88886f3c0e5c88eb006fdb034cf98
+  .agents/skills/feod/SKILL.md: 27faa9fc54cc355b797e53e7b1e8662b77118c2e875ffe5705121c76e9d47d0f
   .agents/skills/openspec-apply-change/SKILL.md: 3e9b0b7973d99360132c850adca86a1ba95f78940013cd39a124b22a9b1a8456
   .agents/skills/openspec-archive-change/SKILL.md: 21e93c047e28148fe4e04c144c18f5938807731a4fe9635822cd463c1015b00b
   .agents/skills/openspec-explore/SKILL.md: 4296b5815b5581681813f51ea5dd75999d17df11e2320829a260420855408d95
@@ -63,9 +69,15 @@ local_deployed_file_hashes:
   .cursor/commands/opsx-sync.md: 4fdb2ad57634b7dd55d1d07b117e5ea1a4cf1894299ef6a6c98a0c6ac2976125
   .cursor/commands/opsx-update.md: 84c68aa775aec8909ad38371b15ea7328c129894e8f117fbb1fb5a1c1d2143ef
   .cursor/commands/orchestrate.md: 861bfdabf0c31fe5329c22889c4f029f27cfa608b9c902de91c67ca32d4e7825
-  .agents/skills/feod/examples.md: 056d117600e5c6d6d48c3fc4a3221dacf98613b8adae8949e61534eeb076fa5a
-  .agents/skills/feod/library-core.md: d669b54e20ce86b7c4704fbaa0c6c37bb622005ba7ca41c824362d792c947119
-  .agents/skills/feod/reference.md: 81ccdeac8a63b9336b36e59037731d332a1fc9733479701a162b776498c801d6
   .agents/skills/orchestrate/branching.md: 2b797aa168f30c18019991b67f8c444a38135bbb6595d7d659e37a4e7339ad30
   .agents/skills/orchestrate/examples.md: fa84bea0a1094ab3c8af1d0a72b09adc8fdc604517f2d9ece5493a8a7ccf8354
   .agents/skills/orchestrate/self-commit.md: e7bdfd202668ca4fd773984cc95e876e27d383fad5002242af95e3e3b3167a2a
+  .agents/skills/feod/VERSION.json: 4284546499a5d4239ae0720f8f7707149715d07d430fb4f0ea92c568bc0a87c1
+  .agents/skills/feod/references/init.md: f7e0ca040e24904f8f48095aea8c624d033be858dfb9d0a0afa00db3d8e2f358
+  .agents/skills/feod/references/lint.md: 0b905673de7ec692ec10d2fefbfee90a9f93a81b5aa9592af938fa959b2c53b0
+  .agents/skills/feod/references/profile.template.md: 7b03df0f772534bd8399a3c1b37747f234ee907cf00f55df6d75f6155ca64598
+  .agents/skills/feod/references/rules.md: 57f5dee34ed77130c77a0e914ac4cb5546e692d0348099beebc27ee3ad5605bb
+  .agents/skills/feod/references/structure.md: 2a70a16293aab5235268dc77f5f0e1599513ba765e974c88ff36110ed705dfa0
+  .agents/skills/feod/references/templates/vue-spa.md: 87cd92db3562cac1111d5c82948e5a139c3df4a1ee24ea4d9675b8bc2d3596ec
+  .agents/skills/feod/references/workflows.md: f647b9a226d9cb1352937b012ba06451c3ce385eca1741fb556cf3a033e8233a
+  .agents/skills/feod/scripts/feod.mjs: 67855cf97348e99d3ca7bf8ba4b15f2217751fc1049c0f5661c982ef91cfded2

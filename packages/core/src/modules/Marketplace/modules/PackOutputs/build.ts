@@ -1,7 +1,9 @@
 import { resolve } from "node:path";
-import { loadMarketplaceAuthoringConfig } from "../Authoring/detect.ts";
-import { loadMarketplaceFromBapmYml } from "../Authoring/load.ts";
-import type { MarketplaceAuthoringConfig } from "../Authoring/types.ts";
+import {
+  loadMarketplaceAuthoringConfig,
+  loadMarketplaceFromBapmYml,
+  type MarketplaceAuthoringConfig,
+} from "../../authoring.ts";
 import { MarketplacePackOutputsError } from "./errors.ts";
 import { serializeMarketplaceJson } from "./mappers.ts";
 import {

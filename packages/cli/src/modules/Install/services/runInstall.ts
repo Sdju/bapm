@@ -10,8 +10,10 @@ import {
   runInstall as coreRunInstall,
 } from "@b-apm/core";
 import type { InstallDeps, InstallOptions, InstallResult } from "../types/install.types.ts";
-import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
-import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
+import {
+  createCliIntegrationRegistry,
+  registerManifestIntegrationsFromCwd,
+} from "@/modules/Integrations";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
 

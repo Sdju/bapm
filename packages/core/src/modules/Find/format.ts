@@ -1,5 +1,5 @@
 import type { LockedDependency } from "@/modules/Lockfile";
-import { asText } from "@/util/asText.ts";
+import { asText } from "@/common/asText.ts";
 import { WORKSPACE_OWNER_KEY } from "./types.ts";
 
 /**

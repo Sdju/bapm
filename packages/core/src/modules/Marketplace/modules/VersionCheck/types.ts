@@ -1,7 +1,4 @@
-import type {
-  MarketplaceAuthoringConfig,
-  MarketplaceVersioningStrategy,
-} from "../Authoring/types.ts";
+import type { MarketplaceAuthoringConfig, MarketplaceVersioningStrategy } from "../../authoring.ts";
 
 export type PackageVersionRow = {
   path: string;
