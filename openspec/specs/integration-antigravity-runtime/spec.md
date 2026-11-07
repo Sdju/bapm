@@ -54,7 +54,7 @@ Instruction primitives MUST materialize to `.agents/rules/<name>.md` under regis
 
 ### Requirement: Skills materialize under .agents/skills
 
-Skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Portable Agent Plugins skills (`format: "agent-plugin"` with `skillDirectory`) MUST copy the complete skill directory (dereferenced, contained under plugin root) into that destination. Skill materialize MUST NOT write MCP config as a side effect.
+Skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Directory-backed skills (native `skillDirectory` and portable Agent Plugins `format: "agent-plugin"`) MUST copy the complete skill directory (dereferenced, contained under the skill/package root) into that destination. Skill materialize MUST NOT write MCP config as a side effect.
 
 #### Scenario: Skill appears under cross-tool skills root
 

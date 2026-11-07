@@ -59,7 +59,7 @@ Command primitives (including sources discovered as `*.prompt.md`) MUST material
 
 ### Requirement: Skills materialize under .agents/skills
 
-Skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Portable Agent Plugins skills (`format: "agent-plugin"` with `skillDirectory`) MUST copy the complete skill directory into that destination. Skill materialize MUST NOT write `.gemini/skills/` and MUST NOT write MCP config as a side effect.
+Skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Directory-backed skills (native `skillDirectory` and portable Agent Plugins `format: "agent-plugin"`) MUST copy the complete skill directory into that destination. Skill materialize MUST NOT write `.gemini/skills/` and MUST NOT write MCP config as a side effect.
 
 #### Scenario: Skill appears under cross-tool skills root
 

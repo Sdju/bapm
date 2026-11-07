@@ -57,6 +57,25 @@ Discovery MUST recognize a package-root `SKILL.md` as one skill unit attributed 
 - **WHEN** a package or project contains `.apm/prompts/*.prompt.md` or `.apm/hooks/*.json`
 - **THEN** discovery MUST include corresponding `command` and `hook` primitives in the attributed set
 
+### Requirement: Directory-backed skills expose their complete skill directory
+
+When discovery finds a skill as `.apm/skills/<name>/SKILL.md` or `skills/<name>/SKILL.md`, the primitive MUST carry `skillDirectory` pointing at `<name>` so targets can materialize the complete skill unit (references, scripts, nested assets). A package-root `SKILL.md` MUST NOT carry `skillDirectory`, because its containing directory is the whole package; only that file is the skill unit.
+
+#### Scenario: Typed .apm skill directory marked
+
+- **WHEN** discovery finds `.apm/skills/foo/SKILL.md`
+- **THEN** the `foo` skill primitive MUST include `skillDirectory` equal to `.apm/skills/foo`
+
+#### Scenario: skills collection directory marked
+
+- **WHEN** discovery finds `skills/foo/SKILL.md`
+- **THEN** the `foo` skill primitive MUST include `skillDirectory` equal to `skills/foo`
+
+#### Scenario: Package-root SKILL.md stays file-backed
+
+- **WHEN** discovery finds `SKILL.md` at a package or project root
+- **THEN** the resulting skill primitive MUST NOT include `skillDirectory`
+
 ### Requirement: Discovery covers commands from prompts
 
 Discovery MUST recognize command primitives from `.apm/prompts/*.prompt.md` and package-root `*.prompt.md` files. Each such file MUST produce an attributed primitive with type `command`. Discovery MUST NOT require a separate `.apm/commands/` directory for APM-layout packages.

@@ -92,6 +92,7 @@ function scanPackageRoot(
             source,
             path: skillMd,
             packageName,
+            skillDirectory: dirname(skillMd),
           }),
         );
       }
@@ -148,6 +149,9 @@ function scanTypedApm(
           source,
           path: filePath,
           packageName,
+          ...(type === "skill" && basename(filePath) === "SKILL.md"
+            ? { skillDirectory: dirname(filePath) }
+            : {}),
         }),
       );
     });
@@ -303,6 +307,7 @@ function makePrimitive(p: {
   source: PrimitiveSource;
   path: string;
   packageName?: string;
+  skillDirectory?: string;
 }): AttributedPrimitive {
   return {
     name: p.name,
@@ -310,6 +315,7 @@ function makePrimitive(p: {
     source: p.source,
     path: p.path,
     ...(p.packageName ? { packageName: p.packageName } : {}),
+    ...(p.skillDirectory ? { skillDirectory: p.skillDirectory } : {}),
   };
 }
 

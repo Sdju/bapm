@@ -59,7 +59,7 @@ On materialize, agent primitives MUST be written to `.kiro/agents/<stem>.md`. Pr
 
 ### Requirement: Materialize skills under .kiro/skills
 
-On materialize, skill primitives MUST deploy via the Agent Skills layout to `.kiro/skills/<name>/SKILL.md` (and companion files). Skills MUST NOT be written to `.agents/skills/` for this target.
+On materialize, skill primitives MUST deploy via the Agent Skills layout to `.kiro/skills/<name>/SKILL.md` (and companion files). Directory-backed skills (native `skillDirectory` and portable Agent Plugins) MUST copy the complete skill directory into that destination. Skills MUST NOT be written to `.agents/skills/` for this target.
 
 #### Scenario: Skill lands under .kiro/skills
 

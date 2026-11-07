@@ -31,7 +31,7 @@ The OpenCode integration MUST provide a detection predicate that returns true wh
 
 ### Requirement: Skills materialize under .opencode/skills
 
-When the OpenCode integration is active, skill primitives MUST materialize to `.opencode/skills/<name>/SKILL.md` under registered deploy roots. Portable Agent Plugins skills (`format: "agent-plugin"` with `skillDirectory`) MUST copy the complete skill directory (dereferenced, contained under plugin root) into that destination. Registered roots for an active opencode MUST include at least `.opencode`. Writes MUST NEVER escape registered roots. Skill materialize MUST NOT write `opencode.json` MCP entries as a side effect.
+When the OpenCode integration is active, skill primitives MUST materialize to `.opencode/skills/<name>/SKILL.md` under registered deploy roots. Directory-backed skills (native `skillDirectory` and portable Agent Plugins `format: "agent-plugin"`) MUST copy the complete skill directory (dereferenced, contained under the skill/package root) into that destination. Registered roots for an active opencode MUST include at least `.opencode`. Writes MUST NEVER escape registered roots. Skill materialize MUST NOT write `opencode.json` MCP entries as a side effect.
 
 #### Scenario: Skill appears under OpenCode skills root
 
@@ -40,7 +40,7 @@ When the OpenCode integration is active, skill primitives MUST materialize to `.
 
 #### Scenario: Portable skill directory is fully copied
 
-- **WHEN** install runs with opencode active and a portable Agent Plugins skill with auxiliary files under `skillDirectory`
+- **WHEN** install runs with opencode active and a directory-backed skill (native or portable Agent Plugins) with auxiliary files under `skillDirectory`
 - **THEN** those auxiliary files MUST be present under `.opencode/skills/<name>/` after materialize
 
 ### Requirement: Agents materialize under .opencode/agents

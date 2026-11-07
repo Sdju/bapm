@@ -1,4 +1,11 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vite-plus/test";
@@ -147,6 +154,117 @@ describe("materializeSkill", () => {
         primitive: { name: "hello", packageName: "pkg" },
       },
     ]);
+  });
+
+  test("copies full native .apm/skills directory and inventories auxiliary files", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "bapm-skill-native-apm-"));
+    const skillDir = join(cwd, ".apm", "skills", "foo");
+    mkdirSync(join(skillDir, "scripts"), { recursive: true });
+    writeFileSync(join(skillDir, "SKILL.md"), "# foo\n");
+    writeFileSync(join(skillDir, "reference.md"), "# reference\n");
+    writeFileSync(join(skillDir, "scripts", "run.sh"), "#!/bin/sh\n");
+
+    const deployed = materializeSkill({
+      primitive: {
+        name: "foo",
+        type: "skill",
+        source: "local",
+        path: join(skillDir, "SKILL.md"),
+        skillDirectory: skillDir,
+      },
+      cwd,
+      deployRoots: [".agents/skills"],
+      destDir: ".agents/skills/foo",
+    });
+
+    expect(readFileSync(join(cwd, ".agents", "skills", "foo", "reference.md"), "utf8")).toBe(
+      "# reference\n",
+    );
+    expect(readFileSync(join(cwd, ".agents", "skills", "foo", "scripts", "run.sh"), "utf8")).toBe(
+      "#!/bin/sh\n",
+    );
+    expect(deployed.map((d) => d.path).sort()).toEqual([
+      ".agents/skills/foo/SKILL.md",
+      ".agents/skills/foo/reference.md",
+      ".agents/skills/foo/scripts/run.sh",
+    ]);
+  });
+
+  test("copies full native skills/<name> directory with extra markdown", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "bapm-skill-native-skills-"));
+    const skillDir = join(cwd, "skills", "foo");
+    mkdirSync(skillDir, { recursive: true });
+    writeFileSync(join(skillDir, "SKILL.md"), "# foo\n");
+    writeFileSync(join(skillDir, "extra.md"), "# extra\n");
+
+    const deployed = materializeSkill({
+      primitive: {
+        name: "foo",
+        type: "skill",
+        source: "dependency:example",
+        path: join(skillDir, "SKILL.md"),
+        skillDirectory: skillDir,
+      },
+      cwd,
+      deployRoots: [".agents/skills"],
+      destDir: ".agents/skills/foo",
+    });
+
+    expect(readFileSync(join(cwd, ".agents", "skills", "foo", "extra.md"), "utf8")).toBe(
+      "# extra\n",
+    );
+    expect(deployed.map((d) => d.path).sort()).toEqual([
+      ".agents/skills/foo/SKILL.md",
+      ".agents/skills/foo/extra.md",
+    ]);
+  });
+
+  test("package-root SKILL.md copies only the file, not the whole package", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "bapm-skill-package-root-"));
+    const packageDir = join(cwd, "pkg");
+    mkdirSync(packageDir, { recursive: true });
+    writeFileSync(join(packageDir, "SKILL.md"), "# root skill\n");
+    writeFileSync(join(packageDir, "README.md"), "# package readme\n");
+
+    const deployed = materializeSkill({
+      primitive: {
+        name: "root-skill",
+        type: "skill",
+        source: "dependency:pkg",
+        path: join(packageDir, "SKILL.md"),
+      },
+      cwd,
+      deployRoots: [".agents/skills"],
+      destDir: ".agents/skills/root-skill",
+    });
+
+    expect(deployed.map((d) => d.path)).toEqual([".agents/skills/root-skill/SKILL.md"]);
+    expect(existsSync(join(cwd, ".agents", "skills", "root-skill", "README.md"))).toBe(false);
+  });
+
+  test("native skill directory rejects symlink escape", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "bapm-skill-escape-"));
+    const skillDir = join(cwd, "skills", "foo");
+    mkdirSync(skillDir, { recursive: true });
+    writeFileSync(join(skillDir, "SKILL.md"), "# foo\n");
+    const outside = join(cwd, "outside.md");
+    writeFileSync(outside, "# outside\n");
+    symlinkSync(outside, join(skillDir, "leak.md"));
+
+    expect(() =>
+      materializeSkill({
+        primitive: {
+          name: "foo",
+          type: "skill",
+          source: "local",
+          path: join(skillDir, "SKILL.md"),
+          skillDirectory: skillDir,
+        },
+        cwd,
+        deployRoots: [".agents/skills"],
+        destDir: ".agents/skills/foo",
+      }),
+    ).toThrow(/outside its package root/);
   });
 
   test("copies portable skill directory under destDir", () => {

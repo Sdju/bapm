@@ -10,8 +10,10 @@ export type AttributedPrimitive = {
   packageName?: string;
   content?: string;
   /**
-   * Complete portable skill directory. Present only for Agent Plugins skills so
-   * targets can import auxiliary scripts, references, and assets as one unit.
+   * Complete skill directory. Present for native `skills/<name>/SKILL.md` and
+   * `.apm/skills/<name>/SKILL.md` layouts and for portable Agent Plugins skills,
+   * so targets can import auxiliary references, scripts, and assets as one unit.
+   * Package-root `SKILL.md` intentionally has no `skillDirectory`.
    */
   skillDirectory?: string;
   pluginRoot?: string;

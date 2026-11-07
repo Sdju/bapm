@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the explicit-only `agent-skills` cross-client skills host on `@b-apm/integration-agent-skills`: never auto-detect, skills-only materialize to `.agents/skills/<name>/SKILL.md`, and no MCP/hooks/compile surface.
+Defines the explicit-only `agent-skills` cross-client skills host on `@b-apm/integration-agent-skills`: never auto-detect, skills-only materialize to `.agents/skills/<name>/` (complete directory), and no MCP/hooks/compile surface.
 
 ## Requirements
 
@@ -59,7 +59,7 @@ Registered default deploy roots for agent-skills MUST be `.agents` (or an equiva
 
 ### Requirement: Skills materialize under .agents/skills
 
-When agent-skills is active, skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Portable Agent Plugins skills (`format: "agent-plugin"` with `skillDirectory`) MUST copy the complete skill directory (dereferenced, contained under plugin root) into that destination. Skill materialize MUST NOT write MCP config, hooks, or compile outputs as a side effect.
+When agent-skills is active, skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Directory-backed skills (native `skillDirectory` and portable Agent Plugins `format: "agent-plugin"`) MUST copy the complete skill directory (dereferenced, contained under the skill/package root) into that destination. Skill materialize MUST NOT write MCP config, hooks, or compile outputs as a side effect.
 
 #### Scenario: Skill appears under cross-tool skills root
 
@@ -68,7 +68,7 @@ When agent-skills is active, skill primitives MUST materialize to `.agents/skill
 
 #### Scenario: Portable skill directory is fully copied
 
-- **WHEN** install runs with agent-skills active and a portable Agent Plugins skill with auxiliary files under `skillDirectory`
+- **WHEN** install runs with agent-skills active and a directory-backed skill (native or portable Agent Plugins) with auxiliary files under `skillDirectory`
 - **THEN** those auxiliary files MUST be present under `.agents/skills/<name>/` after materialize
 
 ### Requirement: Non-skill primitives skip native files
