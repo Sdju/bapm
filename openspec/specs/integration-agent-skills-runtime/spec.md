@@ -36,7 +36,7 @@ The agent-skills integration MUST always return false from `detect`, regardless 
 
 ### Requirement: Activation is explicit only
 
-agent-skills MUST activate only when the composition root / install selects it via forced `--target agent-skills`, or via manifest `active` listing `agent-skills` after object-map registration of `@b-apm/integration-agent-skills`. Presence of `.agents/` alone MUST NOT activate the host.
+agent-skills MUST activate only when the composition root / install selects it via forced `--target agent-skills`, or via manifest `active` selecting `agent-skills`, once `@b-apm/integration-agent-skills` is registered (by canonical package resolution or an object-map entry). Presence of `.agents/` alone MUST NOT activate the host.
 
 #### Scenario: Forced target activates without detect
 
@@ -45,7 +45,7 @@ agent-skills MUST activate only when the composition root / install selects it v
 
 #### Scenario: Manifest active activates without detect
 
-- **WHEN** the manifest declares object-map `targets.agent-skills` to this package and `active: [agent-skills]`, and install runs without `--target`
+- **WHEN** `@b-apm/integration-agent-skills` is installed in the project, the manifest declares `active: { target: agent-skills }` without a `targets:` entry, and install runs without `--target`
 - **THEN** install MUST activate `agent-skills` and MUST invoke its materialize
 
 ### Requirement: Deploy roots cover .agents only
