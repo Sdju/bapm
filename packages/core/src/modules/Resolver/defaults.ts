@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
-import { cpSync, existsSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
 import type { Downloader, GitRemote, TagLister } from "./types.ts";
 import { identityToCacheDir, normalizeRepoIdentity } from "./identity.ts";
@@ -95,25 +96,202 @@ export function createDefaultGitRemote(): GitRemote {
 export function createDefaultDownloader(): Downloader {
   return {
     async download(args) {
-      mkdirSync(args.dest, { recursive: true });
       if (args.path) {
         if (!existsSync(args.path)) {
           throw new Error(`Local path not found: ${args.path}`);
         }
+        mkdirSync(args.dest, { recursive: true });
         cpSync(args.path, args.dest, { recursive: true });
         return;
       }
       if (!args.repoUrl) {
         throw new Error("download requires repoUrl or path");
       }
-      // Clone into temp then checkout commit if provided
-      const url = args.repoUrl;
-      await runGit(["clone", "--quiet", url, args.dest], { allowFail: false });
-      if (args.commit) {
-        await runGit(["-C", args.dest, "checkout", "--quiet", args.commit]);
+      // Resolve and install both download into the same dest; reuse a matching checkout.
+      const repoUrl = args.repoUrl;
+      if (await isCheckoutAt(args.dest, repoUrl, args.commit)) return;
+
+      const parent = dirname(args.dest);
+      mkdirSync(parent, { recursive: true });
+      // Build the new checkout beside dest so a failed clone/checkout leaves the
+      // previously usable cache untouched.
+      const temp = mkdtempSync(join(parent, `.${basename(args.dest)}.tmp-`));
+      try {
+        await runGit(["clone", "--quiet", repoUrl, temp], { allowFail: false });
+        if (args.commit) {
+          await runGit(["-C", temp, "checkout", "--quiet", args.commit]);
+        }
+        await swapIntoPlace(temp, args.dest, () => isCheckoutAt(args.dest, repoUrl, args.commit));
+      } finally {
+        // Absent after a successful rename; best-effort removal otherwise.
+        try {
+          rmSync(temp, { recursive: true, force: true });
+        } catch {
+          // A leftover temp dir is harmless: later runs use a fresh mkdtemp path.
+        }
       }
     },
   };
+}
+
+/**
+ * Idempotency guard: dest must be a checkout of the requested repo, resolved at
+ * the requested commit (when given), with no modified tracked files.
+ */
+async function isCheckoutAt(
+  dest: string,
+  repoUrl: string,
+  commit: string | undefined,
+): Promise<boolean> {
+  if (!existsSync(join(dest, ".git"))) return false;
+
+  const remote = await runGit(["-C", dest, "config", "--get", "remote.origin.url"], {
+    allowFail: true,
+  });
+  if (!isSameRepo(remote.trim(), repoUrl)) return false;
+
+  const head = (
+    await runGit(["-C", dest, "rev-parse", "--verify", "HEAD^{commit}"], { allowFail: true })
+  )
+    .trim()
+    .toLowerCase();
+  if (!/^[0-9a-f]{40}$/.test(head)) return false;
+
+  if (commit) {
+    // Accept short SHAs / tags / refs already present in dest before comparing.
+    const requested = (
+      await runGit(["-C", dest, "rev-parse", "--verify", `${commit}^{commit}`], { allowFail: true })
+    )
+      .trim()
+      .toLowerCase();
+    if (!/^[0-9a-f]{40}$/.test(requested) || requested !== head) return false;
+  }
+
+  const status = await runGitResult(["-C", dest, "status", "--porcelain", "--untracked-files=no"]);
+  // Fail closed: a probe failure is not the same as clean output.
+  return status.code === 0 && status.stdout.trim() === "";
+}
+
+/** Compare git URLs; local paths/file URLs are resolved, remotes normalized. */
+function isSameRepo(a: string, b: string): boolean {
+  const left = canonicalRepoRef(a);
+  const right = canonicalRepoRef(b);
+  if (!left || !right) return false;
+  if (process.platform === "win32") return left.toLowerCase() === right.toLowerCase();
+  return left === right;
+}
+
+function canonicalRepoRef(url: string): string | undefined {
+  const trimmed = url.trim().replace(/\/+$/, "");
+  if (!trimmed) return undefined;
+  if (/^file:\/\//i.test(trimmed)) {
+    try {
+      return resolve(fileURLToPath(trimmed));
+    } catch {
+      return normalizeRepoIdentity(trimmed);
+    }
+  }
+  if (
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("./") ||
+    trimmed.startsWith("../") ||
+    trimmed.startsWith("\\\\") ||
+    /^[A-Za-z]:[\\/]/.test(trimmed)
+  ) {
+    return resolve(trimmed);
+  }
+  return normalizeRepoIdentity(trimmed);
+}
+
+/**
+ * Replace dest with temp, keeping dest intact if the swap itself fails.
+ * Concurrent downloads may install a valid checkout first; accept that tree
+ * rather than failing the losing download.
+ */
+async function swapIntoPlace(
+  temp: string,
+  dest: string,
+  isReusable: () => Promise<boolean>,
+): Promise<void> {
+  const backup = `${temp}.old`;
+  try {
+    renameSync(temp, dest);
+    return;
+  } catch (error) {
+    // Rename onto a non-empty directory fails; the same tree may already be
+    // installed by a concurrent download.
+    if (!isOccupiedTargetError(error) || !existsSync(dest)) throw error;
+  }
+
+  if (await isReusable()) return;
+
+  try {
+    // Renaming a symlink moves the link itself, never its target.
+    renameSync(dest, backup);
+  } catch (error) {
+    if (!isMissingTargetError(error)) throw error;
+    // A concurrent download moved dest away after our check; retry once.
+    try {
+      renameSync(temp, dest);
+      return;
+    } catch (retryError) {
+      if (isOccupiedTargetError(retryError) && (await isReusable())) return;
+      throw retryError;
+    }
+  }
+
+  try {
+    renameSync(temp, dest);
+  } catch (error) {
+    if (isOccupiedTargetError(error) && (await isReusable())) {
+      removeBestEffort(backup);
+      return;
+    }
+    try {
+      renameSync(backup, dest);
+    } catch (restoreError) {
+      throw combinedSwapError(error, restoreError, backup);
+    }
+    throw error;
+  }
+  removeBestEffort(backup);
+}
+
+function isOccupiedTargetError(error: unknown): boolean {
+  const code = (error as NodeJS.ErrnoException | undefined)?.code;
+  // ENOTEMPTY/EEXIST: non-empty/occupied dest. EPERM: Windows rename-over.
+  // ENOTDIR/EISDIR: dest exists but is a file/symlink rather than a directory.
+  return (
+    code === "ENOTEMPTY" ||
+    code === "EEXIST" ||
+    code === "EPERM" ||
+    code === "ENOTDIR" ||
+    code === "EISDIR"
+  );
+}
+
+function isMissingTargetError(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
+}
+
+function removeBestEffort(path: string): void {
+  try {
+    rmSync(path, { recursive: true, force: true });
+  } catch {
+    // The new tree is already in place. A leftover unique backup path is
+    // harmless and must not fail the download.
+  }
+}
+
+function combinedSwapError(original: unknown, restore: unknown, backup: string): Error {
+  return new Error(
+    `failed to install checkout: ${errorMessage(original)}; ` +
+      `also failed to restore previous checkout from ${backup}: ${errorMessage(restore)}`,
+  );
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 export function modulesCacheDest(cwd: string, identity: string, commit?: string): string {
@@ -137,7 +315,9 @@ function gitUrlFromArgs(args: string[]): string | undefined {
   return undefined;
 }
 
-async function runGit(args: string[], options?: { allowFail?: boolean }): Promise<string> {
+type GitResult = { code: number; stdout: string; stderr: string };
+
+async function runGitResult(args: string[]): Promise<GitResult> {
   const url = gitUrlFromArgs(args);
   const host = url ? hostnameFromUrlOrHost(url) : undefined;
   const env =
@@ -163,13 +343,17 @@ async function runGit(args: string[], options?: { allowFail?: boolean }): Promis
     });
     child.on("error", reject);
     child.on("close", (code) => {
-      if (code !== 0 && options?.allowFail !== true) {
-        reject(new Error(`git ${args.join(" ")} failed: ${stderr || stdout}`));
-        return;
-      }
-      resolve(stdout);
+      resolve({ code: code ?? 1, stdout, stderr });
     });
   });
+}
+
+async function runGit(args: string[], options?: { allowFail?: boolean }): Promise<string> {
+  const result = await runGitResult(args);
+  if (result.code !== 0 && options?.allowFail !== true) {
+    throw new Error(`git ${args.join(" ")} failed: ${result.stderr || result.stdout}`);
+  }
+  return result.stdout;
 }
 
 export { normalizeRepoIdentity };

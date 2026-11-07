@@ -31,6 +31,21 @@ export type CollectMcpServersResult = {
 export type ApplyMcpInventoryOptions = {
   document: LockfileDocument;
   servers: Array<{ name: string; packageName?: string; [key: string]: unknown }>;
-  configPath: string;
-  targetId: string;
+  /** Target that received the config. Omit to refresh `mcp_servers` without inventing target inventory. */
+  targetId?: string;
+  /** Host config path; only written together with `targetId`. */
+  configPath?: string;
+};
+
+export type ScrubMcpInventoryOptions = {
+  document: LockfileDocument;
+  /** Drop every MCP inventory bag (`mcp_servers`, `mcp_configs`, target maps, provenance). */
+  all?: boolean;
+  /** Root package whose server entries are stale even when dependency entries are preserved. */
+  rootPackageName?: string;
+  /**
+   * Dependency packages still present in the current resolution. When omitted or
+   * empty, all dependency-owned entries are preserved.
+   */
+  livePackageNames?: readonly string[];
 };
