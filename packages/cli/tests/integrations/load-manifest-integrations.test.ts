@@ -16,12 +16,12 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createIntegrationRegistry } from "@b-apm/integration-api";
 import {
+  globalModuleRootForCliEntry,
+  isLocalPathSpecifier,
   loadIntegrationFromPackage,
   ManifestIntegrationLoadError,
-  globalModuleRootForCliEntry,
   registerManifestIntegrations,
-} from "../../src/app/integrations/loadManifestIntegrations.ts";
-import { isLocalPathSpecifier } from "../../src/app/integrations/localPathSpecifier.ts";
+} from "../../src/modules/Integrations/index.ts";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 

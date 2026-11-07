@@ -1,0 +1,15 @@
+name: bapm
+version: 0.2.1
+
+# MCP servers and other agent artifacts are declared here. `bapm install`
+# writes agent-specific files (for example .cursor/mcp.json); generated
+# outputs are gitignored.
+dependencies:
+  apm: []
+  mcp: []
+
+# bapm manages its own agent primitives from .apm/. Cursor is the project's
+# default host; contributors using another agent can override `active` in
+# bapm.local.yml (see CONTRIBUTING.md).
+active:
+  target: cursor

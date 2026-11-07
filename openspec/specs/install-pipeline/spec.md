@@ -91,6 +91,30 @@ When install materializes harness files through a registered target and is not i
 - **WHEN** a non-frozen install deploys cursor skills/rules/agents and writes lock write-back
 - **THEN** the lockfile MUST include `deployed_file_hashes` entries covering the deployed harness paths for the relevant dependency inventory
 
+### Requirement: Native directory-backed skills materialize the complete skill unit
+
+When install materializes a native skill discovered from `.apm/skills/<name>/SKILL.md` or `skills/<name>/SKILL.md`, it MUST copy the complete skill directory into the target's skill destination: `SKILL.md`, auxiliary markdown, scripts, nested directories, and assets. Copying MUST be containment-checked so symlinks or paths escaping the skill/package root fail closed. A package-root `SKILL.md` remains file-backed and MUST NOT cause the whole package to be copied. Portable Agent Plugins skills with `format: "agent-plugin"` and `skillDirectory` keep their existing complete-directory behavior.
+
+#### Scenario: Native skill auxiliary files deploy
+
+- **WHEN** install materializes `.apm/skills/foo/SKILL.md` or `skills/foo/SKILL.md` that also contains `reference.md` or nested assets
+- **THEN** those files MUST appear next to `SKILL.md` in the destination skill directory
+
+#### Scenario: Native skill inventory includes auxiliary files
+
+- **WHEN** install writes lock inventory after materializing a directory-backed native skill
+- **THEN** the inventory MUST include every deployed file from that skill directory, not only `SKILL.md`
+
+#### Scenario: Package-root SKILL.md does not copy the package
+
+- **WHEN** install materializes a skill whose only source is a package-root `SKILL.md`
+- **THEN** only `SKILL.md` MUST be copied and unrelated package files MUST NOT appear in the destination
+
+#### Scenario: Skill symlink escape fails closed
+
+- **WHEN** a native skill directory contains a symlink or path resolving outside the skill/package root
+- **THEN** materialize MUST fail closed with a diagnostic that the skill escapes its package root
+
 ### Requirement: Orphan cleanup for removed dependency deploy inventory
 
 When the previous lock lists deployed harness paths (via `deployed_file_hashes` or equivalent inventory) for a dependency that is no longer in the resolved install set, install MUST remove those orphaned files (or fail closed with a documented reason if removal is unsafe). Cleanup MUST NOT delete files outside previously recorded inventory paths.

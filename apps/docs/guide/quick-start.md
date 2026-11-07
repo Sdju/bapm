@@ -99,6 +99,8 @@ bapm: installed for cursor
 
 Rules, агенты и MCP из пакетов, если они есть, окажутся в `.cursor/rules/`, `.cursor/agents/` и `.cursor/mcp.json`.
 
+Если в каталоге skill есть дополнительные файлы (`reference.md`, скрипты, вложенные ассеты), bapm скопирует их рядом с `SKILL.md` в `.agents/skills/hello/`.
+
 `npx bapm doctor` проверит окружение и проект, `npx bapm install --dry-run` покажет, что будет установлено, ничего не меняя.
 
 ## 5. Закоммитьте

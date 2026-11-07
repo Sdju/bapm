@@ -18,16 +18,18 @@
 
 Пакет — каталог (обычно git-репозиторий или его подкаталог) со своим `bapm.yml` или `apm.yml` (`name` и `version`) и файлами для агента. bapm находит их по раскладке APM:
 
-| Что                           | Где в пакете                                                     |
-| ----------------------------- | ---------------------------------------------------------------- |
-| skills                        | `skills/<name>/SKILL.md`, `.apm/skills/`, или `SKILL.md` в корне |
-| instructions (rules у Cursor) | `.apm/instructions/`                                             |
-| agents (субагенты)            | `.apm/agents/`                                                   |
-| commands                      | `.apm/prompts/<name>.prompt.md` или `<name>.prompt.md` в корне   |
-| hooks                         | `.apm/hooks/*.json` или `hooks/*.json`                           |
-| MCP-серверы                   | `dependencies.mcp` в манифесте пакета                            |
+| Что                           | Где в пакете                                                    |
+| ----------------------------- | --------------------------------------------------------------- |
+| skills                        | `skills/<name>/`, `.apm/skills/<name>/`, или `SKILL.md` в корне |
+| instructions (rules у Cursor) | `.apm/instructions/`                                            |
+| agents (субагенты)            | `.apm/agents/`                                                  |
+| commands                      | `.apm/prompts/<name>.prompt.md` или `<name>.prompt.md` в корне  |
+| hooks                         | `.apm/hooks/*.json` или `hooks/*.json`                          |
+| MCP-серверы                   | `dependencies.mcp` в манифесте пакета                           |
 
 Каталоги `rules/` и `commands/` в корне пакета bapm не читает.
+
+Для `skills/<name>/` и `.apm/skills/<name>/` bapm копирует весь каталог skill: вспомогательные `.md`, скрипты и вложенные ассеты попадают рядом с `SKILL.md` в каталог агента. Для `SKILL.md` в корне пакета копируется только сам файл, чтобы не разложить весь пакет.
 
 Пакет берётся из GitHub (`org/repo`), любого git-URL, локального пути или, экспериментально, из registry. Формы записи: [Зависимости](/guide/manifest-dependencies).
 

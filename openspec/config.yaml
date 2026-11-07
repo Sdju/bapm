@@ -28,7 +28,7 @@ context: |
   Orchestration:
   - Prefer /orchestrate for multi-step implementation: parent only dispatches Task subagents
   - OpenSpec explore/propose → separate acceptance tests (TDD RED) → apply → accept → merge
-  - See .cursor/skills/orchestrate/SKILL.md
+  - See .apm/skills/orchestrate/SKILL.md
 
 rules:
   proposal:

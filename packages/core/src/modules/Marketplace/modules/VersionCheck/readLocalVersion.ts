@@ -2,7 +2,7 @@ import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { loadYamlDocument } from "@/common/yaml/loadDocument.ts";
 import { APM_MANIFEST_FILE, BAPM_MANIFEST_FILE } from "@/modules/Manifest";
-import { ensureMarketplacePathWithin } from "../PackOutputs/profiles.ts";
+import { ensureMarketplacePathWithin } from "../../outputPaths.ts";
 import { findPluginJson } from "./findPluginJson.ts";
 import type { LocalVersionRead } from "./types.ts";
 

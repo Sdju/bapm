@@ -198,6 +198,30 @@ function treeIsContained(directory: string, root: string, visited: Set<string>):
   return true;
 }
 
+function copyContainedSkillDirectory(args: {
+  sourceDir: string;
+  root: unknown;
+  destDir: string;
+  outsideRootMessage: string;
+  escapesRootMessage: string;
+}): void {
+  const source = realpathSync(args.sourceDir);
+  const root = typeof args.root === "string" ? realpathSync(args.root) : undefined;
+  if (!root || !isWithin(root, source) || !statSync(source).isDirectory()) {
+    throw new Error(args.outsideRootMessage);
+  }
+  const skillFile = realpathSync(join(source, "SKILL.md"));
+  if (
+    !isWithin(root, skillFile) ||
+    !statSync(skillFile).isFile() ||
+    !treeIsContained(source, root, new Set())
+  ) {
+    throw new Error(args.escapesRootMessage);
+  }
+  mkdirSync(args.destDir, { recursive: true });
+  cpSync(source, args.destDir, { recursive: true, dereference: true, force: true });
+}
+
 /**
  * Copy a validated portable Agent Plugin skill directory without retaining symlinks.
  * Throws when the skill escapes `pluginRoot`.
@@ -207,25 +231,31 @@ export function copyPortableSkillDirectory(
   pluginRoot: unknown,
   destDir: string,
 ): void {
-  const source = realpathSync(sourceDir);
-  const root = typeof pluginRoot === "string" ? realpathSync(pluginRoot) : undefined;
-  if (!root || !isWithin(root, source) || !statSync(source).isDirectory()) {
-    throw new Error("Agent Plugin skill directory is outside its plugin root");
-  }
-  const skillFile = realpathSync(join(source, "SKILL.md"));
-  if (
-    !isWithin(root, skillFile) ||
-    !statSync(skillFile).isFile() ||
-    !treeIsContained(source, root, new Set())
-  ) {
-    throw new Error("Agent Plugin skill contains a path outside its plugin root");
-  }
-  mkdirSync(destDir, { recursive: true });
-  cpSync(source, destDir, { recursive: true, dereference: true, force: true });
+  copyContainedSkillDirectory({
+    sourceDir,
+    root: pluginRoot,
+    destDir,
+    outsideRootMessage: "Agent Plugin skill directory is outside its plugin root",
+    escapesRootMessage: "Agent Plugin skill contains a path outside its plugin root",
+  });
 }
 
 /**
- * Host-agnostic skill materialize: Agent Plugin tree / SKILL.md copy / content stub.
+ * Copy a native skill directory (references, scripts, nested assets) without
+ * retaining symlinks. Throws when the skill escapes `packageRoot`.
+ */
+export function copySkillDirectory(sourceDir: string, packageRoot: unknown, destDir: string): void {
+  copyContainedSkillDirectory({
+    sourceDir,
+    root: packageRoot,
+    destDir,
+    outsideRootMessage: "Skill directory is outside its package root",
+    escapesRootMessage: "Skill contains a path outside its package root",
+  });
+}
+
+/**
+ * Host-agnostic skill materialize: directory-backed tree / SKILL.md copy / content stub.
  * Hosts only choose `destDir` (cwd-relative or absolute under deploy roots).
  */
 export function materializeSkill(args: {
@@ -242,8 +272,16 @@ export function materializeSkill(args: {
   mkdirSync(destDir, { recursive: true });
 
   const src = p.path ? resolve(p.path) : undefined;
-  if (p.format === "agent-plugin" && typeof p.skillDirectory === "string") {
-    copyPortableSkillDirectory(p.skillDirectory, p.pluginRoot, destDir);
+  const skillDirectory =
+    typeof p.skillDirectory === "string" && existsSync(p.skillDirectory)
+      ? p.skillDirectory
+      : undefined;
+  if (skillDirectory && p.format === "agent-plugin") {
+    copyPortableSkillDirectory(skillDirectory, p.pluginRoot, destDir);
+  } else if (skillDirectory) {
+    const packageRoot =
+      typeof p.pluginRoot === "string" ? p.pluginRoot : findPackageRoot(skillDirectory);
+    copySkillDirectory(skillDirectory, packageRoot, destDir);
   } else if (src && existsSync(src)) {
     const skillMd = src.endsWith("SKILL.md") ? src : join(src, "SKILL.md");
     if (existsSync(skillMd) && statSync(skillMd).isFile()) {

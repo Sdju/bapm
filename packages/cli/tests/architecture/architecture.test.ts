@@ -38,6 +38,20 @@ test("tsconfig maps @/* to ./src/*", () => {
   expect(tsconfig.compilerOptions?.paths?.["@/*"]).toEqual(["./src/*"]);
 });
 
+test("project feod config declares the CLI root (pages→commands)", () => {
+  const feod = JSON.parse(readFileSync(join(cliRoot, "../../feod.config.json"), "utf8")) as {
+    roots: Record<string, { layerDirs?: Record<string, string>; dependencies?: string[] }>;
+  };
+  expect(feod.roots["packages/cli/src"]).toEqual({
+    layerDirs: { pages: "commands" },
+    dependencies: ["packages/core/src"],
+  });
+});
+
+test("Integrations module owns manifest integration loading", () => {
+  expect(existsSync(join(srcRoot, "modules", "Integrations", "index.ts"))).toBe(true);
+});
+
 test("Help, Version, and Install are directory modules with index.ts", () => {
   for (const name of ["Help", "Version", "Install"] as const) {
     const modDir = join(srcRoot, "modules", name);

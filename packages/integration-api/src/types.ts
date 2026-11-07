@@ -22,7 +22,7 @@ export type AttributedPrimitive = {
   packageName?: string;
   /** Optional raw content hint; hosts may re-read from path. */
   content?: string;
-  /** Complete portable Agent Plugin skill directory, when applicable. */
+  /** Complete skill directory (native or portable Agent Plugin), when applicable. */
   skillDirectory?: string;
   /** Resolved portable plugin root for containment-aware targets. */
   pluginRoot?: string;

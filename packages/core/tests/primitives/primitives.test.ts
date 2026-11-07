@@ -161,6 +161,33 @@ describe("primitives discovery (pr-001..003)", () => {
     expect(sourceOf(skill!)).toMatch(/^dependency:/);
   });
 
+  test("directory-backed skills carry skillDirectory; package-root SKILL.md does not", () => {
+    project = createTempProject();
+    writeText(
+      join(project.cwd, ".apm", "skills", "typed-skill", "SKILL.md"),
+      "---\nname: typed-skill\n---\n# Typed\n",
+    );
+    writeText(
+      join(project.cwd, "skills", "collection-skill", "SKILL.md"),
+      "---\nname: collection-skill\n---\n# Collection\n",
+    );
+    writeText(
+      join(project.cwd, "SKILL.md"),
+      "---\nname: package-root-skill\n---\n# Package root\n",
+    );
+
+    const found = primitivesOf(getDiscoverPrimitives()({ cwd: project.cwd }));
+    const typed = found.find((p) => nameOf(p) === "typed-skill");
+    const collection = found.find((p) => nameOf(p) === "collection-skill");
+    const packageRoot = found.find((p) => nameOf(p) === "package-root-skill");
+
+    expect(asText(typed?.skillDirectory)).toBe(join(project.cwd, ".apm", "skills", "typed-skill"));
+    expect(asText(collection?.skillDirectory)).toBe(
+      join(project.cwd, "skills", "collection-skill"),
+    );
+    expect(packageRoot?.skillDirectory).toBeUndefined();
+  });
+
   test("prompts → command and hooks → hook discovery + local override", () => {
     project = createTempProject();
     writeText(

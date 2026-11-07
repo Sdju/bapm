@@ -6,11 +6,12 @@ import {
   githubHttpsUrlFromOwnerRepo,
   isGithubOwnerRepoShorthand,
   isLocalAuthoringSource,
+  loadMarketplaceAuthoringConfig,
+  loadMarketplaceFromBapmYml,
   splitHostFromAuthoringSource,
-} from "../Authoring/source.ts";
-import { loadMarketplaceAuthoringConfig } from "../Authoring/detect.ts";
-import { loadMarketplaceFromBapmYml } from "../Authoring/load.ts";
-import type { MarketplaceAuthoringConfig, PackageEntry } from "../Authoring/types.ts";
+  type MarketplaceAuthoringConfig,
+  type PackageEntry,
+} from "../../authoring.ts";
 import { MarketplacePackOutputsError } from "./errors.ts";
 import type {
   LsRemoteFn,

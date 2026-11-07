@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import type { MarketplaceAuthoringConfig, PackageEntry } from "../Authoring/types.ts";
+import type { MarketplaceAuthoringConfig, PackageEntry } from "../../authoring.ts";
 import { readLocalVersion } from "./readLocalVersion.ts";
 import { renderTag } from "./renderTag.ts";
 import type {

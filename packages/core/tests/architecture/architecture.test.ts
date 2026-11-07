@@ -42,50 +42,53 @@ test("pages is an empty stub (no domain logic), not commands", () => {
   const tsFiles = listFilesRecursive(pagesDir).filter((f) => f.endsWith(".ts"));
   expect(tsFiles, "pages must not host domain .ts files").toEqual([]);
 
-  const feod = JSON.parse(readText("package.json")) as {
-    feod?: { layerDirs?: { pages?: string } };
-  };
-  expect(feod.feod?.layerDirs?.pages).toBe("pages");
+  const feod = readProjectFeodConfig();
+  expect(feod.roots["packages/core/src"]?.layerDirs?.pages).toBe("pages");
 });
 
-test("package.json has library feod block (pages→pages, not commands)", () => {
-  const pkg = JSON.parse(readText("package.json")) as {
-    feod?: {
-      srcRoot?: string;
-      aliasPrefix?: string;
-      layerDirs?: Record<string, string>;
-      common?: { allowIndex?: boolean };
-      modules?: {
-        publicEntry?: string;
-        allowDeepImports?: boolean;
-        singleFileModules?: boolean;
-      };
-      pages?: {
-        useFileBasedRouting?: boolean;
-        modulePages?: boolean;
-        privateModulesPrefix?: null;
-      };
-    };
-  };
+test("project feod config declares the core library root (pages→pages, not commands)", () => {
+  const feod = readProjectFeodConfig();
 
-  expect(pkg.feod).toBeTruthy();
-  expect(pkg.feod?.srcRoot).toBe("src");
-  expect(pkg.feod?.aliasPrefix).toBe("@");
-  expect(pkg.feod?.layerDirs).toEqual({
-    app: "app",
-    pages: "pages",
-    modules: "modules",
-    common: "common",
-    global: "globals",
+  expect(feod.$schema).toBe("https://feod.dev/feod.schema.json");
+  expect(feod.roots["packages/core/src"]).toBeTruthy();
+  expect(feod.rootDefault?.layerDirs).toEqual({ global: "globals" });
+  expect(feod.rootDefault?.modules).toEqual({
+    publicEntries: ["index.ts"],
+    requirePublicEntry: true,
+    forbiddenNames: ["common", "shared", "utils"],
   });
-  expect(pkg.feod?.common?.allowIndex).toBe(false);
-  expect(pkg.feod?.modules?.publicEntry).toBe("index.ts");
-  expect(pkg.feod?.modules?.allowDeepImports).toBe(false);
-  expect(pkg.feod?.modules?.singleFileModules).toBe(false);
-  expect(pkg.feod?.pages?.useFileBasedRouting).toBe(false);
-  expect(pkg.feod?.pages?.modulePages).toBe(false);
-  expect(pkg.feod?.pages?.privateModulesPrefix).toBeNull();
+  expect(feod.rootDefault?.globals?.allowedFiles).toEqual(["**/*.d.ts"]);
+  expect(feod.rootDefault?.globals?.localImports).toBe("forbid");
+  expect(feod.rootDefault?.imports?.unresolved).toBe("forbid");
+  expect(feod.rootDefault?.submodules).toEqual({
+    visibility: "parent-only",
+    parentImports: "public",
+    childImportsParent: "implementation",
+  });
+  expect(feod.rootDefault?.inventory).toEqual({ uncovered: true });
+  expect(feod.roots["packages/core/src"]?.dependencies).toBeUndefined();
 });
+
+function readProjectFeodConfig(): {
+  $schema?: string;
+  rootDefault?: {
+    layerDirs?: Record<string, string>;
+    modules?: Record<string, unknown>;
+    globals?: { allowedFiles?: string[]; localImports?: string };
+    imports?: { unresolved?: string };
+    submodules?: Record<string, string>;
+    inventory?: Record<string, unknown>;
+  };
+  roots: Record<
+    string,
+    {
+      layerDirs?: Record<string, string>;
+      dependencies?: string[];
+    }
+  >;
+} {
+  return JSON.parse(readFileSync(join(coreRoot, "../../feod.config.json"), "utf8"));
+}
 
 test("tsconfig maps @/* to ./src/*", () => {
   const tsconfig = JSON.parse(readText("tsconfig.json")) as {

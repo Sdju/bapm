@@ -53,29 +53,5 @@
   },
   "engines": {
     "node": ">=22.12.0"
-  },
-  "feod": {
-    "srcRoot": "src",
-    "aliasPrefix": "@",
-    "layerDirs": {
-      "app": "app",
-      "pages": "commands",
-      "modules": "modules",
-      "common": "common",
-      "global": "globals"
-    },
-    "common": {
-      "allowIndex": false
-    },
-    "modules": {
-      "publicEntry": "index.ts",
-      "allowDeepImports": false,
-      "singleFileModules": false
-    },
-    "pages": {
-      "useFileBasedRouting": false,
-      "modulePages": false,
-      "privateModulesPrefix": null
-    }
   }
 }

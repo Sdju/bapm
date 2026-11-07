@@ -72,7 +72,7 @@ Agent primitives MUST materialize to `.github/agents/<name>.agent.md` under regi
 
 ### Requirement: Skills materialize under .agents/skills
 
-Skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Portable Agent Plugins skills (`format: "agent-plugin"` with `skillDirectory`) MUST copy the complete skill directory (dereferenced, contained under plugin root) into that destination. Skill materialize MUST NOT write `.github/skills/` and MUST NOT write MCP config as a side effect.
+Skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under registered deploy roots. Directory-backed skills (native `skillDirectory` and portable Agent Plugins `format: "agent-plugin"`) MUST copy the complete skill directory (dereferenced, contained under the skill/package root) into that destination. Skill materialize MUST NOT write `.github/skills/` and MUST NOT write MCP config as a side effect.
 
 #### Scenario: Skill appears under cross-tool skills root
 
@@ -81,7 +81,7 @@ Skill primitives MUST materialize to `.agents/skills/<name>/SKILL.md` under regi
 
 #### Scenario: Portable skill directory is fully copied
 
-- **WHEN** install runs with Copilot active and a portable Agent Plugins skill with auxiliary files under `skillDirectory`
+- **WHEN** install runs with Copilot active and a directory-backed skill (native or portable Agent Plugins) with auxiliary files under `skillDirectory`
 - **THEN** those auxiliary files MUST be present under `.agents/skills/<name>/` after materialize
 
 ### Requirement: Hooks deploy as per-file JSON with camelCase events and ownership

@@ -11,12 +11,16 @@ export default defineConfig({
       "CONFORMANCE.md",
       "CONFORMANCE.json",
       "AGENT_PLUGINS_COMPATIBILITY.md",
+      // Vendored FEOD skill is synced from upstream and must stay byte-identical.
+      ".apm/skills/**",
     ],
   },
   lint: {
     jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
     options: { typeAware: true, typeCheck: true },
+    // Vendored FEOD skill is synced from upstream and must stay byte-identical.
+    ignorePatterns: [".apm/skills/**"],
   },
   // https://viteplus.dev/guide/commit-hooks
   staged: {

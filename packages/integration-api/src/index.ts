@@ -47,6 +47,7 @@ export {
   compileMarkdownReport,
   copyHookScript,
   copyPortableSkillDirectory,
+  copySkillDirectory,
   filterFrontmatterKeys,
   findPackageRoot,
   getConfigureMcp,

@@ -50,7 +50,7 @@ Registered default deploy roots for Claude MUST include `.claude` and MUST cover
 
 ### Requirement: Skills materialize under .claude/skills
 
-When Claude is active, skill primitives MUST materialize to `.claude/skills/<name>/SKILL.md` under registered deploy roots. Portable Agent Plugins skills (`format: "agent-plugin"` with `skillDirectory`) MUST copy the complete skill directory (dereferenced, contained under plugin root) into that destination. Skill materialize MUST NOT write `.agents/skills/` and MUST NOT write MCP config as a side effect.
+When Claude is active, skill primitives MUST materialize to `.claude/skills/<name>/SKILL.md` under registered deploy roots. Directory-backed skills (native `skillDirectory` and portable Agent Plugins `format: "agent-plugin"`) MUST copy the complete skill directory (dereferenced, contained under the skill/package root) into that destination. Skill materialize MUST NOT write `.agents/skills/` and MUST NOT write MCP config as a side effect.
 
 #### Scenario: Skill appears under Claude skills root
 
@@ -59,7 +59,7 @@ When Claude is active, skill primitives MUST materialize to `.claude/skills/<nam
 
 #### Scenario: Portable skill directory is fully copied
 
-- **WHEN** install runs with Claude active and a portable Agent Plugins skill with auxiliary files under `skillDirectory`
+- **WHEN** install runs with Claude active and a directory-backed skill (native or portable Agent Plugins) with auxiliary files under `skillDirectory`
 - **THEN** those auxiliary files MUST be present under `.claude/skills/<name>/` after materialize
 
 ### Requirement: Instructions materialize as Claude rules with paths frontmatter

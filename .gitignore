@@ -31,6 +31,53 @@ dist-ssr
 # AI agent worktrees
 .claude/worktrees/
 
+# bapm runtime and personal overlay
+apm_modules/
+bapm.local.yml
+bapm.local.lock.yaml
+.agents/local/
+
+# bapm-generated agent artifacts (materialized by `bapm install`)
+# Source of truth is .apm/ and bapm.yml; never commit generated outputs.
+.agents/skills/
+.agents/rules/
+.agents/mcp_config.json
+.cursor/agents/
+.cursor/commands/
+.cursor/rules/
+.cursor/hooks/
+.cursor/hooks.json
+.cursor/bapm-hooks.json
+.cursor/mcp.json
+.claude/skills/
+.claude/agents/
+.claude/commands/
+.claude/rules/
+.mcp.json
+.codex/
+.opencode/skills/
+.opencode/commands/
+opencode.json
+opencode.jsonc
+.windsurf/rules/
+.windsurf/workflows/
+.gemini/settings.json
+.gemini/commands/
+.kiro/skills/
+.kiro/steering/
+.kiro/settings/mcp.json
+.grok/skills/
+.grok/rules/
+.github/instructions/
+.github/agents/
+.github/prompts/
+.github/hooks/
+
+# bapm compile outputs
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+.github/copilot-instructions.md
 
 # External references / samples (not part of the repo)
 .samples/
