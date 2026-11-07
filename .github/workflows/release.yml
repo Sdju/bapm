@@ -32,7 +32,6 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
-          package-manager-cache: false
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -76,14 +75,15 @@ jobs:
             }
           " "$ver"
 
+      # Workspace packages expose types from dist/; typecheck needs a prior build.
+      - name: Build
+        run: pnpm run build
+
       - name: Check
         run: pnpm run check
 
       - name: Test
         run: pnpm run test
-
-      - name: Build
-        run: pnpm run build
 
       - name: Pack release assets
         run: |
