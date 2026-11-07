@@ -7,10 +7,10 @@ Usage:
   bapm pack [options]
 
 Options:
-  --archive                    Write a plain zip artifact (M7 MUST path)
+  --archive                    Write a plain zip artifact (also the default without flags)
   --agent-plugins              Pack a validated Agent Plugins v1 portable root
   --dry-run                    Validate / collect without durable zip or marketplace.json
-  --check-release              pr-004 tag↔manifest version gate
+  --check-release              Check that the manifest version matches the git tag
   --check-versions             Marketplace local-package version alignment (lockstep /
                                tag_pattern / per_package); plugin.json fallback when no YAML
   --tag <name>                 Tag under check (optional with --check-release; else HEAD)
@@ -25,7 +25,7 @@ Options:
 Notes:
   Unknown flags are rejected. --check-release never creates or pushes tags.
   --check-versions is distinct from --check-release (marketplace alignment vs tag↔root version).
-  Pack refuses secret-pattern paths (.env, *.pem, …) per sc-007.
+  Pack refuses secret-pattern paths (.env, *.pem, …).
   Optional project-root .bapmignore (gitignore syntax) omits matching files from the zip;
   root bapm.yml/apm.yml stay included; .gitignore is not used as a fallback.
   When marketplace: is present with outputs selected, pack emits Claude/Codex marketplace.json.

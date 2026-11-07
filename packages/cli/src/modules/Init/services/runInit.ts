@@ -9,12 +9,14 @@ Usage:
 
 Options:
   -y, --yes           Non-interactive defaults (version 0.1.0)
-  --target <id>       Record host target (e.g. cursor)
+  --target <id>       Activate an agent (e.g. cursor); also writes a targets: entry that
+                      limits deployment to that agent
   --help, -h          Show this help
 
 Notes:
   Writes ${deps.manifestFile} only. Refuses if apm.yml or bapm.yml already exists.
-  Unknown flags are rejected. No plugin / marketplace scaffold in M7.
+  Remove the generated targets: block if the project is shared with other agents.
+  Unknown flags are rejected. For plugin or marketplace scaffolds use bapm plugin init / bapm marketplace init.
 `;
 }
 

@@ -32,7 +32,7 @@ Options:
 
 Informational:
   auth                     Whether GITHUB_TOKEN / GH_TOKEN is set (names only, never secrets)
-  network                  With -v: git ls-remote probe (never critical)
+  network                  With -v: git ls-remote probe of github.com (never critical)
 `;
 }
 

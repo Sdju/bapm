@@ -9,7 +9,7 @@ export type ApproveCliDeps = {
 };
 
 export function formatApproveHelp(deps: ApproveCliDeps): string {
-  return `${deps.name} approve — Persist user-local executable allow (sc-010)
+  return `${deps.name} approve — Persist user-local executable allow
 
 Usage:
   bapm approve <package-name> [--user]

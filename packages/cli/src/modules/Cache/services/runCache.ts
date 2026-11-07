@@ -64,7 +64,7 @@ Usage:
   bapm cache clean [-y|--yes] [--dry-run]
 
 Options:
-  -y, --yes    Confirm clean without interactive prompt
+  -y, --yes    Required to clean (there is no interactive prompt)
   --dry-run    Preview clean without deleting (no -y required)
   --help, -h   Show this help
 

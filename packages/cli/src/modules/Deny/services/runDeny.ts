@@ -8,7 +8,7 @@ export type DenyCliDeps = {
 };
 
 export function formatDenyHelp(deps: DenyCliDeps): string {
-  return `${deps.name} deny — Persist user-local executable deny (sc-010)
+  return `${deps.name} deny — Persist user-local executable deny
 
 Usage:
   bapm deny <package-name> [--user]

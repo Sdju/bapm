@@ -123,7 +123,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
 }
 
 export function formatCompileHelp(deps: LifecycleCliDeps): string {
-  return `${deps.name} compile — Emit target-owned output from discovered primitives
+  return `${deps.name} compile — Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
 
 Usage:
   bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
@@ -139,6 +139,7 @@ Options:
 Host selection: --target <id> → sole manifest active → sole auto-detect → fail.
 When active lists multiple hosts, pass --target <id>. Compile stays single-host.
 The selected target determines the default output path and rendering.
+Run from the directory that contains ${deps.manifestFile}.
 `;
 }
 

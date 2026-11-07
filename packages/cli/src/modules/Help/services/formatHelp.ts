@@ -19,14 +19,14 @@ Commands:
   pack         Build a plain-zip producer archive (--archive / --check-release / --check-versions)
   publish      Publish flat registry zip via PUT (experimental; BAPM_EXPERIMENTAL_REGISTRIES=1)
   self-update  Check / apply CLI updates from npm (--check)
-  update       Re-resolve pins (rs-011/rs-012); --dry-run / -y
+  update       Re-resolve dependency pins; --dry-run / -y
   outdated     Compare lock pins to remote tips (exit 0 when outdated)
   uninstall    Remove packages from manifest, modules, deploy, lock
   prune        Remove orphan modules not in the resolved graph
-  deps         Inspect lock deps (list | tree | why)
+  deps         Inspect lock deps (list | tree | why) or wipe modules (clean)
   audit        Integrity checks (--ci gate)
   doctor       Environment and project sanity checks
-  compile      Emit AGENTS.md from discovered primitives (cursor)
+  compile      Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
   cache        Modules-cache info | clean (apm_modules)
   policy       Policy status (read-only governance posture)
   approve      Persist user-local MCP allow (~/.bapm/config.json; not project yml)
@@ -59,7 +59,7 @@ Usage:
 Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
-  --force                  Accept force. Does not refresh refs and does not bypass frozen or policy
+  --force                  Accepted for APM parity; currently has no effect (does not refresh refs or bypass frozen/policy)
   --allow-insecure         Dual-consent half for direct http:// dependencies
   --allow-insecure-host <hostname>
                            Allow transitive http:// from this FQDN (repeatable)
@@ -78,21 +78,23 @@ Host selection:
   Priority: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
   Use active in bapm.yml / apm.yml when detect is missing or ambiguous.
 
-MCP / Cursor:
-  When the cursor target is active, eligible MCP servers are written to .cursor/mcp.json.
+MCP:
+  Eligible MCP servers are written to the active agent's MCP config (for Cursor: .cursor/mcp.json).
   Direct dependencies.mcp are deployed by default. Transitive MCP requires --trust-transitive-mcp
-  (or an executables.allow / allowExecutables grant for that package — sc-009).
-  Auto-detect without .cursor/ does not mkdir solely for MCP.
+  or an executables.allow grant for that package. Once any grant exists (bapm.yml executables,
+  bapm approve / deny), every dependency with MCP must be approved or denied.
 
 Bin consent:
   Non-interactive (CI / frozen / non-TTY) installs skip dependency bin/ unless --trust-bin or a
-  persisted executables.allow bin grant applies. Flags cannot override org/project deny.
+  persisted executables.allow bin grant applies. Interactive installs deploy with a warning.
+  Flags cannot override org/project deny.
 
 Unknown flags are rejected. --frozen and --no-frozen cannot be combined.
 --trust-bin and --no-trust-bin cannot be combined.
 Frozen (explicit or when CI is truthy) cannot be combined with --update.
 When the CI environment variable is truthy (not "", "0", or "false"), install
-defaults to frozen unless --no-frozen is passed (OpenAPM req-lk-018).
-A local .zip path is detected as a pack archive (install-from-archive round-trip).
+defaults to frozen unless --no-frozen is passed.
+A local .zip path is installed as a pack archive: members are added to the current directory,
+nothing else is removed, and existing files with different content are never overwritten.
 `;
 }
