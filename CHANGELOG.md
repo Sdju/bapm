@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 — 2026-11-08
+
+### Fixed
+
+- **Published package manifests.** `0.2.0` shipped `workspace:*` / `catalog:` dependency specifiers that npm cannot install. `0.2.1` publishes rewritten manifests via `pnpm publish`. Use `0.2.1` instead of `0.2.0`.
+
 ## 0.2.0 — 2026-11-08
 
 ### Added

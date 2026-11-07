@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-agent-skills",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Agent-skills (cross-client .agents/skills) runtime integration for bapm",
   "keywords": [
     "b-apm",

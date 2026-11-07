@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-claude",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Claude Code runtime + marketplace-output integration for bapm",
   "keywords": [
     "b-apm",
