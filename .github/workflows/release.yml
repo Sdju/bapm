@@ -84,6 +84,10 @@ jobs:
 
       - name: Test
         run: pnpm run test
+        env:
+          # GitHub Actions sets CI=true; bapm treats that as lk-018 default-frozen.
+          # Suite tests that need CI-frozen set CI themselves; happy-path installs must not.
+          CI: ""
 
       - name: Pack release assets
         run: |
