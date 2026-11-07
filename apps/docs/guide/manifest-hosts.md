@@ -1,65 +1,73 @@
-# Hosts: detect, active, targets
+# Агенты в манифесте: `active`, `target`, `targets`
 
-Как bapm выбирает, **куда** материализовать пакеты. Полный приоритет: [Как выбирается host](/guide/host-selection). How-to по пакетам: [Поддерживаемые hosts](/guide/supported-hosts).
+Справка по полям `bapm.yml`, которые управляют выбором агента. Как эти поля участвуют в выборе: [Выбор агента](/guide/host-selection).
 
-Из коробки CLI **не** бандлит runtime hosts. Стандартные агенты — отдельные пакеты `@b-apm/integration-*`. Object-map не обязателен для канонических hosts.
+## `active`
 
-## Три понятия (громко)
-
-| Понятие     | Роль                                                                          |
-| ----------- | ----------------------------------------------------------------------------- |
-| **detect**  | Auto: интеграция говорит «cwd похож на мой host» (маркеры вроде `.cursor/`)   |
-| **active**  | Explicit choose: какие host id активны (base и/или `bapm.local.yml`)          |
-| **targets** | Replace/add **пакет реализации** (host id → npm/path). **Не активирует** host |
-
-`targets:` сами по себе не активируют hosts и не нужны, чтобы «разрешить» cursor/claude/… — для известных id CLI пробует `@b-apm/integration-<id>`.
-
-## Обычно достаточно (без map)
-
-```bash
-npm i -D @b-apm/integration-cursor
-# в проекте есть .cursor/  →
-bapm install
-```
-
-Или pin без detect:
+Каких агентов (и какие [пресеты](/guide/config-manifest#пресеты)) использовать. Две равноценные формы:
 
 ```yaml
-# bapm.yml
+# объект
 active:
   target: cursor
+  preset: developer
 ```
 
-## Object-map — когда нужен
+```yaml
+# список объектов (так пишет bapm init)
+active:
+  - target: cursor
+  - preset: developer
+```
+
+Значение `target` и `preset` — строка или список: `target: [cursor, claude]`. Префикс `!` исключает элемент; значение с ним берите в кавычки, иначе YAML прочитает его как тег: `preset: ["!experimental"]`. Исключение действует только на сам элемент: пресеты и агенты, которые исключённый пресет включил через свой `active`, останутся.
+
+Отвергаются:
+
+- `active: [cursor]` — список без ключей (старая форма);
+- пустые `active: []` и `active: {}`.
+
+В `bapm.local.yml` поле `active` заменяет значение из `bapm.yml` целиком.
+
+## `targets` и `target`
+
+Эти поля пришли из APM и делают две вещи сразу.
+
+**Регистрируют свою интеграцию**, если значение — карта «id агента → модуль»:
 
 ```yaml
 targets:
-  cursor: "./agents/integration/my-cursor" # override canonical
-  x-acme-editor: "@acme/my-integration" # custom host
+  cursor: "./tools/my-cursor-integration" # заменить стандартную
+  x-acme-editor: "@acme/bapm-integration" # добавить своего агента
 ```
 
-| Форма значения                               | Трактовка                                |
-| -------------------------------------------- | ---------------------------------------- |
-| `./…`, `../…`, абсолютный путь               | Локальный path относительно project root |
-| всё остальное (`@scope/name`, `pkg@version`) | npm package specifier                    |
+| Значение                          | Как понимается                                                                             |
+| --------------------------------- | ------------------------------------------------------------------------------------------ |
+| `./…`, `../…` или абсолютный путь | Локальный модуль, должен лежать в проекте                                                  |
+| всё остальное                     | Имя npm-пакета (`@scope/name`), установленного через npm; версию в значении указать нельзя |
 
-Map entries загружаются **fail-closed**. Canonical hosts без ключа в map — soft resolve `@b-apm/integration-*`.
+Если модуль из карты не загрузился, команда завершается с ошибкой. Агенты, которых нет в карте, загружаются из стандартных пакетов `@b-apm/integration-<id>`.
 
-## Поля манифеста
+**Ограничивают, для каких агентов раскладываются файлы.** Если в корне `bapm.yml` есть `target` или `targets` (строкой, списком или картой), файлы получают только перечисленные там агенты. Агент, выбранный через `active` или `--target`, но отсутствующий в этом списке, получит сообщение `installed for <id>` и ни одного файла.
 
-| Поле      | Форма                     | Смысл                                                                                                 |
-| --------- | ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `target`  | строка **или** object-map | Legacy: один host id. Object-map (**bapm-расширение**): host → пакет/путь. Нельзя вместе с `targets`  |
-| `targets` | список **или** object-map | Legacy: несколько id. Object-map — override/add impl                                                  |
-| `active`  | object / list-of-maps     | Structured `preset` / `target` (+ `!` negation). Пустой `active: []` / `{}` и bare `[cursor]` — отказ |
+Поэтому:
 
-## Типичные ошибки
+- для известных агентов не пишите `targets` вовсе;
+- если используете карту для своей интеграции, перечислите в ней всех агентов команды;
+- `bapm init --target` создаёт карту с одним агентом — удалите её, если агентов больше одного.
 
-| Симптом                                        | Что проверить                                                                     |
-| ---------------------------------------------- | --------------------------------------------------------------------------------- |
-| `Target detection is missing or ambiguous`     | `--target` / `active`; при маркере без пакета — установите `@b-apm/integration-*` |
-| `Unknown or unregistered target`               | Пакет не установлен / custom id без map                                           |
-| `Manifest "active" … empty / legacy`           | Structured form; уберите `[]` / bare list                                         |
-| `must not declare both "target" and "targets"` | Оставьте одно поле                                                                |
+Формы: `target` — строка (`target: cursor`) или карта; `targets` — список (`targets: [cursor, claude]`) или карта. Указывать оба поля одновременно нельзя.
 
-Personal overlay: [Overlay](/guide/manifest-overlay).
+Ни одно из полей не выбирает агента: без `active`, `--target` или автоопределения (`detect` интеграции находит маркер вроде `.cursor/`) install попросит указать агента. Иначе говоря, `targets` не активирует агента.
+
+## Частые ошибки
+
+| Сообщение                                                | Что делать                                                |
+| -------------------------------------------------------- | --------------------------------------------------------- |
+| `Manifest "active" rejects legacy bare host-token lists` | `active: { target: cursor }` вместо `active: [cursor]`    |
+| `Manifest "active" … empty`                              | Уберите пустой `active` или укажите агента                |
+| `Custom YAML tag (!…) is not allowed`                    | Возьмите значение с `!` в кавычки                         |
+| `Manifest "target" must be a non-empty string or …`      | Список пишется в `targets`, а не в `target`               |
+| `must not declare both "target" and "targets"`           | Оставьте одно из полей                                    |
+| `Unknown or unregistered target`                         | Проверьте id и что интеграция установлена или в `targets` |
+| `installed for <id>`, но файлов нет                      | Агента нет в `target` / `targets`                         |

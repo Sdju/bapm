@@ -1,130 +1,130 @@
-# Зависимости в манифесте
+# Зависимости
 
-Блоки `dependencies` и `devDependencies` — **mapping**, не список. Обзор манифеста: [bapm.yml](/guide/config-manifest).
+Пакеты агента перечисляются в `dependencies.apm`, MCP-серверы — в `dependencies.mcp`. Обзор остальных полей манифеста: [bapm.yml](/guide/config-manifest).
 
-## Пример
+## Пакеты: `dependencies.apm`
+
+### Репозиторий GitHub
 
 ```yaml
 dependencies:
   apm:
-    - org/example-skill#v1.0.0
-    - path: ./packages/hello-skill
-    - local
-    - git: https://github.com/org/repo.git
+    - acme/agent-skills # ветка по умолчанию
+    - acme/agent-skills#v1.2.0 # тег, ветка или коммит
+    - github.com/acme/agent-skills # то же, с явным хостом
+```
+
+Так же пакет добавляется командой: `bapm install acme/agent-skills`.
+
+### Подкаталог репозитория
+
+Строка `acme/monorepo/skills/review` **не** означает подкаталог: bapm воспримет её как адрес репозитория `https://github.com/acme/monorepo/skills/review` и не найдёт его. Для подкаталога используйте объект:
+
+```yaml
+dependencies:
+  apm:
+    - git: https://github.com/acme/monorepo
+      path: skills/review
       ref: main
-      path: packages/skill
-  mcp: []
 ```
 
-`bapm install <ref>` дописывает в `dependencies.apm`; `--dev` — в `devDependencies.apm`.
-
-## Ключи списков
-
-| Ключ   | Валидация                                            |
-| ------ | ---------------------------------------------------- |
-| `apm`  | Список; каждая запись глубоко проверяется            |
-| `mcp`  | Список, если присутствует; без deep-resolve на parse |
-| `lsp`  | То же: list shape без deep-resolve                   |
-| другие | List сохраняется as-is; не-list sibling keys тоже    |
-
-`bapm init` пишет пустые `dependencies.apm` и `dependencies.mcp`.
-
-## Формы `dependencies.apm`
-
-1. **Строка** (shorthand): `org/repo`, `org/repo#v1.0.0` (и host-qualified вроде `github.com/org/repo`). Многосегментная строка `org/repo/subdir` **не** режется на repo + virtual path — это URL `https://github.com/org/repo/subdir`. Подкаталог задавайте объектом `git` + `path`.
-2. **Объект** ровно с **одним** source kind: `git` \| `id` \| `path` \| `registry` \| `marketplace` \| `local`.
-
-Особые пары (не второй source kind):
-
-- `git` + `path` — `path` как companion (для `git: parent` поле `path` обязательно)
-- `id` + `registry` — указатель на именованный registry
-
-`local` — **bapm-расширение** (не vocabulary OpenAPM v0.1). Портативная OpenAPM-форма — `path:`.
-
-| Форма `local`                 | Эффективный путь |
-| ----------------------------- | ---------------- |
-| `- local`                     | `.agents/local`  |
-| `local: true` / `null` / `""` | `.agents/local`  |
-| `local: ./alt`                | указанный путь   |
-| `local: false`                | отказ            |
-
-Если в графе есть `local`, bapm ensure `.gitignore` и fail-closed при tracked файлах под этим корнем. Обычный `path:` этот gate не включает.
-
-Пины `local` уходят в `bapm.local.lock.yaml` (personal); `path:` — в shared lock. См. [lock-файл](/guide/lockfile), [личный local lock](/guide/situations/personal-local-lock).
-
-Allowlist meta-ключей объекта: `version`, `ref`, `alias`, `skills`, `targets`, `allow_insecure`, `type`, `prerelease`, `name` (marketplace), companions `path` / `registry`. Ключи `x-*` допускаются.
-
-### Object-form `skills:` / `targets:` (subset install)
-
-На объектной записи `- id:` или `- git:` можно задать consumer-side subset:
-
-| Поле       | Смысл                                                                                                                                                                                                    |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `skills:`  | Непустой список имён skills (или относительных path-алиасов). Install материализует **только** эти skills; другие типы примитивов пакета не отбрасываются из‑за `skills:`. Пустой список — ошибка parse. |
-| `targets:` | Непустой список mf-005 host-токенов. Примитивы этой зависимости деплоятся только на пересечении active install targets с этим списком (и с package/consumer intersection).                               |
-
-Опущенные поля = без сужения («все selectable skills / все eligible targets»). Полный пакет всё равно скачивается; subset применяется на materialize.
-
-**Не путать** с top-level `target:` / `targets:` пакета (предпочтения хостов / package-declared intersection в манифесте самого пакета). Per-dep `targets:` на dependency entry — дополнительный conjunct со стороны consumer.
+### Любой git-репозиторий
 
 ```yaml
 dependencies:
   apm:
-    - id: acme/toolkit
-      version: "1.0.0"
-      skills: [keep-me]
-      targets: [cursor]
+    - git: https://gitlab.example.com/team/agent-rules.git
+      ref: v2.0.0
+```
+
+### Локальный каталог
+
+```yaml
+dependencies:
+  apm:
+    - path: ./tools/team-skills
+```
+
+В каталоге должен быть свой `bapm.yml` или `apm.yml` с `name` и `version`. Запись попадает в общий lock, поэтому путь должен существовать у всех, кто работает с репозиторием. В текущей версии в lock записывается абсолютный путь к каталогу, так что `bapm.lock.yaml` будет отличаться на разных машинах.
+
+Для личных черновиков, которые есть только у вас, используйте `local` — см. [Личные пакеты](/guide/situations/personal-local-lock).
+
+### Только часть пакета
+
+Если из большого пакета нужно несколько skills или пакет нужен только одному из агентов, сузьте установку:
+
+```yaml
+dependencies:
+  apm:
     - git: https://github.com/acme/toolkit.git
-      skills: [keep-me]
+      skills: [code-review, commit-message] # только эти skills
+      targets: [cursor] # только для Cursor
 ```
 
-Registry-форма `- id:` round-trip'ится как object-form (не схлопывается в `git:`). Structured rewrite, который пытается заменить `id:` на git-shaped entry с той же identity, отклоняется.
+Пакет всё равно скачивается целиком, фильтр применяется при раскладке. Остальные типы файлов (rules, agents) `skills:` не отфильтровывает. Пустой список `skills: []` — ошибка.
 
-Marketplace-форма: непустые `marketplace` и `name` (опционально `version`).
+### Registry и маркетплейс {#registry}
 
 ```yaml
 dependencies:
   apm:
-    - id: my-pkg
+    - id: my-pkg # из приватного registry (экспериментально)
       registry: my-registry
       version: "^1.0.0"
-    - name: plugin-name
+    - name: plugin-name # из зарегистрированного маркетплейса
       marketplace: my-marketplace
-      version: "1.2.3"
 ```
 
-## MCP env placeholders (Cursor bake)
+Настройка registry: [Registries](/guide/manifest-registries). Поиск в маркетплейсе: [search](/reference/search).
 
-В `dependencies.mcp[].env` (и `headers`) при install в Cursor плейсхолдеры **запекаются** в литералы из окружения. Неразрешённый — install падает.
+### Правило одного источника
 
-| Форма                             | Источник           |
-| --------------------------------- | ------------------ |
-| `${VAR}` / `${env:VAR}` / `<VAR>` | OpenAPM/APM parity |
-| `{bake:NAME}` / `{bake:env:NAME}` | только bapm        |
+В каждой записи ровно один источник: `git`, `path`, `id`, `registry`, `marketplace` или `local`. `path` рядом с `git` означает подкаталог, `registry` рядом с `id` — имя registry; это не второй источник. Иначе будет ошибка `must have exactly one source kind`.
 
-Lookup: overrides → process.env → top-level манифеста [`env:`](/guide/config-manifest#manifest-env) (непустое).
+## MCP-серверы: `dependencies.mcp`
 
 ```yaml
 dependencies:
   mcp:
-    - name: my-server
+    - name: github
       registry: false
       transport: stdio
       command: npx
-      args: ["-y", "my-mcp"]
+      args: ["-y", "@modelcontextprotocol/server-github"]
       env:
-        API_TOKEN: "${API_TOKEN}"
-        BAKED: "{bake:API_TOKEN}"
+        GITHUB_TOKEN: "${GITHUB_TOKEN}"
+    - name: docs
+      registry: false
+      transport: http
+      url: https://mcp.example.com/
 ```
 
-По умолчанию в `.cursor/mcp.json` попадают **прямые** `dependencies.mcp`; transitive — с `--trust-transitive-mcp`.
+`registry: false` означает, что сервер описан целиком здесь, а не берётся из MCP-registry.
 
-## Типичные ошибки
+По умолчанию ставятся только MCP-серверы, объявленные прямо в вашем `bapm.yml`; серверы, которые приносят зависимости, молча пропускаются. Так пакет не может без вашего ведома добавить агенту исполняемый процесс. Включить их можно разово флагом `bapm install --trust-transitive-mcp` или постоянно, разрешив конкретный пакет в `executables` или через `bapm approve`. Во втором случае bapm начнёт требовать разрешение для каждого пакета с MCP. Подробнее: [MCP-сервер не появился](/guide/situations/policy-mcp).
 
-| Симптом                                       | Что проверить                                                         |
-| --------------------------------------------- | --------------------------------------------------------------------- |
-| `must have exactly one source kind`           | Ровно один из `git`\|`id`\|`path`\|`registry`\|`marketplace`\|`local` |
-| `MCP env bake failed` / unresolved            | Задайте переменную в окружении или в top-level `env:` перед install   |
-| `OpenAPM v0.1 rejects top-level "workspaces"` | Уберите `workspaces` с корня (это не deps)                            |
+## MCP и переменные окружения
 
-Сценарий MCP/policy: [Policy и MCP](/guide/situations/policy-mcp).
+В `env` MCP-сервера можно ссылаться на переменные: `${VAR}`, `${env:VAR}` или `<VAR>` (как в APM), либо `{bake:VAR}` (только bapm). Откуда берутся значения: [env в манифесте](/guide/config-manifest#переменные-для-mcp-env).
+
+Что происходит дальше, зависит от агента:
+
+- **Большинство интеграций, включая Cursor**, подставляют значения при `install` и записывают их в конфиг агента открытым текстом (например, в `.cursor/mcp.json`). Если переменной нет, install завершается ошибкой.
+- **Kiro и Copilot** оставляют `${VAR}` в конфиге, и агент подставляет значение сам при запуске. `{bake:VAR}` подставляется при install и у них.
+
+::: warning Конфиг агента с подставленными значениями — секрет
+В `bapm.lock.yaml` сервер записывается как в манифесте, с `${VAR}`, а вот `.cursor/mcp.json` и аналоги содержат настоящие значения. Держите такие файлы в `.gitignore`.
+
+Версии bapm до этого исправления записывали подставленные значения и в lock. Если такой lock уже закоммичен, выполните `bapm install`, чтобы переписать его, и смените попавшие в историю git токены.
+:::
+
+`headers` у HTTP-серверов в текущей версии в конфиг агента не передаются вовсе, вместе с подставленными значениями. Если серверу нужен заголовок авторизации, настройте его в агенте вручную.
+
+## Частые ошибки
+
+| Сообщение                                         | Что делать                                                                |
+| ------------------------------------------------- | ------------------------------------------------------------------------- |
+| `git ls-remote https://github.com/a/b/c … failed` | Строка с тремя сегментами — это не подкаталог. Используйте `git` + `path` |
+| `Failed to load local package manifest`           | В каталоге `path:` нет `bapm.yml` / `apm.yml` с `name` и `version`        |
+| `must have exactly one source kind`               | Оставьте в записи один источник                                           |
+| `MCP env bake failed: unresolved placeholder`     | Задайте переменную в окружении или в `env` манифеста                      |

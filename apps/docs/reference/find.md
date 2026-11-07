@@ -18,7 +18,7 @@ Offline: смотрит inventory lock (`deployed_file_hashes` / списки), 
 | `--path`       | —        | Печатать root-to-target why-chains (как `deps why`)      | off     |
 | `--help`, `-h` | —        | Показать help                                            | —       |
 
-## Коды выхода codes
+## Коды выхода
 
 | Код | Смысл                                  |
 | --- | -------------------------------------- |

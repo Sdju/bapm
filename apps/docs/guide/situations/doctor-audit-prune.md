@@ -1,61 +1,74 @@
-# US-07: Doctor / audit / prune после ручной поломки
+# Что-то сломалось
 
-## Когда …
+## Ситуация
 
-После ручных правок в `apm_modules/`, deploy-файлах Cursor, lock или env install «ведёт себя странно»: лишние каталоги, несовпадение hashes, сомнения в окружении.
+Кто-то правил файлы в `.agents/skills/` или `.cursor/` вручную, удалял каталоги в `apm_modules/`, переключал ветки, и теперь install или агент ведут себя странно.
 
-### Цель
+## Шаги
 
-Диагностировать окружение (`doctor`), проверить integrity (`audit`), убрать orphan-модули (`prune`), затем при необходимости переустановить по lock.
-
-### Шаги
-
-1. Sanity окружения и проекта:
+### 1. Проверьте окружение
 
 ```bash
 bapm doctor
-bapm doctor -v
 ```
 
-`-v` даёт богаче detail и informational network probe (`git ls-remote`); auth check смотрит только **имена** `GITHUB_TOKEN` / `GH_TOKEN`, не секреты.
+```text
+PASS	git	git is available on PATH
+PASS	manifest	manifest readable
+PASS	lockfile	lockfile readable
+PASS	modules	apm_modules ok
+PASS	auth	GITHUB_TOKEN/GH_TOKEN not set
+```
 
-2. Integrity gate (lock + deployed presence + hash re-verify):
+`doctor -v` дополнительно проверяет сетевой доступ к github.com (свой git-сервер проверьте сами: `git ls-remote <url>`). Если `bapm.local.yml` или `bapm.local.lock.yaml` случайно закоммичены, в выводе появится строка `PASS local-overlay … is git-tracked` (или `local-lock`): она не помечена как ошибка, так что смотрите на текст.
+
+### 2. Найдите расхождения с lock
 
 ```bash
 bapm audit --ci
-# отчёт в файл:
-bapm audit --ci -f json -o audit.json
 ```
 
-3. Orphan-модули вне графа lock:
+```text
+Hash mismatch for .agents/skills/code-review/SKILL.md: expected dab0…, observed bff5…
+```
+
+`audit` покажет изменённые и удалённые файлы.
+
+### 3. Восстановите
 
 ```bash
-bapm prune --dry-run
+bapm install
+```
+
+Обычный install перезаписывает изменённые и возвращает удалённые файлы в состояние из lock. Ручные правки в этих файлах пропадут; если они нужны, сохраните их заранее и перенесите в пакет.
+
+`bapm install --frozen` для восстановления не подходит: он только сообщает о расхождении и завершается с ошибкой.
+
+### 4. Уберите лишнее
+
+```bash
+bapm prune --dry-run   # что будет удалено
 bapm prune
 ```
 
-4. Если hashes/deploy разъехались, но lock правильный — переустановите по frozen lock:
+`prune` удаляет из `apm_modules/` пакеты, которых больше нет в lock. Файлы в каталогах агента (`.agents/skills/`, `.cursor/`) он не трогает: skills от удалённых пакетов нужно убрать вручную.
+
+Если `apm_modules/` повреждён целиком, очистите его и установите заново:
 
 ```bash
-bapm install --frozen --target cursor
+bapm cache clean -y
+bapm install
 ```
 
-Если lock сам битый/устаревший относительно манифеста — вне CI обновите осознанно (`install` без frozen или [US-03](/guide/situations/update-deps)), затем снова audit.
+## Результат
 
-### Ожидаемый результат
+`bapm audit --ci` завершается сообщением `Audit CI clean`.
 
-- `doctor` сообщает о проблемах окружения/проекта; network probe с `-v` не critical.
-- Tracked `bapm.local.yml` / `bapm.local.lock.yaml` → WARN, не critical.
-- `audit --ci` падает при отсутствии lock, missing deploy или hash mismatch.
-- `prune` удаляет только orphans вне resolved graph; `--dry-run` только превью.
-- После `install --frozen` диск снова согласован с закоммиченным **shared** lock (если пины валидны).
+## Если не помогло
 
-Справка: [doctor](/reference/doctor), [audit](/reference/audit), [prune](/reference/prune). Shared vs personal: [lock-файл](/guide/lockfile).
-
-### Если не сработало
-
-- `audit` без `--ci` → для CI-gate path флаг обязателен (см. help/reference).
-- Prune не трогает «лишние» файлы вне modules graph (ручной мусор в `.cursor/` может остаться) → переinstall / ручная чистка deploy + frozen install.
-- Doctor «зелёный», audit красный → смотрите lock/hashes, не только env tokens.
-- Doctor WARN про personal lock tracked → `git rm --cached bapm.local.lock.yaml`.
-- Не правите lock вручную «чтобы сходится» — перегенерируйте через install/update ([lock-файл](/guide/lockfile)).
+| Проблема                                            | Что делать                                                                               |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `doctor` проходит, `audit` падает                   | Проблема в файлах, а не в окружении: выполните `bapm install`                            |
+| В `.agents/skills/` остался skill удалённого пакета | Удалите каталог вручную                                                                  |
+| `bapm doctor`: `… is git-tracked`                   | `git rm --cached bapm.local.yml bapm.local.lock.yaml`                                    |
+| Lock явно не соответствует манифесту                | Не правьте его руками: `bapm install` или [`bapm update`](/guide/situations/update-deps) |

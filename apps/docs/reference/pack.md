@@ -14,16 +14,16 @@ bapm pack [options]
 
 Для `--check-versions`: если у local package есть `bapm.yml`/`apm.yml`, YAML **authoritative** (при битом манифесте fallback на `plugin.json` нет). Иначе версия читается из `plugin.json` (корневой или стандартные APM-пути: `.github/plugin/`, `.claude-plugin/`, `.cursor-plugin/`).
 
-Claude/Codex здесь — **marketplace-output** emit. Runtime install/compile для тех же hosts — через `@b-apm/integration-claude` / `@b-apm/integration-codex` и detect, `active` или `--target`; `targets:` нужен только для override/custom host (см. [hosts](/guide/supported-hosts)).
+Для `marketplace.json` нужны установленные `@b-apm/integration-claude` и/или `@b-apm/integration-codex`. `pack` только собирает файлы и не устанавливает пакеты в проект.
 
 ## Параметры
 
 | Флаг                   | Значение                | Эффект                                                                                         | Default        |
 | ---------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- | -------------- |
-| `--archive`            | —                       | Записать plain zip artifact                                                                    | off            |
+| `--archive`            | —                       | Записать plain zip artifact. Без флагов и без `marketplace:` zip пишется и так                 | off            |
 | `--agent-plugins`      | —                       | Pack validated Agent Plugins v1 portable root; не эмитит marketplace; нужен root `plugin.json` | off            |
 | `--dry-run`            | —                       | Validate / collect без durable zip или marketplace.json                                        | off            |
-| `--check-release`      | —                       | Gate tag↔manifest version (pr-004)                                                             | off            |
+| `--check-release`      | —                       | Проверить, что версия в манифесте совпадает с git-тегом                                        | off            |
 | `--check-versions`     | —                       | Marketplace version alignment для local packages (`lockstep` / `tag_pattern` / `per_package`)  | off            |
 | `--tag`                | `<name>`                | Tag под check (опционально с `--check-release`; иначе HEAD)                                    | HEAD           |
 | `--marketplace`, `-m`  | `all` \| `none` \| list | Фильтр host marketplace emit (`claude`, `codex`)                                               | all configured |
@@ -41,6 +41,7 @@ Claude/Codex здесь — **marketplace-output** emit. Runtime install/compile
 - Из архива опускаются `bapm.local.yml` и `bapm.local.lock.yaml` (unpublished surface).
 - Пример `.bapmignore`: `README.md`, `CHANGELOG.md`, `docs/**` — типичные authoring-файлы вне дистрибутива; игнорированный `.env` не вызывает secret-refuse.
 - Нечитаемый `.bapmignore` (например, каталог вместо файла) — fail closed, архив не создаётся.
+- Zip ставится через `bapm install ./file.zip` в пустой каталог: файлы, которые уже есть с другим содержимым, install не перезаписывает ([подробнее](/reference/install#замечания)).
 
 ### Пример `.bapmignore`
 
@@ -55,4 +56,4 @@ docs/**
 !LICENSE.md
 ```
 
-См. также: [publish](/reference/publish), [marketplace](/reference/marketplace), [plugin](/reference/plugin), [US-06 Marketplace pack](/guide/situations/marketplace-pack), [lock-файл](/guide/lockfile).
+См. также: [publish](/reference/publish), [marketplace](/reference/marketplace), [plugin](/reference/plugin), [Сборка маркетплейса](/guide/situations/marketplace-pack), [lock-файл](/guide/lockfile).

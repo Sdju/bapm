@@ -48,11 +48,11 @@ Skills stay under `.opencode/skills/` (not APM `.agents/skills/`). Writes never 
 
 ## Activation
 
+A `targets:` entry is not needed (it would also restrict deployment to the listed hosts).
+
 ```yaml
-targets:
-  opencode: "@b-apm/integration-opencode"
 active:
-  - opencode
+  - target: opencode
 ```
 
 ```bash

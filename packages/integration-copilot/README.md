@@ -10,11 +10,11 @@ GitHub Copilot **runtime** host for bapm (project-scope file primitives + home M
 npm i -D @b-apm/integration-copilot
 ```
 
+A `targets:` entry is not needed (it would also restrict deployment to the listed hosts).
+
 ```yaml
-targets:
-  copilot: "@b-apm/integration-copilot"
 active:
-  - copilot
+  - target: copilot
 ```
 
 ```bash

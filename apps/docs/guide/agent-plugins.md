@@ -1,62 +1,66 @@
-# Portable Agent Plugins v1
+# Agent Plugins
 
-Узкая portable-граница: корневой `plugin.json`, skills (conventional или exclusive declaration), корневой `mcp.json`, плюс объявленные в `plugin.json` пути `commands` / `hooks` (fail-closed).
+[Agent Plugins](https://github.com/Sdju/agent-plugins) — переносимый формат плагина агента: один каталог с `plugin.json`, skills, MCP, командами и хуками, который разные агенты могут подключить без переделки. bapm умеет ставить такие плагины как обычные зависимости и собирать их.
+
+## Структура плагина
 
 ```text
 my-plugin/
-  plugin.json          # optional skills: omit | [] | ["name", "skills/x", "skills"]
+  plugin.json
   mcp.json
   skills/
     hello/
       SKILL.md
   commands/
-    ship.md          # если указано в plugin.json → commands
+    ship.md          # если объявлен в plugin.json
   hooks/
-    session.json     # если указано в plugin.json → hooks
+    session.json     # если объявлен в plugin.json
 ```
 
-## `plugin.json` `skills:` (exclusive)
+Создать заготовку: `bapm plugin init --agent-plugins --skills my-plugin`. В ней будут только `plugin.json` и пример skill `skills/example/`; `mcp.json`, команды и хуки добавьте сами.
 
-| Форма             | Поведение                                                                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ключ **опущен**   | Conventional discovery: только immediate `skills/<name>/SKILL.md`                                                                                             |
-| `"skills": []`    | **Ноль** skills, даже если каталог есть; shadow-диагностика, если conventional entries существуют                                                             |
-| `"skills": ["…"]` | Exclusive list: только разрешённые имена / `skills/<name>` / контейнер `skills` или `./skills`; missing / traversal / escape → **fail-closed** до deploy/lock |
+## Какие skills ставятся
 
-Это **не** то же самое, что consumer object-form dep `skills:` (deps-object-subset): на стороне зависимости пустой список — parse error; на стороне плагина пустой список — намеренный zero deploy.
+Управляется полем `skills` в `plugin.json`:
 
-Матрица поддержки: [AGENT_PLUGINS_COMPATIBILITY.md](../../../AGENT_PLUGINS_COMPATIBILITY.md) (fixtures + тесты, не сертификация).
+| Значение                | Что ставится                                      |
+| ----------------------- | ------------------------------------------------- |
+| поле отсутствует        | все `skills/<name>/SKILL.md` на первом уровне     |
+| `[]`                    | ни одного skill, даже если каталог `skills/` есть |
+| `["hello", "skills/x"]` | только перечисленные                              |
 
-## В Cursor
+Если перечисленный skill не найден или путь выходит за пределы плагина, установка завершается ошибкой до изменения файлов. То же для объявленных `commands` и `hooks`.
 
-Cursor-integration адаптирует portable MCP в `.cursor/mcp.json`: `stdio` → `stdio`, `streamable-http` → `http`, `sse` → `sse`. Portable MCP-файл **не** копируется as-is. Declared commands → `.cursor/commands/<name>.md`; declared hooks → merge `.cursor/hooks.json` (скрипты под `.cursor/hooks/`).
+Это поле плагина, а не фильтр `skills:` в вашем `bapm.yml`: там пустой список — ошибка, а здесь — осознанный отказ от skills.
 
-## В GitHub Copilot (native Agent Plugins)
+## Как плагин ставится в разные агенты
 
-При `install --target copilot` (или когда Copilot в effective targets) admitted portable Agent Plugins регистрируются **нативно** в project scope:
+**Cursor.** MCP из `mcp.json` переводится в формат `.cursor/mcp.json` (`stdio`, `streamable-http` → `http`, `sse`). Команды — в `.cursor/commands/`, хуки — в `.cursor/hooks.json` и `.cursor/hooks/`.
 
-- Пакет остаётся под `apm_modules/` (live load; **без** copy в private Copilot state и **без** `--plugin-dir`)
-- Owned catalog: `apm_modules/.github/plugin/marketplace.json`
-- Ownership ledger: `apm_modules/.github/plugin/apm-registration.json`
-- Settings merge: `.github/copilot/settings.local.json` → `extraKnownMarketplaces.apm` (directory `apm_modules`) и `enabledPlugins["<name>@apm"]`
-- Loose Copilot projection (`.agents/skills/`, home MCP из portable root) для admitted packages **пропускается**, чтобы не double-load
-- Другие targets (например Cursor) в multi-target install сохраняют свою portable materialize
+**OpenCode.** MCP — в `opencode.json` (`stdio` → `local`, `streamable-http` → `remote`; `sse` не поддерживается: такой сервер молча пропускается). Skills — в `.opencode/skills/`, команды — в `.opencode/commands/`. Хуки молча пропускаются.
 
-Live load в IDE требует **GitHub Copilot CLI ≥ 1.0.81** и folder trust для `apm_modules` (bapm не вызывает Copilot binary и не pre-seed trust). Authoring по-прежнему через `--agent-plugins` / portable `plugin.json`.
+**GitHub Copilot.** Плагин не копируется, а регистрируется как есть из `apm_modules/`:
 
-## В OpenCode
+- bapm создаёт каталог плагинов `apm_modules/.github/plugin/marketplace.json`;
+- включает его в `.github/copilot/settings.local.json` (`extraKnownMarketplaces.apm` и `enabledPlugins`).
 
-Пакет `@b-apm/integration-opencode` (opt-in через `targets:`) адаптирует portable MCP в project `opencode.json` под `mcp`: `stdio` → `type: "local"` + `command` array, `streamable-http` → `type: "remote"` + `url`. Portable `sse` **не** мапится молча (fail-closed). Skills копируются в `.opencode/skills/`. Commands → `.opencode/commands/`; hooks явно пропускаются с diagnostic (не supported).
+Для этого нужен GitHub Copilot CLI версии 1.0.81 или новее. Регистрация на уровне пользователя (`$COPILOT_HOME`) не поддерживается.
 
-## Граница
+**Остальные агенты** получают содержимое плагина как обычного пакета, по своим путям из [таблицы](/guide/supported-hosts#layout), с теми же [пропусками](/guide/supported-hosts#skipped).
 
-- `plugin.json` ≠ `bapm.yml` / `apm.yml`
-- Упаковка portable-плагина — архив, не публикация в marketplace
-- OpenAPM в [CONFORMANCE.md](../../../CONFORMANCE.md) ≠ conformance Agent Plugins
-- Объявленные `commands` / `hooks` / exclusive `skills` — требования: missing/escape → fail-closed до deploy/lock
+## Сборка
 
-Marketplace-output и portable-архивы независимы от Cursor/OpenCode/Copilot runtime install.
+```bash
+bapm pack --agent-plugins
+```
 
-## Что не поддерживается
+Собирает архив плагина. Это не публикация в маркетплейс: для маркетплейсов Claude Code и Codex см. [Сборка маркетплейса](/guide/situations/marketplace-pack).
 
-Sandboxing, OAuth, инъекция секретов, undeclared agents, client extensions, vendor-specific расширения. Небезопасные пути skills и secret-подобные MCP env отклоняются. Global (`-g` / `$COPILOT_HOME`) Copilot registration — вне этого среза.
+## Ограничения
+
+- Нет изоляции: хуки и MCP плагина исполняются с вашими правами.
+- Нет OAuth и подстановки секретов из формата плагина.
+- Похожие на секреты значения в `env` MCP и небезопасные пути skills отклоняются.
+- Не поддерживаются субагенты, не объявленные в `plugin.json`, и расширения формата под конкретных клиентов.
+
+Покрытие тестами по агентам: [`AGENT_PLUGINS_COMPATIBILITY.md`](https://github.com/Sdju/bapm/blob/master/AGENT_PLUGINS_COMPATIBILITY.md).

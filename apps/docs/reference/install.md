@@ -21,7 +21,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--frozen`               | —              | Fail, если lock нет или пины дрейфуют; при наличии — re-verify `deployed_file_hashes`                 | off (но см. CI ниже)      |
 | `--no-frozen`            | —              | Отключить frozen, в том числе CI-default                                                              | —                         |
 | `--dry-run`              | —              | Превью direct deps / would-add; без durable project writes                                            | off                       |
-| `--force`                | —              | Accept force (overwrite / future security gates). Не обновляет refs и не обходит frozen/policy        | off                       |
+| `--force`                | —              | Сейчас без эффекта (см. замечания). Не обновляет refs и не обходит frozen/policy                      | off                       |
 | `--allow-insecure`       | —              | Dual consent для direct `http://` deps с `allow_insecure: true`                                       | off                       |
 | `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                             | —                         |
 | `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                           | off                       |
@@ -44,9 +44,16 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - `--trust-bin` и `--no-trust-bin` взаимно исключаются; флаги не переопределяют org/project deny.
 - Non-interactive (CI, `BAPM_NON_INTERACTIVE`, non-TTY или frozen) по умолчанию **не** деплоит dependency `bin/` без `--trust-bin` или persisted `executables.allow` с `bin: true`.
 - Frozen (явный или CI-default) нельзя сочетать с `--update`.
-- Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen` (OpenAPM req-lk-018).
-- `--force` ≠ `--target` (forced-target activation).
-- Выбор host: `--target <id>` → манифест `active: { target: <id> }` → sole auto-detect → fail. См. [Поддерживаемые hosts](/guide/supported-hosts), [Hosts](/guide/manifest-hosts).
-- При активном cursor eligible MCP пишутся в `.cursor/mcp.json` (прямые mcp по умолчанию). Auto-detect без `.cursor/` не создаёт каталог только ради MCP.
+- Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen`.
+- `--force` в текущей версии ничего не меняет: флаг принимается, но не влияет на установку. Он не связан с `--target`.
+- В интерактивном терминале `bin/` зависимостей раскладывается и без `--trust-bin`, с предупреждением. `bapm approve` разрешение на `bin/` не выдаёт.
+- `--no-policy` отключает и политику организации, включая её запреты.
+- Frozen проверяет наличие lock, пины прямых зависимостей и хэши развёрнутых файлов. Изменение `#ref` в манифесте при уже закреплённой зависимости frozen не замечает. См. [CI по lock-файлу](/guide/situations/ci-frozen).
+- Выбор агента: `--target <id>` → `active` в `bapm.local.yml` → `active` в `bapm.yml` → автоопределение → ошибка. В `active` можно перечислить несколько агентов, тогда файлы раскладываются для каждого, а MCP — только для первого. См. [Выбор агента](/guide/host-selection).
+- Файлы в каталогах агента с тем же путём, что у устанавливаемого пакета, перезаписываются без предупреждения.
+- Если пакет убран из манифеста вручную, уже развёрнутые им файлы не удаляются.
+- MCP для Cursor пишется в `.cursor/mcp.json`; каталог создаётся при необходимости. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента уже есть или создан в этом же install. См. [Поддерживаемые агенты](/guide/supported-hosts#layout).
 
-Сценарии: [Быстрый старт](/guide/quick-start), [US-01](/guide/situations/install-fresh), [US-02 CI / frozen](/guide/situations/ci-frozen).
+- `install <archive.zip>` добавляет файлы архива в текущий каталог и ничего не удаляет. Если файл из архива уже есть с другим содержимым (обычно `bapm.yml`), install завершается ошибкой `Refusing to overwrite existing files` до записи чего-либо. Поэтому ставьте архив в пустой каталог.
+
+Сценарии: [Быстрый старт](/guide/quick-start), [Подключить bapm к проекту](/guide/situations/install-fresh), [CI по lock-файлу](/guide/situations/ci-frozen).

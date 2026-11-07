@@ -1,59 +1,68 @@
 # Команды
 
-Карта CLI. Флаги — в [Справке](/reference/) и `bapm <command> --help`. Установка: [Быстрый старт](/guide/quick-start).
+Краткий обзор команд по задачам. Все флаги — в [Справке](/reference/) и в `bapm <команда> --help`.
 
-## Каждый день
+## Установка и обновление
+
+| Команда                | Что делает                                                                |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `bapm init`            | Создаёт `bapm.yml`                                                        |
+| `bapm install`         | Скачивает пакеты, пишет lock, раскладывает файлы агенту                   |
+| `bapm install <ref>`   | Добавляет пакет в манифест и устанавливает                                |
+| `bapm outdated`        | Показывает пакеты, для которых есть более новые версии                    |
+| `bapm update`          | Обновляет версии в lock (с подтверждением или `-y`)                       |
+| `bapm uninstall <имя>` | Убирает пакет из lock и с диска; [есть ограничения](/reference/uninstall) |
+| `bapm lock`            | Только lock, без раскладки файлов                                         |
 
 ```bash
-bapm init -y --target cursor
-bapm install --target cursor
-bapm update -y
-bapm outdated
+bapm install acme/agent-skills   # добавить пакет
+bapm outdated                    # что устарело
+bapm update -y                   # обновить
 ```
 
-| Команда     | Назначение                                        | Справка                           |
-| ----------- | ------------------------------------------------- | --------------------------------- |
-| `init`      | Создать `bapm.yml`                                | [init](/reference/init)           |
-| `install`   | Resolve + lock + modules + deploy (при target)    | [install](/reference/install)     |
-| `lock`      | Только resolve + lockfile, без host deploy        | [lock](/reference/lock)           |
-| `update`    | Переразрешить пины (`--dry-run` / `-y`)           | [update](/reference/update)       |
-| `outdated`  | Сравнить пины lock с remote tips                  | [outdated](/reference/outdated)   |
-| `uninstall` | Убрать пакеты из манифеста, modules, deploy, lock | [uninstall](/reference/uninstall) |
-| `prune`     | Удалить orphan-модули вне графа                   | [prune](/reference/prune)         |
+## Разобраться, что установлено
 
-Deploy в Cursor — после установки `@b-apm/integration-cursor` и выбора host через detect, `active` или `--target cursor`. `targets:` нужен только для override/custom host — [поддерживаемые hosts](/guide/supported-hosts).
+| Команда                   | Что делает                           |
+| ------------------------- | ------------------------------------ |
+| `bapm deps list` / `tree` | Список и дерево зависимостей из lock |
+| `bapm deps why <пакет>`   | Почему пакет оказался в проекте      |
+| `bapm find <путь>`        | Какой пакет положил этот файл        |
+| `bapm view <пакет>`       | Информация об установленном пакете   |
 
-## Инспекция и проверка
+```bash
+bapm find .agents/skills/code-review/SKILL.md
+```
 
-| Команда  | Назначение                              | Справка                     |
-| -------- | --------------------------------------- | --------------------------- |
-| `deps`   | `list` \| `tree` \| `why` \| `clean`    | [deps](/reference/deps)     |
-| `find`   | Какой пакет владеет deployed-путём      | [find](/reference/find)     |
-| `view`   | Offline inspect пакета (lock + modules) | [view](/reference/view)     |
-| `audit`  | Integrity checks (`--ci`)               | [audit](/reference/audit)   |
-| `doctor` | Sanity checks окружения и проекта       | [doctor](/reference/doctor) |
+## Проверить и починить
 
-## Вывод и политика
+| Команда            | Что делает                                                       |
+| ------------------ | ---------------------------------------------------------------- |
+| `bapm doctor`      | Проверяет окружение и проект: git, манифест, lock, `apm_modules` |
+| `bapm audit --ci`  | Сверяет развёрнутые файлы с хешами в lock; для CI                |
+| `bapm prune`       | Удаляет из `apm_modules/` пакеты, которых больше нет в lock      |
+| `bapm cache clean` | Очищает `apm_modules/` целиком                                   |
 
-| Команда            | Назначение                                        | Справка                                   |
-| ------------------ | ------------------------------------------------- | ----------------------------------------- |
-| `compile`          | Собрать вывод (по умолчанию cursor → `AGENTS.md`) | [compile](/reference/compile)             |
-| `policy`           | Статус policy (read-only)                         | [policy](/reference/policy)               |
-| `approve` / `deny` | User-local MCP allow/deny в `~/.bapm/config.json` | [policy](/reference/policy#approve--deny) |
+## Агент и безопасность
 
-## Реже: pack, marketplace, meta
+| Команда                | Что делает                                                         |
+| ---------------------- | ------------------------------------------------------------------ |
+| `bapm compile`         | Собирает `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` из установленного |
+| `bapm policy status`   | Показывает, какая политика действует в проекте                     |
+| `bapm approve <пакет>` | Разрешает пакету ставить MCP-серверы (только у вас)                |
+| `bapm deny <пакет>`    | Запрещает (только у вас)                                           |
 
-| Команда            | Назначение                                          | Справка                               |
-| ------------------ | --------------------------------------------------- | ------------------------------------- |
-| `help` / `version` | Справка и версия (`-V`)                             | —                                     |
-| `cache`            | Info / clean `apm_modules`                          | [cache](/reference/cache)             |
-| `self-update`      | Обновление CLI относительно npm (`--check`)         | [self-update](/reference/self-update) |
-| `pack`             | Zip / marketplace.json                              | [pack](/reference/pack)               |
-| `plugin`           | Scaffold plugin-проекта (`plugin init`)             | [plugin](/reference/plugin)           |
-| `marketplace`      | Registry + authoring                                | [marketplace](/reference/marketplace) |
-| `search`           | Поиск плагинов                                      | [search](/reference/search)           |
-| `publish`          | Experimental PUT (`BAPM_EXPERIMENTAL_REGISTRIES=1`) | [publish](/reference/publish)         |
+## Публикация
 
-Experimental registry resolve/install и `publish` — только с `BAPM_EXPERIMENTAL_REGISTRIES=1`.
+| Команда            | Что делает                                     |
+| ------------------ | ---------------------------------------------- |
+| `bapm plugin init` | Создаёт заготовку пакета-плагина               |
+| `bapm pack`        | Собирает zip-архив и `marketplace.json`        |
+| `bapm marketplace` | Подключает чужие маркетплейсы и описывает свой |
+| `bapm search`      | Ищет плагины в подключённом маркетплейсе       |
+| `bapm publish`     | Публикует пакет в registry (экспериментально)  |
 
-Сценарии: [Сценарии](/guide/situations/).
+## Служебные
+
+`bapm help`, `bapm version` (`-V`), `bapm self-update --check`.
+
+Пошаговые инструкции: [Сценарии](/guide/situations/).

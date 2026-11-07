@@ -10,11 +10,11 @@ Windsurf/Cascade **runtime** host for bapm (project-scope file primitives + home
 npm i -D @b-apm/integration-windsurf
 ```
 
+A `targets:` entry is not needed (it would also restrict deployment to the listed hosts).
+
 ```yaml
-targets:
-  windsurf: "@b-apm/integration-windsurf"
 active:
-  - windsurf
+  - target: windsurf
 ```
 
 ```bash

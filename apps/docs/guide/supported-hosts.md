@@ -1,93 +1,98 @@
-# Поддерживаемые hosts и кастомные интеграции
+# Поддерживаемые агенты
 
-Куда `bapm install` / `bapm compile` раскладывают пакеты. Выбор id: [Как выбирается host](/guide/host-selection). Поля: [Hosts](/guide/manifest-hosts).
+Каждый агент подключается отдельным npm-пакетом. Поставьте интеграцию своего агента рядом с CLI:
 
-CLI **не** включает hosts «из коробки». Для известных id стандартный пакет — `@b-apm/integration-<id>` (canonical fallback). Object-map `targets:` — override или custom host, не обязательный шаг для Cursor.
+```bash
+npm i -D @b-apm/cli @b-apm/integration-<id>
+```
+
+Больше ничего настраивать не нужно: bapm найдёт пакет по id агента. Как bapm решает, для какого агента ставить: [Выбор агента](/guide/host-selection).
 
 ## Таблица
 
-| Host             | Auto-detect                       | Canonical package                 | Explicit-only?             | Override        |
-| ---------------- | --------------------------------- | --------------------------------- | -------------------------- | --------------- |
-| **Cursor**       | `.cursor/` или `.cursorrules`     | `@b-apm/integration-cursor`       | нет                        | `targets:` ниже |
-| **OpenCode**     | `.opencode/` / `opencode.json(c)` | `@b-apm/integration-opencode`     | нет                        | `targets:` ниже |
-| **Copilot**      | whitelist под `.github/`          | `@b-apm/integration-copilot`      | нет                        | `targets:` ниже |
-| **Windsurf**     | `.windsurf/`                      | `@b-apm/integration-windsurf`     | нет                        | `targets:` ниже |
-| **Kiro**         | `.kiro/`                          | `@b-apm/integration-kiro`         | нет                        | `targets:` ниже |
-| **Grok Build**   | `.grok/`                          | `@b-apm/integration-grok-build`   | нет                        | `targets:` ниже |
-| **Claude**       | `.claude/` или `CLAUDE.md`        | `@b-apm/integration-claude`       | нет                        | `targets:` ниже |
-| **Codex**        | `.codex/`                         | `@b-apm/integration-codex`        | нет                        | `targets:` ниже |
-| **Gemini**       | `.gemini/` или `GEMINI.md`        | `@b-apm/integration-gemini`       | нет                        | `targets:` ниже |
-| **Antigravity**  | нет                               | `@b-apm/integration-antigravity`  | да (`--target` / `active`) | `targets:` ниже |
-| **Agent Skills** | нет                               | `@b-apm/integration-agent-skills` | да                         | `targets:` ниже |
-| **Свой агент**   | по вашей `detect`                 | —                                 | map обязателен             | см. Advanced    |
+| Агент          | id             | Пакет                             | Маркер для auto-detect                                                               |
+| -------------- | -------------- | --------------------------------- | ------------------------------------------------------------------------------------ |
+| Cursor         | `cursor`       | `@b-apm/integration-cursor`       | `.cursor/` или `.cursorrules`                                                        |
+| Claude Code    | `claude`       | `@b-apm/integration-claude`       | `.claude/` или `CLAUDE.md`                                                           |
+| Codex CLI      | `codex`        | `@b-apm/integration-codex`        | `.codex/`                                                                            |
+| GitHub Copilot | `copilot`      | `@b-apm/integration-copilot`      | `.github/copilot-instructions.md` или `.github/{instructions,agents,prompts,hooks}/` |
+| OpenCode       | `opencode`     | `@b-apm/integration-opencode`     | `.opencode/`, `opencode.json(c)`                                                     |
+| Windsurf       | `windsurf`     | `@b-apm/integration-windsurf`     | `.windsurf/`                                                                         |
+| Gemini CLI     | `gemini`       | `@b-apm/integration-gemini`       | `.gemini/` или `GEMINI.md`                                                           |
+| Kiro           | `kiro`         | `@b-apm/integration-kiro`         | `.kiro/`                                                                             |
+| Grok Build     | `grok-build`   | `@b-apm/integration-grok-build`   | `.grok/`                                                                             |
+| Antigravity    | `antigravity`  | `@b-apm/integration-antigravity`  | нет, только `--target` или `active`                                                  |
+| Agent Skills   | `agent-skills` | `@b-apm/integration-agent-skills` | нет, только `--target` или `active`                                                  |
 
-Пакет нужно **установить** (project `npm i -D` или global рядом с CLI). Absent map ≠ «нет hosts»: CLI пробует canonical для известных id.
+`agent-skills` кладёт только skills в `.agents/skills/` и подходит для агентов, которые читают этот общий каталог, но своей интеграции не имеют.
 
-::: tip Про npm и Kiro
-Пакеты `@b-apm/integration-*` на npm (релиз **UNSTABLE**, lockstep **0.1.0**; `@b-apm/integration-kiro` на registry сейчас **0.1.1** из‑за первичного 404/hold). Если `npm i` внезапно не находит пакет — подождите индекс или ставьте из git/workspace.
-:::
+Все интеграции в статусе раннего релиза, как и CLI.
 
-## Happy path (Cursor)
+## Куда попадают файлы {#layout}
 
-```bash
-npm i -D @b-apm/integration-cursor
-# есть .cursor/ →
-bapm install
-```
+| Агент       | Skills              | Rules / instructions    | MCP                                   | `bapm compile`                    |
+| ----------- | ------------------- | ----------------------- | ------------------------------------- | --------------------------------- |
+| Cursor      | `.agents/skills/`   | `.cursor/rules/`        | `.cursor/mcp.json`                    | `AGENTS.md`                       |
+| Claude Code | `.claude/skills/`   | `.claude/rules/`        | `.mcp.json`                           | `CLAUDE.md`                       |
+| Codex CLI   | `.agents/skills/`   | только через compile    | `.codex/config.toml`                  | `AGENTS.md`                       |
+| Copilot     | `.agents/skills/`   | `.github/instructions/` | `~/.copilot/mcp-config.json`          | `.github/copilot-instructions.md` |
+| OpenCode    | `.opencode/skills/` | только через compile    | `opencode.json`                       | `AGENTS.md`                       |
+| Windsurf    | `.agents/skills/`   | `.windsurf/rules/`      | `~/.codeium/windsurf/mcp_config.json` | не поддерживается                 |
+| Gemini CLI  | `.agents/skills/`   | только через compile    | `.gemini/settings.json`               | `GEMINI.md`                       |
+| Kiro        | `.kiro/skills/`     | `.kiro/steering/`       | `.kiro/settings/mcp.json`             | `AGENTS.md`                       |
+| Grok Build  | `.grok/skills/`     | `.grok/rules/`          | не поддерживается                     | `AGENTS.md`                       |
+| Antigravity | `.agents/skills/`   | `.agents/rules/`        | `.agents/mcp_config.json`             | `AGENTS.md`                       |
 
-Без `targets:` в манифесте. Pin через `active` или `--target cursor` — по желанию.
+Agents, commands и hooks раскладываются в каталог агента (`.cursor/agents/`, `.claude/commands/` и т. п.), если агент их поддерживает. Неподдерживаемый тип пропускается **без сообщения** в выводе `install` — см. ниже.
 
-### Cursor: layout
+Обратите внимание:
 
-Skills → `.agents/skills/`, rules → `.cursor/rules/`, agents → `.cursor/agents/`, commands/hooks → `.cursor/…`, MCP → `.cursor/mcp.json`.
+- **Copilot и Windsurf пишут MCP в домашний каталог**, а не в проект. Эти настройки общие для всех ваших проектов.
+- **Claude Code, Gemini CLI, Kiro и Antigravity пишут MCP, только если каталог агента существует** (`.claude/`, `.gemini/`, `.kiro/`, `.agents/`). Каталог может создать и сам install, если пакеты приносят skills или rules. Если ставятся только MCP-серверы, а каталога нет, они молча пропускаются: создайте каталог и повторите `install`.
+- **Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют один `AGENTS.md`**. Если вы запускаете `compile` для нескольких из них, файл перезаписывает последний запуск.
 
-## Другие canonical hosts
+Подробности по каждому агенту — в README его пакета на npm.
 
-Паттерн тот же: установить `@b-apm/integration-<id>`, обеспечить detect **или** `active` / `--target`.
+## Что каждый агент пропускает {#skipped}
 
-| Host     | Кратко про layout / notes                                      |
-| -------- | -------------------------------------------------------------- |
-| OpenCode | skills/agents/commands под `.opencode/`; MCP → `opencode.json` |
-| Copilot  | `.github/instructions`, prompts, agents; MCP в home Copilot    |
-| Windsurf | `.windsurf/rules`, workflows; MCP в Codeium home               |
-| Claude   | `.claude/skills` (не `.agents`); marketplace через `bapm pack` |
-| Codex    | `.agents/skills` + `.codex/`; compile → `AGENTS.md`            |
+Если в пакете есть тип файлов, который агент не поддерживает, install его не раскладывает и ничего об этом не пишет.
 
-## Open-world и security
+| Агент        | Не раскладывается | Особенности                                                            |
+| ------------ | ----------------- | ---------------------------------------------------------------------- |
+| Cursor       | —                 |                                                                        |
+| Claude Code  | —                 |                                                                        |
+| Copilot      | —                 | commands — в `.github/prompts/`                                        |
+| Codex CLI    | commands          | instructions — только через `compile`                                  |
+| OpenCode     | hooks             | instructions — только через `compile`                                  |
+| Windsurf     | agents            | commands — в `.windsurf/workflows/`                                    |
+| Gemini CLI   | agents            | commands — в `.gemini/commands/*.toml`; instructions — через `compile` |
+| Kiro         | commands          |                                                                        |
+| Grok Build   | hooks, commands   |                                                                        |
+| Antigravity  | agents, commands  |                                                                        |
+| Agent Skills | всё, кроме skills |                                                                        |
 
-- **Open-world:** любой npm/path модуль с контрактом `createIntegration` может стать host через `targets:` — CLI не закрытый allowlist runtime.
-- **Canonical list** — только удобный default specifier для известных id, не sandbox.
-- Пакет интеграции = **trusted executable dependency** (как любая npm dep): bapm не изолирует код интеграции. Это отдельно от MCP trust, policy approve/deny, `--frozen` и file hashes.
+## Claude и Codex: маркетплейс
 
-## Advanced: custom `targets:`
+`@b-apm/integration-claude` и `@b-apm/integration-codex` умеют не только ставить пакеты в проект, но и собирать `marketplace.json` для публикации плагинов через `bapm pack`. Это отдельная задача: [Сборка маркетплейса](/guide/situations/marketplace-pack).
 
-Кастомный npm или локальный модуль:
+## Свой агент {#custom}
+
+Если вашего агента нет в таблице или нужно изменить поведение стандартной интеграции, подключите свой модуль через `targets`:
 
 ```yaml
 targets:
-  x-acme-editor: "@acme/my-integration"
-  # или override:
-  cursor: "./agents/integration/my-cursor"
+  x-acme-editor: "@acme/bapm-integration" # npm-пакет
+  cursor: "./tools/my-cursor-integration" # замена стандартной, путь внутри проекта
 active:
-  - x-acme-editor
+  target: x-acme-editor
 ```
 
-```bash
-bapm install --target x-acme-editor
-```
+Модуль экспортирует `createIntegration()` (или фабрику по умолчанию), которая возвращает объект с `id` (совпадает с ключом в `targets`), `deployRoots`, `detect` и `materialize`. Типы и хелперы — в пакете `@b-apm/integration-api`, пример реализации — `@b-apm/integration-cursor`.
 
-### Контракт модуля
+Локальный путь должен указывать внутрь проекта.
 
-Экспорт (первое совпадение): `createIntegration()` → factory вроде `createCursorIntegration` → default. У экземпляра: `id` (совпадает с ключом map), `deployRoots`, `detect`, `materialize`. Helpers: `@b-apm/integration-api`. Authoring: [Architecture](/architecture/).
+`targets` не только подключает модуль, но и ограничивает раскладку: файлы получат только агенты из этого списка. Если в команде работают и в других агентах, перечислите в `targets` и их стандартные интеграции. См. [Агенты в манифесте](/guide/manifest-hosts#targets-и-target).
 
-Локальный path обязан оставаться внутри project root (containment).
-
-## Типичные ошибки
-
-| Симптом                                    | Что проверить                                      |
-| ------------------------------------------ | -------------------------------------------------- |
-| `Unknown or unregistered target`           | Пакет установлен? Custom id объявлен в `targets:`? |
-| маркер есть, пакет не найден               | `npm i -D @b-apm/integration-<id>`                 |
-| `Target detection is missing or ambiguous` | `--target` / `active` / один маркер                |
-
-Дальше: [host selection](/guide/host-selection) · [быстрый старт](/guide/quick-start).
+::: warning Интеграция — это исполняемый код
+bapm запускает код интеграции без изоляции, как любую npm-зависимость. Подключайте только те интеграции, которым доверяете. Политика MCP, `approve` / `deny` и проверка хешей lock-файла на код интеграции не распространяются.
+:::

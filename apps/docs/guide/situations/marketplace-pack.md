@@ -1,66 +1,63 @@
-# US-06: Marketplace pack (Claude / Codex)
+# Сборка маркетплейса
 
-## Когда …
+## Ситуация
 
-Нужны **host marketplace outputs** (`marketplace.json` для Claude и/или Codex) и/или plain-zip archive. Runtime install для Claude/Codex — отдельно через `@b-apm/integration-claude` / `@b-apm/integration-codex` и detect, `active` или `--target` (см. [supported hosts](/guide/supported-hosts)); pack не заменяет install.
+Вы поддерживаете набор плагинов (skills, агенты, MCP) и хотите, чтобы пользователи Claude Code или Codex могли подключить их как маркетплейс. Для этого нужен `marketplace.json` в формате каждого агента.
 
-### Цель
+Это задача автора пакетов. Чтобы просто поставить чужие пакеты в свой проект, достаточно `bapm install`.
 
-Эмитнуть marketplace JSON (и опционально zip) из блока `marketplace:` в манифесте; pack не заменяет `bapm install --target claude`.
+## Шаги
 
-### Шаги
-
-1. Заведите или дополните authoring-блок в манифесте:
+### 1. Опишите маркетплейс
 
 ```bash
 bapm marketplace init
-# пакеты в marketplace::
-bapm marketplace package add …
+bapm marketplace package add …   # для каждого плагина
 bapm marketplace check
 ```
 
-Подробнее: [marketplace](/reference/marketplace), поле `marketplace:` в [Registries](/guide/manifest-registries).
+Команды заполняют блок `marketplace:` в `bapm.yml`. Подробнее о полях: [marketplace](/guide/manifest-registries#marketplace), о флагах: [bapm marketplace](/reference/marketplace).
 
-2. Превью без durable writes:
+### 2. Проверьте без записи
 
 ```bash
 bapm pack --dry-run
 ```
 
-3. Эмит marketplace JSON (по умолчанию — все configured hosts; фильтр `claude` / `codex`):
+### 3. Соберите
 
 ```bash
-bapm pack --marketplace all
-# только Claude:
-bapm pack --marketplace claude
-# свой путь:
-bapm pack --marketplace-path claude=./out/claude-marketplace.json
+bapm pack --marketplace all       # для Claude Code и Codex
+bapm pack --marketplace claude    # только для Claude Code
+bapm pack --marketplace-path claude=./dist/claude-marketplace.json
 ```
 
-4. При необходимости plain zip рядом:
+Нужны пакеты `@b-apm/integration-claude` и/или `@b-apm/integration-codex`: они знают формат `marketplace.json` своего агента.
+
+### 4. Перед релизом
 
 ```bash
-bapm pack --archive
+bapm pack --check-release   # версия в bapm.yml совпадает с git-тегом
+bapm pack --check-versions  # версии пакетов маркетплейса согласованы
 ```
 
-5. Gate версий tag↔manifest без создания tags:
+Обе проверки ничего не собирают и не создают тегов.
 
-```bash
-bapm pack --check-release
-```
+## Другие форматы
 
-### Ожидаемый результат
+| Команда                     | Что получится                                                                          |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| `bapm pack --archive`       | zip-архив проекта, который можно поставить через `bapm install ./file.zip`             |
+| `bapm pack --agent-plugins` | архив в переносимом формате [Agent Plugins](/guide/agent-plugins); нужен `plugin.json` |
 
-- При `marketplace:` и выбранных outputs появляются Claude/Codex `marketplace.json` (не runtime deploy в `.cursor/`).
-- Marketplace-only проект (без `dependencies:`) эмитит JSON и **пропускает** пустой zip.
-- `--agent-plugins` пакует portable Agent Plugins root и **не** эмитит marketplace; нужен root `plugin.json`.
+Без флагов `bapm pack` тоже собирает zip-архив. Ставьте его в пустой каталог: `bapm install ./file.zip` не перезаписывает существующие файлы с другим содержимым и в этом случае завершается ошибкой.
 
-Флаги: [pack](/reference/pack). Runtime install: [US-01](/guide/situations/install-fresh) с `--target cursor|opencode|claude|codex`.
+Лишние файлы из архива исключаются через `.bapmignore` (синтаксис как у `.gitignore`). `bapm.local.yml` и `bapm.local.lock.yaml` не попадают в архив никогда.
 
-### Если не сработало
+## Если не получилось
 
-- Нет `marketplace:` → добавьте через `marketplace init` / правку YAML.
-- Ожидали `install --target claude|codex` → поставьте соответствующий `@b-apm/integration-*`; `targets:` добавляйте только для override/custom host ([hosts](/guide/supported-hosts)); marketplace JSON — отдельно через `pack --marketplace`.
-- Secret-pattern paths (`.env`, `*.pem`, …) → pack отказывается (sc-007).
-- Remote resolve без сети → `--offline` fail closed, если сеть нужна.
-- `--check-release` не пушит и не создаёт tags — только gate.
+| Проблема                                        | Что делать                                                                             |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Нет блока `marketplace:`                        | `bapm marketplace init`                                                                |
+| pack отказывается из-за `.env`, `*.pem` и т. п. | bapm не упаковывает файлы, похожие на секреты. Удалите их или добавьте в `.bapmignore` |
+| Нужна сеть, а её нет                            | С `--offline` pack завершится ошибкой, если пакеты нужно скачивать                     |

@@ -37,11 +37,9 @@ Auto-detect without force MUST NOT create `.grok/` solely to opt in. Lone `AGENT
 ## Dependencies
 
 Depends only on `@b-apm/integration-api` among bapm packages — not `@b-apm/core`.
-Register via object-map:
+Activate (a `targets:` entry is not needed and would also restrict deployment to the listed hosts):
 
 ```yaml
-targets:
-  grok-build: "@b-apm/integration-grok-build"
 active:
-  - grok-build
+  - target: grok-build
 ```
