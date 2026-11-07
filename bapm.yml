@@ -5,7 +5,9 @@ version: 0.2.1
 # writes agent-specific files (for example .cursor/mcp.json); generated
 # outputs are gitignored.
 dependencies:
-  apm: []
+  apm:
+    - git: https://github.com/Sdju/feod
+      ref: main
   mcp: []
 
 # bapm manages its own agent primitives from .apm/. Cursor is the project's
