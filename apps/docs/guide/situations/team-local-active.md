@@ -1,41 +1,94 @@
-# US: Команда с разными агентами
+# Команда с разными агентами
 
-## Когда …
+## Ситуация
 
-Общий репозиторий зависимостей агента; у Vasya — Cursor, у Masha — Claude. Не хочется конфликтовать в `bapm.yml` из‑за `active`.
+Команда хранит общие skills и MCP в репозитории. Часть разработчиков работает в Cursor, часть в Claude Code. Если записать агента в `bapm.yml`, одним придётся постоянно менять его под себя, а в PR будут конфликты.
 
-### Цель
+## Решение
 
-Agent-neutral base-манифест + личный выбор host через `bapm.local.yml`.
+Общий `bapm.yml` описывает только зависимости. Агента каждый выбирает в личном `bapm.local.yml`, который не коммитится.
 
-### Шаги
-
-1. В git — общий `bapm.yml` с `dependencies` (без обязательного `active` под одного человека).
-2. Каждый разработчик ставит свой `@b-apm/integration-*`.
-3. Личный overlay (в `.gitignore`):
+### 1. Общий манифест
 
 ```yaml
-# Vasya — bapm.local.yml
-active:
-  - cursor
+# bapm.yml — в git
+name: team-agent-config
+version: 1.0.0
+dependencies:
+  apm:
+    - acme/team-skills
+  mcp:
+    - name: docs
+      registry: false
+      transport: http
+      url: https://mcp.example.com/
+```
+
+Поля `active` здесь нет. Если оно есть, личный файл всё равно его перекроет.
+
+Полей `target` и `targets` здесь тоже быть не должно: они ограничивают, для каких агентов раскладываются файлы. Если манифест создавали через `bapm init --target cursor`, удалите блок `targets`, иначе у коллеги в Claude Code install напишет `installed for claude`, но ничего не разложит.
+
+### 2. `.gitignore`
+
+```text
+bapm.local.yml
+bapm.local.lock.yaml
+apm_modules/
+```
+
+### 3. Каждый выбирает агента
+
+Разработчик в Cursor:
+
+```bash
+npm i -D @b-apm/integration-cursor
 ```
 
 ```yaml
-# Masha — bapm.local.yml
+# bapm.local.yml
 active:
-  - claude
+  target: cursor
 ```
 
-4. `bapm install` — local `active` заменяет base `active`.
+Разработчик в Claude Code:
 
-### Ожидаемый результат
+```bash
+npm i -D @b-apm/integration-claude
+```
 
-Одинаковый граф зависимостей; разный layout агента. Overlay не уезжает в pack/publish.
+```yaml
+# bapm.local.yml
+active:
+  target: claude
+```
 
-Подробнее: [Personal overlay](/guide/manifest-overlay), [host selection](/guide/host-selection).
+Интеграции можно добавить в `devDependencies` проекта для всех сразу: пока агент выбран через `active`, лишние интеграции не мешают.
 
-Личный WIP-пакет через `local` (отдельный personal lock, не overlay): [личный local lock](/guide/situations/personal-local-lock).
+### 4. Установка
 
-### Если не сработало
+```bash
+bapm install
+```
 
-Несколько detect без `active` → fail-closed; задайте local `active` или `--target`.
+## Результат
+
+- Все получают одни и те же пакеты тех же версий: lock общий.
+- Файлы раскладываются по-разному: у первого в `.agents/skills/` и `.cursor/`, у второго в `.claude/` и `.mcp.json`.
+- `bapm.yml` и `bapm.lock.yaml` не меняются от смены агента, конфликтов в PR нет.
+
+## Если в проекте несколько маркеров
+
+Автоопределение проверяет маркеры только у установленных интеграций. Если закоммичены и `.cursor/`, и `.claude/`, а у вас установлена одна интеграция, будет выбран её агент. Если установлены обе, без `bapm.local.yml` install завершится ошибкой `Target detection is missing or ambiguous`: создайте `bapm.local.yml` или передайте `--target`.
+
+Если кто-то хочет получать файлы сразу для двух агентов, в `bapm.local.yml` можно указать список: `active: { target: [cursor, claude] }`. MCP-серверы в текущей версии получит только первый агент из списка.
+
+## Если не получилось
+
+| Сообщение                                                | Что делать                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| `Target detection is missing or ambiguous`               | Создайте `bapm.local.yml` с `active` или добавьте `--target` |
+| `Manifest "active" rejects legacy bare host-token lists` | Пишите `active: { target: cursor }`, а не `active: [cursor]` |
+| `… is not installed or resolvable`                       | Поставьте интеграцию своего агента                           |
+| `installed for claude`, но файлов нет                    | В `bapm.yml` остался блок `targets` / `target`. Удалите его  |
+
+Связанное: [Личные настройки](/guide/manifest-overlay) · [Пресеты](/guide/config-manifest#пресеты) — если, кроме агента, различаются наборы пакетов.

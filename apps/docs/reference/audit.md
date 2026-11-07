@@ -8,17 +8,17 @@
 bapm audit --ci [-f text|json|sarif] [-o path]
 ```
 
-CI-гейт: наличие lock, deployed presence и hash re-verify. Неизвестные флаги отвергаются. Markdown-расширение у `-o` не принимается.
+CI-гейт: проверяет, что lock есть, развёрнутые файлы на месте и их хэши совпадают с lock. При расхождении завершается с ненулевым кодом. Неизвестные флаги отвергаются. Markdown-расширение у `-o` не принимается.
 
 ## Параметры
 
-| Флаг             | Значение                    | Эффект                                                  | Default                         |
-| ---------------- | --------------------------- | ------------------------------------------------------- | ------------------------------- |
-| `--ci`           | —                           | CI gate (lock + deployed presence + hash re-verify)     | required for gate path          |
-| `-f`, `--format` | `text` \| `json` \| `sarif` | Формат отчёта                                           | `text` (или из расширения `-o`) |
-| `-o`, `--output` | `<path>`                    | Записать body в файл (mkdir parents; body не на stdout) | stdout                          |
-| `--help`, `-h`   | —                           | Показать help                                           | —                               |
+| Флаг             | Значение                    | Эффект                                                                                                | Default                         |
+| ---------------- | --------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `--ci`           | —                           | CI-гейт. Сейчас `bapm audit` без флага делает то же самое, но в скриптах указывайте `--ci`, как в APM | —                               |
+| `-f`, `--format` | `text` \| `json` \| `sarif` | Формат отчёта                                                                                         | `text` (или из расширения `-o`) |
+| `-o`, `--output` | `<path>`                    | Записать отчёт в файл (каталоги создаются). Только для `json` и `sarif`                               | stdout                          |
+| `--help`, `-h`   | —                           | Показать help                                                                                         | —                               |
 
-Если `-f` не задан, формат может выводиться из расширения `-o` (`.json` → json, `.sarif` / `.sarif.json` → sarif).
+Если `-f` не задан, формат может выводиться из расширения `-o` (`.json` → json, `.sarif` / `.sarif.json` → sarif). С форматом `text` отчёт печатается в stdout, а файл по `-o` не создаётся.
 
-См. также: [doctor](/reference/doctor), [install --frozen](/reference/install), [US-07 Doctor / audit / prune](/guide/situations/doctor-audit-prune).
+См. также: [doctor](/reference/doctor), [install --frozen](/reference/install), [Что-то сломалось](/guide/situations/doctor-audit-prune).

@@ -13,6 +13,7 @@ import type { InstallDeps, InstallOptions, InstallResult } from "../types/instal
 import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
 import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
+import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -26,7 +27,7 @@ Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
   --dry-run                Preview direct deps / would-add; no durable project writes
-  --force                  Accept force (overwrite / future security gates). Does not refresh refs and does not bypass frozen or policy
+  --force                  Accepted for APM parity; currently has no effect (does not refresh refs or bypass frozen/policy)
   --allow-insecure         Allow direct http:// deps that also set allow_insecure: true (dual consent)
   --allow-insecure-host <hostname>
                            Allow transitive http:// deps from this FQDN (repeatable)
@@ -48,20 +49,21 @@ Notes:
   Unknown flags are rejected. Combining --frozen with --no-frozen is an error.
   Combining --trust-bin with --no-trust-bin is an error.
   Combining frozen (explicit or CI-default) with --update is an error.
-  Frozen integrity (lk-015/017/018) is kept; MCP config sync vs pins is optional/default-off.
+  Frozen re-verifies lock pins, deployed file hashes and package tree hashes.
   When the CI environment variable is truthy (not "", "0", or "false"), install
-  defaults to frozen unless --no-frozen is passed (OpenAPM req-lk-018).
+  defaults to frozen unless --no-frozen is passed.
   Non-interactive installs (CI, BAPM_NON_INTERACTIVE, non-TTY, or frozen) do not deploy
   dependency bin/ by default without --trust-bin or a persisted executables.allow bin grant;
+  interactive installs deploy it with a warning.
   --trust-bin / --no-trust-bin are per-invocation consent and cannot override org/project deny.
-  A local .zip path is consumed as a pack archive (install-from-archive).
+  A local .zip path is installed as a pack archive: members are added to the current directory,
+  nothing else is removed, and existing files with different content are never overwritten.
   Non-zip positionals are package refs added to dependencies.apm (auto-creates
   a minimal manifest when missing). Frozen rejects positional package-ref add.
   --exclude filters MCP/runtime configure only — not a full skip-install.
-  --force is distinct from --target (forced-target activation).
   Host selection: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
   Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
-  When cursor is active, eligible MCP servers write .cursor/mcp.json (direct mcp by default).
+  Eligible MCP servers are written to the active agent's MCP config (direct mcp by default).
 `;
 }
 
@@ -574,14 +576,13 @@ async function runCoreInstall(
     }
     return { ok: true };
   } catch (error) {
-    const raw =
-      error instanceof Error
-        ? error.message
-        : typeof error === "object" && error !== null && "message" in error
-          ? String((error as { message: unknown }).message)
-          : String(error);
+    const raw = formatErrorMessage(error);
     const message = enrichUnregisteredTargetMessage(raw, cwd);
-    console.error(`${deps.name}: ${message}`);
+    const rendered = formatErrorCauseChain(error, {
+      verbose: parsed.verbose,
+      message,
+    });
+    console.error(`${deps.name}: ${rendered}`);
     return { ok: false, message };
   }
 }

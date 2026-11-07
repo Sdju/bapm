@@ -6,19 +6,19 @@ Cross-client **agent-skills** runtime for bapm: skills-only deploy to `.agents/s
 
 ## Surface
 
-| Capability | Export                                               | When                                           |
-| ---------- | ---------------------------------------------------- | ---------------------------------------------- |
-| Runtime    | `createAgentSkillsIntegration` / `createIntegration` | `targets.agent-skills` + `active` / `--target` |
+| Capability | Export                                               | When                  |
+| ---------- | ---------------------------------------------------- | --------------------- |
+| Runtime    | `createAgentSkillsIntegration` / `createIntegration` | `active` / `--target` |
 
 Thin host: **no** MCP, hooks, or compile.
 
 ## Detection vs forced / active
 
-| Mode                                  | When active                                                        | Creates roots?                               |
-| ------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------- |
-| **Auto-detect**                       | Never (`detect` always false — `.agents/` is shared)               | Never from detect                            |
-| **Forced** (`--target agent-skills`)  | Explicit forced target id                                          | MAY `mkdir` `.agents/skills/` on materialize |
-| **Manifest `active: [agent-skills]`** | After object-map registration, without requiring filesystem detect | Same as forced                               |
+| Mode                                            | When active                                          | Creates roots?                               |
+| ----------------------------------------------- | ---------------------------------------------------- | -------------------------------------------- |
+| **Auto-detect**                                 | Never (`detect` always false — `.agents/` is shared) | Never from detect                            |
+| **Forced** (`--target agent-skills`)            | Explicit forced target id                            | MAY `mkdir` `.agents/skills/` on materialize |
+| **Manifest `active: { target: agent-skills }`** | Without requiring filesystem detect                  | Same as forced                               |
 
 ## Deploy roots
 
@@ -35,9 +35,11 @@ Shared path with Cursor/Codex/Copilot/antigravity under `.agents/skills/` is int
 
 ## Opt-in
 
+Install the package next to the CLI; the canonical id resolves `@b-apm/integration-agent-skills` without a `targets:` entry.
+
 ```yaml
-targets:
-  agent-skills: "@b-apm/integration-agent-skills"
 active:
-  - agent-skills
+  target: agent-skills
 ```
+
+A root `targets:` map also restricts deployment to the listed hosts, so add it only to override the module.

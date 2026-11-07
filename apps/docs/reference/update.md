@@ -24,4 +24,4 @@ bapm update [packages...] [options]
 
 Positionals — опциональный список пакетов для ограниченного update. Неизвестные флаги отвергаются.
 
-См. также: [outdated](/reference/outdated), [lock](/reference/lock), [US-03 Update deps](/guide/situations/update-deps).
+См. также: [outdated](/reference/outdated), [lock](/reference/lock), [Обновить зависимости](/guide/situations/update-deps).

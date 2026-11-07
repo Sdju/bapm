@@ -1,62 +1,59 @@
-# Как выбирается host
+# Выбор агента
 
-Куда `bapm install` / `bapm compile` раскладывают пакеты. Поля манифеста: [Hosts](/guide/manifest-hosts). Таблица пакетов: [Поддерживаемые hosts](/guide/supported-hosts).
+`bapm install` раскладывает файлы для одного или нескольких агентов, `bapm compile` — всегда для одного. Эта страница объясняет, как агенты выбираются и как закрепить выбор.
 
-## Два отдельных вопроса
+## Порядок выбора
 
-1. **Какой host активен?** (selection)
-2. **Какой пакет реализации загрузить?** (resolution)
+Первое сработавшее правило побеждает:
 
-Их нельзя смешивать: `targets:` меняет пакет, но **не активирует** host.
+| №   | Источник                    | Пример                                 |
+| --- | --------------------------- | -------------------------------------- |
+| 1   | Флаг командной строки       | `bapm install --target claude`         |
+| 2   | `active` в `bapm.local.yml` | `active: { target: cursor }`           |
+| 3   | `active` в `bapm.yml`       | `active: { target: [cursor, claude] }` |
+| 4   | Автоопределение по маркеру  | в каталоге есть `.cursor/`             |
 
-## Precedence (selection)
+`--target` выбирает ровно одного агента. В `active` можно перечислить несколько: install разложит файлы для каждого, а `compile` потребует выбрать одного через `--target`. MCP-серверы в текущей версии записываются только для первого агента из списка.
 
-```
---target <id>
-    ↓ иначе
-bapm.local.yml → active
-    ↓ иначе (local не задал active)
-базовый bapm.yml / apm.yml → active
-    ↓ иначе
-sole auto-detect среди зарегистрированных интеграций
-    ↓ иначе (0 или ≥2)
-fail-closed
-```
+`active` в `bapm.local.yml` полностью заменяет `active` из `bapm.yml`, а не дополняет его.
 
-| Шаг            | Поведение                                                                 |
-| -------------- | ------------------------------------------------------------------------- |
-| `--target`     | Force; перекрывает `active` и detect                                      |
-| local `active` | Из `bapm.local.yml`; **заменяет** весь список base `active` (overlay)     |
-| base `active`  | Из committed манифеста                                                    |
-| auto-detect    | Ровно один зарегистрированный host с `detect === true`                    |
-| ambiguity      | Несколько detect / несколько active без `--target` → ошибка (fail-closed) |
-| missing        | Нет detect, нет `active`, нет `--target` → ошибка                         |
+Автоопределение (auto-detect) проверяет маркеры только у установленных интеграций. Если в проекте есть `.cursor/` и `.claude/`, а установлена только `@b-apm/integration-cursor`, выбран будет Cursor. Если маркер узнали несколько установленных интеграций или ни одна, команда завершается с ошибкой:
 
-## Resolution (пакет реализации)
-
-Отдельно от выбора id:
-
-```
-явный targets: / target: object-map для этого id
-    ↓ иначе
-canonical @b-apm/integration-<id> (если id известен CLI)
-    ↓ иначе
-host не регистрируется (custom id без map → unknown target)
+```text
+bapm: Target detection is missing or ambiguous; pass --target <id> or set active in the manifest.
+Multiple host markers found (cursor (@b-apm/integration-cursor), claude (@b-apm/integration-claude)).
 ```
 
-- Map **absent** или **partial** — для известных hosts CLI всё равно пробует canonical пакет (если он установлен в проекте / global).
-- Map entry **перекрывает** canonical для этого ключа; остальные известные hosts по-прежнему через fallback.
-- Custom id (`x-acme-…`) — только через object-map (или явная регистрация).
+Маркеры перечислены в [таблице агентов](/guide/supported-hosts#таблица).
 
-Пакет интеграции — обычная npm-зависимость: bapm **не** бандлит integrations в `@b-apm/cli` и **не** песочничит npm. Это отдельно от MCP trust / policy / frozen / hashes. Список canonical-пакетов и оговорка по `@b-apm/integration-kiro` на npm: [supported hosts](/guide/supported-hosts).
+## Какой способ выбрать
 
-## Типичные сценарии
+| Ситуация                               | Решение                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------ |
+| Один агент, в проекте есть его каталог | Ничего не настраивать, сработает автоопределение                                     |
+| Вся команда работает в одном агенте    | `active: { target: cursor }` в `bapm.yml`                                            |
+| Проект поддерживает несколько агентов  | `active: { target: [cursor, claude] }` в `bapm.yml`                                  |
+| У каждого свой агент                   | `active` в личном `bapm.local.yml` — [сценарий](/guide/situations/team-local-active) |
+| Разовая установка для другого агента   | `bapm install --target <id>`                                                         |
 
-| Ситуация                               | Решение                                                          |
-| -------------------------------------- | ---------------------------------------------------------------- |
-| Один агент, пакет установлен           | `bapm install` (detect)                                          |
-| Два маркера (`.cursor` + `.claude`)    | `--target` или `active` / local overlay                          |
-| Команда: общий манифест, разные агенты | `bapm.local.yml` → `active` — [overlay](/guide/manifest-overlay) |
-| Подменить реализацию Cursor            | `targets: { cursor: "./my-cursor" }`                             |
+## Откуда берётся интеграция
 
-Дальше: [быстрый старт](/guide/quick-start) · [supported hosts](/guide/supported-hosts).
+Для известных агентов bapm загружает пакет `@b-apm/integration-<id>`: сначала ищет его в `node_modules` проекта, затем среди глобальных пакетов. Достаточно `npm i -D @b-apm/integration-cursor`, настраивать ничего не нужно.
+
+Поле `targets` в манифесте нужно, только чтобы заменить стандартную интеграцию своей или подключить агента, которого bapm не знает. См. [Свой агент](/guide/supported-hosts#custom).
+
+::: warning `target` и `targets` ограничивают раскладку
+`targets` не выбирает агента, но если в корне `bapm.yml` есть `target` или `targets`, bapm раскладывает файлы только для перечисленных там агентов. Остальные выбранные агенты получают сообщение `installed for <id>` и ни одного файла. `bapm init --target` создаёт такой блок; если в команде больше одного агента, удалите его или перечислите в нём всех.
+:::
+
+## Частые ошибки
+
+| Сообщение                                                | Причина и решение                                                                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `Target detection is missing or ambiguous`               | Нет ни `active`, ни маркера, или маркер узнали несколько установленных интеграций. Укажите `--target` или `active` |
+| `… is not installed or resolvable`                       | Маркер найден, а интеграции нет. `npm i -D @b-apm/integration-<id>`                                                |
+| `Unknown or unregistered target`                         | Опечатка в id или свой агент без записи в `targets`                                                                |
+| `Manifest "active" rejects legacy bare host-token lists` | `active: [cursor]` не поддерживается, пишите `active: { target: cursor }`                                          |
+| `installed for <id>`, но файлов нет                      | Агента нет в `target` / `targets` корня `bapm.yml`. Удалите блок или добавьте агента                               |
+
+Поля `active`, `target` и `targets` подробно: [Агенты в манифесте](/guide/manifest-hosts).

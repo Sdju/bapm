@@ -149,7 +149,7 @@ function buildMarkdown(json) {
   lines.push("| Class | Posture | Notes |");
   lines.push("|-------|---------|-------|");
   lines.push(
-    `| Consumer | **${json.classes.consumer}** | Primary claim (cursor deploy matrix; waivers below) |`,
+    `| Consumer | **${json.classes.consumer}** | Primary claim (per-host @b-apm/integration-* packages; waivers below) |`,
   );
   lines.push(`| Producer | **${json.classes.producer}** | init/pack/pr-004 surface |`);
   const govNotes =

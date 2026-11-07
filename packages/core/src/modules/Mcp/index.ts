@@ -5,7 +5,8 @@
  *
  * - `collectMcpServers` — direct + optional transitive (trust-transitive / grant)
  * - `bakeMcpStringMap` / `bakeMcpServerMaps` — install-time placeholder bake for Cursor
- * - `applyMcpInventoryToLock` — populate `mcp_servers` / related fields
+ * - `applyMcpInventoryToLock` — populate `mcp_servers` / related fields (target optional)
+ * - `scrubMcpInventory` — prune stale root-owned MCP inventory / clear all MCP bags
  *
  * ## Example
  *
@@ -20,6 +21,7 @@ export type {
   CollectMcpServersOptions,
   CollectMcpServersResult,
   ApplyMcpInventoryOptions,
+  ScrubMcpInventoryOptions,
 } from "./types.ts";
 
 export type { BakeMcpStringMapOptions, BakeableMcpServer } from "./bake.ts";
@@ -31,4 +33,4 @@ export {
 } from "./bake.ts";
 
 export { collectMcpServers } from "./collect.ts";
-export { applyMcpInventoryToLock } from "./lockInventory.ts";
+export { applyMcpInventoryToLock, scrubMcpInventory } from "./lockInventory.ts";

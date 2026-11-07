@@ -8,7 +8,7 @@ Defines how bapm resolves, validates, and registers runtime host integrations fr
 
 ### Requirement: Object-map supplies integration packages for registration
 
-When the project manifest uses the object-map form of `target` or `targets`, the CLI composition root MUST, before install or compile active-host selection, resolve each map value as either an npm package specifier or a local filesystem path (per specifier-form rules), load a runtime `BapmIntegration` from that module, and register it on the integration registry under the corresponding map key. Legacy string or string-array `target` / `targets` MUST NOT trigger map-value package or path loading. The map MUST NOT by itself select which host id is active for the run; activation MUST continue to require CLI `--target` / forced override, a non-empty manifest `active` list, or unambiguous auto-detect per `install-pipeline` / `manifest-active-targets`.
+When the project manifest uses the object-map form of `target` or `targets`, the CLI composition root MUST, before install or compile active-host selection, resolve each map value as either an npm package specifier or a local filesystem path (per specifier-form rules), load a runtime `BapmIntegration` from that module, and register it on the integration registry under the corresponding map key. Legacy string or string-array `target` / `targets` MUST NOT trigger map-value package or path loading. The map MUST NOT by itself select which host id is active for the run; activation MUST continue to require CLI `--target` / forced override, a non-empty manifest `active`, or unambiguous auto-detect per `install-pipeline` / `manifest-active-targets`. Map keys also count as declared project target ids for deploy intersection per `install-pipeline`.
 
 #### Scenario: Map entry registers custom host before selection
 
@@ -32,7 +32,7 @@ When the project manifest uses the object-map form of `target` or `targets`, the
 
 #### Scenario: Map plus active activates without --target
 
-- **WHEN** an object-map registers `x-acme-editor` and the manifest also declares `active: [x-acme-editor]`, and install runs without `--target`
+- **WHEN** an object-map registers `x-acme-editor` and the manifest also declares `active: { target: x-acme-editor }`, and install runs without `--target`
 - **THEN** after map load, install MUST be allowed to activate `x-acme-editor` via `active` without requiring detect
 
 ### Requirement: Canonical packages register known hosts without a map

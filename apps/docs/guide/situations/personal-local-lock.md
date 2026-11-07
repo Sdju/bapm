@@ -1,62 +1,68 @@
-# US: Личный local без шума в team lock
+# Личные пакеты
 
-## Когда …
+## Ситуация
 
-Нужен локальный WIP-пакет (каталог `.agents/local` или свой путь через `local:`) в **своём** checkout, а командный `bapm.lock.yaml` / `apm.lock.yaml` не должен раздуваться личными пинами и не должен уезжать в PR.
+Вы пишете новый skill и хотите пользоваться им в проекте, пока он не готов. Коллегам и CI он не нужен, и его версии не должны попадать в общий `bapm.lock.yaml`.
 
-### Цель
+## Решение
 
-Зафиксировать личные `local`-зависимости в `bapm.local.lock.yaml` (gitignore), оставив shared lock только для командного графа.
+Положите пакет в `.agents/local/` и подключите источником `local`. Его версии пойдут в `bapm.local.lock.yaml`, который не коммитится.
 
-### Шаги
-
-1. В shared-манифесте (`bapm.yml` в git) держите командные зависимости (`git`, registry, `path:`, …). Личный WIP лучше объявлять через bapm-дискриминатор `local`, а не через OpenAPM `path:` — иначе pin попадёт в shared:
-
-```yaml
-# пример только для локальной машины — если кладёте local в shared bapm.yml,
-# коллеги/CI тоже увидят эту зависимость в манифесте
-dependencies:
-  apm:
-    - local
-    # или: local: ./my-wip-skill
-```
-
-Частый вариант: `local` только у себя (или в личной ветке), не в CI-критичном shared-манифесте.
-
-2. Resolve / install:
-
-```bash
-bapm lock
-# или
-bapm install --target cursor
-```
-
-3. Убедитесь, что появился gitignored personal lock и shared не содержит личный pin:
+### 1. Создайте пакет
 
 ```text
-bapm.lock.yaml          # командный граф
-bapm.local.lock.yaml    # только local-пины
-.gitignore              # содержит bapm.local.lock.yaml
+.agents/local/
+  bapm.yml              # name и version
+  skills/
+    my-draft/SKILL.md
 ```
 
-4. В PR коммитьте shared lock + манифест. **Не** добавляйте `bapm.local.lock.yaml`.
+### 2. Подключите его
 
-### Ожидаемый результат
+```yaml
+dependencies:
+  apm:
+    - acme/team-skills
+    - local # то же, что local: .agents/local
+```
 
-- Effective graph при чтении = shared ∪ personal.
-- OpenAPM `path:` остаётся в shared (даже если в lock wire `source: local`).
-- Bags вроде `local_deployed_*` остаются на shared.
-- Без `local` в графе personal-файл не создаётся; после удаления всех `local` устаревший personal очищается.
+Другой каталог: `- local: ./my-wip`.
 
-Подробнее: [Lock-файл](/guide/lockfile), [зависимости](/guide/manifest-dependencies), [overlay](/guide/manifest-overlay) (это про `bapm.local.yml`, не про lock).
+### 3. Установите
 
-### Если не сработало
+```bash
+bapm install
+```
 
-| Симптом                            | Что проверить                                                        |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| Личный pin всё ещё в shared        | Форма в манифесте — `local`, не `path:`; затем снова `bapm lock`     |
-| Legacy pin в shared, personal пуст | Нормально на чтении; следующий успешный lock/install мигрирует       |
-| `apm.local.lock.yaml` → ошибка     | Удалите файл; поддерживается только `bapm.local.lock.yaml`           |
-| Doctor WARN: personal tracked      | `git rm --cached bapm.local.lock.yaml` + строка в `.gitignore`       |
-| CI frozen падает из‑за `local`     | Уберите `local` из CI-манифеста или обеспечьте pin в effective graph |
-| Pack/publish «утащил» personal     | Не должен: pack/publish опускают `bapm.local.lock.yaml`              |
+После install:
+
+- версия личного пакета записана в `bapm.local.lock.yaml`, общий `bapm.lock.yaml` её не содержит;
+- `bapm.local.lock.yaml` и `.agents/local/` добавлены в `.gitignore`;
+- если под `.agents/local/` есть файлы, уже закоммиченные в git, install откажется работать, чтобы личное не утекло в репозиторий.
+
+## Важная оговорка
+
+Запись `- local` сама находится в `bapm.yml`, а он общий. Если закоммитить её, у коллег и в CI install будет искать `.agents/local/`, которого у них нет. Варианты:
+
+- держите запись `local` только в своей рабочей копии и не коммитьте её;
+- или держите её в отдельной ветке, пока пакет не готов.
+
+Когда пакет готов, перенесите его в отдельный репозиторий или в общий каталог и подключите через `git` или `path`.
+
+## Чем `local` отличается от `path`
+
+|                        | `local`                | `path: ./…`      |
+| ---------------------- | ---------------------- | ---------------- |
+| Для кого               | Только для вас         | Для всей команды |
+| Куда пишется версия    | `bapm.local.lock.yaml` | `bapm.lock.yaml` |
+| Каталог в `.gitignore` | да, автоматически      | нет              |
+| Есть в OpenAPM / APM   | нет, только в bapm     | да               |
+
+## Если не получилось
+
+| Проблема                                 | Что делать                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| Личный пакет оказался в `bapm.lock.yaml` | Он подключён через `path:`, а не `local`. Исправьте и выполните `bapm install` |
+| install ругается на файлы в git          | `git rm -r --cached .agents/local`                                             |
+| CI падает из-за `local`                  | Запись `local` попала в общий `bapm.yml`. Уберите её из коммита                |
+| `bapm doctor`: personal lock tracked     | `git rm --cached bapm.local.lock.yaml`                                         |

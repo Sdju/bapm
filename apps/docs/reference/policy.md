@@ -27,22 +27,34 @@ bapm approve <package-name> [--user]
 bapm deny <package-name> [--user]
 ```
 
-| Флаг / аргумент  | Значение   | Эффект                                        | Default           |
-| ---------------- | ---------- | --------------------------------------------- | ----------------- |
-| `<package-name>` | имя пакета | Обязательный positional                       | —                 |
-| `--user`         | —          | Принят для APM parity; путь всегда user-local | всегда user-local |
-| `--help`, `-h`   | —          | Показать help                                 | —                 |
+| Флаг / аргумент  | Значение   | Эффект                                                         | Default |
+| ---------------- | ---------- | -------------------------------------------------------------- | ------- |
+| `<package-name>` | имя пакета | Обязательный positional                                        | —       |
+| `--user`         | —          | Принимается для совместимости с APM; запись всегда в `~/.bapm` | —       |
+| `--help`, `-h`   | —          | Показать help                                                  | —       |
 
 Без имени пакета команда печатает help и завершается с ошибкой.
 
-Связанные install-флаги: `--policy` / `--no-policy` / `--trust-transitive-mcp` на [install](/reference/install). Сценарий: [US-04 Policy / MCP](/guide/situations/policy-mcp).
+Первый `approve` или `deny` включает режим явных разрешений: дальше install требует решение для каждого пакета с MCP и падает с `MCP withheld: unapproved dependency executables`, пока его нет. `approve` разрешает только MCP; разрешение на `bin/` пакета через него не выдаётся.
 
-## Allow / deny / require — регистр идентификаторов
+Разрешение для всей команды задаётся не в файле политики, а в `bapm.yml` проекта:
 
-При match-time сравнении `dependencies.allow` / `deny` / exact `require` bapm применяет то же правило регистра, что и для Consumer identity (OpenAPM req-pl-018 / req-rs-016 §3):
+```yaml
+executables:
+  allow:
+    acme/mcp-tools:
+      mcp: true
+```
 
-- ASCII-fold (`A–Z` → `a–z`) сегментов repository coordinates для `github.com`, `*.ghe.com`, значения `GITHUB_HOST` и для `source: registry` (включая registry prefixes).
-- Остальные hosts, local и marketplace — byte-exact по path.
-- Virtual path внутри репозитория и `#ref` остаются case-sensitive.
-- Merge цепочки policy (§6.4) сравнивает authored-записи byte-exactly (fold только при evaluate).
-- Exact `require` не интерпретирует `*` как glob.
+Файл политики (`apm-policy.yml` / `bapm-policy.yml`) в секции `executables` понимает только запреты: `deny` (список пакетов) и `deny_all`. На MCP-серверы из собственного `dependencies.mcp` проекта он не действует.
+
+Связанные install-флаги: `--policy` / `--no-policy` / `--trust-transitive-mcp` на [install](/reference/install). Сценарий: [MCP-сервер не появился](/guide/situations/policy-mcp).
+
+## Регистр в `allow` / `deny` / `require`
+
+При сравнении записей политики с зависимостями:
+
+- для GitHub (`github.com`, `*.ghe.com`, хост из `GITHUB_HOST`) и registry имена владельца и репозитория сравниваются без учёта регистра: `Acme/Tools` совпадёт с `acme/tools`;
+- для остальных git-хостов, `local` и маркетплейсов регистр учитывается;
+- путь внутри репозитория и `#ref` всегда сравниваются с учётом регистра;
+- в `require` символ `*` не является шаблоном.

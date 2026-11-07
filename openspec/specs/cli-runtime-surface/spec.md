@@ -799,7 +799,7 @@ The CLI `compile` command MUST accept `--target <id>` and `--target=<id>`, forwa
 
 #### Scenario: Sole manifest active selects compile without --target
 
-- **WHEN** `runCli(["compile"])` runs with `active: [cursor]`, cursor registered by an object-map or resolvable canonical package and compile-capable, and detect absent
+- **WHEN** `runCli(["compile"])` runs with `active: { target: cursor }`, cursor registered by an object-map or resolvable canonical package and compile-capable, and detect absent
 - **THEN** compile MUST select cursor without requiring `--target`
 
 ### Requirement: Install and compile load manifest integration map before core

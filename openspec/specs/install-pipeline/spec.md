@@ -171,6 +171,11 @@ Manifest parsing/install MUST hard-error when both `target` and `targets` fields
 - **WHEN** the project manifest declares object-map `targets` whose keys include `cursor` and a dependency declares `targets: [copilot]` only
 - **THEN** that dependency's primitives MUST NOT be deployed to an active cursor target (non-overlapping declared ids)
 
+#### Scenario: Root declared targets narrow other active hosts
+
+- **WHEN** the project manifest declares `targets: { cursor: "@b-apm/integration-cursor" }` and install runs with `--target claude` (claude registered)
+- **THEN** install MUST NOT deploy package primitives to claude, because `claude` is not among the declared project target ids
+
 #### Scenario: Object-map package registered then forced target materializes
 
 - **WHEN** the project manifest declares object-map `targets` with `x-acme-editor` bound to a resolvable valid runtime integration package and install runs with `--target x-acme-editor`
@@ -178,7 +183,7 @@ Manifest parsing/install MUST hard-error when both `target` and `targets` fields
 
 #### Scenario: Active does not expand declared preference
 
-- **WHEN** the project manifest declares `targets: [cursor]` and `active: [cursor]` (or additional registered ids only via `active`)
+- **WHEN** the project manifest declares `targets: [cursor]` and `active: { target: [cursor, claude] }`
 - **THEN** declared project target ids for intersection MUST still come from `target`/`targets` only
 
 ### Requirement: Deploy only under registered deploy roots
@@ -210,7 +215,9 @@ Uninstall of removed deps and prune of orphan modules MUST reuse existing orphan
 
 ### Requirement: Install accepts a local pack archive path
 
-Install MUST accept a local filesystem path to a pack-produced plain zip as an install source. When the argument is such an archive, install MUST extract/consume the conforming layout (manifest at expected root; optional packed lock/primitives) into the target project directory and MUST make the resulting manifest dual-read parseable. On invalid archive layout or failing manifest validate, install MUST fail closed with non-zero exit. This path is the primary M7 round-trip for pack (unpack-equivalent). Full network resolve of archive-embedded deps MAY proceed via existing install orchestration after extract when dependencies are present.
+Install MUST accept a local filesystem path to a pack-produced plain zip as an install source. When the argument is such an archive, install MUST extract/consume the conforming layout (manifest at expected root; optional packed lock/primitives) into the target project directory and MUST make the resulting manifest dual-read parseable. On invalid archive layout or failing manifest validate, install MUST fail closed with non-zero exit. This path is the primary round-trip for pack (unpack-equivalent). Full network resolve of archive-embedded deps MAY proceed via existing install orchestration after extract when dependencies are present.
+
+Archive extract into the project MUST be additive: files and directories in the project that are not members of the archive MUST remain untouched (including `.git/`). When an archive member would overwrite an existing project file whose bytes differ, install MUST fail closed before writing any archive member and the diagnostic MUST name at least one conflicting path. Existing files with identical bytes MUST NOT count as conflicts. Extract MUST NOT create, modify, or delete anything outside the project directory.
 
 #### Scenario: Install from pack zip lands manifest
 
@@ -221,6 +228,21 @@ Install MUST accept a local filesystem path to a pack-produced plain zip as an i
 
 - **WHEN** install is invoked with a path that is not a valid pack zip layout
 - **THEN** install MUST exit non-zero without claiming a successful archive install
+
+#### Scenario: Unrelated project files survive archive install
+
+- **WHEN** install is invoked with a valid pack zip in a directory that already contains `.git/` and files not present in the archive
+- **THEN** after install those files and `.git/` MUST still exist with unchanged content
+
+#### Scenario: Conflicting file fails closed before writes
+
+- **WHEN** the project already has `bapm.yml` whose bytes differ from the archive's `bapm.yml`
+- **THEN** install MUST exit non-zero, MUST name `bapm.yml` in the diagnostic, and MUST NOT write any archive member into the project
+
+#### Scenario: Nothing is written next to the project
+
+- **WHEN** install from archive runs in `<parent>/project`
+- **THEN** no new entries MUST appear in `<parent>` during or after the operation
 
 ### Requirement: Policy gate before download and materialize
 

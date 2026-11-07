@@ -130,7 +130,7 @@ Usage:
 Options:
   --ci              CI gate: lock present + deployed presence + hash re-verify
   -f, --format      Output format: text (default), json, or sarif
-  -o, --output      Write report body to file (mkdir parents; body not on stdout)
+  -o, --output      Write json/sarif report to file (mkdir parents); text always prints to stdout
 `;
 }
 

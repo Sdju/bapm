@@ -18,7 +18,7 @@ repository_case_rules: |
   Virtual in-repository paths and # refs stay byte-exact. Policy merge compares authored
   entries byte-exactly (fold at match time only).
 limitations:
-  - Multi-target adapters beyond cursor are out of scope
+  - OpenAPM §8.5 per-target layout is not claimed; host layouts are defined by the @b-apm/integration-* packages
   - Registry host / rg-001 not claimed (N/A)
   - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
   - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
@@ -711,13 +711,13 @@ requirements:
     keyword: MUST
     section: "8.5"
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
   - id: req-tg-003
     class: consumer
     keyword: MUST
     section: "8.5"
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
   - id: req-tg-004
     class: consumer
     keyword: MUST
@@ -729,37 +729,37 @@ requirements:
     keyword: MUST
     section: "8.5"
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
   - id: req-tg-006
     class: consumer
     keyword: MUST
     section: "8.5"
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
   - id: req-tg-007
     class: consumer
     keyword: MUST
     section: "8.5"
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
   - id: req-tg-008
     class: consumer
     keyword: MUST
     section: 8.5.3
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
   - id: req-tg-009
     class: consumer
     keyword: MUST
     section: 8.5.1
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
   - id: req-tg-010
     class: consumer
     keyword: MUST
     section: 8.5.4
     status: skipped
-    rationale: "Out of scope for P3: multi-target adapters beyond cursor"
+    rationale: "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     notes: project-scoped native hooks use a portable project-directory environment anchor and reject shell-expansion path syntax
   - id: req-sc-001
     class: consumer

@@ -1,78 +1,57 @@
-# Personal overlay: bapm.local.yml
+# Личные настройки: `bapm.local.yml`
 
-Личные host/env/registry настройки **без** правок общего `bapm.yml`. Обзор: [манифест](/guide/config-manifest). Выбор host: [host selection](/guide/host-selection).
+`bapm.local.yml` лежит рядом с `bapm.yml`, не коммитится и переопределяет часть настроек только на вашей машине. Типичные случаи:
 
-## Командный сценарий (first-class)
-
-Общий `bapm.yml` — зависимости и политика команды (agent-neutral). У каждого разработчика — свой агент через local `active`:
-
-```yaml
-# bapm.yml (в git) — общий граф, без привязки к агенту Vasya/Masha
-name: team-agent-deps
-version: 1.0.0
-dependencies:
-  apm:
-    - path: ./packages/shared-skills
-```
-
-```yaml
-# bapm.local.yml у Vasya (не коммитить)
-active:
-  target: cursor
-```
-
-```yaml
-# bapm.local.yml у Masha
-active:
-  target: claude
-```
-
-Local `active` **заменяет** base `active` целиком (не merge). Общий манифест остаётся нейтральным; Cursor у Vasya и Claude у Masha не спорят в PR.
-
-Если в base объявлены `presets`, local может выбрать их через structured `active` (`preset: developer`) — определения presets остаются только в base (`presets` на overlay запрещён).
-
-Нужны пакеты `@b-apm/integration-cursor` / `@b-apm/integration-claude` у соответствующего разработчика (project или global).
+- в команде разные агенты, и каждый выбирает свой;
+- нужен другой [пресет](/guide/config-manifest#пресеты), чем у проекта по умолчанию;
+- нужны личные значения переменных для MCP (токены, локальные адреса).
 
 ## Пример
 
 ```yaml
 # bapm.local.yml
 active:
-  target: cursor
+  target: claude
+  preset: analyst
 env:
-  FOO: "personal"
+  GITHUB_TOKEN: "ghp_…"
 ```
 
-Добавьте в `.gitignore`:
+Добавьте файл в `.gitignore`:
 
 ```text
 bapm.local.yml
 bapm.local.lock.yaml
 ```
 
-Пины от дискриминатора `local` живут в `bapm.local.lock.yaml` (см. [lock-файл](/guide/lockfile) и [личный local lock](/guide/situations/personal-local-lock)) — та же unpublished-поверхность, что и у overlay: gitignore, doctor WARN если tracked, pack/publish опускают.
+bapm сам в `.gitignore` его не добавляет. Если файл всё же попал в git, `bapm doctor` покажет строку `local-overlay … is git-tracked` (она помечена `PASS` и на код выхода не влияет); уберите файл из индекса командой `git rm --cached bapm.local.yml`.
 
-## Правила
+## Что можно переопределить
 
-- Имя строго `bapm.local.yml` (рядом с базовым манифестом, без walk-up).
-- `apm.local.yml` в v1 **отклонён**.
-- Это **не** source `local:` у зависимостей (каталог `.agents/local`). Overlay — настройки; `local:` — источник пакета (pins → `bapm.local.lock.yaml`).
+| Ключ                 | Как объединяется с `bapm.yml`                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `active`             | Заменяет целиком: базовый `active` не учитывается                                        |
+| `env`                | По ключам: ваши значения побеждают                                                       |
+| `target` / `targets` | Если и там и там карта — по ключам, ваши побеждают; иначе ваше значение заменяет базовое |
+| `registries`         | По имени registry                                                                        |
 
-## Allowlist
+`target` / `targets` в личном файле тоже [ограничивают раскладку](/guide/manifest-hosts#targets-и-target): добавив сюда свою интеграцию, перечислите и агентов из `bapm.yml`.
 
-| Ключ                 | Merge                                                                               |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `active`             | replace всей structured selection (`preset` / `target`)                             |
-| `target` / `targets` | object-map + object-map → deep-merge (local wins); иначе replace + mutual exclusion |
-| `env`                | deep-merge строк (local wins per key)                                               |
-| `registries`         | deep-merge по имени registry                                                        |
+Любой другой ключ (`dependencies`, `presets`, `name`…) — ошибка. Зависимости в личном файле объявить нельзя: для личных пакетов есть `local`, см. [Личные пакеты](/guide/situations/personal-local-lock).
 
-Всё остальное (`name`, `version`, `dependencies`, `presets`, `x-*`, …) — отказ.
+## Приоритет
 
-## Precedence
+1. флаги командной строки (`--target`);
+2. `bapm.local.yml`;
+3. `bapm.yml`.
 
-CLI flags (`--target`, …) → `bapm.local.yml` → base `bapm.yml` / `apm.yml` → process-env overrides (где есть).
+Для значений `env` переменные окружения процесса важнее обоих файлов.
 
-Pack и publish **опускают** файл. `bapm doctor` предупреждает, если overlay уже tracked (`git rm --cached bapm.local.yml`).
+## Что ещё важно знать
 
-detect / active / targets — [Hosts](/guide/manifest-hosts).
+- Имя строго `bapm.local.yml`; `apm.local.yml` не поддерживается.
+- bapm ищет файл только в текущем каталоге, рядом с `bapm.yml`.
+- `bapm pack` и `bapm publish` не включают его в архив.
+- Не путайте с источником `local` в `dependencies`: `bapm.local.yml` — это настройки, а `local` — способ подключить личный пакет.
+
+Сценарий целиком: [Команда с разными агентами](/guide/situations/team-local-active).

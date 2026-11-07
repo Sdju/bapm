@@ -36,7 +36,7 @@ export async function extractPackArchive(
   }
 
   try {
-    const result = safeExtractZip(bytes, outputDir);
+    const result = safeExtractZip(bytes, outputDir, { mode: "merge" });
     return { ok: true, outputDir: result.dest, filesExtracted: result.filesExtracted };
   } catch (cause) {
     if (cause instanceof SafeExtractError) {

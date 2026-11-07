@@ -1,60 +1,62 @@
-# US-01: Свежий install в Cursor
+# Подключить bapm к существующему проекту
 
-## Когда …
+## Ситуация
 
-Новый проект без манифеста и lockfile: нужно завести `bapm.yml` и первый раз материализовать зависимости в Cursor.
+В проекте уже есть `.cursor/` с правилами и skills, которые копировались вручную из других репозиториев. Хочется перевести общие части на пакеты, чтобы обновлять их командой, а не копированием.
 
-::: warning UNSTABLE
-Ранний публичный релиз на npm. Команды `npm i` рабочие, но релиз нестабильный. См. [быстрый старт](/guide/quick-start).
-:::
+## Шаги
 
-### Цель
-
-Получить рабочий `bapm.yml`, lock и deploy в Cursor (skills / rules / agents / MCP при наличии) — **без** обязательного object-map `targets:`.
-
-### Шаги
-
-1. Установите CLI и интеграцию вместе (`npm i -g` или `-D` — [Быстрый старт](/guide/quick-start)).
-2. В корне проекта:
+### 1. Установите bapm
 
 ```bash
-npm i -D @b-apm/integration-cursor
-mkdir -p .cursor   # если ещё нет маркера Cursor
-# минимальный манифест (или bapm init -y --target cursor — scaffold с pin)
+npm i -D @b-apm/cli @b-apm/integration-cursor
+npx bapm init -y --target cursor
 ```
 
-Пример `bapm.yml` без map:
+### 2. Перенесите общие части в зависимости
+
+Всё, что пришло из другого репозитория, подключите как пакет, а скопированные файлы удалите:
 
 ```yaml
-name: my-agent-project
-version: 0.0.1
 dependencies:
-  apm: []
-  mcp: []
+  apm:
+    - acme/agent-skills#v1.2.0
+    - git: https://github.com/acme/monorepo
+      path: agent/rules
 ```
 
-3. Добавьте зависимости в `dependencies.apm` / `dependencies.mcp`.
-4. Установите:
+То, что написано специально для этого проекта, можно оставить как есть: bapm не трогает файлы, которые он не ставил, если их имена не совпадают с устанавливаемыми.
+
+::: warning Совпадающие имена перезаписываются
+Если в `.agents/skills/` или `.cursor/` уже лежит файл с тем же путём, что и в пакете (например, `.agents/skills/code-review/SKILL.md`), `install` перезапишет его без предупреждения, и `--dry-run` этого не покажет. Перед первым install закоммитьте текущее состояние, чтобы увидеть перезаписанные файлы в `git diff`.
+:::
+
+### 3. Установите
 
 ```bash
-bapm install
-# force при необходимости:
-# bapm install --target cursor
+npx bapm install --dry-run   # что будет установлено
+npx bapm install
 ```
 
-Опционально: `--dry-run`, `-v`.
+### 4. Проверьте
 
-### Ожидаемый результат
+```bash
+npx bapm deps list                          # что установлено
+npx bapm find .agents/skills/<имя>/SKILL.md # из какого пакета файл
+```
 
-- Lock и `apm_modules/`.
-- Deploy в Cursor: `.agents/skills/…`, `.cursor/rules/…`, `.cursor/agents/…`, при eligible MCP — `.cursor/mcp.json`.
+Откройте Cursor: skills из пакетов появятся среди доступных.
 
-Подробнее: [host selection](/guide/host-selection), [install](/reference/install).
+### 5. Закоммитьте
 
-### Если не сработало
+`bapm.yml`, `bapm.lock.yaml`, `package.json` и `.gitignore` с `apm_modules/` и `bapm.local.yml`.
 
-| Симптом                    | Что сделать                          |
-| -------------------------- | ------------------------------------ |
-| пакет / integration-cursor | `npm i -D @b-apm/integration-cursor` |
-| ambiguous detect           | `--target cursor` или `active`       |
-| нет манифеста              | создайте `bapm.yml` или `bapm init`  |
+## Если не получилось
+
+| Сообщение                                      | Что делать                                                                                     |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `… @b-apm/integration-cursor is not installed` | `npm i -D @b-apm/integration-cursor`                                                           |
+| `Target detection is missing or ambiguous`     | Кроме `.cursor/`, в проекте есть маркер другого агента. Задайте `active` или `--target cursor` |
+| `Failed to download …`                         | Проверьте доступ к репозиторию: `git ls-remote <url>`. Для приватных задайте `GITHUB_TOKEN`    |
+
+Дальше: [Команда с разными агентами](/guide/situations/team-local-active) · [CI по lock-файлу](/guide/situations/ci-frozen).

@@ -108,7 +108,7 @@ export async function resolveAndLock(
   const packages = graph.nodes
     .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
     .map((n) => ({
-      repoUrl: n.kind === "local" ? undefined : restoreGitUrl(n.repo_url),
+      repoUrl: n.kind === "local" ? undefined : (n.gitUrl ?? restoreGitUrl(n.repo_url)),
       path: n.path,
       commit: n.resolved_commit,
       identity: n.identity,
@@ -349,6 +349,7 @@ function buildLockDocument(
       repo_url: n.repo_url ?? n.identity,
       resolved_commit: n.resolved_commit,
     };
+    if (n.virtualPath) entry.virtual_path = n.virtualPath;
     if (n.constraint) entry.constraint = n.constraint;
     if (n.resolved_tag) entry.resolved_tag = n.resolved_tag;
     if (n.resolved_at) entry.resolved_at = n.resolved_at;

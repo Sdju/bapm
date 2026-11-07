@@ -66,6 +66,8 @@ import {
   bakeMcpServerMaps,
   collectMcpServers,
   McpEnvBakeError,
+  scrubMcpInventory,
+  type CollectedMcpServer,
 } from "@/modules/Mcp";
 import { defaultBinDeployRoot, discoverPackageBinFiles, materializeBinFiles } from "./binDeploy.ts";
 import {
@@ -254,7 +256,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       const packages = nodes
         .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
         .map((n) => ({
-          repoUrl: n.kind === "local" ? undefined : restoreGitUrl(n.repo_url),
+          repoUrl: n.kind === "local" ? undefined : (n.gitUrl ?? restoreGitUrl(n.repo_url)),
           path: n.path,
           commit: n.resolved_commit,
           identity: n.identity,
@@ -344,6 +346,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     : discoverPrimitives({
         cwd,
         modulesDir: join(cwd, APM_MODULES_DIR),
+        packageRoots: nodes
+          .map((node) => node.packageRoot)
+          .filter((root): root is string => typeof root === "string" && root.length > 0),
         declarationOrder,
       });
   const raw = nativeRaw.filter(
@@ -842,10 +847,26 @@ async function deployMcpAfterPolicy(args: {
   });
   args.diagnostics.push(...collected.diagnostics);
 
+  const rootName = String(args.rootManifest.name ?? "root");
+
   if (collected.servers.length === 0) {
     return {
-      lockPath: args.lockPath,
-      lockDocument: args.lockDocument,
+      ...refreshMcpLockInventory({
+        cwd: args.cwd,
+        frozen: args.frozen,
+        document: args.lockDocument,
+        lockPath: args.lockPath,
+        previousLockFilename: args.previousLockFilename,
+        update: {
+          kind: "prune",
+          rootPackageName: rootName,
+          ...(args.nodes.length > 0
+            ? {
+                livePackageNames: [...new Set(args.nodes.map((node) => node.name).filter(Boolean))],
+              }
+            : {}),
+        },
+      }),
       withholdFatal: false,
       withheldPackages: [],
     };
@@ -853,7 +874,6 @@ async function deployMcpAfterPolicy(args: {
 
   const approved: typeof collected.servers = [];
   const withheldPackages: string[] = [];
-  const rootName = String(args.rootManifest.name ?? "root");
 
   for (const server of collected.servers) {
     if (server.origin === "direct" || server.packageName === rootName) {
@@ -897,8 +917,14 @@ async function deployMcpAfterPolicy(args: {
 
   if (approved.length === 0) {
     return {
-      lockPath: args.lockPath,
-      lockDocument: args.lockDocument,
+      ...refreshMcpLockInventory({
+        cwd: args.cwd,
+        frozen: args.frozen,
+        document: args.lockDocument,
+        lockPath: args.lockPath,
+        previousLockFilename: args.previousLockFilename,
+        update: { kind: "clear" },
+      }),
       withholdFatal,
       withholdMessage,
       withheldPackages: uniqueWithheld,
@@ -913,8 +939,14 @@ async function deployMcpAfterPolicy(args: {
 
   if (!args.registry || args.activeTargets.length === 0) {
     return {
-      lockPath: args.lockPath,
-      lockDocument: args.lockDocument,
+      ...refreshMcpLockInventory({
+        cwd: args.cwd,
+        frozen: args.frozen,
+        document: args.lockDocument,
+        lockPath: args.lockPath,
+        previousLockFilename: args.previousLockFilename,
+        update: { kind: "declarations", servers: approved },
+      }),
       withholdFatal,
       withholdMessage,
       withheldPackages: uniqueWithheld,
@@ -999,37 +1031,115 @@ async function deployMcpAfterPolicy(args: {
     break;
   }
 
-  let lockDocument = args.lockDocument;
-  let lockPath = args.lockPath;
-
-  if (
-    wroteConfig &&
-    !args.frozen &&
-    lockDocument &&
-    configPath &&
-    configuredTargetId &&
-    configuredServers
-  ) {
-    applyMcpInventoryToLock({
-      document: lockDocument,
-      servers: configuredServers,
-      configPath,
-      targetId: configuredTargetId,
-    });
-    lockPath = partitionAndWriteLockfiles(lockDocument, {
-      cwd: args.cwd,
-      sourcePath: lockPath,
-      sourceFilename: args.previousLockFilename,
-    }).sharedPath;
-  }
+  const updated = refreshMcpLockInventory({
+    cwd: args.cwd,
+    frozen: args.frozen,
+    document: args.lockDocument,
+    lockPath: args.lockPath,
+    previousLockFilename: args.previousLockFilename,
+    update: {
+      kind: "declarations",
+      servers: approved,
+      ...(wroteConfig && configPath && configuredTargetId
+        ? { target: { targetId: configuredTargetId, configPath } }
+        : {}),
+    },
+  });
 
   return {
-    lockPath,
-    lockDocument,
+    ...updated,
     withholdFatal,
     withholdMessage,
     withheldPackages: uniqueWithheld,
   };
+}
+
+type McpLockInventoryUpdate =
+  | {
+      kind: "declarations";
+      servers: CollectedMcpServer[];
+      target?: { targetId: string; configPath: string };
+    }
+  | { kind: "prune"; rootPackageName: string; livePackageNames?: string[] }
+  | { kind: "clear" };
+
+/**
+ * Keep lock MCP inventory in sync on every non-frozen install path — including
+ * early returns where no target config is written. `prune` removes stale
+ * root-owned server entries while preserving dependency-owned ones; `clear`
+ * drops every MCP inventory bag (all servers withheld); `declarations` writes
+ * the current authored set, optionally with the configured target.
+ */
+function refreshMcpLockInventory(args: {
+  cwd: string;
+  frozen: boolean;
+  document?: LockfileDocument;
+  lockPath?: string;
+  previousLockFilename?: string;
+  update: McpLockInventoryUpdate;
+}): { lockPath?: string; lockDocument?: LockfileDocument } {
+  if (args.frozen || !args.document) {
+    return { lockPath: args.lockPath, lockDocument: args.document };
+  }
+
+  const doc = args.document as LockfileDocument & Record<string, unknown>;
+  const hadInventory =
+    hasMcpEntries(doc.mcp_servers) ||
+    hasMcpEntries(doc.mcp_configs) ||
+    hasMcpEntries(doc.mcp_target_servers) ||
+    hasMcpEntries(doc.mcp_config_provenance);
+  const update = args.update;
+  const before = update.kind === "declarations" ? undefined : inventoryFingerprint(doc);
+
+  if (update.kind === "declarations") {
+    applyMcpInventoryToLock({
+      document: args.document,
+      servers: update.servers,
+      ...update.target,
+    });
+    // Nothing existed and nothing is authored: avoid a redundant second lock write.
+    if (!hadInventory && update.servers.length === 0 && !update.target) {
+      return { lockPath: args.lockPath, lockDocument: args.document };
+    }
+  } else if (update.kind === "prune") {
+    if (!hasMcpEntries(doc.mcp_servers)) {
+      return { lockPath: args.lockPath, lockDocument: args.document };
+    }
+    scrubMcpInventory({
+      document: args.document,
+      rootPackageName: update.rootPackageName,
+      ...(update.livePackageNames ? { livePackageNames: update.livePackageNames } : {}),
+    });
+    if (inventoryFingerprint(doc) === before) {
+      return { lockPath: args.lockPath, lockDocument: args.document };
+    }
+  } else {
+    if (!hadInventory) {
+      return { lockPath: args.lockPath, lockDocument: args.document };
+    }
+    scrubMcpInventory({ document: args.document, all: true });
+  }
+
+  const lockPath = partitionAndWriteLockfiles(args.document, {
+    cwd: args.cwd,
+    sourcePath: args.lockPath,
+    sourceFilename: args.previousLockFilename,
+  }).sharedPath;
+  return { lockPath, lockDocument: args.document };
+}
+
+function inventoryFingerprint(doc: Record<string, unknown>): string {
+  return JSON.stringify([
+    doc.mcp_servers ?? null,
+    doc.mcp_configs ?? null,
+    doc.mcp_target_servers ?? null,
+    doc.mcp_config_provenance ?? null,
+  ]);
+}
+
+function hasMcpEntries(value: unknown): boolean {
+  if (Array.isArray(value)) return value.length > 0;
+  return Boolean(value) && typeof value === "object" && Object.keys(value as object).length > 0;
 }
 
 /** Discover + gate + materialize dependency package-root `bin/` (install-trust-bin). */

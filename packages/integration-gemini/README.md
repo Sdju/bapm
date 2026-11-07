@@ -35,13 +35,13 @@ MCP is **not** written by materialize — only via `configureMcp` → `.gemini/s
 
 `compile` defaults to `GEMINI.md`, includes **instruction** primitives only, and honors `write` for preview vs durable emit.
 
-## Object-map
+## Activation
+
+A `targets:` entry is not needed (it would also restrict deployment to the listed hosts).
 
 ```yaml
-targets:
-  gemini: "@b-apm/integration-gemini"
 active:
-  - gemini
+  - target: gemini
 ```
 
 Depends on `@b-apm/integration-api` (+ `smol-toml`) among dependencies — not `@b-apm/core`.

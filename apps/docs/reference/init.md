@@ -12,12 +12,12 @@ bapm init [options] [project-name]
 
 ## Параметры
 
-| Флаг           | Значение | Эффект                                              | Default |
-| -------------- | -------- | --------------------------------------------------- | ------- |
-| `-y`, `--yes`  | —        | Non-interactive defaults (`version: 0.1.0`)         | off     |
-| `--target`     | `<id>`   | Записать host target в манифест (например `cursor`) | —       |
-| `--help`, `-h` | —        | Показать help                                       | —       |
+| Флаг           | Значение | Эффект                                                     | Default |
+| -------------- | -------- | ---------------------------------------------------------- | ------- |
+| `-y`, `--yes`  | —        | Non-interactive defaults (`version: 0.1.0`)                | off     |
+| `--target`     | `<id>`   | Записать агента в `active` и `targets` (например `cursor`) | —       |
+| `--help`, `-h` | —        | Показать help                                              | —       |
 
 Позиционный `project-name` задаёт `name` (иначе — имя каталога).
 
-Сценарий: [US-01 Свежий install](/guide/situations/install-fresh). Манифест: [config](/guide/config-manifest).
+Пример результата: [Быстрый старт](/guide/quick-start#init). Манифест: [bapm.yml](/guide/config-manifest).

@@ -16,7 +16,7 @@
   },
   "optional_features": [],
   "limitations": [
-    "Multi-target adapters beyond cursor are out of scope",
+    "OpenAPM §8.5 per-target layout is not claimed; host layouts are defined by the @b-apm/integration-* packages",
     "Registry host / rg-001 not claimed (N/A)",
     "Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names",
     "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
@@ -1006,7 +1006,7 @@
       "section": "8.5",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     },
     {
       "id": "req-tg-003",
@@ -1014,7 +1014,7 @@
       "section": "8.5",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     },
     {
       "id": "req-tg-004",
@@ -1030,7 +1030,7 @@
       "section": "8.5",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     },
     {
       "id": "req-tg-006",
@@ -1038,7 +1038,7 @@
       "section": "8.5",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     },
     {
       "id": "req-tg-007",
@@ -1046,7 +1046,7 @@
       "section": "8.5",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     },
     {
       "id": "req-tg-008",
@@ -1054,7 +1054,7 @@
       "section": "8.5.3",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     },
     {
       "id": "req-tg-009",
@@ -1062,7 +1062,7 @@
       "section": "8.5.1",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     },
     {
       "id": "req-tg-010",
@@ -1070,7 +1070,7 @@
       "section": "8.5.4",
       "conformance_class": "consumer",
       "status": "skipped",
-      "rationale": "Out of scope for P3: multi-target adapters beyond cursor"
+      "rationale": "OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures"
     }
   ]
 }

@@ -1,27 +1,40 @@
-# Совместимость и граница OpenAPM
+# Совместимость с APM и OpenAPM
 
-Изолированная страница про APM / OpenAPM. Для повседневной работы с CLI она не нужна — начните с [быстрого старта](/guide/quick-start).
+Страница для тех, кто переходит с [microsoft/apm](https://github.com/microsoft/apm) или сверяет bapm со спецификацией OpenAPM. Для обычной работы она не нужна.
 
-- Runtime host — opt-in пакет (пример: **Cursor** / `@b-apm/integration-cursor`); для известных hosts object-map `targets:` не обязателен (canonical fallback). Map — override / custom ([hosts](/guide/supported-hosts)).
-- OpenAPM wire ≠ полная копия CLI [microsoft/apm](https://github.com/microsoft/apm).
-- Полный dump классов и limitations: корневой [`CONFORMANCE.md`](../../../CONFORMANCE.md).
+## Коротко
 
-## Три оси
+- **Файлы совместимы.** bapm читает `apm.yml` и `apm.lock.yaml` и продолжает писать в `apm.lock.yaml`, если проект уже им пользуется.
+- **Формат соответствует OpenAPM v0.1** в ролях Consumer, Producer и Governance: манифест, lock, политика, разрешение зависимостей. Требования OpenAPM к раскладке файлов по агентам (раздел 8.5) пока не проверяются: каждая интеграция раскладывает файлы по-своему. Роль Registry (сервер registry) не реализована: bapm только клиент.
+- **CLI — не копия `apm`.** Команды и флаги похожи, но не совпадают один к одному. Скрипты под `apm` могут потребовать правок.
 
-| Ось                   | Смысл                                         | Позиция bapm                                                                                                                                  |
-| --------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| **OpenAPM v0.1**      | Wire: манифест, lock, policy, resolve, deploy | Claimed в [`CONFORMANCE.md`](../../../CONFORMANCE.md): Consumer, Producer, Governance; Registry N/A                                           |
-| **APM product CLI**   | Поверхность microsoft/apm                     | **Не** drop-in клон APM CLI                                                                                                                   |
-| **Host integrations** | Куда материализуются пакеты                   | Opt-in `@b-apm/integration-*` (не бандл CLI); canonical fallback без `targets:`; map — override/custom. Claude/Codex также marketplace-output |
+Полный перечень с оговорками: [`CONFORMANCE.md`](https://github.com/Sdju/bapm/blob/master/CONFORMANCE.md) в репозитории.
 
-## Вне scope (по Limitations)
+## Чем bapm отличается от APM
 
-Подробности — в [`CONFORMANCE.md`](../../../CONFORMANCE.md) / [`CONFORMANCE.json`](../../../CONFORMANCE.json):
+Есть в bapm сверх формата APM:
 
-- Встроенная **multi-target** runtime matrix (несколько клиентов «из коробки» в одном прогоне) — не claimed; кастомные integrations через object-map — поддерживаются отдельно ([hosts](/guide/supported-hosts))
-- **registry host** (rg-001 N/A; только client)
-- Marketplace / portable plugin packaging — не универсальная совместимость со всеми клиентами
-- Interactive approve/deny, org deny gates — заявлены частично; полный APM approve UX и hooks/bin/canvas — soft (MCP-only)
-- OpenAPM **§10.3** заявлен; Auth-глубина и soft tar.gz-only — limitations
+- поддержка агентов вынесена в пакеты `@b-apm/integration-*`, можно подключить свою;
+- личные настройки в `bapm.local.yml`;
+- личные пакеты через источник `local` с отдельным `bapm.local.lock.yaml`;
+- пресеты (`presets` и `active`).
 
-Намеренно (не баги): ∩-pick vs APM first-wins, OpenAPM-strict YAML anchors, bapm-only source `local`, personal overlay `bapm.local.yml` (не часть OpenAPM wire и не `local:` source).
+Пока проще, чем в APM:
+
+- `compile` собирает один файл (`AGENTS.md` и аналоги) для одного агента за запуск, без распределения инструкций по каталогам через `applyTo`;
+- при установке для нескольких агентов сразу MCP получает только первый;
+- установка из registry экспериментальная (`BAPM_EXPERIMENTAL_REGISTRIES=1`).
+
+## Поведение, которое отличается намеренно
+
+- **Пересечение агентов.** Если и пакет, и ваша запись зависимости ограничивают список агентов, bapm берёт пересечение, а APM — первое найденное.
+- **YAML-якоря** обрабатываются строго по OpenAPM.
+- **Порядок записей в lock.** bapm сортирует зависимости по `repo_url` (как в OpenAPM), а APM — по глубине в дереве. Lock, переписанный bapm, может отличаться от записанного `apm` порядком записей.
+- **`local` и `bapm.local.yml`** — расширения bapm, их нет ни в APM, ни в OpenAPM. Для переносимых манифестов используйте `path:`.
+
+## Что не заявлено
+
+- раскладка файлов по правилам OpenAPM 8.5;
+- работа bapm в роли registry-сервера;
+- совместимость маркетплейсов и Agent Plugins со всеми клиентами;
+- полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP и `bin/` зависимостей; hooks пакетов не контролируются.

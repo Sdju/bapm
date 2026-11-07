@@ -8,7 +8,7 @@
 bapm publish [options]
 ```
 
-Experimental PUT flat registry zip. Требует `BAPM_EXPERIMENTAL_REGISTRIES=1`. Для защищённых registry — `BAPM_REGISTRY_TOKEN` (Bearer). Layout архива: `apm.yml` + `.apm/` в корне zip (отдельно от `bapm pack`). Неизвестные флаги отвергаются.
+Experimental PUT flat registry zip. Требует `BAPM_EXPERIMENTAL_REGISTRIES=1`. Для защищённых registry — токен (Bearer), см. ниже. Layout архива: `apm.yml` + `.apm/` в корне zip (отдельно от `bapm pack`). Неизвестные флаги отвергаются.
 
 Тот же корневой `.bapmignore`, что и у [pack](/reference/pack): может опустить optional docs (`README.md`, `CHANGELOG.md`, …) и отдельные файлы под `.apm/`. Wire `apm.yml` всегда пишется из base-манифеста. Если после ignore в `.apm/` не осталось файлов — publish fail closed. `--zip` загружает готовый archive **без** повторного применения `.bapmignore`. `.gitignore` не используется как fallback.
 
@@ -21,5 +21,13 @@ Experimental PUT flat registry zip. Требует `BAPM_EXPERIMENTAL_REGISTRIES
 | `--help`, `-h` | —        | Показать help                           | —       |
 
 Архив **не** включает `bapm.local.yml` и `bapm.local.lock.yaml` (как pack).
+
+## Что нужно перед публикацией
+
+- `name` в манифесте в форме `owner/repo`;
+- `registries.default` — registry, куда публиковать ([Registries](/guide/manifest-registries));
+- непустой каталог `.apm/`;
+- `BAPM_EXPERIMENTAL_REGISTRIES=1`;
+- для закрытого registry — токен в `BAPM_REGISTRY_<NAME>_TOKEN` (имя registry в верхнем регистре) или общий `BAPM_REGISTRY_TOKEN`.
 
 См. также: [pack](/reference/pack) (`.bapmignore`, producer zip / marketplace.json), [lock-файл](/guide/lockfile), карта [команд](/guide/commands).

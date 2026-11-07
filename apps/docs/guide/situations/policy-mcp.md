@@ -1,60 +1,75 @@
-# US-04: Policy блокирует MCP
+# MCP-сервер не появился
 
-## Когда …
+## Ситуация
 
-Install/материализация MCP не пишет сервер в `.cursor/mcp.json` (unapproved / deny / project policy), либо нужно явно разрешить или запретить пакет локально.
+MCP-сервер есть в зависимостях, `bapm install` прошёл, но в `.cursor/mcp.json` (или конфиге вашего агента) сервера нет. Или install падает с сообщением про MCP.
 
-### Цель
+## Возможные причины
 
-Понять effective policy, выдать user-local allow/deny и повторить install, не правя project yml ради grants.
+Проверьте по порядку.
 
-### Шаги
+### 1. Сервер пришёл из зависимости, а не из вашего манифеста
 
-1. Посмотрите discovery / enforcement (read-only):
+По умолчанию bapm ставит только MCP-серверы, объявленные прямо в `dependencies.mcp` вашего `bapm.yml`. Серверы, которые приносят пакеты, молча пропускаются: пакет не должен без вашего ведома запускать процессы на вашей машине.
+
+Варианты, от простого к точному:
+
+- перенесите описание сервера в свой `dependencies.mcp`;
+- разовый запуск с доверием ко всем пакетам: `bapm install --trust-transitive-mcp`;
+- разрешите конкретный пакет для всей команды в `bapm.yml`:
+
+  ```yaml
+  executables:
+    allow:
+      acme/mcp-tools:
+        mcp: true
+  ```
+
+- или только для себя: `bapm approve acme/mcp-tools` (запись в `~/.bapm/config.json`).
+
+::: warning Разрешения включаются для всех пакетов сразу
+Как только появляется хоть одно разрешение — `executables` в `bapm.yml` или первый `bapm approve` / `bapm deny` на машине, — bapm начинает требовать разрешение для **каждого** пакета с MCP. Пока хотя бы один такой пакет не разрешён, install падает с `MCP withheld: unapproved dependency executables`. Разрешите или запретите каждый пакет из сообщения.
+:::
+
+### 2. Сервер запрещён
+
+Запрет может прийти из трёх мест, и он всегда сильнее разрешения:
+
+- `bapm deny <пакет>` у вас на машине;
+- `executables.deny` в `bapm.yml`;
+- файл политики `apm-policy.yml` / `bapm-policy.yml` в репозитории или политика организации.
+
+Посмотрите, какая политика действует:
 
 ```bash
 bapm policy status
-# JSON:
-bapm policy status --json
-# non-zero, если нет usable policy:
-bapm policy status --check
 ```
 
-2. Если MCP из зависимости не попал в `.cursor/mcp.json` из‑за отсутствия allow — одобрите **имя пакета** в user store:
+Файл политики умеет только запрещать: `executables.deny` со списком пакетов или `executables.deny_all: true`. Секцию `mcp:` bapm игнорирует, `executables.allow` в файле политики — ошибка. На MCP-серверы из вашего собственного `dependencies.mcp` политика не действует.
 
-```bash
-bapm approve <package-name>
-```
+`bapm deny` не убирает сервер, который уже записан в конфиг агента: удалите его оттуда вручную.
 
-Запись идёт в `~/.bapm/config.json` (`executables.allow`), **не** в `bapm.yml` / `apm.yml`.
+### 3. Выбран другой агент
 
-3. Чтобы явно запретить пакет у себя:
+MCP пишется в конфиг того агента, для которого шёл install. Проверьте вывод (`bapm: installed for cursor`) и при необходимости укажите `--target`. Если в `active` перечислено несколько агентов, MCP в текущей версии получает только первый.
 
-```bash
-bapm deny <package-name>
-```
+### 4. Агент не поддерживает MCP или пишет его в другое место
 
-4. Повторите install с Cursor:
+Copilot и Windsurf пишут MCP в домашний каталог (`~/.copilot/`, `~/.codeium/windsurf/`), Grok Build MCP не поддерживает. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента существует к этому моменту. Если пакеты с skills в том же install его создали, MCP запишется; если ставятся одни MCP-серверы, они молча пропускаются. См. [таблицу агентов](/guide/supported-hosts#layout).
 
-```bash
-bapm install --target cursor
-```
+### 5. У HTTP-сервера нет заголовков
 
-5. Project policy-файл (`apm-policy.yml` / `bapm-policy.yml` или `--policy <path>`) может задавать `executables.allow` на уровне репозитория. Escape hatch на install: `--no-policy` или `BAPM_POLICY_DISABLE=1` (ослабляет checks — только осознанно).
+`headers` HTTP-серверов в текущей версии в конфиг агента не передаются. Сервер появится, но без авторизации. Добавьте заголовок в конфиг агента вручную.
 
-Транзитивный MCP по умолчанию не деплоится: нужен `--trust-transitive-mcp` на [install](/reference/install).
+## Если install падает
 
-### Ожидаемый результат
+| Сообщение                                         | Что делать                                                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `MCP withheld: unapproved dependency executables` | Разрешите (`approve` или `executables.allow` в `bapm.yml`) либо запретите (`deny`) каждый пакет с MCP                           |
+| `MCP env bake failed: unresolved placeholder`     | Задайте переменную окружения или `env` в `bapm.local.yml`. [Подробнее](/guide/manifest-dependencies#mcp-и-переменные-окружения) |
+| `Policy requires a non-empty string name`         | В файле политики есть `executables.allow` или нет `name`. Политика только запрещает; разрешения перенесите в `bapm.yml`         |
+| Другая ошибка политики                            | `bapm policy status`, затем правка файла политики                                                                               |
 
-- `policy status` сообщает source / outcome без мутаций манифеста и lock.
-- `approve` / `deny` меняют только `~/.bapm/config.json`.
-- После allow + install eligible MCP появляется в `.cursor/mcp.json`; при deny / withhold — записи нет и есть fail-closed сигнал в выводе.
+Отключить проверку политики для одного запуска можно флагом `--no-policy` или переменной `BAPM_POLICY_DISABLE=1`. Это отключает и запреты организации, поэтому используйте только для диагностики.
 
-Справка: [policy / approve / deny](/reference/policy).
-
-### Если не сработало
-
-- `approve` / `deny` без имени → help и ошибка; передайте `<package-name>`.
-- Approve сделали, но MCP всё ещё нет → проверьте, что dep в `dependencies.mcp` (прямые) или нужен `--trust-transitive-mcp`; что активен `--target cursor`; что имя пакета совпадает с grant.
-- Ожидали, что approve попадёт в git → нет: grants user-local; для команды используйте project policy-файл в репозитории.
-- `policy` без `status` → usage и ошибка; нужна подкоманда `status`.
+Справка: [policy, approve, deny](/reference/policy) · [install](/reference/install).

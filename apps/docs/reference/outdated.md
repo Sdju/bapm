@@ -25,4 +25,4 @@ Report-only: не меняет lockfile, modules cache и project files. Exit `0
 - semver constraints — highest satisfying tag
 - полный 40-hex SHA — сравнение с latest annotated semver tag (только отчёт; манифест не переписывается)
 
-Чтобы переразрешить и записать пины: [update](/reference/update). Сценарий: [US-03](/guide/situations/update-deps).
+Чтобы переразрешить и записать пины: [update](/reference/update). Сценарий: [Обновить зависимости](/guide/situations/update-deps).

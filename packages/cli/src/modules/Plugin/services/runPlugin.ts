@@ -37,7 +37,7 @@ Usage:
 
 Options:
   -y, --yes           Non-interactive defaults (version 0.1.0); allow overwrite
-  --target <id>       Record host target (e.g. cursor)
+  --target <id>       Write target: <id> (limits deployment to that agent; not with --agent-plugins)
   --agent-plugins     Create an Agent Plugins v1 portable root (no bapm.yml)
   --skills            Include a minimal portable skills/example/SKILL.md layout
   -v, --verbose       Extra logging (optional)

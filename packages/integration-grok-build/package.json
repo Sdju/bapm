@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-grok-build",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Grok Build runtime integration for bapm",
   "keywords": [
     "b-apm",

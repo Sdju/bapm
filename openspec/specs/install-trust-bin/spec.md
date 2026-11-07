@@ -70,7 +70,7 @@ When install is interactive (none of the non-interactive signals above) and neit
 
 ### Requirement: Shared ExecutableTrust ladder for bin type
 
-Bin consent MUST evaluate package approval through the same layered deny-wins resolver used for MCP (`resolveExecutableTrust` / classify twin), with `executableType` `bin`. Invocation flags MUST apply only after that ladder: deny/withhold from the ladder wins; `--trust-bin` MUST NOT invent a parallel allow store; `--no-trust-bin` MUST force skip when the ladder would allow. Documentation MUST NOT claim a second bin-only policy noun besides `executables`.
+Bin consent MUST evaluate package approval through the same layered deny-wins resolver used for MCP, with executable type `bin`. Invocation flags MUST apply only after that ladder: deny/withhold from the ladder wins; `--trust-bin` MUST NOT invent a parallel allow store; `--no-trust-bin` MUST force skip when the ladder would allow. Bin grants MUST be expressed under the same `executables` manifest/user-store key as MCP grants.
 
 #### Scenario: Project bin allow satisfies non-interactive without flag
 

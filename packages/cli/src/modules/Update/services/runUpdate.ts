@@ -110,7 +110,7 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
 }
 
 export function formatUpdateHelp(deps: LifecycleCliDeps): string {
-  return `${deps.name} update — Re-resolve dependency pins (rs-011/rs-012)
+  return `${deps.name} update — Re-resolve dependency pins
 
 Usage:
   bapm update [packages...] [options]

@@ -6,16 +6,16 @@ Antigravity CLI (`agy`) project-scope runtime for bapm.
 
 ## Activation (explicit-only)
 
-| Mode                                | Condition                        | Notes                                                                                   |
-| ----------------------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
-| **Auto-detect**                     | Never                            | `detect` always returns `false` — shared `.agents/` is not an Antigravity-unique signal |
-| **Forced** (`--target antigravity`) | Explicit CLI/manifest object-map | MAY `mkdir` `.agents/` for rules/skills/hooks                                           |
+| Mode                                | Condition                       | Notes                                                                                   |
+| ----------------------------------- | ------------------------------- | --------------------------------------------------------------------------------------- |
+| **Auto-detect**                     | Never                           | `detect` always returns `false` — shared `.agents/` is not an Antigravity-unique signal |
+| **Forced** (`--target antigravity`) | `--target` or manifest `active` | MAY `mkdir` `.agents/` for rules/skills/hooks                                           |
 
-Not part of `--target all` alone (same APM model as `agent-skills`). Load via:
+Never auto-detected (same model as `agent-skills`). Select it explicitly; a `targets:` entry is not needed and would also restrict deployment to the listed hosts:
 
 ```yaml
-targets:
-  antigravity: "@b-apm/integration-antigravity"
+active:
+  target: antigravity
 ```
 
 ## Layout

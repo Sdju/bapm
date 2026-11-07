@@ -78,6 +78,10 @@ export type ResolvedNode = {
   /** Display / lock repo_url (host/path form without scheme when git). */
   repo_url?: string;
   path?: string;
+  /** Canonical POSIX virtual subpath inside a git package (APM monorepo form). */
+  virtualPath?: string;
+  /** Original clone URL (preserves local git sources that lock repo_url cannot). */
+  gitUrl?: string;
   resolved_commit?: string;
   /** Pin identity for lock emit / outdated tip (literal ref or picked tag). */
   resolved_ref?: string;

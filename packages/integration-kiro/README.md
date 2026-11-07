@@ -10,11 +10,11 @@ Kiro IDE/CLI **runtime** host for bapm (project-scope `.kiro/` primitives + tran
 npm i -D @b-apm/integration-kiro
 ```
 
+A `targets:` entry is not needed (it would also restrict deployment to the listed hosts).
+
 ```yaml
-targets:
-  kiro: "@b-apm/integration-kiro"
 active:
-  - kiro
+  - target: kiro
 ```
 
 ```bash

@@ -2,6 +2,7 @@
  * Resolve/lock test helpers — temp projects, fake ports, flexible result accessors.
  */
 import { asText } from "../asText.ts";
+import { execFileSync } from "node:child_process";
 import {
   mkdirSync,
   mkdtempSync,
@@ -74,6 +75,61 @@ export function writeText(path: string, contents: string): void {
 
 export function copyMiniMonorepo(dest: string): void {
   cpSync(fixturePath("mini-monorepo"), dest, { recursive: true });
+}
+
+export function git(repo: string, ...args: string[]): string {
+  return execFileSync("git", args, {
+    cwd: repo,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      GIT_AUTHOR_NAME: "t",
+      GIT_AUTHOR_EMAIL: "t@example.com",
+      GIT_COMMITTER_NAME: "t",
+      GIT_COMMITTER_EMAIL: "t@example.com",
+    },
+  }).trim();
+}
+
+/**
+ * Real local git repo in APM virtual-package shape:
+ * root manifest + root-only skill, and packages/leaf with its own manifest/skill.
+ * `leafDependency` adds a relative path dep proving children resolve from leaf.
+ */
+export function createVirtualGitRepo(root: string, options?: { leafDependency?: string }): string {
+  const repo = join(root, "remote-repo");
+  ensureDir(join(repo, "packages", "leaf"));
+  writeText(join(repo, "apm.yml"), `name: repo-root\nversion: 0.0.1\ndependencies:\n  apm: []\n`);
+  writeText(
+    join(repo, "skills", "root-only", "SKILL.md"),
+    "---\nname: root-only\n---\n# Root only\n",
+  );
+  const leafDeps = options?.leafDependency
+    ? `  apm:\n    - path: ./${options.leafDependency}\n`
+    : `  apm: []\n`;
+  writeText(
+    join(repo, "packages", "leaf", "apm.yml"),
+    `name: leaf\nversion: 0.0.1\ndependencies:\n${leafDeps}`,
+  );
+  writeText(
+    join(repo, "packages", "leaf", "skills", "leaf", "SKILL.md"),
+    "---\nname: leaf\n---\n# Leaf\n",
+  );
+  if (options?.leafDependency) {
+    writeText(
+      join(repo, "packages", "leaf", options.leafDependency, "apm.yml"),
+      `name: child\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+    );
+    writeText(
+      join(repo, "packages", "leaf", options.leafDependency, "skills", "child", "SKILL.md"),
+      "---\nname: child\n---\n# Child\n",
+    );
+  }
+  git(repo, "init", "-q");
+  git(repo, "add", "-A");
+  git(repo, "commit", "-qm", "init");
+  return repo;
 }
 
 /** 40-hex fake commit for fixture pins. */
