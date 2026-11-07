@@ -12,7 +12,7 @@ feod-profile: 1
 | multiapp                            | no                                                   |
 | framework                           | none (TypeScript CLI + library)                      |
 | srcRoot / alias                     | packages/cli/src + packages/core/src / @             |
-| layers                              | app, pages, modules, common, globals                 |
+| layers                              | app, commands, modules, common, globals              |
 | pages                               | omit (commands layer is CLI dispatch, not URL pages) |
 | modulePages                         | no                                                   |
 | fileBasedRouting                    | no                                                   |
@@ -38,3 +38,5 @@ feod-profile: 1
   are excluded from FEOD inventory.
 - FEOD lint runs via `node scripts/check-feod.mjs` with the Oxlint bundled by Vite+; `pnpm check`
   and `pnpm ready` include it.
+- The `feod` skill is installed from `Sdju/feod` (`skills/feod`) through the `bapm.yml` dependency,
+  not vendored under `.apm/`.
