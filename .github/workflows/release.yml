@@ -101,6 +101,26 @@ jobs:
           done
           ls -la release-assets
 
+      - name: Assert packed manifests are publishable
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(release-assets/*.tgz)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No release assets were packed"
+            exit 1
+          fi
+          failed=0
+          for f in "${files[@]}"; do
+            tar -xOf "$f" package/package.json > /tmp/packed-package.json
+            if grep -Eq '"(workspace|catalog):' /tmp/packed-package.json; then
+              echo "::error file=${f}::packed manifest still contains workspace:/catalog: specifiers"
+              cat /tmp/packed-package.json
+              failed=1
+            fi
+          done
+          exit "$failed"
+
       - name: Publish to npm (OIDC trusted publishing)
         run: |
           set -euo pipefail
