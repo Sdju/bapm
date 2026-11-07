@@ -17,7 +17,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 
 | Class | Posture | Notes |
 |-------|---------|-------|
-| Consumer | **claimed** | Primary claim (cursor deploy matrix; waivers below) |
+| Consumer | **claimed** | Primary claim (per-host @b-apm/integration-* packages; waivers below) |
 | Producer | **claimed** | init/pack/pr-004 surface |
 | Governance | **claimed** | Ordered providers `local` then `github-owner-dotgithub`; extends resolve/merge + host-class pin |
 | Registry | **n/a** | No registry host; req-rg-001 not claimed |
@@ -33,7 +33,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 
 ## Limitations / non-conformance
 
-- Multi-target adapters beyond cursor are out of scope
+- OpenAPM §8.5 per-target layout is not claimed; host layouts are defined by the @b-apm/integration-* packages
 - Registry host / rg-001 not claimed (N/A)
 - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
@@ -173,26 +173,26 @@ entries byte-exactly (fold at match time only).
 | req-sc-012 | MUST | 10.14 | consumer | active | packages/core/tests/executable-trust/require-presence-withheld.test.ts |
 | req-sc-013 | MUST | 10.3 | consumer | active | packages/core/tests/auth/overlap-ambient.test.ts |
 | req-tg-001 | MUST | 8.4 | consumer | active | packages/core/tests/install/target-materialize.test.ts; packages/core/tests/install/cursor-e2e.test.ts |
-| req-tg-002 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
-| req-tg-003 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
+| req-tg-002 | MUST | 8.5 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
+| req-tg-003 | MUST | 8.5 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
 | req-tg-004 | MUST | 4.2.1 | consumer | active | packages/core/tests/manifest/validate.test.ts |
-| req-tg-005 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
-| req-tg-006 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
-| req-tg-007 | MUST | 8.5 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
-| req-tg-008 | MUST | 8.5.3 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
-| req-tg-009 | MUST | 8.5.1 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
-| req-tg-010 | MUST | 8.5.4 | consumer | skipped |  — Out of scope for P3: multi-target adapters beyond cursor |
+| req-tg-005 | MUST | 8.5 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
+| req-tg-006 | MUST | 8.5 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
+| req-tg-007 | MUST | 8.5 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
+| req-tg-008 | MUST | 8.5.3 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
+| req-tg-009 | MUST | 8.5.1 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
+| req-tg-010 | MUST | 8.5.4 | consumer | skipped |  — OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures |
 
 ## Waivers
 
 - **req-pl-017** (n/a): ADO org-policy discovery / multi-candidate cascades are out of scope (see scope_out)
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
 - **req-sc-004** (skipped): Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)
-- **req-tg-002** (skipped): Out of scope for P3: multi-target adapters beyond cursor
-- **req-tg-003** (skipped): Out of scope for P3: multi-target adapters beyond cursor
-- **req-tg-005** (skipped): Out of scope for P3: multi-target adapters beyond cursor
-- **req-tg-006** (skipped): Out of scope for P3: multi-target adapters beyond cursor
-- **req-tg-007** (skipped): Out of scope for P3: multi-target adapters beyond cursor
-- **req-tg-008** (skipped): Out of scope for P3: multi-target adapters beyond cursor
-- **req-tg-009** (skipped): Out of scope for P3: multi-target adapters beyond cursor
-- **req-tg-010** (skipped): Out of scope for P3: multi-target adapters beyond cursor
+- **req-tg-002** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
+- **req-tg-003** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
+- **req-tg-005** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
+- **req-tg-006** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
+- **req-tg-007** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
+- **req-tg-008** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
+- **req-tg-009** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
+- **req-tg-010** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures
