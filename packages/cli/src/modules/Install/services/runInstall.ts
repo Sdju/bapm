@@ -13,6 +13,7 @@ import type { InstallDeps, InstallOptions, InstallResult } from "../types/instal
 import { registerManifestIntegrationsFromCwd } from "@/app/integrations/loadManifestIntegrations.ts";
 import { createCliIntegrationRegistry } from "@/app/integrations/registry.ts";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
+import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -575,14 +576,13 @@ async function runCoreInstall(
     }
     return { ok: true };
   } catch (error) {
-    const raw =
-      error instanceof Error
-        ? error.message
-        : typeof error === "object" && error !== null && "message" in error
-          ? String((error as { message: unknown }).message)
-          : String(error);
+    const raw = formatErrorMessage(error);
     const message = enrichUnregisteredTargetMessage(raw, cwd);
-    console.error(`${deps.name}: ${message}`);
+    const rendered = formatErrorCauseChain(error, {
+      verbose: parsed.verbose,
+      message,
+    });
+    console.error(`${deps.name}: ${rendered}`);
     return { ok: false, message };
   }
 }
