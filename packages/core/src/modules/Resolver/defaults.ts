@@ -96,7 +96,9 @@ export function createDefaultGitRemote(): GitRemote {
 export function createDefaultDownloader(): Downloader {
   return {
     async download(args) {
-      if (args.path) {
+      // `path` is only a local source when there is no git source. With a
+      // repoUrl it is the APM virtual subpath inside the clone.
+      if (args.path && !args.repoUrl) {
         if (!existsSync(args.path)) {
           throw new Error(`Local path not found: ${args.path}`);
         }

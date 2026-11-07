@@ -23,6 +23,12 @@ export type DiscoverPrimitivesOptions = {
   cwd?: string;
   /** Modules root; defaults to `<cwd>/apm_modules`. */
   modulesDir?: string;
+  /**
+   * Exact resolver package roots to scan. When set, discovery does not walk the
+   * modules tree, so git virtual-path packages are read from their subdirectory
+   * instead of the clone root.
+   */
+  packageRoots?: string[];
   /** Declaration order of dependency package names (pr-003). */
   declarationOrder?: string[];
 };

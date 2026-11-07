@@ -1,5 +1,5 @@
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { loadManifest, withEffectiveDirectDeps } from "@/modules/Manifest";
 import { loadAgentPluginManifest } from "@/modules/AgentPlugins";
 import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
@@ -76,6 +76,8 @@ type EdgeRecord = {
   resolved_at?: string;
   name: string;
   path?: string;
+  virtualPath?: string;
+  gitUrl?: string;
   packageRoot?: string;
   artifactFormat?: "openapm" | "agent-plugin";
   repo_url?: string;
@@ -349,6 +351,9 @@ function nodeToLockRow(n: ResolvedNode): Record<string, unknown> {
   if (n.resolved_commit) row.resolved_commit = n.resolved_commit;
   if (n.version) row.version = n.version;
   if (n.path) row.path = n.path;
+  if (n.kind !== "local" && n.kind !== "registry" && n.virtualPath) {
+    row.virtual_path = n.virtualPath;
+  }
   if (n.constraint) row.constraint = n.constraint;
   if (n.resolved_tag) row.resolved_tag = n.resolved_tag;
   if (n.resolved_url) row.resolved_url = n.resolved_url;
@@ -570,6 +575,8 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     resolved_by: e.chain.join("->"),
     repo_url: e.repo_url,
     path: e.path,
+    virtualPath: e.virtualPath,
+    gitUrl: e.gitUrl,
     resolved_commit: e.resolved_commit,
     resolved_ref: resolvedRefForEdge(e),
     constraint: e.constraint,
@@ -685,6 +692,51 @@ async function resolveLocal(
   }
 }
 
+function isDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Canonical POSIX virtual subpath inside a git clone. Backslashes are manifest
+ * separators; `.` segments are ignored. Absolute paths, home forms, and `..`
+ * escapes are rejected before any filesystem operation.
+ */
+function normalizeGitVirtualPath(raw: string, repoLabel: string): string | undefined {
+  const pathSyntax = raw.trim().replaceAll("\\", "/");
+  const invalid = (reason: string) =>
+    new ResolverError(
+      "RESOLVE_VIRTUAL_PATH_INVALID",
+      `Invalid virtual path "${raw}" for git repository ${repoLabel}: ${reason}`,
+      { details: { repoUrl: repoLabel, virtualPath: raw } },
+    );
+
+  if (pathSyntax === "" || pathSyntax === ".") return undefined;
+  if (
+    pathSyntax.startsWith("/") ||
+    /^[A-Za-z]:\//.test(pathSyntax) ||
+    pathSyntax === "~" ||
+    pathSyntax.startsWith("~/")
+  ) {
+    throw invalid("must be a relative path inside the repository");
+  }
+
+  const segments: string[] = [];
+  for (const segment of pathSyntax.split("/")) {
+    if (segment === "" || segment === ".") continue;
+    if (segment === "..") {
+      if (segments.length === 0) throw invalid("path escapes the repository root");
+      segments.pop();
+      continue;
+    }
+    segments.push(segment);
+  }
+  return segments.length > 0 ? segments.join("/") : undefined;
+}
+
 async function resolveGit(
   item: QueueItem,
   classified: ClassifiedDependency,
@@ -706,6 +758,8 @@ async function resolveGit(
   const gitUrl = classified.git!;
   const identity = normalizeRepoIdentity(gitUrl);
   const lockUrl = toLockRepoUrl(gitUrl);
+  const virtualPath =
+    classified.path === undefined ? undefined : normalizeGitVirtualPath(classified.path, lockUrl);
   const warm = ctx.warmByIdentity.get(identity);
   const reResolve = ctx.updateRefs && ctx.shouldUpdate;
 
@@ -778,16 +832,28 @@ async function resolveGit(
     });
   }
 
+  // A git virtual package is the subdirectory inside the clone; the clone dest
+  // itself remains the modules cache entry shared by all virtual paths.
+  const packageRoot = virtualPath ? join(dest, ...virtualPath.split("/")) : dest;
+  if (virtualPath && !isDirectory(packageRoot)) {
+    throw new ResolverError(
+      "RESOLVE_FAILED",
+      `Virtual path "${virtualPath}" not found in git repository ${lockUrl}: ` +
+        `expected a directory at ${packageRoot}`,
+      { details: { repoUrl: lockUrl, virtualPath, packageRoot, dest } },
+    );
+  }
+
   let childName = warm?.name ?? nameHint;
   let childDeps: DependencyEntry[] = [];
   let artifactFormat: EdgeRecord["artifactFormat"] = "openapm";
   try {
-    const child = loadManifest({ cwd: dest });
+    const child = loadManifest({ cwd: packageRoot });
     childName = child.document.name || childName;
     childDeps = listApmDeps(child.document.dependencies);
   } catch {
     try {
-      const portable = loadAgentPluginManifest({ root: dest });
+      const portable = loadAgentPluginManifest({ root: packageRoot });
       childName = portable.manifest.name;
       artifactFormat = "agent-plugin";
     } catch {
@@ -809,7 +875,9 @@ async function resolveGit(
     resolved_tag,
     resolved_at,
     name: childName,
-    packageRoot: dest,
+    virtualPath,
+    gitUrl,
+    packageRoot,
     artifactFormat,
     repo_url: lockUrl,
     marketplaceProvenance: item.marketplaceProvenance,
@@ -820,8 +888,8 @@ async function resolveGit(
     ctx.visitOrder.push(childName);
   }
 
-  // Explore all edges; expand children once per (identity, constraint).
-  const expandKey = `${identity}::${constraint ?? classified.ref ?? ""}`;
+  // Explore all edges; expand children once per (identity, virtual path, constraint).
+  const expandKey = `${identity}::${virtualPath ?? ""}::${constraint ?? classified.ref ?? ""}`;
   if (ctx.expanded.has(expandKey)) return;
   ctx.expanded.add(expandKey);
 
@@ -832,7 +900,8 @@ async function resolveGit(
       depth: item.depth + 1,
       chain: finalChain,
       ancestorIdentities: nextAncestors,
-      fromDir: dest,
+      // Relative child paths resolve inside the virtual package, not repo root.
+      fromDir: packageRoot,
       parentName: childName,
       shouldUpdate: ctx.shouldUpdate,
     });
@@ -916,7 +985,10 @@ async function applyIntersectionPick(
           resolved_tag: winnerTag,
           resolved_at: winnerTag,
           version: winnerTag.replace(/^v/, ""),
+          virtualPath: tightEdge.virtualPath,
+          gitUrl: tightEdge.gitUrl,
           packageRoot: tightEdge.packageRoot,
+          artifactFormat: tightEdge.artifactFormat,
         });
         continue;
       }

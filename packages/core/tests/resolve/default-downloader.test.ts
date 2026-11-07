@@ -198,6 +198,23 @@ describe("default downloader idempotency", () => {
     );
   });
 
+  test("repoUrl plus path clones the repo instead of treating path as local", async () => {
+    const { repoUrl, second } = makeRepo();
+    const dest = join(root!, "apm_modules", "pkg", "virtual");
+    const downloader = createDefaultDownloader();
+
+    await downloader.download({
+      repoUrl,
+      path: join(root!, "not-a-local-source"),
+      commit: second,
+      dest,
+      identity: "pkg",
+    });
+
+    expect(readFileSync(join(dest, "file.txt"), "utf8")).toBe("v2\n");
+    expect(git(dest, "rev-parse", "HEAD")).toBe(second);
+  });
+
   test("failed clone leaves a pre-existing dest intact", async () => {
     const { repoUrl, first } = makeRepo();
     const dest = join(root!, "apm_modules", "pkg", "cached");

@@ -256,7 +256,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       const packages = nodes
         .filter((n) => n.kind === "git-literal" || n.kind === "git-semver" || n.kind === "local")
         .map((n) => ({
-          repoUrl: n.kind === "local" ? undefined : restoreGitUrl(n.repo_url),
+          repoUrl: n.kind === "local" ? undefined : (n.gitUrl ?? restoreGitUrl(n.repo_url)),
           path: n.path,
           commit: n.resolved_commit,
           identity: n.identity,
@@ -346,6 +346,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     : discoverPrimitives({
         cwd,
         modulesDir: join(cwd, APM_MODULES_DIR),
+        packageRoots: nodes
+          .map((node) => node.packageRoot)
+          .filter((root): root is string => typeof root === "string" && root.length > 0),
         declarationOrder,
       });
   const raw = nativeRaw.filter(

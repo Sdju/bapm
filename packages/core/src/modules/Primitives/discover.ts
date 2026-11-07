@@ -21,16 +21,39 @@ export function discoverPrimitives(options: DiscoverPrimitivesOptions = {}): Att
   // Local project primitives
   scanPackageRoot(cwd, "local", undefined, found);
 
-  // Dependency packages under modules dir
-  if (existsSync(modulesRoot)) {
-    for (const pkg of findPackageRoots(modulesRoot)) {
-      const name = readPackageName(pkg) ?? basename(pkg);
-      const source: PrimitiveSource = `dependency:${name}`;
-      scanPackageRoot(pkg, source, name, found);
-    }
+  // Dependency packages: explicit resolver roots when provided (git virtual
+  // paths), otherwise the legacy modules-tree walk.
+  const packageRoots =
+    options.packageRoots === undefined
+      ? existsSync(modulesRoot)
+        ? findPackageRoots(modulesRoot)
+        : []
+      : uniquePackageRoots(cwd, options.packageRoots);
+  for (const pkg of packageRoots) {
+    const name = readPackageName(pkg) ?? basename(pkg);
+    const source: PrimitiveSource = `dependency:${name}`;
+    scanPackageRoot(pkg, source, name, found);
   }
 
   return found;
+}
+
+function uniquePackageRoots(cwd: string, roots: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const root of roots) {
+    if (!root) continue;
+    const abs = resolve(cwd, root);
+    if (seen.has(abs)) continue;
+    try {
+      if (!statSync(abs).isDirectory()) continue;
+    } catch {
+      continue;
+    }
+    seen.add(abs);
+    out.push(abs);
+  }
+  return out;
 }
 
 function scanPackageRoot(
