@@ -101,19 +101,37 @@ jobs:
           done
           ls -la release-assets
 
+      - name: Assert packed manifests are publishable
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(release-assets/*.tgz)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No release assets were packed"
+            exit 1
+          fi
+          failed=0
+          for f in "${files[@]}"; do
+            tar -xOf "$f" package/package.json > /tmp/packed-package.json
+            if grep -Eq '"(workspace|catalog):' /tmp/packed-package.json; then
+              echo "::error file=${f}::packed manifest still contains workspace:/catalog: specifiers"
+              cat /tmp/packed-package.json
+              failed=1
+            fi
+          done
+          exit "$failed"
+
       - name: Publish to npm (OIDC trusted publishing)
         run: |
           set -euo pipefail
           # Do not export NODE_AUTH_TOKEN / NPM_TOKEN — OIDC only.
           unset NODE_AUTH_TOKEN NPM_TOKEN || true
-          npm config set registry https://registry.npmjs.org/
-          for dir in packages/*/; do
-            if node -p "Boolean(require('./${dir}package.json').private)" | grep -qx true; then
-              echo "skip private ${dir}"
-              continue
-            fi
-            (cd "$dir" && npm publish --access public --provenance)
-          done
+          # pnpm rewrites workspace:* and catalog: specifiers in the packed
+          # manifest; npm publish would ship them verbatim and break installs.
+          pnpm -r --filter './packages/**' \
+            publish \
+            --access public \
+            --no-git-checks
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
