@@ -54,9 +54,9 @@ Notes:
   Frozen re-verifies lock pins, deployed file hashes and package tree hashes.
   When the CI environment variable is truthy (not "", "0", or "false"), install
   defaults to frozen unless --no-frozen is passed.
-  Non-interactive installs (CI, BAPM_NON_INTERACTIVE, non-TTY, or frozen) do not deploy
-  dependency bin/ by default without --trust-bin or a persisted executables.allow bin grant;
-  interactive installs deploy it with a warning.
+  All installs (interactive and non-interactive) skip dependency bin/ unless
+  --trust-bin or a persisted executables.allow bin grant applies. An interactive
+  terminal is not implicit consent; pass --trust-bin or approve bin persistently.
   --trust-bin / --no-trust-bin are per-invocation consent and cannot override org/project deny.
   A local .zip path is installed as a pack archive: members are added to the current directory,
   nothing else is removed, and existing files with different content are never overwritten.

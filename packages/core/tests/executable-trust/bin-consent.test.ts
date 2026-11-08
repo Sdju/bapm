@@ -12,16 +12,87 @@ function decide(partial: ResolveBinDeployConsentOptions) {
 }
 
 describe("resolveBinDeployConsent", () => {
-  test("interactive default deploys with warn when ladder skip", () => {
+  test("interactive default withholds without grant (TTY is not consent)", () => {
     const d = decide({
       packageName: "acme/bin-plugin",
       trustBin: "default",
       isInteractive: true,
       projectSurface: { present: false, allow: {}, deny: {} },
     });
-    expect(d.deploy).toBe(true);
+    expect(d.deploy).toBe(false);
+    expect(d.withhold).toBe(true);
     expect(d.warn).toBe(true);
     expect(d.ladderOutcome).toBe("skip");
+    expect(d.reason).toMatch(/--trust-bin/);
+    expect(d.reason).toMatch(/approve.*--bin|--bin.*approve/i);
+  });
+
+  test("interactive default deploys with persisted project bin allow", () => {
+    const d = decide({
+      packageName: "acme/bin-plugin",
+      trustBin: "default",
+      isInteractive: true,
+      projectSurface: {
+        present: true,
+        allow: { "acme/bin-plugin": { bin: true } },
+        deny: {},
+      },
+    });
+    expect(d.deploy).toBe(true);
+    expect(d.warn).toBe(false);
+    expect(d.ladderOutcome).toBe("allow");
+  });
+
+  test("interactive default deploys with persisted user bin allow", () => {
+    const d = decide({
+      packageName: "acme/bin-plugin",
+      trustBin: "default",
+      isInteractive: true,
+      userSurface: {
+        present: true,
+        allow: { "acme/bin-plugin": { bin: true } },
+        deny: {},
+      },
+    });
+    expect(d.deploy).toBe(true);
+    expect(d.ladderOutcome).toBe("allow");
+  });
+
+  test("interactive --trust-bin deploys without warn when ladder skips", () => {
+    const d = decide({
+      packageName: "acme/bin-plugin",
+      trustBin: "allow",
+      isInteractive: true,
+      projectSurface: { present: false, allow: {}, deny: {} },
+    });
+    expect(d.deploy).toBe(true);
+    expect(d.warn).toBe(false);
+  });
+
+  test("interactive surface present without package withholds and warns", () => {
+    const d = decide({
+      packageName: "acme/bin-plugin",
+      trustBin: "default",
+      isInteractive: true,
+      projectSurface: { present: true, allow: {}, deny: {} },
+    });
+    expect(d.deploy).toBe(false);
+    expect(d.withhold).toBe(true);
+    expect(d.warn).toBe(true);
+    expect(d.ladderOutcome).toBe("withhold");
+    expect(d.reason).toMatch(/approve.*--bin|--bin.*approve/i);
+  });
+
+  test("interactive --trust-bin cannot override ladder withhold", () => {
+    const d = decide({
+      packageName: "acme/bin-plugin",
+      trustBin: "allow",
+      isInteractive: true,
+      projectSurface: { present: true, allow: {}, deny: {} },
+    });
+    expect(d.deploy).toBe(false);
+    expect(d.withhold).toBe(true);
+    expect(d.ladderOutcome).toBe("withhold");
   });
 
   test("CI / non-interactive default skips without grant", () => {

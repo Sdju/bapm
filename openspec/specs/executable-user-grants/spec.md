@@ -22,7 +22,7 @@ The system MUST load and save executable grants from a user-local JSON config fi
 
 ### Requirement: Interactive approve and deny CLI write user store only
 
-The CLI MUST expose interactive `bapm approve` and `bapm deny` that persist decisions to the user-local executables store. Interactive defaults MUST target user scope only (always user-local, or require `--user`). Interactive approve/deny MUST NOT write approval or deny decisions into the project `bapm.yml` / `apm.yml` manifest.
+The CLI MUST expose interactive `bapm approve` and `bapm deny` that persist decisions to the user-local executables store. Interactive defaults MUST target user scope only (always user-local, or require `--user`). Interactive approve/deny MUST NOT write approval or deny decisions into the project `bapm.yml` / `apm.yml` manifest. The commands MUST accept `--mcp` (default for compatibility), `--bin`, and `--hook` type flags; `bapm approve <pkg> --bin` MUST persist a `bin` allow grant so install does not require `--trust-bin` for that package.
 
 #### Scenario: Approve persists outside project manifest
 

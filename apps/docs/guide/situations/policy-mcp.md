@@ -61,6 +61,23 @@ Copilot и Windsurf пишут MCP в домашний каталог (`~/.copil
 
 `headers` HTTP/SSE-серверов подставляются из окружения так же, как `env`, и записываются интеграциями, которые поддерживают заголовки. Если сервер отвечает 401, проверьте, что переменная задана и выбранный агент пишет `headers`.
 
+## Не появился `bin/` из зависимости
+
+Dependency `bin/` деплоится только с явным согласием — в интерактивном терминале тоже. Если install печатает diagnostic про `BIN_TRUST_WITHHOLD`, выберите один вариант:
+
+- разово: `bapm install --trust-bin`;
+- постоянно для себя: `bapm approve <пакет> --bin` (запись в `~/.bapm/config.json`);
+- для всей команды: `executables.allow` в `bapm.yml`:
+
+  ```yaml
+  executables:
+    allow:
+      acme/bin-tools:
+        bin: true
+  ```
+
+`--no-trust-bin`, org/project/user deny сильнее любого разрешения, включая `--trust-bin`.
+
 ## Если install падает
 
 | Сообщение                                         | Что делать                                                                                                                                               |

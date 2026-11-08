@@ -41,7 +41,7 @@ Install flags (see also: bapm help install):
   --no-frozen              Opt out of frozen (including when CI defaults to frozen)
   --target <id>            Force a registered host target (overrides manifest active)
   --trust-transitive-mcp   Deploy dependency MCP (default: direct dependencies.mcp only)
-  --trust-bin / --no-trust-bin   Per-invocation bin/ consent (non-interactive defaults to skip)
+  --trust-bin / --no-trust-bin   Per-invocation bin/ consent (default: skip without explicit grant)
 
 Experimental registries:
   Set BAPM_EXPERIMENTAL_REGISTRIES=1 to enable registry resolve/install and publish.
@@ -85,9 +85,9 @@ MCP:
   bapm approve / deny), every dependency with MCP must be approved or denied.
 
 Bin consent:
-  Non-interactive (CI / frozen / non-TTY) installs skip dependency bin/ unless --trust-bin or a
-  persisted executables.allow bin grant applies. Interactive installs deploy with a warning.
-  Flags cannot override org/project deny.
+  All installs (interactive and non-interactive) skip dependency bin/ unless --trust-bin or a
+  persisted executables.allow bin grant applies. A TTY is not implicit consent; pass --trust-bin
+  or approve bin persistently (bapm approve <pkg> --bin). Flags cannot override org/project deny.
 
 Unknown flags are rejected. --frozen and --no-frozen cannot be combined.
 --trust-bin and --no-trust-bin cannot be combined.

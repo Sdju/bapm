@@ -20,22 +20,25 @@ bapm policy status [options]
 
 ## approve / deny
 
-User-local MCP grants в `~/.bapm/config.json` (`executables.allow` / `executables.deny`). **Никогда** не пишут project `bapm.yml` / `apm.yml`.
+User-local executable grants в `~/.bapm/config.json` (`executables.allow` / `executables.deny`). **Никогда** не пишут project `bapm.yml` / `apm.yml`.
 
 ```text
-bapm approve <package-name> [--user]
-bapm deny <package-name> [--user]
+bapm approve <package-name> [--bin|--hook|--mcp] [--user]
+bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 ```
 
-| Флаг / аргумент  | Значение   | Эффект                                                         | Default |
-| ---------------- | ---------- | -------------------------------------------------------------- | ------- |
-| `<package-name>` | имя пакета | Обязательный positional                                        | —       |
-| `--user`         | —          | Принимается для совместимости с APM; запись всегда в `~/.bapm` | —       |
-| `--help`, `-h`   | —          | Показать help                                                  | —       |
+| Флаг / аргумент  | Значение   | Эффект                                                                   | Default |
+| ---------------- | ---------- | ------------------------------------------------------------------------ | ------- |
+| `<package-name>` | имя пакета | Обязательный positional                                                  | —       |
+| `--mcp`          | —          | Разрешить/запретить MCP-серверы пакета                                   | да      |
+| `--bin`          | —          | Разрешить/запретить deploy `bin/` пакета (persisted consent для install) | —       |
+| `--hook`         | —          | Разрешить/запретить hooks пакета                                         | —       |
+| `--user`         | —          | Принимается для совместимости с APM; запись всегда в `~/.bapm`           | —       |
+| `--help`, `-h`   | —          | Показать help                                                            | —       |
 
-Без имени пакета команда печатает help и завершается с ошибкой.
+Без имени пакета команда печатает help и завершается с ошибкой. Без type-флага команда по-прежнему пишет `mcp: true` (approve или deny) — для совместимости. Несколько флагов можно передать сразу: каждый тип сохраняется отдельно.
 
-Первый `approve` или `deny` включает режим явных разрешений: дальше install требует решение для каждого пакета с MCP и падает с `MCP withheld: unapproved dependency executables`, пока его нет. `approve` разрешает только MCP; разрешение на `bin/` пакета через него не выдаётся.
+Первый `approve` или `deny` включает режим явных разрешений: дальше install требует решение для каждого пакета с MCP и падает с `MCP withheld: unapproved dependency executables`, пока его нет. `bapm approve <пакет> --bin` выдаёт persisted consent на `bin/`: после него `bapm install` деплоит `bin/` без `--trust-bin` (но deny по-прежнему сильнее).
 
 Разрешение для всей команды задаётся не в файле политики, а в `bapm.yml` проекта:
 
