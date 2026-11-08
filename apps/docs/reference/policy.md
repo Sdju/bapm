@@ -46,7 +46,7 @@ executables:
       mcp: true
 ```
 
-Файл политики (`apm-policy.yml` / `bapm-policy.yml`) в секции `executables` понимает только запреты: `deny` (список пакетов) и `deny_all`. На MCP-серверы из собственного `dependencies.mcp` проекта он не действует.
+Файл политики (`apm-policy.yml` / `bapm-policy.yml`) в секции `executables` понимает только запреты: `deny` (список пакетов) и `deny_all`. `executables.allow` и top-level `mcp:` он не отвергает, а молча игнорирует: ошибки не будет, но и правило не применится. На MCP-серверы из собственного `dependencies.mcp` проекта он не действует.
 
 Связанные install-флаги: `--policy` / `--no-policy` / `--trust-transitive-mcp` на [install](/reference/install). Сценарий: [MCP-сервер не появился](/guide/situations/policy-mcp).
 

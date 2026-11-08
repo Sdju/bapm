@@ -45,7 +45,7 @@ MCP-сервер есть в зависимостях, `bapm install` прошё
 bapm policy status
 ```
 
-Файл политики умеет только запрещать: `executables.deny` со списком пакетов или `executables.deny_all: true`. Секцию `mcp:` bapm игнорирует, `executables.allow` в файле политики — ошибка. На MCP-серверы из вашего собственного `dependencies.mcp` политика не действует.
+Файл политики умеет только запрещать: `executables.deny` со списком пакетов или `executables.deny_all: true`. Секцию `mcp:` и `executables.allow` bapm молча игнорирует: ошибки нет, но и правило не применяется. Разрешения для исполняемых задаются в `bapm.yml` (`executables.allow`) или через `bapm approve`. На MCP-серверы из вашего собственного `dependencies.mcp` политика не действует.
 
 `bapm deny` не убирает сервер, который уже записан в конфиг агента: удалите его оттуда вручную.
 
@@ -63,12 +63,12 @@ Copilot и Windsurf пишут MCP в домашний каталог (`~/.copil
 
 ## Если install падает
 
-| Сообщение                                         | Что делать                                                                                                                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `MCP withheld: unapproved dependency executables` | Разрешите (`approve` или `executables.allow` в `bapm.yml`) либо запретите (`deny`) каждый пакет с MCP                           |
-| `MCP env bake failed: unresolved placeholder`     | Задайте переменную окружения или `env` в `bapm.local.yml`. [Подробнее](/guide/manifest-dependencies#mcp-и-переменные-окружения) |
-| `Policy requires a non-empty string name`         | В файле политики есть `executables.allow` или нет `name`. Политика только запрещает; разрешения перенесите в `bapm.yml`         |
-| Другая ошибка политики                            | `bapm policy status`, затем правка файла политики                                                                               |
+| Сообщение                                         | Что делать                                                                                                                                               |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MCP withheld: unapproved dependency executables` | Разрешите (`approve` или `executables.allow` в `bapm.yml`) либо запретите (`deny`) каждый пакет с MCP                                                    |
+| `MCP env bake failed: unresolved placeholder`     | Задайте переменную окружения или `env` в `bapm.local.yml`. [Подробнее](/guide/manifest-dependencies#mcp-и-переменные-окружения)                          |
+| `Policy requires a non-empty string name`         | В файле политики нет поля `name` или оно пустое. `executables.allow` такой ошибки не вызывает: он молча игнорируется, разрешения перенесите в `bapm.yml` |
+| Другая ошибка политики                            | `bapm policy status`, затем правка файла политики                                                                                                        |
 
 Отключить проверку политики для одного запуска можно флагом `--no-policy` или переменной `BAPM_POLICY_DISABLE=1`. Это отключает и запреты организации, поэтому используйте только для диагностики.
 
