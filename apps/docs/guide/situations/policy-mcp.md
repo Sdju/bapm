@@ -48,11 +48,15 @@ MCP-сервер есть в зависимостях, `bapm install` прошё
 - `executables.deny` в `bapm.yml`;
 - файл политики `apm-policy.yml` / `bapm-policy.yml` в репозитории или политика организации.
 
+Политика организации ищется в `<owner>/.github/apm-policy.yml`, если git remote `origin` (или единственный remote) указывает на тот же хост, что и implementation-default (обычно `github.com`). Запрос идёт по `https` через `curl` с таймаутом. Если локального файла нет и org-policy не загрузилась при `fetch_failure: block`, install завершится fail-closed, а не тихо пропустит запрет.
+
 Посмотрите, какая политика действует:
 
 ```bash
 bapm policy status
 ```
+
+В отчёте `provider: github-owner-dotgithub` означает, что применена политика организации; `provider: local` — файл из репозитория; `absent` — ни локального файла, ни org-policy не нашлось.
 
 Файл политики умеет только запрещать: `executables.deny` со списком пакетов или `executables.deny_all: true`. Секцию `mcp:` и `executables.allow` bapm молча игнорирует: ошибки нет, но и правило не применяется. Разрешения для исполняемых задаются в `bapm.yml` (`executables.allow`) или через `bapm approve`. На MCP-серверы из вашего собственного `dependencies.mcp` политика не действует.
 

@@ -638,7 +638,7 @@
         "tests/fixtures/spec-conformance/policy/valid-extends.yml",
         "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
       ],
-      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts; packages/cli/tests/policy/remote-fetch.test.ts"
     },
     {
       "id": "req-pl-012",
@@ -650,7 +650,7 @@
         "tests/fixtures/spec-conformance/policy/valid-extends.yml",
         "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
       ],
-      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/cli/tests/policy/remote-fetch.test.ts"
     },
     {
       "id": "req-pl-013",

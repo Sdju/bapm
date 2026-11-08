@@ -19,6 +19,19 @@ bapm policy status [options]
 | `--check`         | —        | Non-zero exit, если нет usable policy                       | off (exit 0 для found / absent / disabled / soft diagnostics) |
 | `--help`, `-h`    | —        | Help для `policy` или `policy status`                       | —                                                             |
 
+## Откуда берётся политика
+
+Порядок discovery по умолчанию:
+
+1. **repo-local** — `apm-policy.yml` или `bapm-policy.yml` в корне проекта (dual-read; оба файла одновременно — ошибка).
+2. **`github-owner-dotgithub`** — если локального файла нет, bapm берёт git remote `origin` (или единственный remote), проверяет, что его хост совпадает с implementation-default (по умолчанию `github.com`), и загружает `https://<host>/<owner>/.github/apm-policy.yml`.
+
+Remote-запрос идёт синхронно через `curl` (`-fsSL`, `--max-time 10`, только `https`). Если remote-хост не GitHub или remote не выбран, org-policy не ищется. Если remote-политика не загрузилась и effective `fetch_failure: block`, install/lock/update завершаются fail-closed с диагностикой; `policy status` показывает `outcome: error` с сетевым диагнозом.
+
+Полные каскады APM/Azure DevOps (`.apm`, `_apm`, ADO org-policy, multi-candidate) не реализованы и не заявлены.
+
+`--no-policy` отключает только шаг 1, поэтому org-policy продолжает применяться. `--no-policy-all` и `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1` отключают и удалённый поиск: сетевого запроса не будет.
+
 ## approve / deny
 
 User-local executable grants в `~/.bapm/config.json` (`executables.allow` / `executables.deny`). **Никогда** не пишут project `bapm.yml` / `apm.yml`.
