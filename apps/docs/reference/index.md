@@ -27,6 +27,7 @@
 | `doctor`                      | [doctor](/reference/doctor)   |
 | `compile`                     | [compile](/reference/compile) |
 | `targets`                     | [targets](/reference/targets) |
+| `runtime`                     | [runtime](/reference/runtime) |
 | `mcp`                         | [mcp](/reference/mcp)         |
 | `config`                      | [config](/reference/config)   |
 | `auth`                        | [auth](/reference/auth)       |

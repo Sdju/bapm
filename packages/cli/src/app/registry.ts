@@ -30,6 +30,7 @@ import {
   COMMAND_AUTH,
   COMMAND_RUN,
   COMMAND_PREVIEW,
+  COMMAND_RUNTIME,
 } from "@/common/constants/commands.ts";
 import { approveCommand } from "@/commands/approve.ts";
 import { auditCommand } from "@/commands/audit.ts";
@@ -62,6 +63,7 @@ import { mcpCommand } from "@/commands/mcp.ts";
 import { authCommand } from "@/commands/auth.ts";
 import { runCommand } from "@/commands/run.ts";
 import { previewCommand } from "@/commands/preview.ts";
+import { runtimeCommand } from "@/commands/runtime.ts";
 import { approve } from "./init/approve.ts";
 import { audit } from "./init/audit.ts";
 import { cache } from "./init/cache.ts";
@@ -89,6 +91,7 @@ import { mcp } from "./init/mcp.ts";
 import { auth } from "./init/auth.ts";
 import { run } from "./init/run.ts";
 import { preview } from "./init/preview.ts";
+import { runtime } from "./init/runtime.ts";
 import { uninstall } from "./init/uninstall.ts";
 import { update } from "./init/update.ts";
 import { version } from "./init/version.ts";
@@ -128,6 +131,7 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_AUTH]: (argv) => authCommand(argv, auth),
   [COMMAND_RUN]: (argv) => runCommand(argv, run),
   [COMMAND_PREVIEW]: (argv) => previewCommand(argv, preview),
+  [COMMAND_RUNTIME]: (argv) => runtimeCommand(argv, runtime),
   "-h": (argv) => helpCommand(argv, help),
   "--help": (argv) => helpCommand(argv, help),
   "-V": (argv) => versionCommand(argv, version),

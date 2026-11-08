@@ -29,3 +29,4 @@ export const COMMAND_MCP = "mcp";
 export const COMMAND_AUTH = "auth";
 export const COMMAND_RUN = "run";
 export const COMMAND_PREVIEW = "preview";
+export const COMMAND_RUNTIME = "runtime";
