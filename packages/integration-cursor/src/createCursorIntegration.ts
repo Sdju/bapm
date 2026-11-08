@@ -19,6 +19,7 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   renderPrimitivesMarkdown,
@@ -169,6 +170,7 @@ export function createCursorIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -192,6 +194,11 @@ function writeCursorMcpConfig(
   const next: Record<string, Record<string, unknown>> = { ...existing };
 
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(
+    next,
+    Object.keys(incoming),
+    ctx.managedServers,
+  );
   for (const [name, entry] of Object.entries(incoming)) {
     next[name] = entry;
     writtenNames.push(name);

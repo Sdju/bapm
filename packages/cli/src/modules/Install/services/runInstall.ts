@@ -494,6 +494,32 @@ function resolveLocalZipArchive(
   return abs;
 }
 
+/**
+ * Reconcile host MCP configs without resolving or deploying APM packages.
+ * Used after a user-local deny so already-written servers disappear from host
+ * configs. Policy discovery is skipped: this is a cleanup pass, not a deploy.
+ */
+export async function runMcpReconfigure(options: { cwd?: string } = {}): Promise<{
+  ok: boolean;
+  message?: string;
+}> {
+  const cwd = options.cwd ?? process.cwd();
+  const registry = createCliIntegrationRegistry();
+  try {
+    await registerManifestIntegrationsFromCwd(registry, cwd);
+    await coreRunInstall({
+      cwd,
+      only: "mcp",
+      noPolicy: true,
+      integrationRegistry: registry,
+      env: process.env as Record<string, string | undefined>,
+    });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: formatErrorMessage(error) };
+  }
+}
+
 export async function runInstall(
   deps: InstallDeps,
   options: InstallOptions,
