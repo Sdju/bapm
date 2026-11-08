@@ -79,4 +79,3 @@ ls AGENTS.md            # один файл, перезаписан вторым
 ## Связанные
 
 - §8.5 и честность заявленного покрытия — см. `CONFORMANCE.md` и [openapm-8-5-layout.md](./openapm-8-5-layout.md).
-- [stale-specs-compile-and-cursor.md](./stale-specs-compile-and-cursor.md) — устаревшая спека `compile-agents-md`.

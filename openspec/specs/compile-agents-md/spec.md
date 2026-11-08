@@ -205,14 +205,14 @@ Compile MUST render the selected primitives into a single instruction file. It M
 
 Thin single-target, single-file compile is **intentional**. Gaps vs microsoft/apm `apm compile` / `AgentsCompiler` are tracked as product tech debt (not silent omissions, not OpenAPM MUST failures). Canonical IDs: `.samples/apm-knowledge/topics/tech-debt-compile.md`.
 
-| ID            | Gap                                                        | Status                 |
-| ------------- | ---------------------------------------------------------- | ---------------------- |
-| TD-COMPILE-01 | Emit all primitives vs APM instructions-only                | debt                   |
-| TD-COMPILE-02 | No per-path `applyTo` / glob placement (single-file only)   | debt                   |
-| TD-COMPILE-03 | No markdown link inline / `--no-links`                      | debt (SHOULD deferred) |
-| TD-COMPILE-05 | Missing APM UX flags (watch/clean/global/…)                 | debt                   |
-| TD-COMPILE-06 | No deterministic Build ID / Unicode write gate              | debt                   |
-| TD-COMPILE-07 | Thinner `--validate` than APM                               | debt                   |
-| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections              | debt                   |
+| ID            | Gap                                                       | Status                 |
+| ------------- | --------------------------------------------------------- | ---------------------- |
+| TD-COMPILE-01 | Emit all primitives vs APM instructions-only              | debt                   |
+| TD-COMPILE-02 | No per-path `applyTo` / glob placement (single-file only) | debt                   |
+| TD-COMPILE-03 | No markdown link inline / `--no-links`                    | debt (SHOULD deferred) |
+| TD-COMPILE-05 | Missing APM UX flags (watch/clean/global/…)               | debt                   |
+| TD-COMPILE-06 | No deterministic Build ID / Unicode write gate            | debt                   |
+| TD-COMPILE-07 | Thinner `--validate` than APM                             | debt                   |
+| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections            | debt                   |
 
 Closing a `debt` row REQUIRES a dedicated OpenSpec change that updates this section and the knowledge inventory. Specs MUST NOT claim APM AgentsCompiler parity while these rows remain open.

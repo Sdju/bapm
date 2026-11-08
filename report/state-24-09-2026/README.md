@@ -11,11 +11,11 @@
 | Важность | Карточек | Что означает                                                                                                                                               |
 | -------- | -------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | критично |        0 | молчаливая потеря/порча файлов, утечка секрета, принципиально небезопасная команда, дыра в обязательном security-гейте                                     |
-| высокая  |        4 | в частом сценарии команда молча делает не то; дыра в CI-гейте; обходится security-контроль; заявленная возможность не работает; ломается совместная работа |
-| средняя  |        6 | неверное поведение в узком сценарии; вводящий в заблуждение UX/JSON/диагностика; дрейф спеки; неполная фича с обходом                                      |
+| высокая  |        1 | в частом сценарии команда молча делает не то; дыра в CI-гейте; обходится security-контроль; заявленная возможность не работает; ломается совместная работа |
+| средняя  |        3 | неверное поведение в узком сценарии; вводящий в заблуждение UX/JSON/диагностика; дрейф спеки; неполная фича с обходом                                      |
 | низкая   |        7 | осознанное отличие без вреда, формулировки docs, редкий edge case с простым обходом                                                                        |
 
-Высокий приоритет: hooks без grant, общая grant-поверхность, `--no-policy` против org deny, TTY `bin/`.
+Осталось: общая grant-поверхность (высокая), remote policy, `deny` без очистки host-конфига, user-global MCP Copilot/Windsurf и осознанные отличия от APM.
 
 ## Как читать карточку
 
@@ -44,30 +44,37 @@
 
 ### Незавершённое или спорное поведение CLI
 
-| Файл                                                           | Тема                                     | Важность |
-| -------------------------------------------------------------- | ---------------------------------------- | -------- |
-| [install-force-noop.md](./install-force-noop.md)               | `--force` принимается и ничего не делает | средняя  |
-| [deny-does-not-undeploy.md](./deny-does-not-undeploy.md)       | `deny` не убирает уже записанный сервер  | средняя  |
-| [copilot-windsurf-home-mcp.md](./copilot-windsurf-home-mcp.md) | Copilot и Windsurf пишут MCP в `$HOME`   | средняя  |
+| Файл                                                           | Тема                                    | Важность |
+| -------------------------------------------------------------- | --------------------------------------- | -------- |
+| [deny-does-not-undeploy.md](./deny-does-not-undeploy.md)       | `deny` не убирает уже записанный сервер | средняя  |
+| [copilot-windsurf-home-mcp.md](./copilot-windsurf-home-mcp.md) | Copilot и Windsurf пишут MCP в `$HOME`  | средняя  |
 
 ### Policy / MCP / trust
 
 | Файл                                                                 | Тема                                                | Важность |
 | -------------------------------------------------------------------- | --------------------------------------------------- | -------- |
-| [policy-hooks-ungated.md](./policy-hooks-ungated.md)                 | Hooks и canvas не под ExecutableTrust               | высокая  |
 | [grant-surface-all-or-nothing.md](./grant-surface-all-or-nothing.md) | Любое разрешение включает проверку всех MCP-пакетов | высокая  |
-| [no-policy-disables-org.md](./no-policy-disables-org.md)             | `--no-policy` отключает и org deny                  | высокая  |
-| [trust-bin-interactive.md](./trust-bin-interactive.md)               | В TTY `bin/` ставится без `--trust-bin`             | высокая  |
 
 ### Спека vs код / тесты
 
-| Файл                                                                     | Тема                                                                  | Важность |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------- | -------- |
-| [stale-specs-compile-and-cursor.md](./stale-specs-compile-and-cursor.md) | `compile-agents-md` и `cursor-mcp-deploy` про старый cursor-only срез | средняя  |
-| [policy-remote-not-wired.md](./policy-remote-not-wired.md)               | Remote/ADO policy cascade не подключён к CLI                          | средняя  |
-| [cli-tests-cursor-resolves.md](./cli-tests-cursor-resolves.md)           | Пять CLI-тестов ждут, что канонические интеграции не резолвятся       | средняя  |
+| Файл                                                       | Тема                                         | Важность |
+| ---------------------------------------------------------- | -------------------------------------------- | -------- |
+| [policy-remote-not-wired.md](./policy-remote-not-wired.md) | Remote/ADO policy cascade не подключён к CLI | средняя  |
 
 ## Исправлено и удалено
+
+### Пачка 3 (08.11.2026)
+
+| Что                                                        | Коммит                                  |
+| ---------------------------------------------------------- | --------------------------------------- |
+| Hooks под ExecutableTrust при наличии grant/org deny       | `bf03d8f` (`fix/hooks-trust`)           |
+| `bin/` требует явного согласия даже в TTY                  | `b0f13fe` (`fix/trust-bin-explicit`)    |
+| 5 CLI-тестов изолированы от `NODE_PATH`                    | `56032c0` (`fix/cli-test-isolation`)    |
+| Спеки `compile-agents-md` и `cursor-mcp-deploy` переписаны | `8ed4f2e` (`fix/stale-specs`)           |
+| `--no-policy` не отключает org deny                        | `4b6b22c` (`fix/no-policy-org`)         |
+| `install --force` печатает предупреждение о no-op          | `99b167e` (`fix/install-force-warning`) |
+
+Удалены как исправленные: `policy-hooks-ungated`, `trust-bin-interactive`, `cli-tests-cursor-resolves`, `stale-specs-compile-and-cursor`, `no-policy-disables-org`, `install-force-noop`.
 
 ### Пачка 2 (08.11.2026)
 
@@ -79,8 +86,6 @@
 | `update --dry-run` резолвит ветки/literal refs              | `d70c954` (`fix/update-dry-run-refs`)  |
 | Docs/spec: orphan cleanup, хеши, policy allow, plugin flags | `0d99181` (`fix/docs-spec-debt`)       |
 | Тесты изолированы от реального `~/.bapm`                    | `235a945` (`fix/tests-home-isolation`) |
-
-Удалены как исправленные/задокументированные: `update-not-blocked-in-ci`, `skipped-primitives-silent`, `mcp-dir-must-exist`, `targets-narrow-deploy`, `deps-why-is-direct`, `update-dry-run-branches`, `orphan-files-cleanup`, `hash-formats`, `policy-file-deny-only`, `plugin-flags-vs-spec`, `no-mcp-subcommand`, `tests-home-isolation`.
 
 ### Пачка 1 (08.11.2026)
 

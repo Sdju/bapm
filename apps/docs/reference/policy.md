@@ -10,14 +10,14 @@ bapm policy status [options]
 
 Только чтение: отчёт об effective policy discovery / enforcement. Не мутирует lockfiles, manifests, modules. Без подкоманды CLI печатает usage и выходит с ошибкой — нужна `status`.
 
-| Флаг           | Значение | Эффект                                                | Default                                                       |
-| -------------- | -------- | ----------------------------------------------------- | ------------------------------------------------------------- |
-| `--json`       | —        | Stable JSON keys (`outcome`, `source`, `provider`, …) | off                                                           |
-| `--policy`     | `<path>` | Явный policy-файл (побеждает dual-read discovery)     | discovery                                                     |
-| `--no-policy`  | —        | Пропустить только repo-local discovery; org policy остаётся | off                                                           |
-| `--no-policy-all` | —     | Полный escape: skip discovery, report disabled | off                                                           |
-| `--check`      | —        | Non-zero exit, если нет usable policy                 | off (exit 0 для found / absent / disabled / soft diagnostics) |
-| `--help`, `-h` | —        | Help для `policy` или `policy status`                 | —                                                             |
+| Флаг              | Значение | Эффект                                                      | Default                                                       |
+| ----------------- | -------- | ----------------------------------------------------------- | ------------------------------------------------------------- |
+| `--json`          | —        | Stable JSON keys (`outcome`, `source`, `provider`, …)       | off                                                           |
+| `--policy`        | `<path>` | Явный policy-файл (побеждает dual-read discovery)           | discovery                                                     |
+| `--no-policy`     | —        | Пропустить только repo-local discovery; org policy остаётся | off                                                           |
+| `--no-policy-all` | —        | Полный escape: skip discovery, report disabled              | off                                                           |
+| `--check`         | —        | Non-zero exit, если нет usable policy                       | off (exit 0 для found / absent / disabled / soft diagnostics) |
+| `--help`, `-h`    | —        | Help для `policy` или `policy status`                       | —                                                             |
 
 ## approve / deny
 

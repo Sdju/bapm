@@ -77,5 +77,3 @@ bapm policy status --json
 `bapm policy status` видит только репозиторный `apm-policy.yml`/`bapm-policy.yml` или явный `--policy`. Org policy с github.com owner не ищется, хотя провайдер и его тесты существуют. Чужие хосты и ADO cascade не ищутся — это соответствует спеке.
 
 ## Связанные
-
-- [no-policy-disables-org.md](./no-policy-disables-org.md) — `--no-policy` и org-deny.

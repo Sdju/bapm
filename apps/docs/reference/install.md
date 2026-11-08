@@ -32,8 +32,8 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--parallel-downloads`   | `<n>`          | Параллельные загрузки; `0` = serial                                                                   | `4`                       |
 | `-v`, `--verbose`        | —              | Богаче progress / diagnostics (не ослабляет frozen/policy)                                            | off                       |
 | `--policy`               | `<path>`       | Явный policy-файл (побеждает `apm-policy.yml` / `bapm-policy.yml`)                                    | discovery                 |
-| `--no-policy`            | —              | Пропустить только repo-local `apm-policy.yml`/`bapm-policy.yml`; org deny остаётся | off                       |
-| `--no-policy-all`        | —              | Полный escape: пропустить local и org policy (также `BAPM_POLICY_DISABLE=1`)       | off                       |
+| `--no-policy`            | —              | Пропустить только repo-local `apm-policy.yml`/`bapm-policy.yml`; org deny остаётся                    | off                       |
+| `--no-policy-all`        | —              | Полный escape: пропустить local и org policy (также `BAPM_POLICY_DISABLE=1`)                          | off                       |
 | `--trust-transitive-mcp` | —              | Деплоить MCP из зависимостей; по умолчанию только direct `dependencies.mcp`                           | off                       |
 | `--trust-bin`            | —              | Согласие на deploy dependency/plugin `bin/` для этого запуска (если policy/ExecutableTrust позволяет) | off (нужен явный consent) |
 | `--no-trust-bin`         | —              | Пропустить deploy `bin/` для этого запуска (даже если policy allow)                                   | —                         |
