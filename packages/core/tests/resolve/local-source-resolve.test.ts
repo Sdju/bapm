@@ -136,4 +136,105 @@ describe("Resolver local source resolve", () => {
     expect(local).toBeTruthy();
     expect(local!.source).toBe("local");
   });
+
+  test("path: lock stores a project-relative portable path", async () => {
+    const project = createTempProject();
+    projects.push(project);
+    writePackageAt(project.cwd, "pkgs/a", "pkg-a");
+    writeRootApm(project.cwd, "    - path: ./pkgs/a\n");
+
+    await resolveAndLock({ cwd: project.cwd });
+
+    const lock = loadLockfile({ cwd: project.cwd });
+    const local = (lock.document.dependencies ?? []).find((d) => d.name === "pkg-a");
+    expect(local).toBeTruthy();
+    expect(local!.repo_url).toBe("local:pkgs/a");
+    expect(local!.path).toBe("pkgs/a");
+    expect(String(local!.path)).not.toContain(project.cwd);
+  });
+
+  test("path: in-project absolute prev.path is normalized on rewrite", async () => {
+    const project = createTempProject();
+    projects.push(project);
+    writePackageAt(project.cwd, "pkgs/a", "pkg-a");
+    writeRootApm(project.cwd, "    - path: ./pkgs/a\n");
+    writeText(
+      join(project.cwd, "bapm.lock.yaml"),
+      [
+        'lockfile_version: "1"',
+        "dependencies:",
+        "  - repo_url: local:pkgs/a",
+        "    name: pkg-a",
+        "    source: local",
+        `    path: ${join(project.cwd, "pkgs/a")}`,
+        "",
+      ].join("\n"),
+    );
+
+    await resolveAndLock({ cwd: project.cwd });
+
+    const lock = loadLockfile({ cwd: project.cwd });
+    const local = (lock.document.dependencies ?? []).find((d) => d.name === "pkg-a");
+    expect(local).toBeTruthy();
+    expect(local!.path).toBe("pkgs/a");
+  });
+
+  test("path: foreign absolute prev.path is not carried forward", async () => {
+    const project = createTempProject();
+    projects.push(project);
+    writePackageAt(project.cwd, "pkgs/a", "pkg-a");
+    writeRootApm(project.cwd, "    - path: ./pkgs/a\n");
+    writeText(
+      join(project.cwd, "bapm.lock.yaml"),
+      [
+        'lockfile_version: "1"',
+        "dependencies:",
+        "  - repo_url: local:pkgs/a",
+        "    name: pkg-a",
+        "    source: local",
+        "    path: /home/alice/proj/pkgs/a",
+        "",
+      ].join("\n"),
+    );
+
+    await resolveAndLock({ cwd: project.cwd });
+
+    const lock = loadLockfile({ cwd: project.cwd });
+    const local = (lock.document.dependencies ?? []).find((d) => d.name === "pkg-a");
+    expect(local).toBeTruthy();
+    expect(local!.path).toBe("pkgs/a");
+    expect(String(local!.path)).not.toMatch(/^\/|^[A-Za-z]:[\\/]/);
+  });
+
+  test("path: lock generated in another cwd is reused relative to the new project", async () => {
+    const first = createTempProject();
+    const second = createTempProject();
+    projects.push(first, second);
+    for (const project of [first, second]) {
+      writePackageAt(project.cwd, "pkgs/a", "pkg-a");
+      writeRootApm(project.cwd, "    - path: ./pkgs/a\n");
+    }
+
+    await resolveAndLock({ cwd: first.cwd });
+    writeText(
+      join(second.cwd, "bapm.lock.yaml"),
+      [
+        'lockfile_version: "1"',
+        "dependencies:",
+        "  - repo_url: local:pkgs/a",
+        "    name: pkg-a",
+        "    source: local",
+        `    path: ${join(first.cwd, "pkgs/a")}`,
+        "",
+      ].join("\n"),
+    );
+
+    await resolveAndLock({ cwd: second.cwd });
+
+    const lock = loadLockfile({ cwd: second.cwd });
+    const local = (lock.document.dependencies ?? []).find((d) => d.name === "pkg-a");
+    expect(local).toBeTruthy();
+    expect(local!.path).toBe("pkgs/a");
+    expect(String(local!.path)).not.toContain(first.cwd);
+  });
 });

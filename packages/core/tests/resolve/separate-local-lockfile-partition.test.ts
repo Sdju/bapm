@@ -58,7 +58,9 @@ describe("separate-local-lockfile — partition write", () => {
 
     expect(sharedLockExists(project.cwd)).toBe(true);
     const shared = loadLockfile({ cwd: project.cwd });
-    expect(shared.document.dependencies?.some((d) => d.name === "pkg-a")).toBe(true);
+    const sharedDep = shared.document.dependencies?.find((d) => d.name === "pkg-a");
+    expect(sharedDep).toBeTruthy();
+    expect(sharedDep!.path).toBe("pkgs/a");
     expect(personalLockExists(project.cwd), "path: must not require personal lock").toBe(false);
   });
 

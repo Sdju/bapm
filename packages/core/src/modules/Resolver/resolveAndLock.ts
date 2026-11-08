@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { isAbsolute, posix, relative, resolve } from "node:path";
 import { loadManifest, withEffectiveDirectDeps } from "@/modules/Manifest";
 import {
   computeCanonicalTreeSha256,
@@ -140,7 +140,7 @@ export async function resolveAndLock(
     registryBaseUrl: options.registryBaseUrl,
   });
 
-  const document = buildLockDocument(graph.nodes, existingLock);
+  const document = buildLockDocument(graph.nodes, existingLock, cwd);
   const written = partitionAndWriteLockfiles(document, {
     cwd,
     sourcePath,
@@ -291,9 +291,51 @@ function restoreGitUrl(repoUrl: string | undefined): string | undefined {
   return `https://${repoUrl}`;
 }
 
+function toPosixPath(value: string): string {
+  return value.replaceAll("\\", "/");
+}
+
+function isAbsolutePortablePath(value: string): boolean {
+  const normalized = toPosixPath(value);
+  return isAbsolute(normalized) || /^[A-Za-z]:\//.test(normalized);
+}
+
+function escapesProjectRoot(relPosix: string): boolean {
+  return relPosix === ".." || relPosix.startsWith("../") || isAbsolutePortablePath(relPosix);
+}
+
+/**
+ * Local lock `path` is a portable project-relative POSIX path (e.g. `pkgs/a`).
+ * Paths outside the project stay absolute because they cannot be made portable
+ * relative to the shared lock root.
+ */
+function toProjectRelativeLockPath(absPath: string, cwd: string): string {
+  const abs = resolve(absPath);
+  const relPosix = toPosixPath(relative(resolve(cwd), abs));
+  return escapesProjectRoot(relPosix) || relPosix === "" ? toPosixPath(abs) : relPosix;
+}
+
+/**
+ * Normalizes a previously locked local path. An absolute path is only reusable
+ * when it still lives inside this project; foreign-machine absolute paths are
+ * dropped so the current resolution wins instead of being carried forward.
+ */
+function normalizeLockedLocalPath(prevPath: string, cwd: string): string | undefined {
+  const raw = toPosixPath(prevPath).trim();
+  if (!raw) return undefined;
+  if (isAbsolutePortablePath(raw)) {
+    const relPosix = toPosixPath(relative(resolve(cwd), resolve(raw)));
+    if (escapesProjectRoot(relPosix) || relPosix === "") return undefined;
+    return relPosix;
+  }
+  const relPosix = posix.normalize(raw);
+  return escapesProjectRoot(relPosix) || relPosix === "" ? undefined : relPosix;
+}
+
 function buildLockDocument(
   nodes: ResolvedNode[],
   existing: LockfileDocument | null,
+  cwd: string,
 ): LockfileDocument {
   const deps: LockedDependency[] = [];
   const existingByIdentity = new Map<string, LockedDependency>();
@@ -313,10 +355,12 @@ function buildLockDocument(
       };
       if (prev?.deployed_file_hashes) entry.deployed_file_hashes = prev.deployed_file_hashes;
       const pathField = (prev as Record<string, unknown> | undefined)?.path;
-      if (typeof pathField === "string") {
-        (entry as Record<string, unknown>).path = pathField;
-      } else if (n.path) {
-        (entry as Record<string, unknown>).path = n.path;
+      const prevPath =
+        typeof pathField === "string" ? normalizeLockedLocalPath(pathField, cwd) : undefined;
+      const currentPath = n.path ? toProjectRelativeLockPath(n.path, cwd) : undefined;
+      const lockPath = prevPath ?? currentPath;
+      if (lockPath) {
+        (entry as Record<string, unknown>).path = lockPath;
       }
       applyMarketplaceProvenance(entry, n);
       if (n.personalLockScope) {
