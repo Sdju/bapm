@@ -233,13 +233,13 @@ describe("CLI global MCP install", () => {
     fixture.globalRoot = customRoot;
     writeGlobalManifest(fixture);
 
-    const { result } = await runGlobal(
+    const { result, combined } = await runGlobal(
       fixture,
       ["install", "-g", "--only", "mcp", "--target", "cursor"],
       { BAPM_HOME: customRoot },
     );
 
-    expect(result).toBe(0);
+    expect(result, combined).toBe(0);
     expect(existsSync(join(customRoot, "bapm.lock.yaml"))).toBe(true);
     expect(existsSync(join(originalRoot, "bapm.lock.yaml"))).toBe(false);
     expect(existsSync(join(fixture.home, ".cursor", "mcp.json"))).toBe(true);
