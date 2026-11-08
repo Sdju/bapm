@@ -39,6 +39,8 @@ User-local executable grants в `~/.bapm/config.json` (`executables.allow` / `ex
 
 ```text
 bapm approve <package-name> [--bin|--hook|--mcp] [--user]
+bapm approve --list [--json]
+bapm approve --pending [--json]
 bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 ```
 
@@ -49,9 +51,14 @@ bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 | `--bin`          | —          | Разрешить/запретить deploy `bin/` пакета (persisted consent для install) | —       |
 | `--hook`         | —          | Разрешить/запретить hooks пакета                                         | —       |
 | `--user`         | —          | Принимается для совместимости с APM; запись всегда в `~/.bapm`           | —       |
+| `--list`         | —          | Показать user-local grants: package, types, allow/deny, source           | —       |
+| `--pending`      | —          | Найти dependency MCP/bin/hook без решения в project/user/org             | —       |
+| `--json`         | —          | Stable JSON для `--list` / `--pending`                                   | off     |
 | `--help`, `-h`   | —          | Показать help                                                            | —       |
 
 Без имени пакета команда печатает help и завершается с ошибкой. Без type-флага команда по-прежнему пишет `mcp: true` (approve или deny) — для совместимости. Несколько флагов можно передать сразу: каждый тип сохраняется отдельно.
+
+`bapm approve --list` — только чтение `~/.bapm/config.json`: строки с `package`, `types`, `grant` (`allow` / `deny`) и `source` (`user`). `--pending` — только чтение manifest/lock: dependency-пакеты с типами `mcp`, `bin`, `hook`, которые не имеют явного allow/deny в project manifest, user config или org policy. MCP берётся из lock `mcp_servers` (и manifest `dependencies.mcp`, но root/direct серверы не требуют approve), `bin` — из `bin/` в materialized package roots, `hook` — из dependency primitives. JSON-формы: `{source, path, present, grants}` для `--list` и `{lockfile, manifest, pending}` для `--pending`, где pending-строка — `{package, types, reason}`. Оба режима ничего не пишут и не меняют lock/manifest/модули; `--json` без `--list`/`--pending` отклоняется. `bapm deny --list/--pending` не добавлены: используйте `approve --list` для просмотра и `deny <пакет>` для запрета.
 
 Первый `approve` или `deny` включает проверку MCP и hooks у зависимостей, но не требует решения по каждому пакету. Пакет, которого нет ни в `allow`, ни в `deny`, пропускается с предупреждением `MCP_NOT_APPROVED` — install продолжается. Фатальное сообщение `MCP withheld: explicitly denied or unapproved dependency executables` остаётся только для явного deny (project/user/org, включая org `deny_all`) и для пакета, упомянутого в grant-поверхности без `mcp: true` (например `mcp: false` или только `bin: true`). Deny всегда сильнее allow.
 
