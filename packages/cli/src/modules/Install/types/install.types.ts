@@ -13,6 +13,9 @@ export interface InstallOptions {
   env?: Record<string, string | undefined>;
   /** Injected policy ports (tests); production defaults to a curl fetcher. */
   policyPorts?: PolicyCliPorts;
+  /** Override `~/.bapm` user store (global installs pass the global root). */
+  configDir?: string;
+  marketplaceConfigDir?: string;
 }
 
 export interface InstallResult {

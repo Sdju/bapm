@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { homedir } from "node:os";
+import { basename, dirname, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
   BapmIntegration,
@@ -57,11 +58,16 @@ export function createCursorIntegration(options?: {
     // Cursor expands ${env:VAR} at server start. Install must not bake APM
     // placeholders into the project-local config (APM 0.33+ #3116).
     mcpEnvMode: "translate",
+    supportsGlobalMcp: true,
     detect: ({ cwd }) => {
       const cursorDir = join(cwd, ".cursor");
       if (existsSync(cursorDir) && statSync(cursorDir).isDirectory()) return true;
       const legacy = join(cwd, ".cursorrules");
       return existsSync(legacy) && statSync(legacy).isFile();
+    },
+    detectGlobal: () => {
+      const cursorDir = join(homedir(), ".cursor");
+      return existsSync(cursorDir) && statSync(cursorDir).isDirectory();
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
@@ -78,6 +84,11 @@ export function createCursorIntegration(options?: {
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
+      if (ctx?.scope === "global") {
+        throw new Error(
+          "Cursor global install does not deploy file primitives yet; global skills/rules are the next slice",
+        );
+      }
       const cwd = resolve(ctx?.cwd ?? process.cwd());
       const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
       if (!roots.some((r) => r === ".agents/skills" || r.startsWith(".agents/skills"))) {
@@ -174,6 +185,7 @@ export function createCursorIntegration(options?: {
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
         managedServers: ctx?.managedServers,
+        scope: ctx?.scope,
       });
     },
   };
@@ -184,13 +196,16 @@ function writeCursorMcpConfig(
   ctx: ConfigureMcpContext & { cwd: string; deployRoots: string[] },
 ): ConfigureMcpReport {
   const { cwd, deployRoots } = ctx;
-  if (!deployRoots.some((r) => r === ".cursor" || r.startsWith(".cursor"))) {
+  const globalScope = ctx.scope === "global";
+  if (!globalScope && !deployRoots.some((r) => r === ".cursor" || r.startsWith(".cursor"))) {
     throw new Error("cursor configureMcp requires a registered .cursor deploy root");
   }
 
-  const destFile = join(cwd, ".cursor", "mcp.json");
-  assertUnderDeployRoots(cwd, destFile, deployRoots);
-  mkdirSync(join(cwd, ".cursor"), { recursive: true });
+  const destFile = globalScope
+    ? join(homedir(), ".cursor", "mcp.json")
+    : join(cwd, ".cursor", "mcp.json");
+  if (!globalScope) assertUnderDeployRoots(cwd, destFile, deployRoots);
+  mkdirSync(dirname(destFile), { recursive: true });
 
   const existing = readExistingMcpServers(destFile);
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
@@ -208,9 +223,9 @@ function writeCursorMcpConfig(
 
   return {
     targetId: ctx.targetId,
-    configPath: MCP_JSON_REL,
+    configPath: globalScope ? destFile : MCP_JSON_REL,
     servers: writtenNames,
-    deployedFiles: [{ path: MCP_JSON_REL }],
+    ...(globalScope ? {} : { deployedFiles: [{ path: MCP_JSON_REL }] }),
     diagnostics,
   } as ConfigureMcpReport;
 }

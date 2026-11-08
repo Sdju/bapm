@@ -17,6 +17,7 @@ export type {
   ConfigureLspReport,
   DeployedFile,
   LspServerConfig,
+  DeploymentScope,
   MaterializeContext,
   MaterializeReport,
   McpEnvMode,

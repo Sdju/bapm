@@ -4,6 +4,7 @@ import type {
   BapmIntegration,
   ConfigureLspReport,
   ConfigureMcpReport,
+  DeploymentScope,
   MaterializeReport,
   IntegrationRegistry,
   McpServerConfig,
@@ -132,6 +133,14 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const excludeIds = normalizeExcludeIds(options);
   const excludeSet = new Set(excludeIds);
   const only = normalizeOnlyMode(options.only);
+  const scope = options.scope === "global" ? "global" : "project";
+  if (scope === "global" && only !== "mcp") {
+    throw new InstallError(
+      "INSTALL_GLOBAL_UNSUPPORTED",
+      "Global install currently supports MCP only (--only mcp); global skills, rules, and compile are the next slice.",
+      { details: { scope, only: only ?? "both" } },
+    );
+  }
   const skipApmMaterialize = only === "mcp";
   const skipMcpConfigure = only === "apm";
   // Accepted for CLI parity; must not refresh refs / bypass frozen / disable policy.
@@ -459,6 +468,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     forcedTargetId,
     manifestActive: resolvedTargetIds,
     configTargetId,
+    scope,
   });
   assertActiveTargetsRegistered(activeTargets, registry);
   const lspTargets = resolveLspTargets(registry, activeTargets, excludeSet);
@@ -472,6 +482,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     primitives: resolved.primitives,
     lspDeployable: lspTargets.length > 0,
   });
+  if (scope === "global") {
+    assertGlobalMcpSupported(activeTargets, registry, excludeSet);
+  }
 
   // Root `target` / `targets` is a deployment allow-list (tg-008), not active
   // selection. Fail closed when it excludes every active host; otherwise warn
@@ -567,6 +580,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         cwd,
         targetId,
         deployRoots: [...target.deployRoots],
+        scope,
         skipNativeRegisteredPackages: [...admittedNativePackages],
       })) as void | MaterializeReport;
       // Adapter skip diagnostics must reach the install result (and CLI), not
@@ -654,6 +668,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       trustContext: installTrustContext,
       env: options.env,
       mcpRegistry: options.mcpRegistry,
+      scope,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
     if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
@@ -1189,6 +1204,8 @@ async function deployMcpAfterPolicy(args: {
   /** Env overlay; `BAPM_NO_GLOBAL_MCP` skips home-scoped MCP configure when truthy. */
   env?: Record<string, string | undefined>;
   mcpRegistry?: McpRegistryLookup;
+  /** Project (default) or user-global configure path selection. */
+  scope?: DeploymentScope;
 }): Promise<{
   lockPath?: string;
   lockDocument?: LockfileDocument;
@@ -1242,6 +1259,7 @@ async function deployMcpAfterPolicy(args: {
       excludeSet: args.excludeSet,
       pruneByTarget,
       diagnostics: args.diagnostics,
+      scope: args.scope,
     });
     return {
       ...refreshMcpLockInventory({
@@ -1403,6 +1421,7 @@ async function deployMcpAfterPolicy(args: {
       excludeSet: args.excludeSet,
       pruneByTarget,
       diagnostics: args.diagnostics,
+      scope: args.scope,
     });
     return {
       ...refreshMcpLockInventory({
@@ -1515,6 +1534,7 @@ async function deployMcpAfterPolicy(args: {
       cwd: args.cwd,
       targetId,
       deployRoots: [...target.deployRoots],
+      scope: args.scope,
       ...(managedServers && managedServers.length > 0 ? { managedServers } : {}),
     })) as ConfigureMcpReport;
     if (!report || report.targetId !== targetId) {
@@ -1544,7 +1564,7 @@ async function deployMcpAfterPolicy(args: {
 
     configuredTargets.push({ targetId, configPath: normalizedConfigPath });
 
-    if (homeScopedMcp && !warnedGlobalTargets.has(targetId)) {
+    if (args.scope !== "global" && homeScopedMcp && !warnedGlobalTargets.has(targetId)) {
       warnedGlobalTargets.add(targetId);
       args.diagnostics.push({
         code: "MCP_GLOBAL_CONFIG_WARN",
@@ -1684,6 +1704,7 @@ async function pruneTargetMcpConfigs(args: {
   excludeSet: Set<string>;
   pruneByTarget: Map<string, string[]>;
   diagnostics: unknown[];
+  scope?: DeploymentScope;
 }): Promise<void> {
   if (!args.registry || args.pruneByTarget.size === 0) return;
 
@@ -1701,6 +1722,7 @@ async function pruneTargetMcpConfigs(args: {
         cwd: args.cwd,
         targetId,
         deployRoots: [...target.deployRoots],
+        scope: args.scope,
         managedServers: [...managedServers],
       })) as ConfigureMcpReport | undefined;
       const adapterDiagnostics = report?.diagnostics;
@@ -1952,8 +1974,14 @@ async function deployLspAfterPolicy(args: {
       args.diagnostics.push(...report.diagnostics.map(markSkipDiagnosticWarn));
     }
 
-    const written = (report.servers ?? [...approvedNames]).filter(Boolean);
-    if (written.length > 0) nextTargets[targetId] = [...new Set(written)].sort();
+    const written = (report.servers ?? [...approvedNames]).filter(
+      (name): name is string => typeof name === "string" && name.length > 0,
+    );
+    if (written.length > 0) {
+      nextTargets[targetId] = [...new Set(written)].sort((left, right) =>
+        left.localeCompare(right),
+      );
+    }
   }
 
   // Previously configured hosts that are not active in this run still release
@@ -2418,6 +2446,26 @@ function dedupePreserveOrder(ids: string[]): string[] {
   return out;
 }
 
+/** Global MCP is opt-in per integration; refuse unsupported hosts clearly. */
+function assertGlobalMcpSupported(
+  activeTargets: string[],
+  registry: IntegrationRegistry | undefined,
+  excludeSet: Set<string>,
+): void {
+  const unsupported: string[] = [];
+  for (const id of activeTargets) {
+    if (excludeSet.has(id)) continue;
+    const target = registry ? findTarget(registry, id) : undefined;
+    if (target && target.supportsGlobalMcp !== true) unsupported.push(id);
+  }
+  if (unsupported.length === 0) return;
+  throw new InstallError(
+    "INSTALL_GLOBAL_UNSUPPORTED",
+    `Global MCP is not supported for target(s): ${unsupported.join(", ")}. Supported global MCP hosts in this release: cursor, opencode.`,
+    { details: { unsupported, activeTargets: [...activeTargets] } },
+  );
+}
+
 async function resolveActiveTargets(args: {
   cwd: string;
   registry?: IntegrationRegistry;
@@ -2425,6 +2473,7 @@ async function resolveActiveTargets(args: {
   forcedTargetId?: string;
   manifestActive?: string[];
   configTargetId?: string;
+  scope?: DeploymentScope;
 }): Promise<string[]> {
   // 1. CLI / forced --target wins over everything.
   if (args.forcedTargetId) {
@@ -2455,11 +2504,13 @@ async function resolveActiveTargets(args: {
     );
   }
 
-  const detection = await detectRegisteredTargets(args.registry, args.cwd);
+  const detection = await detectRegisteredTargets(args.registry, args.cwd, args.scope);
   if (detection.detectedIds.length === 1) return detection.detectedIds;
   throw new InstallError(
     "INSTALL_UNKNOWN_TARGET",
-    "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
+    args.scope === "global"
+      ? `Global target detection is missing or ambiguous; pass --target <id> (supported: cursor, opencode) or set active in ~/.bapm/bapm.yml`
+      : "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
     { details: { detectedTargets: detection.detectedIds, diagnostics: detection.diagnostics } },
   );
 }
@@ -2467,14 +2518,18 @@ async function resolveActiveTargets(args: {
 async function detectRegisteredTargets(
   registry: IntegrationRegistry,
   cwd: string,
+  scope: DeploymentScope = "project",
 ): Promise<{ detectedIds: string[]; diagnostics: unknown[] }> {
-  if (typeof registry.detect === "function") return registry.detect(cwd);
+  // A custom registry `detect(cwd)` is project-only; global detection must use
+  // each target's user-scope detector.
+  if (scope !== "global" && typeof registry.detect === "function") return registry.detect(cwd);
 
   const detectedIds: string[] = [];
   const diagnostics: unknown[] = [];
   for (const target of listRegistry(registry)) {
     try {
-      if (await target.detect({ cwd })) detectedIds.push(target.id);
+      const detect = scope === "global" ? target.detectGlobal : target.detect;
+      if (detect && (await detect({ cwd }))) detectedIds.push(target.id);
     } catch {
       diagnostics.push({
         targetId: target.id,

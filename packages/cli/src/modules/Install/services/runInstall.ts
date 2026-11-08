@@ -19,6 +19,7 @@ import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTarg
 import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
 import { resolvePolicyPorts } from "@/common/policyFetcher.ts";
 import { readConfiguredMcpRegistryUrl, readConfiguredTarget } from "@/modules/Config";
+import { ensureGlobalProject, resolveGlobalProjectRoot } from "@/common/globalProject.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -27,8 +28,13 @@ Usage:
   bapm install [options]
   bapm install <package-ref...>   Add package ref(s) to dependencies.apm (or --dev → devDependencies.apm), then install
   bapm install <archive.zip>      Install from a pack-produced plain zip archive
+  bapm install -g --only mcp      Configure user-global MCP from ~/.bapm (BAPM_HOME override)
 
 Options:
+  --global, -g             Use the user-global project root (~/.bapm, or BAPM_HOME).
+                           This slice is MCP-only: combine with --only mcp (or
+                           --mcp). Global skills/rules/compile are not supported yet.
+  --mcp                    Alias for --only mcp.
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
   --dry-run                Preview direct deps / would-add; no durable project writes
@@ -72,6 +78,8 @@ Notes:
   Host selection: --target <id> → local-overlay active → manifest active → config target → sole auto-detect → fail.
   Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
   Eligible MCP servers are written to the active agent's MCP config (direct mcp by default).
+  Global MCP: Cursor → ~/.cursor/mcp.json, OpenCode → ~/.config/opencode/opencode.json.
+  Project manifests and locks are never read or written with --global.
 `;
 }
 
@@ -81,6 +89,7 @@ export type ParseInstallArgsOptions = {
 };
 
 export type ParsedInstallArgs = {
+  global: boolean;
   frozen: boolean;
   noFrozen: boolean;
   update: boolean;
@@ -112,6 +121,7 @@ export function parseInstallArgs(
   argv: string[],
   options: ParseInstallArgsOptions = {},
 ): ParsedInstallArgs {
+  let global = false;
   let frozenFlag = false;
   let noFrozen = false;
   let update = false;
@@ -136,6 +146,7 @@ export function parseInstallArgs(
   let help = false;
 
   const partial = (): ParsedInstallArgs => ({
+    global,
     frozen: frozenFlag,
     noFrozen,
     update,
@@ -162,6 +173,17 @@ export function parseInstallArgs(
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") {
       help = true;
+      continue;
+    }
+    if (arg === "--global" || arg === "-g") {
+      global = true;
+      continue;
+    }
+    if (arg === "--mcp") {
+      if (only !== undefined && only !== "mcp") {
+        return { ...partial(), error: "Cannot combine --mcp with --only apm" };
+      }
+      only = "mcp";
       continue;
     }
     if (arg === "--frozen") {
@@ -439,6 +461,7 @@ export function parseInstallArgs(
   }
 
   return {
+    global,
     frozen,
     noFrozen,
     update,
@@ -545,21 +568,68 @@ export async function runInstall(
     return { ok: false, message: parsed.error };
   }
 
-  const archivePath = resolveLocalZipArchive(parsed.archivePath, options.cwd);
-  if (parsed.archivePath && !archivePath) {
+  let effectiveOptions = options;
+  const effectiveParsed = parsed;
+  if (parsed.global) {
+    if (parsed.only === "apm") {
+      const message =
+        "--global currently supports MCP only (--only mcp); global skills, rules, and compile are the next slice.";
+      console.error(`${deps.name}: ${message}`);
+      return { ok: false, message };
+    }
+    if (parsed.packageRefs && parsed.packageRefs.length > 0) {
+      const message =
+        "--global does not install APM packages yet; package refs are project-scoped. Use --only mcp for global MCP.";
+      console.error(`${deps.name}: ${message}`);
+      return { ok: false, message };
+    }
+    if (parsed.archivePath) {
+      const message =
+        "--global does not install archive .zip files; archive install is project-scoped.";
+      console.error(`${deps.name}: ${message}`);
+      return { ok: false, message };
+    }
+
+    if (parsed.only !== "mcp") {
+      const message =
+        "Global install currently supports MCP only. Re-run with `bapm install --global --only mcp` (or -g --mcp); global skills, rules, and compile are the next slice.";
+      console.error(`${deps.name}: ${message}`);
+      return { ok: false, message };
+    }
+
+    const globalRoot = resolveGlobalProjectRoot(options.env);
+    if (!parsed.dryRun) {
+      try {
+        ensureGlobalProject(globalRoot);
+      } catch (error) {
+        const message = formatErrorMessage(error);
+        console.error(`${deps.name}: ${message}`);
+        return { ok: false, message };
+      }
+    }
+    effectiveOptions = {
+      ...options,
+      cwd: globalRoot,
+      configDir: globalRoot,
+      marketplaceConfigDir: globalRoot,
+    };
+  }
+
+  const archivePath = resolveLocalZipArchive(effectiveParsed.archivePath, effectiveOptions.cwd);
+  if (effectiveParsed.archivePath && !archivePath) {
     // Explicit path that looks like zip but is missing / not a file — still try core
     // with resolved path so corrupt/missing fails closed with install error.
-    const attempted = resolve(options.cwd ?? process.cwd(), parsed.archivePath);
-    if (parsed.archivePath.toLowerCase().endsWith(".zip")) {
+    const attempted = resolve(effectiveOptions.cwd ?? process.cwd(), effectiveParsed.archivePath);
+    if (effectiveParsed.archivePath.toLowerCase().endsWith(".zip")) {
       // Pass through so core extract fails closed on corrupt/missing.
-      return runCoreInstall(deps, options, parsed, attempted);
+      return runCoreInstall(deps, effectiveOptions, effectiveParsed, attempted);
     }
-    const message = `Unknown install argument (expected options or a local .zip): ${parsed.archivePath}`;
+    const message = `Unknown install argument (expected options or a local .zip): ${effectiveParsed.archivePath}`;
     console.error(`${deps.name}: ${message}`);
     return { ok: false, message };
   }
 
-  return runCoreInstall(deps, options, parsed, archivePath);
+  return runCoreInstall(deps, effectiveOptions, effectiveParsed, archivePath);
 }
 
 async function runCoreInstall(
@@ -587,7 +657,8 @@ async function runCoreInstall(
 
     await registerManifestIntegrationsFromCwd(registry, cwd);
     const result = await coreRunInstall({
-      cwd: options.cwd,
+      cwd,
+      scope: parsed.global ? "global" : "project",
       archivePath: archiveLanded ? undefined : archivePath,
       dryRun: parsed.dryRun,
       packageRefs: parsed.packageRefs,
@@ -605,7 +676,9 @@ async function runCoreInstall(
       only: parsed.only,
       forcedTarget: parsed.target,
       forceTarget: parsed.target,
-      configTarget: readConfiguredTarget(),
+      configTarget: readConfiguredTarget(
+        options.configDir ? { configRoot: options.configDir } : undefined,
+      ),
       integrationRegistry: registry,
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
@@ -618,6 +691,8 @@ async function runCoreInstall(
       }),
       trustTransitiveMcp: parsed.trustTransitiveMcp,
       trustBin: parsed.trustBin,
+      configDir: options.configDir,
+      marketplaceConfigDir: options.marketplaceConfigDir,
       env: options.env ?? (process.env as Record<string, string | undefined>),
       mcpRegistry: {
         // Lazy: installs without registry-only MCP entries never validate or
@@ -642,9 +717,13 @@ async function runCoreInstall(
     emitDiagnosticWarnings(deps.name, result.diagnostics, policyEmitted, trustEmitted);
     if (parsed.dryRun || result.dryRun) {
       emitDryRunPreview(deps.name, result.diagnostics);
-      console.log(`${deps.name}: dry-run preview complete; no changes made`);
+      console.log(
+        `${deps.name}: dry-run preview complete; no changes made${parsed.global ? " (global scope, MCP only)" : ""}`,
+      );
     } else if (result.activeTargets && result.activeTargets.length > 0) {
-      console.log(`${deps.name}: installed for ${result.activeTargets.join(", ")}`);
+      console.log(
+        `${deps.name}: installed for ${result.activeTargets.join(", ")}${parsed.global ? " (global scope, MCP only)" : ""}`,
+      );
     }
     return { ok: true };
   } catch (error) {

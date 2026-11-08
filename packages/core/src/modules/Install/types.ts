@@ -1,11 +1,17 @@
 import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
 import type { McpRegistryLookup } from "@/modules/Mcp";
-import type { IntegrationRegistry } from "@b-apm/integration-api";
+import type { DeploymentScope, IntegrationRegistry } from "@b-apm/integration-api";
 
 export type InstallOnlyMode = "apm" | "mcp";
 
 export type RunInstallOptions = {
   cwd?: string;
+  /**
+   * Deployment scope. `project` (default) writes under `cwd`; `global` uses
+   * user-scoped host paths via `ConfigureMcpContext.scope` and only supports
+   * `only: "mcp"` in this release.
+   */
+  scope?: DeploymentScope;
   frozen?: boolean;
   /** Rejected when combined with frozen. */
   update?: boolean;

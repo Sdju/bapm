@@ -14,21 +14,22 @@ registry; флаг `--local` возвращает прежнее offline-пов�
 ## Использование
 
 ```text
-bapm mcp list [--json]
-bapm mcp show <name> [--registry URL] [--version VER] [--json] [--local]
-bapm mcp search <query> [--registry URL] [--limit N] [--json] [--local]
+bapm mcp list [--json] [--global]
+bapm mcp show <name> [--registry URL] [--version VER] [--json] [--local] [--global]
+bapm mcp search <query> [--registry URL] [--limit N] [--json] [--local] [--global]
 bapm mcp install <name> [--registry URL] [--version VER] [--dry-run] [--json]
 ```
 
-| Флаг         | Эффект                                                      |
-| ------------ | ----------------------------------------------------------- |
-| `--json`     | Стабильный JSON вместо таблицы/полей                        |
-| `--registry` | Базовый URL MCP registry (перекрывает env и user config)    |
-| `--local`    | `search`/`show` только по локальному инвентарю              |
-| `--version`  | Версия сервера в registry; по умолчанию `latest`            |
-| `--limit`    | Максимум результатов `search` (по умолчанию 10)             |
-| `--dry-run`  | `install`: напечатать запись манифеста, ничего не записывая |
-| `--help`     | Показать help (`bapm mcp --help`)                           |
+| Флаг         | Эффект                                                                                         |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| `--json`     | Стабильный JSON вместо таблицы/полей                                                           |
+| `--global`   | Читать инвентарь `~/.bapm` (`BAPM_HOME` override); для `show`/`search` подразумевает `--local` |
+| `--registry` | Базовый URL MCP registry (перекрывает env и user config)                                       |
+| `--local`    | `search`/`show` только по локальному инвентарю                                                 |
+| `--version`  | Версия сервера в registry; по умолчанию `latest`                                               |
+| `--limit`    | Максимум результатов `search` (по умолчанию 10)                                                |
+| `--dry-run`  | `install`: напечатать запись манифеста, ничего не записывая                                    |
+| `--help`     | Показать help (`bapm mcp --help`)                                                              |
 
 `bapm mcp` без подкоманды работает как `bapm mcp list`.
 
@@ -162,6 +163,33 @@ bapm mcp install io.github.github/github-mcp-server --registry https://mcp.inter
 
 `APPROVAL` для dependency-серверов считается по тем же грантам, что и install:
 `executables.allow` / `deny` в манифесте и `~/.bapm/config.json`.
+
+## Global MCP
+
+`bapm mcp list/show --global` читает user-scope проект `~/.bapm` (или
+`BAPM_HOME`): `bapm.yml` и `bapm.lock.yaml` в этом каталоге. Это тот же
+инвентарь и тот же trust/approval расчёт, что для проекта, но без чтения
+project manifest/lock. JSON добавляет `scope: "global"` и `root`, текстовый
+вывод печатает `global scope: <path>`.
+
+Установка global MCP выполняется командой:
+
+```text
+bapm install --global --only mcp --target cursor
+bapm install -g --mcp --target opencode
+```
+
+Global root и пути хостов:
+
+| Host     | Config                             |
+| -------- | ---------------------------------- |
+| Cursor   | `~/.cursor/mcp.json`               |
+| OpenCode | `~/.config/opencode/opencode.json` |
+
+Только MCP: global skills/rules/agents/commands/hooks и `compile` пока не
+поддерживаются, поэтому `bapm install -g` без `--only mcp`/`--mcp` завершается
+ошибкой. Неподдерживаемый хост возвращает `Global MCP is not supported for
+target(s)`.
 
 ## `install` из манифеста
 
