@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
-import { sharedGitCacheInfo } from "@/modules/SharedCache";
+import { sharedGitCacheInfo, sharedHttpCacheInfo } from "@/modules/SharedCache";
 import type {
   CacheCleanOptions,
   CacheCleanResult,
@@ -35,9 +35,12 @@ export function cacheInfo(options: CacheInfoOptions = {}): CacheInfoResult {
     : `cache root: ${cacheRoot}\nentries: ${entries}\nsize: ${sizeBytes} bytes\nfiles/dirs under apm_modules`;
 
   // Keep pre-existing output byte-stable when the shared cache is off; append
-  // the shared section only when BAPM_CACHE_DIR configured one.
+  // the shared sections only when BAPM_CACHE_DIR configured one.
   const shared = sharedGitCacheInfo({ env: options.env });
-  const text = shared.cacheDir ? `${modulesText}\n\n${shared.text}` : modulesText;
+  const sharedHttp = sharedHttpCacheInfo({ env: options.env });
+  const text = shared.cacheDir
+    ? `${modulesText}\n\n${shared.text}\n\n${sharedHttp.text}`
+    : modulesText;
 
   return {
     cacheRoot,
@@ -47,6 +50,7 @@ export function cacheInfo(options: CacheInfoOptions = {}): CacheInfoResult {
     empty,
     text,
     shared,
+    sharedHttp,
   };
 }
 

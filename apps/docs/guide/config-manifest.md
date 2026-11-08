@@ -156,20 +156,22 @@ bapm preview greet -p name=World
 
 Параметры `-p name=value` подставляются как `{{name}}` или `${input:name}` и дополнительно экспортируются как `PARAM_NAME`. Команды выполняются с правами пользователя через системный shell; значения параметров shell-экранируются. Подробности: [run / preview](/reference/run).
 
-## Shared git cache (opt-in)
+## Shared cache: git + HTTP (opt-in)
 
-По умолчанию bapm клонирует git-зависимости прямо в `apm_modules`, без общего кеша. Чтобы несколько проектов на машине переиспользовали bare mirror, задайте корень кеша:
+По умолчанию bapm клонирует git-зависимости прямо в `apm_modules`, без общего кеша. Чтобы несколько проектов на машине переиспользовали bare mirror и кэш registry-ответов, задайте корень кеша:
 
 ```bash
 export BAPM_CACHE_DIR="$HOME/.cache/bapm"
 bapm install
 ```
 
-Layout: `<BAPM_CACHE_DIR>/git/<sha256(normalized repo url)>.git`. Один mirror на репозиторий, не на ref. Local `path`, `file://` и `local:` источники не кешируются. Cache не меняет ключи `apm_modules` и изоляцию identity (rs-016).
+Layout: `<BAPM_CACHE_DIR>/git/<sha256(normalized repo url)>.git` для git mirrors и `<BAPM_CACHE_DIR>/http/<sha256(url + request headers)>` для HTTP `GET 200` responses. Один git mirror на репозиторий, не на ref. Local `path`, `file://` и `local:` источники не кешируются. Cache не меняет ключи `apm_modules` и изоляцию identity (rs-016).
+
+HTTP-кэш по умолчанию включён при заданном `BAPM_CACHE_DIR`; `BAPM_HTTP_CACHE=0` отключает только HTTP, а `BAPM_HTTP_CACHE_TTL` задаёт свежесть в секундах (default `300`). Запросы с `Authorization` / `Cookie`, non-GET методы и ответы `4xx`/`5xx` не кэшируются.
 
 Отключить использование кеша в одном запуске или в CI можно `BAPM_NO_CACHE=1`; `BAPM_CACHE_DIR` при этом можно оставить заданным. При ошибке кеша install печатает warning и делает обычный clone, поэтому opt-in не должен ломать установку.
 
-Посмотреть путь/размер и очистить только mirrors: `bapm cache info`, `bapm cache info --shared`, `bapm cache clean --shared -y`. Обычный `bapm cache clean -y` по-прежнему очищает `apm_modules`. Подробнее: [cache](/reference/cache).
+Посмотреть путь/размер и очистить только shared-кэши: `bapm cache info`, `bapm cache info --shared`, `bapm cache clean --shared -y`, `bapm cache prune --shared`. Обычный `bapm cache clean -y` по-прежнему очищает `apm_modules`. Подробнее: [cache](/reference/cache).
 
 ## Какие правки делать вручную
 

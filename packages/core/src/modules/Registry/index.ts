@@ -48,6 +48,7 @@ export const createRegistryHttpClient = createRegistryClient;
 export const createPackageRegistryClient = createRegistryClient;
 
 export { createFetchTransport, resolveRegistryToken, joinRegistryUrl } from "./transport.ts";
+export type { FetchTransportOptions } from "./transport.ts";
 
 export {
   EXTRA_CA_BUNDLE_ENV,

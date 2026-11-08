@@ -2,13 +2,47 @@ import { RegistryError } from "./errors.ts";
 import { applyExtraCaBundleFromEnv } from "./tlsTrust.ts";
 import type { RegistryHttpRequest, RegistryHttpResponse, RegistryHttpTransport } from "./types.ts";
 import { fetchWithRedirectAuthDrop } from "@/modules/Auth";
+import {
+  isSharedHttpCacheableRequest,
+  lookupSharedHttpCache,
+  storeSharedHttpCache,
+} from "@/modules/SharedCache";
+import type { SharedCacheEnv } from "@/modules/SharedCache";
 
-/** Default real-fetch transport — redirect-safe for Authed requests (sc-003). */
-export function createFetchTransport(): RegistryHttpTransport {
+export type FetchTransportOptions = {
+  /** Env for the opt-in shared HTTP cache (default: `process.env`). */
+  env?: SharedCacheEnv;
+};
+
+/**
+ * Default real-fetch transport — redirect-safe for Authed requests (sc-003).
+ *
+ * GET 200 responses are cached when the opt-in shared HTTP cache is enabled
+ * (`BAPM_CACHE_DIR`, minus `BAPM_NO_CACHE=1` / `BAPM_HTTP_CACHE=0`). Requests
+ * carrying Authorization/Cookie headers, non-GET methods, and non-200
+ * responses are never cached. Cache errors fall back to the network.
+ */
+export function createFetchTransport(options: FetchTransportOptions = {}): RegistryHttpTransport {
+  const env = options.env ?? process.env;
   return {
     async fetch(request: RegistryHttpRequest): Promise<RegistryHttpResponse> {
       // Additive corporate CA support; NODE_EXTRA_CA_CERTS is handled by Node itself.
       applyExtraCaBundleFromEnv();
+
+      const cacheRequest = {
+        method: request.method,
+        url: request.url,
+        headers: request.headers,
+      };
+      if (isSharedHttpCacheableRequest(cacheRequest)) {
+        try {
+          const cached = lookupSharedHttpCache(cacheRequest, { env });
+          if (cached.hit) return cached.response;
+        } catch {
+          // Cache read must never break a registry request.
+        }
+      }
+
       const init: RequestInit = {
         method: request.method,
         headers: request.headers,
@@ -33,11 +67,24 @@ export function createFetchTransport(): RegistryHttpTransport {
       response.headers.forEach((value, key) => {
         headers[key.toLowerCase()] = value;
       });
-      return {
+      const result: RegistryHttpResponse = {
         status: response.status,
         headers,
         body: new Uint8Array(ab),
       };
+
+      // Only idempotent GET 200 responses are cacheable. Redirects are
+      // followed manually inside fetchWithRedirectAuthDrop; the final 200 is
+      // stored under the original request URL only when the request is safe.
+      if (isSharedHttpCacheableRequest(cacheRequest)) {
+        try {
+          storeSharedHttpCache(cacheRequest, result, { env });
+        } catch {
+          // Cache write must never break a registry request.
+        }
+      }
+
+      return result;
     },
   };
 }
