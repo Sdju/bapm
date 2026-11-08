@@ -55,7 +55,17 @@
 | P2 targets/config/lifecycle                    | fixed                         | `e686568` |
 | P2 Copilot marketplace + check-clean           | fixed                         | `2b7c517` |
 
-Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime, registry MCP lookup, canvas/LSP deploy, полный config key set).
+Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime setup/remove, registry MCP lookup, canvas/LSP deploy, view -g).
+
+### Пачка 6 (08.11.2026)
+
+| Что                                                                       | Статус                                   | Коммит    |
+| ------------------------------------------------------------------------- | ---------------------------------------- | --------- |
+| `config` key set: target, mcp-registry-url, temp-dir, self-update.channel | fixed (stored-only consumers documented) | `54c2e69` |
+| `cache prune --shared`                                                    | fixed                                    | `ac1a3ee` |
+| `runtime list/status` read-only                                           | fixed (setup/remove deferred)            | `8bc38df` |
+
+Проверки: core 278 файлов / 1522 теста, CLI 141 / 782, `vp check` 0 ошибок, conformance/specs OK.
 
 ### Пачка 5 (08.11.2026)
 
