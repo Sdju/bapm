@@ -55,7 +55,18 @@
 | P2 targets/config/lifecycle                    | fixed                         | `e686568` |
 | P2 Copilot marketplace + check-clean           | fixed                         | `2b7c517` |
 
-Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope, runtime, compile applyTo, pack Claude bundle/plugin hooks-assets, shared cache, registry MCP lookup, canvas/LSP deploy).
+Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime/run, compile applyTo/distributed, pack Claude bundle, registry MCP lookup, canvas/LSP deploy).
+
+### Пачка 4 (08.11.2026)
+
+| Что                                                          | Статус | Коммит    |
+| ------------------------------------------------------------ | ------ | --------- |
+| `approve --all/--recommended` (pending → grants)             | fixed  | `6425656` |
+| `compile --target a,b` / `--all`, collision fail-closed      | fixed  | `56a8d29` |
+| Portable plugin pack: declared paths/hooks/assets validation | fixed  | `72137ec` |
+| Opt-in shared git mirror cache (`BAPM_CACHE_DIR`)            | fixed  | `fbe79f5` |
+
+Проверки: core 274 файла / 1490 тестов, CLI 136 / 735, `vp check` 0 ошибок, conformance/specs OK.
 
 ### Пачка 3 (08.11.2026)
 
