@@ -30,6 +30,7 @@ import {
   materializeRegistryNodes,
   resolveAndLock,
   resolveDependencyGraph,
+  type DownloadPackageSpec,
   type ResolvedNode,
 } from "@/modules/Resolver";
 import {
@@ -82,6 +83,7 @@ import {
 } from "./deployedInventory.ts";
 import { InstallError } from "./errors.ts";
 import { enforceFrozen } from "./frozen.ts";
+import { assertFrozenDeployInventory } from "./frozenUnderRecorded.ts";
 import { gateInsecureBeforeFetch, normalizeAllowInsecureHosts } from "./insecurePolicy.ts";
 import {
   assertMarketplacePackageRefsResolvable,
@@ -230,6 +232,12 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   let nodes: ResolvedNode[] = [];
   let lockDocument: LockfileDocument | undefined;
   let policyDiagnostics: unknown[] = [];
+  /**
+   * Frozen package materialization is deferred until after the under-record gate
+   * so a lock that cannot prove the would-be deploy set fails before local
+   * package copies (and before any lock/harness mutation).
+   */
+  let frozenPackages: DownloadPackageSpec[] | undefined;
 
   const ports = {
     gitRemote: options.gitRemote,
@@ -270,12 +278,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
           identity: n.identity,
           name: n.name,
         }));
-      await downloadPackages({
-        cwd,
-        packages,
-        parallelDownloads: options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS,
-        downloader: options.downloader,
-      });
+      frozenPackages = packages;
       await materializeRegistryNodes(nodes, {
         cwd,
         mirrorUrl: options.mirrorUrl,
@@ -402,6 +405,28 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         primitives: raw,
         declarationOrder,
       });
+
+  // Frozen must not deploy primitives that the lock does not record, and local
+  // snapshots must be re-verified before target materialize / lock writes.
+  if (frozen && !skipApmMaterialize && lockDocument) {
+    assertFrozenDeployInventory({
+      cwd,
+      document: lockDocument,
+      nodes,
+      primitives: resolved.primitives,
+    });
+  }
+
+  // Deferred frozen package copy (local modules) runs only after the gate.
+  if (frozenPackages) {
+    await downloadPackages({
+      cwd,
+      packages: frozenPackages,
+      parallelDownloads: options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS,
+      downloader: options.downloader,
+    });
+    frozenPackages = undefined;
+  }
 
   // Resolve target state only after independent preconditions (manifest,
   // frozen, resolution, and policy) pass, but before target harness writes.

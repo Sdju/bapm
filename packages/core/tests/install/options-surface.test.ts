@@ -12,6 +12,7 @@ import {
   writeMcpLeafProject,
   type TempProject,
 } from "./ux-helpers.ts";
+import { addDeployedFilesToLock } from "./helpers.ts";
 
 describe("install options surface", () => {
   let project: TempProject | undefined;
@@ -63,6 +64,9 @@ describe("install options surface", () => {
       forceTarget: "cursor",
     });
     expect(seeded.result).toMatchObject({ ok: true });
+    // The spy target reports no deployed files; seed the would-be deploy set so
+    // the frozen under-record gate is not the subject of this MCP test.
+    addDeployedFilesToLock(project.cwd, "leaf", ["leaf/.apm/skills/hello/SKILL.md"]);
 
     writeFileSync(
       join(project.cwd, ".cursor", "mcp.json"),
