@@ -193,6 +193,7 @@ export function writeDirectMcpHttpProject(
     serverName?: string;
     url?: string;
     envYaml?: string;
+    headersYaml?: string;
     withCursorDir?: boolean;
   },
 ): void {
@@ -208,6 +209,11 @@ export function writeDirectMcpHttpProject(
       ? `      env:
 ${options.envYaml}`
       : "";
+  const headersBlock =
+    options?.headersYaml !== undefined
+      ? `      headers:
+${options.headersYaml}`
+      : "";
 
   writeFileSync(
     join(cwd, "bapm.yml"),
@@ -220,7 +226,7 @@ ${cursorMapYaml(linkCursorIntegration(cwd))}dependencies:
       registry: false
       transport: http
       url: ${url}
-${envBlock}
+${envBlock}${headersBlock}
 `,
     "utf8",
   );

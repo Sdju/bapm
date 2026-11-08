@@ -5,6 +5,7 @@ import type {
   ConfigureMcpReport,
   MaterializeReport,
   IntegrationRegistry,
+  McpServerConfig,
 } from "@b-apm/integration-api";
 import { getConfigureMcp } from "@b-apm/integration-api";
 import {
@@ -953,10 +954,7 @@ async function deployMcpAfterPolicy(args: {
     };
   }
 
-  let wroteConfig = false;
-  let configPath: string | undefined;
-  let configuredTargetId: string | undefined;
-  let configuredServers: typeof approved | undefined;
+  const configuredTargets: Array<{ targetId: string; configPath: string }> = [];
 
   for (const targetId of args.activeTargets) {
     const target = findTarget(args.registry, targetId);
@@ -980,13 +978,18 @@ async function deployMcpAfterPolicy(args: {
     // Lookup: overrides → process.env → effective manifest `env` (fills gaps).
     const bakeMode = target.mcpEnvMode === "translate" ? "translate" : "bake";
     const manifestEnv = args.rootManifest.env;
+    let configuredServers: McpServerConfig[];
     try {
-      configuredServers = approved.map((server) =>
-        bakeMcpServerMaps(server, {
+      configuredServers = approved.map((server) => {
+        const baked = bakeMcpServerMaps(server, {
           mode: bakeMode,
           ...(manifestEnv !== undefined ? { manifestEnv } : {}),
-        }),
-      );
+        });
+        // Internal provenance stays on `approved` for trust/lock inventory; the
+        // host only receives the portable MCP server contract.
+        const { origin: _origin, packageName: _packageName, ...hostServer } = baked;
+        return hostServer;
+      });
     } catch (error) {
       if (error instanceof McpEnvBakeError) {
         throw new InstallError("INSTALL_MCP_ENV_BAKE", error.message, {
@@ -1025,10 +1028,7 @@ async function deployMcpAfterPolicy(args: {
       );
     }
 
-    wroteConfig = true;
-    configuredTargetId = targetId;
-    configPath = normalizedConfigPath;
-    break;
+    configuredTargets.push({ targetId, configPath: normalizedConfigPath });
   }
 
   const updated = refreshMcpLockInventory({
@@ -1040,9 +1040,7 @@ async function deployMcpAfterPolicy(args: {
     update: {
       kind: "declarations",
       servers: approved,
-      ...(wroteConfig && configPath && configuredTargetId
-        ? { target: { targetId: configuredTargetId, configPath } }
-        : {}),
+      ...(configuredTargets.length > 0 ? { targets: configuredTargets } : {}),
     },
   });
 
@@ -1059,6 +1057,8 @@ type McpLockInventoryUpdate =
       kind: "declarations";
       servers: CollectedMcpServer[];
       target?: { targetId: string; configPath: string };
+      /** All targets configured this run; each gets `mcp_configs`/`mcp_target_servers`. */
+      targets?: Array<{ targetId: string; configPath: string }>;
     }
   | { kind: "prune"; rootPackageName: string; livePackageNames?: string[] }
   | { kind: "clear" };
@@ -1096,9 +1096,15 @@ function refreshMcpLockInventory(args: {
       document: args.document,
       servers: update.servers,
       ...update.target,
+      ...(update.targets ? { targets: update.targets } : {}),
     });
     // Nothing existed and nothing is authored: avoid a redundant second lock write.
-    if (!hadInventory && update.servers.length === 0 && !update.target) {
+    if (
+      !hadInventory &&
+      update.servers.length === 0 &&
+      !update.target &&
+      !(update.targets && update.targets.length > 0)
+    ) {
       return { lockPath: args.lockPath, lockDocument: args.document };
     }
   } else if (update.kind === "prune") {

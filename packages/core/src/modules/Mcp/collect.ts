@@ -16,6 +16,7 @@ type ParsedMcpEntry = {
   args?: unknown[];
   url?: string;
   env?: Record<string, string>;
+  headers?: Record<string, string>;
   registry?: unknown;
 };
 
@@ -108,6 +109,7 @@ function toCollected(
     args: entry.args,
     url: entry.url,
     env: entry.env,
+    headers: entry.headers,
     registry: entry.registry,
     origin,
     packageName,
@@ -132,6 +134,10 @@ function parseMcpList(raw: unknown): ParsedMcpEntry[] {
       env:
         rec.env && typeof rec.env === "object" && !Array.isArray(rec.env)
           ? (rec.env as Record<string, string>)
+          : undefined,
+      headers:
+        rec.headers && typeof rec.headers === "object" && !Array.isArray(rec.headers)
+          ? (rec.headers as Record<string, string>)
           : undefined,
       registry: rec.registry,
     });

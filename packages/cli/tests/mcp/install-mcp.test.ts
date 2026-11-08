@@ -65,6 +65,36 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     expect(readMcpJsonRaw(project.cwd)).not.toContain("${API_TOKEN}");
   });
 
+  test("HTTP headers bake into Cursor config while lock keeps the placeholder", async () => {
+    project = createTempProject();
+    const secret = "cursor-header-bake-token-1c7e";
+    writeDirectMcpHttpProject(project.cwd, {
+      headersYaml: `        Authorization: "Bearer \${MCP_TOKEN}"\n`,
+    });
+
+    const { result, combined } = await runInProject(
+      project.cwd,
+      ["install", "--target", "cursor"],
+      { MCP_TOKEN: secret },
+    );
+    expectKnownFlags(combined);
+    expect(result).toBe(0);
+
+    const servers = readMcpServers(project.cwd);
+    const entry = servers.github as {
+      headers?: Record<string, string>;
+      origin?: unknown;
+      packageName?: unknown;
+    };
+    expect(entry.headers?.Authorization).toBe(`Bearer ${secret}`);
+    expect(entry.origin).toBeUndefined();
+    expect(entry.packageName).toBeUndefined();
+
+    const lock = readLockText(project.cwd);
+    expect(lock).toContain("Bearer ${MCP_TOKEN}");
+    expect(lock).not.toContain(secret);
+  });
+
   test("second install keeps owned mcpServers keys stable (idempotent)", async () => {
     project = createTempProject();
     writeDirectMcpProject(project.cwd);
