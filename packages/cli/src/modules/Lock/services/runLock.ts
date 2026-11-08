@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { resolvePolicyPorts } from "@/common/policyFetcher.ts";
 import type { LockDeps, LockOptions, LockResult } from "../types/lock.types.ts";
 
 export function formatLockHelp(_deps?: LockDeps): string {
@@ -294,6 +295,10 @@ export async function runLock(deps: LockDeps, options: LockOptions): Promise<Loc
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
       noRepoPolicy: parsed.noRepoPolicy,
+      ...resolvePolicyPorts({
+        noPolicy: parsed.noPolicy,
+        policyPorts: options.policyPorts,
+      }),
     });
     const lockPath = result.lockPath;
     return {

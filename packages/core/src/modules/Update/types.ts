@@ -1,4 +1,18 @@
-import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
+import type { Downloader, GitRemote, ResolveAndLockOptions, TagLister } from "@/modules/Resolver";
+
+/** Policy discovery/fetch ports forwarded to the lock+install gates. */
+type PolicyPorts = Pick<
+  ResolveAndLockOptions,
+  | "fetchPolicyUrl"
+  | "httpGet"
+  | "fetchAncestor"
+  | "defaultFetchFailure"
+  | "implementationDefaultHost"
+  | "providers"
+  | "policyProviders"
+  | "listGitRemotes"
+  | "remotes"
+>;
 
 export type UpdatePlanEntry = {
   name: string;
@@ -51,7 +65,7 @@ export type RunUpdateOptions = {
   noPolicy?: boolean;
   /** Skip only repository-local policy; org/remote policy still applies. */
   noRepoPolicy?: boolean;
-};
+} & PolicyPorts;
 
 export type UpdateResult = {
   ok: boolean;

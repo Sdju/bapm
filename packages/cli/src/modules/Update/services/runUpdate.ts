@@ -6,8 +6,14 @@ import {
 } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 import { createInterface } from "node:readline";
+import { resolvePolicyPorts, type PolicyCliPorts } from "@/common/policyFetcher.ts";
 
-export type UpdateOptions = { args?: string[]; cwd?: string };
+export type UpdateOptions = {
+  args?: string[];
+  cwd?: string;
+  /** Injected policy ports (tests); production defaults to a curl fetcher. */
+  policyPorts?: PolicyCliPorts;
+};
 
 export type ParsedUpdateArgs = {
   yes: boolean;
@@ -196,6 +202,10 @@ export async function runUpdateCli(
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
       noRepoPolicy: parsed.noRepoPolicy,
+      ...resolvePolicyPorts({
+        noPolicy: parsed.noPolicy,
+        policyPorts: options.policyPorts,
+      }),
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),

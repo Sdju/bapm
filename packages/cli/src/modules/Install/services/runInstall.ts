@@ -16,6 +16,7 @@ import {
 } from "@/modules/Integrations";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
+import { resolvePolicyPorts } from "@/common/policyFetcher.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -578,6 +579,11 @@ async function runCoreInstall(
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
       noRepoPolicy: parsed.noRepoPolicy,
+      ...resolvePolicyPorts({
+        noPolicy: parsed.noPolicy,
+        env: options.env,
+        policyPorts: options.policyPorts,
+      }),
       trustTransitiveMcp: parsed.trustTransitiveMcp,
       trustBin: parsed.trustBin,
       env: options.env ?? (process.env as Record<string, string | undefined>),

@@ -41,6 +41,18 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
     downloader: options.downloader,
   };
 
+  const policyPorts = {
+    policyProviders: options.policyProviders ?? options.providers,
+    providers: options.providers ?? options.policyProviders,
+    listGitRemotes: options.listGitRemotes,
+    remotes: options.remotes,
+    fetchPolicyUrl: options.fetchPolicyUrl,
+    httpGet: options.httpGet,
+    fetchAncestor: options.fetchAncestor,
+    defaultFetchFailure: options.defaultFetchFailure,
+    implementationDefaultHost: options.implementationDefaultHost,
+  };
+
   const verbose = options.verbose === true;
 
   if (dryRun) {
@@ -81,6 +93,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
     policy: options.policy ?? options.policyPath,
     noPolicy: options.noPolicy,
     noRepoPolicy: options.noRepoPolicy,
+    ...policyPorts,
     ...ports,
   });
 
@@ -93,6 +106,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
       policy: options.policy ?? options.policyPath,
       noPolicy: options.noPolicy,
       noRepoPolicy: options.noRepoPolicy,
+      ...policyPorts,
       ...ports,
     });
   } catch {

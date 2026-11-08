@@ -1,7 +1,13 @@
 import { runPolicyStatus, type PolicyStatusReport } from "@b-apm/core";
+import { resolvePolicyPorts, type PolicyCliPorts } from "@/common/policyFetcher.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
-export type PolicyCliOptions = { args?: string[]; cwd?: string };
+export type PolicyCliOptions = {
+  args?: string[];
+  cwd?: string;
+  /** Injected policy ports (tests); production defaults to a curl fetcher. */
+  policyPorts?: PolicyCliPorts;
+};
 
 export type ParsedPolicyArgs = {
   subcommand?: "status";
@@ -189,6 +195,10 @@ export async function runPolicyCli(
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
       noRepoPolicy: parsed.noRepoPolicy,
+      ...resolvePolicyPorts({
+        noPolicy: parsed.noPolicy,
+        policyPorts: options.policyPorts,
+      }),
     });
 
     if (parsed.json) {

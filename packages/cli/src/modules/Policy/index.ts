@@ -5,6 +5,7 @@ import {
   runPolicyCli,
 } from "./services/runPolicy.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
+import type { PolicyCliOptions } from "./services/runPolicy.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };
 export { formatPolicyHelp, formatPolicyStatusHelp, parsePolicyArgs };
@@ -16,7 +17,7 @@ export function createPolicy(deps?: LifecycleCliDeps) {
     lockFile: "bapm.lock.yaml",
   };
   return {
-    async run(options: { args?: string[]; cwd?: string }): Promise<LifecycleResult> {
+    async run(options: PolicyCliOptions): Promise<LifecycleResult> {
       return runPolicyCli(resolved, options);
     },
     formatHelp(): string {

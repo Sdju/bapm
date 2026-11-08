@@ -1,5 +1,6 @@
 import { formatUpdateHelp, parseUpdateArgs, runUpdateCli } from "./services/runUpdate.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
+import type { UpdateOptions } from "./services/runUpdate.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };
 export { formatUpdateHelp, parseUpdateArgs };
@@ -11,7 +12,7 @@ export function createUpdate(deps?: LifecycleCliDeps) {
     lockFile: "bapm.lock.yaml",
   };
   return {
-    async run(options: { args?: string[]; cwd?: string }): Promise<LifecycleResult> {
+    async run(options: UpdateOptions): Promise<LifecycleResult> {
       return runUpdateCli(resolved, options);
     },
     formatHelp(): string {
