@@ -36,6 +36,12 @@ export type CompileAgentsMdOptions = {
   /** Select every registered compile-capable target (project scope). */
   all?: boolean;
   /**
+   * Opt-in distributed placement: instruction primitives with `applyTo` write
+   * host output files in their literal target directories. The default remains
+   * one single-file output per selected host.
+   */
+  distributed?: boolean;
+  /**
    * User-config target default (`~/.bapm/config.json` `target`). Applied after
    * manifest/local-overlay `active` and before auto-detect.
    */

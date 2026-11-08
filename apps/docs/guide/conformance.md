@@ -21,7 +21,7 @@
 
 Пока проще, чем в APM:
 
-- `compile` собирает один файл (`AGENTS.md` и аналоги) для одного агента за запуск, без распределения инструкций по каталогам через `applyTo`;
+- `compile` по умолчанию собирает один файл (`AGENTS.md` и аналоги) на агента; opt-in `--distributed` раскладывает instructions по каталогам из `applyTo` (консервативный префикс пути, без APM-оптимизатора);
 - LSP (`dependencies.lsp`) и canvas не разворачиваются: install печатает `LSP_UNSUPPORTED` / `CANVAS_UNSUPPORTED`, а не игнорирует их молча;
 - установка из registry экспериментальная (`BAPM_EXPERIMENTAL_REGISTRIES=1`).
 
@@ -35,7 +35,7 @@
 | Порядок записей в lock     | `(repo_url, virtual_path)`                                                                | APM: по глубине дерева                                         | [Lock-файл](/guide/lockfile)                         |
 | YAML                       | Строгий subset: якоря, алиасы и кастомные теги отвергаются при чтении                     | APM: свободный SafeLoader; OpenAPM: строгий subset             | [Манифест](/guide/config-manifest)                   |
 | Раскладка §8.5             | Не заявляется; пути задают пакеты `@b-apm/integration-*`                                  | OpenAPM: каноническая per-target карта                         | [Куда попадают файлы](/guide/supported-hosts#layout) |
-| `compile`                  | Один файл хоста за запуск, без per-path `applyTo`                                         | APM: раскладка по каталогам через `applyTo`                    | [compile](/reference/compile)                        |
+| `compile`                  | Один файл хоста по умолчанию; opt-in `--distributed` — буквальный префикс `applyTo`       | APM: раскладка через context optimizer                         | [compile](/reference/compile)                        |
 | `bapm.local.yml` и `local` | Личный оверлей настроек и личный пакет с отдельным lock                                   | Нет ни в APM, ни в OpenAPM                                     | [Личные настройки](/guide/manifest-overlay)          |
 | Registry                   | Клиент только за `BAPM_EXPERIMENTAL_REGISTRIES=1`; роль registry-хоста не заявляется      | APM: registry-клиент в обычном install; OpenAPM: роль Registry | [Registries](/guide/manifest-registries)             |
 

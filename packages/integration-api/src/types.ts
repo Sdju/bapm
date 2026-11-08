@@ -98,6 +98,12 @@ export type CompileContext = {
   outputFile?: string;
   /** Core-owned write intent; false for validation and preview requests. */
   write: boolean;
+  /**
+   * Core-owned distributed placement intent. When true, hosts that normally
+   * omit instruction primitives (because install materializes them as native
+   * rules) MUST render them into this compile output instead.
+   */
+  includeInstructions?: boolean;
 };
 
 /** Target-owned compile emission result. Paths are project-relative. */

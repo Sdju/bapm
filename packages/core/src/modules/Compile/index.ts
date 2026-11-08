@@ -5,6 +5,7 @@
  *
  * - `compileAgentsMd` / `compileProject` / `runCompile` / `emitAgentsMd`
  * - Single target (`forcedTarget`) or multi (`forcedTargets` / `all`)
+ * - `distributed` opts into conservative per-directory `applyTo` placement
  * - `validate` / `dryRun` skip durable write; `verbose` yields thin attribution
  *
  * ## Example

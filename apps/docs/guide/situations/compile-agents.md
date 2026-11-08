@@ -32,6 +32,7 @@ bapm compile -o docs/AGENTS.md         # в другой путь (один хо
 bapm compile -v                        # показать, из каких файлов собрано
 bapm compile --target cursor,claude    # два хоста за один запуск
 bapm compile --all                     # все compile-capable хосты
+bapm compile --distributed             # разложить applyTo по каталогам
 ```
 
 Имя файла зависит от агента: [таблица](/guide/supported-hosts#layout). Агент выбирается так же, как для install; если в `active` указано несколько агентов, передайте `--target` или `--all`. В multi-target режиме каждый хост пишет свой файл за один запуск.
@@ -53,6 +54,33 @@ Wrote CLAUDE.md (claude) (2 primitives)
 
 `--all` работает так же, но выбирает все зарегистрированные compile-capable хосты. Если среди них есть несколько хостов с `AGENTS.md` (обычный случай), запуск завершится collision-ошибкой: выберите явный список без дублей путей.
 
+## Пример: инструкции по каталогам {#distributed}
+
+По умолчанию compile собирает один файл на хост. Если instruction-примитивы размечены `applyTo`, включите distributed mode:
+
+```markdown
+---
+description: TypeScript style
+applyTo: "src/**"
+---
+
+# TypeScript
+
+Use explicit types in src.
+```
+
+```bash
+bapm compile --target cursor --distributed
+```
+
+```text
+Wrote src/AGENTS.md (2 primitives)
+```
+
+Glob `src/**` даёт каталог `src/`, `docs/*.md` — `docs/`. Имя файла остаётся хостовым: `src/AGENTS.md`, `src/CLAUDE.md`, `.github/src/copilot-instructions.md`. Instructions без `applyTo` и не-instruction примитивы остаются в корневом `AGENTS.md`. Root-only globs (`**/*.ts`, `*.ts`) тоже остаются в корне. `--strategy distributed` — синоним `--distributed`; `--strategy single-file` возвращает обычный режим.
+
+`--distributed` не принимает `-o`: у каждого каталога свой выходной путь. Абсолютные `applyTo`, `..`, `.git`/`node_modules` и симлинки в пути отвергаются без записи.
+
 ## Что попадает в файл {#contents}
 
 Состав зависит от агента: то, что агент уже получил отдельными файлами при install, в собранный файл не дублируется.
@@ -73,7 +101,7 @@ Wrote CLAUDE.md (claude) (2 primitives)
 - `-o` меняет каталог, но не всегда имя: для Codex, OpenCode, Grok Build и Hermes файл должен называться `AGENTS.md`, для Gemini — `GEMINI.md`. `-o` допустим только при выборе одного хоста.
 - `--target` и `--all` взаимоисключающие.
 - Файл генерируется целиком: ручные правки пропадут при следующем `compile`. Пишите инструкции в пакете, а не в сгенерированном файле.
-- `compile` проще, чем `apm compile` из microsoft/apm: он собирает один файл на хоста без распределения по каталогам через `applyTo`.
+- Distributed mode — консервативное подмножество `apm compile`: берётся буквальный префикс пути из `applyTo`, без файлового scoring и наследования контекста APM-оптимизатора. По умолчанию режим выключен.
 
 ## Если не получилось
 

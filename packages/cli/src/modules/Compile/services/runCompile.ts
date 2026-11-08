@@ -20,6 +20,8 @@ export type ParsedCompileArgs = {
   targets?: string[];
   /** Select every registered compile-capable host. */
   all?: boolean;
+  /** Opt-in per-directory applyTo placement. */
+  distributed: boolean;
   help?: boolean;
   error?: string;
 };
@@ -36,11 +38,21 @@ function parseTargetList(value: string): string[] {
   return ids;
 }
 
+function parseStrategy(value: string): "single-file" | "distributed" | undefined {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "single-file" || normalized === "single" || normalized === "default") {
+    return "single-file";
+  }
+  if (normalized === "distributed") return "distributed";
+  return undefined;
+}
+
 export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
   let validate = false;
   let dryRun = false;
   let verbose = false;
   let all = false;
+  let distributed = false;
   let outputFile: string | undefined;
   let targets: string[] | undefined;
 
@@ -49,6 +61,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     dryRun,
     verbose,
     all,
+    distributed,
     outputFile,
     target: targets?.[0],
     targets,
@@ -73,6 +86,37 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     }
     if (arg === "--all") {
       all = true;
+      continue;
+    }
+    if (arg === "--distributed") {
+      distributed = true;
+      continue;
+    }
+    if (arg === "--strategy") {
+      const value = argv[i + 1];
+      if (value === undefined || value.startsWith("-")) {
+        return { ...snapshot(), error: "missing value for --strategy <single-file|distributed>" };
+      }
+      const strategy = parseStrategy(value);
+      if (!strategy) {
+        return {
+          ...snapshot(),
+          error: `unknown compile strategy: ${value} (expected single-file or distributed)`,
+        };
+      }
+      distributed = strategy === "distributed";
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--strategy=")) {
+      const strategy = parseStrategy(arg.slice("--strategy=".length));
+      if (!strategy) {
+        return {
+          ...snapshot(),
+          error: `unknown compile strategy: ${arg.slice("--strategy=".length)} (expected single-file or distributed)`,
+        };
+      }
+      distributed = strategy === "distributed";
       continue;
     }
     if (arg === "--output" || arg === "-o") {
@@ -126,12 +170,14 @@ export function formatCompileHelp(deps: LifecycleCliDeps): string {
   return `${deps.name} compile — Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
 
 Usage:
-  bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--dry-run] [-v] [--validate]
+  bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--dry-run] [-v] [--validate]
 
 Options:
   -o, --output PATH   Override the target's default output path (single target only)
   --target <ids>      Force one host, or a comma-separated list (cursor,claude)
   --all               Emit for every registered compile-capable host in one run
+  --distributed       Place instruction applyTo globs in matching project directories
+  --strategy <name>   single-file (default) or distributed
   --dry-run           Preview every would-write path; do not write
   -v, --verbose       Print thin source attribution (name, type, path)
   --validate          Discover/validate only; do not write
@@ -145,6 +191,13 @@ Multi-target: each selected host writes its own file in one invocation. If two s
 hosts share an output path (Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, Antigravity
 all use AGENTS.md), compile fails closed and lists the colliding hosts — it never overwrites.
 -o is not accepted with multi-target selection; run one host per output path.
+
+Distributed mode (opt-in) reads instruction applyTo (scalar, comma list, or YAML list),
+uses the literal directory prefix of each glob (src/** → src/AGENTS.md, docs/*.md → docs/),
+keeps global/unmatched instructions in the root output, and preserves each host's default
+basename (CLAUDE.md, GEMINI.md, .github/copilot-instructions.md). Root-only globs such as
+**/*.ts stay in the root file. Outputs never leave the project; symlinked or escaping paths
+fail closed. -o is rejected in distributed mode because each directory gets its own file.
 
 Run from the directory that contains ${deps.manifestFile}.
 `;
@@ -169,6 +222,12 @@ export async function runCompileCli(
     return { ok: false, exitCode: 1, message };
   }
   const explicitMulti = (parsed.targets?.length ?? 0) > 1;
+  if (parsed.distributed && parsed.outputFile) {
+    const message =
+      "--distributed cannot share one --output / -o path; per-directory outputs derive from the target default";
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, exitCode: 1, message };
+  }
   if (explicitMulti && parsed.outputFile) {
     const message =
       "multiple compile targets cannot share one --output path; select a single target or omit -o";
@@ -187,6 +246,7 @@ export async function runCompileCli(
       forcedTarget: multi ? undefined : parsed.target,
       forcedTargets: multi && !parsed.all ? parsed.targets : undefined,
       all: parsed.all === true,
+      distributed: parsed.distributed,
       configTarget: readConfiguredTarget(),
       integrationRegistry: registry,
       validate: parsed.validate,
@@ -206,7 +266,7 @@ export async function runCompileCli(
     // validate-first: when validate is set, never use dry-run would-write messaging
     if (parsed.validate) {
       console.log(
-        `compile --validate ok (${result.primitivesCount} primitives; ${result.outputs.length} targets; no write)`,
+        `compile --validate ok (${result.primitivesCount} primitives; ${result.outputs.length} outputs; no write)`,
       );
     } else if (parsed.dryRun) {
       if (multiple) {

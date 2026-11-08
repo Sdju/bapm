@@ -1,4 +1,4 @@
-import { join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import type { BapmIntegration, IntegrationRegistry } from "@b-apm/integration-api";
 import { loadManifest, resolveActive } from "@/modules/Manifest";
 import {
@@ -7,6 +7,11 @@ import {
   type AttributedPrimitive,
 } from "@/modules/Primitives";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
+import {
+  assertSafeCompileOutput,
+  buildDistributedPlan,
+  type DistributedPlan,
+} from "./distributed.ts";
 import type {
   CompileAgentsMdOptions,
   CompileAgentsMdResult,
@@ -36,6 +41,11 @@ export async function compileAgentsMd(
 
   const targets = await selectCompileTargets(options, cwd);
   const multi = targets.length > 1;
+  if (options.distributed === true && options.outputFile?.trim()) {
+    throw new Error(
+      "Compile --distributed does not accept one --output / -o path; per-directory outputs derive from each target's default path",
+    );
+  }
   if (multi && options.outputFile?.trim()) {
     throw new Error(
       "Compile with multiple compile targets cannot use one --output path; select a single target or omit -o / --output",
@@ -51,7 +61,16 @@ export async function compileAgentsMd(
   let outputs: CompileOutput[];
   let firstContent = "";
 
-  if (!multi) {
+  if (options.distributed === true) {
+    const distributed = await compileDistributed({
+      cwd,
+      targets,
+      plan: buildDistributedPlan(sorted, cwd),
+      write,
+    });
+    firstContent = distributed.firstContent;
+    outputs = distributed.outputs;
+  } else if (!multi) {
     const target = targets[0]!;
     const emitted = await target.compile!(sorted, { ...compileContext, write });
     firstContent = emitted.content;
@@ -105,6 +124,144 @@ export async function compileAgentsMd(
 export const compileProject = compileAgentsMd;
 export const runCompile = compileAgentsMd;
 export const emitAgentsMd = compileAgentsMd;
+
+type PlannedEmission = {
+  dir: string;
+  primitives: AttributedPrimitive[];
+  outputFile: string;
+};
+
+type TargetEmissionPlan = {
+  target: ResolvedCompileTarget;
+  emissions: PlannedEmission[];
+};
+
+type EmissionPreview = {
+  target: ResolvedCompileTarget;
+  targetId: string;
+  primitives: AttributedPrimitive[];
+  outputFile: string;
+  emitted: { path: string; content: string; wrote: boolean };
+};
+
+/**
+ * Opt-in distributed emission: render root primitives once and each literal
+ * `applyTo` directory through the same host-owned compiler. The host keeps its
+ * default basename; only the directory changes.
+ */
+async function compileDistributed(args: {
+  cwd: string;
+  targets: ResolvedCompileTarget[];
+  plan: DistributedPlan;
+  write: boolean;
+}): Promise<{ outputs: CompileOutput[]; firstContent: string }> {
+  const targetPlans: TargetEmissionPlan[] = [];
+  for (const target of args.targets) {
+    targetPlans.push(await planTargetEmissions(target, args.plan, args.cwd));
+  }
+
+  // Render without writing first so every path is known and validated before
+  // any file is touched. This also covers --dry-run / --validate.
+  const previews: EmissionPreview[] = [];
+  for (const targetPlan of targetPlans) {
+    for (const emission of targetPlan.emissions) {
+      assertSafeCompileOutput(args.cwd, emission.outputFile);
+      const emitted = await targetPlan.target.compile!(emission.primitives, {
+        cwd: args.cwd,
+        outputFile: emission.outputFile,
+        write: false,
+        includeInstructions: true,
+      });
+      previews.push({
+        target: targetPlan.target,
+        targetId: String(targetPlan.target.id),
+        primitives: emission.primitives,
+        outputFile: emission.outputFile,
+        emitted,
+      });
+    }
+  }
+  assertNoDistributedCollision(args.cwd, previews);
+
+  if (!args.write) {
+    return {
+      firstContent: previews[0]?.emitted.content ?? "",
+      outputs: previews.map((preview) => ({
+        targetId: preview.targetId,
+        path: preview.emitted.path,
+        wrote: false,
+      })),
+    };
+  }
+
+  const written: Array<{ targetId: string; path: string; wrote: boolean; content: string }> = [];
+  for (const preview of previews) {
+    const durable = await preview.target.compile!(preview.primitives, {
+      cwd: args.cwd,
+      outputFile: preview.outputFile,
+      write: true,
+      includeInstructions: true,
+    });
+    written.push({
+      targetId: preview.targetId,
+      path: durable.path,
+      wrote: durable.wrote,
+      content: durable.content,
+    });
+  }
+
+  return {
+    firstContent: written[0]?.content ?? "",
+    outputs: written.map(({ targetId, path, wrote }) => ({ targetId, path, wrote })),
+  };
+}
+
+async function planTargetEmissions(
+  target: ResolvedCompileTarget,
+  plan: DistributedPlan,
+  cwd: string,
+): Promise<TargetEmissionPlan> {
+  // Probe the target's own default path with an empty primitive set. The host
+  // owns the basename and any host-specific prefix (for example .github/).
+  const probe = await target.compile!([], {
+    cwd,
+    write: false,
+    includeInstructions: true,
+  });
+  const rootPath = probe.path;
+  const rootDir = dirname(rootPath);
+
+  const emissions = plan.placements.map((placement) => ({
+    dir: placement.dir,
+    primitives: placement.primitives,
+    outputFile:
+      placement.dir === ""
+        ? rootPath
+        : join(rootDir === "." ? "" : rootDir, placement.dir, basename(rootPath)),
+  }));
+
+  return { target, emissions };
+}
+
+function assertNoDistributedCollision(cwd: string, previews: EmissionPreview[]): void {
+  const byPath = new Map<string, Array<{ targetId: string; path: string }>>();
+  for (const preview of previews) {
+    const key = resolve(cwd, preview.emitted.path);
+    const hosts = byPath.get(key) ?? [];
+    hosts.push({ targetId: preview.targetId, path: preview.emitted.path });
+    byPath.set(key, hosts);
+  }
+
+  for (const hosts of byPath.values()) {
+    const ids = [...new Set(hosts.map((host) => host.targetId))];
+    if (ids.length < 2) continue;
+    const path = hosts[0]!.path;
+    throw new Error(
+      `Compile target collision: hosts ${ids.map((id) => `"${id}"`).join(", ")} all write "${path}". ` +
+        "Refusing to overwrite one host's output with another; select one host per output path or exclude duplicates.",
+    );
+  }
+}
 
 function toAttribution(primitives: AttributedPrimitive[]): CompileAttributionEntry[] {
   return primitives.map((p) => {

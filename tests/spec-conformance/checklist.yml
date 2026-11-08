@@ -22,7 +22,7 @@ limitations:
   - Registry host / rg-001 not claimed (N/A)
   - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
   - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
-  - compile writes one host file per invocation and does not implement per-path applyTo; use --target plus -o for additional outputs
+  - compile defaults to one host file per invocation; opt-in --distributed places instructions by the literal applyTo directory prefix without APM context-optimizer scoring or inheritance
   - "bapm.local.yml and the local: dependency source are bapm-only extensions, absent from APM and OpenAPM"
   - Registry client is opt-in behind BAPM_EXPERIMENTAL_REGISTRIES=1; bapm does not claim the OpenAPM registry-host role
   - Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) remains soft; dependency bin is gated via ExecutableTrust (type bin) plus install --trust-bin / --no-trust-bin consent; dependency hooks are gated via ExecutableTrust (type hook) when a project/user grant surface or org executables.deny/deny_all is active, and keep the legacy soft (ungated) deploy only when no grant surface exists; LSP entries under dependencies.lsp are not deployed and emit an LSP_UNSUPPORTED warning naming the package and servers; canvas has no primitive/materialize path, remains unimplemented/soft, and a manifest canvas key or canvas primitive emits CANVAS_UNSUPPORTED instead of being silently dropped
