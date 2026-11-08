@@ -26,6 +26,8 @@ npm i -D @b-apm/cli @b-apm/integration-<id>
 
 `agent-skills` кладёт только skills в `.agents/skills/` и подходит для агентов, которые читают этот общий каталог, но своей интеграции не имеют.
 
+Устаревшие id `vscode` и `agents` в `target` / `targets` / `active` означают `copilot`: bapm нормализует их при разборе манифеста. Подробнее — [Агенты в манифесте](/guide/manifest-hosts#targets-и-target).
+
 Все интеграции в статусе раннего релиза, как и CLI.
 
 ## Куда попадают файлы {#layout}

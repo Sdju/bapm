@@ -109,8 +109,10 @@ export type {
 } from "./pluginJson.ts";
 export {
   CANONICAL_TARGET_TOKENS,
+  TARGET_ALIAS_TO_CANONICAL,
   TARGET_ALIAS_TOKENS,
   VENDOR_TARGET_RE,
   isValidTargetToken,
+  normalizeTargetToken,
 } from "./targets.ts";
 export { isExemptInsecureHost } from "./registryUrl.ts";

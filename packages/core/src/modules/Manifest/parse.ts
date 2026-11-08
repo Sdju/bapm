@@ -4,7 +4,7 @@ import type { ManifestWarning } from "./errors.ts";
 import { ManifestError } from "./errors.ts";
 import { parsePresetsField } from "./presets.ts";
 import { isExemptInsecureHost } from "./registryUrl.ts";
-import { isValidTargetToken } from "./targets.ts";
+import { isValidTargetToken, normalizeTargetToken } from "./targets.ts";
 import type {
   ActiveEntry,
   BapmManifest,
@@ -546,7 +546,8 @@ function parseTargetOrTargetsField(
         );
       }
       assertValidTargetToken(value, "target");
-      return value;
+      // Canonicalise legacy aliases (`vscode` / `agents` → `copilot`) once at parse.
+      return normalizeTargetToken(value);
     }
     if (isPlainObject(value)) {
       return parseTargetIntegrationMap(value, "target");
@@ -570,7 +571,7 @@ function parseTargetOrTargetsField(
     for (let i = 0; i < value.length; i++) {
       assertValidTargetToken(String(value[i]), `targets[${i}]`);
     }
-    return value as string[];
+    return normalizeTargetTokenList(value as string[]);
   }
   if (isPlainObject(value)) {
     return parseTargetIntegrationMap(value, "targets");
@@ -596,6 +597,7 @@ function parseTargetIntegrationMap(
   }
 
   const out: TargetIntegrationMap = {};
+  const sourceKeyByCanonical = new Map<string, string>();
   for (const key of keys) {
     const trimmedKey = key.trim();
     const entryPath = `${field}.${trimmedKey || key}`;
@@ -617,7 +619,31 @@ function parseTargetIntegrationMap(
         { path: entryPath },
       );
     }
-    out[trimmedKey] = trimmedVal;
+
+    const canonicalKey = normalizeTargetToken(trimmedKey);
+    const previousKey = sourceKeyByCanonical.get(canonicalKey);
+    if (previousKey !== undefined) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Manifest "${field}" object map has duplicate host "${canonicalKey}" after alias normalization ("${previousKey}" and "${trimmedKey}")`,
+        { path: entryPath, details: { token: trimmedKey, canonical: canonicalKey } },
+      );
+    }
+    sourceKeyByCanonical.set(canonicalKey, trimmedKey);
+    out[canonicalKey] = trimmedVal;
+  }
+  return out;
+}
+
+/** Canonicalise aliases and drop duplicates while preserving first-seen order. */
+function normalizeTargetTokenList(tokens: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const token of tokens) {
+    const canonical = normalizeTargetToken(token);
+    if (seen.has(canonical)) continue;
+    seen.add(canonical);
+    out.push(canonical);
   }
   return out;
 }
