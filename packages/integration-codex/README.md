@@ -38,6 +38,8 @@ Lone project-root `AGENTS.md` is **not** a Codex signal (shared compile family w
 | command/prompt | skip (non-fatal diagnostic)                                                              |
 | hook           | merge `.codex/hooks.json` + scripts under `.codex/hooks/` + `.codex/bapm-hooks.json`     |
 
+Hooks use Codex's native nested groups: `hooks[event] = [{ matcher?, hooks: [{ type, command }] }]`. Flat source command entries become an intermediate group with a nested `hooks` array; an existing source matcher is preserved and no matcher is invented. Ownership stays in `.codex/bapm-hooks.json`, so retries replace only bapm-owned nested handlers and keep foreign groups.
+
 MCP is **not** written by materialize — only via `configureMcp` → `.codex/config.toml` `mcp_servers` (stdio + https remote; SSE rejected).
 
 Remote `headers` map to Codex-native fields: static values → `http_headers`; an exactly-`${VAR}` value → `env_http_headers`; `Authorization: "Bearer ${VAR}"` → `bearer_token_env_var`. Header references are never baked into a literal secret; a value with surrounding text that Codex cannot express is skipped with `CODEX_MCP_HEADER_UNEXPRESSIBLE`. Stdio `env` remains install-time baked because Codex does not interpolate it.

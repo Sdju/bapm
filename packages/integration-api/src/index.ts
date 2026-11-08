@@ -39,6 +39,9 @@ export type {
   PrimitiveMaterializeHandler,
   PrimitiveMaterializeHandlers,
   PrimitiveMaterializeKind,
+  RenderNativeHookEntriesArgs,
+  RenderNativeHookEntriesResult,
+  RewriteHookCommand,
 } from "./helpers.ts";
 
 export {
@@ -62,6 +65,7 @@ export {
   readHookOwnershipSidecar,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
+  renderNativeHookEntries,
   renderPrimitivesMarkdown,
   sanitizeName,
   stripOwnedHookCommands,

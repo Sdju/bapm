@@ -13,6 +13,7 @@ const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const REQUIRED = [
   "readHookOwnershipSidecar",
   "writeHookOwnershipSidecar",
+  "renderNativeHookEntries",
   "stripOwnedHookCommands",
   "removeOwnedHookArtifacts",
   "copyHookScript",
