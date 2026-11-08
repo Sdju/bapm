@@ -568,8 +568,12 @@ async function runCoreInstall(
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),
     });
-    emitPolicyDiagnostics(deps.name, result.policyDiagnostics ?? result.diagnostics);
-    emitTrustDiagnostics(deps.name, result.diagnostics);
+    const policyEmitted = emitPolicyDiagnostics(
+      deps.name,
+      result.policyDiagnostics ?? result.diagnostics,
+    );
+    const trustEmitted = emitTrustDiagnostics(deps.name, result.diagnostics);
+    emitDiagnosticWarnings(deps.name, result.diagnostics, policyEmitted, trustEmitted);
     if (parsed.dryRun || result.dryRun) {
       emitDryRunPreview(deps.name, result.diagnostics);
       console.log(`${deps.name}: dry-run preview complete; no changes made`);
@@ -601,7 +605,8 @@ function emitDryRunPreview(name: string, diagnostics: unknown[]): void {
   }
 }
 
-function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): void {
+function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): Set<string> {
+  const emitted = new Set<string>();
   for (const d of diagnostics) {
     if (!d || typeof d !== "object") continue;
     const rec = d as Record<string, unknown>;
@@ -609,10 +614,13 @@ function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): void {
     const message = typeof rec.message === "string" ? rec.message : "";
     if (!/policy|enforcement|violat|denied/i.test(`${code}\n${message}`)) continue;
     console.error(`${name}: policy warning: ${message || code}`);
+    emitted.add(message || code);
   }
+  return emitted;
 }
 
-function emitTrustDiagnostics(name: string, diagnostics: unknown[]): void {
+function emitTrustDiagnostics(name: string, diagnostics: unknown[]): Set<string> {
+  const emitted = new Set<string>();
   for (const d of diagnostics) {
     if (!d || typeof d !== "object") continue;
     const rec = d as Record<string, unknown>;
@@ -620,5 +628,45 @@ function emitTrustDiagnostics(name: string, diagnostics: unknown[]): void {
     const message = typeof rec.message === "string" ? rec.message : "";
     if (!/withhold|unapproved|mcp_trust|trust/i.test(`${code}\n${message}`)) continue;
     console.error(`${name}: ${message || code}`);
+    emitted.add(message || code);
   }
+  return emitted;
+}
+
+/**
+ * Surface adapter/selection diagnostics that are warnings even when they do not
+ * match the policy/trust message filters — skipped primitives, opt-in MCP
+ * directory skips, and target allow-list filtering. Dedupe against the policy
+ * and trust emitters so one diagnostic never prints twice.
+ */
+function emitDiagnosticWarnings(
+  name: string,
+  diagnostics: unknown[],
+  policyEmitted: Set<string>,
+  trustEmitted: Set<string>,
+): void {
+  const emitted = new Set<string>([...policyEmitted, ...trustEmitted]);
+  for (const d of diagnostics) {
+    if (!d || typeof d !== "object") continue;
+    const rec = d as Record<string, unknown>;
+    const code = typeof rec.code === "string" ? rec.code : "";
+    const message = typeof rec.message === "string" ? rec.message : "";
+    const text = message || code;
+    if (!text || emitted.has(text)) continue;
+    if (!isWarningDiagnostic(rec, code)) continue;
+    emitted.add(text);
+    console.error(`${name}: warning: ${text}`);
+  }
+}
+
+function isWarningDiagnostic(rec: Record<string, unknown>, code: string): boolean {
+  if (rec.warn === true) return true;
+  const normalized = code.toUpperCase();
+  if (!normalized) return false;
+  return (
+    /_UNSUPPORTED(?:$|_)/.test(normalized) ||
+    /MCP_DIR_/.test(normalized) ||
+    /_MCP_SKIP_NO_.*_DIR$/.test(normalized) ||
+    /_SKIP_/.test(normalized)
+  );
 }

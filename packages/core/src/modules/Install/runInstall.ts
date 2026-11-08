@@ -400,6 +400,46 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   });
   assertActiveTargetsRegistered(activeTargets, registry);
 
+  // Root `target` / `targets` is a deployment allow-list (tg-008), not active
+  // selection. Fail closed when it excludes every active host; otherwise warn
+  // for each filtered host instead of silently materializing nothing.
+  const targetSelectionDiagnostics: unknown[] = [];
+  const rootDeclaredTargets = declaredTargetIds(rootManifest);
+  if (rootDeclaredTargets.length > 0) {
+    const declaredSet = new Set(rootDeclaredTargets);
+    const skippedActiveTargets = activeTargets.filter((id) => !declaredSet.has(id));
+    if (skippedActiveTargets.length === activeTargets.length) {
+      rollbackFreshLock({ previousLock, lockPath, cwd });
+      throw new InstallError(
+        "INSTALL_TARGETS_EMPTY_INTERSECTION",
+        `No active target is declared in the root target/targets: active=[${activeTargets.join(
+          ", ",
+        )}], declared=[${rootDeclaredTargets.join(
+          ", ",
+        )}]. Remove target/targets or add the active host to it.`,
+        {
+          details: {
+            activeTargets: [...activeTargets],
+            declaredTargets: [...rootDeclaredTargets],
+          },
+        },
+      );
+    }
+    if (skippedActiveTargets.length > 0) {
+      targetSelectionDiagnostics.push({
+        code: "INSTALL_TARGET_SKIPPED_BY_TARGETS",
+        message: `Active target(s) ${skippedActiveTargets.join(
+          ", ",
+        )} are not declared in the root target/targets [${rootDeclaredTargets.join(
+          ", ",
+        )}]; their package primitives will be skipped. Add them to target/targets or remove the restriction.`,
+        warn: true,
+        skippedTargets: [...skippedActiveTargets],
+        declaredTargets: [...rootDeclaredTargets],
+      });
+    }
+  }
+
   const copilotActive = activeTargets.includes("copilot");
   let admittedNativePackages = new Set<string>();
   let admittedNativePlugins: ReturnType<typeof admitCopilotNativePlugins> = [];
@@ -417,6 +457,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
   const subsetDiagnostics: unknown[] = [];
+  const materializeDiagnostics: unknown[] = [];
 
   if (!skipApmMaterialize && registry && activeTargets.length > 0) {
     const packageTargets = collectPackageDeclaredTargets(nodes, raw);
@@ -442,6 +483,12 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         deployRoots: [...target.deployRoots],
         skipNativeRegisteredPackages: [...admittedNativePackages],
       })) as void | MaterializeReport;
+      // Adapter skip diagnostics must reach the install result (and CLI), not
+      // just the per-target report. Normalize visibility before deployment
+      // hashes so result inspection can distinguish skipped primitives.
+      for (const diagnostic of report?.diagnostics ?? []) {
+        materializeDiagnostics.push(markSkipDiagnosticWarn(diagnostic));
+      }
       allDeployed.push(...collectTargetDeployedHashes(cwd, target, report));
     }
   }
@@ -540,6 +587,8 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ...resolved.diagnostics,
       ...portablePluginDiagnostics,
       ...subsetDiagnostics,
+      ...targetSelectionDiagnostics,
+      ...materializeDiagnostics,
       ...binDiagnostics,
       ...mcpDiagnostics,
     ],
@@ -603,6 +652,20 @@ function portablePluginRoot(node: ResolvedNode): string | undefined {
     if (candidate && existsSync(join(candidate, "plugin.json"))) return candidate;
   }
   return undefined;
+}
+
+/**
+ * Adapter diagnostics for unsupported/skipped primitives are user-visible
+ * warnings. Keep the adapter payload intact while normalizing `warn` so the
+ * CLI generic warning emitter can surface it.
+ */
+function markSkipDiagnosticWarn(diagnostic: unknown): unknown {
+  if (!diagnostic || typeof diagnostic !== "object") return diagnostic;
+  const rec = diagnostic as Record<string, unknown>;
+  if (rec.warn === true) return rec;
+  const code = typeof rec.code === "string" ? rec.code.toUpperCase() : "";
+  if (!/_UNSUPPORTED(?:$|_)|_SKIP_|_MCP_SKIP_NO_/.test(code)) return diagnostic;
+  return { ...rec, warn: true };
 }
 
 /** Best-effort: drop a lock written by this install when a later gate fails closed. */
@@ -1015,7 +1078,9 @@ async function deployMcpAfterPolicy(args: {
     const adapterDiagnostics = (
       report as (ConfigureMcpReport & { diagnostics?: unknown[] }) | undefined
     )?.diagnostics;
-    if (adapterDiagnostics) args.diagnostics.push(...adapterDiagnostics);
+    if (adapterDiagnostics) {
+      args.diagnostics.push(...adapterDiagnostics.map(markSkipDiagnosticWarn));
+    }
 
     const reportedConfigPath =
       typeof report?.configPath === "string" ? report.configPath.trim() : "";

@@ -190,7 +190,10 @@ function writeClaudeMcpConfig(
         {
           code: "CLAUDE_MCP_SKIP_NO_CLAUDE_DIR",
           message:
-            "Skipping project MCP write: .claude/ directory is absent (Claude project-scope MCP is opt-in)",
+            "Skipping project MCP write for claude: .claude/ directory is absent (Claude project-scope MCP is opt-in; create .claude/ and re-run install)",
+          target: ctx.targetId,
+          dir: ".claude/",
+          warn: true,
         },
       ],
     };

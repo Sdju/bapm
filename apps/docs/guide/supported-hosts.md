@@ -43,21 +43,21 @@ npm i -D @b-apm/cli @b-apm/integration-<id>
 | Grok Build  | `.grok/skills/`     | `.grok/rules/`          | не поддерживается                     | `AGENTS.md`                       |
 | Antigravity | `.agents/skills/`   | `.agents/rules/`        | `.agents/mcp_config.json`             | `AGENTS.md`                       |
 
-Agents, commands и hooks раскладываются в каталог агента (`.cursor/agents/`, `.claude/commands/` и т. п.), если агент их поддерживает. Неподдерживаемый тип пропускается **без сообщения** в выводе `install` — см. ниже.
+Agents, commands и hooks раскладываются в каталог агента (`.cursor/agents/`, `.claude/commands/` и т. п.), если агент их поддерживает. Неподдерживаемый тип пропускается с предупреждением `bapm: warning: …` в `stderr` — см. ниже.
 
 Skill раскладывается как полный каталог: `SKILL.md`, вспомогательные `.md`, скрипты и вложенные ассеты попадают в каталог skills агента. Для `SKILL.md` в корне пакета копируется только сам файл.
 
 Обратите внимание:
 
 - **Copilot и Windsurf пишут MCP в домашний каталог**, а не в проект. Эти настройки общие для всех ваших проектов.
-- **Claude Code, Gemini CLI, Kiro и Antigravity пишут MCP, только если каталог агента существует** (`.claude/`, `.gemini/`, `.kiro/`, `.agents/`). Каталог может создать и сам install, если пакеты приносят skills или rules. Если ставятся только MCP-серверы, а каталога нет, они молча пропускаются: создайте каталог и повторите `install`.
+- **Claude Code, Gemini CLI, Kiro и Antigravity пишут MCP, только если каталог агента существует** (`.claude/`, `.gemini/`, `.kiro/`, `.agents/`). Каталог может создать и сам install, если пакеты приносят skills или rules. Если ставятся только MCP-серверы, а каталога нет, install печатает предупреждение `bapm: warning: …` с путём каталога: создайте каталог и повторите `install`.
 - **Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют один `AGENTS.md`**. Если вы запускаете `compile` для нескольких из них, файл перезаписывает последний запуск.
 
 Подробности по каждому агенту — в README его пакета на npm.
 
 ## Что каждый агент пропускает {#skipped}
 
-Если в пакете есть тип файлов, который агент не поддерживает, install его не раскладывает и ничего об этом не пишет.
+Если в пакете есть тип файлов, который агент не поддерживает, install его не раскладывает и печатает предупреждение `bapm: warning: …` в `stderr`.
 
 | Агент        | Не раскладывается | Особенности                                                            |
 | ------------ | ----------------- | ---------------------------------------------------------------------- |
@@ -69,7 +69,7 @@ Skill раскладывается как полный каталог: `SKILL.md
 | Windsurf     | agents            | commands — в `.windsurf/workflows/`                                    |
 | Gemini CLI   | agents            | commands — в `.gemini/commands/*.toml`; instructions — через `compile` |
 | Kiro         | commands          |                                                                        |
-| Grok Build   | hooks, commands   |                                                                        |
+| Grok Build   | hooks, prompts    | commands — в `.grok/commands/`                                         |
 | Antigravity  | agents, commands  |                                                                        |
 | Agent Skills | всё, кроме skills |                                                                        |
 
