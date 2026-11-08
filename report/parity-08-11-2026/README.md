@@ -57,6 +57,15 @@
 
 Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime setup/remove, registry MCP lookup, canvas/LSP deploy, view -g).
 
+### Пачка 9 (09.11.2026)
+
+| Что                                                         | Статус              | Коммит    |
+| ----------------------------------------------------------- | ------------------- | --------- |
+| LSP deploy для Claude/Copilot + trust + lock inventory      | fixed               | `a0d1a3a` |
+| Global MCP scope: `install -g --only mcp` (Cursor/OpenCode) | fixed (first slice) | `342bda9` |
+
+Проверки: core 285 файлов / 1594 теста, CLI 146 / 822, `vp check` 0 ошибок, conformance/specs OK.
+
 ### Пачка 8 (09.11.2026)
 
 | Что                                | Статус                          | Коммит    |
@@ -137,7 +146,7 @@
 
 Актуальный замороженный список: [`remaining.md`](remaining.md).
 
-- **Actionable:** user-scope/global install, LSP deploy.
+- **Actionable:** user-scope для skills/rules/agents/commands/hooks + global compile.
 - **Follow-up уже принятых решений:** stored-only config keys, `runtime setup/remove`, `view -g`, lifecycle executor, experimental CLI, `mcp install`, canvas.
 - **Намеренно не делаем / N/A:** resolve ∩-pick, lock sort, full `replace`, manifest-v0.1.48, registry host, APM installer/gh-aw/contributor dashboard, project-default approve.
 

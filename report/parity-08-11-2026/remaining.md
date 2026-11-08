@@ -2,15 +2,16 @@
 
 Это **замороженный** список после серии правок. Обновлено 09.11.2026. Новые пункты сюда не добавляются без отдельного product-решения: найденный «риск» сначала классифицируется как actionable, follow-up или N/A.
 
-## Actionable — 2 пункта
+## Actionable — 1 пункт
 
-| #   | Пункт                                                                                  | Почему остаётся                                                                 | Оценка |
-| --- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------ |
-| 1   | **User-scope/global install** (`-g`, user manifest/lock, user MCP для Cursor/OpenCode) | Крупный отдельный change; затрагивает lock-модель и все интеграции              | L      |
-| 2   | **LSP deploy + trust**                                                                 | Нужны per-host форматы и `lsp` executable type; сейчас только `LSP_UNSUPPORTED` | L      |
+| #   | Пункт                                                                  | Почему остаётся                                                                                          | Оценка |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
+| 1   | **User-scope для skills/rules/agents/commands/hooks + global compile** | MCP-срез `-g` уже сделан (Cursor/OpenCode); остальные примитивы и global lock/compile — следующий change | L      |
 
 ## Исправлено в последней пачке
 
+- LSP deploy для Claude/Copilot (`a0d1a3a`)
+- Global MCP scope `install -g --only mcp` (`342bda9`)
 - `compile --watch` (`5d160cc`)
 - registry MCP `search/show/install` (`7fa9c81`)
 - annotated tag `source.sha` → peeled commit (`1eb454f`)
