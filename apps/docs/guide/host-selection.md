@@ -29,6 +29,26 @@ Multiple host markers found (cursor (@b-apm/integration-cursor), claude (@b-apm/
 
 Маркеры перечислены в [таблице агентов](/guide/supported-hosts#таблица).
 
+## User-scope / global
+
+`bapm install --global --only mcp` (`-g --mcp`) выбирает агента для
+пользовательских MCP-конфигов, а не для файлов проекта. Global root —
+`~/.bapm` (`BAPM_HOME` override); project `bapm.yml`/lock не читаются.
+
+| №   | Источник для `--global`                                           |
+| --- | ----------------------------------------------------------------- |
+| 1   | `--target <id>`                                                   |
+| 2   | `active` в `~/.bapm/bapm.yml`                                     |
+| 3   | `target` в `~/.bapm/config.json`                                  |
+| 4   | Auto-detect по user-каталогу: `~/.cursor/`, `~/.config/opencode/` |
+
+Global auto-detect использует `detectGlobal` интеграции, а не проектные маркеры.
+Если найдено несколько хостов, укажите `--target`. В этом релизе global
+поддерживают только **Cursor** (`~/.cursor/mcp.json`) и **OpenCode**
+(`~/.config/opencode/opencode.json`); остальные хосты возвращают понятную
+ошибку. Global skills/rules/compile — следующий slice; `--global` без
+`--only mcp` завершается ошибкой.
+
 `grok-bot`, `hermes` и `intellij` — explicit-only: у них нет проектного маркера, поэтому auto-detect их никогда не выберет. Указывайте `--target <id>` или `active`. `intellij` к тому же MCP-only и не поддерживает `compile`.
 
 ## Какой способ выбрать

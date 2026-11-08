@@ -20,6 +20,7 @@ import {
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 import { readConfiguredMcpRegistryUrl } from "@/modules/Config";
 import { runMcpReconfigure } from "@/modules/Install";
+import { resolveGlobalProjectRoot } from "@/common/globalProject.ts";
 
 export type McpCliDeps = LifecycleCliDeps & {
   /** Override user config root for `mcp-registry-url` precedence tests. */
@@ -59,6 +60,8 @@ export type ParsedMcpArgs = {
   limit?: number;
   /** Preview only: emit the manifest snippet without writing/installing. */
   dryRun: boolean;
+  /** Read the user-global project (`~/.bapm` / `BAPM_HOME`). */
+  global: boolean;
 };
 
 const MCP_SUBS = new Set<McpSub>(["list", "show", "search", "install"]);
@@ -67,13 +70,15 @@ export function formatMcpHelp(deps: McpCliDeps): string {
   return `${deps.name} mcp — Inspect and install MCP servers
 
 Usage:
-  bapm mcp list [--json]
-  bapm mcp show <name> [--registry URL] [--version VER] [--json] [--local]
-  bapm mcp search <query> [--registry URL] [--limit N] [--json] [--local]
+  bapm mcp list [--json] [--global]
+  bapm mcp show <name> [--registry URL] [--version VER] [--json] [--local] [--global]
+  bapm mcp search <query> [--registry URL] [--limit N] [--json] [--local] [--global]
   bapm mcp install <name> [--registry URL] [--version VER] [--dry-run] [--json]
 
 Options:
   --json            Stable machine-readable output
+  --global, -g      Read the user-global project inventory (~/.bapm, or BAPM_HOME);
+                    implies --local for show/search
   --registry URL    MCP registry base URL (overrides MCP_REGISTRY_URL/config)
   --local           Search/show only the local lock + manifest inventory
   --version VER     Registry server version (default: latest)
@@ -126,13 +131,14 @@ export function parseMcpArgs(argv: string[]): ParsedMcpArgs {
 }
 
 function baseParsed(sub: McpSub): ParsedMcpArgs {
-  return { sub, json: false, local: false, dryRun: false };
+  return { sub, json: false, local: false, dryRun: false, global: false };
 }
 
 function parseFlags(sub: McpSub, argv: string[], initialJson: boolean): ParsedMcpArgs {
   let json = initialJson;
   let local = false;
   let dryRun = false;
+  let global = false;
   let registry: string | undefined;
   let version: string | undefined;
   let limit: number | undefined;
@@ -143,6 +149,15 @@ function parseFlags(sub: McpSub, argv: string[], initialJson: boolean): ParsedMc
     if (arg === "--help" || arg === "-h") return { ...baseParsed(sub), json, help: true };
     if (arg === "--json") {
       json = true;
+      continue;
+    }
+    if (arg === "--global" || arg === "-g") {
+      if (sub === "install") {
+        return { ...baseParsed(sub), json, error: "Unknown install flag: --global" };
+      }
+      global = true;
+      // Global inventory is offline: never mix it with a registry lookup.
+      if (sub === "show" || sub === "search") local = true;
       continue;
     }
     if (arg === "--local") {
@@ -202,7 +217,7 @@ function parseFlags(sub: McpSub, argv: string[], initialJson: boolean): ParsedMc
     positionals.push(arg);
   }
 
-  const result = { ...baseParsed(sub), json, registry, version, limit, local, dryRun };
+  const result = { ...baseParsed(sub), json, registry, version, limit, local, dryRun, global };
   if (local && registry !== undefined) {
     return { ...result, error: "--local and --registry cannot be combined" };
   }
@@ -367,14 +382,18 @@ export async function runMcpCli(
     return { ok: false, exitCode: 1, message: parsed.error };
   }
 
+  const scopedOptions: McpOptions = parsed.global
+    ? { ...options, cwd: resolveGlobalProjectRoot(deps.env) }
+    : options;
+
   try {
-    if (parsed.sub === "list") return runLocalList(deps, options, parsed);
-    if (parsed.sub === "search" && parsed.local) return runLocalSearch(deps, options, parsed);
-    if (parsed.sub === "show" && parsed.local) return runLocalShow(deps, options, parsed);
+    if (parsed.sub === "list") return runLocalList(deps, scopedOptions, parsed);
+    if (parsed.sub === "search" && parsed.local) return runLocalSearch(deps, scopedOptions, parsed);
+    if (parsed.sub === "show" && parsed.local) return runLocalShow(deps, scopedOptions, parsed);
 
     if (parsed.sub === "search") return await runRegistrySearch(deps, parsed);
     if (parsed.sub === "show") return await runRegistryShow(deps, parsed);
-    return await runRegistryInstall(deps, options, parsed);
+    return await runRegistryInstall(deps, scopedOptions, parsed);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (parsed.json) {
@@ -395,16 +414,30 @@ export async function runMcpCli(
   }
 }
 
+function scopeFields(parsed: ParsedMcpArgs, options: McpOptions): Record<string, unknown> {
+  if (!parsed.global) return {};
+  return { scope: "global", root: options.cwd ?? process.cwd() };
+}
+
+function printGlobalScope(parsed: ParsedMcpArgs, options: McpOptions): void {
+  if (!parsed.global) return;
+  console.log(`global scope: ${options.cwd ?? process.cwd()}`);
+}
+
 function runLocalList(
   deps: McpCliDeps,
   options: McpOptions,
   parsed: ParsedMcpArgs,
 ): LifecycleResult {
-  const result = listMcpInventory({ cwd: options.cwd });
+  const result = listMcpInventory({
+    cwd: options.cwd,
+    ...(parsed.global ? { configRoot: options.cwd } : {}),
+  });
   if (parsed.json) {
     console.log(
       JSON.stringify(
         {
+          ...scopeFields(parsed, options),
           lockfile: result.lockPath,
           manifest: result.manifestPath,
           servers: result.servers,
@@ -414,8 +447,10 @@ function runLocalList(
       ),
     );
   } else if (result.servers.length === 0) {
+    printGlobalScope(parsed, options);
     console.log("(no MCP servers)");
   } else {
+    printGlobalScope(parsed, options);
     printTable(result.servers);
   }
   return { ok: true, exitCode: 0 };
@@ -428,12 +463,14 @@ function runLocalSearch(
 ): LifecycleResult {
   const result = searchMcpInventory({
     cwd: options.cwd,
+    ...(parsed.global ? { configRoot: options.cwd } : {}),
     query: parsed.query ?? "",
   });
   if (parsed.json) {
     console.log(
       JSON.stringify(
         {
+          ...scopeFields(parsed, options),
           query: result.query,
           lockfile: result.lockPath,
           manifest: result.manifestPath,
@@ -444,8 +481,10 @@ function runLocalSearch(
       ),
     );
   } else if (result.servers.length === 0) {
+    printGlobalScope(parsed, options);
     console.log(`(no MCP servers matching "${result.query}")`);
   } else {
+    printGlobalScope(parsed, options);
     printTable(result.servers);
   }
   return { ok: true, exitCode: 0 };
@@ -456,7 +495,11 @@ function runLocalShow(
   options: McpOptions,
   parsed: ParsedMcpArgs,
 ): LifecycleResult {
-  const result = showMcpServer({ cwd: options.cwd, name: parsed.name ?? "" });
+  const result = showMcpServer({
+    cwd: options.cwd,
+    ...(parsed.global ? { configRoot: options.cwd } : {}),
+    name: parsed.name ?? "",
+  });
   if (!result.ok) {
     if (parsed.json) {
       console.error(
@@ -479,8 +522,9 @@ function runLocalShow(
     return { ok: false, exitCode: 1, message: result.error };
   }
   if (parsed.json) {
-    console.log(JSON.stringify(result.server, null, 2));
+    console.log(JSON.stringify({ ...scopeFields(parsed, options), ...result.server }, null, 2));
   } else {
+    printGlobalScope(parsed, options);
     printServer(result.server);
   }
   return { ok: true, exitCode: 0 };

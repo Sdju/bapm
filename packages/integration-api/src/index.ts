@@ -13,6 +13,7 @@ export type {
   ConfigureMcpFn,
   ConfigureMcpReport,
   DeployedFile,
+  DeploymentScope,
   MaterializeContext,
   MaterializeReport,
   McpEnvMode,

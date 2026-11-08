@@ -26,6 +26,8 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                                                                                                | —                               |
 | `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                                                                                              | off                             |
 | `--only`                 | `apm` \| `mcp` | Только APM packages (без MCP) или только MCP configure (без APM materialize)                                                                                             | оба                             |
+| `--global`, `-g`         | —              | User-scope install из `~/.bapm` (`BAPM_HOME` override). В этом релизе — **только MCP**: требует `--only mcp`. Global skills/rules/compile — следующий slice              | off                             |
+| `--mcp`                  | —              | Alias для `--only mcp` (в том числе для `bapm install -g --mcp`)                                                                                                         | —                               |
 | `--target`               | `<id>`         | Принудительно активировать registered host target (игнорирует `active`, config target и detect)                                                                          | `active` → config → auto-detect |
 | `--exclude`              | `<id>[,<id>]`  | Пропустить MCP configure для runtime id; список через запятую или несколько флагов; **не** полный skip install (повторяемый)                                             | —                               |
 | `--update`               | —              | Переразрешить mutable refs; нельзя с frozen / CI-default frozen                                                                                                          | off                             |
@@ -62,6 +64,33 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 
 - `install <archive.zip>` добавляет файлы архива в текущий каталог и ничего не удаляет. Если файл из архива уже есть с другим содержимым (обычно `bapm.yml`), install завершается ошибкой `Refusing to overwrite existing files` до записи чего-либо. Поэтому ставьте архив в пустой каталог.
 - Приватный registry с внутренним CA или TLS-inspecting proxy: задайте `NODE_EXTRA_CA_CERTS` до запуска Node или `BAPM_EXTRA_CA_BUNDLE` для additive CA bundle. См. [Private registry и TLS](/guide/situations/tls-private-registry).
+
+## Global MCP (`--global` / `-g`)
+
+`bapm install -g --only mcp` (или `bapm install -g --mcp`) читает user-scope проект
+`~/.bapm` и настраивает MCP для пользовательских конфигов хоста:
+
+| Host     | User-scope MCP config              |
+| -------- | ---------------------------------- |
+| Cursor   | `~/.cursor/mcp.json`               |
+| OpenCode | `~/.config/opencode/opencode.json` |
+
+- Global root: `~/.bapm`, либо `BAPM_HOME` (если задан). Там лежат `bapm.yml`
+  и `bapm.lock.yaml`. Если их нет, `bapm install -g` создаёт минимальные
+  `bapm.yml` и пустой `bapm.lock.yaml`; существующие файлы не перезаписываются.
+- Project manifests, project lockfiles и project host-конфиги при `--global`
+  **не читаются и не пишутся**. MCP-декларации берутся из `~/.bapm/bapm.yml`
+  (`dependencies.mcp`).
+- Выбор хоста: `--target cursor|opencode` либо автоопределение по
+  `~/.cursor/` / `~/.config/opencode/`. Если оба хоста присутствуют, передайте
+  `--target`, иначе install завершится ошибкой неоднозначности.
+- `~/.bapm/config.json` остаётся user store для `bapm approve` / `bapm deny`;
+  global install использует тот же trust/policy pipeline, что и project install.
+- Этот slice поддерживает **только MCP**. `bapm install -g` без `--only mcp`
+  завершается ошибкой с подсказкой перейти на `--only mcp`: global skills, rules,
+  agents, commands, hooks и `compile` появятся в следующем slice.
+- Неподдерживаемый для global scope хост (например `claude` или custom target)
+  даёт ошибку `Global MCP is not supported for target(s): …`.
 
 ## Hooks в нативных конфигах
 

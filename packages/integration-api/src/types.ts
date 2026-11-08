@@ -5,6 +5,12 @@
 /** Target identifier (built-in like `cursor`, or vendor `x-<vendor>-<name>`). */
 export type TargetId = string;
 
+/**
+ * Deployment scope. `project` writes under the project cwd (default);
+ * `global` writes user-scoped host files selected by the integration.
+ */
+export type DeploymentScope = "project" | "global";
+
 /** Source attribution for a discovered primitive (OpenAPM pr-001). */
 export type PrimitiveSource = "local" | `dependency:${string}`;
 
@@ -46,6 +52,8 @@ export type MaterializeContext = {
   targetId: TargetId;
   /** Deploy roots declared by the target (relative to cwd). */
   deployRoots: string[];
+  /** Project (default) or user-global deployment. */
+  scope?: DeploymentScope;
   [key: string]: unknown;
 };
 
@@ -144,6 +152,11 @@ export type ConfigureMcpContext = {
   /** Deploy roots declared by the target (relative to cwd). */
   deployRoots?: string[];
   /**
+   * Project (default) or user-global deployment. Global integrations must
+   * select a user-scoped config path instead of writing under `cwd`.
+   */
+  scope?: DeploymentScope;
+  /**
    * Server names bapm previously wrote for this target that are no longer in
    * the approved set (for example after `bapm deny`). Targets that own a
    * mergeable config must remove these entries while leaving foreign servers
@@ -203,6 +216,12 @@ export type BapmIntegration = {
   /** Registered deploy root(s) relative to project cwd (tg-002). */
   deployRoots: string[];
   detect: TargetDetectFn;
+  /**
+   * Optional user-scope detection (global install). Project `detect` markers
+   * are meaningless at the global root, so core calls this instead when
+   * `scope: "global"`. Omitted ⇒ the target never auto-detects globally.
+   */
+  detectGlobal?: TargetDetectFn;
   materialize: (
     primitives: AttributedPrimitiveSet,
     ctx?: MaterializeContext,
@@ -229,6 +248,11 @@ export type BapmIntegration = {
    * and supports `--exclude` as the opt-out. Omitted ⇒ `project`.
    */
   mcpScope?: "project" | "home";
+  /**
+   * True when `configureMcp` understands `scope: "global"` and writes a
+   * user-scoped config. Core refuses global MCP for targets without this.
+   */
+  supportsGlobalMcp?: true;
   [key: string]: unknown;
 };
 
