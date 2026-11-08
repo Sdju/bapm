@@ -2,6 +2,7 @@
  * p6f — CLI `deps why --json`, honest exits, name/repo_url match, human path.
  * Specs: deps-inspect, cli-runtime-surface.
  */
+import { join } from "node:path";
 import { asText } from "../asText.ts";
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
@@ -13,7 +14,9 @@ import {
   runInProject,
   stdoutText,
   writeEmptyLock,
+  writeLock,
   writeManifest,
+  writeText,
   writeTransitiveLock,
   type TempProject,
 } from "./helpers.ts";
@@ -164,6 +167,47 @@ describe("p6f CLI deps why --json + exits", () => {
     expect(text).toMatch(/parent/i);
     expect(text).toMatch(/child/i);
     expect(text).toMatch(/→|->|\+--|chain/i);
+  });
+
+  test("is_direct follows manifest/depth, not empty resolved_by", async () => {
+    project = createTempProject();
+    writeText(
+      join(project.cwd, "bapm.yml"),
+      `name: root
+version: 0.0.1
+dependencies:
+  apm:
+    - https://example.com/org/foo.git
+`,
+    );
+    writeLock(
+      project.cwd,
+      `lockfile_version: "1"
+dependencies:
+  - name: foo
+    repo_url: https://example.com/org/foo.git
+    source: git
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    resolved_by: root->foo
+  - name: foo-bar
+    repo_url: https://example.com/org/foo-bar.git
+    source: git
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+`,
+    );
+
+    const direct = await runInProject(project.cwd, ["deps", "why", "foo", "--json"]);
+    expect(direct.result).toBe(0);
+    const directDoc = parseJsonStdout(direct.stdout);
+    expect((directDoc.package as Record<string, unknown>).is_direct).toBe(true);
+    const directPaths = directDoc.paths as Array<{ chain: Array<Record<string, unknown>> }>;
+    expect(directPaths[0]?.chain.map((n) => asText(n.name ?? ""))).toEqual(["foo"]);
+
+    const transitive = await runInProject(project.cwd, ["deps", "why", "foo-bar", "--json"]);
+    expect(transitive.result).toBe(0);
+    expect((parseJsonStdout(transitive.stdout).package as Record<string, unknown>).is_direct).toBe(
+      false,
+    );
   });
 
   test("empty lock still treats missing package as exit 1", async () => {

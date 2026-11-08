@@ -173,6 +173,98 @@ describe("whyDeps unit", () => {
     expect(r.text).toMatch(/parent.*child|→/);
   });
 
+  test("direct root->name chain with a manifest identity is_direct true (no depth)", () => {
+    project(`lockfile_version: "1"
+dependencies:
+  - name: foo
+    repo_url: https://example.com/org/foo.git
+    source: git
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    resolved_by: root->foo
+  - name: foo-bar
+    repo_url: https://example.com/org/foo-bar.git
+    source: git
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+`);
+    write(
+      join(cwd, "bapm.yml"),
+      `name: root
+version: 0.0.1
+dependencies:
+  apm:
+    - https://example.com/org/foo.git
+`,
+    );
+
+    const direct = whyDeps({ cwd, package: "foo" });
+    expect(direct.ok).toBe(true);
+    expect(direct.package?.is_direct).toBe(true);
+    expect(direct.paths?.length).toBe(1);
+    expect(direct.paths?.[0]?.chain.map((n) => n.name)).toEqual(["foo"]);
+
+    const undeclared = whyDeps({ cwd, package: "foo-bar" });
+    expect(undeclared.ok).toBe(true);
+    expect(undeclared.package?.is_direct).toBe(false);
+    expect(undeclared.paths?.[0]?.chain.map((n) => n.name)).toEqual(["foo-bar"]);
+  });
+
+  test("local direct path without resolved_by/depth is_direct true via manifest", () => {
+    project(`lockfile_version: "1"
+dependencies:
+  - name: local-a
+    repo_url: local:pkgs/local-a
+    source: local
+    version: 1.0.0
+  - name: local-b
+    repo_url: local:pkgs/local-b
+    source: local
+    version: 1.0.0
+`);
+    write(
+      join(cwd, "bapm.yml"),
+      `name: local-root
+version: 0.0.1
+devDependencies:
+  apm:
+    - path: ./pkgs/local-a
+`,
+    );
+
+    const direct = whyDeps({ cwd, package: "local-a" });
+    expect(direct.ok).toBe(true);
+    expect(direct.package?.is_direct).toBe(true);
+    expect(direct.package?.source).toBe("local");
+
+    const undeclared = whyDeps({ cwd, package: "local-b" });
+    expect(undeclared.ok).toBe(true);
+    expect(undeclared.package?.is_direct).toBe(false);
+  });
+
+  test("missing manifest falls back conservatively to lock depth/resolved_by", () => {
+    project(`lockfile_version: "1"
+dependencies:
+  - name: direct-old
+    repo_url: https://example.com/org/direct-old.git
+    source: git
+    resolved_commit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  - name: child-old
+    repo_url: https://example.com/org/child-old.git
+    source: git
+    resolved_commit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    resolved_by:
+      - direct-old
+`);
+    rmSync(join(cwd, "bapm.yml"), { force: true });
+
+    const direct = whyDeps({ cwd, package: "direct-old" });
+    expect(direct.ok).toBe(true);
+    expect(direct.package?.is_direct).toBe(true);
+
+    const child = whyDeps({ cwd, package: "child-old" });
+    expect(child.ok).toBe(true);
+    expect(child.package?.is_direct).toBe(false);
+  });
+
   test("offline-only: no network side effects (lock is sole source)", () => {
     project(TRANSITIVE);
     const before = process.env.http_proxy;
