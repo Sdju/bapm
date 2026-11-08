@@ -16,6 +16,25 @@ export type CompileOutput = {
   wrote: boolean;
 };
 
+export type CompileCleanSkipReason = "modified" | "unreadable" | "unlink-failed";
+
+/** One stale generated output that clean refused to delete. */
+export type CompileCleanSkip = {
+  /** Project-relative path. */
+  path: string;
+  reason: CompileCleanSkipReason;
+};
+
+/** Result of the `clean` phase (`compile --clean`). */
+export type CompileCleanResult = {
+  /** Stale generated outputs deleted by this invocation. */
+  removed: string[];
+  /** Stale generated outputs a `--dry-run` preview would delete. */
+  wouldRemove: string[];
+  /** Candidates kept because they were modified, unreadable, or undeletable. */
+  skipped: CompileCleanSkip[];
+};
+
 export type CompileAgentsMdOptions = {
   cwd?: string;
   /** When true, discover/validate only — do not write target output. */
@@ -42,6 +61,13 @@ export type CompileAgentsMdOptions = {
    */
   distributed?: boolean;
   /**
+   * Remove orphaned generated outputs for the selected hosts (APM `--clean`).
+   * Only files with a valid Build ID that are not part of this invocation's
+   * planned output set are candidates. `dryRun` previews removals; `validate`
+   * wins and never deletes.
+   */
+  clean?: boolean;
+  /**
    * User-config target default (`~/.bapm/config.json` `target`). Applied after
    * manifest/local-overlay `active` and before auto-detect.
    */
@@ -61,4 +87,6 @@ export type CompileAgentsMdResult = {
   attribution: CompileAttributionEntry[];
   /** One entry per selected target, in selection order. */
   outputs: CompileOutput[];
+  /** Present when `clean` was requested and `validate` did not suppress it. */
+  clean?: CompileCleanResult;
 };

@@ -7,6 +7,7 @@ import {
   type AttributedPrimitive,
 } from "@/modules/Primitives";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
+import { cleanCompileOutputs, outputShapeFromPath, type CompileOutputShape } from "./clean.ts";
 import {
   assertSafeCompileOutput,
   buildDistributedPlan,
@@ -110,6 +111,18 @@ export async function compileAgentsMd(
     }
   }
 
+  // `--clean` is orphan cleanup, mirroring APM: keep this run's planned
+  // outputs, remove only stale generated files with a valid Build ID.
+  const clean =
+    options.clean === true && options.validate !== true
+      ? cleanCompileOutputs({
+          cwd,
+          shapes: await selectedOutputShapes(targets, cwd, options.outputFile),
+          keep: outputs.map((output) => output.path),
+          dryRun: options.dryRun === true,
+        })
+      : undefined;
+
   return {
     ok: true,
     path: outputs[0]?.path,
@@ -118,6 +131,7 @@ export async function compileAgentsMd(
     primitivesCount: sorted.length,
     attribution,
     outputs,
+    ...(clean ? { clean } : {}),
   };
 }
 
@@ -308,6 +322,30 @@ function assertNoOutputCollision(
         "Refusing to overwrite one host's output with another; select one host per output path or exclude duplicates.",
     );
   }
+}
+
+/**
+ * Probe each selected target's default output path (and an explicit `-o`
+ * override) to derive the shapes eligible for orphan cleanup. Distributed
+ * outputs keep the host's basename/prefix, so this covers their nested paths.
+ */
+async function selectedOutputShapes(
+  targets: ResolvedCompileTarget[],
+  cwd: string,
+  outputFile: string | undefined,
+): Promise<CompileOutputShape[]> {
+  const shapes: CompileOutputShape[] = [];
+  for (const target of targets) {
+    const probe = await target.compile!([], { cwd, write: false });
+    const shape = outputShapeFromPath(probe.path);
+    if (shape) shapes.push(shape);
+  }
+  const override = outputFile?.trim();
+  if (override) {
+    const shape = outputShapeFromPath(override);
+    if (shape) shapes.push(shape);
+  }
+  return shapes;
 }
 
 function readManifestActive(cwd: string): string[] | undefined {

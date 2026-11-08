@@ -6,6 +6,7 @@
  * - `compileAgentsMd` / `compileProject` / `runCompile` / `emitAgentsMd`
  * - Single target (`forcedTarget`) or multi (`forcedTargets` / `all`)
  * - `distributed` opts into conservative per-directory `applyTo` placement
+ * - `clean` removes orphaned generated outputs with a valid Build ID
  * - `validate` / `dryRun` skip durable write; `verbose` yields thin attribution
  *
  * ## Example
@@ -21,6 +22,11 @@ export type {
   CompileAgentsMdOptions,
   CompileAgentsMdResult,
   CompileAttributionEntry,
+  CompileCleanResult,
+  CompileCleanSkip,
+  CompileCleanSkipReason,
   CompileOutput,
 } from "./types.ts";
 export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "./compileAgentsMd.ts";
+export { cleanCompileOutputs, outputShapeFromPath } from "./clean.ts";
+export type { CompileOutputShape } from "./clean.ts";

@@ -712,10 +712,21 @@ export type {
   CompileAgentsMdOptions,
   CompileAgentsMdResult,
   CompileAttributionEntry,
+  CompileCleanResult,
+  CompileCleanSkip,
+  CompileCleanSkipReason,
   CompileOutput,
+  CompileOutputShape,
 } from "@/modules/Compile";
 
-export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "@/modules/Compile";
+export {
+  cleanCompileOutputs,
+  compileAgentsMd,
+  compileProject,
+  emitAgentsMd,
+  outputShapeFromPath,
+  runCompile,
+} from "@/modules/Compile";
 
 export type {
   DetectLifecycleUnsupportedOptions,

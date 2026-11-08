@@ -9,7 +9,7 @@ Discover primitives → emit deterministic instruction files for one or several 
 - `compileAgentsMd` / `compileProject` / `runCompile` / `emitAgentsMd`
 - Options: `validate` (no durable write), `dryRun`, `verbose`, `cwd`, `outputFile`,
   `forcedTarget` (single), `forcedTargets` (comma-separated ids from `--target a,b`), `all` (`--all`),
-  `distributed` (opt-in `applyTo` placement)
+  `distributed` (opt-in `applyTo` placement), `clean` (orphan generated-output cleanup)
 - Result: single-target `path` / `content` / `wrote` stay for compatibility; `outputs` lists
   `{ targetId, path, wrote }` for every emitted output (multiple outputs per host in distributed mode)
 
@@ -38,7 +38,16 @@ instructions are placed below the root. Unsafe patterns (absolute, `..`, control
 and symlinked output paths fail closed before any write. Full APM context-optimizer placement
 (file-match scoring, inheritance analysis) is not implemented.
 
+## Build ID and clean
+
+Every output ends with `<!-- Build ID: <12 hex> -->`, hashed over normalized content
+excluding the marker. `clean: true` removes orphaned target-shaped outputs that are absent
+from this run's planned set and still carry a matching Build ID; `dryRun` previews removals
+and `validate` suppresses cleaning. Hand-authored and edited generated files are never
+deleted. `clean` uses the same target selection as compile, so `--target` is not required
+when `active` / config / sole detect applies.
+
 ## Non-goals
 
-Full APM optimizer placement, `--watch`, `--clean`, `--global`, and APM prompt compiler
-behavior remain out of scope.
+Full APM optimizer placement, `--watch`, `--global`, and APM prompt compiler behavior
+remain out of scope.

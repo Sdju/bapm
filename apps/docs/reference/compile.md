@@ -5,7 +5,7 @@
 ## Использование
 
 ```text
-bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--strategy <name>] [--dry-run] [-v] [--validate]
+bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--strategy <name>] [--clean] [--dry-run] [-v] [--validate]
 ```
 
 Выбранный агент задаёт путь по умолчанию и состав файла: `AGENTS.md` (Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, Antigravity), `CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`. Windsurf, Grok Bot и IntelliJ compile не поддерживают. Что попадает в файл у каждого агента: [Собрать AGENTS.md](/guide/situations/compile-agents#contents). Нужен `bapm.yml` в текущем каталоге. Неизвестные флаги отвергаются.
@@ -25,20 +25,57 @@ Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes и Antigravity использ�
 | `--all`           | —              | Собрать для всех зарегистрированных compile-capable хостов                                                                                      | off                                    |
 | `--distributed`   | —              | Opt-in: разложить instructions по каталогам из `applyTo`                                                                                        | off                                    |
 | `--strategy`      | `<name>`       | `single-file` (по умолчанию) или `distributed`                                                                                                  | `single-file`                          |
-| `--dry-run`       | —              | Превью всех would-write путей; не писать файлы                                                                                                  | off                                    |
+| `--clean`         | —              | Удалить осиротевшие generated-файлы выбранных хостов (только с валидным Build ID)                                                               | off                                    |
+| `--dry-run`       | —              | Превью всех would-write путей и would-remove для `--clean`; не менять файлы                                                                     | off                                    |
 | `-v`, `--verbose` | —              | Thin source attribution (name, type, path)                                                                                                      | off                                    |
-| `--validate`      | —              | Только discover/validate; не писать                                                                                                             | off                                    |
+| `--validate`      | —              | Только discover/validate; не писать и не чистить                                                                                                | off                                    |
 | `--help`, `-h`    | —              | Показать help                                                                                                                                   | —                                      |
 
-`--dry-run` и `--validate` не пишут выходные файлы. В multi-target режиме `--dry-run` печатает по строке на каждый хост.
+`--dry-run` и `--validate` не пишут выходные файлы. В multi-target режиме `--dry-run` печатает по строке на каждый хост. `--validate` имеет приоритет: `--clean` при нём не удаляет файлы.
 
-Выбор host: `--target` / `--all` → sole манифест `active` → `target` из `~/.bapm/config.json` → sole auto-detect → fail. Multi-`active` без `--target` — ошибка. `--target` и `--all` взаимоисключающие. `-o` нельзя сочетать с несколькими хостами: один путь не может быть общим для разных хостов.
+Выбор host: `--target` / `--all` → sole манифест `active` → `target` из `~/.bapm/config.json` → sole auto-detect → fail. Multi-`active` без `--target` — ошибка. `--target` и `--all` взаимоисключающие. `-o` нельзя сочетать с несколькими хостами: один путь не может быть общим для разных хостов. `--clean` использует тот же выбор хостов и не требует явного `--target`, если срабатывает sole `active` / config / auto-detect.
 
 `grok-bot`, `hermes` и `intellij` — explicit-only; у `intellij` нет `compile`, поэтому `--target intellij` завершается диагностикой, а не записью файла.
 
 ::: tip Collision policy
 Перед записью compile вычисляет пути всех выбранных хостов. Если два хоста претендуют на один путь (например, `AGENTS.md`), запуск падает с диагностикой вида `Compile target collision: hosts "cursor", "codex" all write "AGENTS.md"` и ничего не пишет. Молчаливой перезаписи нет.
 :::
+
+## Build ID {#build-id}
+
+Каждый собранный Markdown-файл заканчивается одной детерминированной строкой:
+
+```text
+<!-- Build ID: 4f0c2a7b91de -->
+```
+
+Это первые 12 hex-символов SHA-256 от нормализованного содержимого без самой строки Build ID (нормализуются переводы строк, BOM и хвостовые пробелы строк). Поэтому:
+
+- одинаковый вход даёт одинаковый Build ID при повторных запусках;
+- изменённый вход даёт другой Build ID;
+- ручная правка сгенерированного файла делает Build ID невалидным (это защищает `--clean`).
+
+Build ID — это маркер дрейфа, а не подпись и не attestation происхождения.
+
+## Clean {#clean}
+
+`--clean` удаляет только **осиротевшие** generated-выходы выбранных хостов: файлы, которые имеют форму выходного файла хоста (`AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md` и т. д.), не входят в текущий план сборки и содержат валидный Build ID, совпадающий с содержимым.
+
+```bash
+bapm compile --clean --dry-run   # показать, что будет удалено
+bapm compile --clean             # собрать текущие файлы и удалить осиротевшие
+```
+
+Правила безопасности:
+
+- файл без Build ID считается ручным и не удаляется;
+- generated-файл, изменённый после сборки, имеет невалидный Build ID и не удаляется (в verbose-режиме видно `kept … (modified)`);
+- текущие запланированные выходы не удаляются;
+- `--clean --dry-run` ничего не пишет и не удаляет, только печатает `would remove …`;
+- `--clean --validate` не удаляет ничего (validate-first);
+- в multi-target режиме учитываются формы выходов всех выбранных хостов; в distributed mode осиротевшие вложенные файлы прошлых раскладок тоже удаляются.
+
+`--clean` — это очистка orphans, а не «удалить всё сгенерированное»: текущий выход пересобирается обычной записью, а удаляются только файлы, которых больше нет в плане.
 
 ## Distributed mode {#distributed}
 
@@ -61,3 +98,5 @@ Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes и Antigravity использ�
 `--target`, `--all`, `--dry-run` и `--validate` работают как обычно. `-o` в distributed mode запрещён: у каждого каталога свой файл. Абсолютные пути, `..`, служебные каталоги (`.git`, `node_modules`, `apm_modules`, `bapm_modules`) и симлинки в пути выхода отвергаются до записи. Это консервативное подмножество APM: файловый scoring и наследование контекста APM-оптимизатора не реализованы.
 
 Сценарий: [Собрать AGENTS.md](/guide/situations/compile-agents).
+
+`--watch` по-прежнему не реализован: compile запускается вручную. Build ID и `--clean` уже есть.

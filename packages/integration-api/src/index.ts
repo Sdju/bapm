@@ -31,6 +31,17 @@ export type {
 
 export { createIntegrationRegistry, createMarketplaceOutputRegistry } from "./registry.ts";
 
+export {
+  BUILD_ID_LINE_PATTERN,
+  BUILD_ID_PLACEHOLDER,
+  applyBuildId,
+  buildIdBody,
+  computeBuildId,
+  hasBuildIdLine,
+  hasValidBuildId,
+  stabilizeBuildId,
+} from "./buildId.ts";
+
 export type {
   CopyHookScriptArgs,
   CopyHookScriptResult,
