@@ -9,6 +9,7 @@ Thin helpers over the project modules-cache root (`apm_modules`), plus the opt-i
 - `cacheInfo` / `getCacheInfo` / `modulesCacheInfo` — root + entries + size (also exposes `shared` stats)
 - `cacheClean` / `cleanModulesCache` — remove modules entries (`yes` / `-y` required)
 - `sharedGitCacheInfo` / `sharedGitCacheClean` — shared mirror path/size and mirror-only wipe
+- `pruneSharedCache` — remove shared mirrors older than `days` (default 30)
 
 ## Invariants
 

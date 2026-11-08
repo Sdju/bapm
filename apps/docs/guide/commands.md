@@ -48,6 +48,7 @@ bapm find .agents/skills/code-review/SKILL.md
 | `bapm auth <host>` | Показывает источник токена; `--check` проверяет через API, `--export` — строка для `eval` |
 | `bapm prune`       | Удаляет из `apm_modules/` пакеты, которых больше нет в lock                               |
 | `bapm cache clean` | Очищает `apm_modules/` целиком                                                            |
+| `bapm cache prune` | Чистит shared git mirrors старше `--days` (`--shared`); `apm_modules` не трогает          |
 
 ## Скрипты проекта
 

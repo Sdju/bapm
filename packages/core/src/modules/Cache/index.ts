@@ -6,6 +6,7 @@
  * - `cacheInfo` / `getCacheInfo` / `modulesCacheInfo`
  * - `cacheClean` / `cleanModulesCache` — project modules-cache only
  * - `sharedGitCacheInfo`, `sharedGitCacheClean` — opt-in shared mirror cache
+ * - `pruneSharedCache` — remove shared mirrors older than N days
  *
  * ## Example
  *
@@ -39,6 +40,10 @@ export type {
   SharedGitCacheInfoOptions,
   SharedGitCacheInfoResult,
   SharedGitCacheOverride,
+  SharedGitCachePruneCandidate,
+  SharedGitCachePruneFailure,
+  SharedGitCachePruneOptions,
+  SharedGitCachePruneResult,
   SharedGitCacheReason,
   SharedGitMirrorEntry,
 } from "@/modules/SharedCache";
@@ -46,8 +51,10 @@ export type {
 export {
   BAPM_CACHE_DIR_ENV,
   BAPM_NO_CACHE_ENV,
+  DEFAULT_SHARED_GIT_PRUNE_DAYS,
   SHARED_GIT_CACHE_SUBDIR,
   isCacheableGitRepoUrl,
+  pruneSharedCache,
   resolveSharedGitCacheConfig,
   sharedGitCacheClean,
   sharedGitCacheInfo,
