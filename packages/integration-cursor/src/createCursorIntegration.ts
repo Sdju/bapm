@@ -60,6 +60,7 @@ export function createCursorIntegration(options?: {
     mcpEnvMode: "translate",
     supportsGlobalMcp: true,
     supportsGlobalFiles: true,
+    globalCompileOutput: ".cursor/AGENTS.md",
     detect: ({ cwd }) => {
       const cursorDir = join(cwd, ".cursor");
       if (existsSync(cursorDir) && statSync(cursorDir).isDirectory()) return true;

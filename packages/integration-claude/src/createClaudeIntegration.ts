@@ -81,6 +81,7 @@ export function createClaudeIntegration(options?: {
       return existsSync(claudeDir) && statSync(claudeDir).isDirectory();
     },
     supportsGlobalFiles: true,
+    globalCompileOutput: ".claude/CLAUDE.md",
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
       const content = renderPrimitivesMarkdown({

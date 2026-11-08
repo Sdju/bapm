@@ -1,4 +1,4 @@
-import type { IntegrationRegistry } from "@b-apm/integration-api";
+import type { DeploymentScope, IntegrationRegistry } from "@b-apm/integration-api";
 
 export type CompileAttributionEntry = {
   name: string;
@@ -36,7 +36,26 @@ export type CompileCleanResult = {
 };
 
 export type CompileAgentsMdOptions = {
+  /** Project root; fallback for both `manifestCwd` and `deployCwd`. */
   cwd?: string;
+  /**
+   * Root for manifest, lock, modules and primitive discovery. Defaults to
+   * `cwd`. A global compile passes the `~/.bapm` (`BAPM_HOME`) root here so
+   * project files are never read.
+   */
+  manifestCwd?: string;
+  /**
+   * Root for host compile outputs. Defaults to `cwd`. A global compile passes
+   * the user home so `~/.cursor`, `~/.claude`, and `~/.codex` receive files
+   * while the manifest root stays under `~/.bapm`.
+   */
+  deployCwd?: string;
+  /**
+   * Deployment scope. `global` requires a home-relative
+   * `globalCompileOutput` on each selected integration and uses the user home
+   * as the output root; unsupported hosts fail closed.
+   */
+  scope?: DeploymentScope;
   /** When true, discover/validate only — do not write target output. */
   validate?: boolean;
   /** When true (and not validate), compute content but do not write. */

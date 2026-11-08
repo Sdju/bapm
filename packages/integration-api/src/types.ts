@@ -315,6 +315,13 @@ export type BapmIntegration = {
   /** Optional host-owned compile rendering and output placement. */
   compile?: CompileFn;
   /**
+   * Home-relative compile output path for user scope (`bapm compile --global`).
+   * Presence opts the host into global compile; core writes the host-owned file
+   * under the user home instead of the project root. Hosts without it fail the
+   * global command with an unsupported-for-global diagnostic.
+   */
+  globalCompileOutput?: string;
+  /**
    * Optional MCP env handling mode. Omitted ⇒ bake-compatible (Cursor default).
    * Install reads this through the api contract — no host-id allowlists in core.
    */

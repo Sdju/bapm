@@ -108,8 +108,11 @@ home-каталоги выбранных агентов. `bapm install -g --only
   project-scoped.
 - `~/.bapm/config.json` остаётся user store для `bapm approve` / `bapm deny`;
   global install использует тот же trust/policy pipeline, что и project install.
-- `bapm compile --global` пока не поддерживается (см.
-  [compile](/reference/compile#global)).
+- `bapm compile --global` (`-g`) использует тот же global root и пишет
+  user-scope root context для Cursor (`~/.cursor/AGENTS.md`), Claude Code
+  (`~/.claude/CLAUDE.md`) и Codex CLI (`~/.codex/AGENTS.md`); остальные хосты
+  дают unsupported-for-global ошибку. См.
+  [compile](/reference/compile#global).
 
 ## Hooks в нативных конфигах
 

@@ -20,7 +20,26 @@ import type {
   CompileOutput,
 } from "./types.ts";
 
-type ResolvedCompileTarget = Pick<BapmIntegration, "id" | "compile">;
+type ResolvedCompileTarget = Pick<BapmIntegration, "id" | "compile" | "globalCompileOutput">;
+
+/** Home-relative global output path, if the host opts into global compile. */
+function globalCompileOutputOf(target: ResolvedCompileTarget): string | undefined {
+  const value = target.globalCompileOutput;
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function isGlobalCompileTarget(target: BapmIntegration): boolean {
+  return typeof target.compile === "function" && globalCompileOutputOf(target) !== undefined;
+}
+
+function supportedGlobalCompileHosts(registry: IntegrationRegistry): string[] {
+  return registry
+    .list()
+    .filter(isGlobalCompileTarget)
+    .map((target) => String(target.id));
+}
 
 /**
  * Discover conflict-resolved primitives then delegate output emission to one
@@ -33,14 +52,23 @@ export async function compileAgentsMd(
   options: CompileAgentsMdOptions = {},
 ): Promise<CompileAgentsMdResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
-  const modulesDir = options.modulesDir ?? join(cwd, APM_MODULES_DIR);
+  const manifestCwd = resolve(options.manifestCwd ?? cwd);
+  const deployCwd = resolve(options.deployCwd ?? cwd);
+  const scope = options.scope === "global" ? "global" : "project";
+  const modulesDir = options.modulesDir ?? join(manifestCwd, APM_MODULES_DIR);
 
-  const raw = discoverPrimitives({ cwd, modulesDir });
+  if (scope === "global" && options.outputFile?.trim()) {
+    throw new Error(
+      "Compile --global does not accept --output / -o; each host owns its user-scope output path",
+    );
+  }
+
+  const raw = discoverPrimitives({ cwd: manifestCwd, modulesDir });
   const { primitives } = resolvePrimitiveConflicts({ primitives: raw });
   const sorted = sortPrimitives(primitives);
   const attribution = toAttribution(sorted);
 
-  const targets = await selectCompileTargets(options, cwd);
+  const targets = await selectCompileTargets(options, manifestCwd, scope);
   const multi = targets.length > 1;
   if (options.distributed === true && options.outputFile?.trim()) {
     throw new Error(
@@ -52,28 +80,46 @@ export async function compileAgentsMd(
       "Compile with multiple compile targets cannot use one --output path; select a single target or omit -o / --output",
     );
   }
+  if (scope === "global") {
+    for (const target of targets) {
+      const output = globalCompileOutputOf(target);
+      if (!output) {
+        throw globalCompileUnsupportedError(target.id, options.integrationRegistry);
+      }
+      // Fail closed before any host write if an integration declares an unsafe
+      // home-relative path.
+      assertSafeCompileOutput(deployCwd, output);
+    }
+  }
 
   const write = options.validate !== true && options.dryRun !== true;
-  const compileContext = {
-    cwd,
-    outputFile: options.outputFile,
-  } as const;
+  const outputFileFor = (target: ResolvedCompileTarget): string | undefined =>
+    scope === "global" ? globalCompileOutputOf(target) : options.outputFile;
+  const compileContextFor = (target: ResolvedCompileTarget) => ({
+    cwd: deployCwd,
+    outputFile: outputFileFor(target),
+    ...(scope === "global" ? { includeInstructions: true } : {}),
+  });
 
   let outputs: CompileOutput[];
   let firstContent = "";
 
   if (options.distributed === true) {
     const distributed = await compileDistributed({
-      cwd,
+      cwd: deployCwd,
+      scope,
       targets,
-      plan: buildDistributedPlan(sorted, cwd),
+      plan: buildDistributedPlan(sorted, deployCwd),
       write,
     });
     firstContent = distributed.firstContent;
     outputs = distributed.outputs;
   } else if (!multi) {
     const target = targets[0]!;
-    const emitted = await target.compile!(sorted, { ...compileContext, write });
+    const emitted = await target.compile!(sorted, {
+      ...compileContextFor(target),
+      write,
+    });
     firstContent = emitted.content;
     outputs = [{ targetId: target.id, path: emitted.path, wrote: emitted.wrote }];
   } else {
@@ -82,15 +128,21 @@ export async function compileAgentsMd(
     const previews = await Promise.all(
       targets.map(async (target) => ({
         target,
-        emitted: await target.compile!(sorted, { ...compileContext, write: false }),
+        emitted: await target.compile!(sorted, {
+          ...compileContextFor(target),
+          write: false,
+        }),
       })),
     );
-    assertNoOutputCollision(cwd, previews);
+    assertNoOutputCollision(deployCwd, previews);
 
     if (write) {
       const written = await Promise.all(
         previews.map(async ({ target }) => {
-          const durable = await target.compile!(sorted, { ...compileContext, write: true });
+          const durable = await target.compile!(sorted, {
+            ...compileContextFor(target),
+            write: true,
+          });
           return {
             targetId: target.id,
             path: durable.path,
@@ -113,13 +165,22 @@ export async function compileAgentsMd(
 
   // `--clean` is orphan cleanup, mirroring APM: keep this run's planned
   // outputs, remove only stale generated files with a valid Build ID.
+  const shapes =
+    options.clean === true && options.validate !== true
+      ? await selectedOutputShapes(targets, deployCwd, options.outputFile, scope)
+      : [];
+  const cleanSearchDirs =
+    scope === "global"
+      ? [...new Set(shapes.map((shape) => shape.dir).filter((dir) => dir.length > 0))]
+      : undefined;
   const clean =
     options.clean === true && options.validate !== true
       ? cleanCompileOutputs({
-          cwd,
-          shapes: await selectedOutputShapes(targets, cwd, options.outputFile),
+          cwd: deployCwd,
+          shapes,
           keep: outputs.map((output) => output.path),
           dryRun: options.dryRun === true,
+          ...(cleanSearchDirs ? { searchDirs: cleanSearchDirs } : {}),
         })
       : undefined;
 
@@ -165,13 +226,14 @@ type EmissionPreview = {
  */
 async function compileDistributed(args: {
   cwd: string;
+  scope: "project" | "global";
   targets: ResolvedCompileTarget[];
   plan: DistributedPlan;
   write: boolean;
 }): Promise<{ outputs: CompileOutput[]; firstContent: string }> {
   const targetPlans: TargetEmissionPlan[] = [];
   for (const target of args.targets) {
-    targetPlans.push(await planTargetEmissions(target, args.plan, args.cwd));
+    targetPlans.push(await planTargetEmissions(target, args.plan, args.cwd, args.scope));
   }
 
   // Render without writing first so every path is known and validated before
@@ -234,15 +296,22 @@ async function planTargetEmissions(
   target: ResolvedCompileTarget,
   plan: DistributedPlan,
   cwd: string,
+  scope: "project" | "global",
 ): Promise<TargetEmissionPlan> {
   // Probe the target's own default path with an empty primitive set. The host
   // owns the basename and any host-specific prefix (for example .github/).
-  const probe = await target.compile!([], {
-    cwd,
-    write: false,
-    includeInstructions: true,
-  });
-  const rootPath = probe.path;
+  // Global hosts declare their home-relative root instead of probing the
+  // project-shaped default.
+  const rootPath =
+    scope === "global"
+      ? globalCompileOutputOf(target)!
+      : (
+          await target.compile!([], {
+            cwd,
+            write: false,
+            includeInstructions: true,
+          })
+        ).path;
   const rootDir = dirname(rootPath);
 
   const emissions = plan.placements.map((placement) => ({
@@ -333,11 +402,15 @@ async function selectedOutputShapes(
   targets: ResolvedCompileTarget[],
   cwd: string,
   outputFile: string | undefined,
+  scope: "project" | "global",
 ): Promise<CompileOutputShape[]> {
   const shapes: CompileOutputShape[] = [];
   for (const target of targets) {
-    const probe = await target.compile!([], { cwd, write: false });
-    const shape = outputShapeFromPath(probe.path);
+    const path =
+      scope === "global"
+        ? globalCompileOutputOf(target)!
+        : (await target.compile!([], { cwd, write: false })).path;
+    const shape = outputShapeFromPath(path);
     if (shape) shapes.push(shape);
   }
   const override = outputFile?.trim();
@@ -361,6 +434,7 @@ function readManifestActive(cwd: string): string[] | undefined {
 async function selectCompileTargets(
   options: CompileAgentsMdOptions,
   cwd: string,
+  scope: "project" | "global",
 ): Promise<ResolvedCompileTarget[]> {
   const registry = options.integrationRegistry;
   if (!registry) {
@@ -378,13 +452,22 @@ async function selectCompileTargets(
       .filter(
         (
           target,
-        ): target is BapmIntegration & { compile: NonNullable<BapmIntegration["compile"]> } =>
-          typeof target.compile === "function",
+        ): target is BapmIntegration & {
+          compile: NonNullable<BapmIntegration["compile"]>;
+        } =>
+          typeof target.compile === "function" &&
+          (scope !== "global" || isGlobalCompileTarget(target)),
       )
-      .map((target) => ({ id: target.id, compile: target.compile }));
+      .map((target) => ({
+        id: target.id,
+        compile: target.compile,
+        globalCompileOutput: target.globalCompileOutput,
+      }));
     if (targets.length === 0) {
       throw new Error(
-        "Compile --all found no registered compile-capable targets; register host integrations first",
+        scope === "global"
+          ? `Compile --global --all found no registered compile-capable targets with user-scope paths. Supported global compile hosts: ${supportedGlobalCompileHosts(registry).join(", ") || "(none registered)"}`
+          : "Compile --all found no registered compile-capable targets; register host integrations first",
       );
     }
     return targets;
@@ -395,13 +478,14 @@ async function selectCompileTargets(
     throw new Error("Compile accepts either forcedTarget or forcedTargets, not both");
   }
   if (forcedIds.length > 0) {
-    return forcedIds.map((id) => resolveCompileTarget(registry, id));
+    return forcedIds.map((id) => resolveCompileTarget(registry, id, scope));
   }
 
   const single = await selectCompileTarget(
     registry,
     options.forcedTarget,
     cwd,
+    scope,
     options.configTarget,
   );
   return [single];
@@ -416,24 +500,46 @@ function normalizeForcedTargets(forcedTargets: string[] | undefined): string[] {
   return [...new Set(ids)];
 }
 
-function resolveCompileTarget(registry: IntegrationRegistry, id: string): ResolvedCompileTarget {
+function resolveCompileTarget(
+  registry: IntegrationRegistry,
+  id: string,
+  scope: "project" | "global",
+): ResolvedCompileTarget {
   const target = registry.get(id);
   if (!target) throw new Error(`Unknown or unregistered target: ${id}`);
   if (typeof target.compile !== "function") {
     throw new Error(`Target "${target.id}" does not support compile`);
   }
-  return { id: target.id, compile: target.compile };
+  if (scope === "global" && !isGlobalCompileTarget(target)) {
+    throw globalCompileUnsupportedError(target.id, registry);
+  }
+  return {
+    id: target.id,
+    compile: target.compile,
+    globalCompileOutput: target.globalCompileOutput,
+  };
+}
+
+function globalCompileUnsupportedError(
+  id: string,
+  registry: IntegrationRegistry | undefined,
+): Error {
+  const supported = registry ? supportedGlobalCompileHosts(registry) : [];
+  return new Error(
+    `Global compile is not supported for target "${id}". Supported global compile hosts: ${supported.join(", ") || "(none registered)"}.`,
+  );
 }
 
 async function selectCompileTarget(
   registry: IntegrationRegistry,
   forcedTarget: string | undefined,
   cwd: string,
+  scope: "project" | "global",
   configTarget?: string,
 ): Promise<ResolvedCompileTarget> {
   // 1. Forced --target
   if (forcedTarget) {
-    return resolveCompileTarget(registry, forcedTarget);
+    return resolveCompileTarget(registry, forcedTarget, scope);
   }
 
   // 2. Manifest `active` — sole compile-capable id, or fail if multi
@@ -447,38 +553,52 @@ async function selectCompileTarget(
     }
 
     const soleId = manifestActive[0]!;
-    return resolveCompileTarget(registry, soleId);
+    return resolveCompileTarget(registry, soleId, scope);
   }
 
   // 3. User config default target (before detect)
   const configured = configTarget?.trim();
   if (configured) {
-    return resolveCompileTarget(registry, configured);
+    return resolveCompileTarget(registry, configured, scope);
   }
 
   // 4. Sole auto-detect among compile-capable registered hosts
-  const detection = await detectRegisteredTargets(registry, cwd);
+  const detection = await detectRegisteredTargets(registry, cwd, scope);
   const candidates = detection.detectedIds
     .map((id) => registry.get(id))
     .filter((target): target is BapmIntegration => Boolean(target?.compile));
   if (candidates.length !== 1) {
     throw new Error(
-      "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
+      scope === "global"
+        ? `Global target detection is missing or ambiguous; pass --target <id> (supported compile hosts: ${supportedGlobalCompileHosts(registry).join(", ") || "(none registered)"}) or set active in ~/.bapm/bapm.yml`
+        : "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
     );
   }
-  return { id: candidates[0]!.id, compile: candidates[0]!.compile! };
+  const detected = candidates[0]!;
+  if (scope === "global" && !isGlobalCompileTarget(detected)) {
+    throw globalCompileUnsupportedError(detected.id, registry);
+  }
+  return {
+    id: detected.id,
+    compile: detected.compile!,
+    globalCompileOutput: detected.globalCompileOutput,
+  };
 }
 
 async function detectRegisteredTargets(
   registry: IntegrationRegistry,
   cwd: string,
+  scope: "project" | "global" = "project",
 ): Promise<{ detectedIds: string[] }> {
-  if (typeof registry.detect === "function") return registry.detect(cwd);
+  // A custom registry `detect(cwd)` is project-only; global detection must use
+  // each target's user-scope detector.
+  if (scope !== "global" && typeof registry.detect === "function") return registry.detect(cwd);
 
   const detectedIds: string[] = [];
   for (const target of registry.list()) {
     try {
-      if (await target.detect({ cwd })) detectedIds.push(target.id);
+      const detect = scope === "global" ? target.detectGlobal : target.detect;
+      if (detect && (await detect({ cwd }))) detectedIds.push(target.id);
     } catch {
       // Detection errors are documented non-matches.
     }
