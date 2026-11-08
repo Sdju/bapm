@@ -203,14 +203,14 @@ describe("CLI mcp", () => {
     writeText(project.cwd, "bapm.yml", MANIFEST);
     writeText(project.cwd, "bapm.lock.yaml", MULTI_TARGET_LOCK);
 
-    const known = await runInProject(project.cwd, ["mcp", "show", "manifest-only"], {
+    const known = await runInProject(project.cwd, ["mcp", "show", "manifest-only", "--local"], {
       HOME: project.home,
     });
     expect(known.result).toBe(0);
     expect(known.combined).toContain("manifest-only");
     expect(known.combined).toContain("declaration:");
 
-    const unknown = await runInProject(project.cwd, ["mcp", "show", "nope"], {
+    const unknown = await runInProject(project.cwd, ["mcp", "show", "nope", "--local"], {
       HOME: project.home,
     });
     expect(unknown.result).toBe(1);
@@ -224,7 +224,7 @@ describe("CLI mcp", () => {
 
     const { result, stderr } = await runInProject(
       project.cwd,
-      ["mcp", "show", "missing", "--json"],
+      ["mcp", "show", "missing", "--local", "--json"],
       { HOME: project.home },
     );
     expect(result).toBe(1);
@@ -241,7 +241,7 @@ describe("CLI mcp", () => {
     writeText(project.cwd, "bapm.yml", MANIFEST);
     writeText(project.cwd, "bapm.lock.yaml", MULTI_TARGET_LOCK);
 
-    const hit = await runInProject(project.cwd, ["mcp", "search", "leaf", "--json"], {
+    const hit = await runInProject(project.cwd, ["mcp", "search", "leaf", "--local", "--json"], {
       HOME: project.home,
     });
     expect(hit.result).toBe(0);
@@ -252,7 +252,7 @@ describe("CLI mcp", () => {
     expect(json.query).toBe("leaf");
     expect(json.servers.map((server) => server.name)).toEqual(["dep-http"]);
 
-    const miss = await runInProject(project.cwd, ["mcp", "search", "absent"], {
+    const miss = await runInProject(project.cwd, ["mcp", "search", "absent", "--local"], {
       HOME: project.home,
     });
     expect(miss.result).toBe(0);
@@ -268,8 +268,8 @@ describe("CLI mcp", () => {
     expect(combined).toContain("bapm mcp list");
     expect(combined).toContain("bapm mcp show <name>");
     expect(combined).toContain("bapm mcp search <query>");
-    expect(combined).toMatch(/read-only/i);
-    expect(combined).toMatch(/mcp install.*not included/i);
+    expect(combined).toContain("bapm mcp install <name>");
+    expect(combined).toMatch(/--local/i);
   });
 
   test("help mcp topic delegates to command help", async () => {
@@ -281,14 +281,13 @@ describe("CLI mcp", () => {
     expect(combined).toContain("bapm mcp list");
   });
 
-  test("mcp install is explicitly not included", async () => {
+  test("mcp install requires a server name", async () => {
     project = createProject();
     const { result, combined } = await runInProject(project.cwd, ["mcp", "install"], {
       HOME: project.home,
     });
     expect(result).toBe(1);
-    expect(combined).toMatch(/mcp install is not included/i);
-    expect(combined).toContain("bapm install");
+    expect(combined).toContain("mcp install requires a server name");
   });
 
   test("inspection writes nothing to the project", async () => {
@@ -298,10 +297,10 @@ describe("CLI mcp", () => {
     const before = fingerprintProject(project.cwd);
 
     const list = await runInProject(project.cwd, ["mcp", "list"], { HOME: project.home });
-    const show = await runInProject(project.cwd, ["mcp", "show", "dep-http"], {
+    const show = await runInProject(project.cwd, ["mcp", "show", "dep-http", "--local"], {
       HOME: project.home,
     });
-    const search = await runInProject(project.cwd, ["mcp", "search", "leaf"], {
+    const search = await runInProject(project.cwd, ["mcp", "search", "leaf", "--local"], {
       HOME: project.home,
     });
     expect([list.result, show.result, search.result]).toEqual([0, 0, 0]);

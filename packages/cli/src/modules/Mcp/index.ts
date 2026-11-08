@@ -1,12 +1,13 @@
 import { formatMcpHelp, parseMcpArgs, runMcpCli } from "./services/runMcp.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
+import type { McpCliDeps } from "./services/runMcp.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };
 export type { McpCliDeps, McpOptions, McpSub, ParsedMcpArgs } from "./services/runMcp.ts";
 export { formatMcpHelp, parseMcpArgs };
 
-export function createMcp(deps?: LifecycleCliDeps) {
-  const resolved: LifecycleCliDeps = deps ?? {
+export function createMcp(deps?: McpCliDeps) {
+  const resolved: McpCliDeps = deps ?? {
     name: "bapm",
     manifestFile: "bapm.yml",
     lockFile: "bapm.lock.yaml",

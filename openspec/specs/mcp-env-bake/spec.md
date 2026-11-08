@@ -120,3 +120,17 @@ When install records MCP servers in the lockfile inventory, it MUST record the s
 
 - **WHEN** a server declares `env.KEY: "{bake:KEY}"` and `KEY` resolves to `k-value`
 - **THEN** the lock MUST record `{bake:KEY}` and MUST NOT contain `k-value`
+
+### Requirement: Registry-resolved MCP servers preserve authored overlays for bake
+
+When a `dependencies.mcp` entry is resolved through an MCP registry, conversion to the host-agnostic server contract MUST keep the declaration's authored `env` / `headers` overlays and MUST apply the same bake / translate policy as a self-defined server. Registry-provided environment defaults and header values MAY be used as generated inputs, but a registry bearer token and any resolved secret values MUST NOT be written into the lockfile or printed in registry search/show output.
+
+#### Scenario: Authored env overlay still bakes after registry resolution
+
+- **WHEN** a registry-only entry also declares `env.API_TOKEN: "${API_TOKEN}"` and the registry returns a package
+- **THEN** the resolved server MUST reach host configure with that authored env value and the existing bake/translate policy, and the lock MUST keep `${API_TOKEN}` rather than the resolved secret
+
+#### Scenario: Registry token is never persisted
+
+- **WHEN** `MCP_REGISTRY_TOKEN` is set for a private registry lookup
+- **THEN** no lockfile, manifest, JSON output, or diagnostic emitted by resolution MUST contain the token value

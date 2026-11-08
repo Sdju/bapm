@@ -27,7 +27,7 @@ bapm config unset <key>
 | Ключ                  | Тип                   | По умолчанию | Что делает                                                        |
 | --------------------- | --------------------- | ------------ | ----------------------------------------------------------------- |
 | `target`              | target id             | не задан     | Личный агент по умолчанию перед автоопределением                  |
-| `mcp-registry-url`    | `http(s)://host`      | не задан     | Хранит базовый URL приватного MCP registry (пока только хранение) |
+| `mcp-registry-url`    | `http(s)://host`      | не задан     | Базовый URL приватного MCP registry для `mcp search/show/install` |
 | `temp-dir`            | путь                  | не задан     | Хранит абсолютный temp-каталог (пока только хранение)             |
 | `self-update.channel` | `stable`/`prerelease` | `stable`     | Хранит канал self-update (пока только хранение)                   |
 
@@ -61,7 +61,7 @@ bapm config unset target
 - query string и fragment;
 - пустой хост, некорректный порт, управляющие символы и URL длиннее 2048 символов.
 
-Завершающие `/` нормализуются. Пока значение только хранится: registry-lookup MCP в bapm ещё не реализован, поэтому `install` / `mcp` его не читают. Ключ можно безопасно задать заранее; при появлении consumer-а приоритет будет `--registry` → `MCP_REGISTRY_URL` → `mcp-registry-url` → встроенный default.
+Завершающие `/` нормализуются. Значение используется командами `bapm mcp search/show/install` и registry-lookup при `bapm install`; приоритет: `--registry` → `MCP_REGISTRY_URL` → `mcp-registry-url` → встроенный `https://api.mcp.github.com`. Для приватного registry задайте `MCP_REGISTRY_TOKEN` (не хранится в config).
 
 ```bash
 bapm config set mcp-registry-url https://mcp.internal.example.com
