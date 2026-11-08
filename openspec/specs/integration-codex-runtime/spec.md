@@ -92,17 +92,22 @@ Instruction, command, and prompt primitives MUST NOT write Codex-native host fil
 
 ### Requirement: Hooks merge into hooks.json with ownership sidecar
 
-Hook primitives MUST merge into `.codex/hooks.json` under the native hooks structure Codex expects, copying referenced scripts under `.codex/hooks/<name>/` as needed. The package MUST maintain a project sidecar at `.codex/bapm-hooks.json` recording bapm-owned hook entries/scripts so reinstall can remove previously owned entries before re-merge. Native `hooks.json` MUST preserve unrelated top-level keys and non-owned hook handlers. Ownership metadata MUST NOT be left as Codex-native private keys inside handler objects in `hooks.json`.
+Hook primitives MUST merge into `.codex/hooks.json` under Codex's native nested hook structure: each event value MUST be an array of matcher groups shaped `{ "matcher"?: <matcher>, "hooks": [ … ] }`. Flat source command entries MUST become an intermediate group with a nested `hooks` array, and no matcher MUST be invented when the source did not declare one. Source matcher groups MUST keep their matcher and other group/handler fields. Referenced scripts MUST be copied under `.codex/hooks/<name>/` as needed. The package MUST maintain a project sidecar at `.codex/bapm-hooks.json` recording bapm-owned hook entries/scripts so reinstall can remove previously owned entries (including legacy flat entries) before re-merge. Native `hooks.json` MUST preserve unrelated top-level keys and non-owned hook handlers or groups. Ownership metadata MUST NOT be left as Codex-native private keys inside handler objects in `hooks.json`.
 
 #### Scenario: Hooks merge into hooks.json
 
 - **WHEN** Codex materialize runs with a valid hook primitive JSON
-- **THEN** `.codex/hooks.json` MUST contain the merged hook handlers and unrelated existing keys MUST remain intact
+- **THEN** `.codex/hooks.json` MUST contain the merged nested hook groups and unrelated existing keys MUST remain intact
+
+#### Scenario: Flat source command becomes a nested group
+
+- **WHEN** Codex materialize receives a flat `SessionStart` command entry
+- **THEN** `.codex/hooks.json` MUST write `{ "hooks": [{ "type": …, "command": … }] }` without adding a matcher when none was declared
 
 #### Scenario: Reinstall replaces owned hooks only
 
 - **WHEN** Codex materialize runs again after a prior owned hooks deploy
-- **THEN** previously bapm-owned hook entries MUST be replaced according to the sidecar and non-owned handlers MUST remain
+- **THEN** previously bapm-owned hook entries MUST be replaced according to the sidecar and non-owned handlers or groups MUST remain
 
 ### Requirement: Active Codex invocation may create .codex for hooks and MCP
 

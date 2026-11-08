@@ -21,6 +21,7 @@ import {
   pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
+  renderNativeHookEntries,
   renderPrimitivesMarkdown,
   sanitizeName,
   stripOwnedHookCommands,
@@ -549,10 +550,9 @@ function extractSingleEnvRef(value: string): string | undefined {
   return match?.[1];
 }
 
-type HookEntry = { command?: string; [key: string]: unknown };
 type HooksDoc = {
   version?: number;
-  hooks?: Record<string, HookEntry[]>;
+  hooks?: Record<string, unknown[]>;
   [key: string]: unknown;
 };
 
@@ -619,35 +619,34 @@ function materializeCodexHooks(args: {
       if (!Array.isArray(entries)) continue;
       const event = normalizeCodexHookEvent(rawEvent);
       const destList = Array.isArray(doc.hooks[event]) ? [...doc.hooks[event]!] : [];
-      for (const entry of entries) {
-        if (!entry || typeof entry !== "object") continue;
-        const command = typeof entry.command === "string" ? entry.command.trim() : "";
-        if (!command) {
-          destList.push({ ...entry });
-          continue;
-        }
-
-        const rewritten = copyHookScript({
-          cwd,
-          deployRoots: roots,
-          hookFile: srcPath,
-          command,
-          alreadyDeployedNeedle: ".codex/",
-          destRel: `.codex/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
-          commandAsDotSlash: true,
-        });
-        const nextEntry: HookEntry = { ...entry, command: rewritten.commandRel };
-        destList.push(nextEntry);
-        ownedEntries.push({ event, command: rewritten.commandRel });
-        if (rewritten.scriptRel) {
-          scripts.push(rewritten.scriptRel);
-          deployedFiles.push({
-            path: rewritten.scriptRel,
-            primitive: { name: String(p.name), packageName: p.packageName },
+      const rendered = renderNativeHookEntries({
+        entries: entries as unknown[],
+        rewriteCommand: (command) => {
+          const rewritten = copyHookScript({
+            cwd,
+            deployRoots: roots,
+            hookFile: srcPath,
+            command,
+            alreadyDeployedNeedle: ".codex/",
+            destRel: `.codex/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
+            commandAsDotSlash: true,
           });
-        }
+          return {
+            command: rewritten.commandRel,
+            ...(rewritten.scriptRel ? { scriptRel: rewritten.scriptRel } : {}),
+          };
+        },
+      });
+      for (const entry of rendered.owned) ownedEntries.push({ event, command: entry.command });
+      for (const scriptRel of rendered.scripts) {
+        if (scripts.includes(scriptRel)) continue;
+        scripts.push(scriptRel);
+        deployedFiles.push({
+          path: scriptRel,
+          primitive: { name: String(p.name), packageName: p.packageName },
+        });
       }
-      doc.hooks[event] = destList;
+      doc.hooks[event] = [...destList, ...rendered.entries];
     }
 
     nextOwned[name] = {

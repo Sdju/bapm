@@ -507,31 +507,158 @@ export function pruneManagedMcpServerNames<T>(
   return removed;
 }
 
+export type RewriteHookCommand = (command: string) => {
+  command: string;
+  scriptRel?: string;
+};
+
+export type RenderNativeHookEntriesArgs = {
+  entries: unknown[];
+  /** Injected only when neither the group nor the flat source entry declares a matcher. */
+  defaultMatcher?: string;
+  /** Claude: inject `type: "command"` into untyped flat command entries. */
+  defaultHandlerType?: boolean;
+  rewriteCommand?: RewriteHookCommand;
+};
+
+export type RenderNativeHookEntriesResult = {
+  entries: unknown[];
+  owned: Array<{ command: string }>;
+  scripts: string[];
+};
+
+function withoutOwnershipKey(record: Record<string, unknown>): Record<string, unknown> {
+  const { _apm_source: _drop, ...rest } = record;
+  void _drop;
+  return rest;
+}
+
 /**
- * Remove entries whose `command` appears in any owned `entries`.
- * Mutates `hooks` in place; does not delete files from disk.
+ * Render portable flat or nested hook entries in a host's matcher-group schema.
+ *
+ * Flat entries become `{ matcher?, hooks: [{ ...handler }] }`; entries that are
+ * already matcher groups keep their group metadata and nested handlers. Command
+ * fields are rewritten through `rewriteCommand` and reported through `owned`.
+ */
+export function renderNativeHookEntries(
+  args: RenderNativeHookEntriesArgs,
+): RenderNativeHookEntriesResult {
+  const { entries, defaultMatcher, defaultHandlerType, rewriteCommand } = args;
+  const rendered: unknown[] = [];
+  const owned: Array<{ command: string }> = [];
+  const scripts: string[] = [];
+
+  const rewriteHandler = (handler: Record<string, unknown>): Record<string, unknown> => {
+    const next = withoutOwnershipKey(handler);
+    const rawCommand = typeof next.command === "string" ? next.command : "";
+    const command = rawCommand.trim();
+    if (!command) return next;
+    if (!rewriteCommand) {
+      owned.push({ command });
+      return next;
+    }
+    const rewritten = rewriteCommand(command);
+    next.command = rewritten.command;
+    owned.push({ command: rewritten.command });
+    if (rewritten.scriptRel) scripts.push(rewritten.scriptRel);
+    return next;
+  };
+
+  for (const raw of entries) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      rendered.push(raw);
+      continue;
+    }
+    const source = raw as Record<string, unknown>;
+    const nested = source.hooks;
+
+    if (Array.isArray(nested)) {
+      const group = withoutOwnershipKey(source);
+      delete group.hooks;
+      const matcher = group.matcher;
+      delete group.matcher;
+      if (matcher) group.matcher = matcher;
+      else if (defaultMatcher !== undefined) group.matcher = defaultMatcher;
+      group.hooks = nested
+        .filter(
+          (handler): handler is Record<string, unknown> =>
+            Boolean(handler) && typeof handler === "object" && !Array.isArray(handler),
+        )
+        .map(rewriteHandler);
+      rendered.push(group);
+      continue;
+    }
+
+    const data = withoutOwnershipKey(source);
+    const matcher = data.matcher;
+    delete data.matcher;
+    delete data.hooks;
+    const handler = defaultHandlerType
+      ? {
+          ...(data.type === undefined && typeof data.command === "string"
+            ? { type: "command" }
+            : {}),
+          ...data,
+        }
+      : data;
+    const group: Record<string, unknown> = {};
+    if (matcher) group.matcher = matcher;
+    else if (defaultMatcher !== undefined) group.matcher = defaultMatcher;
+    group.hooks = [rewriteHandler(handler)];
+    rendered.push(group);
+  }
+
+  return { entries: rendered, owned, scripts };
+}
+
+/** Owned commands recorded in sidecar entries, used for nested and legacy flat shapes. */
+function ownedHookCommands(ownership: HookOwnershipSidecar): Set<string> {
+  const commands = new Set<string>();
+  for (const record of Object.values(ownership.owned ?? {})) {
+    for (const entry of record.entries ?? []) {
+      if (entry.command) commands.add(entry.command);
+    }
+  }
+  return commands;
+}
+
+/**
+ * Remove entries whose `command` appears in any owned `entries`, including
+ * handlers nested inside matcher groups. Mutates `hooks` in place; does not
+ * delete files from disk.
  */
 export function stripOwnedHookCommands(
   hooks: Record<string, unknown>,
   ownership: HookOwnershipSidecar,
 ): void {
-  const ownedCommands = new Set<string>();
-  for (const record of Object.values(ownership.owned ?? {})) {
-    for (const entry of record.entries ?? []) {
-      if (entry.command) ownedCommands.add(entry.command);
-    }
-  }
+  const ownedCommands = ownedHookCommands(ownership);
   if (ownedCommands.size === 0) return;
+
+  const isOwned = (value: unknown): boolean =>
+    typeof value === "string" && ownedCommands.has(value);
 
   for (const [event, entries] of Object.entries(hooks)) {
     if (!Array.isArray(entries)) continue;
-    hooks[event] = entries.filter((e) => {
-      const cmd =
-        e && typeof e === "object" && typeof (e as { command?: unknown }).command === "string"
-          ? (e as { command: string }).command
-          : "";
-      return !ownedCommands.has(cmd);
-    });
+    const kept: unknown[] = [];
+    for (const entry of entries) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        kept.push(entry);
+        continue;
+      }
+      const record = entry as Record<string, unknown>;
+      if (Array.isArray(record.hooks)) {
+        const handlers = record.hooks.filter((handler) => {
+          if (!handler || typeof handler !== "object" || Array.isArray(handler)) return true;
+          return !isOwned((handler as { command?: unknown }).command);
+        });
+        if (record.hooks.length > 0 && handlers.length === 0) continue;
+        kept.push({ ...record, hooks: handlers });
+        continue;
+      }
+      if (isOwned(record.command)) continue;
+      kept.push(entry);
+    }
+    hooks[event] = kept;
   }
 }
 

@@ -63,6 +63,55 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - `install <archive.zip>` добавляет файлы архива в текущий каталог и ничего не удаляет. Если файл из архива уже есть с другим содержимым (обычно `bapm.yml`), install завершается ошибкой `Refusing to overwrite existing files` до записи чего-либо. Поэтому ставьте архив в пустой каталог.
 - Приватный registry с внутренним CA или TLS-inspecting proxy: задайте `NODE_EXTRA_CA_CERTS` до запуска Node или `BAPM_EXTRA_CA_BUNDLE` для additive CA bundle. См. [Private registry и TLS](/guide/situations/tls-private-registry).
 
+## Hooks в нативных конфигах
+
+Hook-примитивы записываются в родную схему выбранного хоста. Плоский источник:
+
+```json
+{ "hooks": { "SessionStart": [{ "type": "command", "command": "./run.sh" }] } }
+```
+
+становится:
+
+Cursor — `.cursor/hooks.json` (плоские handlers):
+
+```json
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [{ "type": "command", "command": "./.cursor/hooks/<hook>/run.sh" }]
+  }
+}
+```
+
+Claude Code — `.claude/settings.json` (matcher-группы):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      { "matcher": "*", "hooks": [{ "type": "command", "command": "./.claude/hooks/<hook>/run.sh" }] }
+    ]
+  }
+}
+```
+
+Codex CLI — `.codex/hooks.json` (matcher-группы без matcher по умолчанию):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "./.codex/hooks/<hook>/run.sh" }] }
+    ]
+  }
+}
+```
+
+Если источник уже содержит группы `{ "matcher": "Bash", "hooks": [...] }`, matcher и остальные поля handler/группы сохраняются. Claude дополнительно подставляет `"type": "command"` для плоской команды без `type`; Codex matcher по умолчанию не добавляет.
+
+Принадлежность handlers хранится в sidecar `.cursor/bapm-hooks.json`, `.claude/bapm-hooks.json` или `.codex/bapm-hooks.json`. Повторный install удаляет только ранее установленные bapm handlers и сохраняет пользовательские записи в нативном файле; sidecar не пишется внутрь нативного JSON.
+
 ## `lifecycle:` не исполняется
 
 Если корневой манифест или манифест зависимости содержит ключ `lifecycle:`, bapm его сохраняет, но **не запускает** ни одной команды. Install печатает предупреждение `LIFECYCLE_UNSUPPORTED` с именем пакета — по одному на корень и на каждую зависимость. Уберите блок или выполните шаги вручную; policy-обхода и shell-исполнения здесь нет.

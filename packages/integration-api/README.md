@@ -52,6 +52,7 @@ Optional fs/path helpers for host `materialize` (exported from the package root)
 | `HookOwnershipSidecar`            | Type for `.*/bapm-hooks.json` owned map (flexible optional fields) |
 | `readHookOwnershipSidecar`        | Read ownership sidecar; missing/malformed → `{ owned: {} }`        |
 | `writeHookOwnershipSidecar`       | Write `{ owned }` as pretty JSON + trailing newline                |
+| `renderNativeHookEntries`         | Render flat/nested hook intent as native matcher groups            |
 | `stripOwnedHookCommands`          | Filter event arrays by owned entry commands (no disk deletes)      |
 | `removeOwnedHookArtifacts`        | Best-effort rm of owned `scripts` / `hookFile` / `hookFiles`       |
 | `copyHookScript`                  | Simple script copy + command rewrite (needle + caller `destRel`)   |
