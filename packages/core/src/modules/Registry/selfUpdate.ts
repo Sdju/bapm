@@ -1,4 +1,5 @@
 import { RegistryError } from "./errors.ts";
+import { applyExtraCaBundleFromEnv } from "./tlsTrust.ts";
 import type { CheckSelfUpdateOptions, CheckSelfUpdateResult } from "./types.ts";
 
 const DEFAULT_PACKAGE = "@b-apm/cli";
@@ -49,6 +50,7 @@ export async function checkSelfUpdate(
     if (options.fetchMetadata) {
       meta = await options.fetchMetadata(metaUrl);
     } else {
+      applyExtraCaBundleFromEnv();
       const res = await fetch(metaUrl, {
         headers: { Accept: "application/json" },
       });

@@ -177,7 +177,7 @@ function collectFromEntry(
 
   let childDoc: BapmManifest;
   try {
-    childDoc = loadManifest({ cwd: abs }).document;
+    childDoc = loadManifest({ cwd: abs, allowReplace: true }).document;
   } catch {
     return;
   }

@@ -39,6 +39,10 @@
 
 Пошагово: [CI по lock-файлу](/guide/situations/ci-frozen).
 
+## Версии схемы
+
+bapm читает и пишет `lockfile_version: "1"` и `"2"`. Версия `"3"` появилась в APM 0.35 для root-правил `replace:` (секция `replacements:` и per-dependency `replacement:`). bapm не реализует replacement: такой lock отвергается с `LOCKFILE_V3_UNSUPPORTED`, а манифест с непустым `replace:` — с `MANIFEST_REPLACE_UNSUPPORTED`, чтобы не установить upstream вместо настроенного fork/local checkout. Уберите `replace:` и перегенерируйте lock командой `bapm lock` либо используйте для этого проекта APM 0.35+.
+
 ## Личный lock: `bapm.local.lock.yaml`
 
 Появляется, только если в манифесте есть зависимости с источником `local` — личные пакеты, которые есть только на вашей машине. Их версии пишутся в отдельный файл, чтобы не попадать в общий lock и в чужие PR.

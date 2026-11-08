@@ -629,7 +629,7 @@ async function resolveLocal(
   let childManifest;
   let portablePlugin;
   try {
-    childManifest = loadManifest({ cwd: abs });
+    childManifest = loadManifest({ cwd: abs, allowReplace: true });
   } catch (cause) {
     try {
       portablePlugin = loadAgentPluginManifest({ root: abs });
@@ -851,7 +851,7 @@ async function resolveGit(
   let childDeps: DependencyEntry[] = [];
   let artifactFormat: EdgeRecord["artifactFormat"] = "openapm";
   try {
-    const child = loadManifest({ cwd: packageRoot });
+    const child = loadManifest({ cwd: packageRoot, allowReplace: true });
     childName = child.document.name || childName;
     childDeps = listApmDeps(child.document.dependencies);
   } catch {

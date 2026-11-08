@@ -154,7 +154,11 @@ function validateOverlayEnv(value: unknown, sourcePath?: string): Record<string,
 /**
  * Merge allowlisted local fields over a validated base document, then re-validate.
  */
-export function mergeLocalOverlay(base: BapmManifest, overlay: LocalOverlayFields): BapmManifest {
+export function mergeLocalOverlay(
+  base: BapmManifest,
+  overlay: LocalOverlayFields,
+  options: { allowReplace?: boolean } = {},
+): BapmManifest {
   const merged: Record<string, unknown> = { ...base };
 
   if (overlay.active !== undefined) {
@@ -196,7 +200,7 @@ export function mergeLocalOverlay(base: BapmManifest, overlay: LocalOverlayField
     }
   }
 
-  return parseManifestDocument(merged).document;
+  return parseManifestDocument(merged, options).document;
 }
 
 function mergeRegistriesMaps(

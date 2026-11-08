@@ -48,6 +48,7 @@ export {
 } from "./localOverlay.ts";
 export type { LocalOverlayFields } from "./localOverlay.ts";
 export { parseManifest, parseManifestDocument, validateManifestEnv } from "./parse.ts";
+export type { ParseManifestOptions } from "./parse.ts";
 export { parseDepSkillSubset, parseDepTargetSubset, applyDepSubsetFields } from "./depSubset.ts";
 export {
   mergeApmDependencyUpdate,

@@ -31,7 +31,9 @@ export function loadBaseManifest(options: LoadManifestOptions = {}): LoadManifes
   }
 
   const raw = loadYamlDocument(text, discovered.path);
-  const { document, warnings } = parseManifestDocument(raw);
+  const { document, warnings } = parseManifestDocument(raw, {
+    allowReplace: options.allowReplace,
+  });
 
   return {
     document,
@@ -56,7 +58,9 @@ export function loadEffectiveManifest(options: LoadManifestOptions = {}): LoadMa
     return base;
   }
 
-  const document = mergeLocalOverlay(base.document, local.fields);
+  const document = mergeLocalOverlay(base.document, local.fields, {
+    allowReplace: options.allowReplace,
+  });
   return {
     document,
     sourcePath: base.sourcePath,

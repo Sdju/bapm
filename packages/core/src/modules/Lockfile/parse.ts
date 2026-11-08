@@ -55,6 +55,25 @@ export function parseLockfileDocument(input: unknown): LockfileDocument {
   if (versionRaw === undefined || versionRaw === null) {
     versionRaw = "1";
   }
+  if (versionRaw === "3") {
+    throw new LockfileError(
+      "LOCKFILE_V3_UNSUPPORTED",
+      `Lockfile version "3" is not supported by bapm. ` +
+        `APM 0.35 introduced v3 for root replacement rules (manifest "replace:") and ` +
+        `per-dependency "replacement:" evidence; bapm cannot apply those semantics and ` +
+        `refuses to read the lock rather than install the upstream source. ` +
+        `Remediation: remove the replacement rules and regenerate the lock with bapm ` +
+        `(bapm lock), or use APM 0.35+ for this project. Supported versions: "1", "2".`,
+      {
+        path: "lockfile_version",
+        details: {
+          found: "3",
+          supported: ["1", "2"],
+          apmFeature: "dependency replacement (replace:/replacements)",
+        },
+      },
+    );
+  }
   if (typeof versionRaw !== "string" || !SUPPORTED_VERSIONS.has(versionRaw)) {
     throw new LockfileError(
       "LOCKFILE_UNSUPPORTED_VERSION",

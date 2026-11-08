@@ -139,7 +139,14 @@ export type DiscoveredManifest = {
   filename: string;
 };
 
-export type LoadManifestOptions = DiscoverManifestOptions;
+export type LoadManifestOptions = DiscoverManifestOptions & {
+  /**
+   * Dependency manifests may declare root `replace:` even though APM applies
+   * replacement rules only from the consumer root. Root loads keep the default
+   * (`false`) and fail closed with MANIFEST_REPLACE_UNSUPPORTED.
+   */
+  allowReplace?: boolean;
+};
 
 export type LoadManifestResult = {
   /** Validated document retaining unknown / `x-*` keys. */

@@ -78,6 +78,7 @@ export default defineConfig({
           { text: "Команда с разными агентами", link: "/guide/situations/team-local-active" },
           { text: "Личные пакеты", link: "/guide/situations/personal-local-lock" },
           { text: "CI по lock-файлу", link: "/guide/situations/ci-frozen" },
+          { text: "Private registry и TLS", link: "/guide/situations/tls-private-registry" },
           { text: "Обновить зависимости", link: "/guide/situations/update-deps" },
           { text: "MCP-сервер не появился", link: "/guide/situations/policy-mcp" },
           { text: "Собрать AGENTS.md", link: "/guide/situations/compile-agents" },

@@ -6,6 +6,7 @@ export type RegistryErrorCode =
   | "REGISTRY_DIGEST"
   | "REGISTRY_GATE"
   | "REGISTRY_CONFIG"
+  | "REGISTRY_TLS"
   | "REGISTRY_PARSE"
   | "REGISTRY_PUBLISH"
   | "SELF_UPDATE";
