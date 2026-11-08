@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Defines `bapm compile`: discover project and module primitives, select exactly one registered compile-capable target from an explicit `--target`, a sole manifest `active` id, or a sole positive auto-detect, and delegate one instruction-file emission to that target. Every supported host is selected the same way; Cursor is one target, not the compile contract. Child-directory distribution and per-path `applyTo` placement are out of scope.
+Defines `bapm compile`: discover project and module primitives, select one or more registered compile-capable targets from an explicit `--target` list, `--all`, a sole manifest `active` id, or a sole positive auto-detect, and delegate one instruction-file emission per selected target. Every supported host is selected the same way; Cursor is one target, not the compile contract. Child-directory distribution and per-path `applyTo` placement are out of scope. Multi-target emission is in scope: `--target a,b` and `--all` write one output per host in a single invocation, with fail-closed output-path collision handling.
 
 ## Requirements
 
-### Requirement: Compile emits one target-owned instruction file
+### Requirement: Compile emits one target-owned instruction file per selected target
 
-`bapm compile` MUST discover primitives from the project and installed modules, resolve primitive conflicts, order the surviving primitives deterministically, and delegate emission to exactly one selected registered compile-capable target. Each invocation MUST emit at most one instruction file. Compile MUST use only the selected target's compile capability and MUST NOT require foreign-host adapters or packages to be present. Emitting several host files in one invocation (`--target all`) remains out of scope.
+`bapm compile` MUST discover primitives from the project and installed modules, resolve primitive conflicts, order the surviving primitives deterministically, and delegate emission to each selected registered compile-capable target. Each invocation MUST emit at most one instruction file per selected target. A single-target invocation MUST emit exactly one host file. Compile MUST use only the selected targets' compile capabilities and MUST NOT require foreign-host adapters or packages beyond the selected set. When several targets are selected, compile MUST emit their files in one invocation.
 
 #### Scenario: Selected target writes its instruction file
 
@@ -17,12 +17,17 @@ Defines `bapm compile`: discover project and module primitives, select exactly o
 
 #### Scenario: One invocation does not emit foreign host files
 
-- **WHEN** compile succeeds for the Claude target
-- **THEN** `CLAUDE.md` MAY be written by that invocation and compile MUST NOT also create `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, or another target's instruction file
+- **WHEN** compile succeeds for a single selected Claude target
+- **THEN** `CLAUDE.md` MAY be written by that invocation and compile MUST NOT also create `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md`, or another unselected target's instruction file
 
-### Requirement: Compile selects an explicit or unambiguous registered target
+#### Scenario: Multi-target invocation writes every selected host file
 
-Compile MUST obtain target detection and compile emission from the registered integration registry. Selection MUST prefer an explicit forced `--target` / forced id when present. Else when the project manifest `active` lists exactly one registered compile-capable integration id, compile MUST select that id without requiring detect. Else without an explicit target, exactly one registered compile-capable integration MUST positively detect the project for compile to proceed. When `active` lists more than one id without an explicit `--target`, or when zero or multiple registered compile-capable integrations are detected and no sole `active` id applies, compile MUST fail with clear guidance to pass `--target <id>` and MUST not write a compile output. An explicit or automatic target MUST be accepted only when it exposes the compile capability.
+- **WHEN** compile runs with `--target cursor,claude` and both hosts resolve distinct output paths
+- **THEN** the invocation MUST write `AGENTS.md` and `CLAUDE.md`, report both outputs, and exit `0`
+
+### Requirement: Compile selects explicit, multi, all, or unambiguous registered targets
+
+Compile MUST obtain target detection and compile emission from the registered integration registry. Selection MUST prefer explicit forced targets when present. `--target <id>` selects one host; `--target <a>,<b>` selects a comma-separated list in order. `--all` MUST select every registered compile-capable integration at project scope. `--target` and `--all` MUST be mutually exclusive and MUST fail closed when combined. Else when the project manifest `active` lists exactly one registered compile-capable integration id, compile MUST select that id without requiring detect. Else without an explicit target, exactly one registered compile-capable integration MUST positively detect the project for compile to proceed. When `active` lists more than one id without an explicit `--target`, or when zero or multiple registered compile-capable integrations are detected and no sole `active` id applies, compile MUST fail with clear guidance to pass `--target <id>` and MUST not write a compile output. An explicit or automatic target MUST be accepted only when it exposes the compile capability. `--all` MUST skip registered targets without compile rather than failing on them.
 
 #### Scenario: Compile automatically selects sole detected target
 
@@ -49,16 +54,31 @@ Compile MUST obtain target detection and compile emission from the registered in
 - **WHEN** compile runs with `--target <id>` for an id that is unregistered or does not expose compile
 - **THEN** compile MUST fail without writing an output file
 
+#### Scenario: Comma-separated target list selects several hosts
+
+- **WHEN** compile runs with `--target cursor,claude`
+- **THEN** both ids MUST be resolved from the registry and their compile capabilities used, in that order
+
+#### Scenario: All selects every compile-capable target
+
+- **WHEN** compile runs with `--all`
+- **THEN** it MUST emit for every registered target that exposes compile and MUST ignore registered targets that do not
+
+#### Scenario: Target and all conflict
+
+- **WHEN** compile runs with both `--target` and `--all`
+- **THEN** it MUST fail without writing any compile output
+
 ### Requirement: Compile output layout is owned by the selected target
 
 The selected target's compile capability MUST determine the default output path and render the compile output from the conflict-resolved primitive set. Core MUST retain discovery, conflict resolution, option validation, and no-write orchestration, but MUST NOT derive a host-specific default path itself. Shipped compile-capable targets MUST default to:
 
-- Cursor, Codex, OpenCode, Kiro, Grok Build, and Antigravity: project-root `AGENTS.md`
+- Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, and Antigravity: project-root `AGENTS.md`
 - Claude: project-root `CLAUDE.md`
 - Gemini: project-root `GEMINI.md`
 - Copilot: `.github/copilot-instructions.md`
 
-Windsurf does not expose compile and MUST be rejected as a compile target. Compile MUST NOT merge several hosts into one document; Cursor, Codex, OpenCode, Kiro, Grok Build, and Antigravity share `AGENTS.md`, so separate invocations for those hosts are last-writer-wins.
+Windsurf does not expose compile and MUST be rejected as a compile target. Compile MUST NOT merge several hosts into one document. Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, and Antigravity share `AGENTS.md`; selecting more than one of them in a single invocation MUST fail closed instead of overwriting.
 
 #### Scenario: Target controls default compile output
 
@@ -67,7 +87,7 @@ Windsurf does not expose compile and MUST be rejected as a compile target. Compi
 
 #### Scenario: AGENTS family host writes project-root AGENTS.md
 
-- **WHEN** compile selects Cursor, Codex, OpenCode, Kiro, Grok Build, or Antigravity and no `-o` / `--output` is supplied
+- **WHEN** compile selects Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, or Antigravity and no `-o` / `--output` is supplied
 - **THEN** `AGENTS.md` at the project root MUST be the reported and written path
 
 #### Scenario: Claude and Gemini use their own default names
@@ -82,17 +102,41 @@ Windsurf does not expose compile and MUST be rejected as a compile target. Compi
 
 #### Scenario: Shared AGENTS.md is not merged across hosts
 
-- **WHEN** compile runs for Cursor and later for another AGENTS-family host in separate invocations
-- **THEN** the later invocation MUST overwrite `AGENTS.md` and MUST NOT preserve a merged document from both hosts
+- **WHEN** compile selects two or more AGENTS-family hosts in one invocation
+- **THEN** the invocation MUST fail closed before writing and MUST list the colliding hosts and path
 
 #### Scenario: Windsurf cannot be a compile target
 
 - **WHEN** compile runs with `--target windsurf`
 - **THEN** compile MUST fail because the target does not expose the compile capability
 
+### Requirement: Multi-target output collisions fail closed
+
+Before durable write, compile MUST resolve the output path of every selected target. When two or more selected targets resolve to the same path, compile MUST fail with a diagnostic that lists every colliding host and the shared path, MUST NOT write any selected output, and MUST NOT silently let one host overwrite another. This policy applies to `--target a,b`, `--all`, and any programmatic multi-target selection, with or without `--dry-run` / `--validate`. Compile MUST reject `-o` / `--output` when more than one target is selected because one path cannot be shared across hosts. A multi-target selection where every path is distinct MUST proceed and write one file per host.
+
+#### Scenario: Two AGENTS-family hosts collide
+
+- **WHEN** compile runs with `--target cursor,codex`
+- **THEN** exit code MUST be non-zero, the diagnostic MUST mention `cursor`, `codex`, and `AGENTS.md`, and `AGENTS.md` MUST NOT be created or rewritten
+
+#### Scenario: All collides on the shared AGENTS.md
+
+- **WHEN** `bapm compile --all` selects several AGENTS-family hosts
+- **THEN** compile MUST fail closed, listing the colliding hosts and `AGENTS.md`, and MUST write no selected output
+
+#### Scenario: Distinct multi-target paths all write
+
+- **WHEN** compile runs with `--target claude,gemini,copilot`
+- **THEN** `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md` MUST all be written and exit code MUST be `0`
+
+#### Scenario: Output override with multiple targets is rejected
+
+- **WHEN** compile runs with `--target cursor,claude -o OUT.md`
+- **THEN** compile MUST fail without writing `OUT.md` or any host file
+
 ### Requirement: Compile accepts output path flag
 
-`bapm compile` MUST accept `-o` / `--output PATH` and MUST write the compiled instruction file to that path relative to the project cwd when neither `--validate` nor `--dry-run` applies. When `-o` / `--output` is omitted, the default output MUST be the selected target's default path. Parent directories for the output path MUST be created when missing. Paths outside cwd are invalid. A target MAY require a fixed basename: shipped Codex, OpenCode, and Grok Build targets require `AGENTS.md`, and Gemini requires `GEMINI.md`.
+`bapm compile` MUST accept `-o` / `--output PATH` and MUST write the compiled instruction file to that path relative to the project cwd when neither `--validate` nor `--dry-run` applies. `-o` / `--output` MUST be valid only when exactly one target is selected; with multiple targets compile MUST reject it. When `-o` / `--output` is omitted, the default output MUST be the selected target's default path. Parent directories for the output path MUST be created when missing. Paths outside cwd are invalid. A target MAY require a fixed basename: shipped Codex, OpenCode, Grok Build, and Hermes targets require `AGENTS.md`, and Gemini requires `GEMINI.md`.
 
 #### Scenario: Custom output path writes only that file
 
@@ -106,7 +150,7 @@ Windsurf does not expose compile and MUST be rejected as a compile target. Compi
 
 #### Scenario: Target-enforced basename rejects another name
 
-- **WHEN** compile runs for Codex, OpenCode, or Grok Build with an output basename other than `AGENTS.md`, or for Gemini with a basename other than `GEMINI.md`
+- **WHEN** compile runs for Codex, OpenCode, Grok Build, or Hermes with an output basename other than `AGENTS.md`, or for Gemini with a basename other than `GEMINI.md`
 - **THEN** compile MUST fail without writing the output file
 
 #### Scenario: Output outside cwd is rejected
@@ -125,7 +169,7 @@ The compile emitter MUST order discovered primitives deterministically. When inp
 
 ### Requirement: Validate mode does not write
 
-When `--validate` is provided, compile MUST perform discovery and validation checks without durable write of the compile output file (the selected target's default or the path from `-o` / `--output`). Validate success messaging MUST remain distinct from `--dry-run` would-write preview messaging.
+When `--validate` is provided, compile MUST perform discovery and validation checks without durable write of any compile output file (each selected target's default or the path from `-o` / `--output`). Validate success messaging MUST remain distinct from `--dry-run` would-write preview messaging.
 
 #### Scenario: Validate leaves the default output untouched
 
@@ -139,7 +183,7 @@ When `--validate` is provided, compile MUST perform discovery and validation che
 
 ### Requirement: Dry-run previews without write
 
-When `--dry-run` is provided (and `--validate` is not), compile MUST discover and render as for a normal compile, MUST print a would-write preview that includes the intended output path and primitives count, MUST NOT create or rewrite the output file (the selected target's default or `-o` path), and MUST exit `0` on success. The dry-run success message MUST be observably distinct from the `--validate` success message.
+When `--dry-run` is provided (and `--validate` is not), compile MUST discover and render as for a normal compile, MUST print a would-write preview that includes every intended output path (one line per selected target when multi-target) and primitives count, MUST NOT create or rewrite any output file (the selected targets' defaults or the single `-o` path), and MUST exit `0` on success. The dry-run success message MUST be observably distinct from the `--validate` success message.
 
 #### Scenario: Dry-run leaves output absent
 
@@ -171,21 +215,31 @@ When `-v` / `--verbose` is provided on a successful compile or dry-run path, the
 
 ### Requirement: Core compile options support target selection, dry-run, and verbose
 
-`@b-apm/core` compile orchestration MUST accept options equivalent to `forcedTarget`, an integration registry (or registered target factory), `dryRun`, and `verbose` (in addition to existing `validate` and `outputFile`) so target selection and no-write preview are not CLI-only side effects. When `dryRun` is true and `validate` is false, core MUST compute content and MUST set `wrote` false without durable write. When `validate` is true, core MUST NOT write regardless of `dryRun`.
+`@b-apm/core` compile orchestration MUST accept options equivalent to `forcedTarget`, `forcedTargets` (multi-target list), `all`, an integration registry (or registered target factory), `dryRun`, and `verbose` (in addition to existing `validate` and `outputFile`) so target selection and no-write preview are not CLI-only side effects. When `dryRun` is true and `validate` is false, core MUST compute content and MUST set `wrote` false without durable write. When `validate` is true, core MUST NOT write regardless of `dryRun`. The result MUST expose one `outputs` entry per selected target with `targetId`, `path`, and `wrote`, while retaining the single-target `path` / `content` / `wrote` fields for compatibility.
 
 #### Scenario: Core dryRun does not write
 
 - **WHEN** core compile is invoked with `dryRun: true` and `validate: false`
-- **THEN** the result MUST report `wrote: false` and the output path on disk MUST not be created or rewritten by that call
+- **THEN** the result MUST report `wrote: false` and every output path on disk MUST not be created or rewritten by that call
 
 #### Scenario: Core forced target bypasses detection
 
 - **WHEN** core compile is invoked with a registered `forcedTarget`
 - **THEN** it MUST use that target's compile capability without consulting manifest `active` or auto-detect
 
+#### Scenario: Core forcedTargets emits one output per host
+
+- **WHEN** core compile is invoked with `forcedTargets: ["cursor", "claude"]`
+- **THEN** `outputs` MUST contain one entry per target in order, and the first entry MUST also populate the legacy `path` field
+
+#### Scenario: Core all selects all compile-capable targets
+
+- **WHEN** core compile is invoked with `all: true`
+- **THEN** `outputs` MUST include every registered target that exposes compile and MUST exclude registered hosts without compile
+
 ### Requirement: Compile does not replace install materialize
 
-Compile MUST NOT be required to refresh host install materialize trees such as rules, skills, agents, commands, or hooks; those remain install's responsibility. Compile's deliverable is one instruction file for the selected target.
+Compile MUST NOT be required to refresh host install materialize trees such as rules, skills, agents, commands, or hooks; those remain install's responsibility. Compile's deliverable is one instruction file per selected target.
 
 #### Scenario: Compile does not write host materialize trees
 
@@ -194,16 +248,16 @@ Compile MUST NOT be required to refresh host install materialize trees such as r
 
 ### Requirement: Compile emits one file and does not interpret applyTo placement
 
-Compile MUST render the selected primitives into a single instruction file. It MUST NOT distribute primitives across per-path outputs or interpret instruction `applyTo` / glob placement for compile output; a target MAY omit primitives already materialized as host rules, but it MUST NOT create a separate file per `applyTo` path.
+Compile MUST render the selected primitives into one instruction file per selected target. It MUST NOT distribute primitives across per-path outputs or interpret instruction `applyTo` / glob placement for compile output; a target MAY omit primitives already materialized as host rules, but it MUST NOT create a separate file per `applyTo` path.
 
 #### Scenario: Instruction with applyTo stays in the single output
 
 - **WHEN** a discovered instruction primitive declares `applyTo` patterns and compile runs for the selected target
-- **THEN** compile MUST write its one instruction file and MUST NOT create per-pattern or per-directory compile outputs
+- **THEN** compile MUST write that target's one instruction file and MUST NOT create per-pattern or per-directory compile outputs
 
 ## Tech debt (APM parity — not claimed)
 
-Thin single-target, single-file compile is **intentional**. Gaps vs microsoft/apm `apm compile` / `AgentsCompiler` are tracked as product tech debt (not silent omissions, not OpenAPM MUST failures). Canonical IDs: `.samples/apm-knowledge/topics/tech-debt-compile.md`.
+Thin per-host, single-file compile is **intentional**. Multi-target `--target a,b` / `--all` is supported, but each host still produces one flat instruction file. Gaps vs microsoft/apm `apm compile` / `AgentsCompiler` are tracked as product tech debt (not silent omissions, not OpenAPM MUST failures). Canonical IDs: `.samples/apm-knowledge/topics/tech-debt-compile.md`.
 
 | ID            | Gap                                                       | Status                 |
 | ------------- | --------------------------------------------------------- | ---------------------- |

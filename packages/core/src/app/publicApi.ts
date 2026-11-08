@@ -709,6 +709,7 @@ export type {
   CompileAgentsMdOptions,
   CompileAgentsMdResult,
   CompileAttributionEntry,
+  CompileOutput,
 } from "@/modules/Compile";
 
 export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "@/modules/Compile";

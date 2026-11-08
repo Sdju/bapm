@@ -44,7 +44,7 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).not.toMatch(/optimizer|distributed placement|multi-host/i);
   });
 
-  test("compile help omits deferred --no-links and multi-host flags", async () => {
+  test("compile help omits deferred --no-links, global, watch and clean flags", async () => {
     const viaFlag = await withCapturedIo(() => runCli(["compile", "--help"]));
     const text = [
       [...viaFlag.stdout, ...viaFlag.stderr].join("\n"),
@@ -55,7 +55,7 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).not.toMatch(/--no-links\b/);
     expect(text).toMatch(/--target\s+<id>/);
     expect(text).toMatch(/\bactive\b/i);
-    expect(text).not.toMatch(/--all\b/);
+    expect(text).toMatch(/--all\b/);
     expect(text).not.toMatch(/--global\b/);
     expect(text).not.toMatch(/-g\b.*global|global.*-g\b/i);
     expect(text).not.toMatch(/--watch\b/);
@@ -90,6 +90,21 @@ describe("p7d CLI compile help + fail-closed", () => {
 
     const long = parseCompileArgs(["--output"]);
     expect(long.error).toBeTruthy();
+  });
+
+  test("parseCompileArgs accepts comma-separated --target and --all", () => {
+    const multi = parseCompileArgs(["--target", "cursor, claude", "--dry-run"]);
+    expect(multi.error).toBeUndefined();
+    expect(multi.targets).toEqual(["cursor", "claude"]);
+    expect(multi.target).toBe("cursor");
+
+    const deduped = parseCompileArgs(["--target=cursor,cursor"]);
+    expect(deduped.error).toBeUndefined();
+    expect(deduped.targets).toEqual(["cursor"]);
+
+    const all = parseCompileArgs(["--all"]);
+    expect(all.error).toBeUndefined();
+    expect(all.all).toBe(true);
   });
 
   test("unknown compile flag fails closed", async () => {
