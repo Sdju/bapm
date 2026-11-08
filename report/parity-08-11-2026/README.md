@@ -55,7 +55,17 @@
 | P2 targets/config/lifecycle                    | fixed                         | `e686568` |
 | P2 Copilot marketplace + check-clean           | fixed                         | `2b7c517` |
 
-Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime/run, compile applyTo/distributed, pack Claude bundle, registry MCP lookup, canvas/LSP deploy).
+Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime, registry MCP lookup, canvas/LSP deploy, полный config key set).
+
+### Пачка 5 (08.11.2026)
+
+| Что                                                 | Статус | Коммит    |
+| --------------------------------------------------- | ------ | --------- |
+| `bapm run` / `bapm preview` для manifest `scripts:` | fixed  | `45692c6` |
+| Claude plugin bundle: `pack --format claude-plugin` | fixed  | `5250b30` |
+| Compile `--distributed` / `applyTo` placement       | fixed  | `63fae95` |
+
+Проверки: core 277 файлов / 1513 тестов, CLI 139 / 759, `vp check` 0 ошибок, conformance/specs OK.
 
 ### Пачка 4 (08.11.2026)
 
