@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Defines `bapm compile`: discover project and module primitives, select one or more registered compile-capable targets from an explicit `--target` list, `--all`, a sole manifest `active` id, or a sole positive auto-detect, and delegate one instruction-file emission per selected target. Every supported host is selected the same way; Cursor is one target, not the compile contract. Child-directory distribution and per-path `applyTo` placement are out of scope. Multi-target emission is in scope: `--target a,b` and `--all` write one output per host in a single invocation, with fail-closed output-path collision handling.
+Defines `bapm compile`: discover project and module primitives, select one or more registered compile-capable targets from an explicit `--target` list, `--all`, a sole manifest `active` id, or a sole positive auto-detect, and delegate instruction-file emission to each selected target. Every supported host is selected the same way; Cursor is one target, not the compile contract. The default remains one output per host. Opt-in `--distributed` adds a conservative per-directory `applyTo` placement subset with fail-closed path checks. Multi-target emission is in scope: `--target a,b` and `--all` write one output per host per placement directory in a single invocation, with fail-closed output-path collision handling.
 
 ## Requirements
 
 ### Requirement: Compile emits one target-owned instruction file per selected target
 
-`bapm compile` MUST discover primitives from the project and installed modules, resolve primitive conflicts, order the surviving primitives deterministically, and delegate emission to each selected registered compile-capable target. Each invocation MUST emit at most one instruction file per selected target. A single-target invocation MUST emit exactly one host file. Compile MUST use only the selected targets' compile capabilities and MUST NOT require foreign-host adapters or packages beyond the selected set. When several targets are selected, compile MUST emit their files in one invocation.
+`bapm compile` MUST discover primitives from the project and installed modules, resolve primitive conflicts, order the surviving primitives deterministically, and delegate emission to each selected registered compile-capable target. In the default single-file mode each invocation MUST emit exactly one instruction file per selected target. In opt-in distributed mode it MUST emit one file per target per resolved placement directory. Compile MUST use only the selected targets' compile capabilities and MUST NOT require foreign-host adapters or packages beyond the selected set. When several targets are selected, compile MUST emit their files in one invocation.
 
 #### Scenario: Selected target writes its instruction file
 
@@ -239,34 +239,96 @@ When `-v` / `--verbose` is provided on a successful compile or dry-run path, the
 
 ### Requirement: Compile does not replace install materialize
 
-Compile MUST NOT be required to refresh host install materialize trees such as rules, skills, agents, commands, or hooks; those remain install's responsibility. Compile's deliverable is one instruction file per selected target.
+Compile MUST NOT be required to refresh host install materialize trees such as rules, skills, agents, commands, or hooks; those remain install's responsibility. Compile's deliverable is one instruction file per selected target in single-file mode, or one per placement directory in distributed mode.
 
 #### Scenario: Compile does not write host materialize trees
 
 - **WHEN** `bapm compile` runs without a prior install materialize of rules
 - **THEN** compile MUST NOT create or update a host rules tree such as `.cursor/rules/`, `.claude/rules/`, or `.kiro/steering/`
 
-### Requirement: Compile emits one file and does not interpret applyTo placement
+### Requirement: Distributed placement is opt-in and the single-file default is unchanged
 
-Compile MUST render the selected primitives into one instruction file per selected target. It MUST NOT distribute primitives across per-path outputs or interpret instruction `applyTo` / glob placement for compile output; a target MAY omit primitives already materialized as host rules, but it MUST NOT create a separate file per `applyTo` path.
+Without `--distributed` (or `--strategy distributed`), compile MUST emit exactly one instruction file per selected target and MUST NOT create per-directory outputs. `--strategy single-file` MUST select the same default behavior. An unknown `--strategy` value MUST fail closed without writing. Distributed mode MUST reject `-o` / `--output` because each placement directory owns its own output path. Multi-target collision policy MUST cover every distributed emission path, not only each target's root file.
 
-#### Scenario: Instruction with applyTo stays in the single output
+#### Scenario: Default compile ignores applyTo placement
 
-- **WHEN** a discovered instruction primitive declares `applyTo` patterns and compile runs for the selected target
-- **THEN** compile MUST write that target's one instruction file and MUST NOT create per-pattern or per-directory compile outputs
+- **WHEN** a discovered instruction primitive declares `applyTo` and compile runs without `--distributed`
+- **THEN** compile MUST write exactly that target's single default output and MUST NOT create per-pattern or per-directory compile outputs
+
+#### Scenario: Strategy flag selects the mode
+
+- **WHEN** compile runs with `--strategy distributed`
+- **THEN** it MUST behave as `--distributed`, and `--strategy single-file` MUST restore the single-file default
+
+#### Scenario: Distributed rejects output override
+
+- **WHEN** compile runs with `--distributed -o OUT.md`
+- **THEN** it MUST fail without writing `OUT.md` or any host output
+
+### Requirement: Distributed compile reads applyTo and places by literal directory prefix
+
+In distributed mode compile MUST read instruction frontmatter `applyTo` in scalar, top-level comma-separated, or YAML-list form, and MAY accept `globs` as an alias. Compile MUST use the literal directory prefix before the first glob segment as the placement directory: `src/**`, `src/**/*.ts`, and `src/foo.ts` place under `src/`; `docs/*.md` places under `docs/`; root-only patterns such as `**/*.ts`, `*.ts`, `{src,lib}/**`, and bare names without `/` place at the project root. Missing, unreadable, or malformed frontmatter MUST be treated as global. Multiple patterns MUST place the instruction in every distinct resolved directory. Each placement MUST use the selected target's own default basename and prefix (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`), changing only the directory. This is a conservative subset: file-match scoring, inheritance analysis, and other APM context-optimizer behavior are NOT required.
+
+#### Scenario: Single applyTo glob writes a child-directory output
+
+- **WHEN** an instruction declares `applyTo: "src/**"` and compile runs with `--distributed`
+- **THEN** the selected target's host output MUST be written under `src/` (for example `src/AGENTS.md` for Cursor) and the instruction body MUST appear in it
+
+#### Scenario: Multiple globs place the same instruction in every directory
+
+- **WHEN** an instruction declares multiple `applyTo` patterns resolving to `src` and `docs`
+- **THEN** compile MUST write both `src/<host-file>` and `docs/<host-file>` with that instruction
+
+#### Scenario: Host-specific names are preserved
+
+- **WHEN** a Claude target compiles an instruction with `applyTo: "src/**"` in distributed mode
+- **THEN** the output MUST be `src/CLAUDE.md`, and Copilot MUST use its `.github/<dir>/copilot-instructions.md` shape
+
+### Requirement: Distributed root output retains global and non-instruction primitives
+
+Instructions without `applyTo`, instructions whose patterns resolve to the project root, and every non-instruction primitive MUST remain in the root output. Instructions placed only in child directories MUST NOT be duplicated into the root output. When every instruction is distributed below the root and no non-instruction or global primitive remains, compile MUST suppress the empty root output shell.
+
+#### Scenario: Global and distributed instructions are separated
+
+- **WHEN** one instruction has no `applyTo` and another declares `applyTo: "src/**"` in distributed mode
+- **THEN** the root host file MUST contain the global instruction, `src/<host-file>` MUST contain the distributed instruction, and neither MUST contain the other's body
+
+#### Scenario: Empty root shell is suppressed
+
+- **WHEN** every discovered instruction is distributed below the root and no root-only primitives exist
+- **THEN** compile MUST NOT create a root host file containing only an empty placeholder
+
+### Requirement: Distributed paths fail closed
+
+Distributed output paths MUST remain inside the project cwd. Compile MUST reject absolute patterns, `..` segments, control directories (`.git`, `node_modules`, `apm_modules`, `bapm_modules`), and any existing symlink component in the output path. These checks MUST run before any durable write and MUST apply equally to `--dry-run` and `--validate`. A rejected path MUST produce a non-zero error and MUST NOT write any selected output.
+
+#### Scenario: Escaping applyTo is rejected
+
+- **WHEN** an instruction declares `applyTo: "../outside/**"` in distributed mode
+- **THEN** compile MUST fail with a path-escape diagnostic and MUST NOT write outside the project
+
+#### Scenario: Symlinked placement directory is rejected
+
+- **WHEN** the resolved placement directory is a symlink
+- **THEN** compile MUST fail before writing and MUST NOT create or modify any output
+
+#### Scenario: Validate and dry-run perform the same safety check
+
+- **WHEN** compile runs in distributed mode with `--validate` or `--dry-run` against an unsafe path
+- **THEN** it MUST fail closed without writing
 
 ## Tech debt (APM parity — not claimed)
 
-Thin per-host, single-file compile is **intentional**. Multi-target `--target a,b` / `--all` is supported, but each host still produces one flat instruction file. Gaps vs microsoft/apm `apm compile` / `AgentsCompiler` are tracked as product tech debt (not silent omissions, not OpenAPM MUST failures). Canonical IDs: `.samples/apm-knowledge/topics/tech-debt-compile.md`.
+The default per-host single-file compile is **intentional**. Multi-target `--target a,b` / `--all` is supported, and opt-in `--distributed` places instructions by the literal `applyTo` directory prefix. Full APM `AgentsCompiler` context-optimizer parity remains product tech debt (not silent omissions, not OpenAPM MUST failures). Canonical IDs: `.samples/apm-knowledge/topics/tech-debt-compile.md`.
 
-| ID            | Gap                                                       | Status                 |
-| ------------- | --------------------------------------------------------- | ---------------------- |
-| TD-COMPILE-01 | Emit all primitives vs APM instructions-only              | debt                   |
-| TD-COMPILE-02 | No per-path `applyTo` / glob placement (single-file only) | debt                   |
-| TD-COMPILE-03 | No markdown link inline / `--no-links`                    | debt (SHOULD deferred) |
-| TD-COMPILE-05 | Missing APM UX flags (watch/clean/global/…)               | debt                   |
-| TD-COMPILE-06 | No deterministic Build ID / Unicode write gate            | debt                   |
-| TD-COMPILE-07 | Thinner `--validate` than APM                             | debt                   |
-| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections            | debt                   |
+| ID            | Gap                                                                    | Status                                             |
+| ------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
+| TD-COMPILE-01 | Emit all primitives vs APM instructions-only                           | debt                                               |
+| TD-COMPILE-02 | Full APM context-optimizer placement (file-match scoring, inheritance) | debt (opt-in literal-prefix `--distributed` ships) |
+| TD-COMPILE-03 | No markdown link inline / `--no-links`                                 | debt (SHOULD deferred)                             |
+| TD-COMPILE-05 | Missing APM UX flags (watch/clean/global/…)                            | debt                                               |
+| TD-COMPILE-06 | No deterministic Build ID / Unicode write gate                         | debt                                               |
+| TD-COMPILE-07 | Thinner `--validate` than APM                                          | debt                                               |
+| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections                         | debt                                               |
 
 Closing a `debt` row REQUIRES a dedicated OpenSpec change that updates this section and the knowledge inventory. Specs MUST NOT claim APM AgentsCompiler parity while these rows remain open.

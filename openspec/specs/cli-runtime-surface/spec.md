@@ -373,17 +373,17 @@ Invoking `compile` MUST be recognized by CLI dispatch and MUST invoke a thin FEO
 
 ### Requirement: Compile help documents polish flags
 
-`bapm compile --help` / `-h` MUST document `-o` / `--output`, `--dry-run`, `-v` / `--verbose`, and `--validate`. Help MUST NOT list `--no-links`, `--target`, `--all`, `-g` / `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as supported flags in this change. Help MUST NOT claim multi-host optimizer or distributed placement behavior.
+`bapm compile --help` / `-h` MUST document `-o` / `--output`, `--target`, `--all`, `--distributed`, `--strategy`, `--dry-run`, `-v` / `--verbose`, and `--validate`. Help MUST NOT list `--no-links`, `-g` / `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as supported flags. Help MUST NOT claim APM context-optimizer parity.
 
-#### Scenario: Compile help lists polish flags
+#### Scenario: Compile help lists supported flags
 
 - **WHEN** `bapm compile --help` (or `-h`) runs
-- **THEN** exit code MUST be `0` and help text MUST mention `-o` or `--output`, `--dry-run`, `-v` or `--verbose`, and `--validate`
+- **THEN** exit code MUST be `0` and help text MUST mention `-o` or `--output`, `--target`, `--all`, `--distributed`, `--strategy`, `--dry-run`, `-v` or `--verbose`, and `--validate`
 
-#### Scenario: Compile help omits deferred and multi-host flags
+#### Scenario: Compile help omits deferred flags
 
 - **WHEN** `bapm compile --help` runs
-- **THEN** help text MUST NOT advertise `--no-links`, `--target`, `--all`, `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as available options
+- **THEN** help text MUST NOT advertise `--no-links`, `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as available options
 
 ### Requirement: Cache info and clean commands
 

@@ -67,7 +67,8 @@ export function createClaudeIntegration(options?: {
       const content = renderPrimitivesMarkdown({
         primitives: primitivesList(primitives),
         title: "# CLAUDE.md",
-        filter: (p) => !/instruction/i.test(String(p.type ?? "")),
+        filter: (p) =>
+          context.includeInstructions === true || !/instruction/i.test(String(p.type ?? "")),
       });
       return compileMarkdownReport({
         cwd: context.cwd,

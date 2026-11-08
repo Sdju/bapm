@@ -8,19 +8,37 @@ Discover primitives → emit deterministic instruction files for one or several 
 
 - `compileAgentsMd` / `compileProject` / `runCompile` / `emitAgentsMd`
 - Options: `validate` (no durable write), `dryRun`, `verbose`, `cwd`, `outputFile`,
-  `forcedTarget` (single), `forcedTargets` (comma-separated ids from `--target a,b`), `all` (`--all`)
+  `forcedTarget` (single), `forcedTargets` (comma-separated ids from `--target a,b`), `all` (`--all`),
+  `distributed` (opt-in `applyTo` placement)
 - Result: single-target `path` / `content` / `wrote` stay for compatibility; `outputs` lists
-  `{ targetId, path, wrote }` for every selected host
+  `{ targetId, path, wrote }` for every emitted output (multiple outputs per host in distributed mode)
 
 ## Multi-target safety
 
-- `forcedTargets` / `all` emit one target-owned file per selected host in one invocation.
-- `outputFile` is rejected when more than one host is selected (one path cannot be shared).
+- `forcedTargets` / `all` emit one target-owned file per selected host per placement directory.
+- `outputFile` is rejected with more than one host and in distributed mode.
 - If two selected hosts resolve to the same output path (for example `AGENTS.md` for Cursor,
   Codex, OpenCode, Kiro, Grok Build, Hermes, and Antigravity), compile fails closed and lists
   every colliding host and the path. It never silently overwrites.
 
+## Distributed mode (conservative subset)
+
+`distributed: true` reads instruction `applyTo` (scalar, comma list, or YAML list; `globs` is
+accepted as an alias) and uses each pattern's literal directory prefix:
+
+- `src/**`, `src/**/*.ts`, `src/foo.ts` → `src/`
+- `docs/*.md` → `docs/`
+- `**/*.ts`, `*.ts`, `{src,lib}/**`, bare names → project root
+
+Each selected host keeps its default basename and prefix (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`,
+`.github/copilot-instructions.md`), so `src/**` becomes `src/AGENTS.md` for Cursor and
+`.github/src/copilot-instructions.md` for Copilot. Global/unmatched instructions and every
+non-instruction primitive stay in the root output; an empty root shell is suppressed when all
+instructions are placed below the root. Unsafe patterns (absolute, `..`, control directories)
+and symlinked output paths fail closed before any write. Full APM context-optimizer placement
+(file-match scoring, inheritance analysis) is not implemented.
+
 ## Non-goals
 
-Per-path `applyTo` placement, `--watch`, `--clean`, `--global`, and APM prompt compiler
+Full APM optimizer placement, `--watch`, `--clean`, `--global`, and APM prompt compiler
 behavior remain out of scope.

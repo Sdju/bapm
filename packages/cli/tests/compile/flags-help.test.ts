@@ -41,6 +41,8 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).toMatch(/-v\b|--verbose\b/);
     expect(text).toMatch(/--verbose\b/);
     expect(text).toMatch(/--validate\b/);
+    expect(text).toMatch(/--distributed\b/);
+    expect(text).toMatch(/--strategy\b/);
     expect(text).not.toMatch(/optimizer|distributed placement|multi-host/i);
   });
 
@@ -90,6 +92,23 @@ describe("p7d CLI compile help + fail-closed", () => {
 
     const long = parseCompileArgs(["--output"]);
     expect(long.error).toBeTruthy();
+  });
+
+  test("parseCompileArgs accepts --distributed and --strategy", () => {
+    const flag = parseCompileArgs(["--distributed"]);
+    expect(flag.error).toBeUndefined();
+    expect(flag.distributed).toBe(true);
+
+    const strategy = parseCompileArgs(["--strategy", "distributed"]);
+    expect(strategy.error).toBeUndefined();
+    expect(strategy.distributed).toBe(true);
+
+    const single = parseCompileArgs(["--strategy=single-file"]);
+    expect(single.error).toBeUndefined();
+    expect(single.distributed).toBe(false);
+
+    const invalid = parseCompileArgs(["--strategy", "nope"]);
+    expect(invalid.error).toMatch(/unknown compile strategy/i);
   });
 
   test("parseCompileArgs accepts comma-separated --target and --all", () => {
