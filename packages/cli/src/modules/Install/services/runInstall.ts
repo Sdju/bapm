@@ -17,6 +17,7 @@ import {
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
 import { resolvePolicyPorts } from "@/common/policyFetcher.ts";
+import { readConfiguredTarget } from "@/modules/Config";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -67,7 +68,7 @@ Notes:
   --exclude filters MCP/runtime configure only — not a full skip-install.
   Copilot and Windsurf write user-global MCP shared by every project; install warns
   with the path. Use --exclude copilot,windsurf or BAPM_NO_GLOBAL_MCP=1 to skip it.
-  Host selection: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
+  Host selection: --target <id> → local-overlay active → manifest active → config target → sole auto-detect → fail.
   Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
   Eligible MCP servers are written to the active agent's MCP config (direct mcp by default).
 `;
@@ -515,6 +516,7 @@ export async function runMcpReconfigure(options: { cwd?: string } = {}): Promise
       only: "mcp",
       noPolicy: true,
       integrationRegistry: registry,
+      configTarget: readConfiguredTarget(),
       env: process.env as Record<string, string | undefined>,
     });
     return { ok: true };
@@ -602,6 +604,7 @@ async function runCoreInstall(
       only: parsed.only,
       forcedTarget: parsed.target,
       forceTarget: parsed.target,
+      configTarget: readConfiguredTarget(),
       integrationRegistry: registry,
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,

@@ -23,3 +23,5 @@ export const COMMAND_SEARCH = "search";
 export const COMMAND_FIND = "find";
 export const COMMAND_VIEW = "view";
 export const COMMAND_PLUGIN = "plugin";
+export const COMMAND_TARGETS = "targets";
+export const COMMAND_CONFIG = "config";

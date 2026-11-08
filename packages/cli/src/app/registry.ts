@@ -24,6 +24,8 @@ import {
   COMMAND_UNINSTALL,
   COMMAND_UPDATE,
   COMMAND_VERSION,
+  COMMAND_TARGETS,
+  COMMAND_CONFIG,
 } from "@/common/constants/commands.ts";
 import { approveCommand } from "@/commands/approve.ts";
 import { auditCommand } from "@/commands/audit.ts";
@@ -50,6 +52,8 @@ import { uninstallCommand } from "@/commands/uninstall.ts";
 import { updateCommand } from "@/commands/update.ts";
 import { versionCommand } from "@/commands/version.ts";
 import { viewCommand } from "@/commands/view.ts";
+import { targetsCommand } from "@/commands/targets.ts";
+import { configCommand } from "@/commands/config.ts";
 import { approve } from "./init/approve.ts";
 import { audit } from "./init/audit.ts";
 import { cache } from "./init/cache.ts";
@@ -71,6 +75,8 @@ import { prune } from "./init/prune.ts";
 import { publish } from "./init/publish.ts";
 import { search } from "./init/search.ts";
 import { selfUpdate } from "./init/selfUpdate.ts";
+import { targets } from "./init/targets.ts";
+import { config } from "./init/config.ts";
 import { uninstall } from "./init/uninstall.ts";
 import { update } from "./init/update.ts";
 import { version } from "./init/version.ts";
@@ -104,6 +110,8 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_SEARCH]: (argv) => searchCommand(argv, search),
   [COMMAND_FIND]: (argv) => findCommand(argv, find),
   [COMMAND_VIEW]: (argv) => viewCommand(argv, view),
+  [COMMAND_TARGETS]: (argv) => targetsCommand(argv, targets),
+  [COMMAND_CONFIG]: (argv) => configCommand(argv, config),
   "-h": (argv) => helpCommand(argv, help),
   "--help": (argv) => helpCommand(argv, help),
   "-V": (argv) => versionCommand(argv, version),

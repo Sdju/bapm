@@ -27,7 +27,12 @@ export async function compileAgentsMd(
   const { primitives } = resolvePrimitiveConflicts({ primitives: raw });
   const sorted = sortPrimitives(primitives);
   const attribution = toAttribution(sorted);
-  const target = await selectCompileTarget(options.integrationRegistry, options.forcedTarget, cwd);
+  const target = await selectCompileTarget(
+    options.integrationRegistry,
+    options.forcedTarget,
+    cwd,
+    options.configTarget,
+  );
   if (typeof target.compile !== "function") {
     throw new Error(`Target "${target.id}" does not support compile`);
   }
@@ -89,6 +94,7 @@ async function selectCompileTarget(
   registry: IntegrationRegistry | undefined,
   forcedTarget: string | undefined,
   cwd: string,
+  configTarget?: string,
 ): Promise<BapmIntegration> {
   if (!registry) {
     throw new Error(
@@ -122,7 +128,18 @@ async function selectCompileTarget(
     return sole;
   }
 
-  // 3. Sole auto-detect among compile-capable registered hosts
+  // 3. User config default target (before detect)
+  const configured = configTarget?.trim();
+  if (configured) {
+    const target = registry.get(configured);
+    if (!target) throw new Error(`Unknown or unregistered target: ${configured}`);
+    if (typeof target.compile !== "function") {
+      throw new Error(`Target "${target.id}" does not support compile`);
+    }
+    return target;
+  }
+
+  // 4. Sole auto-detect among compile-capable registered hosts
   const detection = await detectRegisteredTargets(registry, cwd);
   const candidates = detection.detectedIds
     .map((id) => registry.get(id))

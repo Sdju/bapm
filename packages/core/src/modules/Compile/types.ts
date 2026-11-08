@@ -21,6 +21,11 @@ export type CompileAgentsMdOptions = {
   integrationRegistry?: IntegrationRegistry;
   /** Explicit registered target id, bypassing target detection. */
   forcedTarget?: string;
+  /**
+   * User-config target default (`~/.bapm/config.json` `target`). Applied after
+   * manifest/local-overlay `active` and before auto-detect.
+   */
+  configTarget?: string;
 };
 
 export type CompileAgentsMdResult = {

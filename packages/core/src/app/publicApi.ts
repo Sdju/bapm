@@ -652,6 +652,17 @@ export type {
 export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "@/modules/Compile";
 
 export type {
+  DetectLifecycleUnsupportedOptions,
+  LifecycleUnsupportedDiagnostic,
+} from "@/modules/Lifecycle";
+
+export {
+  collectLifecycleUnsupported,
+  detectLifecycleUnsupported,
+  hasLifecycleDeclaration,
+} from "@/modules/Lifecycle";
+
+export type {
   CacheCleanOptions,
   CacheCleanResult,
   CacheInfoOptions,

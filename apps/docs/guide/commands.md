@@ -28,6 +28,8 @@ bapm update -y                   # обновить
 | `bapm deps why <пакет>`   | Почему пакет оказался в проекте      |
 | `bapm find <путь>`        | Какой пакет положил этот файл        |
 | `bapm view <пакет>`       | Информация об установленном пакете   |
+| `bapm targets`            | Какие агенты зарегистрированы и активны |
+| `bapm config`             | Личный target по умолчанию и grant-ы |
 
 ```bash
 bapm find .agents/skills/code-review/SKILL.md
