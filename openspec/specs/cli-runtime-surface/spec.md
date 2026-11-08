@@ -40,12 +40,12 @@ Invoking `version`, `-V`, or `--version` MUST print a single line containing the
 
 ### Requirement: Help command prints usage
 
-Invoking `help`, `-h`, `--help`, or omitting the command (default `help`) MUST print usage that lists at least the `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, and `self-update` commands and MUST return exit code `0`. Help text for `install` MUST describe real install behavior (agentic dependency install), including consumption of a local pack archive path when supported, not a permanent stub disclaimer, and MUST be consistent with the install-help requirement for the supported flag subset. Help MUST mention the MCP path (install-time MCP and/or thin `mcp` command when registered). Lifecycle and producer commands MUST NOT be described as permanent stubs.
+Invoking `help`, `-h`, `--help`, or omitting the command (default `help`) MUST print usage that lists at least the `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, `self-update`, `policy`, `approve`, and `deny` commands and MUST return exit code `0`. Help text for `install` MUST describe real install behavior (agentic dependency install), including consumption of a local pack archive path when supported, not a permanent stub disclaimer, and MUST be consistent with the install-help requirement for the supported flag subset. Help MUST mention the MCP path (install-time MCP plus the `approve`, `deny`, and `policy` commands used to manage grants). Lifecycle and producer commands MUST NOT be described as permanent stubs.
 
 #### Scenario: help subcommand succeeds
 
 - **WHEN** `runCli(["help"])` is called
-- **THEN** stdout MUST include usage text mentioning `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, and `self-update`, and the return code MUST be `0`
+- **THEN** stdout MUST include usage text mentioning `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, `self-update`, `policy`, `approve`, and `deny`, and the return code MUST be `0`
 
 #### Scenario: default command is help
 
@@ -343,13 +343,13 @@ Install help MUST document `--policy` and `--no-policy` (and MAY mention env dis
 - **WHEN** install help is requested
 - **THEN** stdout MUST mention `--policy` and `--no-policy`
 
-### Requirement: Optional thin policy status command
+### Requirement: Thin policy status command
 
-The CLI MAY register a thin `policy` / `policy status` command that reports whether a policy was discovered, its path/filename, and enforcement mode. If registered, unknown flags MUST hard-error and help MUST list it. If not registered in M8, conformance MUST document diagnostics-via-install only.
+The CLI MUST register a `policy` / `policy status` command that reports whether a policy was discovered, its path/filename, and enforcement mode. Unknown flags MUST hard-error and help MUST list it.
 
-#### Scenario: Policy status not unknown when registered
+#### Scenario: Policy status is not unknown
 
-- **WHEN** `policy status` is implemented and `runCli(["policy", "status"])` is invoked in a project with a local policy
+- **WHEN** `runCli(["policy", "status"])` is invoked in a project with a local policy
 - **THEN** the CLI MUST NOT treat `policy` as an unknown command and MUST report discovery outcome
 
 ### Requirement: Compile command emits AGENTS.md
@@ -499,7 +499,7 @@ The install command MUST accept `--parallel-downloads <int>` (default 4; `0` = s
 
 ### Requirement: CLI policy status subcommand
 
-The CLI MUST expose `bapm policy status` as a registered command path under group `policy` with **only** the `status` subcommand in this change (`explain` / approve-deny MUST NOT be added). Top-level help MUST mention `policy`. Status MUST accept `--json`, `--policy <path>`, `--no-policy`, and `--check`. Status MUST NOT expose `--no-cache` unless bapm discovery gains a truthful cache switch (omit rather than invent). Unknown flags MUST fail closed with non-zero exit for parse errors.
+The CLI MUST expose `bapm policy status` as a registered command path under group `policy` with **only** the `status` subcommand (`explain` MUST NOT be added; `approve` and `deny` are separate top-level commands, not subcommands of `policy`). Top-level help MUST mention `policy`. Status MUST accept `--json`, `--policy <path>`, `--no-policy`, and `--check`. Status MUST NOT expose `--no-cache` unless bapm discovery gains a truthful cache switch (omit rather than invent). Unknown flags MUST fail closed with non-zero exit for parse errors.
 
 #### Scenario: Help lists policy
 
