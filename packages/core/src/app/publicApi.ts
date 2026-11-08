@@ -178,6 +178,9 @@ export type {
   TagLister,
   ResolverErrorCode,
   PurgeInstallPathArgs,
+  AdmittedLocalFile,
+  LocalFileInfo,
+  LocalFilePrimitiveType,
 } from "@/modules/Resolver";
 
 export {
@@ -207,6 +210,11 @@ export {
   collectLocalSourcePaths,
   ensureLocalRootUntracked,
   ensureLocalSourcesUntracked,
+  admitLocalFile,
+  computeLocalSourceContentHash,
+  isLocalSingleFile,
+  localFileInfo,
+  materializeLocalFileSnapshot,
 } from "@/modules/Resolver";
 
 export type {

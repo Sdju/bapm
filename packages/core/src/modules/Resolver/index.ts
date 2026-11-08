@@ -33,6 +33,14 @@ export {
   localRootGitignorePattern,
 } from "./localSource.ts";
 export {
+  admitLocalFile,
+  computeLocalSourceContentHash,
+  isLocalSingleFile,
+  localFileInfo,
+  materializeLocalFileSnapshot,
+} from "./localFile.ts";
+export type { AdmittedLocalFile, LocalFileInfo, LocalFilePrimitiveType } from "./localFile.ts";
+export {
   collectLocalSourcePaths,
   ensureLocalRootUntracked,
   ensureLocalSourcesUntracked,
