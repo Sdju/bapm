@@ -105,6 +105,11 @@ export type BapmManifest = {
    * `bapm.local.yml` when present (local keys win).
    */
   env?: Record<string, string>;
+  /**
+   * npm-style project scripts (`bapm run <name>`). Values are shell command
+   * lines; bapm never evaluates them as JavaScript.
+   */
+  scripts?: Record<string, string>;
   [key: string]: unknown;
 };
 

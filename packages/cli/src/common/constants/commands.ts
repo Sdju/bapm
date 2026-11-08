@@ -27,3 +27,5 @@ export const COMMAND_TARGETS = "targets";
 export const COMMAND_CONFIG = "config";
 export const COMMAND_MCP = "mcp";
 export const COMMAND_AUTH = "auth";
+export const COMMAND_RUN = "run";
+export const COMMAND_PREVIEW = "preview";

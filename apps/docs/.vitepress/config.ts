@@ -114,6 +114,10 @@ export default defineConfig({
         ],
       },
       {
+        text: "Скрипты проекта",
+        items: [{ text: "run / preview", link: "/reference/run" }],
+      },
+      {
         text: "Агент и политика",
         items: [
           { text: "compile", link: "/reference/compile" },

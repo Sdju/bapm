@@ -863,3 +863,37 @@ Invoking install help MUST document `--trust-bin` and `--no-trust-bin`, includin
 
 - **WHEN** install help is requested
 - **THEN** stdout MUST note that non-interactive (or CI/frozen) installs do not deploy bin by default without consent or policy allow
+
+### Requirement: Project scripts run and preview are registered
+
+Invoking `run` and `preview` MUST be recognized by CLI dispatch and MUST route through a thin FEOD command → Run module. `bapm run [SCRIPT]` MUST default to the `start` script; when no name is given and `start` is absent it MUST exit non-zero and list available scripts. `bapm preview [SCRIPT]` MUST resolve and print the original command, parameter substitution, and resolved shell command without executing anything. Both commands MUST accept repeated `-p` / `--param name=value` and `-v` / `--verbose`; `run` MUST also accept `--dry-run` as a non-executing preview. Parameter values MUST NOT be evaluated as JavaScript and MUST be shell-escaped before substitution into the command. Scripts execute through a shell in the project directory with the invoking user's privileges. Unknown flags, invalid parameter syntax, missing scripts, and non-zero command exits MUST produce a non-zero CLI exit. Top-level help MUST mention `run` and `preview`.
+
+#### Scenario: run defaults to start
+
+- **WHEN** `runCli(["run"])` runs in a project whose manifest defines `scripts.start: "echo hello"`
+- **THEN** the exit code MUST be `0` and the command output MUST include `hello`
+
+#### Scenario: run boots a named script with parameters
+
+- **WHEN** `runCli(["run", "greet", "-p", "name=World"])` runs with `scripts.greet: "echo hello {{name}}"`
+- **THEN** the exit code MUST be `0` and the command output MUST include `hello World`
+
+#### Scenario: preview does not execute
+
+- **WHEN** `runCli(["preview", "start"])` runs with a script that would create a file
+- **THEN** stdout MUST include the resolved command and the file MUST NOT be created
+
+#### Scenario: missing script fails and lists names
+
+- **WHEN** `runCli(["run", "missing"])` runs and no such script exists
+- **THEN** the return code MUST be non-zero and output MUST list available script names
+
+#### Scenario: command failure propagates
+
+- **WHEN** `runCli(["run", "fail"])` runs a script whose command exits non-zero
+- **THEN** the CLI return code MUST be non-zero
+
+#### Scenario: parameter values cannot inject shell commands
+
+- **WHEN** a parameter value contains shell metacharacters or command substitution and is substituted into a script
+- **THEN** the value MUST remain a quoted argument and MUST NOT create the side-effect file named in the injected command

@@ -68,6 +68,7 @@ export {
   unionPresetDependencies,
   withEffectiveDirectDeps,
   validateManifestEnv,
+  validateManifestScripts,
   loadYamlDocument,
   serializeManifest,
   writeManifest,
