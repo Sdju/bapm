@@ -471,12 +471,13 @@ export {
   collectPackFiles,
   assertProjectHasContent,
   defaultArchiveName,
+  assertPortableAgentPluginPackSet,
   formatStrictMetadataIssues,
   validateMarketplaceStrictMetadata,
   validatePackStrictMetadata,
 } from "@/modules/Pack";
 
-export type { BapmIgnoreRules, PackFileEntry } from "@/modules/Pack";
+export type { BapmIgnoreRules, PackFileEntry, PortablePackValidationInput } from "@/modules/Pack";
 
 export type {
   DiscoverPolicyOptions,

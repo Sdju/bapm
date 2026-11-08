@@ -67,6 +67,20 @@ When a portable Agent Plugins `plugin.json` declares `commands` and/or `hooks` p
 - **WHEN** `plugin.json` declares a `commands` or `hooks` path that is missing or escapes the plugin root
 - **THEN** install MUST fail closed before deploy/lock commit with a diagnostic naming the bad path
 
+### Requirement: Portable producer pack preserves declared commands/hooks and assets
+
+When bapm packs a portable Agent Plugins v1 root, the producer MUST package the declared `commands` / `hooks` files, declared skill directories with their auxiliary files, root `mcp.json`, `agents/` content, native manifests, and sibling assets at unchanged relative paths. Producer validation MUST be at least as strict as consumer validation: missing, traversing, symlinked, or `.bapmignore`-excluded declared paths MUST fail closed before the archive is written. Producer MUST NOT rewrite declared paths in `plugin.json` when the archive preserves the original layout.
+
+#### Scenario: Declared hook and command round-trip
+
+- **WHEN** a portable producer root declares a hook JSON, its sibling script, a command file, and a skill directory, then is packed, extracted, and repacked
+- **THEN** both archives MUST contain the declared paths and sibling assets unchanged, and the extracted root MUST pass consumer declared-path discovery
+
+#### Scenario: Producer rejects an archive consumer would reject
+
+- **WHEN** a declared command/hook path is missing, escapes the plugin root, is a symlink, or is omitted by `.bapmignore`
+- **THEN** `pack --agent-plugins` MUST fail closed before writing the archive
+
 ### Requirement: Compatibility matrix lists commands and hooks support
 
 The Agent Plugins compatibility status artifact MUST list `commands` and `hooks` as supported (or target-specific where host matrix differs) for the declared-`plugin.json`-path surface, and MUST NOT continue to classify them under a blanket `unsupported-components` / `not-supported` bucket. Remaining non-goals (sandboxing, OAuth/secrets, undeclared agents, client extensions, vendor-specific extensions) MUST stay outside the supported claim. Generated matrix check MUST fail on drift.
@@ -101,7 +115,7 @@ The repository MUST maintain a dedicated Agent Plugins compatibility status arti
 
 ### Requirement: End-to-end portable regression coverage
 
-Regression coverage MUST exercise producer manifest creation, portable pack, safe extraction, consumer installation, complete skill directory materialization, and target MCP mapping. It MUST also retain unsafe-input rejection coverage. Coverage MUST include at least one path that installs a packed portable plugin into Cursor and one path that installs into OpenCode when `@b-apm/integration-opencode` is the active host.
+Regression coverage MUST exercise producer manifest creation, portable pack (including declared commands/hooks and sibling assets), safe extraction, consumer installation, complete skill directory materialization, and target MCP mapping. It MUST also retain unsafe-input rejection coverage. Coverage MUST include at least one path that installs a packed portable plugin into Cursor and one path that installs into OpenCode when `@b-apm/integration-opencode` is the active host.
 
 #### Scenario: Packed portable plugin installs into Cursor
 

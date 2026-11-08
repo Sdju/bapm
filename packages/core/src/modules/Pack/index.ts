@@ -60,3 +60,5 @@ export { BAPM_IGNORE_FILE, loadBapmIgnore, isBapmIgnored, isBapmIgnoredDir } fro
 export type { BapmIgnoreRules } from "./bapmIgnore.ts";
 export { collectPackFiles, assertProjectHasContent, defaultArchiveName } from "./collect.ts";
 export type { PackFileEntry } from "./collect.ts";
+export { assertPortableAgentPluginPackSet } from "./portable.ts";
+export type { PortablePackValidationInput } from "./portable.ts";
