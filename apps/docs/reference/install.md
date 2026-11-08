@@ -72,3 +72,19 @@ bapm: warning: LIFECYCLE_UNSUPPORTED: Package "lifecycle-leaf" declares a "lifec
 ```
 
 Сценарии: [Быстрый старт](/guide/quick-start), [Подключить bapm к проекту](/guide/situations/install-fresh), [CI по lock-файлу](/guide/situations/ci-frozen).
+
+## `dependencies.lsp` не деплоится
+
+Если корневой манифест или манифест зависимости объявляет непустой `dependencies.lsp` (или `devDependencies.lsp`), bapm сохраняет записи для совместимости, но **не разворачивает** LSP-серверы и не пропускает их через executable trust. Install печатает предупреждение `LSP_UNSUPPORTED` с именем пакета и объявленных серверов — по одному на корень и на каждую зависимость. Настройте LSP-сервер в хосте вручную или уберите блок.
+
+```text
+bapm: warning: LSP_UNSUPPORTED: Package "lsp-leaf" declares LSP server(s) [yaml-language-server] under dependencies.lsp; bapm parses the entries but does not deploy LSP servers.
+```
+
+## Canvas не реализован
+
+Если в манифесте есть ключ `canvas:` (не `null`/`false`) или при установке найден primitive с типом `canvas`, install печатает `CANVAS_UNSUPPORTED` с именем пакета/primitive и **не разворачивает** canvas. Canvas намеренно остаётся вне trust-гейтов, пока для него нет пути материализации. Проекты без LSP/canvas ничего из этого не видят.
+
+```text
+bapm: warning: CANVAS_UNSUPPORTED: Package "canvas-leaf" declares a "canvas" key; bapm does not implement canvas primitives and does not deploy them.
+```

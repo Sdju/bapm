@@ -765,3 +765,22 @@ When Copilot is an effective target, install MUST NOT materialize loose Copilot 
 
 - **WHEN** install runs with effective targets including both `copilot` and `cursor` against one admitted portable plugin
 - **THEN** Copilot MUST use native registration without loose `.agents/skills/` projection from that plugin for Copilot, and Cursor MAY still materialize portable skills/MCP per existing Cursor rules
+
+### Requirement: Install surfaces unsupported LSP and canvas declarations
+
+Install MUST NOT silently ignore `dependencies.lsp` / `devDependencies.lsp` entries or canvas declarations. When the effective root manifest or a resolved dependency manifest declares non-empty LSP entries, install MUST add an `LSP_UNSUPPORTED` warning to the install result naming the declaring package and declared server labels; the LSP entries MUST NOT be deployed. When the root/dependency manifest declares a non-null `canvas:` key, or primitive resolution yields a primitive of type `canvas`, install MUST add a `CANVAS_UNSUPPORTED` warning naming the package/primitive. Both diagnostics MUST reach the CLI warning output, MUST be inspectable in the install result, and MUST NOT change the deploy/trust behavior of projects without LSP or canvas declarations. Canvas MUST remain outside the executable trust gates until it has a materialize path.
+
+#### Scenario: Root and dependency LSP declarations warn
+
+- **WHEN** a project and one of its path dependencies both declare non-empty `dependencies.lsp`
+- **THEN** install MUST emit one `LSP_UNSUPPORTED` warning per declaring package, name the package and servers, deploy no LSP entry, and still complete successfully
+
+#### Scenario: Canvas manifest key and primitive warn
+
+- **WHEN** a manifest declares a `canvas:` key or a resolved primitive has type `canvas`
+- **THEN** install MUST emit `CANVAS_UNSUPPORTED` for that package/primitive instead of dropping it silently and MUST NOT gate canvas through ExecutableTrust
+
+#### Scenario: Normal install is unchanged
+
+- **WHEN** neither LSP nor canvas is declared
+- **THEN** install MUST emit no `LSP_UNSUPPORTED` or `CANVAS_UNSUPPORTED` diagnostic and MUST keep existing deploy behavior

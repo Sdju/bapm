@@ -34,7 +34,7 @@ active:
 | Поле              | Обязательно | Зачем                                                                                                                                |
 | ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `name`, `version` | да          | Имя и версия проекта                                                                                                                 |
-| `dependencies`    | нет         | `apm` — пакеты агента, `mcp` — MCP-серверы. [Формы записи](/guide/manifest-dependencies)                                             |
+| `dependencies`    | нет         | `apm` — пакеты агента, `mcp` — MCP-серверы, `lsp` — сохраняется, но не деплоится (`LSP_UNSUPPORTED`). [Формы записи](/guide/manifest-dependencies) |
 | `devDependencies` | нет         | То же, что `dependencies`; сюда пишет `bapm install --dev <ref>`                                                                     |
 | `active`          | нет         | Какого агента и какие пресеты использовать. [Подробнее](/guide/manifest-hosts#active)                                                |
 | `presets`         | нет         | Именованные наборы зависимостей, см. ниже                                                                                            |
@@ -42,6 +42,7 @@ active:
 | `targets`         | нет         | Своя интеграция агента; заодно ограничивает, каким агентам раскладываются файлы. [Подробнее](/guide/manifest-hosts#targets-и-target) |
 | `executables`     | нет         | Разрешения для MCP и `bin/` из зависимостей для всей команды. [Подробнее](/guide/situations/policy-mcp)                              |
 | `lifecycle`       | нет         | Сохраняется, но **не исполняется**: install печатает `LIFECYCLE_UNSUPPORTED`. См. [install](/reference/install)                      |
+| `canvas`          | нет         | **Не реализован**: install печатает `CANVAS_UNSUPPORTED` и ничего не разворачивает. См. [install](/reference/install)                |
 | `registries`      | нет         | Приватные registry (экспериментально). [Подробнее](/guide/manifest-registries)                                                       |
 | `marketplace`     | нет         | Описание маркетплейса для `bapm pack`. [Подробнее](/guide/manifest-registries#marketplace)                                           |
 
