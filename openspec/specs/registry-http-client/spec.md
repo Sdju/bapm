@@ -71,6 +71,30 @@ The registry HTTP transport MUST be injectable (port/adapter) so acceptance and 
 - **WHEN** resolve/install/publish tests inject a mock registry transport
 - **THEN** no outbound network to a real public registry MUST be required for those tests to pass
 
+### Requirement: Optional shared HTTP response cache for GET
+
+When the opt-in shared HTTP cache is enabled (`BAPM_CACHE_DIR` set, `BAPM_NO_CACHE` unset, `BAPM_HTTP_CACHE` not disabled), the production registry transport MUST look up a fresh cached response before fetching an idempotent `GET` and MUST store only `200` responses. Cache keys MUST include the request URL and request headers (`sha256(url + canonical headers)`, layout `<BAPM_CACHE_DIR>/http/<key>`). Requests with `Authorization` or `Cookie` headers MUST bypass the cache entirely. Non-GET methods and `4xx`/`5xx` responses MUST NOT be cached. `BAPM_HTTP_CACHE_TTL` MUST set freshness in seconds (default 300). Cache read/write errors MUST fall back to the network without changing the registry result.
+
+#### Scenario: Second anonymous GET is served from cache
+
+- **WHEN** the shared HTTP cache is enabled and two identical anonymous GET requests return `200`
+- **THEN** the first MUST populate `<BAPM_CACHE_DIR>/http/` and the second MUST be served from the cached status/headers/body without another network call
+
+#### Scenario: Authed GET bypasses cache
+
+- **WHEN** a GET carries `Authorization: Bearer …` or a `Cookie` header
+- **THEN** the transport MUST NOT read or write the shared HTTP cache for that request
+
+#### Scenario: Publish and error responses bypass cache
+
+- **WHEN** the client publishes via `PUT` or a GET returns `4xx`/`5xx`
+- **THEN** no shared HTTP cache entry MUST be created
+
+#### Scenario: Cache corruption does not break requests
+
+- **WHEN** a cached HTTP entry is unreadable or malformed
+- **THEN** the transport MUST fetch from the network and return the normal response
+
 ### Requirement: Authed registry requests use redirect Auth drop
 
 When the Registry HTTP client issues Authed requests (Authorization Bearer present), the production transport MUST follow redirects using the redirect-auth-drop capability: on cross-credential-host-class 3xx, origin Authorization and origin-class credential material MUST be dropped before the redirected request; destination-class credentials MAY be re-resolved. Default native fetch redirect following that forwards Authorization across credential host classes MUST NOT be used for Authed production Registry traffic.

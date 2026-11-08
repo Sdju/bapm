@@ -2,8 +2,11 @@ import {
   cacheClean,
   cacheInfo,
   pruneSharedCache,
+  pruneSharedHttpCache,
   sharedGitCacheClean,
   sharedGitCacheInfo,
+  sharedHttpCacheClean,
+  sharedHttpCacheInfo,
 } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
@@ -118,16 +121,18 @@ Options:
   -y, --yes    Skip confirmation where applicable (prune is non-interactive;
                the flag is accepted for symmetry with destructive commands)
   --dry-run    Preview clean/prune without deleting (no -y required)
-  --shared     Operate on the opt-in shared git mirror cache instead of
-               project modules (BAPM_CACHE_DIR; BAPM_NO_CACHE=1 disables use)
-  --days N     Prune shared mirrors not modified/accessed in N days
-               (default: 30; nonnegative integer)
+  --shared     Operate on the opt-in shared caches instead of project modules
+               (BAPM_CACHE_DIR; BAPM_NO_CACHE=1 disables use). Covers git mirrors
+               and cached HTTP GET responses; BAPM_HTTP_CACHE=0 disables HTTP.
+  --days N     Prune shared git mirrors / HTTP entries not modified or accessed
+               in N days (default: 30; nonnegative integer)
   --json       Stable prune output: {"pruned":N,"failed":N,"candidates":[...],"root":"..."}
   --help, -h   Show this help
 
 By default cache info/clean operate on the project modules-cache root (apm_modules).
 cache prune never deletes apm_modules: without --shared it prints a pointer to
-bapm prune. With --shared it only prunes bare mirrors under <BAPM_CACHE_DIR>/git.
+bapm prune. With --shared it prunes bare mirrors under <BAPM_CACHE_DIR>/git and
+cached HTTP responses under <BAPM_CACHE_DIR>/http.
 Missing BAPM_CACHE_DIR is a successful no-op ("shared cache not configured").
 After clean/prune, re-run install/lock to repopulate.
 `;
@@ -149,8 +154,13 @@ export async function runCacheCli(
 
   try {
     if (parsed.subcommand === "info") {
-      const info = parsed.shared ? sharedGitCacheInfo() : cacheInfo({ cwd: options.cwd });
-      console.log(info.text);
+      if (parsed.shared) {
+        const git = sharedGitCacheInfo();
+        const http = sharedHttpCacheInfo();
+        console.log(`${git.text}\n\n${http.text}`);
+      } else {
+        console.log(cacheInfo({ cwd: options.cwd }).text);
+      }
       return { ok: true, exitCode: 0 };
     }
 
@@ -158,16 +168,23 @@ export async function runCacheCli(
       return runPrune(deps, parsed);
     }
 
-    const result = parsed.shared
-      ? sharedGitCacheClean({
-          yes: parsed.yes,
-          dryRun: parsed.dryRun,
-        })
-      : cacheClean({
-          cwd: options.cwd,
-          yes: parsed.yes,
-          dryRun: parsed.dryRun,
-        });
+    if (parsed.shared) {
+      const git = sharedGitCacheClean({ yes: parsed.yes, dryRun: parsed.dryRun });
+      const http = sharedHttpCacheClean({ yes: parsed.yes, dryRun: parsed.dryRun });
+      const message = `${git.message}\n${http.message}`;
+      if (git.refused || http.refused) {
+        console.error(`${deps.name}: ${message}`);
+        return { ok: false, exitCode: 1, message };
+      }
+      console.log(message);
+      return { ok: git.ok && http.ok, exitCode: git.ok && http.ok ? 0 : 1, message };
+    }
+
+    const result = cacheClean({
+      cwd: options.cwd,
+      yes: parsed.yes,
+      dryRun: parsed.dryRun,
+    });
     if (result.refused) {
       console.error(`${deps.name}: ${result.message}`);
       return { ok: false, exitCode: 1, message: result.message };
@@ -185,7 +202,7 @@ function runPrune(deps: LifecycleCliDeps, parsed: ParsedCacheArgs): LifecycleRes
   if (!parsed.shared) {
     const message =
       "project apm_modules is handled by `bapm prune`; pass --shared to prune " +
-      "the shared git mirror cache under BAPM_CACHE_DIR";
+      "the shared caches under BAPM_CACHE_DIR";
     if (parsed.json) {
       console.log(serializePruneJson({ pruned: 0, failed: 0, candidates: [], root: null }));
       console.error(`${deps.name}: ${message}`);
@@ -195,30 +212,39 @@ function runPrune(deps: LifecycleCliDeps, parsed: ParsedCacheArgs): LifecycleRes
     return { ok: true, exitCode: 0, message };
   }
 
-  const result = pruneSharedCache({
+  const git = pruneSharedCache({
+    days: parsed.days,
+    dryRun: parsed.dryRun,
+    yes: parsed.yes,
+  });
+  const http = pruneSharedHttpCache({
     days: parsed.days,
     dryRun: parsed.dryRun,
     yes: parsed.yes,
   });
 
+  const pruned = git.pruned + http.pruned;
+  const failed = git.failed + http.failed;
+  const candidates = [...git.candidates, ...http.candidates.map((name) => `http/${name}`)];
+  // Preserve the historical git-only root when HTTP contributed nothing.
+  const root =
+    http.candidates.length > 0
+      ? (http.cacheDir ?? git.cacheDir ?? http.root ?? null)
+      : (git.root ?? null);
+  const message = `${git.message}\n${http.message}`;
+  const ok = git.ok && http.ok;
+
   if (parsed.json) {
-    console.log(
-      serializePruneJson({
-        pruned: result.pruned,
-        failed: result.failed,
-        candidates: result.candidates,
-        root: result.root ?? null,
-      }),
-    );
-    if (result.reason === "env-unset" || result.failed > 0) {
-      console.error(`${deps.name}: ${result.message}`);
+    console.log(serializePruneJson({ pruned, failed, candidates, root }));
+    if (git.reason === "env-unset" || http.failed > 0 || failed > 0) {
+      console.error(`${deps.name}: ${message}`);
     }
   } else {
-    if (result.ok) console.log(result.message);
-    else console.error(`${deps.name}: ${result.message}`);
+    if (ok) console.log(message);
+    else console.error(`${deps.name}: ${message}`);
   }
 
-  return { ok: result.ok, exitCode: result.ok ? 0 : 1, message: result.message };
+  return { ok, exitCode: ok ? 0 : 1, message };
 }
 
 function serializePruneJson(value: {

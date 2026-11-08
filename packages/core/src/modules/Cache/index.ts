@@ -6,7 +6,8 @@
  * - `cacheInfo` / `getCacheInfo` / `modulesCacheInfo`
  * - `cacheClean` / `cleanModulesCache` — project modules-cache only
  * - `sharedGitCacheInfo`, `sharedGitCacheClean` — opt-in shared mirror cache
- * - `pruneSharedCache` — remove shared mirrors older than N days
+ * - `sharedHttpCacheInfo`, `sharedHttpCacheClean` — opt-in shared HTTP cache
+ * - `pruneSharedCache`, `pruneSharedHttpCache` — age-based shared cleanup
  *
  * ## Example
  *
@@ -46,6 +47,25 @@ export type {
   SharedGitCachePruneResult,
   SharedGitCacheReason,
   SharedGitMirrorEntry,
+  SharedHttpCacheCleanOptions,
+  SharedHttpCacheCleanResult,
+  SharedHttpCacheConfig,
+  SharedHttpCacheHit,
+  SharedHttpCacheInfoOptions,
+  SharedHttpCacheInfoResult,
+  SharedHttpCacheLookupResult,
+  SharedHttpCacheMiss,
+  SharedHttpCacheMissReason,
+  SharedHttpCacheOverride,
+  SharedHttpCachePruneCandidate,
+  SharedHttpCachePruneFailure,
+  SharedHttpCachePruneOptions,
+  SharedHttpCachePruneResult,
+  SharedHttpCacheReason,
+  SharedHttpCacheRequest,
+  SharedHttpCacheResponse,
+  SharedHttpCacheStoreReason,
+  SharedHttpCacheStoreResult,
 } from "@/modules/SharedCache";
 
 export {
@@ -59,4 +79,20 @@ export {
   sharedGitCacheClean,
   sharedGitCacheInfo,
   sharedGitMirrorName,
+} from "@/modules/SharedCache";
+
+export {
+  BAPM_HTTP_CACHE_ENV,
+  BAPM_HTTP_CACHE_TTL_ENV,
+  DEFAULT_SHARED_HTTP_PRUNE_DAYS,
+  DEFAULT_SHARED_HTTP_TTL_SECONDS,
+  SHARED_HTTP_CACHE_SUBDIR,
+  isSharedHttpCacheableRequest,
+  lookupSharedHttpCache,
+  pruneSharedHttpCache,
+  resolveSharedHttpCacheConfig,
+  sharedHttpCacheClean,
+  sharedHttpCacheInfo,
+  sharedHttpCacheKey,
+  storeSharedHttpCache,
 } from "@/modules/SharedCache";

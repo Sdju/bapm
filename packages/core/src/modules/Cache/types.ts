@@ -1,4 +1,4 @@
-import type { SharedGitCacheInfoResult } from "@/modules/SharedCache";
+import type { SharedGitCacheInfoResult, SharedHttpCacheInfoResult } from "@/modules/SharedCache";
 
 export type CacheInfoOptions = {
   cwd?: string;
@@ -17,6 +17,8 @@ export type CacheInfoResult = {
   text: string;
   /** Shared git-cache stats; present even when the shared cache is disabled. */
   shared?: SharedGitCacheInfoResult;
+  /** Shared HTTP-cache stats; present even when the shared cache is disabled. */
+  sharedHttp?: SharedHttpCacheInfoResult;
 };
 
 export type CacheCleanOptions = {

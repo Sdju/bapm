@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines thin `bapm cache` UX over the modules-cache root: `info` reports root and size/entry stats, and `clean` removes cache content with confirm/`-y`, without breaking resolve identity isolation (rs-016). It also exposes an opt-in shared git mirror cache (`BAPM_CACHE_DIR`) with its own info/clean surface, while default clean stays project-modules.
+Defines thin `bapm cache` UX over the modules-cache root: `info` reports root and size/entry stats, and `clean` removes cache content with confirm/`-y`, without breaking resolve identity isolation (rs-016). It also exposes opt-in shared git mirror and HTTP response caches (`BAPM_CACHE_DIR`) with their own info/clean/prune surface, while default clean stays project-modules.
 
 ## Requirements
 
@@ -93,28 +93,62 @@ Shared git caching MUST be off unless `BAPM_CACHE_DIR` is set. When enabled, git
 
 ### Requirement: Shared cache info and clean surface
 
-The cache module MUST expose shared git-cache path/size/mirror info and a clean operation scoped to `<BAPM_CACHE_DIR>/git`. The CLI MUST expose this as `bapm cache info --shared` and `bapm cache clean --shared` (with the same `-y`/`--dry-run` rules). Default `bapm cache info` MAY include shared stats when configured. Default `bapm cache clean` MUST keep project modules-cache semantics and MUST NOT delete shared mirrors or `apm_modules` when `--shared` is used.
+The cache module MUST expose shared git-cache and HTTP-cache path/size/entry info and clean operations scoped to `<BAPM_CACHE_DIR>/git` and `<BAPM_CACHE_DIR>/http`. The CLI MUST expose this as `bapm cache info --shared` and `bapm cache clean --shared` (with the same `-y`/`--dry-run` rules). Default `bapm cache info` MAY include shared stats when configured. Default `bapm cache clean` MUST keep project modules-cache semantics and MUST NOT delete shared mirrors/HTTP entries or `apm_modules` when `--shared` is used.
 
 #### Scenario: Shared info reports path and size
 
-- **WHEN** `bapm cache info --shared` runs with populated mirrors
-- **THEN** output MUST identify the shared git-cache path and report mirror count/size without error
+- **WHEN** `bapm cache info --shared` runs with populated mirrors and HTTP entries
+- **THEN** output MUST identify both shared cache paths and report mirror/entry counts and size without error
 
 #### Scenario: Shared clean leaves modules
 
 - **WHEN** `bapm cache clean --shared -y` runs
-- **THEN** mirrors under `<BAPM_CACHE_DIR>/git` MUST be removed and `apm_modules` MUST be untouched
+- **THEN** mirrors under `<BAPM_CACHE_DIR>/git` and HTTP entries under `<BAPM_CACHE_DIR>/http` MUST be removed and `apm_modules` MUST be untouched
 
 #### Scenario: Default clean leaves shared cache
 
 - **WHEN** `bapm cache clean -y` runs without `--shared`
-- **THEN** project modules-cache entries MUST be removed and shared git mirrors MUST remain
+- **THEN** project modules-cache entries MUST be removed and shared git mirrors/HTTP entries MUST remain
 
-### Requirement: Shared APM git http cache remains optional
+### Requirement: Opt-in shared HTTP response cache
 
-M9 MUST NOT require implementing APM's shared user-level **http** cache (`cache/http_cache.py`). Project modules-local cache remains sufficient for the MUST bar; the opt-in shared git mirror cache above is an additive capability. Optional `bapm cache prune --days N` is SHOULD/later.
+The shared HTTP cache MUST be off unless `BAPM_CACHE_DIR` is set. When enabled, the registry transport MUST cache only idempotent `GET` responses with status `200` at `<BAPM_CACHE_DIR>/http/<sha256(url + canonical request headers)>`. Requests carrying `Authorization` or `Cookie` headers MUST bypass both read and write. `BAPM_NO_CACHE=1` MUST disable all shared-cache use; `BAPM_HTTP_CACHE=0` MUST disable only HTTP caching. `BAPM_HTTP_CACHE_TTL` MUST control freshness in seconds (default 300, nonnegative integer). `POST`/`PUT`/`PATCH`/`DELETE`, `4xx`/`5xx`, and redirect responses MUST NOT be stored. Redirect following MUST remain manual/redirect-safe; a final `200` after redirect MAY be cached under the original URL only when the original request is safe. Cache read/write failures MUST fall back to the network.
 
-#### Scenario: No shared http cache required
+#### Scenario: First GET populates and second hits
 
-- **WHEN** inspecting cache deliverables
-- **THEN** absence of a separate shared http cache implementation MUST NOT fail the MUST bar
+- **WHEN** two identical anonymous GET 200 requests run with the same `BAPM_CACHE_DIR`
+- **THEN** the first MUST perform the network fetch and store the response, and the second MUST return the cached status/headers/body without a network call
+
+#### Scenario: TTL expiry refetches
+
+- **WHEN** a cached entry is older than `BAPM_HTTP_CACHE_TTL`
+- **THEN** the next request MUST fetch from the network and replace the entry
+
+#### Scenario: Auth and mutating requests bypass
+
+- **WHEN** a GET carries `Authorization`/`Cookie` or the method is not GET
+- **THEN** the shared HTTP cache MUST NOT be read or written
+
+#### Scenario: Failures are not cached
+
+- **WHEN** a GET returns `4xx` or `5xx`
+- **THEN** no HTTP cache entry MUST be created and the next request MUST go to the network
+
+#### Scenario: Malformed entry falls back
+
+- **WHEN** a stored HTTP entry cannot be parsed or validated
+- **THEN** the request MUST fall back to the network and MUST NOT fail because of the cache
+
+### Requirement: Shared cache prune covers HTTP entries
+
+`bapm cache prune --shared [--days N]` MUST remove shared git mirrors and HTTP cache entries older than the retention window (default 30 days). `--dry-run` MUST list candidates without deleting. Missing `BAPM_CACHE_DIR` MUST be a successful no-op. HTTP entries MUST be pruned independently of git mirrors and MUST never cause project `apm_modules` deletion.
+
+#### Scenario: HTTP entries prune by age
+
+- **WHEN** `bapm cache prune --shared --days 7` runs with old and recent HTTP entries
+- **THEN** only entries older than 7 days MUST be removed and recent entries MUST remain
+
+#### Scenario: HTTP prune dry-run
+
+- **WHEN** `bapm cache prune --shared --dry-run` runs with stale HTTP entries
+- **THEN** candidates MUST be reported and no HTTP entry MUST be deleted

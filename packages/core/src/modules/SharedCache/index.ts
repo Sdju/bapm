@@ -1,16 +1,19 @@
 /**
- * SharedCache — opt-in shared bare git mirror cache.
+ * SharedCache — opt-in shared bare git mirror + HTTP response cache.
  *
- * Enabled by `BAPM_CACHE_DIR`; `BAPM_NO_CACHE=1` disables use. Layout:
- * `<BAPM_CACHE_DIR>/git/<sha256(normalized repo url)>.git`.
+ * Enabled by `BAPM_CACHE_DIR`; `BAPM_NO_CACHE=1` disables use. Git layout:
+ * `<BAPM_CACHE_DIR>/git/<sha256(normalized repo url)>.git`. HTTP layout:
+ * `<BAPM_CACHE_DIR>/http/<sha256(url + headers)>` (GET 200 only).
  *
  * ## Public API
  *
- * - `resolveSharedGitCacheConfig` — env/config gate
- * - `isCacheableGitRepoUrl` — never cache local paths / `file://` / `local:`
+ * - `resolveSharedGitCacheConfig` / `resolveSharedHttpCacheConfig` — env gates
+ * - `isCacheableGitRepoUrl`, `isSharedHttpCacheableRequest`
  * - `ensureSharedGitMirror`, `materializeSharedGitCheckout` — downloader helpers
- * - `sharedGitCacheInfo`, `sharedGitCacheClean` — size/path info and mirror wipe
- * - `pruneSharedCache` — remove mirrors older than `--days` (default 30)
+ * - `lookupSharedHttpCache`, `storeSharedHttpCache` — registry transport helpers
+ * - `sharedGitCacheInfo`, `sharedGitCacheClean` — git size/path info and wipe
+ * - `sharedHttpCacheInfo`, `sharedHttpCacheClean` — HTTP size/path info and wipe
+ * - `pruneSharedCache`, `pruneSharedHttpCache` — age-based cleanup
  *
  * ## Example
  *
@@ -34,6 +37,25 @@ export type {
   SharedGitCachePruneResult,
   SharedGitCacheReason,
   SharedGitMirrorEntry,
+  SharedHttpCacheCleanOptions,
+  SharedHttpCacheCleanResult,
+  SharedHttpCacheConfig,
+  SharedHttpCacheHit,
+  SharedHttpCacheInfoOptions,
+  SharedHttpCacheInfoResult,
+  SharedHttpCacheLookupResult,
+  SharedHttpCacheMiss,
+  SharedHttpCacheMissReason,
+  SharedHttpCacheOverride,
+  SharedHttpCachePruneCandidate,
+  SharedHttpCachePruneFailure,
+  SharedHttpCachePruneOptions,
+  SharedHttpCachePruneResult,
+  SharedHttpCacheReason,
+  SharedHttpCacheRequest,
+  SharedHttpCacheResponse,
+  SharedHttpCacheStoreReason,
+  SharedHttpCacheStoreResult,
 } from "./types.ts";
 
 export {
@@ -50,3 +72,19 @@ export {
   sharedGitCacheInfo,
   sharedGitMirrorName,
 } from "./gitCache.ts";
+
+export {
+  BAPM_HTTP_CACHE_ENV,
+  BAPM_HTTP_CACHE_TTL_ENV,
+  DEFAULT_SHARED_HTTP_PRUNE_DAYS,
+  DEFAULT_SHARED_HTTP_TTL_SECONDS,
+  SHARED_HTTP_CACHE_SUBDIR,
+  isSharedHttpCacheableRequest,
+  lookupSharedHttpCache,
+  pruneSharedHttpCache,
+  resolveSharedHttpCacheConfig,
+  sharedHttpCacheClean,
+  sharedHttpCacheInfo,
+  sharedHttpCacheKey,
+  storeSharedHttpCache,
+} from "./httpCache.ts";
