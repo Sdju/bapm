@@ -55,6 +55,7 @@ export type MarketplaceAuthoringConfig = {
   output?: unknown;
   claude?: unknown;
   codex?: unknown;
+  copilot?: unknown;
   metadata?: Record<string, unknown>;
   /**
    * Present after authoring load (defaults to `{ strategy: "lockstep" }` when omitted in YAML).

@@ -14,6 +14,7 @@ export type {
   LsRemoteFn,
   BuildMarketplaceOutputsOptions,
   MarketplaceOutputWritten,
+  MarketplaceOutputDocument,
   BuildMarketplaceOutputsResult,
   ResolveMarketplacePackagesOptions,
   ResolveMarketplacePackagesResult,
@@ -38,6 +39,16 @@ export {
 } from "./resolve.ts";
 
 export { serializeMarketplaceJson } from "./mappers.ts";
+
+export {
+  checkMarketplaceDrift,
+  diffMarketplaceJson,
+  type MarketplaceDriftDifference,
+  type MarketplaceDriftStatus,
+  type MarketplaceDriftOutput,
+  type CheckMarketplaceDriftResult,
+  type CheckMarketplaceDriftOptions,
+} from "./drift.ts";
 
 export { atomicWriteMarketplaceJson } from "./write.ts";
 

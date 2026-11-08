@@ -13,9 +13,12 @@ Options:
   --check-release              Check that the manifest version matches the git tag
   --check-versions             Marketplace local-package version alignment (lockstep /
                                tag_pattern / per_package); plugin.json fallback when no YAML
+  --check-clean                Read-only marketplace drift gate: regenerate selected
+                               marketplace.json and diff against the on-disk artifact.
+                               Exit 4 when missing/drift; writes no zip or JSON
   --tag <name>                 Tag under check (optional with --check-release; else HEAD)
   --marketplace <all|none|list>
-                               Filter host marketplace emit (claude,codex); default: all configured
+                               Filter host marketplace emit (claude,codex,copilot); default: all configured
   --marketplace-path FORMAT=PATH
                                Override output path for a format (repeatable; must stay under project root)
   --offline                    Fail closed when remote package resolve needs network
@@ -28,8 +31,9 @@ Notes:
   Pack refuses secret-pattern paths (.env, *.pem, …).
   Optional project-root .bapmignore (gitignore syntax) omits matching files from the zip;
   root bapm.yml/apm.yml stay included; .gitignore is not used as a fallback.
-  When marketplace: is present with outputs selected, pack emits Claude/Codex marketplace.json.
+  When marketplace: is present with outputs selected, pack emits Claude/Codex/Copilot marketplace.json.
   Marketplace-only projects (no dependencies:) emit JSON and skip empty zip.
+  --check-clean is read-only: drift/missing marketplace.json exits 4 without writing anything.
   --agent-plugins never emits marketplace output and requires root plugin.json.
 `;
 }
@@ -40,6 +44,7 @@ export type ParsedPackArgs = {
   dryRun: boolean;
   checkRelease: boolean;
   checkVersions: boolean;
+  checkClean: boolean;
   tag?: string;
   marketplace?: string;
   marketplacePaths: string[];
@@ -55,6 +60,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
   let dryRun = false;
   let checkRelease = false;
   let checkVersions = false;
+  let checkClean = false;
   let tag: string | undefined;
   let marketplace: string | undefined;
   const marketplacePaths: string[] = [];
@@ -68,6 +74,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     dryRun,
     checkRelease,
     checkVersions,
+    checkClean,
     tag,
     marketplace,
     marketplacePaths,
@@ -99,6 +106,10 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     }
     if (arg === "--check-versions") {
       checkVersions = true;
+      continue;
+    }
+    if (arg === "--check-clean") {
+      checkClean = true;
       continue;
     }
     if (arg === "--offline") {
@@ -173,6 +184,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
 }
 
 const VERSION_ALIGNMENT_EXIT = 3;
+const CHECK_CLEAN_EXIT = 4;
 
 function runCheckVersionsGate(deps: PackDeps, cwd: string | undefined): PackResult {
   const root = cwd ?? process.cwd();
@@ -258,7 +270,12 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
 
   try {
     // Gate-only when --check-versions without --archive and without marketplace emit intent
-    if (parsed.checkVersions && !parsed.archive && parsed.marketplace === undefined) {
+    if (
+      parsed.checkVersions &&
+      !parsed.archive &&
+      parsed.marketplace === undefined &&
+      !parsed.checkClean
+    ) {
       // Still allow combining with check-release gate-only in the same invocation
       if (parsed.checkRelease) {
         const gate = await deps.checkReleaseTag({ cwd, tag: parsed.tag });
@@ -270,7 +287,12 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
     }
 
     // Gate-only when --check-release without --archive and without marketplace emit intent
-    if (parsed.checkRelease && !parsed.archive && parsed.marketplace === undefined) {
+    if (
+      parsed.checkRelease &&
+      !parsed.archive &&
+      parsed.marketplace === undefined &&
+      !parsed.checkClean
+    ) {
       const gate = await deps.checkReleaseTag({ cwd, tag: parsed.tag });
       for (const w of gate.warnings ?? []) {
         console.error(`${deps.name}: warning: ${w}`);
@@ -278,7 +300,7 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
       return { ok: true };
     }
 
-    if (!parsed.archive && !parsed.checkRelease && !parsed.checkVersions) {
+    if (!parsed.archive && !parsed.checkRelease && !parsed.checkVersions && !parsed.checkClean) {
       // Default to archive mode for bare `pack` convenience (marketplace-only may skip zip in core)
       parsed.archive = true;
     }
@@ -294,12 +316,55 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
       archive: parsed.archive,
       dryRun: parsed.dryRun,
       checkRelease: parsed.checkRelease,
+      checkClean: parsed.checkClean,
       tag: parsed.tag,
       marketplace: parsed.marketplace,
       marketplacePaths: parsed.marketplacePaths.length ? parsed.marketplacePaths : undefined,
       offline: parsed.offline,
       includePrerelease: parsed.includePrerelease,
     });
+
+    if (result.checkClean) {
+      const clean = result.checkClean;
+      if (clean.skipped) {
+        console.log(
+          `${deps.name}: Marketplace drift check skipped: no marketplace block or no outputs selected.`,
+        );
+      } else {
+        for (const output of clean.outputs) {
+          if (output.status === "unchanged") {
+            console.log(`${deps.name}: Marketplace drift OK: ${output.path}`);
+            continue;
+          }
+          if (output.status === "missing") {
+            console.error(
+              `${deps.name}: ${output.path}: missing on disk (would be created by pack)`,
+            );
+            continue;
+          }
+          console.error(
+            `${deps.name}: ${output.path}: ${output.differences.length} difference(s) vs regenerated output`,
+          );
+          for (const diff of output.differences.slice(0, 20)) {
+            const oldText = JSON.stringify(diff.old);
+            const newText = JSON.stringify(diff.new);
+            console.error(`  ${diff.path || "<root>"}  ${oldText} -> ${newText}`);
+          }
+          if (output.differences.length > 20) {
+            console.error(`  ... and ${output.differences.length - 20} more`);
+          }
+        }
+        if (!clean.ok) {
+          return {
+            ok: false,
+            message: "Marketplace working-tree drift detected (--check-clean)",
+            exitCode: CHECK_CLEAN_EXIT,
+          };
+        }
+      }
+      console.log("Marketplace drift check: read-only; no pack outputs were written.");
+      return { ok: true };
+    }
 
     if (result.archivePath) {
       console.log(`Wrote ${result.archivePath}`);

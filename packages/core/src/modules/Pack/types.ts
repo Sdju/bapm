@@ -1,4 +1,5 @@
 import type { MarketplaceOutputRegistry } from "@b-apm/integration-api";
+import type { CheckMarketplaceDriftResult } from "@/modules/Marketplace";
 
 export type RunPackOptions = {
   cwd?: string;
@@ -14,6 +15,8 @@ export type RunPackOptions = {
   outputPath?: string;
   /** Also run pr-004 release gate before packing. */
   checkRelease?: boolean;
+  /** Read-only marketplace drift gate (`--check-clean`, exit 4 on drift). */
+  checkClean?: boolean;
   /** Tag override for `--check-release`. */
   tag?: string;
   /**
@@ -47,6 +50,8 @@ export type RunPackResult = {
   archivePath?: string;
   filesPacked: number;
   marketplaceWritten?: boolean;
+  /** Populated when the read-only `--check-clean` drift gate ran. */
+  checkClean?: CheckMarketplaceDriftResult;
 };
 
 export type ExtractPackArchiveOptions = {

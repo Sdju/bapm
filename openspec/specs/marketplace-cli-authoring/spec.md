@@ -73,7 +73,7 @@ emit or multi-host AuthResolver.
 
 ### Requirement: Authoring help section
 
-Marketplace group help and related help text MUST list Authoring subcommands (`init`, `package`, `check`, and `migrate` when shipped) separately from Consumer subcommands. Help MUST NOT claim that pack host marketplace.json emit is unavailable when pack marketplace outputs are shipped. Help MAY direct authors to `bapm pack` for Claude/Codex host artifact emission. Help MUST NOT advertise a restored `marketplace build` verb.
+Marketplace group help and related help text MUST list Authoring subcommands (`init`, `package`, `check`, and `migrate` when shipped) separately from Consumer subcommands. Help MUST NOT claim that pack host marketplace.json emit is unavailable when pack marketplace outputs are shipped. Help MAY direct authors to `bapm pack` for Claude/Codex/Copilot host artifact emission. Help MUST NOT advertise a restored `marketplace build` verb.
 
 #### Scenario: marketplace help lists Authoring
 
