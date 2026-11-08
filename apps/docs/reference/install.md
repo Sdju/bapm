@@ -52,7 +52,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Выбор агента: `--target <id>` → `active` в `bapm.local.yml` → `active` в `bapm.yml` → автоопределение → ошибка. В `active` можно перечислить несколько агентов, тогда файлы раскладываются для каждого, а MCP — только для первого. См. [Выбор агента](/guide/host-selection).
 - Файлы в каталогах агента с тем же путём, что у устанавливаемого пакета, перезаписываются без предупреждения.
 - Если пакет убран из манифеста вручную, уже развёрнутые им файлы не удаляются.
-- MCP для Cursor пишется в `.cursor/mcp.json`; каталог создаётся при необходимости. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента уже есть или создан в этом же install. См. [Поддерживаемые агенты](/guide/supported-hosts#layout).
+- MCP для Cursor пишется в `.cursor/mcp.json`; каталог создаётся при необходимости. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента уже есть или создан в этом же install; иначе install печатает `bapm: warning: …` с путём каталога. См. [Поддерживаемые агенты](/guide/supported-hosts#layout).
 
 - `install <archive.zip>` добавляет файлы архива в текущий каталог и ничего не удаляет. Если файл из архива уже есть с другим содержимым (обычно `bapm.yml`), install завершается ошибкой `Refusing to overwrite existing files` до записи чего-либо. Поэтому ставьте архив в пустой каталог.
 

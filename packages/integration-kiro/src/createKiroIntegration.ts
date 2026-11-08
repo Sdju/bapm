@@ -224,7 +224,10 @@ function writeKiroMcpConfig(
         {
           code: "KIRO_MCP_SKIP_NO_KIRO_DIR",
           message:
-            "Skipping project MCP write: .kiro/ directory is absent (Kiro project-scope MCP is opt-in)",
+            "Skipping project MCP write for kiro: .kiro/ directory is absent (Kiro project-scope MCP is opt-in; create .kiro/ and re-run install)",
+          target: ctx.targetId,
+          dir: ".kiro/",
+          warn: true,
         },
       ],
     };

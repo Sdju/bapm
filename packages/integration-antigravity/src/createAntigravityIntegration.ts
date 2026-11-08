@@ -241,7 +241,10 @@ function writeAntigravityMcpConfig(
         {
           code: "ANTIGRAVITY_MCP_SKIP_NO_AGENTS_DIR",
           message:
-            "Skipping project MCP write: .agents/ directory is absent (Antigravity project-scope MCP is opt-in)",
+            "Skipping project MCP write for antigravity: .agents/ directory is absent (Antigravity project-scope MCP is opt-in; create .agents/ and re-run install)",
+          target: ctx.targetId,
+          dir: ".agents/",
+          warn: true,
         },
       ],
     };

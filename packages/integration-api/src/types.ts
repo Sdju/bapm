@@ -156,7 +156,18 @@ export type ConfigureMcpReport = {
   servers?: string[];
   deployedFiles?: DeployedFile[];
   /** Explicit adapter decisions or unsupported-server diagnostics. */
-  diagnostics?: Array<{ code: string; message: string; server?: string }>;
+  diagnostics?: Array<{
+    code: string;
+    message: string;
+    server?: string;
+    /** Surface as `bapm: warning:` during install (skip/opt-in decisions). */
+    warn?: boolean;
+    /** Host target that made the decision, when relevant. */
+    target?: TargetId;
+    /** Host directory/path referenced by the decision, when relevant. */
+    dir?: string;
+    [key: string]: unknown;
+  }>;
 };
 
 /** Optional MCP configure hook — targets that lack it are skipped for MCP. */
