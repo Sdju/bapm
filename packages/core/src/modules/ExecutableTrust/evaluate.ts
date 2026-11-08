@@ -67,6 +67,9 @@ export function parseExecutableGrants(
  * Layered deny-wins resolver (sc-011):
  * org deny_all / org deny → project|user deny → project allow → user allow →
  * withhold if any grant surface present else skip.
+ *
+ * `executableType` is looked up verbatim in grant entries, so `mcp`, `bin`, and
+ * `hook` share the same ladder without per-type policy code.
  */
 export function resolveExecutableTrust(
   options: ResolveExecutableTrustOptions,

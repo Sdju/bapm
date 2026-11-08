@@ -12,9 +12,10 @@ export function formatApproveHelp(deps: ApproveCliDeps): string {
   return `${deps.name} approve — Persist user-local executable allow
 
 Usage:
-  bapm approve <package-name> [--user]
+  bapm approve <package-name> [--hook] [--user]
 
 Persists an MCP allow grant under ~/.bapm/config.json (executables.allow).
+Pass --hook to persist a hook grant (executables.allow.<pkg>.hook: true).
 Interactive approve NEVER writes project ${deps.manifestFile}.
 `;
 }
@@ -23,12 +24,18 @@ export function parseApproveArgs(argv: string[]): {
   help: boolean;
   packageName?: string;
   user: boolean;
+  executableType: "mcp" | "hook";
 } {
   let help = false;
+  let executableType: "mcp" | "hook" = "mcp";
   const positionals: string[] = [];
   for (const arg of argv) {
     if (arg === "--help" || arg === "-h") {
       help = true;
+      continue;
+    }
+    if (arg === "--hook") {
+      executableType = "hook";
       continue;
     }
     if (arg === "--user") {
@@ -38,7 +45,7 @@ export function parseApproveArgs(argv: string[]): {
     if (arg.startsWith("-")) continue;
     positionals.push(arg);
   }
-  return { help, packageName: positionals[0], user: true };
+  return { help, packageName: positionals[0], user: true, executableType };
 }
 
 export async function runApproveCli(
@@ -61,8 +68,10 @@ export async function runApproveCli(
   save({
     packageName,
     grant: "allow",
-    executableType: "mcp",
+    executableType: parsed.executableType,
   });
-  console.log(`Approved "${packageName}" (mcp) in user config (~/.bapm/config.json)`);
+  console.log(
+    `Approved "${packageName}" (${parsed.executableType}) in user config (~/.bapm/config.json)`,
+  );
   return { ok: true, exitCode: 0 };
 }

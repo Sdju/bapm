@@ -42,6 +42,21 @@ describe("CLI approve/deny user-local (sc-010)", () => {
     expect(readText(ymlPath)).not.toMatch(/mcp-dep/);
   });
 
+  test("approve --hook persists a hook grant in the user store", async () => {
+    env = createIsolatedHome();
+    const ymlPath = writeMinimalProject(env.cwd);
+    const before = readText(ymlPath);
+
+    const { result, combined } = await runInEnv(env, ["approve", "hook-dep", "--hook"]);
+    expect(result, `approve --hook should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    const entry = cfg.executables?.allow?.["hook-dep"] as Record<string, unknown> | undefined;
+    expect(entry?.hook, "hook grant must persist under executables.allow.<pkg>.hook").toBe(true);
+    expect(entry?.mcp).toBeUndefined();
+    expect(readText(ymlPath)).toBe(before);
+  });
+
   test("deny persists to user store and does not write project bapm.yml", async () => {
     env = createIsolatedHome();
     const ymlPath = writeMinimalProject(env.cwd);
