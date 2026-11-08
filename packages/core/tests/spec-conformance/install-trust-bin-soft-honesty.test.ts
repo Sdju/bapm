@@ -1,6 +1,7 @@
 /**
- * Soft honesty: bin gated via ExecutableTrust + trust-bin consent;
- * hooks/canvas remain ungated soft (executable-mcp-trust MODIFIED).
+ * Limitations honesty: hooks are gated when a trust surface / org deny is
+ * active, legacy soft only without a surface; canvas remains unimplemented;
+ * bin gated via ExecutableTrust + trust-bin consent.
  */
 import { existsSync } from "node:fs";
 import { describe, expect, test } from "vite-plus/test";
@@ -18,8 +19,8 @@ function limitationsHonestyBlob(): string {
   return `${limitationsBlob(doc)}\n${scopeOutBlob(doc)}\n${md}`;
 }
 
-describe("install-trust-bin — soft honesty (hooks/canvas vs bin)", () => {
-  test("limitations MUST NOT claim bin remains ungated soft debt with hooks/canvas", () => {
+describe("install-trust-bin — soft honesty (hooks gated with surface; canvas unimplemented)", () => {
+  test("limitations MUST NOT bundle bin as ungated soft debt with hooks/canvas", () => {
     const blob = limitationsHonestyBlob();
     const doc = loadChecklist();
     const scope = scopeOutBlob(doc);
@@ -32,15 +33,30 @@ describe("install-trust-bin — soft honesty (hooks/canvas vs bin)", () => {
       `expected hooks/bin/canvas ungated trio removed from limitations/scope_out (${checklistPath}):\n${blob}`,
     ).toBe(false);
 
-    // hooks + canvas soft honesty must remain.
+    // hooks + canvas residual honesty must remain.
     expect(
       /hooks/i.test(blob) && /canvas/i.test(blob),
-      `expected hooks and canvas soft residual still named:\n${blob}`,
+      `expected hooks and canvas residual still named:\n${blob}`,
     ).toBe(true);
 
+    // Hooks are now gated when a surface / org deny exists (not the old soft trio).
     expect(
-      /ungated|soft|MCP-only|mcp.?only|not gated/i.test(blob),
-      `expected soft/ungated framing for hooks/canvas residual:\n${blob}`,
+      /hooks?[^.\n]{0,160}(gated|withheld|ExecutableTrust)|ExecutableTrust[^.\n]{0,80}\bhook\b|type\s*[:=]?\s*["']?hook/i.test(
+        blob,
+      ),
+      `expected dependency hooks documented as gated via ExecutableTrust(type hook):\n${blob}`,
+    ).toBe(true);
+
+    // Legacy no-surface behaviour must stay honest, not silently claimed as gated.
+    expect(
+      /no grant surface|without a grant surface|surface.{0,40}absent|legacy soft/i.test(blob),
+      `expected legacy no-grant-surface hook behavior documented:\n${blob}`,
+    ).toBe(true);
+
+    // Canvas is still not implemented.
+    expect(
+      /canvas[^.\n]{0,160}(unimplemented|not implemented|soft|no primitive)/i.test(blob),
+      `expected canvas unimplemented/soft honesty:\n${blob}`,
     ).toBe(true);
 
     // Bin gating documented as consent and/or ExecutableTrust (not second policy noun).

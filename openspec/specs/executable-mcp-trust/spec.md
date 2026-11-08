@@ -99,13 +99,28 @@ When org policy `executables.deny` / `deny_all` is modeled, a shared deny-wins r
 - **WHEN** org policy denies an executable package and project grants allow it
 - **THEN** MCP deploy for that package MUST be denied at install and the shared classifier MUST agree
 
-### Requirement: Hooks and canvas stay ungated while bin is gated
+### Requirement: Dependency hooks are gated with a trust surface while canvas stays unimplemented
 
-Hooks and canvas executable primitives MUST remain ungated by the MCP trust ladder and by bin consent flags. Dependency `bin/` MUST be gated via the shared executable trust resolver (type `bin`) plus install `--trust-bin` / `--no-trust-bin` consent. The conformance statement MUST list hooks/canvas as ungated in its limitations and MUST NOT list `bin` as ungated.
+Dependency hook primitives MUST pass through the shared executable trust resolver (type `hook`) before materialize when the consuming project or user store presents a grant surface, or when org policy `executables.deny` / `deny_all` is active. A withheld hook MUST be dropped and reported with a warning diagnostic naming the package and reason. With no grant surface and no org deny, dependency hooks MAY keep the legacy soft default and deploy. Root/local hooks MUST NOT be gated. Canvas has no primitive/materialize path and MUST remain listed as unimplemented/soft. Dependency `bin/` MUST be gated via the shared executable trust resolver (type `bin`) plus install `--trust-bin` / `--no-trust-bin` consent. The conformance statement MUST list the hook gating boundary and canvas non-implementation in its limitations and MUST NOT list `bin` as ungated.
 
-#### Scenario: Hooks deploy without an executable grant
+#### Scenario: Unapproved dependency hook is withheld under a grant surface
 
-- **WHEN** a dependency ships a hook and the consuming project has an `executables.allow` surface that does not mention that dependency
+- **WHEN** a dependency ships a hook and the consuming project has an `executables.allow` surface that does not mention that dependency's `hook`
+- **THEN** install MUST withhold the hook, MUST report `HOOK_TRUST_WITHHELD` as a warning, and MUST continue installing other primitives
+
+#### Scenario: Hook grant deploys
+
+- **WHEN** the project or user store allows the dependency with `hook: true`
+- **THEN** install MUST deploy the hook for hosts that support hooks
+
+#### Scenario: Org deny withholds hooks without a project surface
+
+- **WHEN** org policy `executables.deny` lists the dependency (or `deny_all: true`)
+- **THEN** install MUST withhold its hooks even when no project grant surface exists
+
+#### Scenario: Legacy no-surface hook deploy
+
+- **WHEN** a dependency ships a hook and neither project/user grant surface nor org deny is present
 - **THEN** install MUST still deploy the hook for hosts that support hooks
 
 #### Scenario: Bin is gated by the shared resolver

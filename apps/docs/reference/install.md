@@ -47,6 +47,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen`.
 - `--force` в текущей версии ничего не меняет: флаг принимается, но не влияет на установку. Он не связан с `--target`.
 - В интерактивном терминале `bin/` зависимостей раскладывается и без `--trust-bin`, с предупреждением. `bapm approve` разрешение на `bin/` не выдаёт.
+- Dependency hooks проверяются через ExecutableTrust (type `hook`) только когда есть project/user grant-поверхность или org `executables.deny`/`deny_all`; иначе hooks раскладываются по legacy-поведению. Root/local hooks проекта не гейтятся, `--trust-bin` на hooks не влияет.
 - `--no-policy` отключает и политику организации, включая её запреты.
 - Frozen проверяет наличие lock, пины прямых зависимостей и хэши развёрнутых файлов, а также сверяет `#ref` прямых git-зависимостей с `resolved_ref` в lock. Расхождение ref при неизменном lock — ошибка `Frozen install ref drift`. См. [CI по lock-файлу](/guide/situations/ci-frozen).
 - Выбор агента: `--target <id>` → `active` в `bapm.local.yml` → `active` в `bapm.yml` → автоопределение → ошибка. В `active` можно перечислить несколько агентов, тогда файлы и MCP раскладываются для каждого поддерживающего хоста. См. [Выбор агента](/guide/host-selection).

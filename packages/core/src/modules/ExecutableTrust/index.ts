@@ -6,6 +6,7 @@
  *
  * - `parseExecutableGrants` — `executables.allow`/`deny` + `allowExecutables` alias
  * - `resolveExecutableTrust` / `classifyExecutableTrust` — org + project + user deny-wins
+ *   for executable types `mcp`, `bin`, and `hook`
  * - `evaluateExecutableTrust` — project-only thin wrapper (sc-009)
  * - `loadUserExecutableGrants` / `saveUserExecutableGrants` — `~/.bapm/config.json`
  * - `evaluateRequiredPackagePresence` — lock presence + distinct withheld (sc-012)

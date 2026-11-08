@@ -61,6 +61,7 @@ import {
   resolveBinDeployConsent,
   resolveExecutableTrust,
   userGrantsToSurface,
+  type ExecutableGrantSurface,
 } from "@/modules/ExecutableTrust";
 import {
   applyMcpInventoryToLock,
@@ -454,20 +455,32 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     }
   }
 
+  const installTrustContext = resolveInstallTrustContext({
+    cwd,
+    rootManifest,
+    configDir: options.configDir ?? options.marketplaceConfigDir,
+    policyPath,
+    noPolicy,
+    policyPorts,
+  });
+
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
   const subsetDiagnostics: unknown[] = [];
   const materializeDiagnostics: unknown[] = [];
+  const hookTrustDiagnostics: unknown[] = [];
 
   if (!skipApmMaterialize && registry && activeTargets.length > 0) {
     const packageTargets = collectPackageDeclaredTargets(nodes, raw);
     const afterSkillFilter = applySkillSubsets(resolved.primitives, nodes, subsetDiagnostics);
+    const afterHookTrust = gateDependencyHooksWithTrust(afterSkillFilter, installTrustContext);
+    hookTrustDiagnostics.push(...afterHookTrust.diagnostics);
     for (const targetId of activeTargets) {
       const target = findTarget(registry, targetId);
       if (!target) continue;
 
       let filtered = filterByIntersection(
-        afterSkillFilter,
+        afterHookTrust.primitives,
         targetId,
         packageTargets,
         rootManifest,
@@ -538,6 +551,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         policyPath,
         noPolicy,
         policyPorts,
+        trustContext: installTrustContext,
       }),
     );
   }
@@ -561,6 +575,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       policyPath,
       noPolicy,
       policyPorts,
+      trustContext: installTrustContext,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
     if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
@@ -588,6 +603,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ...portablePluginDiagnostics,
       ...subsetDiagnostics,
       ...targetSelectionDiagnostics,
+      ...hookTrustDiagnostics,
       ...materializeDiagnostics,
       ...binDiagnostics,
       ...mcpDiagnostics,
@@ -847,6 +863,101 @@ function summarizeDirectEntry(entry: DependencyEntry): string {
   return entryNameHint(entry) ?? "(dep)";
 }
 
+type InstallTrustContext = {
+  projectSurface: ExecutableGrantSurface;
+  userSurface: ExecutableGrantSurface;
+  combinedSurface: ExecutableGrantSurface;
+  orgExecutables: PolicyExecutables;
+};
+
+type InstallTrustContextArgs = {
+  cwd: string;
+  rootManifest: BapmManifest;
+  configDir?: string;
+  policyPath?: string;
+  noPolicy: boolean;
+  policyPorts?: Parameters<typeof loadOrgExecutablesForTrust>[0]["policyPorts"];
+};
+
+/**
+ * Load the effective executable-trust inputs once per install so hooks, bin,
+ * and MCP share identical project/user/org policy (no duplicated policy logic).
+ */
+function resolveInstallTrustContext(args: InstallTrustContextArgs): InstallTrustContext {
+  const projectSurface = parseExecutableGrants({
+    manifest: args.rootManifest as Record<string, unknown>,
+  });
+  const userLoaded = loadUserExecutableGrants({
+    configDir: args.configDir,
+    configRoot: args.configDir,
+  });
+  const userSurface = userGrantsToSurface(userLoaded);
+  const combinedSurface: ExecutableGrantSurface = {
+    present: projectSurface.present || userSurface.present,
+    allow: { ...projectSurface.allow, ...userSurface.allow },
+    deny: { ...projectSurface.deny, ...userSurface.deny },
+  };
+  return {
+    projectSurface,
+    userSurface,
+    combinedSurface,
+    orgExecutables: loadOrgExecutablesForTrust({
+      cwd: args.cwd,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy,
+      policyPorts: args.policyPorts,
+    }),
+  };
+}
+
+/**
+ * Gate dependency hooks through ExecutableTrust (type `hook`) before any target
+ * materializes them. Root/local hooks (`source: "local"`) are never gated, and
+ * with no grant surface and no org deny the resolver returns `skip` (legacy
+ * soft behavior: dependency hooks deploy).
+ */
+function gateDependencyHooksWithTrust(
+  primitives: AttributedPrimitive[],
+  trust: InstallTrustContext,
+): { primitives: AttributedPrimitive[]; diagnostics: unknown[] } {
+  const kept: AttributedPrimitive[] = [];
+  const diagnostics: unknown[] = [];
+  for (const primitive of primitives) {
+    if (primitive.type !== "hook" || !primitive.source.startsWith("dependency:")) {
+      kept.push(primitive);
+      continue;
+    }
+    const packageName =
+      primitive.packageName?.trim() || primitive.source.slice("dependency:".length);
+    const decision = resolveExecutableTrust({
+      packageName,
+      executableType: "hook",
+      orgExecutables: trust.orgExecutables,
+      projectSurface: trust.projectSurface,
+      userSurface: trust.userSurface,
+      grantSurface: trust.combinedSurface,
+    });
+    if (decision.allowed) {
+      kept.push(primitive);
+      continue;
+    }
+    diagnostics.push({
+      code: "HOOK_TRUST_WITHHELD",
+      message: `hook "${primitive.name}" from dependency "${packageName}" withheld: ${
+        decision.reason ?? `ExecutableTrust ${decision.outcome}`
+      }`,
+      warn: true,
+      packageName,
+      hook: primitive.name,
+      path: primitive.path,
+      withhold: true,
+      unapproved: true,
+      outcome: decision.outcome,
+    });
+  }
+  return { primitives: kept, diagnostics };
+}
+
 async function deployMcpAfterPolicy(args: {
   cwd: string;
   rootManifest: BapmManifest;
@@ -875,6 +986,7 @@ async function deployMcpAfterPolicy(args: {
     defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
     implementationDefaultHost?: string;
   };
+  trustContext?: InstallTrustContext;
 }): Promise<{
   lockPath?: string;
   lockDocument?: LockfileDocument;
@@ -882,25 +994,16 @@ async function deployMcpAfterPolicy(args: {
   withholdMessage?: string;
   withheldPackages: string[];
 }> {
-  const projectSurface = parseExecutableGrants({
-    manifest: args.rootManifest as Record<string, unknown>,
-  });
-  const userLoaded = loadUserExecutableGrants({
-    configDir: args.configDir,
-    configRoot: args.configDir,
-  });
-  const userSurface = userGrantsToSurface(userLoaded);
-  const combinedSurface = {
-    present: projectSurface.present || userSurface.present,
-    allow: { ...projectSurface.allow, ...userSurface.allow },
-    deny: { ...projectSurface.deny, ...userSurface.deny },
-  };
-  const orgExecutables = loadOrgExecutablesForTrust({
-    cwd: args.cwd,
-    policyPath: args.policyPath,
-    noPolicy: args.noPolicy === true,
-    policyPorts: args.policyPorts,
-  });
+  const { projectSurface, userSurface, combinedSurface, orgExecutables } =
+    args.trustContext ??
+    resolveInstallTrustContext({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      configDir: args.configDir,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy === true,
+      policyPorts: args.policyPorts,
+    });
 
   const collected = collectMcpServers({
     cwd: args.cwd,
@@ -1238,22 +1341,19 @@ function deployBinsAfterConsent(args: {
     defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
     implementationDefaultHost?: string;
   };
+  trustContext?: InstallTrustContext;
 }): unknown[] {
   const diagnostics: unknown[] = [];
-  const projectSurface = parseExecutableGrants({
-    manifest: args.rootManifest as Record<string, unknown>,
-  });
-  const userLoaded = loadUserExecutableGrants({
-    configDir: args.configDir,
-    configRoot: args.configDir,
-  });
-  const userSurface = userGrantsToSurface(userLoaded);
-  const orgExecutables = loadOrgExecutablesForTrust({
-    cwd: args.cwd,
-    policyPath: args.policyPath,
-    noPolicy: args.noPolicy,
-    policyPorts: args.policyPorts,
-  });
+  const { projectSurface, userSurface, orgExecutables } =
+    args.trustContext ??
+    resolveInstallTrustContext({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      configDir: args.configDir,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy,
+      policyPorts: args.policyPorts,
+    });
   const deployRoot = args.binDeployRoot
     ? resolve(args.binDeployRoot)
     : defaultBinDeployRoot(args.cwd);

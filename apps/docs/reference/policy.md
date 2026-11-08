@@ -20,22 +20,32 @@ bapm policy status [options]
 
 ## approve / deny
 
-User-local MCP grants в `~/.bapm/config.json` (`executables.allow` / `executables.deny`). **Никогда** не пишут project `bapm.yml` / `apm.yml`.
+User-local MCP/hook grants в `~/.bapm/config.json` (`executables.allow` / `executables.deny`). **Никогда** не пишут project `bapm.yml` / `apm.yml`.
 
 ```text
-bapm approve <package-name> [--user]
+bapm approve <package-name> [--hook] [--user]
 bapm deny <package-name> [--user]
 ```
 
-| Флаг / аргумент  | Значение   | Эффект                                                         | Default |
-| ---------------- | ---------- | -------------------------------------------------------------- | ------- |
-| `<package-name>` | имя пакета | Обязательный positional                                        | —       |
-| `--user`         | —          | Принимается для совместимости с APM; запись всегда в `~/.bapm` | —       |
-| `--help`, `-h`   | —          | Показать help                                                  | —       |
+| Флаг / аргумент  | Значение   | Эффект                                                         | Default   |
+| ---------------- | ---------- | -------------------------------------------------------------- | --------- |
+| `<package-name>` | имя пакета | Обязательный positional                                        | —         |
+| `--hook`         | —          | Выдать grant на hooks (`executables.allow.<pkg>.hook: true`)   | off (mcp) |
+| `--user`         | —          | Принимается для совместимости с APM; запись всегда в `~/.bapm` | —         |
+| `--help`, `-h`   | —          | Показать help                                                  | —         |
 
 Без имени пакета команда печатает help и завершается с ошибкой.
 
-Первый `approve` или `deny` включает режим явных разрешений: дальше install требует решение для каждого пакета с MCP и падает с `MCP withheld: unapproved dependency executables`, пока его нет. `approve` разрешает только MCP; разрешение на `bin/` пакета через него не выдаётся.
+Первый `approve` или `deny` включает режим явных разрешений: дальше install требует решение для каждого пакета с MCP и падает с `MCP withheld: unapproved dependency executables`, пока его нет. `approve` без `--hook` разрешает только MCP; разрешение на `bin/` пакета через него не выдаётся. `approve <pkg> --hook` разрешает hooks пакета (в user store), а в `bapm.yml` то же самое выглядит так:
+
+```yaml
+executables:
+  allow:
+    acme/hook-pack:
+      hook: true
+```
+
+Dependency hooks проверяются, когда есть project/user grant-поверхность или org `executables.deny`/`deny_all`. Без grant-поверхности и без org deny hooks раскладываются по legacy-поведению. Root/local hooks проекта под гейт не попадают.
 
 Разрешение для всей команды задаётся не в файле политики, а в `bapm.yml` проекта:
 
