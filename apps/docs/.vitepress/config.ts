@@ -108,6 +108,7 @@ export default defineConfig({
           { text: "doctor", link: "/reference/doctor" },
           { text: "cache", link: "/reference/cache" },
           { text: "targets", link: "/reference/targets" },
+          { text: "mcp", link: "/reference/mcp" },
           { text: "config", link: "/reference/config" },
         ],
       },

@@ -36,6 +36,7 @@ Commands:
   find         Trace a deployed path to locked package(s) (--source / --path)
   view         Inspect a locally installed package (offline; lock + modules)
   targets      Inspect registered host targets (--json / --all; read-only)
+  mcp          Inspect MCP servers from manifest/lock (list | show | search)
   config       Inspect / update user defaults in ~/.bapm/config.json
 
 Install flags (see also: bapm help install):

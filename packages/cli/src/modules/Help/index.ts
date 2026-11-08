@@ -4,6 +4,7 @@ import { formatPublishHelp } from "@/modules/Publish";
 import { formatSelfUpdateHelp } from "@/modules/SelfUpdate";
 import { formatLockHelp } from "@/modules/Lock";
 import { formatMarketplaceHelp } from "@/modules/Marketplace";
+import { formatMcpHelp } from "@/modules/Mcp";
 
 export type { HelpContentDeps };
 
@@ -14,6 +15,13 @@ export function createHelp(deps: HelpDeps) {
     format(topic?: string): string {
       if (topic === "install") return formatInstallTopicHelp(deps);
       if (topic === "lock") return formatLockHelp();
+      if (topic === "mcp") {
+        return formatMcpHelp({
+          name: deps.name,
+          manifestFile: deps.manifestFile,
+          lockFile: "bapm.lock.yaml",
+        });
+      }
       if (topic === "marketplace") {
         return formatMarketplaceHelp({
           name: deps.name,

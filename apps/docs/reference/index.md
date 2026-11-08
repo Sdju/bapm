@@ -25,6 +25,7 @@
 | `doctor`                      | [doctor](/reference/doctor)   |
 | `compile`                     | [compile](/reference/compile) |
 | `targets`                     | [targets](/reference/targets) |
+| `mcp`                         | [mcp](/reference/mcp)         |
 | `config`                      | [config](/reference/config)   |
 | `policy` / `approve` / `deny` | [policy](/reference/policy)   |
 

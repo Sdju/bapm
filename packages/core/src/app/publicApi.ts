@@ -635,6 +635,15 @@ export type {
   ApplyMcpInventoryOptions,
   BakeMcpStringMapOptions,
   BakeableMcpServer,
+  McpApprovalState,
+  McpInventoryOptions,
+  McpInventoryResult,
+  McpInventoryTarget,
+  McpSearchResult,
+  McpServerDetails,
+  McpServerSummary,
+  McpShowResult,
+  ParsedMcpDeclaration,
 } from "@/modules/Mcp";
 
 export {
@@ -644,6 +653,10 @@ export {
   bakeMcpStringValue,
   bakeMcpServerMaps,
   McpEnvBakeError,
+  listMcpInventory,
+  searchMcpInventory,
+  showMcpServer,
+  parseMcpDeclarations,
 } from "@/modules/Mcp";
 
 export type {
