@@ -57,6 +57,15 @@
 
 Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime setup/remove, registry MCP lookup, canvas/LSP deploy, view -g).
 
+### Пачка 8 (09.11.2026)
+
+| Что                                | Статус                          | Коммит    |
+| ---------------------------------- | ------------------------------- | --------- |
+| `compile --watch`                  | fixed                           | `5d160cc` |
+| Registry MCP `search/show/install` | fixed (conservative conversion) | `7fa9c81` |
+
+Проверки: core 283 файла / 1577 тестов, CLI 145 / 811, `vp check` 0 ошибок, conformance/specs OK.
+
 ### Пачка 7 (09.11.2026)
 
 | Что                                                   | Статус | Коммит    |
@@ -128,7 +137,7 @@
 
 Актуальный замороженный список: [`remaining.md`](remaining.md).
 
-- **Actionable:** user-scope/global install, registry MCP lookup, LSP deploy, compile `--watch`.
+- **Actionable:** user-scope/global install, LSP deploy.
 - **Follow-up уже принятых решений:** stored-only config keys, `runtime setup/remove`, `view -g`, lifecycle executor, experimental CLI, `mcp install`, canvas.
 - **Намеренно не делаем / N/A:** resolve ∩-pick, lock sort, full `replace`, manifest-v0.1.48, registry host, APM installer/gh-aw/contributor dashboard, project-default approve.
 
