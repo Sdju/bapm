@@ -53,7 +53,7 @@ bapm find .agents/skills/code-review/SKILL.md
 
 | Команда                  | Что делает                                                                                                 |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `bapm compile`           | Собирает `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`; `--target a,b` / `--all` — несколько хостов за запуск     |
+| `bapm compile`           | Собирает `AGENTS.md` / `CLAUDE.md` / `GEMINI.md`; `--target a,b` / `--all` — несколько хостов за запуск    |
 | `bapm policy status`     | Показывает, какая политика действует в проекте                                                             |
 | `bapm approve <пакет>`   | Разрешает пакету ставить MCP-серверы (`--bin` / `--hook` — другие типы; только у вас)                      |
 | `bapm approve --all`     | Разрешает все pending dependency MCP/bin/hook у вас (`-y` в non-TTY; `--json` — только план)               |
