@@ -5,6 +5,7 @@ import { formatSelfUpdateHelp } from "@/modules/SelfUpdate";
 import { formatLockHelp } from "@/modules/Lock";
 import { formatMarketplaceHelp } from "@/modules/Marketplace";
 import { formatMcpHelp } from "@/modules/Mcp";
+import { formatAuthHelp } from "@/modules/Auth";
 
 export type { HelpContentDeps };
 
@@ -55,6 +56,13 @@ export function createHelp(deps: HelpDeps) {
             unknownVersion: false,
             message: "",
           }),
+        });
+      }
+      if (topic === "auth") {
+        return formatAuthHelp({
+          name: deps.name,
+          manifestFile: deps.manifestFile,
+          lockFile: "bapm.lock.yaml",
         });
       }
       return formatHelp(deps);

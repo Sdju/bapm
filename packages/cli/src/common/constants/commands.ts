@@ -26,3 +26,4 @@ export const COMMAND_PLUGIN = "plugin";
 export const COMMAND_TARGETS = "targets";
 export const COMMAND_CONFIG = "config";
 export const COMMAND_MCP = "mcp";
+export const COMMAND_AUTH = "auth";
