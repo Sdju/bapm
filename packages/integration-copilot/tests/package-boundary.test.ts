@@ -40,6 +40,7 @@ describe("@b-apm/integration-copilot package boundary", () => {
     expect(target.deployRoots).toEqual(expect.arrayContaining([".github", ".agents"]));
     expect(target.deployRoots).not.toContain(".");
     expect((target as { mcpEnvMode?: string }).mcpEnvMode).toBe("translate");
+    expect((target as { mcpScope?: string }).mcpScope).toBe("home");
   });
 
   test("@b-apm/core must not hard-depend on @b-apm/integration-copilot", () => {
