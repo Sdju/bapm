@@ -3,10 +3,26 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, statSyn
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
+import {
+  isCacheableGitRepoUrl,
+  materializeSharedGitCheckout,
+  resolveSharedGitCacheConfig,
+} from "@/modules/SharedCache";
 import type { Downloader, GitRemote, TagLister } from "./types.ts";
 import { identityToCacheDir, normalizeRepoIdentity } from "./identity.ts";
 import { APM_MODULES_DIR } from "./constants.ts";
 import { materializeLocalFileSnapshot } from "./localFile.ts";
+
+export type DefaultDownloaderOptions = {
+  /** Warning sink for shared-cache fallback messages (default: stderr). */
+  warn?: (message: string) => void;
+  /** Env used for shared-cache gating (default: `process.env`). */
+  env?: NodeJS.ProcessEnv;
+  /** Explicit shared cache root; overrides `BAPM_CACHE_DIR`. */
+  cacheDir?: string;
+  /** Explicit disable; overrides `BAPM_NO_CACHE`. */
+  noCache?: boolean;
+};
 
 /**
  * Default TagLister via `git ls-remote --tags --refs`.
@@ -93,8 +109,10 @@ export function createDefaultGitRemote(): GitRemote {
   };
 }
 
-/** Default Downloader: local copy or shallow git clone into apm_modules. */
-export function createDefaultDownloader(): Downloader {
+/** Default Downloader: local copy or git clone into apm_modules. */
+export function createDefaultDownloader(options: DefaultDownloaderOptions = {}): Downloader {
+  const warn = options.warn ?? ((message: string) => console.error(`bapm: warning: ${message}`));
+
   return {
     async download(args) {
       // `path` is only a local source when there is no git source. With a
@@ -124,9 +142,38 @@ export function createDefaultDownloader(): Downloader {
       // previously usable cache untouched.
       const temp = mkdtempSync(join(parent, `.${basename(args.dest)}.tmp-`));
       try {
-        await runGit(["clone", "--quiet", repoUrl, temp], { allowFail: false });
-        if (args.commit) {
-          await runGit(["-C", temp, "checkout", "--quiet", args.commit]);
+        let installedFromSharedCache = false;
+        const sharedConfig = resolveSharedGitCacheConfig({
+          env: options.env,
+          cacheDir: options.cacheDir,
+          noCache: options.noCache,
+        });
+        if (sharedConfig.enabled && isCacheableGitRepoUrl(repoUrl)) {
+          try {
+            await materializeSharedGitCheckout({
+              config: sharedConfig,
+              repoUrl,
+              identity: normalizeRepoIdentity(repoUrl),
+              commit: args.commit,
+              dest: temp,
+              env: options.env,
+              warn,
+            });
+            installedFromSharedCache = true;
+          } catch (error) {
+            warn(
+              `shared git cache unavailable for ${repoUrl}: ${errorMessage(error)}; ` +
+                "falling back to direct clone",
+            );
+            resetEmptyDir(temp);
+          }
+        }
+
+        if (!installedFromSharedCache) {
+          await runGit(["clone", "--quiet", repoUrl, temp], { allowFail: false });
+          if (args.commit) {
+            await runGit(["-C", temp, "checkout", "--quiet", args.commit]);
+          }
         }
         await swapIntoPlace(temp, args.dest, () => isCheckoutAt(args.dest, repoUrl, args.commit));
       } finally {
@@ -299,6 +346,12 @@ function combinedSwapError(original: unknown, restore: unknown, backup: string):
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/** Clear a mkdtemp path after a failed attempt so a fallback clone can reuse it. */
+function resetEmptyDir(path: string): void {
+  rmSync(path, { recursive: true, force: true });
+  mkdirSync(path, { recursive: true });
 }
 
 export function modulesCacheDest(cwd: string, identity: string, commit?: string): string {

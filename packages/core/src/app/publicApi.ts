@@ -181,6 +181,7 @@ export type {
   AdmittedLocalFile,
   LocalFileInfo,
   LocalFilePrimitiveType,
+  DefaultDownloaderOptions,
 } from "@/modules/Resolver";
 
 export {
@@ -747,6 +748,15 @@ export type {
   CacheCleanResult,
   CacheInfoOptions,
   CacheInfoResult,
+  SharedCacheEnv,
+  SharedGitCacheCleanOptions,
+  SharedGitCacheCleanResult,
+  SharedGitCacheConfig,
+  SharedGitCacheInfoOptions,
+  SharedGitCacheInfoResult,
+  SharedGitCacheOverride,
+  SharedGitCacheReason,
+  SharedGitMirrorEntry,
 } from "@/modules/Cache";
 
 export {
@@ -755,6 +765,14 @@ export {
   modulesCacheInfo,
   cacheClean,
   cleanModulesCache,
+  BAPM_CACHE_DIR_ENV,
+  BAPM_NO_CACHE_ENV,
+  SHARED_GIT_CACHE_SUBDIR,
+  isCacheableGitRepoUrl,
+  resolveSharedGitCacheConfig,
+  sharedGitCacheClean,
+  sharedGitCacheInfo,
+  sharedGitMirrorName,
 } from "@/modules/Cache";
 
 export type {
