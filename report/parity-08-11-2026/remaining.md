@@ -1,17 +1,21 @@
 # Актуальный остаток паритета (09.11.2026)
 
-Это **замороженный** список после серии правок. Новые пункты сюда не добавляются без отдельного product-решения: найденный «риск» сначала классифицируется как actionable, follow-up или N/A.
+Это **замороженный** список после серии правок. Обновлено 09.11.2026. Новые пункты сюда не добавляются без отдельного product-решения: найденный «риск» сначала классифицируется как actionable, follow-up или N/A.
 
-## Actionable — 6 пунктов
+## Actionable — 4 пункта
 
 | #   | Пункт                                                                                  | Почему остаётся                                                                 | Оценка |
 | --- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------ |
-| 1   | **User-scope/global install** (`-g`, user manifest/lock, user MCP для Cursor/OpenCode) | Крупный отдельный change; затрагивает lock-модель и все 11 интеграций           | L      |
+| 1   | **User-scope/global install** (`-g`, user manifest/lock, user MCP для Cursor/OpenCode) | Крупный отдельный change; затрагивает lock-модель и все интеграции              | L      |
 | 2   | **Registry MCP lookup** (`registry:` entry → MCP registry, `mcp install`)              | Нужен registry-клиент и сетевая политика; сейчас fail-closed                    | M      |
 | 3   | **LSP deploy + trust**                                                                 | Нужны per-host форматы и `lsp` executable type; сейчас только `LSP_UNSUPPORTED` | L      |
-| 4   | **Compile build-id / `--watch` / `--clean`**                                           | Multi-target и `applyTo` уже есть; это оставшаяся глубина APM compile           | M      |
-| 5   | **Shared HTTP cache**                                                                  | Git mirror cache есть; HTTP/registry responses ещё не кэшируются                | M      |
-| 6   | **Annotated tag `source.sha`**                                                         | Pack должен писать commit, а не tag object; небольшой фикс                      | S      |
+| 4   | **Compile `--watch`**                                                                  | Build ID, `--clean`, multi-target и `applyTo` уже есть; остался watch           | M      |
+
+## Исправлено в последней пачке
+
+- annotated tag `source.sha` → peeled commit (`1eb454f`)
+- deterministic Build ID + `compile --clean` (`7dad385`)
+- shared HTTP cache (`bapm cache info/clean/prune --shared`) (`308281c`)
 
 ## Follow-up после уже сделанных фиксов
 

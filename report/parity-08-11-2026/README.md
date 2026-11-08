@@ -57,6 +57,16 @@
 
 Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime setup/remove, registry MCP lookup, canvas/LSP deploy, view -g).
 
+### Пачка 7 (09.11.2026)
+
+| Что                                                   | Статус | Коммит    |
+| ----------------------------------------------------- | ------ | --------- |
+| Annotated tag `source.sha` → peeled commit            | fixed  | `1eb454f` |
+| Compile deterministic Build ID + `--clean`            | fixed  | `7dad385` |
+| Shared HTTP cache (`cache info/clean/prune --shared`) | fixed  | `308281c` |
+
+Проверки: core 281 файл / 1558 тестов, CLI 143 / 795, `vp check` 0 ошибок, conformance/specs OK.
+
 ### Пачка 6 (08.11.2026)
 
 | Что                                                                       | Статус                                   | Коммит    |
@@ -118,7 +128,7 @@
 
 Актуальный замороженный список: [`remaining.md`](remaining.md).
 
-- **Actionable:** user-scope/global install, registry MCP lookup, LSP deploy, compile build-id/watch/clean, shared HTTP cache, annotated tag `source.sha`.
+- **Actionable:** user-scope/global install, registry MCP lookup, LSP deploy, compile `--watch`.
 - **Follow-up уже принятых решений:** stored-only config keys, `runtime setup/remove`, `view -g`, lifecycle executor, experimental CLI, `mcp install`, canvas.
 - **Намеренно не делаем / N/A:** resolve ∩-pick, lock sort, full `replace`, manifest-v0.1.48, registry host, APM installer/gh-aw/contributor dashboard, project-default approve.
 
