@@ -8,7 +8,7 @@
   rows from `<configRoot>/config.json` (`~/.bapm` by default), with package,
   grant, types, and source. Never writes.
 - `listPendingExecutablePackages` — dependency packages with executable types
-  (`mcp`, `bin`, `hook`) that have no explicit allow/deny decision in the
+  (`mcp`, `lsp`, `bin`, `hook`) that have no explicit allow/deny decision in the
   project manifest, user config, or org policy. Never writes.
 
 ## Sources

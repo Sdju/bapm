@@ -30,7 +30,7 @@ Commands:
   cache        Modules-cache info | clean; shared-cache prune
   policy       Policy status (read-only governance posture)
   approve      Persist user-local allow (-y/--all, --pending; not project yml)
-  deny         Persist user-local MCP deny (~/.bapm/config.json; not project yml)
+  deny         Persist user-local MCP/LSP deny (~/.bapm/config.json; not project yml)
   marketplace  Consumer registry + authoring (init/package/check)
   search       Search plugins in a registered marketplace (QUERY@MARKETPLACE)
   find         Trace a deployed path to locked package(s) (--source / --path)

@@ -21,6 +21,7 @@ import type {
   BapmIntegration,
   CompileReport,
   ConfigureMcpFn,
+  ConfigureLspFn,
   DeployedFile,
 } from "./types.ts";
 
@@ -325,6 +326,31 @@ export function getConfigureMcp(
     const fn = rec[key];
     if (typeof fn === "function") {
       return (fn as ConfigureMcpFn).bind(target);
+    }
+  }
+  return undefined;
+}
+
+const LSP_CONFIGURE_ALIASES = ["configureLsp", "writeLspConfig", "deployLsp"] as const;
+
+/** True when the target exposes an LSP configure hook (any documented alias). */
+export function hasConfigureLsp(target: BapmIntegration | Record<string, unknown>): boolean {
+  return getConfigureLsp(target) !== undefined;
+}
+
+/**
+ * Resolve optional LSP configure from a registered target.
+ * Accepts `configureLsp` and documented aliases without requiring every host to
+ * use the same method name.
+ */
+export function getConfigureLsp(
+  target: BapmIntegration | Record<string, unknown>,
+): ConfigureLspFn | undefined {
+  const rec = target as Record<string, unknown>;
+  for (const key of LSP_CONFIGURE_ALIASES) {
+    const fn = rec[key];
+    if (typeof fn === "function") {
+      return (fn as ConfigureLspFn).bind(target);
     }
   }
   return undefined;

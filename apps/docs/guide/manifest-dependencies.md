@@ -146,11 +146,13 @@ dependencies:
 
 ## LSP и canvas
 
-`dependencies.lsp` bapm читает и сохраняет, но LSP-серверы пока **не деплоит**. Непустой `dependencies.lsp` (или `devDependencies.lsp`) в корневом или зависимом манифесте даёт предупреждение `LSP_UNSUPPORTED` с именем пакета и серверов; установка остальных файлов продолжается.
+`dependencies.lsp` (и `devDependencies.lsp`) разворачивается в Claude Code и Copilot CLI. Запись содержит `name`, stdio `command`, `args` / `env` по необходимости и карту `extensionToLanguage` (алиас `fileExtensions`). Claude получает `.claude/skills/apm-lsp/.claude-plugin/plugin.json`, Copilot — `.github/lsp.json`. LSP зависимостей проходит через executable trust как тип `lsp` (`bapm approve <пакет> --lsp` или `executables.allow.<pkg>.lsp: true`); невалидная запись или явный `deny` останавливают install.
+
+Если активный хост не поддерживает LSP, непустой блок даёт предупреждение `LSP_UNSUPPORTED` с именем пакета и серверов; установка остальных файлов продолжается. Для Claude/Copilot такого предупреждения нет — серверы записываются в нативный конфиг.
 
 Ключ `canvas:` в манифесте или primitive с типом `canvas` даёт `CANVAS_UNSUPPORTED`: canvas не реализован, ничего не разворачивается и в trust-гейты не попадает. Это не ошибка конфигурации — просто явное предупреждение вместо молчаливого игнорирования.
 
-Подробнее: [install](/reference/install#dependencies-lsp-не-деплоится), [Совместимость](/guide/conformance).
+Подробнее: [install](/reference/install#dependencies-lsp-деплоится-в-claude-code-и-copilot-cli), [Совместимость](/guide/conformance).
 
 ## Частые ошибки
 

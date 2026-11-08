@@ -22,7 +22,8 @@
 Пока проще, чем в APM:
 
 - `compile` по умолчанию собирает один файл (`AGENTS.md` и аналоги) на агента; opt-in `--distributed` раскладывает instructions по каталогам из `applyTo` (консервативный префикс пути, без APM-оптимизатора);
-- LSP (`dependencies.lsp`) и canvas не разворачиваются: install печатает `LSP_UNSUPPORTED` / `CANVAS_UNSUPPORTED`, а не игнорирует их молча;
+- LSP (`dependencies.lsp`) разворачивается в Claude Code и Copilot CLI через executable trust типа `lsp`; хосты без LSP получают `LSP_UNSUPPORTED`;
+- canvas не разворачивается: install печатает `CANVAS_UNSUPPORTED`, а не игнорирует его молча;
 - установка из registry экспериментальная (`BAPM_EXPERIMENTAL_REGISTRIES=1`).
 
 ## Намеренные отличия от APM / OpenAPM
@@ -51,6 +52,6 @@
 - GitLab policy discovery и произвольные ADO-каскады вне scope;
 - работа bapm в роли registry-сервера;
 - совместимость маркетплейсов и Agent Plugins со всеми клиентами;
-- полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP и `bin/` зависимостей, а также hooks зависимостей: при наличии `executables.allow` или org `executables.deny`/`deny_all` hook без grant отбрасывается с предупреждением `HOOK_TRUST_WITHHELD`. Без grant-поверхности hooks остаются в мягком режиме (раскладываются); canvas как primitive не реализован;
-- deploy LSP-серверов из `dependencies.lsp`: записи читаются, но установка только предупреждает `LSP_UNSUPPORTED` и не разворачивает серверы;
+- полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP, LSP, `bin/` и hooks зависимостей: при наличии `executables.allow` или org `executables.deny`/`deny_all` hook без grant отбрасывается с предупреждением `HOOK_TRUST_WITHHELD`. Без grant-поверхности hooks остаются в мягком режиме (раскладываются); canvas как primitive не реализован;
+- LSP deploy вне Claude Code и Copilot CLI: для остальных хостов записи читаются, но установка предупреждает `LSP_UNSUPPORTED` и не разворачивает серверы;
 - canvas: ключ `canvas:` или primitive типа `canvas` даёт `CANVAS_UNSUPPORTED`; путь материализации и trust-гейт не реализованы.

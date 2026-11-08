@@ -53,6 +53,11 @@ export type DetectLspUnsupportedOptions = {
   rootManifest?: BapmManifest;
   /** Resolved dependency nodes with materialized package roots. */
   nodes?: readonly ResolvedNode[];
+  /**
+   * When true, at least one active host deploys LSP, so install must not emit
+   * the `LSP_UNSUPPORTED` warning for the same declarations.
+   */
+  lspDeployable?: boolean;
 };
 
 export type DetectCanvasUnsupportedOptions = DetectLspUnsupportedOptions & {

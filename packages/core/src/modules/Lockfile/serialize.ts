@@ -33,6 +33,8 @@ export function serializeLockfile(document: LockfileInput): string {
     "mcp_config_provenance",
     "lsp_servers",
     "lsp_configs",
+    "lsp_target_servers",
+    "lsp_config_provenance",
     "local_deployed_files",
     "local_deployed_file_hashes",
   ] as const;

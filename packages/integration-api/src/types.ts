@@ -190,6 +190,87 @@ export type ConfigureMcpFn = (
 ) => ConfigureMcpReport | Promise<ConfigureMcpReport>;
 
 /**
+ * Host-agnostic LSP server definition passed to optional `configureLsp`.
+ * Concrete targets map the canonical language map / timeout keys into their
+ * native config shape.
+ *
+ * `extensionToLanguage` is the canonical map; `fileExtensions` and
+ * `extension_to_language` are accepted input aliases. `startupTimeout` is the
+ * canonical timeout; `warmupTimeoutMs` is accepted as an input alias.
+ */
+export type LspServerConfig = {
+  name: string;
+  command?: string;
+  args?: unknown[];
+  env?: Record<string, string>;
+  /** Remote URL form. Hosts that only accept stdio must fail closed. */
+  url?: string;
+  transport?: string;
+  extensionToLanguage?: Record<string, string>;
+  fileExtensions?: Record<string, string>;
+  extension_to_language?: Record<string, string>;
+  startupTimeout?: number;
+  warmupTimeoutMs?: number;
+  shutdownTimeout?: number;
+  restartOnCrash?: boolean;
+  maxRestarts?: number;
+  initializationOptions?: unknown;
+  settings?: unknown;
+  workspaceFolder?: string;
+  /** Package provenance (dependency name or root). */
+  packageName?: string;
+  [key: string]: unknown;
+};
+
+/** Context for optional LSP configure. */
+export type ConfigureLspContext = {
+  cwd: string;
+  /** Active target id for this invocation. */
+  targetId?: TargetId;
+  /** Deploy roots declared by the target (relative to cwd). */
+  deployRoots?: string[];
+  /**
+   * Server names bapm previously wrote for this target that are no longer in
+   * the approved set (for example after `bapm deny`). Targets that own a
+   * mergeable config must remove these entries while leaving foreign servers
+   * untouched.
+   */
+  managedServers?: string[];
+  [key: string]: unknown;
+};
+
+/**
+ * Report returned by `configureLsp` so core can record lock `lsp_*` inventory
+ * without importing concrete host packages.
+ */
+export type ConfigureLspReport = {
+  /** Registered target that owns the reported LSP deployment. */
+  targetId?: TargetId;
+  /** Project-relative path to the written target LSP config. */
+  configPath: string;
+  /** Server names written/updated. */
+  servers?: string[];
+  deployedFiles?: DeployedFile[];
+  /** Explicit adapter decisions or unsupported-server diagnostics. */
+  diagnostics?: Array<{
+    code: string;
+    message: string;
+    server?: string;
+    /** Surface as `bapm: warning:` during install (skip/opt-in decisions). */
+    warn?: boolean;
+    /** Host target that made the decision, when relevant. */
+    target?: TargetId;
+    [key: string]: unknown;
+  }>;
+};
+
+/** Optional LSP configure hook — targets that lack it are skipped for LSP. */
+export type ConfigureLspFn = (
+  servers: LspServerConfig[] | Record<string, LspServerConfig>,
+  ctx?: ConfigureLspContext,
+) => ConfigureLspReport | Promise<ConfigureLspReport>;
+
+/**
  * Install-time MCP env policy for a host.
  * - `bake` (default when omitted): resolve APM `${VAR}` / `${env:VAR}` / `<VAR>` to literals before configure
  * - `translate`: pass APM placeholders through; host writes runtime `${VAR}` forms
@@ -210,6 +291,8 @@ export type BapmIntegration = {
   getDeployRoots?: () => string[];
   /** Optional host-agnostic MCP configure; targets without it are skipped for MCP. */
   configureMcp?: ConfigureMcpFn;
+  /** Optional host-agnostic LSP configure; targets without it are skipped for LSP. */
+  configureLsp?: ConfigureLspFn;
   /** Optional host-owned compile rendering and output placement. */
   compile?: CompileFn;
   /**

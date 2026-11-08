@@ -29,17 +29,18 @@ export type DenyCliDeps = {
   applyDenied?: (options: DenyApplyOptions) => Promise<DenyApplyResult>;
 };
 
-export const DENY_EXECUTABLE_TYPES = ["mcp", "bin", "hook"] as const;
+export const DENY_EXECUTABLE_TYPES = ["mcp", "lsp", "bin", "hook"] as const;
 export type DenyExecutableType = (typeof DENY_EXECUTABLE_TYPES)[number];
 
 export function formatDenyHelp(deps: DenyCliDeps): string {
   return `${deps.name} deny — Persist user-local executable deny
 
 Usage:
-  bapm deny <package-name> [--bin|--hook|--mcp] [--user]
+  bapm deny <package-name> [--bin|--hook|--lsp|--mcp] [--user]
 
 Persists a deny under ~/.bapm/config.json (executables.deny).
   --mcp    deny MCP servers (default)
+  --lsp    deny LSP servers
   --bin    deny dependency bin/ executables
   --hook   deny dependency hooks
 Multiple type flags persist each selected type. With no type flag, deny
@@ -70,7 +71,7 @@ export function parseDenyArgs(argv: string[]): {
       // Interactive path is always user-local (sc-010); flag accepted for APM parity.
       continue;
     }
-    if (arg === "--mcp" || arg === "--bin" || arg === "--hook") {
+    if (arg === "--mcp" || arg === "--lsp" || arg === "--bin" || arg === "--hook") {
       const type = arg.slice(2) as DenyExecutableType;
       if (!executableTypes.includes(type)) executableTypes.push(type);
       continue;

@@ -81,6 +81,12 @@ export function listPendingExecutablePackages(
     add(server.package, "mcp");
   }
 
+  // LSP: lock provenance records the declaring dependency package.
+  for (const owner of Object.values(asRecord(lock?.document.lsp_config_provenance))) {
+    if (typeof owner !== "string" || !owner.startsWith("package:")) continue;
+    add(owner.slice("package:".length), "lsp");
+  }
+
   // bin/hook: only materialized dependency roots can be inspected read-only.
   const roots = collectDependencyRoots(
     cwd,
@@ -133,6 +139,12 @@ export function listPendingExecutablePackages(
     manifest: manifest?.sourcePath ?? null,
     pending,
   };
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
 }
 
 function buildTrustInputs(args: {

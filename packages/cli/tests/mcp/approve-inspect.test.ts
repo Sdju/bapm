@@ -126,6 +126,28 @@ describe("CLI approve --list / --pending", () => {
     expect(json.pending[0]?.reason).toMatch(/unapproved|allow or deny/);
   });
 
+  test("--pending lists dependency LSP packages from lock provenance", async () => {
+    env = createIsolatedHome();
+    writeMinimalProject(env.cwd);
+    writeText(
+      env.cwd,
+      "bapm.lock.yaml",
+      `lockfile_version: "1"
+dependencies: []
+lsp_servers: [yaml-ls]
+lsp_config_provenance:
+  yaml-ls: package:lock-lsp
+`,
+    );
+
+    const { result, stdout, stderr } = await runInEnv(env, ["approve", "--pending", "--json"]);
+    expect(result, stderr.join("\n")).toBe(0);
+    const json = parseJson<PendingJson>(stdout);
+    expect(json.pending).toEqual([
+      expect.objectContaining({ package: "lock-lsp", types: ["lsp"] }),
+    ]);
+  });
+
   test("--pending skips a package allowed in the project manifest", async () => {
     env = createIsolatedHome();
     writeExecutableProject(env.cwd);

@@ -125,13 +125,54 @@ bapm: warning: LIFECYCLE_UNSUPPORTED: Package "lifecycle-leaf" declares a "lifec
 
 Сценарии: [Быстрый старт](/guide/quick-start), [Подключить bapm к проекту](/guide/situations/install-fresh), [CI по lock-файлу](/guide/situations/ci-frozen).
 
-## `dependencies.lsp` не деплоится
+## `dependencies.lsp` деплоится в Claude Code и Copilot CLI
 
-Если корневой манифест или манифест зависимости объявляет непустой `dependencies.lsp` (или `devDependencies.lsp`), bapm сохраняет записи для совместимости, но **не разворачивает** LSP-серверы и не пропускает их через executable trust. Install печатает предупреждение `LSP_UNSUPPORTED` с именем пакета и объявленных серверов — по одному на корень и на каждую зависимость. Настройте LSP-сервер в хосте вручную или уберите блок.
+Корневой манифест и манифесты зависимостей могут объявлять LSP-серверы в `dependencies.lsp` (и `devDependencies.lsp`). bapm разворачивает их только в два хоста с нативной поддержкой:
+
+| Хост        | Файл                                                          | Форма                                      |
+| ----------- | ------------------------------------------------------------- | ------------------------------------------ |
+| Claude Code | `.claude/skills/apm-lsp/.claude-plugin/plugin.json`           | `{ "name": "apm-lsp", "lspServers": … }`   |
+| Copilot CLI | `.github/lsp.json`                                            | `{ "lspServers": … }`                      |
+
+Claude использует `extensionToLanguage` и `startupTimeout`; Copilot — `fileExtensions` и `warmupTimeoutMs`. bapm переводит канонические `extensionToLanguage` / `startupTimeout` в родную форму хоста. Пользовательские (user-global) LSP-конфиги bapm не пишет.
+
+Запись манифеста должна содержать `name`, stdio `command` и карту расширений:
+
+```yaml
+dependencies:
+  lsp:
+    - name: gopls
+      command: gopls
+      args: [serve]
+      extensionToLanguage:
+        ".go": go
+```
+
+`args`, `env`, `transport: stdio`, `initializationOptions`, `settings`, `workspaceFolder`, `startupTimeout`, `shutdownTimeout`, `restartOnCrash` и `maxRestarts` переносятся в конфиг хоста, где применимы. Bare-строка вместо объекта, `url`, не-stdio transport, дубликаты имён и невалидные `args` / `env` / language map завершают install ошибкой `INSTALL_LSP_INVALID` до записи конфига.
+
+LSP зависимостей проходит через executable trust как тип `lsp`:
+
+```yaml
+executables:
+  allow:
+    owner/lsp-pkg:
+      lsp: true
+  deny:
+    owner/untrusted-pkg:
+      lsp: true
+```
+
+Явный `deny` и упомянутый, но не одобренный пакет дают `INSTALL_LSP_TRUST`; неупомянутый пакет пропускается с предупреждением `LSP_NOT_APPROVED`. Одобрить LSP зависимости можно через `bapm approve <пакет> --lsp` или `executables.allow.<пакет>.lsp: true`. Root-серверы (`dependencies.lsp` самого проекта) доверенные по определению, как и direct MCP.
+
+Lock-инвентарь записывается в `lsp_servers`, `lsp_configs`, `lsp_target_servers` и `lsp_config_provenance` (`project:.` или `package:<name>`). Повторный install идемпотентен; удалённые из манифеста серверы удаляются из конфига хоста и lock. В `--frozen` конфиг поддерживается, но lock не переписывается.
+
+Если активные хосты не поддерживают LSP (например, только Cursor), bapm ничего не пишет и печатает прежнее предупреждение `LSP_UNSUPPORTED` с именем пакета и серверов:
 
 ```text
 bapm: warning: LSP_UNSUPPORTED: Package "lsp-leaf" declares LSP server(s) [yaml-language-server] under dependencies.lsp; bapm parses the entries but does not deploy LSP servers.
 ```
+
+Для хостов, где LSP уже настроен, отдельного `LSP_UNSUPPORTED` предупреждения нет.
 
 ## Canvas не реализован
 

@@ -24,7 +24,7 @@ export type ApproveCliDeps = {
   isTTY?: () => boolean;
 };
 
-export const APPROVE_EXECUTABLE_TYPES = ["mcp", "bin", "hook"] as const;
+export const APPROVE_EXECUTABLE_TYPES = ["mcp", "lsp", "bin", "hook"] as const;
 export type ApproveExecutableType = (typeof APPROVE_EXECUTABLE_TYPES)[number];
 
 export type ApproveAllPlanItem = {
@@ -45,13 +45,14 @@ export function formatApproveHelp(deps: ApproveCliDeps): string {
   return `${deps.name} approve — Persist user-local executable allow / inspect grants
 
 Usage:
-  bapm approve <package-name> [--bin|--hook|--mcp] [--user]
+  bapm approve <package-name> [--bin|--hook|--lsp|--mcp] [--user]
   bapm approve --all [--recommended] [-y|--yes] [--json]
   bapm approve --list [--json]
   bapm approve --pending [--json]
 
 Persists an allow grant under ~/.bapm/config.json (executables.allow).
   --mcp    approve MCP servers (default)
+  --lsp    approve LSP servers
   --bin    approve dependency bin/ executables
   --hook   approve dependency hooks
 Multiple type flags persist each selected type. With no type flag, approve
@@ -59,7 +60,7 @@ defaults to --mcp (backward compatible).
 Interactive approve NEVER writes project ${deps.manifestFile}.
 
 Approve all currently pending executable packages:
-  --all          Approve every package/type reported by --pending (mcp, bin, hook)
+  --all          Approve every package/type reported by --pending (mcp, lsp, bin, hook)
   --recommended  Alias for --all for now (identical behavior; documented subset later)
   -y, --yes      Required to write in non-interactive sessions (pipes / CI)
 Without -y, a TTY session prompts before writing. --json prints the plan only
@@ -67,7 +68,7 @@ unless -y is also passed; there are no implicit writes.
 
 Read-only inspection:
   --list     Show user-local grants (package, types, allow/deny, source)
-  --pending  Scan the manifest/lock for dependency MCP/bin/hook packages that
+  --pending  Scan the manifest/lock for dependency MCP/LSP/bin/hook packages that
              are neither allowed nor denied in project/user/org grants
   --json     Machine-readable output for --list / --pending / --all
 
@@ -130,7 +131,7 @@ export function parseApproveArgs(argv: string[]): {
       // Interactive path is always user-local (sc-010); flag accepted for APM parity.
       continue;
     }
-    if (arg === "--mcp" || arg === "--bin" || arg === "--hook") {
+    if (arg === "--mcp" || arg === "--lsp" || arg === "--bin" || arg === "--hook") {
       const type = arg.slice(2) as ApproveExecutableType;
       if (!executableTypes.includes(type)) executableTypes.push(type);
       continue;

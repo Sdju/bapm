@@ -2,12 +2,13 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import type {
   BapmIntegration,
+  ConfigureLspReport,
   ConfigureMcpReport,
   MaterializeReport,
   IntegrationRegistry,
   McpServerConfig,
 } from "@b-apm/integration-api";
-import { getConfigureMcp } from "@b-apm/integration-api";
+import { getConfigureLsp, getConfigureMcp } from "@b-apm/integration-api";
 import {
   loadManifest,
   resolveActive,
@@ -56,6 +57,13 @@ import {
 } from "@/modules/CopilotNativeRegistration";
 import { detectLifecycleUnsupported } from "@/modules/Lifecycle";
 import { detectUnsupportedDeclarations } from "@/modules/LspCanvas";
+import {
+  applyLspInventoryToLock,
+  collectLspServers,
+  LspDeclarationError,
+  readLspTargetInventory,
+  type CollectedLspServer,
+} from "@/modules/Lsp";
 import { extractPackArchive } from "@/modules/Pack";
 import {
   isPackageMentionedInGrants,
@@ -415,14 +423,8 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         declarationOrder,
       });
 
-  // `dependencies.lsp` and canvas declarations are retained by the manifest
-  // parser but have no deploy path. Surface them explicitly instead of silently
-  // dropping; canvas stays outside the executable trust gates.
-  const unsupportedDiagnostics = detectUnsupportedDeclarations({
-    rootManifest,
-    nodes: skipApmMaterialize ? [] : nodes,
-    primitives: resolved.primitives,
-  });
+  // `dependencies.lsp` deploy and canvas diagnostics are resolved after active
+  // targets are known (LSP warnings only when no active host can deploy).
 
   // Frozen must not deploy primitives that the lock does not record, and local
   // snapshots must be re-verified before target materialize / lock writes.
@@ -459,6 +461,17 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     configTargetId,
   });
   assertActiveTargetsRegistered(activeTargets, registry);
+  const lspTargets = resolveLspTargets(registry, activeTargets, excludeSet);
+
+  // `dependencies.lsp` and canvas declarations are retained by the manifest
+  // parser. LSP is deployable on Claude/Copilot; other hosts keep the explicit
+  // unsupported warning. Canvas stays outside the executable trust gates.
+  const unsupportedDiagnostics = detectUnsupportedDeclarations({
+    rootManifest,
+    nodes: skipApmMaterialize ? [] : nodes,
+    primitives: resolved.primitives,
+    lspDeployable: lspTargets.length > 0,
+  });
 
   // Root `target` / `targets` is a deployment allow-list (tg-008), not active
   // selection. Fail closed when it excludes every active host; otherwise warn
@@ -655,6 +668,31 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     }
   }
 
+  const lspDiagnostics: unknown[] = [];
+  if (!skipMcpConfigure) {
+    const lspResult = await deployLspAfterPolicy({
+      cwd,
+      rootManifest,
+      nodes: skipApmMaterialize ? [] : nodes,
+      registry,
+      lspTargets,
+      frozen,
+      lockDocument,
+      lockPath,
+      previousLockFilename: previousLock?.sourceFilename,
+      diagnostics: lspDiagnostics,
+      configDir: options.configDir ?? options.marketplaceConfigDir,
+      policyPath,
+      noPolicy,
+      noRepoPolicy,
+      policyPorts,
+      trustContext: installTrustContext,
+      only,
+    });
+    if (lspResult.lockPath) lockPath = lspResult.lockPath;
+    if (lspResult.lockDocument) lockDocument = lspResult.lockDocument;
+  }
+
   return {
     ok: true,
     lockPath,
@@ -675,6 +713,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ...materializeDiagnostics,
       ...binDiagnostics,
       ...mcpDiagnostics,
+      ...lspDiagnostics,
     ],
     policyDiagnostics,
   };
@@ -1680,6 +1719,304 @@ async function pruneTargetMcpConfigs(args: {
       });
     }
   }
+}
+
+function resolveLspTargets(
+  registry: IntegrationRegistry | undefined,
+  activeTargets: readonly string[],
+  excludeSet: ReadonlySet<string>,
+): string[] {
+  if (!registry) return [];
+  const out: string[] = [];
+  for (const targetId of activeTargets) {
+    if (excludeSet.has(targetId)) continue;
+    const target = findTarget(registry, targetId);
+    if (target && getConfigureLsp(target)) out.push(targetId);
+  }
+  return out;
+}
+
+/**
+ * Reconcile `dependencies.lsp` after MCP/policy.
+ *
+ * No supported active host => no collection and no writes; the caller keeps the
+ * existing `LSP_UNSUPPORTED` warning. Supported hosts are gated by
+ * ExecutableTrust type `lsp`, then written through `configureLsp`.
+ */
+async function deployLspAfterPolicy(args: {
+  cwd: string;
+  rootManifest: BapmManifest;
+  nodes: ResolvedNode[];
+  registry?: IntegrationRegistry;
+  lspTargets: string[];
+  frozen: boolean;
+  lockDocument?: LockfileDocument;
+  lockPath?: string;
+  previousLockFilename?: string;
+  diagnostics: unknown[];
+  configDir?: string;
+  policyPath?: string;
+  noPolicy?: boolean;
+  noRepoPolicy?: boolean;
+  policyPorts?: {
+    policyProviders?: string[];
+    providers?: string[];
+    listGitRemotes?: RunInstallOptions["listGitRemotes"];
+    remotes?: RunInstallOptions["remotes"];
+    fetchPolicyUrl?: RunInstallOptions["fetchPolicyUrl"];
+    httpGet?: RunInstallOptions["httpGet"];
+    fetchAncestor?: RunInstallOptions["fetchAncestor"];
+    defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
+    implementationDefaultHost?: string;
+  };
+  trustContext?: InstallTrustContext;
+  only?: InstallOnlyMode;
+}): Promise<{ lockPath?: string; lockDocument?: LockfileDocument }> {
+  if (args.only === "mcp" || args.lspTargets.length === 0) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const { projectSurface, userSurface, orgExecutables } =
+    args.trustContext ??
+    resolveInstallTrustContext({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      configDir: args.configDir,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy === true,
+      noRepoPolicy: args.noRepoPolicy === true,
+      policyPorts: args.policyPorts,
+    });
+
+  let collected: ReturnType<typeof collectLspServers>;
+  try {
+    collected = collectLspServers({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      nodes: args.nodes,
+    });
+  } catch (error) {
+    if (error instanceof LspDeclarationError) {
+      throw new InstallError("INSTALL_LSP_INVALID", error.message, {
+        details: {
+          server: error.server,
+          packageName: error.packageName,
+          path: error.path,
+        },
+        cause: error,
+      });
+    }
+    throw error;
+  }
+
+  const rootName = String(args.rootManifest.name ?? "root");
+  const approved: CollectedLspServer[] = [];
+  const withheldPackages: string[] = [];
+  const warnedPackages = new Set<string>();
+
+  for (const server of collected.servers) {
+    if (server.origin === "direct" || server.packageName === rootName) {
+      approved.push(server);
+      continue;
+    }
+    const decision = resolveExecutableTrust({
+      packageName: server.packageName,
+      executableType: "lsp",
+      orgExecutables,
+      projectSurface,
+      userSurface,
+    });
+    if (decision.outcome === "skip" || decision.allowed) {
+      approved.push(server);
+      continue;
+    }
+
+    const mentioned =
+      decision.outcome === "deny" ||
+      isPackageMentionedInGrants({
+        packageName: server.packageName,
+        projectSurface,
+        userSurface,
+        orgExecutables,
+      });
+    if (!mentioned) {
+      if (!warnedPackages.has(server.packageName)) {
+        warnedPackages.add(server.packageName);
+        args.diagnostics.push({
+          code: "LSP_NOT_APPROVED",
+          message:
+            `LSP from dependency "${server.packageName}" skipped: not approved. ` +
+            `Run "bapm approve ${server.packageName} --lsp" or add ` +
+            `executables.allow.${server.packageName}.lsp: true to bapm.yml.`,
+          warn: true,
+          packageName: server.packageName,
+          server: server.name,
+          skip: true,
+          unapproved: true,
+          outcome: decision.outcome,
+        });
+      }
+      continue;
+    }
+
+    withheldPackages.push(server.packageName);
+    args.diagnostics.push({
+      code: "LSP_TRUST_WITHHOLD",
+      message: decision.reason ?? `unapproved LSP from "${server.packageName}" withheld`,
+      packageName: server.packageName,
+      server: server.name,
+      withhold: true,
+      unapproved: true,
+      outcome: decision.outcome,
+    });
+  }
+
+  const uniqueWithheld = [...new Set(withheldPackages)];
+  if (uniqueWithheld.length > 0) {
+    throw new InstallError(
+      "INSTALL_LSP_TRUST",
+      `LSP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(
+        ", ",
+      )}). Remove the deny or add executables.allow / allowExecutables with 'lsp: true'.`,
+      { details: { withheldPackages: uniqueWithheld } },
+    );
+  }
+
+  const previousTargets = readLspTargetInventory(
+    args.lockDocument as Record<string, unknown> | undefined,
+  );
+  const hasPreviousInventory = previousTargets.size > 0;
+  if (collected.servers.length === 0 && !hasPreviousInventory) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const approvedNames = new Set(approved.map((server) => server.name));
+  const activeLspTargets = new Set(args.lspTargets);
+  const nextTargets: Record<string, string[]> = {};
+  for (const [targetId, names] of previousTargets) {
+    if (activeLspTargets.has(targetId)) continue;
+    const kept = names.filter((name) => approvedNames.has(name));
+    if (kept.length > 0) nextTargets[targetId] = [...new Set(kept)].sort();
+  }
+
+  for (const targetId of args.lspTargets) {
+    const target = findTarget(args.registry!, targetId);
+    const configureLsp = target ? getConfigureLsp(target) : undefined;
+    if (!target || !configureLsp) continue;
+
+    const stale = (previousTargets.get(targetId) ?? []).filter((name) => !approvedNames.has(name));
+    const hostServers = approved.map(
+      ({ origin: _origin, packageName: _packageName, owner: _owner, raw: _raw, ...server }) => {
+        void _origin;
+        void _packageName;
+        void _owner;
+        void _raw;
+        return server;
+      },
+    );
+
+    let report: ConfigureLspReport;
+    try {
+      report = (await configureLsp(hostServers, {
+        cwd: args.cwd,
+        targetId,
+        deployRoots: [...target.deployRoots],
+        ...(stale.length > 0 ? { managedServers: stale } : {}),
+      })) as ConfigureLspReport;
+    } catch (error) {
+      throw new InstallError(
+        "INSTALL_LSP_CONFIG",
+        `Target "${targetId}" failed to configure LSP: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        { details: { targetId }, cause: error },
+      );
+    }
+
+    if (!report || report.targetId !== targetId) {
+      throw new InstallError(
+        "INSTALL_FAILED",
+        `Target "${targetId}" configured LSP without target-owned deployment attribution`,
+        { details: { targetId, reportTargetId: report?.targetId } },
+      );
+    }
+    const reportedPath = typeof report.configPath === "string" ? report.configPath.trim() : "";
+    if (!reportedPath) {
+      throw new InstallError(
+        "INSTALL_FAILED",
+        `Target "${targetId}" configured LSP without a usable config path`,
+        { details: { targetId } },
+      );
+    }
+    if (report.diagnostics) {
+      args.diagnostics.push(...report.diagnostics.map(markSkipDiagnosticWarn));
+    }
+
+    const written = (report.servers ?? [...approvedNames]).filter(Boolean);
+    if (written.length > 0) nextTargets[targetId] = [...new Set(written)].sort();
+  }
+
+  // Previously configured hosts that are not active in this run still release
+  // server names that were removed from the approved declaration set. Passing
+  // an empty incoming list plus `managedServers` preserves foreign entries.
+  for (const [targetId, names] of previousTargets) {
+    if (activeLspTargets.has(targetId)) continue;
+    const stale = names.filter((name) => !approvedNames.has(name));
+    if (stale.length === 0) continue;
+    const target = findTarget(args.registry!, targetId);
+    const configureLsp = target ? getConfigureLsp(target) : undefined;
+    if (!target || !configureLsp) continue;
+    try {
+      const report = (await configureLsp([], {
+        cwd: args.cwd,
+        targetId,
+        deployRoots: [...target.deployRoots],
+        managedServers: stale,
+      })) as ConfigureLspReport;
+      if (report?.diagnostics) {
+        args.diagnostics.push(...report.diagnostics.map(markSkipDiagnosticWarn));
+      }
+    } catch (error) {
+      throw new InstallError(
+        "INSTALL_LSP_CONFIG",
+        `Target "${targetId}" failed to remove stale LSP servers: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        { details: { targetId, servers: stale }, cause: error },
+      );
+    }
+  }
+
+  if (args.frozen || !args.lockDocument) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const doc = args.lockDocument as LockfileDocument & Record<string, unknown>;
+  const before = lspInventoryFingerprint(doc);
+  applyLspInventoryToLock({
+    document: doc,
+    servers: approved,
+    targetServers: nextTargets,
+  });
+  if (lspInventoryFingerprint(doc) === before) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const lockPath = partitionAndWriteLockfiles(args.lockDocument, {
+    cwd: args.cwd,
+    sourcePath: args.lockPath,
+    sourceFilename: args.previousLockFilename,
+  }).sharedPath;
+  return { lockPath, lockDocument: args.lockDocument };
+}
+
+function lspInventoryFingerprint(doc: Record<string, unknown>): string {
+  return JSON.stringify([
+    doc.lsp_servers ?? null,
+    doc.lsp_configs ?? null,
+    doc.lsp_target_servers ?? null,
+    doc.lsp_config_provenance ?? null,
+  ]);
 }
 
 type McpLockInventoryUpdate =
