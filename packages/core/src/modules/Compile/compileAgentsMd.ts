@@ -11,11 +11,17 @@ import type {
   CompileAgentsMdOptions,
   CompileAgentsMdResult,
   CompileAttributionEntry,
+  CompileOutput,
 } from "./types.ts";
 
+type ResolvedCompileTarget = Pick<BapmIntegration, "id" | "compile">;
+
 /**
- * Discover conflict-resolved primitives then delegate output emission to a
- * selected registered target capability.
+ * Discover conflict-resolved primitives then delegate output emission to one
+ * or more registered target capabilities.
+ *
+ * Single-target callers keep the `path` / `content` / `wrote` result fields;
+ * `outputs` always lists every emitted host (one entry for single-target runs).
  */
 export async function compileAgentsMd(
   options: CompileAgentsMdOptions = {},
@@ -27,28 +33,72 @@ export async function compileAgentsMd(
   const { primitives } = resolvePrimitiveConflicts({ primitives: raw });
   const sorted = sortPrimitives(primitives);
   const attribution = toAttribution(sorted);
-  const target = await selectCompileTarget(
-    options.integrationRegistry,
-    options.forcedTarget,
-    cwd,
-    options.configTarget,
-  );
-  if (typeof target.compile !== "function") {
-    throw new Error(`Target "${target.id}" does not support compile`);
+
+  const targets = await selectCompileTargets(options, cwd);
+  const multi = targets.length > 1;
+  if (multi && options.outputFile?.trim()) {
+    throw new Error(
+      "Compile with multiple compile targets cannot use one --output path; select a single target or omit -o / --output",
+    );
   }
-  const emitted = await target.compile(sorted, {
+
+  const write = options.validate !== true && options.dryRun !== true;
+  const compileContext = {
     cwd,
     outputFile: options.outputFile,
-    write: options.validate !== true && options.dryRun !== true,
-  });
+  } as const;
+
+  let outputs: CompileOutput[];
+  let firstContent = "";
+
+  if (!multi) {
+    const target = targets[0]!;
+    const emitted = await target.compile!(sorted, { ...compileContext, write });
+    firstContent = emitted.content;
+    outputs = [{ targetId: target.id, path: emitted.path, wrote: emitted.wrote }];
+  } else {
+    // Preflight: render without writing so output paths are known before any
+    // file is touched. Collisions fail closed instead of last-writer-wins.
+    const previews = await Promise.all(
+      targets.map(async (target) => ({
+        target,
+        emitted: await target.compile!(sorted, { ...compileContext, write: false }),
+      })),
+    );
+    assertNoOutputCollision(cwd, previews);
+
+    if (write) {
+      const written = await Promise.all(
+        previews.map(async ({ target }) => {
+          const durable = await target.compile!(sorted, { ...compileContext, write: true });
+          return {
+            targetId: target.id,
+            path: durable.path,
+            wrote: durable.wrote,
+            content: durable.content,
+          };
+        }),
+      );
+      firstContent = written[0]?.content ?? "";
+      outputs = written.map(({ targetId, path, wrote }) => ({ targetId, path, wrote }));
+    } else {
+      firstContent = previews[0]?.emitted.content ?? "";
+      outputs = previews.map(({ target, emitted }) => ({
+        targetId: target.id,
+        path: emitted.path,
+        wrote: emitted.wrote,
+      }));
+    }
+  }
 
   return {
     ok: true,
-    path: emitted.path,
-    content: emitted.content,
-    wrote: emitted.wrote,
+    path: outputs[0]?.path,
+    content: firstContent,
+    wrote: outputs.length > 0 && outputs.every((output) => output.wrote),
     primitivesCount: sorted.length,
     attribution,
+    outputs,
   };
 }
 
@@ -80,6 +130,29 @@ function sortPrimitives(primitives: AttributedPrimitive[]): AttributedPrimitive[
   });
 }
 
+function assertNoOutputCollision(
+  cwd: string,
+  previews: Array<{ target: ResolvedCompileTarget; emitted: { path: string } }>,
+): void {
+  const byPath = new Map<string, Array<{ targetId: string; path: string }>>();
+  for (const { target, emitted } of previews) {
+    const key = resolve(cwd, emitted.path);
+    const hosts = byPath.get(key) ?? [];
+    hosts.push({ targetId: String(target.id), path: emitted.path });
+    byPath.set(key, hosts);
+  }
+
+  for (const hosts of byPath.values()) {
+    if (hosts.length < 2) continue;
+    const path = hosts[0]!.path;
+    const ids = hosts.map((host) => host.targetId);
+    throw new Error(
+      `Compile target collision: hosts ${ids.map((id) => `"${id}"`).join(", ")} all write "${path}". ` +
+        "Refusing to overwrite one host's output with another; select one host per output path or exclude duplicates.",
+    );
+  }
+}
+
 function readManifestActive(cwd: string): string[] | undefined {
   try {
     const { document } = loadManifest({ cwd });
@@ -90,23 +163,82 @@ function readManifestActive(cwd: string): string[] | undefined {
   }
 }
 
-async function selectCompileTarget(
-  registry: IntegrationRegistry | undefined,
-  forcedTarget: string | undefined,
+async function selectCompileTargets(
+  options: CompileAgentsMdOptions,
   cwd: string,
-  configTarget?: string,
-): Promise<BapmIntegration> {
+): Promise<ResolvedCompileTarget[]> {
+  const registry = options.integrationRegistry;
   if (!registry) {
     throw new Error(
       "Compile requires a registered target; pass --target <id> or set active in the manifest",
     );
   }
 
+  if (options.all === true) {
+    if (options.forcedTarget || options.forcedTargets?.length) {
+      throw new Error("Compile accepts either --all or --target, not both");
+    }
+    const targets = registry
+      .list()
+      .filter(
+        (
+          target,
+        ): target is BapmIntegration & { compile: NonNullable<BapmIntegration["compile"]> } =>
+          typeof target.compile === "function",
+      )
+      .map((target) => ({ id: target.id, compile: target.compile }));
+    if (targets.length === 0) {
+      throw new Error(
+        "Compile --all found no registered compile-capable targets; register host integrations first",
+      );
+    }
+    return targets;
+  }
+
+  const forcedIds = normalizeForcedTargets(options.forcedTargets);
+  if (options.forcedTarget && forcedIds.length > 0) {
+    throw new Error("Compile accepts either forcedTarget or forcedTargets, not both");
+  }
+  if (forcedIds.length > 0) {
+    return forcedIds.map((id) => resolveCompileTarget(registry, id));
+  }
+
+  const single = await selectCompileTarget(
+    registry,
+    options.forcedTarget,
+    cwd,
+    options.configTarget,
+  );
+  return [single];
+}
+
+function normalizeForcedTargets(forcedTargets: string[] | undefined): string[] {
+  if (forcedTargets === undefined) return [];
+  const ids = forcedTargets.map((id) => String(id ?? "").trim()).filter((id) => id.length > 0);
+  if (ids.length !== forcedTargets.length || ids.length === 0) {
+    throw new Error("Compile forcedTargets must contain at least one non-empty target id");
+  }
+  return [...new Set(ids)];
+}
+
+function resolveCompileTarget(registry: IntegrationRegistry, id: string): ResolvedCompileTarget {
+  const target = registry.get(id);
+  if (!target) throw new Error(`Unknown or unregistered target: ${id}`);
+  if (typeof target.compile !== "function") {
+    throw new Error(`Target "${target.id}" does not support compile`);
+  }
+  return { id: target.id, compile: target.compile };
+}
+
+async function selectCompileTarget(
+  registry: IntegrationRegistry,
+  forcedTarget: string | undefined,
+  cwd: string,
+  configTarget?: string,
+): Promise<ResolvedCompileTarget> {
   // 1. Forced --target
   if (forcedTarget) {
-    const target = registry.get(forcedTarget);
-    if (!target) throw new Error(`Unknown or unregistered target: ${forcedTarget}`);
-    return target;
+    return resolveCompileTarget(registry, forcedTarget);
   }
 
   // 2. Manifest `active` — sole compile-capable id, or fail if multi
@@ -120,23 +252,13 @@ async function selectCompileTarget(
     }
 
     const soleId = manifestActive[0]!;
-    const sole = registry.get(soleId);
-    if (!sole) throw new Error(`Unknown or unregistered target: ${soleId}`);
-    if (typeof sole.compile !== "function") {
-      throw new Error(`Target "${sole.id}" does not support compile`);
-    }
-    return sole;
+    return resolveCompileTarget(registry, soleId);
   }
 
   // 3. User config default target (before detect)
   const configured = configTarget?.trim();
   if (configured) {
-    const target = registry.get(configured);
-    if (!target) throw new Error(`Unknown or unregistered target: ${configured}`);
-    if (typeof target.compile !== "function") {
-      throw new Error(`Target "${target.id}" does not support compile`);
-    }
-    return target;
+    return resolveCompileTarget(registry, configured);
   }
 
   // 4. Sole auto-detect among compile-capable registered hosts
@@ -149,7 +271,7 @@ async function selectCompileTarget(
       "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
     );
   }
-  return candidates[0]!;
+  return { id: candidates[0]!.id, compile: candidates[0]!.compile! };
 }
 
 async function detectRegisteredTargets(

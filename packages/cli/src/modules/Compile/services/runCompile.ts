@@ -14,22 +14,50 @@ export type ParsedCompileArgs = {
   dryRun: boolean;
   verbose: boolean;
   outputFile?: string;
+  /** Single forced host id (backward-compatible; `--target a,b` also fills this). */
   target?: string;
+  /** Forced host ids; more than one selects multi-target emit. */
+  targets?: string[];
+  /** Select every registered compile-capable host. */
+  all?: boolean;
   help?: boolean;
   error?: string;
 };
+
+function parseTargetList(value: string): string[] {
+  const seen = new Set<string>();
+  const ids: string[] = [];
+  for (const part of value.split(",")) {
+    const id = part.trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    ids.push(id);
+  }
+  return ids;
+}
 
 export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
   let validate = false;
   let dryRun = false;
   let verbose = false;
+  let all = false;
   let outputFile: string | undefined;
-  let target: string | undefined;
+  let targets: string[] | undefined;
+
+  const snapshot = () => ({
+    validate,
+    dryRun,
+    verbose,
+    all,
+    outputFile,
+    target: targets?.[0],
+    targets,
+  });
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") {
-      return { validate, dryRun, verbose, outputFile, target, help: true };
+      return { ...snapshot(), help: true };
     }
     if (arg === "--validate") {
       validate = true;
@@ -43,16 +71,14 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
       verbose = true;
       continue;
     }
+    if (arg === "--all") {
+      all = true;
+      continue;
+    }
     if (arg === "--output" || arg === "-o") {
       const next = argv[i + 1];
       if (next === undefined || next.startsWith("-")) {
-        return {
-          validate,
-          dryRun,
-          verbose,
-          outputFile,
-          error: "missing value for --output / -o",
-        };
+        return { ...snapshot(), error: "missing value for --output / -o" };
       }
       outputFile = next;
       i += 1;
@@ -61,13 +87,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     if (arg.startsWith("--output=")) {
       const value = arg.slice("--output=".length);
       if (!value) {
-        return {
-          validate,
-          dryRun,
-          verbose,
-          outputFile,
-          error: "missing value for --output=",
-        };
+        return { ...snapshot(), error: "missing value for --output=" };
       }
       outputFile = value;
       continue;
@@ -75,77 +95,57 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     if (arg === "--target") {
       const value = argv[i + 1];
       if (!value || value.startsWith("-")) {
-        return {
-          validate,
-          dryRun,
-          verbose,
-          outputFile,
-          target,
-          error: "missing value for --target <id>",
-        };
+        return { ...snapshot(), error: "missing value for --target <id>" };
       }
-      target = value;
+      const parsed = parseTargetList(value);
+      if (parsed.length === 0) {
+        return { ...snapshot(), error: "missing value for --target <id>" };
+      }
+      targets = parsed;
       i += 1;
       continue;
     }
     if (arg.startsWith("--target=")) {
-      target = arg.slice("--target=".length);
-      if (!target) {
-        return {
-          validate,
-          dryRun,
-          verbose,
-          outputFile,
-          target,
-          error: "missing value for --target=<id>",
-        };
+      const parsed = parseTargetList(arg.slice("--target=".length));
+      if (parsed.length === 0) {
+        return { ...snapshot(), error: "missing value for --target=<id>" };
       }
+      targets = parsed;
       continue;
     }
     if (arg.startsWith("-")) {
-      return {
-        validate,
-        dryRun,
-        verbose,
-        outputFile,
-        target,
-        error: `Unknown compile flag: ${arg}`,
-      };
+      return { ...snapshot(), error: `Unknown compile flag: ${arg}` };
     }
-    return {
-      validate,
-      dryRun,
-      verbose,
-      outputFile,
-      target,
-      error: `Unexpected compile argument: ${arg}`,
-    };
+    return { ...snapshot(), error: `Unexpected compile argument: ${arg}` };
   }
 
-  return { validate, dryRun, verbose, outputFile, target };
+  return snapshot();
 }
 
 export function formatCompileHelp(deps: LifecycleCliDeps): string {
   return `${deps.name} compile — Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
 
 Usage:
-  bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
+  bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--dry-run] [-v] [--validate]
 
 Options:
-  -o, --output PATH   Override the target's default output path
-  --target <id>       Force host (overrides manifest active; required when multi-active or detect is ambiguous)
-  --dry-run           Preview would-write path; do not write
+  -o, --output PATH   Override the target's default output path (single target only)
+  --target <ids>      Force one host, or a comma-separated list (cursor,claude)
+  --all               Emit for every registered compile-capable host in one run
+  --dry-run           Preview every would-write path; do not write
   -v, --verbose       Print thin source attribution (name, type, path)
   --validate          Discover/validate only; do not write
   --help, -h          Show this help
 
-Host selection: --target <id> → local-overlay active → manifest active → config target → sole auto-detect → fail.
-When active lists multiple hosts, pass --target <id>. Compile stays single-host.
-The selected target determines the default output path and rendering.
+Host selection: --target / --all → local-overlay active → manifest active → config target → sole auto-detect → fail.
+When active lists multiple hosts, pass --target <id> or --target <id>,<id>, or --all.
+Missing or ambiguous detection requires an explicit --target.
 
-Warning: Cursor, Codex, OpenCode, Kiro, Grok Build, and Antigravity share AGENTS.md.
-Compiling for another of these hosts overwrites that file; pass -o PATH to write
-elsewhere (keep the file name AGENTS.md for Codex/OpenCode/Grok Build).
+Multi-target: each selected host writes its own file in one invocation. If two selected
+hosts share an output path (Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, Antigravity
+all use AGENTS.md), compile fails closed and lists the colliding hosts — it never overwrites.
+-o is not accepted with multi-target selection; run one host per output path.
+
 Run from the directory that contains ${deps.manifestFile}.
 `;
 }
@@ -163,6 +163,19 @@ export async function runCompileCli(
     console.error(`${deps.name}: ${parsed.error}`);
     return { ok: false, exitCode: 1, message: parsed.error };
   }
+  if (parsed.all && parsed.targets?.length) {
+    const message = "use either --target or --all, not both";
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, exitCode: 1, message };
+  }
+  const explicitMulti = (parsed.targets?.length ?? 0) > 1;
+  if (explicitMulti && parsed.outputFile) {
+    const message =
+      "multiple compile targets cannot share one --output path; select a single target or omit -o";
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, exitCode: 1, message };
+  }
+  const multi = parsed.all === true || explicitMulti;
   try {
     const cwd = options.cwd ?? process.cwd();
     // Fresh registry per run so object-map loads do not leak across projects.
@@ -171,7 +184,9 @@ export async function runCompileCli(
     const result = await compileAgentsMd({
       cwd: options.cwd,
       outputFile: parsed.outputFile,
-      forcedTarget: parsed.target,
+      forcedTarget: multi ? undefined : parsed.target,
+      forcedTargets: multi && !parsed.all ? parsed.targets : undefined,
+      all: parsed.all === true,
       configTarget: readConfiguredTarget(),
       integrationRegistry: registry,
       validate: parsed.validate,
@@ -187,14 +202,33 @@ export async function runCompileCli(
       }
     }
 
+    const multiple = result.outputs.length > 1;
     // validate-first: when validate is set, never use dry-run would-write messaging
     if (parsed.validate) {
-      console.log(`compile --validate ok (${result.primitivesCount} primitives; no write)`);
-    } else if (parsed.dryRun) {
-      const previewPath = result.path ?? parsed.outputFile ?? "(target default)";
       console.log(
-        `compile --dry-run: would write ${previewPath} (${result.primitivesCount} primitives)`,
+        `compile --validate ok (${result.primitivesCount} primitives; ${result.outputs.length} targets; no write)`,
       );
+    } else if (parsed.dryRun) {
+      if (multiple) {
+        for (const output of result.outputs) {
+          console.log(
+            `compile --dry-run: would write ${output.path} (${output.targetId}) (${result.primitivesCount} primitives)`,
+          );
+        }
+      } else {
+        const previewPath = result.path ?? parsed.outputFile ?? "(target default)";
+        console.log(
+          `compile --dry-run: would write ${previewPath} (${result.primitivesCount} primitives)`,
+        );
+      }
+    } else if (multiple) {
+      for (const output of result.outputs) {
+        if (output.wrote) {
+          console.log(
+            `Wrote ${output.path} (${output.targetId}) (${result.primitivesCount} primitives)`,
+          );
+        }
+      }
     } else if (result.wrote) {
       console.log(`Wrote ${result.path ?? "AGENTS.md"} (${result.primitivesCount} primitives)`);
     }
