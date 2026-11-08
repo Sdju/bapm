@@ -33,7 +33,7 @@ bapm update -y                   # обновить
 | `bapm view <пакет>`       | Информация об установленном пакете                                          |
 | `bapm targets`            | Какие агенты зарегистрированы и активны                                     |
 | `bapm runtime`            | Какие AI runtime CLI найдены в системе                                      |
-| `bapm mcp list` / `show`  | Какие MCP-серверы объявлены и куда попали                                   |
+| `bapm mcp`                | Поиск/просмотр MCP registry и локального инвентаря, `mcp install`           |
 | `bapm config`             | Личные defaults: target, registry URL, temp-dir, канал self-update, grant-ы |
 
 ```bash

@@ -1,4 +1,5 @@
 import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
+import type { McpRegistryLookup } from "@/modules/Mcp";
 import type { IntegrationRegistry } from "@b-apm/integration-api";
 
 export type InstallOnlyMode = "apm" | "mcp";
@@ -146,6 +147,12 @@ export type RunInstallOptions = {
   /** Override `~/.bapm` for marketplace registry during install resolve. */
   marketplaceConfigDir?: string;
   configDir?: string;
+  /**
+   * MCP registry lookup port for `dependencies.mcp` entries that only request
+   * a registry lookup (`registry: true` / a registry URL). Without a port the
+   * legacy fail-closed `MCP_REGISTRY_UNSUPPORTED` diagnostic is preserved.
+   */
+  mcpRegistry?: McpRegistryLookup;
 };
 
 /** Alias for design naming flexibility. */

@@ -4,6 +4,7 @@ import {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
+  createMcpRegistryClient,
   extractPackArchive,
   loadManifest,
   resolveEffectiveFrozen,
@@ -17,7 +18,7 @@ import {
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
 import { resolvePolicyPorts } from "@/common/policyFetcher.ts";
-import { readConfiguredTarget } from "@/modules/Config";
+import { readConfiguredMcpRegistryUrl, readConfiguredTarget } from "@/modules/Config";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -618,6 +619,17 @@ async function runCoreInstall(
       trustTransitiveMcp: parsed.trustTransitiveMcp,
       trustBin: parsed.trustBin,
       env: options.env ?? (process.env as Record<string, string | undefined>),
+      mcpRegistry: {
+        // Lazy: installs without registry-only MCP entries never validate or
+        // contact the MCP registry.
+        getServer(name: string, lookupOptions?: { version?: string; registryUrl?: string }) {
+          const client = createMcpRegistryClient({
+            configuredUrl: readConfiguredMcpRegistryUrl(),
+            env: options.env ?? (process.env as Record<string, string | undefined>),
+          });
+          return client.getServer(name, lookupOptions);
+        },
+      },
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),

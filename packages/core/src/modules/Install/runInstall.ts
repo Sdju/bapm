@@ -72,8 +72,10 @@ import {
   bakeMcpServerMaps,
   collectMcpServers,
   McpEnvBakeError,
+  resolveMcpServerFromRegistry,
   scrubMcpInventory,
   type CollectedMcpServer,
+  type McpRegistryLookup,
 } from "@/modules/Mcp";
 import { defaultBinDeployRoot, discoverPackageBinFiles, materializeBinFiles } from "./binDeploy.ts";
 import {
@@ -638,6 +640,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       policyPorts,
       trustContext: installTrustContext,
       env: options.env,
+      mcpRegistry: options.mcpRegistry,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
     if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
@@ -1076,6 +1079,42 @@ function isRegistryOnlyMcpServer(server: CollectedMcpServer): boolean {
   return !hasCommand && !hasUrl;
 }
 
+function registryUrlForDeclaration(registry: unknown): { registryUrl: string } | undefined {
+  if (typeof registry === "string" && registry.trim().length > 0) {
+    return { registryUrl: registry.trim() };
+  }
+  if (registry && typeof registry === "object" && !Array.isArray(registry)) {
+    const url = (registry as { url?: unknown }).url;
+    if (typeof url === "string" && url.trim().length > 0) {
+      return { registryUrl: url.trim() };
+    }
+  }
+  return undefined;
+}
+
+function registryUnsupportedError(servers: CollectedMcpServer[], cause?: unknown): InstallError {
+  const names = servers.map((server) => server.name).join(", ");
+  const hint =
+    `declare "command" for stdio or "url" for http/streamable-http (and set registry: false), ` +
+    `or inspect the server with \`bapm mcp show ${servers[0]?.name ?? "<name>"}\` / ` +
+    `\`bapm mcp install ${servers[0]?.name ?? "<name>"} --dry-run\``;
+  return new InstallError(
+    "MCP_REGISTRY_UNSUPPORTED",
+    `MCP server${servers.length === 1 ? "" : "s"} ${names} could not be resolved from an MCP registry; ${hint}`,
+    {
+      ...(cause !== undefined ? { cause } : {}),
+      details: {
+        servers: servers.map((server) => ({
+          name: server.name,
+          packageName: server.packageName,
+          origin: server.origin,
+          registry: server.registry,
+        })),
+      },
+    },
+  );
+}
+
 async function deployMcpAfterPolicy(args: {
   cwd: string;
   rootManifest: BapmManifest;
@@ -1110,6 +1149,7 @@ async function deployMcpAfterPolicy(args: {
   trustContext?: InstallTrustContext;
   /** Env overlay; `BAPM_NO_GLOBAL_MCP` skips home-scoped MCP configure when truthy. */
   env?: Record<string, string | undefined>;
+  mcpRegistry?: McpRegistryLookup;
 }): Promise<{
   lockPath?: string;
   lockDocument?: LockfileDocument;
@@ -1186,7 +1226,7 @@ async function deployMcpAfterPolicy(args: {
     };
   }
 
-  const approved: typeof collected.servers = [];
+  let approved: typeof collected.servers = [];
   const withheldPackages: string[] = [];
   const skippedPackages: string[] = [];
 
@@ -1260,25 +1300,46 @@ async function deployMcpAfterPolicy(args: {
     ? `MCP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(", ")}). Remove the deny or add to executables.allow / allowExecutables; otherwise remove MCP.`
     : undefined;
 
-  // Registry lookup is not implemented. Fail before any host config or MCP
-  // lock inventory is written so a `{type:"stdio"}` shell never reaches a host.
+  // Resolve registry-only declarations through the injected MCP registry port.
+  // Without a port (library callers/tests that did not opt in) keep the legacy
+  // fail-closed behavior: fail before any host config or MCP lock inventory is
+  // written so a `{type:"stdio"}` shell never reaches a host.
   const registryOnly = approved.filter(isRegistryOnlyMcpServer);
   if (registryOnly.length > 0) {
-    const names = registryOnly.map((server) => server.name).join(", ");
-    throw new InstallError(
-      "MCP_REGISTRY_UNSUPPORTED",
-      `MCP server${registryOnly.length === 1 ? "" : "s"} ${names} request registry lookup, which bapm does not support; declare "command" for stdio or "url" for http/streamable-http (and set registry: false)`,
-      {
-        details: {
-          servers: registryOnly.map((server) => ({
-            name: server.name,
-            packageName: server.packageName,
-            origin: server.origin,
-            registry: server.registry,
-          })),
-        },
-      },
-    );
+    if (!args.mcpRegistry) {
+      throw registryUnsupportedError(registryOnly);
+    }
+    const resolvedByName = new Map<string, CollectedMcpServer>();
+    for (const server of registryOnly) {
+      try {
+        const details = await args.mcpRegistry.getServer(
+          server.name,
+          registryUrlForDeclaration(server.registry),
+        );
+        const resolution = resolveMcpServerFromRegistry(details, {
+          transport: server.transport,
+          type: server.type,
+          command: server.command,
+          args: server.args,
+          url: server.url,
+          env: server.env,
+          headers: server.headers,
+        });
+        args.diagnostics.push(...resolution.diagnostics);
+        resolvedByName.set(server.name, {
+          ...server,
+          ...resolution.server,
+          // The declaration name remains the stable host key.
+          name: server.name,
+          origin: server.origin,
+          packageName: server.packageName,
+          registry: false,
+        });
+      } catch (cause) {
+        throw registryUnsupportedError([server], cause);
+      }
+    }
+    approved = approved.map((server) => resolvedByName.get(server.name) ?? server);
   }
 
   // Records written by this target in the previous lock let a configure pass

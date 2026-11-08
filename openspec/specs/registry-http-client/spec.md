@@ -108,3 +108,29 @@ When the Registry HTTP client issues Authed requests (Authorization Bearer prese
 
 - **WHEN** no registry token is configured
 - **THEN** list/download MUST still proceed without Authorization and MUST NOT invent a Bearer header
+
+### Requirement: MCP server registry discovery over the injectable transport
+
+The system MUST provide an MCP server registry client that queries the MCP Registry v0 API shape (`GET /v0/servers?search=<query>` and `GET /v0/servers/<url-encoded-name>/versions/<version>`) through the same injectable HTTP transport contract used by the package registry. Search results MUST normalize to stable summary fields (name, description, version, transports, packages); detail results MUST additionally expose packages, remotes, repository/website URLs, and argument/environment metadata. Public JSON/text output MUST NOT include registry-authored header values or a configured bearer token.
+
+Registry endpoint resolution MUST use `--registry` > `MCP_REGISTRY_URL` > persisted `mcp-registry-url` > `https://api.mcp.github.com`. Invalid scheme/host, embedded credentials, query strings, and fragments MUST fail closed before any request. Explicit flag/config URLs MAY use `http://`; the ambient env var MUST require `MCP_REGISTRY_ALLOW_HTTP=1`. A configured `MCP_REGISTRY_TOKEN` / `BAPM_MCP_REGISTRY_TOKEN` MUST be sent only as `Authorization: Bearer …` and MUST bypass the shared HTTP cache.
+
+#### Scenario: Search returns stable summaries without network in tests
+
+- **WHEN** a mock transport serves `{"servers":[{"server":{"name":"io.github.acme/tool","packages":[…],"remotes":[…]}}]}`
+- **THEN** `search` MUST return stable name/description/version/transports/packages fields and MUST require no live network
+
+#### Scenario: Show URL-encodes the server name
+
+- **WHEN** `getServer("io.github.acme/tool")` runs
+- **THEN** the request path MUST contain `io.github.acme%2Ftool/versions/latest` (or the pinned version)
+
+#### Scenario: Network and auth failures fail closed without secrets
+
+- **WHEN** the transport throws or returns 401/403 while a token is configured
+- **THEN** the client MUST return a non-zero diagnostic naming the registry and token env, and MUST NOT echo the token
+
+#### Scenario: Invalid registry URL is rejected before fetch
+
+- **WHEN** `--registry` is `not-a-url`, uses a non-http(s) scheme, contains credentials, or carries a query/fragment
+- **THEN** the lookup MUST fail closed without issuing an HTTP request and without echoing credentials

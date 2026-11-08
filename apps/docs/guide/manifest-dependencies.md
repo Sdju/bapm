@@ -117,8 +117,8 @@ dependencies:
 
 `registry: false` означает, что сервер описан целиком здесь, а не берётся из MCP-registry.
 
-::: warning Registry-only MCP пока не поддерживается
-Запись без `command` и `url`, которая просит lookup в MCP-registry (`registry: true` или имя/URL registry), завершает `install` ошибкой `MCP_REGISTRY_UNSUPPORTED` до записи конфигов агента. Опишите сервер явно: `registry: false`, `transport`, `command`/`url`.
+::: tip Registry-only MCP
+Запись без `command` и `url` с `registry: true` или `registry: <URL>` разрешается через MCP registry при `bapm install`. Посмотреть сервер заранее: `bapm mcp show <name>`; добавить конкретную запись: `bapm mcp install <name> --dry-run`. Если lookup недоступен или сервер не содержит installable package/remote, install завершается fail-closed с `MCP_REGISTRY_UNSUPPORTED`.
 :::
 
 По умолчанию ставятся только MCP-серверы, объявленные прямо в вашем `bapm.yml`; серверы, которые приносят зависимости, молча пропускаются. Так пакет не может без вашего ведома добавить агенту исполняемый процесс. Включить их можно разово флагом `bapm install --trust-transitive-mcp` или постоянно, разрешив конкретный пакет в `executables` или через `bapm approve`. При наличии grant-поверхности пакеты с MCP, которых нет в allow/deny, пропускаются с предупреждением `MCP_NOT_APPROVED`, а фатально install завершается только при явном deny или для упомянутого-но-неразрешённого пакета. Подробнее: [MCP-сервер не появился](/guide/situations/policy-mcp).

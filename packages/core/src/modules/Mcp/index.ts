@@ -54,3 +54,39 @@ export type {
 export { listMcpInventory, searchMcpInventory, showMcpServer } from "./inventory.ts";
 export type { ParsedMcpDeclaration } from "./parse.ts";
 export { parseMcpDeclarations } from "./parse.ts";
+
+export type {
+  CreateMcpRegistryClientOptions,
+  McpRegistryClient,
+  McpRegistryDeclOverlay,
+  McpRegistryEnv,
+  McpRegistryEnvironmentVariable,
+  McpRegistryErrorCode,
+  McpRegistryGetServerOptions,
+  McpRegistryLookup,
+  McpRegistryPackage,
+  McpRegistryRemote,
+  McpRegistryRemoteHeader,
+  McpRegistrySearchOptions,
+  McpRegistryServerDetails,
+  McpRegistryServerResolution,
+  McpRegistryServerSummary,
+  McpRegistrySource,
+  McpRegistryTransport,
+  ResolvedMcpRegistryUrl,
+  ResolveMcpRegistryUrlOptions,
+} from "./registry.ts";
+export {
+  BAPM_MCP_REGISTRY_TOKEN_ENV,
+  DEFAULT_MCP_REGISTRY_URL,
+  MCP_REGISTRY_ALLOW_HTTP_ENV,
+  MCP_REGISTRY_TOKEN_ENV,
+  MCP_REGISTRY_URL_ENV,
+  McpRegistryError,
+  createMcpRegistryClient,
+  normalizeMcpRegistryUrl,
+  redactMcpRegistryDetails,
+  redactMcpRegistryUrl,
+  resolveMcpRegistryUrl,
+  resolveMcpServerFromRegistry,
+} from "./registry.ts";

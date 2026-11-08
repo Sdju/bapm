@@ -6,7 +6,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { IntegrationRegistry } from "@b-apm/integration-api";
-import { runInstall } from "../../src/index.ts";
+import { runInstall, type McpRegistryServerDetails } from "../../src/index.ts";
 import {
   createFakePorts,
   createTempProject,
@@ -50,7 +50,12 @@ describe("MCP registry-only fail-closed", () => {
     return { registry: registry as IntegrationRegistry, writes };
   }
 
-  async function run(cwd: string, registry: IntegrationRegistry, trustTransitiveMcp = false) {
+  async function run(
+    cwd: string,
+    registry: IntegrationRegistry,
+    trustTransitiveMcp = false,
+    mcpRegistry?: { getServer(name: string): Promise<McpRegistryServerDetails> },
+  ) {
     const ports = createFakePorts();
     return runInstall({
       cwd,
@@ -60,6 +65,7 @@ describe("MCP registry-only fail-closed", () => {
       trustTransitiveMcp,
       integrationRegistry: registry,
       registry,
+      ...(mcpRegistry ? { mcpRegistry } : {}),
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,
@@ -132,6 +138,62 @@ dependencies:
     if (existsSync(lockPath)) {
       expect(readFileSync(lockPath, "utf8")).not.toContain("dep-registry");
     }
+  });
+
+  test("root registry-only entry resolves through the injected lookup and configures the host", async () => {
+    project = createTempProject("bapm-mcp-registry-resolved-");
+    writeFileSync(
+      join(project.cwd, "bapm.yml"),
+      `name: registry-resolved
+version: 0.0.1
+dependencies:
+  apm: []
+  mcp:
+    - name: public-github
+      registry: true
+`,
+      "utf8",
+    );
+    const { registry, writes } = await fakeHost();
+    const lookup = {
+      async getServer(name: string): Promise<McpRegistryServerDetails> {
+        return {
+          name,
+          description: "resolved server",
+          version: "1.0.0",
+          repositoryUrl: null,
+          websiteUrl: null,
+          transports: ["stdio"],
+          packages: [
+            {
+              registryType: "npm",
+              identifier: "@acme/server",
+              version: "1.0.0",
+              runtimeHint: "npx",
+            },
+          ],
+          remotes: [],
+          packageDetails: [
+            {
+              registryType: "npm",
+              identifier: "@acme/server",
+              version: "1.0.0",
+              runtimeHint: "npx",
+              runtimeArguments: [],
+              packageArguments: [],
+              environmentVariables: [],
+            },
+          ],
+        };
+      },
+    };
+
+    await expect(run(project.cwd, registry, false, lookup)).resolves.toMatchObject({ ok: true });
+    expect(writes).toEqual(["configureMcp"]);
+    const lock = readFileSync(join(project.cwd, "bapm.lock.yaml"), "utf8");
+    expect(lock).toContain("public-github");
+    expect(lock).toContain("command: npx");
+    expect(lock).toContain("@acme/server");
   });
 
   test("direct registry:false entries still configure when no registry-only entry exists", async () => {
