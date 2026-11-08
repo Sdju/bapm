@@ -80,6 +80,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
     policyPath: options.policyPath ?? options.policy,
     policy: options.policy ?? options.policyPath,
     noPolicy: options.noPolicy,
+    noRepoPolicy: options.noRepoPolicy,
     ...ports,
   });
 
@@ -91,6 +92,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
       policyPath: options.policyPath ?? options.policy,
       policy: options.policy ?? options.policyPath,
       noPolicy: options.noPolicy,
+      noRepoPolicy: options.noRepoPolicy,
       ...ports,
     });
   } catch {

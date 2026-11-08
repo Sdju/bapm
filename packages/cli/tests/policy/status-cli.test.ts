@@ -68,7 +68,22 @@ describe("p6d CLI policy status", () => {
     expect(combined).toMatch(/absent/i);
   });
 
-  test("--no-policy reports disabled/escaped and exits 0", async () => {
+  test("--no-policy skips local policy and reports absent without org", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "p6d-cli-repo-escape");
+    writePolicy(project.cwd, "bapm-policy.yml", RICH_LOCAL);
+
+    const { result, combined } = await runInProject(project.cwd, [
+      "policy",
+      "status",
+      "--no-policy",
+    ]);
+    expectKnownCommand(combined, "policy");
+    expect(result).toBe(0);
+    expect(combined).toMatch(/absent/i);
+  });
+
+  test("--no-policy-all reports disabled/escaped and exits 0", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p6d-cli-escape");
     writePolicy(project.cwd, "bapm-policy.yml", RICH_LOCAL);
@@ -76,7 +91,7 @@ describe("p6d CLI policy status", () => {
     const { result, combined } = await runInProject(project.cwd, [
       "policy",
       "status",
-      "--no-policy",
+      "--no-policy-all",
     ]);
     expectKnownCommand(combined, "policy");
     expect(result).toBe(0);
@@ -138,9 +153,24 @@ describe("p6d CLI policy status", () => {
     expect(combined).toMatch(/absent|disabled|error|no usable|not found/i);
   });
 
-  test("--check fails when disabled via --no-policy", async () => {
+  test("--check fails when disabled via --no-policy-all", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p6d-cli-check-disabled");
+    writePolicy(project.cwd, "bapm-policy.yml", RICH_LOCAL);
+
+    const { result, combined } = await runInProject(project.cwd, [
+      "policy",
+      "status",
+      "--no-policy-all",
+      "--check",
+    ]);
+    expectKnownCommand(combined, "policy");
+    expect(result).not.toBe(0);
+  });
+
+  test("--check fails when local policy is skipped via --no-policy", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "p6d-cli-check-repo-skip");
     writePolicy(project.cwd, "bapm-policy.yml", RICH_LOCAL);
 
     const { result, combined } = await runInProject(project.cwd, [

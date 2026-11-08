@@ -76,8 +76,13 @@ export type RunInstallOptions = {
   policyPath?: string;
   /** Alias for `policyPath`. */
   policy?: string;
-  /** Skip policy discovery + checks (`--no-policy` / env disable). */
+  /** Full escape: skip policy discovery + checks (`--no-policy-all` / env disable). */
   noPolicy?: boolean;
+  /**
+   * Skip only repository-local policy (`--no-policy`). Org/remote policy,
+   * including `executables.deny` / `deny_all`, still applies.
+   */
+  noRepoPolicy?: boolean;
   /** Override ordered policy discovery providers. */
   policyProviders?: string[];
   /** Alias for `policyProviders`. */

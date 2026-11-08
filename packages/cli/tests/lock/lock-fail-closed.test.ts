@@ -45,7 +45,13 @@ describe("CLI bare lock fail-closed argv", () => {
     expect(update.error).toBeUndefined();
     expect(update.updateRefs).toBe(true);
     expect(update.verbose).toBe(true);
-    expect(update.noPolicy).toBe(true);
+    expect(update.noPolicy).toBe(false);
+    expect(update.noRepoPolicy).toBe(true);
+
+    const fullEscape = parseLockArgs(["--no-policy-all"]);
+    expect(fullEscape.error).toBeUndefined();
+    expect(fullEscape.noPolicy).toBe(true);
+    expect(fullEscape.noRepoPolicy).toBe(false);
 
     const parallelSpace = parseLockArgs(["--parallel-downloads", "0"]);
     expect(parallelSpace.error).toBeUndefined();
@@ -178,6 +184,7 @@ dependencies:
       { argv: ["lock", "--policy", policyPath], flag: "--policy" },
       { argv: ["lock", `--policy=${policyPath}`], flag: "--policy" },
       { argv: ["lock", "--no-policy"], flag: "--no-policy" },
+      { argv: ["lock", "--no-policy-all"], flag: "--no-policy-all" },
     ];
 
     for (const { argv, flag } of cases) {

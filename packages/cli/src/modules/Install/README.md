@@ -4,7 +4,7 @@
 
 CLI Install module — thin FEOD wrapper over `@b-apm/core` install + cursor
 host materialize. Parses `--frozen`, `--no-frozen`, `--target <id>`, `--update`,
-`--policy`, `--no-policy`, and an optional local pack `.zip` path (M7
+`--policy`, `--no-policy`, `--no-policy-all`, and an optional local pack `.zip` path (M7
 install-from-archive); hard-errors unknown flags; rejects `--frozen`+`--no-frozen`
 and effective-frozen+`--update`.
 
@@ -22,7 +22,8 @@ to frozen via `@b-apm/core` `resolveEffectiveFrozen`. Pass `--no-frozen` to opt 
 ## Policy flags (M8)
 
 - `--policy <path>` — explicit policy file (wins over dual-read siblings)
-- `--no-policy` — skip gate (also `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1`)
+- `--no-policy` — skip repository-local policy only; org/remote deny still applies
+- `--no-policy-all` — full escape (also `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1`)
 
 Thin `bapm policy status` deferred — diagnostics surface via install/lock.
 

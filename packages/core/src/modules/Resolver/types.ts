@@ -200,8 +200,10 @@ export type ResolveAndLockOptions = ResolvePorts & {
   policyPath?: string;
   /** Alias for `policyPath`. */
   policy?: string;
-  /** Skip policy discovery + checks. */
+  /** Full escape: skip policy discovery + checks. */
   noPolicy?: boolean;
+  /** Skip only repository-local policy; org/remote policy still applies. */
+  noRepoPolicy?: boolean;
   /** Override ordered policy discovery providers. */
   policyProviders?: string[];
   providers?: string[];

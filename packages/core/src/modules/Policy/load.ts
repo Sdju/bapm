@@ -3,7 +3,7 @@ import { basename } from "node:path";
 import { discoverPolicyPath } from "./discover.ts";
 import { PolicyError } from "./errors.ts";
 import { parsePolicyDocument } from "./parse.ts";
-import { discoverPolicyWithProviders } from "./providers.ts";
+import { discoverPolicyWithProviders, filterNonLocalPolicyProviders } from "./providers.ts";
 import { resolvePolicyChain } from "./resolve.ts";
 import type { LoadPolicyOptions, LoadPolicyResult, PolicyDocument } from "./types.ts";
 import { loadYamlDocument } from "./yaml-load.ts";
@@ -46,10 +46,16 @@ export function loadPolicy(options: LoadPolicyExtendedOptions = {}): LoadPolicyR
     return loadFromPath(options.path, options);
   }
 
-  // Provider-ordered discovery (local first, then remote)
+  // Provider-ordered discovery (local first, then remote). `noRepoPolicy`
+  // keeps remote/org providers so org deny still applies.
+  const requestedProviders = options.providers ?? options.policyProviders;
+  const providers = options.noRepoPolicy
+    ? filterNonLocalPolicyProviders(requestedProviders)
+    : requestedProviders;
   const discovered = discoverPolicyWithProviders({
     cwd: options.cwd,
-    providers: options.providers ?? options.policyProviders,
+    providers,
+    policyProviders: providers,
     path: options.path,
     listGitRemotes: options.listGitRemotes,
     remotes: options.remotes,
