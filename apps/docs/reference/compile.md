@@ -5,7 +5,7 @@
 ## Использование
 
 ```text
-bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--strategy <name>] [--clean] [--dry-run] [-v] [--validate]
+bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--strategy <name>] [--clean] [--dry-run] [-v] [--watch] [--validate]
 ```
 
 Выбранный агент задаёт путь по умолчанию и состав файла: `AGENTS.md` (Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, Antigravity), `CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`. Windsurf, Grok Bot и IntelliJ compile не поддерживают. Что попадает в файл у каждого агента: [Собрать AGENTS.md](/guide/situations/compile-agents#contents). Нужен `bapm.yml` в текущем каталоге. Неизвестные флаги отвергаются.
@@ -28,10 +28,13 @@ Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes и Antigravity использ�
 | `--clean`         | —              | Удалить осиротевшие generated-файлы выбранных хостов (только с валидным Build ID)                                                               | off                                    |
 | `--dry-run`       | —              | Превью всех would-write путей и would-remove для `--clean`; не менять файлы                                                                     | off                                    |
 | `-v`, `--verbose` | —              | Thin source attribution (name, type, path)                                                                                                      | off                                    |
+| `--watch`, `-w`   | —              | Собрать один раз, затем пересобирать при изменении входов; Ctrl+C / SIGTERM останавливает                                                       | off                                    |
 | `--validate`      | —              | Только discover/validate; не писать и не чистить                                                                                                | off                                    |
 | `--help`, `-h`    | —              | Показать help                                                                                                                                   | —                                      |
 
 `--dry-run` и `--validate` не пишут выходные файлы. В multi-target режиме `--dry-run` печатает по строке на каждый хост. `--validate` имеет приоритет: `--clean` при нём не удаляет файлы.
+
+`--watch` несовместим с `--validate`: watch обязан писать результат каждого прогона, поэтому CLI отвергает сочетание до запуска. `--watch --dry-run` разрешён и только печатает would-write на каждом изменении. С `--watch` можно использовать `--target`, `--all`, `--distributed`, `--strategy` и `--clean`.
 
 Выбор host: `--target` / `--all` → sole манифест `active` → `target` из `~/.bapm/config.json` → sole auto-detect → fail. Multi-`active` без `--target` — ошибка. `--target` и `--all` взаимоисключающие. `-o` нельзя сочетать с несколькими хостами: один путь не может быть общим для разных хостов. `--clean` использует тот же выбор хостов и не требует явного `--target`, если срабатывает sole `active` / config / auto-detect.
 
@@ -99,4 +102,23 @@ bapm compile --clean             # собрать текущие файлы и �
 
 Сценарий: [Собрать AGENTS.md](/guide/situations/compile-agents).
 
-`--watch` по-прежнему не реализован: compile запускается вручную. Build ID и `--clean` уже есть.
+## Watch {#watch}
+
+```bash
+bapm compile --watch
+bapm compile --watch --target cursor,claude
+bapm compile --watch --distributed --clean
+```
+
+`--watch` делает один обычный compile, затем следит за входами:
+
+- `bapm.yml` / `apm.yml` и `bapm.local.yml` (а также `apm.local.yml`, если он появится);
+- корневые `SKILL.md` и `*.prompt.md`;
+- `.apm/`, `apm_modules/`, `skills/`, `hooks/`, `.agents/local/`;
+- каталоги локальных зависимостей из манифеста (`local:` / `path:`).
+
+Изменения склеиваются debounce-окном ~200 мс, прогоны не пересекаются: событие во время сборки даёт один отложенный перезапуск. При изменении манифеста набор отслеживаемых локальных каталогов пересчитывается.
+
+Если compile упал (например, манифест временно невалиден), ошибка печатается, watcher продолжает работать; следующее изменение запускает новую попытку. Ctrl+C и SIGTERM закрывают watcher и завершают процесс с кодом `0`. Сетевых запросов watch не добавляет: если изменились зависимости, выполните `bapm install` отдельно.
+
+Ограничения: watch не следит за git-зависимостями и не переустанавливает `apm_modules`; изменение уже установленного пакета в кэше не подхватывается, пока пакет не будет материализован заново. Watch также не реализует file-match scoring и наследование контекста APM-оптимизатора.

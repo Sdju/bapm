@@ -1,4 +1,10 @@
-import { compileAgentsMd } from "@b-apm/core";
+import {
+  compileAgentsMd,
+  watchCompile,
+  type CompileAgentsMdResult,
+  type CompileWatchFactory,
+  type CompileWatchTarget,
+} from "@b-apm/core";
 import {
   createCliIntegrationRegistry,
   registerManifestIntegrationsFromCwd,
@@ -7,12 +13,23 @@ import { readConfiguredTarget } from "@/modules/Config";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
-export type CompileOptions = { args?: string[]; cwd?: string };
+/** Test hooks for `--watch`; production runs leave them undefined. */
+export type CompileWatchHooks = {
+  watchFactory?: CompileWatchFactory;
+  once?: boolean;
+  debounceMs?: number;
+  signal?: AbortSignal;
+  resolveTargets?: (cwd: string) => CompileWatchTarget[];
+};
+
+export type CompileOptions = { args?: string[]; cwd?: string; watch?: CompileWatchHooks };
 
 export type ParsedCompileArgs = {
   validate: boolean;
   dryRun: boolean;
   verbose: boolean;
+  /** Recompile when relevant inputs change. */
+  watch: boolean;
   outputFile?: string;
   /** Single forced host id (backward-compatible; `--target a,b` also fills this). */
   target?: string;
@@ -53,6 +70,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
   let validate = false;
   let dryRun = false;
   let verbose = false;
+  let watch = false;
   let all = false;
   let distributed = false;
   let clean = false;
@@ -63,6 +81,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     validate,
     dryRun,
     verbose,
+    watch,
     all,
     distributed,
     clean,
@@ -86,6 +105,10 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     }
     if (arg === "--verbose" || arg === "-v") {
       verbose = true;
+      continue;
+    }
+    if (arg === "--watch" || arg === "-w") {
+      watch = true;
       continue;
     }
     if (arg === "--all") {
@@ -178,7 +201,7 @@ export function formatCompileHelp(deps: LifecycleCliDeps): string {
   return `${deps.name} compile — Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
 
 Usage:
-  bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--clean] [--dry-run] [-v] [--validate]
+  bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--clean] [--dry-run] [-v] [--watch] [--validate]
 
 Options:
   -o, --output PATH   Override the target's default output path (single target only)
@@ -189,6 +212,7 @@ Options:
   --clean             Remove orphaned generated outputs for the selected hosts
   --dry-run           Preview every would-write path and --clean removal; do not mutate
   -v, --verbose       Print thin source attribution (name, type, path)
+  --watch, -w         Compile once, then recompile when inputs change (Ctrl+C stops)
   --validate          Discover/validate only; do not write or clean
   --help, -h          Show this help
 
@@ -204,7 +228,15 @@ inputs keep the same id; changed inputs change it.
 --clean removes only orphaned target-shaped outputs that carry a valid Build ID
 and are absent from this run's planned output set. Hand-authored files and
 generated files edited after compile are never deleted. --validate suppresses
-cleaning. --watch is not implemented yet.
+cleaning.
+
+--watch performs the initial compile, then watches the manifest (bapm.yml /
+apm.yml), .apm/, apm_modules/, package-root skills/hooks/prompts and local
+dependency directories. Changes are debounced (~200 ms), recompiled serially,
+and transient compile errors are printed without stopping the loop. Ctrl+C or
+SIGTERM stops cleanly with exit 0. --watch is incompatible with --validate;
+--watch --dry-run only previews each run. It never downloads; run bapm install
+separately when dependencies change.
 
 Multi-target: each selected host writes its own file in one invocation. If two selected
 hosts share an output path (Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, Antigravity
@@ -253,101 +285,182 @@ export async function runCompileCli(
     console.error(`${deps.name}: ${message}`);
     return { ok: false, exitCode: 1, message };
   }
-  const multi = parsed.all === true || explicitMulti;
-  try {
-    const cwd = options.cwd ?? process.cwd();
-    // Fresh registry per run so object-map loads do not leak across projects.
-    const registry = createCliIntegrationRegistry();
-    await registerManifestIntegrationsFromCwd(registry, cwd);
-    const result = await compileAgentsMd({
-      cwd: options.cwd,
-      outputFile: parsed.outputFile,
-      forcedTarget: multi ? undefined : parsed.target,
-      forcedTargets: multi && !parsed.all ? parsed.targets : undefined,
-      all: parsed.all === true,
-      distributed: parsed.distributed,
-      clean: parsed.clean,
-      configTarget: readConfiguredTarget(),
-      integrationRegistry: registry,
-      validate: parsed.validate,
-      dryRun: parsed.dryRun,
-      verbose: parsed.verbose,
-    });
-
-    if (parsed.verbose) {
-      for (const entry of result.attribution) {
-        const parts = [entry.name, entry.type];
-        if (entry.path) parts.push(entry.path);
-        console.log(parts.join("\t"));
-      }
-    }
-
-    const multiple = result.outputs.length > 1;
-    // validate-first: when validate is set, never use dry-run would-write messaging
-    if (parsed.validate) {
-      console.log(
-        `compile --validate ok (${result.primitivesCount} primitives; ${result.outputs.length} outputs; no write)`,
-      );
-    } else if (parsed.dryRun) {
-      if (multiple) {
-        for (const output of result.outputs) {
-          console.log(
-            `compile --dry-run: would write ${output.path} (${output.targetId}) (${result.primitivesCount} primitives)`,
-          );
-        }
-      } else {
-        const previewPath = result.path ?? parsed.outputFile ?? "(target default)";
-        console.log(
-          `compile --dry-run: would write ${previewPath} (${result.primitivesCount} primitives)`,
-        );
-      }
-    } else if (multiple) {
-      for (const output of result.outputs) {
-        if (output.wrote) {
-          console.log(
-            `Wrote ${output.path} (${output.targetId}) (${result.primitivesCount} primitives)`,
-          );
-        }
-      }
-    } else if (result.wrote) {
-      console.log(`Wrote ${result.path ?? "AGENTS.md"} (${result.primitivesCount} primitives)`);
-    }
-
-    if (parsed.clean && !parsed.validate) {
-      const clean = result.clean;
-      if (parsed.dryRun) {
-        const paths = clean?.wouldRemove ?? [];
-        if (paths.length === 0) {
-          console.log("compile --clean --dry-run: no orphaned generated outputs to remove");
-        } else {
-          for (const path of paths) {
-            console.log(`compile --clean --dry-run: would remove ${path}`);
-          }
-        }
-      } else {
-        const paths = clean?.removed ?? [];
-        if (paths.length === 0) {
-          console.log("compile --clean: no orphaned generated outputs to remove");
-        } else {
-          for (const path of paths) {
-            console.log(`compile --clean: removed ${path}`);
-          }
-        }
-      }
-      if (parsed.verbose) {
-        for (const entry of clean?.skipped ?? []) {
-          console.log(`compile --clean: kept ${entry.path} (${entry.reason})`);
-        }
-      }
-    }
-
-    return { ok: result.ok, exitCode: result.ok ? 0 : 1 };
-  } catch (error) {
-    const message = enrichUnregisteredTargetMessage(
-      error instanceof Error ? error.message : String(error),
-      options.cwd ?? process.cwd(),
-    );
+  if (parsed.watch && parsed.validate) {
+    const message = "--watch cannot be combined with --validate (watch must write each run)";
     console.error(`${deps.name}: ${message}`);
     return { ok: false, exitCode: 1, message };
   }
+  const multi = parsed.all === true || explicitMulti;
+  const cwd = options.cwd ?? process.cwd();
+
+  if (parsed.watch) {
+    return runCompileWatch(deps, options, parsed, cwd, multi);
+  }
+
+  try {
+    await runCompileOnce(deps, parsed, cwd, multi);
+    return { ok: true, exitCode: 0 };
+  } catch (error) {
+    const message = compileErrorMessage(error, cwd);
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, exitCode: 1, message };
+  }
+}
+
+/** One compile invocation: fresh registry, target selection, output printing. */
+async function runCompileOnce(
+  deps: LifecycleCliDeps,
+  parsed: ParsedCompileArgs,
+  cwd: string,
+  multi: boolean,
+): Promise<CompileAgentsMdResult> {
+  // Fresh registry per run so object-map loads do not leak across projects.
+  const registry = createCliIntegrationRegistry();
+  await registerManifestIntegrationsFromCwd(registry, cwd);
+  const result = await compileAgentsMd({
+    cwd,
+    outputFile: parsed.outputFile,
+    forcedTarget: multi ? undefined : parsed.target,
+    forcedTargets: multi && !parsed.all ? parsed.targets : undefined,
+    all: parsed.all === true,
+    distributed: parsed.distributed,
+    clean: parsed.clean,
+    configTarget: readConfiguredTarget(),
+    integrationRegistry: registry,
+    validate: parsed.validate,
+    dryRun: parsed.dryRun,
+    verbose: parsed.verbose,
+  });
+
+  printCompileResult(parsed, result);
+  return result;
+}
+
+function printCompileResult(parsed: ParsedCompileArgs, result: CompileAgentsMdResult): void {
+  if (parsed.verbose) {
+    for (const entry of result.attribution) {
+      const parts = [entry.name, entry.type];
+      if (entry.path) parts.push(entry.path);
+      console.log(parts.join("\t"));
+    }
+  }
+
+  const multiple = result.outputs.length > 1;
+  // validate-first: when validate is set, never use dry-run would-write messaging
+  if (parsed.validate) {
+    console.log(
+      `compile --validate ok (${result.primitivesCount} primitives; ${result.outputs.length} outputs; no write)`,
+    );
+  } else if (parsed.dryRun) {
+    if (multiple) {
+      for (const output of result.outputs) {
+        console.log(
+          `compile --dry-run: would write ${output.path} (${output.targetId}) (${result.primitivesCount} primitives)`,
+        );
+      }
+    } else {
+      const previewPath = result.path ?? parsed.outputFile ?? "(target default)";
+      console.log(
+        `compile --dry-run: would write ${previewPath} (${result.primitivesCount} primitives)`,
+      );
+    }
+  } else if (multiple) {
+    for (const output of result.outputs) {
+      if (output.wrote) {
+        console.log(
+          `Wrote ${output.path} (${output.targetId}) (${result.primitivesCount} primitives)`,
+        );
+      }
+    }
+  } else if (result.wrote) {
+    console.log(`Wrote ${result.path ?? "AGENTS.md"} (${result.primitivesCount} primitives)`);
+  }
+
+  if (parsed.clean && !parsed.validate) {
+    const clean = result.clean;
+    if (parsed.dryRun) {
+      const paths = clean?.wouldRemove ?? [];
+      if (paths.length === 0) {
+        console.log("compile --clean --dry-run: no orphaned generated outputs to remove");
+      } else {
+        for (const path of paths) {
+          console.log(`compile --clean --dry-run: would remove ${path}`);
+        }
+      }
+    } else {
+      const paths = clean?.removed ?? [];
+      if (paths.length === 0) {
+        console.log("compile --clean: no orphaned generated outputs to remove");
+      } else {
+        for (const path of paths) {
+          console.log(`compile --clean: removed ${path}`);
+        }
+      }
+    }
+    if (parsed.verbose) {
+      for (const entry of clean?.skipped ?? []) {
+        console.log(`compile --clean: kept ${entry.path} (${entry.reason})`);
+      }
+    }
+  }
+}
+
+async function runCompileWatch(
+  deps: LifecycleCliDeps,
+  options: CompileOptions,
+  parsed: ParsedCompileArgs,
+  cwd: string,
+  multi: boolean,
+): Promise<LifecycleResult> {
+  const controller = new AbortController();
+  const external = options.watch?.signal;
+  const forwardAbort = (): void => controller.abort();
+  if (external) {
+    if (external.aborted) controller.abort();
+    else external.addEventListener("abort", forwardAbort, { once: true });
+  }
+
+  const onSignal = (): void => {
+    console.log(`${deps.name} compile --watch: stopping…`);
+    controller.abort();
+  };
+  // Replacing the default SIGINT/SIGTERM action lets the loop close watchers
+  // and return exit 0 instead of killing the process mid-write.
+  process.once("SIGINT", onSignal);
+  process.once("SIGTERM", onSignal);
+
+  try {
+    const result = await watchCompile({
+      cwd,
+      compile: async () => runCompileOnce(deps, parsed, cwd, multi),
+      watchFactory: options.watch?.watchFactory,
+      once: options.watch?.once,
+      debounceMs: options.watch?.debounceMs,
+      signal: controller.signal,
+      resolveTargets: options.watch?.resolveTargets,
+      onStatus: (message) => console.log(message),
+      onError: (error) => console.error(`${deps.name}: ${compileErrorMessage(error, cwd)}`),
+    });
+
+    if (result.stopped === "once") {
+      const ok = result.errors === 0;
+      return { ok, exitCode: ok ? 0 : 1 };
+    }
+    return { ok: true, exitCode: 0 };
+  } catch (error) {
+    const message = compileErrorMessage(error, cwd);
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, exitCode: 1, message };
+  } finally {
+    process.removeListener("SIGINT", onSignal);
+    process.removeListener("SIGTERM", onSignal);
+    external?.removeEventListener("abort", forwardAbort);
+  }
+}
+
+function compileErrorMessage(error: unknown, cwd: string): string {
+  return enrichUnregisteredTargetMessage(
+    error instanceof Error ? error.message : String(error),
+    cwd,
+  );
 }

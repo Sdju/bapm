@@ -717,15 +717,25 @@ export type {
   CompileCleanSkipReason,
   CompileOutput,
   CompileOutputShape,
+  CompileWatchFactory,
+  CompileWatchFactoryOptions,
+  CompileWatchHandle,
+  CompileWatchOptions,
+  CompileWatchResult,
+  CompileWatchTarget,
 } from "@/modules/Compile";
 
 export {
   cleanCompileOutputs,
   compileAgentsMd,
   compileProject,
+  createNodeCompileWatchFactory,
+  DEFAULT_COMPILE_WATCH_DEBOUNCE_MS,
   emitAgentsMd,
   outputShapeFromPath,
+  resolveCompileWatchTargets,
   runCompile,
+  watchCompile,
 } from "@/modules/Compile";
 
 export type {
