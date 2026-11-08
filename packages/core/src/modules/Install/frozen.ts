@@ -34,12 +34,25 @@ export function enforceFrozen(options: EnforceFrozenOptions = {}): void {
   }
 
   const { document: manifest } = loadManifest({ cwd });
-  const missing = missingDirectPins(manifest, loaded.document.dependencies ?? []);
+  const lockDeps = loaded.document.dependencies ?? [];
+  const missing = missingDirectPins(manifest, lockDeps);
   if (missing.length > 0) {
     throw new InstallError(
       "INSTALL_FROZEN_MISSING_PIN",
       `Frozen install missing direct dependency pin(s): ${missing.join(", ")}`,
       { details: { missing } },
+    );
+  }
+
+  const refDrift = directRefDrift(manifest, lockDeps);
+  if (refDrift.length > 0) {
+    const summary = refDrift
+      .map((d) => `${d.name} (manifest ref ${d.ref}, lock resolved_ref ${d.resolved_ref})`)
+      .join(", ");
+    throw new InstallError(
+      "INSTALL_FROZEN_REF_DRIFT",
+      `Frozen install ref drift: ${summary}. Run bapm install --update locally and commit the lock`,
+      { details: { refDrift } },
     );
   }
 }
@@ -61,6 +74,52 @@ function listDirectApm(manifest: BapmManifest): DependencyEntry[] {
   return Array.isArray(apm) ? apm : [];
 }
 
+function listDirectDevApm(manifest: BapmManifest): DependencyEntry[] {
+  const apm = manifest.devDependencies?.apm;
+  return Array.isArray(apm) ? apm : [];
+}
+
+function directRefDrift(
+  manifest: BapmManifest,
+  lockDeps: LockedDependency[],
+): Array<{ name: string; ref: string; resolved_ref: string }> {
+  const drift: Array<{ name: string; ref: string; resolved_ref: string }> = [];
+
+  for (const entry of [...listDirectApm(manifest), ...listDirectDevApm(manifest)]) {
+    const n = normalizeEntry(entry);
+    if (typeof n === "string") continue;
+    const obj = n as ObjectDependency;
+    if (!obj.git || typeof obj.ref !== "string") continue;
+    const ref = obj.ref.trim();
+    if (!ref) continue;
+
+    const locked = lockDeps.filter((d) => gitLockMatches(obj.git!, d));
+    // Locks written before resolved_ref existed cannot prove or disprove drift.
+    const pinnedRefs = locked
+      .map((d) => (typeof d.resolved_ref === "string" ? d.resolved_ref.trim() : ""))
+      .filter((r) => r.length > 0);
+    if (pinnedRefs.length === 0) continue;
+    if (pinnedRefs.some((pinned) => pinned === ref)) continue;
+
+    const lockedName = locked.find((d) => typeof d.name === "string" && d.name)?.name;
+    drift.push({
+      name: obj.alias ?? obj.name ?? lockedName ?? summarize(entry),
+      ref,
+      resolved_ref: pinnedRefs[0]!,
+    });
+  }
+  return drift;
+}
+
+function gitLockMatches(git: string, d: LockedDependency): boolean {
+  const repo = String(d.repo_url ?? "");
+  if (!repo) return false;
+  if (repo.startsWith("local:")) return false;
+  const identity = toLockRepoUrl(git);
+  const locked = normalizeRepoIdentity(repo.includes("://") ? repo : `https://${repo}`);
+  return locked === identity || repo === identity || repo.endsWith(identity);
+}
+
 function hasPin(entry: DependencyEntry, lockDeps: LockedDependency[]): boolean {
   const n = normalizeEntry(entry);
   if (typeof n === "string") {
@@ -72,14 +131,7 @@ function hasPin(entry: DependencyEntry, lockDeps: LockedDependency[]): boolean {
   }
   const obj = n as ObjectDependency;
   if (obj.git) {
-    const identity = toLockRepoUrl(obj.git);
-    return lockDeps.some((d) => {
-      const repo = String(d.repo_url ?? "");
-      if (!repo) return false;
-      if (repo.startsWith("local:")) return false;
-      const locked = normalizeRepoIdentity(repo.includes("://") ? repo : `https://${repo}`);
-      return locked === identity || repo === identity || repo.endsWith(identity);
-    });
+    return lockDeps.some((d) => gitLockMatches(obj.git!, d));
   }
   if (obj.path) {
     const pathKey = obj.path.replace(/^\.\//, "").replace(/\/+$/, "");
