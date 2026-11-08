@@ -1,4 +1,5 @@
 import type { MarketplaceOutputRegistry } from "@b-apm/integration-api";
+import type { CheckMarketplaceDriftResult } from "@/modules/Marketplace";
 
 export type RunPackOptions = {
   cwd?: string;
@@ -6,7 +7,11 @@ export type RunPackOptions = {
   agentPlugins?: boolean;
   /** Produce a durable archive (MUST path for M7). */
   archive?: boolean;
-  /** Archive format; only `zip` is supported in M7. */
+  /**
+   * Bundle family. `zip` (default) is the M7 plain producer archive;
+   * `claude-plugin` emits a Claude Code plugin zip (`plugin.json` +
+   * `.claude-plugin/plugin.json` + preserved plugin-native tree).
+   */
   format?: string;
   /** Validate and collect without writing a durable artifact. */
   dryRun?: boolean;
@@ -14,6 +19,10 @@ export type RunPackOptions = {
   outputPath?: string;
   /** Also run pr-004 release gate before packing. */
   checkRelease?: boolean;
+  /** Read-only marketplace drift gate (`--check-clean`, exit 4 on drift). */
+  checkClean?: boolean;
+  /** Validate producer package metadata before any write (`--strict-metadata`, exit 5). */
+  strictMetadata?: boolean;
   /** Tag override for `--check-release`. */
   tag?: string;
   /**
@@ -47,6 +56,8 @@ export type RunPackResult = {
   archivePath?: string;
   filesPacked: number;
   marketplaceWritten?: boolean;
+  /** Populated when the read-only `--check-clean` drift gate ran. */
+  checkClean?: CheckMarketplaceDriftResult;
 };
 
 export type ExtractPackArchiveOptions = {

@@ -1,0 +1,50 @@
+{
+  "name": "@b-apm/integration-intellij",
+  "version": "0.3.0",
+  "description": "IntelliJ (JetBrains Copilot) MCP integration for bapm",
+  "keywords": [
+    "b-apm",
+    "bapm",
+    "unstable"
+  ],
+  "homepage": "https://github.com/Sdju/bapm#readme",
+  "bugs": {
+    "url": "https://github.com/Sdju/bapm/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sdju/bapm.git",
+    "directory": "packages/integration-intellij"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "test": "vp test",
+    "check": "vp check",
+    "prepublishOnly": "vp run build"
+  },
+  "dependencies": {
+    "@b-apm/integration-api": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-kiro",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Kiro IDE/CLI runtime integration for bapm",
   "keywords": [
     "b-apm",

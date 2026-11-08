@@ -1,10 +1,24 @@
 import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
-import type { IntegrationRegistry } from "@b-apm/integration-api";
+import type { McpRegistryLookup } from "@/modules/Mcp";
+import type { DeploymentScope, IntegrationRegistry } from "@b-apm/integration-api";
 
 export type InstallOnlyMode = "apm" | "mcp";
 
 export type RunInstallOptions = {
   cwd?: string;
+  /**
+   * Deployment scope. `project` (default) writes under `cwd`; `global` deploys
+   * file primitives and hooks into the user's home harness layout while the
+   * manifest and lock stay under `cwd` (the `~/.bapm` global root).
+   */
+  scope?: DeploymentScope;
+  /**
+   * Root for deployed file primitives, hooks, bin files, and deployed-hash
+   * inventory. Defaults to `cwd` (project behavior). A global install passes
+   * the user home so `~/.cursor`, `~/.claude`, `~/.codex`, and `~/.agents`
+   * are used while `cwd` remains the global manifest/lock root.
+   */
+  deployCwd?: string;
   frozen?: boolean;
   /** Rejected when combined with frozen. */
   update?: boolean;
@@ -52,6 +66,13 @@ export type RunInstallOptions = {
   forcedTarget?: string;
   /** Alias for `forcedTarget`. */
   forceTarget?: string;
+  /**
+   * User-config target default (`~/.bapm/config.json` `target`). Applied after
+   * manifest/local-overlay `active` and before auto-detect.
+   * CLI selection remains: --target → local overlay active → manifest active →
+   * config target → sole detect → fail.
+   */
+  configTarget?: string;
   /** Injected target registry (from @b-apm/integration-api). */
   integrationRegistry?: IntegrationRegistry;
   /** Alias accepted by acceptance helpers. */
@@ -76,8 +97,13 @@ export type RunInstallOptions = {
   policyPath?: string;
   /** Alias for `policyPath`. */
   policy?: string;
-  /** Skip policy discovery + checks (`--no-policy` / env disable). */
+  /** Full escape: skip policy discovery + checks (`--no-policy-all` / env disable). */
   noPolicy?: boolean;
+  /**
+   * Skip only repository-local policy (`--no-policy`). Org/remote policy,
+   * including `executables.deny` / `deny_all`, still applies.
+   */
+  noRepoPolicy?: boolean;
   /** Override ordered policy discovery providers. */
   policyProviders?: string[];
   /** Alias for `policyProviders`. */
@@ -134,6 +160,12 @@ export type RunInstallOptions = {
   /** Override `~/.bapm` for marketplace registry during install resolve. */
   marketplaceConfigDir?: string;
   configDir?: string;
+  /**
+   * MCP registry lookup port for `dependencies.mcp` entries that only request
+   * a registry lookup (`registry: true` / a registry URL). Without a port the
+   * legacy fail-closed `MCP_REGISTRY_UNSUPPORTED` diagnostic is preserved.
+   */
+  mcpRegistry?: McpRegistryLookup;
 };
 
 /** Alias for design naming flexibility. */

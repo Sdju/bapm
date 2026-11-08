@@ -1,10 +1,12 @@
 import { parseActiveField } from "./active.ts";
+import { negotiateManifestContract, type ManifestContract } from "./contract.ts";
 import { applyDepSubsetFields } from "./depSubset.ts";
 import type { ManifestWarning } from "./errors.ts";
 import { ManifestError } from "./errors.ts";
+import { isManifestExtensionKey } from "./extensions.ts";
 import { parsePresetsField } from "./presets.ts";
 import { isExemptInsecureHost } from "./registryUrl.ts";
-import { isValidTargetToken } from "./targets.ts";
+import { isValidTargetToken, normalizeTargetToken } from "./targets.ts";
 import type {
   ActiveEntry,
   BapmManifest,
@@ -41,12 +43,64 @@ const DEP_META_KEYS = new Set([
 const SEMVER_RE =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
 
+/**
+ * Top-level keys this client understands. Extension keys (`x-*`) are handled
+ * separately. Unknown keys are retained (req-mf-006) but produce a warning so
+ * a typo cannot silently become dead configuration (APM 0.35 parity).
+ */
+const KNOWN_TOP_LEVEL_KEYS = new Set([
+  "$schema",
+  "name",
+  "version",
+  "description",
+  "author",
+  "license",
+  "default_host",
+  "target",
+  "targets",
+  "type",
+  "scripts",
+  "includes",
+  "registries",
+  "replace",
+  "dependencies",
+  "devDependencies",
+  "compilation",
+  "policy",
+  "marketplace",
+  "allowExecutables",
+  "executables",
+  "lifecycle",
+  "homepage",
+  "repository",
+  "keywords",
+  "tags",
+  "build",
+  "manifestVersion",
+  "schemaVersion",
+  // bapm extensions understood by this client.
+  "active",
+  "presets",
+  "env",
+]);
+
 /** Env-safe key shape for top-level `env` / `{bake:NAME}` identifiers. */
 const ENV_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 export type ParseManifestResult = {
   document: BapmManifest;
   warnings: ManifestWarning[];
+  /** Contract selected by `$schema`; absent means the working draft. */
+  contract: ManifestContract;
+};
+
+export type ParseManifestOptions = {
+  /**
+   * APM applies root `replace:` rules only to the consumer manifest; dependency
+   * manifests may still declare the block. bapm rejects it by default so a root
+   * consumer never installs an upstream source by mistake.
+   */
+  allowReplace?: boolean;
 };
 
 /**
@@ -83,10 +137,47 @@ export function validateManifestEnv(value: unknown, pathPrefix = "env"): Record<
 }
 
 /**
+ * Validate top-level `scripts` as a string→string map. Command values are
+ * intentionally opaque shell lines; execution safety is enforced by the
+ * `bapm run` module (no eval, parameter values shell-escaped).
+ */
+export function validateManifestScripts(value: unknown): Record<string, string> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      'Manifest "scripts" must be a mapping of script names to command strings',
+      { path: "scripts" },
+    );
+  }
+
+  const out: Record<string, string> = {};
+  for (const [name, command] of Object.entries(value as Record<string, unknown>)) {
+    const entryPath = `scripts.${name}`;
+    if (!name.trim()) {
+      throw new ManifestError("MANIFEST_VALIDATION", "Manifest script name must be non-empty", {
+        path: entryPath,
+      });
+    }
+    if (typeof command !== "string") {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Manifest "${entryPath}" must be a string command`,
+        { path: entryPath },
+      );
+    }
+    out[name] = command;
+  }
+  return out;
+}
+
+/**
  * Validate a pre-parsed JS value as an OpenAPM/APM project manifest.
  * Retains unknown top-level and `x-*` keys on the returned document.
  */
-export function parseManifestDocument(input: unknown): ParseManifestResult {
+export function parseManifestDocument(
+  input: unknown,
+  options: ParseManifestOptions = {},
+): ParseManifestResult {
   const warnings: ManifestWarning[] = [];
 
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
@@ -97,6 +188,24 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
   }
 
   const raw = input as Record<string, unknown>;
+
+  // Contract selector (`$schema`) is negotiated before any shape validation so
+  // an unknown identity fails closed instead of silently using the draft.
+  const contract = negotiateManifestContract(raw);
+
+  for (const key of Object.keys(raw)) {
+    if (KNOWN_TOP_LEVEL_KEYS.has(key) || isManifestExtensionKey(key)) continue;
+    warnings.push({
+      code: "MF_006_UNKNOWN_TOP_LEVEL",
+      message:
+        `Unknown top-level key "${key}" is retained but not interpreted. ` +
+        `Rename it to x-${key.replace(/^x-/, "")} (OpenAPM x-[a-z][a-z0-9-]*) ` +
+        `to declare a vendor extension, or remove it if it is a typo.`,
+      path: key,
+    });
+  }
+
+  assertReplaceSupported(raw, options);
 
   if ("workspaces" in raw) {
     throw new ManifestError("MANIFEST_VALIDATION", 'OpenAPM v0.1 rejects top-level "workspaces"', {
@@ -112,7 +221,7 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
     );
   }
 
-  let normalizedTarget: string | TargetIntegrationMap | undefined;
+  let normalizedTarget: string | string[] | TargetIntegrationMap | undefined;
   let normalizedTargets: string[] | TargetIntegrationMap | undefined;
 
   if ("target" in raw && raw.target !== undefined) {
@@ -184,6 +293,10 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
     document.env = validateManifestEnv(raw.env);
   }
 
+  if ("scripts" in raw && raw.scripts !== undefined) {
+    document.scripts = validateManifestScripts(raw.scripts);
+  }
+
   if ("dependencies" in raw) {
     document.dependencies = validateDependencyBlock(raw.dependencies, "dependencies");
   }
@@ -194,12 +307,68 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
     document.registries = validateRegistries(raw.registries);
   }
 
-  return { document, warnings };
+  return { document, warnings, contract };
 }
 
 /** Back-compat entry for already-loaded JS objects. */
-export function parseManifest(input: unknown): BapmManifest {
-  return parseManifestDocument(input).document;
+export function parseManifest(input: unknown, options: ParseManifestOptions = {}): BapmManifest {
+  return parseManifestDocument(input, options).document;
+}
+
+/**
+ * Root `replace:` (APM 0.35 replacement rules) is unsupported. Refuse instead
+ * of silently installing the upstream source where the user configured a fork
+ * or local checkout.
+ */
+function assertReplaceSupported(raw: Record<string, unknown>, options: ParseManifestOptions): void {
+  if (options.allowReplace) return;
+  if (!("replace" in raw)) return;
+  const value = raw.replace;
+  // Absent/empty rules have no semantic effect; mirror APM's `parse_replace_block`.
+  if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+    return;
+  }
+
+  const rules = describeReplacementRules(value);
+  throw new ManifestError(
+    "MANIFEST_REPLACE_UNSUPPORTED",
+    `Manifest declares root "replace:" (${rules.join("; ")}), which bapm does not support. ` +
+      `Refusing to continue because the replacement would be ignored and bapm would install ` +
+      `the upstream source instead of the configured local checkout/fork. ` +
+      `Remove the replace: block or use APM 0.35+ for this project.`,
+    { path: "replace", details: { rules } },
+  );
+}
+
+/** Describe replacement rules for the diagnostic without fully re-parsing them. */
+function describeReplacementRules(value: unknown): string[] {
+  const entries = Array.isArray(value) ? value : [value];
+  return entries.map((entry, index) => {
+    const label = `replace[${index}]`;
+    if (!isPlainObject(entry)) {
+      return `${label}=${JSON.stringify(entry) ?? String(entry)}`;
+    }
+    const selector = isPlainObject(entry.for) ? entry.for : undefined;
+    const source = isPlainObject(entry.with) ? entry.with : undefined;
+
+    const selectorParts = [selector?.git, selector?.path]
+      .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+      .map((part) => part.trim());
+    const selectorText = selectorParts.length > 0 ? selectorParts.join(" ") : "?";
+
+    let sourceText = "?";
+    if (source) {
+      const git = typeof source.git === "string" ? source.git.trim() : "";
+      const path = typeof source.path === "string" ? source.path.trim() : "";
+      const ref = typeof source.ref === "string" ? source.ref.trim() : "";
+      if (git) {
+        sourceText = `git:${git}${ref ? `#${ref}` : ""}${path ? ` path:${path}` : ""}`;
+      } else if (path) {
+        sourceText = `path:${path}`;
+      }
+    }
+    return `${label} ${selectorText} -> ${sourceText}`;
+  });
 }
 
 function validateDependencyBlock(value: unknown, field: string): DependencyLists {
@@ -524,10 +693,15 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Dual-shape `target` / `targets`: legacy string|string[] or host→package object map.
+ * Dual-shape `target` / `targets`: legacy scalar / CSV / string array or
+ * host→package object map. Scalar and CSV forms normalize to a canonical
+ * string list, matching APM `parse_targets_field` / `parse_target_field`.
  * Map keys are mf-005; values are trimmed non-empty npm specifier strings.
  */
-function parseTargetOrTargetsField(value: unknown, field: "target"): string | TargetIntegrationMap;
+function parseTargetOrTargetsField(
+  value: unknown,
+  field: "target",
+): string | string[] | TargetIntegrationMap;
 function parseTargetOrTargetsField(
   value: unknown,
   field: "targets",
@@ -538,48 +712,75 @@ function parseTargetOrTargetsField(
 ): string | string[] | TargetIntegrationMap {
   if (field === "target") {
     if (typeof value === "string") {
-      if (!value.trim()) {
-        throw new ManifestError(
-          "MANIFEST_VALIDATION",
-          'Manifest "target" must be a non-empty string (vendor ids x-<vendor>-<name> allowed)',
-          { path: "target" },
-        );
-      }
-      assertValidTargetToken(value, "target");
-      return value;
+      const tokens = splitTargetCsv(value, "target");
+      assertValidTargetTokens(tokens, "target");
+      const normalized = normalizeTargetTokenList(tokens);
+      // Single-token scalar keeps the legacy string projection; CSV / list
+      // forms are canonical arrays so callers never re-split.
+      return normalized.length === 1 ? normalized[0]! : normalized;
+    }
+    if (Array.isArray(value)) {
+      assertValidTargetTokens(value, "target");
+      const normalized = normalizeTargetTokenList(value as string[]);
+      return normalized.length === 1 ? normalized[0]! : normalized;
     }
     if (isPlainObject(value)) {
       return parseTargetIntegrationMap(value, "target");
     }
     throw new ManifestError(
       "MANIFEST_VALIDATION",
-      'Manifest "target" must be a non-empty string or a non-empty object mapping (host id → package)',
+      'Manifest "target" must be a non-empty string (optionally comma-separated), a string array, or a non-empty object mapping (host id → package)',
       { path: "target" },
     );
   }
 
   // targets
+  if (typeof value === "string") {
+    const tokens = splitTargetCsv(value, "targets");
+    assertValidTargetTokens(tokens, "targets");
+    return normalizeTargetTokenList(tokens);
+  }
   if (Array.isArray(value)) {
-    if (value.some((t) => typeof t !== "string" || !t.trim())) {
-      throw new ManifestError(
-        "MANIFEST_VALIDATION",
-        'Manifest "targets" must be an array of non-empty strings or a string-valued object mapping',
-        { path: "targets" },
-      );
-    }
-    for (let i = 0; i < value.length; i++) {
-      assertValidTargetToken(String(value[i]), `targets[${i}]`);
-    }
-    return value as string[];
+    assertValidTargetTokens(value, "targets");
+    return normalizeTargetTokenList(value as string[]);
   }
   if (isPlainObject(value)) {
     return parseTargetIntegrationMap(value, "targets");
   }
   throw new ManifestError(
     "MANIFEST_VALIDATION",
-    'Manifest "targets" must be an array of non-empty strings or a string-valued object mapping',
+    'Manifest "targets" must be a non-empty string (optionally comma-separated), an array of non-empty strings, or a string-valued object mapping',
     { path: "targets" },
   );
+}
+
+/** APM CSV sugar: `"claude,copilot"` → `["claude", "copilot"]`. */
+function splitTargetCsv(value: string, field: "target" | "targets"): string[] {
+  const tokens = value
+    .split(",")
+    .map((token) => token.trim())
+    .filter(Boolean);
+  if (tokens.length === 0) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      `Manifest "${field}" must contain at least one non-empty target token`,
+      { path: field },
+    );
+  }
+  return tokens;
+}
+
+function assertValidTargetTokens(tokens: unknown[], field: "target" | "targets"): void {
+  if (tokens.some((t) => typeof t !== "string" || !t.trim())) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      `Manifest "${field}" must be an array of non-empty strings or a string-valued object mapping`,
+      { path: field },
+    );
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    assertValidTargetToken(String(tokens[i]), `${field}[${i}]`);
+  }
 }
 
 function parseTargetIntegrationMap(
@@ -596,6 +797,7 @@ function parseTargetIntegrationMap(
   }
 
   const out: TargetIntegrationMap = {};
+  const sourceKeyByCanonical = new Map<string, string>();
   for (const key of keys) {
     const trimmedKey = key.trim();
     const entryPath = `${field}.${trimmedKey || key}`;
@@ -617,7 +819,31 @@ function parseTargetIntegrationMap(
         { path: entryPath },
       );
     }
-    out[trimmedKey] = trimmedVal;
+
+    const canonicalKey = normalizeTargetToken(trimmedKey);
+    const previousKey = sourceKeyByCanonical.get(canonicalKey);
+    if (previousKey !== undefined) {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Manifest "${field}" object map has duplicate host "${canonicalKey}" after alias normalization ("${previousKey}" and "${trimmedKey}")`,
+        { path: entryPath, details: { token: trimmedKey, canonical: canonicalKey } },
+      );
+    }
+    sourceKeyByCanonical.set(canonicalKey, trimmedKey);
+    out[canonicalKey] = trimmedVal;
+  }
+  return out;
+}
+
+/** Canonicalise aliases and drop duplicates while preserving first-seen order. */
+function normalizeTargetTokenList(tokens: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const token of tokens) {
+    const canonical = normalizeTargetToken(token);
+    if (seen.has(canonical)) continue;
+    seen.add(canonical);
+    out.push(canonical);
   }
   return out;
 }

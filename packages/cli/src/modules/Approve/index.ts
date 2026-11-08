@@ -18,7 +18,10 @@ export function createApprove(deps?: Partial<ApproveCliDeps>) {
   const resolved: ApproveCliDeps = {
     name: deps?.name ?? "bapm",
     manifestFile: deps?.manifestFile ?? "bapm.yml",
+    configRoot: deps?.configRoot,
     saveGrant: deps?.saveGrant,
+    confirm: deps?.confirm,
+    isTTY: deps?.isTTY,
   };
   return {
     async run(options: { args?: string[]; cwd?: string } = {}): Promise<LifecycleResult> {

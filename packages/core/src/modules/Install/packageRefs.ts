@@ -20,8 +20,10 @@ export function normalizeExcludeIds(options: {
   const raw = [...(options.excludeTargets ?? []), ...(options.exclude ?? [])];
   const out: string[] = [];
   const seen = new Set<string>();
-  for (const id of raw) {
-    const trimmed = String(id ?? "").trim();
+  // `--exclude copilot,windsurf` is the documented opt-out form; repeatable
+  // `--exclude a --exclude b` stays equivalent.
+  for (const id of raw.flatMap((value) => String(value ?? "").split(","))) {
+    const trimmed = id.trim();
     if (!trimmed || seen.has(trimmed)) continue;
     seen.add(trimmed);
     out.push(trimmed);

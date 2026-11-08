@@ -42,6 +42,8 @@ export type DiscoveredPolicy =
 export type LoadPolicyOptions = {
   cwd?: string;
   path?: string;
+  /** Skip repository-local discovery providers; remote/org providers still run. */
+  noRepoPolicy?: boolean;
 };
 
 export type LoadPolicyResult = {
@@ -120,8 +122,13 @@ export type PolicyGateOptions = {
   policyPath?: string;
   /** Alias accepted by acceptance helpers. */
   policy?: string;
-  /** Skip discovery + checks (`--no-policy`). */
+  /** Full escape: skip every policy source (`--no-policy-all` / env disable). */
   noPolicy?: boolean;
+  /**
+   * Skip only repository-local policy discovery/checks (`--no-policy`).
+   * Remote/org providers still run, so org deny/deny_all applies.
+   */
+  noRepoPolicy?: boolean;
   candidates?: PolicyCandidate[];
   dependencies?: PolicyDependencyInput[];
   graphDepth?: number;

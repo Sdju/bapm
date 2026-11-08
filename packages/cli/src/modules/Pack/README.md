@@ -7,4 +7,4 @@ CLI module for `bapm pack` — thin wrapper over `@b-apm/core` `runPack` / `chec
 ## Public API
 
 - `createPack(deps)` → `{ run, formatHelp }`
-- Flags: `--archive`, `--dry-run`, `--check-release`, `--tag`
+- Flags: `--archive`, `--agent-plugins`, `--format <zip|claude-plugin>`, `--dry-run`, `--check-release`, `--check-versions`, `--check-clean`, `--strict-metadata`, `--tag`

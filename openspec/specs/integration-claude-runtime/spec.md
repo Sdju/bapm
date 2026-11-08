@@ -92,17 +92,22 @@ Agent primitives MUST materialize to `.claude/agents/<name>.md`. Command primiti
 
 ### Requirement: Hooks merge into settings.json with ownership sidecar
 
-Hook primitives MUST merge into `.claude/settings.json` under the native hooks structure Claude Code expects, copying referenced scripts under `.claude/hooks/` as needed. The package MUST maintain a project sidecar at `.claude/bapm-hooks.json` recording bapm-owned hook entries/scripts so reinstall can remove previously owned entries before re-merge. Native `settings.json` MUST preserve unrelated top-level keys and non-owned hook handlers. Ownership metadata MUST NOT be left as Claude-native private keys inside handler objects in `settings.json`.
+Hook primitives MUST merge into `.claude/settings.json` under Claude Code's native nested matcher-group structure: `{ "matcher": <matcher|"*">, "hooks": [ … ] }`. Flat source command entries MUST receive matcher `"*"` when no matcher is declared and MUST receive `"type": "command"` when `type` is omitted; explicit handler types MUST be preserved and nested handlers already inside matcher groups MUST NOT be retyped. Source matcher groups MUST keep their matcher and other group/handler fields. Referenced scripts MUST be copied under `.claude/hooks/` as needed. The package MUST maintain a project sidecar at `.claude/bapm-hooks.json` recording bapm-owned hook entries/scripts so reinstall can remove previously owned entries (including legacy flat entries) before re-merge. Native `settings.json` MUST preserve unrelated top-level keys and non-owned hook handlers or groups. Ownership metadata MUST NOT be left as Claude-native private keys inside handler objects in `settings.json`.
 
 #### Scenario: Hooks merge into settings.json
 
 - **WHEN** Claude materialize runs with a valid hook primitive JSON
-- **THEN** `.claude/settings.json` MUST contain the merged hook handlers and unrelated existing settings keys MUST remain intact
+- **THEN** `.claude/settings.json` MUST contain the merged nested matcher groups and unrelated existing settings keys MUST remain intact
+
+#### Scenario: Flat untyped command becomes a typed matcher group
+
+- **WHEN** Claude materialize receives a flat `SessionStart` command entry without `type`
+- **THEN** `.claude/settings.json` MUST write a `matcher: "*"` group whose nested handler has `type: "command"`
 
 #### Scenario: Reinstall replaces owned hooks only
 
 - **WHEN** Claude materialize runs again after a prior owned hooks deploy
-- **THEN** previously bapm-owned hook entries MUST be replaced according to the sidecar and non-owned handlers MUST remain
+- **THEN** previously bapm-owned hook entries MUST be replaced according to the sidecar and non-owned handlers or groups MUST remain
 
 ### Requirement: Forced target may create .claude roots
 

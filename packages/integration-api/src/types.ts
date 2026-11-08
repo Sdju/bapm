@@ -5,6 +5,12 @@
 /** Target identifier (built-in like `cursor`, or vendor `x-<vendor>-<name>`). */
 export type TargetId = string;
 
+/**
+ * Deployment scope. `project` writes under the project cwd (default);
+ * `global` writes user-scoped host files selected by the integration.
+ */
+export type DeploymentScope = "project" | "global";
+
 /** Source attribution for a discovered primitive (OpenAPM pr-001). */
 export type PrimitiveSource = "local" | `dependency:${string}`;
 
@@ -46,6 +52,8 @@ export type MaterializeContext = {
   targetId: TargetId;
   /** Deploy roots declared by the target (relative to cwd). */
   deployRoots: string[];
+  /** Project (default) or user-global deployment. */
+  scope?: DeploymentScope;
   [key: string]: unknown;
 };
 
@@ -98,6 +106,12 @@ export type CompileContext = {
   outputFile?: string;
   /** Core-owned write intent; false for validation and preview requests. */
   write: boolean;
+  /**
+   * Core-owned distributed placement intent. When true, hosts that normally
+   * omit instruction primitives (because install materializes them as native
+   * rules) MUST render them into this compile output instead.
+   */
+  includeInstructions?: boolean;
 };
 
 /** Target-owned compile emission result. Paths are project-relative. */
@@ -124,6 +138,7 @@ export type McpServerConfig = {
   args?: unknown[];
   url?: string;
   env?: Record<string, string>;
+  headers?: Record<string, string>;
   /** Package provenance (dependency name or local). */
   packageName?: string;
   [key: string]: unknown;
@@ -136,6 +151,18 @@ export type ConfigureMcpContext = {
   targetId?: TargetId;
   /** Deploy roots declared by the target (relative to cwd). */
   deployRoots?: string[];
+  /**
+   * Project (default) or user-global deployment. Global integrations must
+   * select a user-scoped config path instead of writing under `cwd`.
+   */
+  scope?: DeploymentScope;
+  /**
+   * Server names bapm previously wrote for this target that are no longer in
+   * the approved set (for example after `bapm deny`). Targets that own a
+   * mergeable config must remove these entries while leaving foreign servers
+   * untouched.
+   */
+  managedServers?: string[];
   [key: string]: unknown;
 };
 
@@ -155,7 +182,18 @@ export type ConfigureMcpReport = {
   servers?: string[];
   deployedFiles?: DeployedFile[];
   /** Explicit adapter decisions or unsupported-server diagnostics. */
-  diagnostics?: Array<{ code: string; message: string; server?: string }>;
+  diagnostics?: Array<{
+    code: string;
+    message: string;
+    server?: string;
+    /** Surface as `bapm: warning:` during install (skip/opt-in decisions). */
+    warn?: boolean;
+    /** Host target that made the decision, when relevant. */
+    target?: TargetId;
+    /** Host directory/path referenced by the decision, when relevant. */
+    dir?: string;
+    [key: string]: unknown;
+  }>;
 };
 
 /** Optional MCP configure hook — targets that lack it are skipped for MCP. */
@@ -163,6 +201,87 @@ export type ConfigureMcpFn = (
   servers: McpServerConfig[] | Record<string, McpServerConfig>,
   ctx?: ConfigureMcpContext,
 ) => ConfigureMcpReport | Promise<ConfigureMcpReport>;
+
+/**
+ * Host-agnostic LSP server definition passed to optional `configureLsp`.
+ * Concrete targets map the canonical language map / timeout keys into their
+ * native config shape.
+ *
+ * `extensionToLanguage` is the canonical map; `fileExtensions` and
+ * `extension_to_language` are accepted input aliases. `startupTimeout` is the
+ * canonical timeout; `warmupTimeoutMs` is accepted as an input alias.
+ */
+export type LspServerConfig = {
+  name: string;
+  command?: string;
+  args?: unknown[];
+  env?: Record<string, string>;
+  /** Remote URL form. Hosts that only accept stdio must fail closed. */
+  url?: string;
+  transport?: string;
+  extensionToLanguage?: Record<string, string>;
+  fileExtensions?: Record<string, string>;
+  extension_to_language?: Record<string, string>;
+  startupTimeout?: number;
+  warmupTimeoutMs?: number;
+  shutdownTimeout?: number;
+  restartOnCrash?: boolean;
+  maxRestarts?: number;
+  initializationOptions?: unknown;
+  settings?: unknown;
+  workspaceFolder?: string;
+  /** Package provenance (dependency name or root). */
+  packageName?: string;
+  [key: string]: unknown;
+};
+
+/** Context for optional LSP configure. */
+export type ConfigureLspContext = {
+  cwd: string;
+  /** Active target id for this invocation. */
+  targetId?: TargetId;
+  /** Deploy roots declared by the target (relative to cwd). */
+  deployRoots?: string[];
+  /**
+   * Server names bapm previously wrote for this target that are no longer in
+   * the approved set (for example after `bapm deny`). Targets that own a
+   * mergeable config must remove these entries while leaving foreign servers
+   * untouched.
+   */
+  managedServers?: string[];
+  [key: string]: unknown;
+};
+
+/**
+ * Report returned by `configureLsp` so core can record lock `lsp_*` inventory
+ * without importing concrete host packages.
+ */
+export type ConfigureLspReport = {
+  /** Registered target that owns the reported LSP deployment. */
+  targetId?: TargetId;
+  /** Project-relative path to the written target LSP config. */
+  configPath: string;
+  /** Server names written/updated. */
+  servers?: string[];
+  deployedFiles?: DeployedFile[];
+  /** Explicit adapter decisions or unsupported-server diagnostics. */
+  diagnostics?: Array<{
+    code: string;
+    message: string;
+    server?: string;
+    /** Surface as `bapm: warning:` during install (skip/opt-in decisions). */
+    warn?: boolean;
+    /** Host target that made the decision, when relevant. */
+    target?: TargetId;
+    [key: string]: unknown;
+  }>;
+};
+
+/** Optional LSP configure hook — targets that lack it are skipped for LSP. */
+export type ConfigureLspFn = (
+  servers: LspServerConfig[] | Record<string, LspServerConfig>,
+  ctx?: ConfigureLspContext,
+) => ConfigureLspReport | Promise<ConfigureLspReport>;
 
 /**
  * Install-time MCP env policy for a host.
@@ -178,6 +297,12 @@ export type BapmIntegration = {
   /** Registered deploy root(s) relative to project cwd (tg-002). */
   deployRoots: string[];
   detect: TargetDetectFn;
+  /**
+   * Optional user-scope detection (global install). Project `detect` markers
+   * are meaningless at the global root, so core calls this instead when
+   * `scope: "global"`. Omitted ⇒ the target never auto-detects globally.
+   */
+  detectGlobal?: TargetDetectFn;
   materialize: (
     primitives: AttributedPrimitiveSet,
     ctx?: MaterializeContext,
@@ -185,13 +310,47 @@ export type BapmIntegration = {
   getDeployRoots?: () => string[];
   /** Optional host-agnostic MCP configure; targets without it are skipped for MCP. */
   configureMcp?: ConfigureMcpFn;
+  /** Optional host-agnostic LSP configure; targets without it are skipped for LSP. */
+  configureLsp?: ConfigureLspFn;
   /** Optional host-owned compile rendering and output placement. */
   compile?: CompileFn;
+  /**
+   * Home-relative compile output path for user scope (`bapm compile --global`).
+   * Presence opts the host into global compile; core writes the host-owned file
+   * under the user home instead of the project root. Hosts without it fail the
+   * global command with an unsupported-for-global diagnostic.
+   */
+  globalCompileOutput?: string;
   /**
    * Optional MCP env handling mode. Omitted ⇒ bake-compatible (Cursor default).
    * Install reads this through the api contract — no host-id allowlists in core.
    */
   mcpEnvMode?: McpEnvMode;
+  /**
+   * Optional MCP `headers` handling mode. Omitted ⇒ inherit `mcpEnvMode`.
+   * Hosts such as Codex bake `env` at install time but translate header
+   * references into host-native indirection instead of writing secrets.
+   */
+  mcpHeadersEnvMode?: McpEnvMode;
+  /**
+   * Where `configureMcp` writes by contract. `home` means a user-global file
+   * shared by every project on the machine; install warns about the collision
+   * and supports `--exclude` as the opt-out. Omitted ⇒ `project`.
+   */
+  mcpScope?: "project" | "home";
+  /**
+   * True when `configureMcp` understands `scope: "global"` and writes a
+   * user-scoped config. Core refuses global MCP for targets without this.
+   */
+  supportsGlobalMcp?: true;
+  /**
+   * True when `materialize` understands `scope: "global"` and can write file
+   * primitives into the user's home harness layout. Core passes the user home
+   * as `MaterializeContext.cwd` for these targets. A full global install
+   * (anything except `--only mcp`) refuses targets without this flag so a
+   * project-shaped adapter never writes harness files into `~/.bapm`.
+   */
+  supportsGlobalFiles?: true;
   [key: string]: unknown;
 };
 

@@ -12,6 +12,9 @@ APM-shaped manifest writer or create `bapm.yml`.
 Declared `commands` / `hooks` path lists in `plugin.json` are requirements:
 `discoverAgentPluginDeclaredPaths` resolves them under the plugin root and
 fail-closes on missing or escaping paths before install deploy/lock commit.
+`Pack` also applies the same requirements on the producer side: declared paths
+(and every file in a declared skill directory) must be present in the collected
+archive set, so a packed portable root cannot fail consumer validation later.
 
 Optional top-level `skills` is exclusive when present:
 

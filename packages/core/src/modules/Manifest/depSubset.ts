@@ -3,7 +3,7 @@
  * (shared by registry `id:` and git-longhand `git:` — APM #2166 / req-mf-022).
  */
 import { ManifestError } from "./errors.ts";
-import { isValidTargetToken } from "./targets.ts";
+import { isValidTargetToken, normalizeTargetToken } from "./targets.ts";
 
 /** Reject empty, traversal (`..`), and absolute/drive skill names. */
 export function parseDepSkillSubset(value: unknown, path: string): string[] {
@@ -91,7 +91,7 @@ export function parseDepTargetSubset(value: unknown, path: string): string[] {
         { path: itemPath, details: { token } },
       );
     }
-    tokens.push(token);
+    tokens.push(normalizeTargetToken(token));
   }
 
   return dedupeSort(tokens);

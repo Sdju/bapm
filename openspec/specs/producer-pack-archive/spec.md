@@ -72,7 +72,7 @@ Invoking `pack` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD c
 
 ### Requirement: No APM plugin pack format in M7
 
-Pack MUST NOT require APM `--format plugin` host directory bundles, tar plugin layouts, or marketplace `--check-clean` / `--check-versions` as M7 success criteria. Optional emission of external host `marketplace.json` files (Claude/Codex paths) when authoring `marketplace:` outputs are selected is allowed and orthogonal to plain-zip success. Those JSON files MUST NOT be treated as OpenAPM normative consumer marketplace resolution claims.
+Pack MUST NOT require APM `--format plugin` host directory bundles or tar plugin layouts as M7 success criteria. Optional emission of external host `marketplace.json` files (Claude/Codex/Copilot paths) when authoring `marketplace:` outputs are selected is allowed and orthogonal to plain-zip success. Optional `--check-clean` (marketplace drift gate) and `--check-versions` MUST NOT be treated as required M7 success criteria. Those JSON files MUST NOT be treated as OpenAPM normative consumer marketplace resolution claims.
 
 #### Scenario: Default pack is plain archive not plugin format
 
@@ -86,7 +86,7 @@ Pack MUST NOT require APM `--format plugin` host directory bundles, tar plugin l
 
 ### Requirement: Pack emits host marketplace.json when authoring outputs selected
 
-When the project has a loadable `marketplace:` authoring config and the effective output selection includes Claude and/or Codex, `bapm pack` MUST invoke marketplace pack emit and write the corresponding host `marketplace.json` artifact(s) under the project root (or configured jailed paths). Plain-zip archive production MUST remain available and MUST NOT be replaced by host JSON emit. Host marketplace.json paths are project-tree artifacts; pack MUST NOT treat nesting marketplace.json inside the zip as the only distribution mechanism for those hosts.
+When the project has a loadable `marketplace:` authoring config and the effective output selection includes Claude, Codex, and/or Copilot, `bapm pack` MUST invoke marketplace pack emit and write the corresponding host `marketplace.json` artifact(s) under the project root (or configured jailed paths). Plain-zip archive production MUST remain available and MUST NOT be replaced by host JSON emit. Host marketplace.json paths are project-tree artifacts; pack MUST NOT treat nesting marketplace.json inside the zip as the only distribution mechanism for those hosts.
 
 #### Scenario: Pack with marketplace writes Claude JSON and zip
 
@@ -109,7 +109,7 @@ When `marketplace:` is present, marketplace outputs are selected, and the projec
 
 ### Requirement: Pack marketplace CLI flags
 
-`bapm pack` MUST accept `--marketplace` (`all` | `none` | comma-separated format list), repeatable `--marketplace-path FORMAT=PATH`, and marketplace-aware `--offline`. Unknown pack flags MUST still fail closed. Pack help MUST document marketplace emit mode. Existing `--archive`, `--dry-run`, `--check-release`, `--check-versions`, and `--tag` behaviors MUST remain; sc-007 secret refuse and pr-004 `--check-release` MUST NOT regress. Marketplace `--check-versions` remains optional and orthogonal to M7 plain-zip success (see `producer-pack-check-versions`).
+`bapm pack` MUST accept `--marketplace` (`all` | `none` | comma-separated format list), repeatable `--marketplace-path FORMAT=PATH`, marketplace-aware `--offline`, and optional `--check-clean`. Unknown pack flags MUST still fail closed. Pack help MUST document marketplace emit mode and the read-only drift gate. Existing `--archive`, `--dry-run`, `--check-release`, `--check-versions`, and `--tag` behaviors MUST remain; sc-007 secret refuse and pr-004 `--check-release` MUST NOT regress. Marketplace `--check-versions` and `--check-clean` remain optional and orthogonal to M7 plain-zip success (see `producer-pack-check-versions` and `marketplace-pack-outputs`).
 
 #### Scenario: Pack help mentions marketplace
 
@@ -144,6 +144,30 @@ When `marketplace:` is present, marketplace outputs are selected, and the projec
 
 - **WHEN** pack `--archive` runs on a conforming project without `--check-versions`
 - **THEN** plain-zip success MUST NOT require version-alignment gate execution
+
+### Requirement: Pack accepts --strict-metadata
+
+`bapm pack` MUST accept `--strict-metadata` as a known flag. Default pack behavior without the flag MUST remain unchanged. With the flag, pack MUST validate producer metadata before writing any durable archive or host `marketplace.json` and MUST exit with code `5` when metadata is missing or invalid. Diagnostics MUST identify the offending field path (for example `bapm.yml#/version`, `plugin.json#/author/name`, or `marketplace.packages[0].description`). The validation MUST cover the dual-read manifest (`name`, semver `version`, and the shape of optional `description`/`author`/`license`/`homepage`/`repository`/`keywords`/`tags`), root and standard-location `plugin.json` metadata, and selected remote marketplace package entries that lack explicit certifiable `description` and fixed display `version`. When `--check-versions` is also requested and version alignment fails, exit `3` MUST take precedence over strict-metadata exit `5`. Unknown pack flags MUST still fail closed. Existing `--archive`, `--dry-run`, `--check-release`, `--check-versions`, `--tag`, `--marketplace`, `--marketplace-path`, `--offline`, `--include-prerelease`, `--agent-plugins`, and `--check-clean` behaviors MUST remain.
+
+#### Scenario: Strict metadata failure writes no artifact
+
+- **WHEN** pack runs with `--strict-metadata` against a manifest whose `version` is not semver 2.0.0
+- **THEN** the exit code MUST be `5`, the diagnostic MUST name the `version` field path, and no zip or marketplace JSON MUST be written
+
+#### Scenario: Valid strict metadata still packs
+
+- **WHEN** pack runs with `--strict-metadata` against a project with a conforming manifest and valid optional metadata
+- **THEN** the command MUST succeed under the normal pack write rules
+
+#### Scenario: Check-versions precedence
+
+- **WHEN** pack runs with both `--check-versions` and `--strict-metadata`, and version alignment fails while metadata would also fail
+- **THEN** the exit code MUST be `3` and no durable artifact MUST be written
+
+#### Scenario: Default pack ignores strict metadata
+
+- **WHEN** pack runs without `--strict-metadata` against metadata that the strict schema would reject
+- **THEN** the default pack behavior MUST remain unchanged
 
 ### Requirement: Pack remains distinct from registry publish flat zip
 
@@ -190,6 +214,67 @@ When collecting the default pack file set, the system MUST omit `bapm.local.lock
 
 - **WHEN** pack `--archive` runs on a conforming project that also has `bapm.local.lock.yaml`
 - **THEN** the resulting zip MUST NOT contain a member named `bapm.local.lock.yaml`
+
+### Requirement: Portable Agent Plugin pack preserves declared components
+
+When `pack --agent-plugins` runs against a portable Agent Plugins v1 root, the archive MUST preserve the portable tree layout: root `plugin.json` and `mcp.json`, declared `commands` / `hooks` paths at their original relative locations, complete declared `skills/<name>/` directories including auxiliary files, `agents/` content, native manifest files (for example `.claude-plugin/plugin.json`), and sibling assets such as hook scripts. The producer MUST NOT relocate these files or rewrite hook/command paths in `plugin.json`, because the preserved relative layout is the consumer contract.
+
+#### Scenario: Hook script and sibling asset round-trip
+
+- **WHEN** a portable root declares a hook JSON that references a sibling script and also contains a declared command, skill directory, `agents/`, `mcp.json`, and a native manifest
+- **THEN** `pack --agent-plugins` MUST write a zip that, after extraction, still contains all of those files at the same relative paths and the extracted root MUST pass consumer declared-path and skill discovery
+
+#### Scenario: Archive can be repacked
+
+- **WHEN** a pack-produced portable archive is extracted and packed again with `--agent-plugins`
+- **THEN** the second archive MUST preserve the same declared paths and sibling assets
+
+### Requirement: Portable Agent Plugin pack fails closed on invalid declared paths
+
+Before writing a portable Agent Plugin zip, the producer MUST resolve every `plugin.json` declared `commands` / `hooks` path and every declared skill directory under the plugin root. A missing path, path traversal, escaping symlink, symlink entry, or a declared path/file omitted from the collected pack set by `.bapmignore` or hard pack rules MUST fail with a non-zero outcome and MUST NOT leave a successful archive. Undeclared authoring files MAY still be omitted by `.bapmignore`.
+
+#### Scenario: Missing declared path fails before write
+
+- **WHEN** `plugin.json` declares a command file that does not exist
+- **THEN** `pack --agent-plugins` MUST fail with a diagnostic naming the declared path and MUST NOT write a zip
+
+#### Scenario: Ignored declared path fails closed
+
+- **WHEN** `.bapmignore` matches a declared command, or an auxiliary file inside a declared skill directory
+- **THEN** `pack --agent-plugins` MUST fail and MUST NOT write a zip
+
+#### Scenario: Traversal or symlink declared path fails closed
+
+- **WHEN** a declared `commands` / `hooks` path escapes the plugin root via `..` or a symbolic link
+- **THEN** `pack --agent-plugins` MUST fail before writing the archive
+
+### Requirement: Pack emits Claude Code plugin bundles on --format claude-plugin
+
+`bapm pack --format claude-plugin` MUST produce a Claude Code plugin bundle while the default pack format remains the plain M7 zip. The bundle MUST contain the source manifest written at both `plugin.json` and `.claude-plugin/plugin.json`, and MUST preserve the package's plugin-native tree at its original relative paths, including `commands/`, `agents/`, `skills/<name>/` with auxiliary files, `hooks/` with sibling scripts/assets, and any declared component paths outside convention directories. The manifest source MUST be the root `plugin.json`, then `.claude-plugin/plugin.json`, otherwise a manifest synthesized from `bapm.yml` / `apm.yml`. If a root `hooks.json` exists and the manifest does not declare `hooks`, the emitted manifest MUST declare `./hooks.json`.
+
+#### Scenario: Claude plugin bundle round-trips declared tree
+
+- **WHEN** `pack --format claude-plugin` runs against a package with `plugin.json`, a command, a skill, a hook JSON with a sibling script and asset, and `agents/` content
+- **THEN** the zip MUST contain `plugin.json`, `.claude-plugin/plugin.json`, and every component at its original relative path, and extraction MUST leave a loadable plugin tree
+
+#### Scenario: Default pack remains the plain archive
+
+- **WHEN** `pack` runs without `--format claude-plugin`
+- **THEN** the artifact MUST remain the default plain M7 producer zip and MUST NOT gain a generated `.claude-plugin/plugin.json`
+
+### Requirement: Claude plugin pack fails closed on invalid declared paths
+
+Before writing a `--format claude-plugin` zip, the producer MUST resolve declared `commands`, `hooks`, `agents`, and `skills` entries (plus string path forms of `mcpServers`, `lspServers`, and `monitors`) under the plugin root. A missing path, `..` or absolute traversal, symbolic link, or a declared path/file omitted from the collected pack set by `.bapmignore` or hard pack rules MUST fail with a non-zero outcome and MUST NOT leave a successful archive. A bare skill name MUST resolve at the conventional `skills/<name>` location. Output bundle member paths MUST stay within the bundle root.
+
+#### Scenario: Missing Claude plugin declared path fails before write
+
+- **WHEN** `plugin.json` declares a command or hook path that does not exist
+- **THEN** `pack --format claude-plugin` MUST fail with a diagnostic naming the declared path and MUST NOT write a zip
+
+#### Scenario: Traversal or symlink Claude plugin declared path fails closed
+
+- **WHEN** a declared Claude plugin component path escapes the plugin root via `..`, an absolute path, or a symbolic link
+- **THEN** `pack --format claude-plugin` MUST fail before writing the archive
 
 ### Requirement: Pack collection honors .bapmignore
 

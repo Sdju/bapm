@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines OpenAPM sc-009 executable trust for MCP: when the consuming project declares an allowExecutables / executables.allow grant set, unapproved dependency MCP MUST NOT deploy—fail closed—while non-executable primitives may still materialize.
+Defines OpenAPM sc-009 executable trust for MCP: when the consuming project declares an allowExecutables / executables.allow grant set, unapproved dependency MCP MUST NOT deploy. Explicit deny (project, user, or org), plus a package mentioned in the grant surface without an MCP approval, MUST fail install; a package never mentioned in any allow/deny map is skipped with a non-fatal `MCP_NOT_APPROVED` warning while non-executable primitives may still materialize. One grant MUST NOT make every unrelated dependency MCP package fatal.
 
 ## Requirements
 
@@ -20,32 +20,63 @@ The system MUST accept a documented alias set for executable approval grants mat
 - **WHEN** the consuming manifest uses the documented `allowExecutables` alias instead of `executables.allow`
 - **THEN** the trust gate MUST apply the same approval semantics
 
-### Requirement: Fail closed when grants present and package unapproved
+### Requirement: Unapproved dependency MCP never deploys; explicit decisions fail install
 
-When the consuming project has an `allowExecutables` / `executables.allow` block (non-absent grant surface), MCP configuration from a dependency MUST NOT be written to `.cursor/mcp.json` unless that package is approved for the executable/MCP type. The gate MUST fail closed: either non-zero exit or a clear withhold diagnostic that prevents silent deploy of the MCP entry.
+When dependency MCP is in scope (a project/user grant surface is present or `--trust-transitive-mcp` is passed), MCP configuration from a dependency MUST NOT be written to `.cursor/mcp.json` unless that package is approved for the executable/MCP type. Install MUST distinguish three outcomes:
 
-#### Scenario: sc-009 withhold unapproved MCP
+- **fatal** – explicit deny from org policy (`executables.deny` / `deny_all`), project `executables.deny`, or user deny; install MUST fail with a withhold message naming the package;
+- **fatal** – the package IS mentioned in a project/user allow or deny map but is not approved for MCP (for example `mcp: false`, or an entry for another executable type only); install MUST fail with a withhold message naming the package;
+- **non-fatal skip** – the package has no entry at all in project/user allow/deny and is not org-denied; its MCP MUST NOT deploy, install MUST continue, and a `warn: true` `MCP_NOT_APPROVED` diagnostic MUST name the package and suggest `bapm approve <pkg>` or `executables.allow.<pkg>.mcp: true`.
 
-- **WHEN** `allowExecutables` / `executables.allow` is present, a dependency provides MCP, and the package is not listed in the approval set
-- **THEN** that MCP entry MUST NOT be written to `.cursor/mcp.json` and the run MUST surface a non-zero outcome or explicit withhold diagnostic
+With `--trust-transitive-mcp` and no grant surface, dependency MCP MUST deploy as before (resolver outcome `skip`).
+
+#### Scenario: Unmentioned unapproved MCP is skipped with a warning
+
+- **WHEN** `allowExecutables` / `executables.allow` is present (including an entry for an unrelated package), a dependency provides MCP, and the package is not mentioned in any allow/deny map
+- **THEN** that MCP entry MUST NOT be written to `.cursor/mcp.json`, install MUST succeed, and the run MUST emit a non-fatal `MCP_NOT_APPROVED` warning naming the package
+
+#### Scenario: Unrelated grant does not break a second dependency
+
+- **WHEN** one dependency package is approved and another dependency package with MCP is unmentioned
+- **THEN** the approved MCP MAY deploy, the second MCP MUST NOT deploy, and install MUST NOT fail solely because the second package is undecided
+
+#### Scenario: Explicit project or user deny is fatal
+
+- **WHEN** the package is denied by project `executables.deny`, user deny, or org policy
+- **THEN** install MUST fail with a withhold message naming the package and MUST NOT deploy its MCP
+
+#### Scenario: Mentioned-but-unapproved package is fatal
+
+- **WHEN** the package appears in an allow/deny map with `mcp: false` or with another executable type only
+- **THEN** install MUST fail with a withhold message naming the package and MUST NOT deploy its MCP
+
+#### Scenario: Org deny_all remains fatal
+
+- **WHEN** org policy sets `executables.deny_all: true`
+- **THEN** install MUST fail for dependency MCP even when no project/user grant surface exists and the package is otherwise unmentioned
 
 #### Scenario: Approved package MCP writes
 
 - **WHEN** the same grant surface lists the package as approved for MCP/executable type
 - **THEN** eligible MCP for that package MUST be allowed to write under cursor MCP deploy rules
 
-### Requirement: Non-executable primitives still materialize when MCP withheld
+#### Scenario: Trust-transitive without surface still deploys
 
-When MCP is withheld by the executable trust gate, install MUST still be allowed to materialize non-executable primitives (skills, instructions, agents) for otherwise installable dependencies, unless a separate policy/install failure applies.
+- **WHEN** `--trust-transitive-mcp` is passed and no project/user grant surface and no org deny are present
+- **THEN** dependency MCP MUST deploy as before
 
-#### Scenario: Skills deploy while MCP withheld
+### Requirement: Non-executable primitives still materialize when MCP is withheld or skipped
 
-- **WHEN** MCP from a dependency is withheld under sc-009 and the dependency also provides a skill
+When MCP is withheld or skipped by the executable trust gate, install MUST still be allowed to materialize non-executable primitives (skills, instructions, agents) for otherwise installable dependencies, unless a separate policy/install failure applies.
+
+#### Scenario: Skills deploy while MCP is withheld or skipped
+
+- **WHEN** MCP from a dependency is withheld or skipped under sc-009 and the dependency also provides a skill
 - **THEN** the skill MAY/MUST still materialize per existing cursor rules and MCP MUST remain undeployed
 
 ### Requirement: Layered deny-wins resolveExecutableTrust
 
-The system MUST provide a single pure trust resolver that combines org policy executable denials, project manifest grants, and user-local grants for a package and executable type (MCP for this claim). Precedence MUST be deny-wins: org `deny_all` or org deny match overrides any project or user allow; then project/user deny; then project allow; then user allow; when a grant surface is present and no allow matches, the outcome MUST be withhold (fail-closed). Org deny MUST NOT be re-enabled by project or user grant.
+The system MUST provide a single pure trust resolver that combines org policy executable denials, project manifest grants, and user-local grants for a package and executable type (MCP for this claim). Precedence MUST be deny-wins: org `deny_all` or org deny match overrides any project or user allow; then project/user deny; then project allow; then user allow; when a grant surface is present and no allow matches, the outcome MUST be withhold. The resolver reports `withhold` but MUST NOT itself decide install fatality: install treats `deny` and a withhold for a mentioned package as fatal, and a withhold for an unmentioned package as a warning skip. Org deny MUST NOT be re-enabled by project or user grant.
 
 #### Scenario: Org deny shadows project allow
 
@@ -65,7 +96,7 @@ The system MUST provide a single pure trust resolver that combines org policy ex
 #### Scenario: Unapproved withholds when surface present
 
 - **WHEN** a grant surface is present (project and/or user), org does not deny, and neither project nor user allows the package for MCP
-- **THEN** the resolver MUST return withhold (fail-closed) for MCP
+- **THEN** the resolver MUST return withhold for MCP (install decides fatal vs warning skip from whether the package is mentioned or explicitly denied)
 
 ### Requirement: Install MCP gate uses shared resolver
 
@@ -99,13 +130,57 @@ When org policy `executables.deny` / `deny_all` is modeled, a shared deny-wins r
 - **WHEN** org policy denies an executable package and project grants allow it
 - **THEN** MCP deploy for that package MUST be denied at install and the shared classifier MUST agree
 
-### Requirement: Hooks and canvas stay ungated while bin is gated
+### Requirement: Dependency hooks and LSP are gated with a trust surface while canvas stays undeployable
 
-Hooks and canvas executable primitives MUST remain ungated by the MCP trust ladder and by bin consent flags. Dependency `bin/` MUST be gated via the shared executable trust resolver (type `bin`) plus install `--trust-bin` / `--no-trust-bin` consent. The conformance statement MUST list hooks/canvas as ungated in its limitations and MUST NOT list `bin` as ungated.
+Dependency hook primitives MUST pass through the shared executable trust resolver (type `hook`) before materialize when the consuming project or user store presents a grant surface, or when org policy `executables.deny` / `deny_all` is active. A withheld hook MUST be dropped and reported with a warning diagnostic naming the package and reason. With no grant surface and no org deny, dependency hooks MAY keep the legacy soft default and deploy. Root/local hooks MUST NOT be gated. Canvas has no primitive/materialize path and MUST remain listed as unimplemented/soft.
 
-#### Scenario: Hooks deploy without an executable grant
+`dependencies.lsp` / `devDependencies.lsp` declarations on the root manifest or a dependency package MUST be deployable through the optional host `configureLsp` hook and MUST pass through the shared executable trust resolver (type `lsp`) before any host config write. Root-owned declarations are trusted by definition. Dependency declarations MUST deploy only when allowed by the deny-wins ladder: an explicit deny or a mentioned-but-unapproved package MUST fail install with `INSTALL_LSP_TRUST`, while an unmentioned package under a grant surface MUST be skipped with an `LSP_NOT_APPROVED` warning. Invalid entries MUST fail closed with `INSTALL_LSP_INVALID` before any host write. Only hosts that expose `configureLsp` (Claude Code and Copilot CLI in this release) are LSP targets; for a project whose active hosts expose no LSP support, install MUST emit `LSP_UNSUPPORTED` naming the declaring package and server labels and MUST NOT write host config. Install MUST record reconciled `lsp_servers`, `lsp_configs`, `lsp_target_servers`, and `lsp_config_provenance` in the lock, MUST remove stale owned host entries, and MUST NOT rewrite lock inventory in frozen mode.
 
-- **WHEN** a dependency ships a hook and the consuming project has an `executables.allow` surface that does not mention that dependency
+A `canvas:` manifest key or a primitive of type `canvas` MUST emit a `CANVAS_UNSUPPORTED` warning diagnostic instead of being silently dropped; canvas MUST remain outside the executable trust gates until a materialize path exists. Dependency `bin/` MUST be gated via the shared executable trust resolver (type `bin`) plus install `--trust-bin` / `--no-trust-bin` consent. The conformance statement MUST list the hook gating boundary, the LSP supported-host boundary, and canvas non-implementation in its limitations and MUST NOT list `bin` as ungated.
+
+#### Scenario: LSP deploys to a supported host under trust
+
+- **WHEN** an active Claude or Copilot host exposes `configureLsp` and the root manifest declares a valid `dependencies.lsp` entry
+- **THEN** install MUST write the host-native LSP config, MUST record the server in `lsp_servers` / `lsp_target_servers` / `lsp_config_provenance`, and MUST NOT emit `LSP_UNSUPPORTED`
+
+#### Scenario: Dependency LSP deny fails closed
+
+- **WHEN** a dependency declares LSP and the project or user surface explicitly denies that package for type `lsp`
+- **THEN** install MUST fail with `INSTALL_LSP_TRUST` and MUST NOT write the denied server to a host config
+
+#### Scenario: LSP declaration warns only on unsupported hosts
+
+- **WHEN** the root manifest or a dependency manifest declares non-empty `dependencies.lsp` and no active host exposes `configureLsp`
+- **THEN** install MUST emit `LSP_UNSUPPORTED` naming the package and server labels, MUST NOT deploy the LSP servers, and MUST continue installing other primitives
+
+#### Scenario: Invalid LSP entry fails closed
+
+- **WHEN** an LSP declaration is a bare string, uses `url`, uses a non-stdio transport, duplicates a name, or has malformed args/env/language map
+- **THEN** install MUST fail with `INSTALL_LSP_INVALID` before writing any host config
+
+#### Scenario: Canvas declaration warns without entering trust gates
+
+- **WHEN** a manifest declares a non-null `canvas:` key or install resolves a primitive with type `canvas`
+- **THEN** install MUST emit `CANVAS_UNSUPPORTED`, MUST NOT deploy the canvas artifact, and MUST NOT evaluate canvas through ExecutableTrust
+
+#### Scenario: Unapproved dependency hook is withheld under a grant surface
+
+- **WHEN** a dependency ships a hook and the consuming project has an `executables.allow` surface that does not mention that dependency's `hook`
+- **THEN** install MUST withhold the hook, MUST report `HOOK_TRUST_WITHHELD` as a warning, and MUST continue installing other primitives
+
+#### Scenario: Hook grant deploys
+
+- **WHEN** the project or user store allows the dependency with `hook: true`
+- **THEN** install MUST deploy the hook for hosts that support hooks
+
+#### Scenario: Org deny withholds hooks without a project surface
+
+- **WHEN** org policy `executables.deny` lists the dependency (or `deny_all: true`)
+- **THEN** install MUST withhold its hooks even when no project grant surface exists
+
+#### Scenario: Legacy no-surface hook deploy
+
+- **WHEN** a dependency ships a hook and neither project/user grant surface nor org deny is present
 - **THEN** install MUST still deploy the hook for hosts that support hooks
 
 #### Scenario: Bin is gated by the shared resolver

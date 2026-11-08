@@ -36,7 +36,20 @@ export type {
 export type { PackErrorCode } from "./errors.ts";
 export { PackError } from "./errors.ts";
 
+export {
+  formatStrictMetadataIssues,
+  validateMarketplaceStrictMetadata,
+  validatePackStrictMetadata,
+} from "./strictMetadata.ts";
+export type { StrictMetadataIssue, ValidatePackStrictMetadataOptions } from "./strictMetadata.ts";
+
 export { runPack, packProject, packArchive } from "./runPack.ts";
+export {
+  buildClaudePluginBundle,
+  CLAUDE_NATIVE_MANIFEST_PATH,
+  CLAUDE_ROOT_MANIFEST_PATH,
+} from "./claudeBundle.ts";
+export type { BuildClaudePluginBundleOptions, ClaudePluginBundle } from "./claudeBundle.ts";
 export { extractPackArchive, unpackArchive, extractPack } from "./extract.ts";
 export {
   MAX_SAFE_ENTRIES,
@@ -53,3 +66,5 @@ export { BAPM_IGNORE_FILE, loadBapmIgnore, isBapmIgnored, isBapmIgnoredDir } fro
 export type { BapmIgnoreRules } from "./bapmIgnore.ts";
 export { collectPackFiles, assertProjectHasContent, defaultArchiveName } from "./collect.ts";
 export type { PackFileEntry } from "./collect.ts";
+export { assertPortableAgentPluginPackSet } from "./portable.ts";
+export type { PortablePackValidationInput } from "./portable.ts";

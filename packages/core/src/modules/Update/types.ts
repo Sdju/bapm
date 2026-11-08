@@ -1,10 +1,26 @@
-import type { Downloader, GitRemote, TagLister } from "@/modules/Resolver";
+import type { Downloader, GitRemote, ResolveAndLockOptions, TagLister } from "@/modules/Resolver";
+
+/** Policy discovery/fetch ports forwarded to the lock+install gates. */
+type PolicyPorts = Pick<
+  ResolveAndLockOptions,
+  | "fetchPolicyUrl"
+  | "httpGet"
+  | "fetchAncestor"
+  | "defaultFetchFailure"
+  | "implementationDefaultHost"
+  | "providers"
+  | "policyProviders"
+  | "listGitRemotes"
+  | "remotes"
+>;
 
 export type UpdatePlanEntry = {
   name: string;
   action: "update" | "add" | "remove" | "keep";
   from?: string;
   to?: string;
+  /** Human-readable explanation (e.g. a mutable ref could not be resolved). */
+  note?: string;
 };
 
 export type RunUpdateOptions = {
@@ -14,11 +30,16 @@ export type RunUpdateOptions = {
   /** Plan only; no lock/modules mutation. */
   dryRun?: boolean;
   "dry-run"?: boolean;
-  /** Frozen context — refuse without override. */
+  /** Frozen context — refuse without override. Defaults to CI-default frozen when omitted. */
   frozen?: boolean;
-  /** Explicit override to allow update under frozen (not used in M6 accept). */
+  /** Explicit override to allow update under frozen context (CLI `--force`). */
   force?: boolean;
   override?: boolean;
+  /**
+   * Env map used to resolve CI-default frozen when `frozen` is omitted.
+   * Defaults to `process.env`; tests pass a stub (e.g. `{ CI: "true" }`).
+   */
+  env?: Record<string, string | undefined>;
   /** Package scope (rs-012). */
   packages?: string[];
   scope?: string[];
@@ -40,9 +61,11 @@ export type RunUpdateOptions = {
   /** Explicit policy file path. */
   policyPath?: string;
   policy?: string;
-  /** Skip policy gate. */
+  /** Full escape: skip policy gate (`--no-policy-all`). */
   noPolicy?: boolean;
-};
+  /** Skip only repository-local policy; org/remote policy still applies. */
+  noRepoPolicy?: boolean;
+} & PolicyPorts;
 
 export type UpdateResult = {
   ok: boolean;

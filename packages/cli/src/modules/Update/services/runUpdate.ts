@@ -6,17 +6,27 @@ import {
 } from "@b-apm/core";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 import { createInterface } from "node:readline";
+import { resolvePolicyPorts, type PolicyCliPorts } from "@/common/policyFetcher.ts";
 
-export type UpdateOptions = { args?: string[]; cwd?: string };
+export type UpdateOptions = {
+  args?: string[];
+  cwd?: string;
+  /** Injected policy ports (tests); production defaults to a curl fetcher. */
+  policyPorts?: PolicyCliPorts;
+};
 
 export type ParsedUpdateArgs = {
   yes: boolean;
   dryRun: boolean;
   verbose: boolean;
+  force: boolean;
   packages: string[];
   parallelDownloads?: number;
   policyPath?: string;
+  /** Full escape (`--no-policy-all`). */
   noPolicy: boolean;
+  /** Repo-local escape (`--no-policy`); org policy still applies. */
+  noRepoPolicy: boolean;
   help?: boolean;
   error?: string;
 };
@@ -25,9 +35,11 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
   let yes = false;
   let dryRun = false;
   let verbose = false;
+  let force = false;
   let help = false;
   let policyPath: string | undefined;
   let noPolicy = false;
+  let noRepoPolicy = false;
   let parallelDownloads: number | undefined;
   const packages: string[] = [];
 
@@ -35,10 +47,12 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
     yes,
     dryRun,
     verbose,
+    force,
     packages,
     parallelDownloads,
     policyPath,
     noPolicy,
+    noRepoPolicy,
   });
 
   for (let i = 0; i < argv.length; i++) {
@@ -59,7 +73,15 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
       verbose = true;
       continue;
     }
+    if (arg === "--force") {
+      force = true;
+      continue;
+    }
     if (arg === "--no-policy") {
+      noRepoPolicy = true;
+      continue;
+    }
+    if (arg === "--no-policy-all") {
       noPolicy = true;
       continue;
     }
@@ -106,7 +128,18 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
     }
     packages.push(arg);
   }
-  return { yes, dryRun, verbose, packages, parallelDownloads, policyPath, noPolicy, help };
+  return {
+    yes,
+    dryRun,
+    verbose,
+    force,
+    packages,
+    parallelDownloads,
+    policyPath,
+    noPolicy,
+    noRepoPolicy,
+    help,
+  };
 }
 
 export function formatUpdateHelp(deps: LifecycleCliDeps): string {
@@ -119,9 +152,11 @@ Options:
   -y, --yes                Apply without interactive confirm
   --dry-run                Print plan only; do not mutate lock/modules
   -v, --verbose            Include keep/[=] rows in plan text
+  --force                  Explicit override: allow update in CI/frozen context
   --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
   --policy <path>          Use explicit policy file
-  --no-policy              Skip policy discovery and checks
+  --no-policy              Skip repository-local policy only; org deny still applies
+  --no-policy-all          Full escape: skip local and org policy
   --help, -h               Show this help
 `;
 }
@@ -159,12 +194,18 @@ export async function runUpdateCli(
       yes: parsed.yes,
       dryRun: parsed.dryRun,
       verbose: parsed.verbose,
+      force: parsed.force,
       parallelDownloads: parsed.parallelDownloads,
       packages: parsed.packages.length ? parsed.packages : undefined,
       scope: parsed.packages.length ? parsed.packages : undefined,
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
+      noRepoPolicy: parsed.noRepoPolicy,
+      ...resolvePolicyPorts({
+        noPolicy: parsed.noPolicy,
+        policyPorts: options.policyPorts,
+      }),
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),

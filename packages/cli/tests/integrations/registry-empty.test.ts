@@ -15,6 +15,7 @@ const CONCRETE_INTEGRATIONS = [
   "@b-apm/integration-cursor",
   "@b-apm/integration-claude",
   "@b-apm/integration-codex",
+  "@b-apm/integration-copilot",
 ] as const;
 
 function readCliPackageJson(): {
@@ -35,12 +36,13 @@ describe("CLI · empty composition registries (opt-in hosts)", () => {
     expect(registry.get("cursor")).toBeUndefined();
   });
 
-  test("createCliMarketplaceOutputRegistry starts with no static Claude/Codex registrations", () => {
+  test("createCliMarketplaceOutputRegistry starts with no static Claude/Codex/Copilot registrations", () => {
     const registry = createCliMarketplaceOutputRegistry();
     const formats = registry.list().map((t) => t.marketplaceOutput.format);
     expect(formats).toEqual([]);
     expect(registry.get("claude")).toBeUndefined();
     expect(registry.get("codex")).toBeUndefined();
+    expect(registry.get("copilot")).toBeUndefined();
   });
 
   test("CLI package.json has no hard deps on concrete @b-apm/integration-* packages", () => {
@@ -58,9 +60,10 @@ describe("CLI · empty composition registries (opt-in hosts)", () => {
     expect(src).not.toMatch(/createCursorIntegration/);
   });
 
-  test("marketplaceOutputs module does not static-import Claude/Codex packages", () => {
+  test("marketplaceOutputs module does not static-import Claude/Codex/Copilot packages", () => {
     const src = readFileSync(join(CLI_ROOT, "src/app/integrations/marketplaceOutputs.ts"), "utf8");
     expect(src).not.toMatch(/@b-apm\/integration-claude/);
     expect(src).not.toMatch(/@b-apm\/integration-codex/);
+    expect(src).not.toMatch(/@b-apm\/integration-copilot/);
   });
 });

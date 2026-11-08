@@ -50,6 +50,11 @@ export function linkCursorIntegration(projectCwd: string): string {
   return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-cursor"));
 }
 
+/** Link any `@b-apm/integration-<id>` workspace package into a temp project. */
+export function linkIntegration(projectCwd: string, id: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, `integration-${id}`));
+}
+
 export async function withCapturedIo<T>(
   fn: () => Promise<T>,
 ): Promise<{ result: T; stdout: string[]; stderr: string[] }> {

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the core producer that turns project `marketplace:` authoring config into host Claude and Codex `marketplace.json` artifacts during pack — resolve, map, path-jail, and atomic multi-output write — without replacing plain-zip pack or claiming OpenAPM consumer marketplace resolution.
+Defines the core producer that turns project `marketplace:` authoring config into host Claude, Codex, and Copilot `marketplace.json` artifacts during pack — resolve, map, path-jail, and atomic multi-output write — without replacing plain-zip pack or claiming OpenAPM consumer marketplace resolution.
 
 ## Requirements
 
@@ -32,22 +32,27 @@ When emitting marketplace outputs, the system MUST load the project authoring co
 
 ### Requirement: Output profiles and path jail
 
-The system MUST support at least Claude and Codex output profiles. Default write paths MUST be Claude → `.claude-plugin/marketplace.json` and Codex → `.agents/plugins/marketplace.json` relative to the project root. When `marketplace.outputs.<format>.path` is set, or when CLI `--marketplace-path FORMAT=PATH` overrides are supplied, the effective path MUST be used. Effective paths MUST be confined under the project root (path jail); escapes MUST fail closed. Boolean or map-shaped `outputs` entries that disable a format MUST exclude that format from the emit set unless an explicit CLI filter re-enables only allowed formats.
+The system MUST support at least Claude, Codex, and Copilot output profiles. Default write paths MUST be Claude → `.claude-plugin/marketplace.json`, Codex → `.agents/plugins/marketplace.json`, and Copilot → `.github/plugin/marketplace.json` relative to the project root. When `marketplace.outputs.<format>.path` is set, when the legacy `marketplace.<format>.output` key is set, or when CLI `--marketplace-path FORMAT=PATH` overrides are supplied, the effective path MUST be used. Effective paths MUST be confined under the project root (path jail); escapes MUST fail closed. Boolean or map-shaped `outputs` entries that disable a format MUST exclude that format from the emit set unless an explicit CLI filter re-enables only allowed formats.
 
 #### Scenario: Default Claude path
 
 - **WHEN** authoring enables Claude output without a custom path and pack emit runs
 - **THEN** the Claude artifact MUST be written at `.claude-plugin/marketplace.json` under the project root
 
+#### Scenario: Default Copilot path
+
+- **WHEN** authoring enables Copilot output via `marketplace.outputs.copilot` without a custom path and pack emit runs
+- **THEN** the Copilot artifact MUST be written at `.github/plugin/marketplace.json` under the project root
+
 #### Scenario: Path override confined
 
 - **WHEN** `--marketplace-path claude=nested/out/marketplace.json` is supplied with a path under the project root
 - **THEN** the Claude artifact MUST be written at that relative path
 
-#### Scenario: Path escape rejected
+#### Scenario: Copilot path escape rejected
 
-- **WHEN** a marketplace path override would resolve outside the project root
-- **THEN** pack MUST fail closed without writing that artifact
+- **WHEN** a Copilot path override would resolve outside the project root
+- **THEN** pack MUST fail closed without writing that artifact or any file outside the project root
 
 ### Requirement: Claude marketplace.json mapping
 
@@ -71,6 +76,39 @@ Codex emit MUST produce `.agents/plugins/marketplace.json` (or configured path) 
 
 - **WHEN** Codex output is selected and every package has a `category`
 - **THEN** the written Codex marketplace.json MUST include those categories on plugin entries
+
+### Requirement: Copilot marketplace.json mapping
+
+Copilot emit MUST produce `.github/plugin/marketplace.json` (or configured path) with a kebab-case marketplace `name`, `owner` (`name`, optional `email`), optional nested `metadata` (`description`, `version`), and `plugins` entries with `name`, optional `description`, optional display-version `version`, and `source`. Local packages MUST use a path string source. Remote GitHub shorthand packages MUST use `{ source: "github", repo }`; other remotes MUST use `{ source: "url", url }`. Remote entries MUST carry `path` when a subdirectory is configured, `ref` for non-commit refs, and a full 40-character `sha` when a commit is pinned; a short commit SHA MUST fail closed. Serialization MUST use two-space indent and a trailing newline.
+
+#### Scenario: Copilot local plugin shape
+
+- **WHEN** Copilot output is selected for a local `./plugins/demo` package
+- **THEN** the written Copilot marketplace.json MUST contain a plugin entry whose `source` is the local path string and whose marketplace identity is normalized to kebab-case
+
+#### Scenario: Copilot short SHA fails closed
+
+- **WHEN** a remote Copilot package resolves to a non-40-character commit SHA
+- **THEN** pack MUST exit non-zero and MUST NOT publish that Copilot marketplace.json
+
+### Requirement: Pack --check-clean drift gate
+
+`bapm pack --check-clean` MUST be a read-only marketplace drift gate with APM semantics: regenerate every selected marketplace output in memory using the same resolver/mappers, then semantically compare each document with the effective on-disk path (including `--marketplace-path` overrides). It MUST NOT write marketplace.json, a zip, or any other pack artifact. `unchanged` outputs pass; `missing` or `drift` outputs MUST exit with code `4`. When no marketplace authoring block exists the gate MUST skip with exit code `0`. When combined with `--check-versions`, a version-alignment failure (exit `3`) MUST take precedence over drift.
+
+#### Scenario: Clean output passes
+
+- **WHEN** `pack --check-clean` runs and the committed marketplace.json equals the regenerated document
+- **THEN** the command MUST exit `0` and MUST not modify the file
+
+#### Scenario: Drift fails with exit 4
+
+- **WHEN** `pack --check-clean` regenerates a document that differs from the on-disk marketplace.json or the file is missing
+- **THEN** the command MUST exit `4`, report the drift, and MUST NOT write any artifact
+
+#### Scenario: No marketplace block skips
+
+- **WHEN** `pack --check-clean` runs on a project without a `marketplace:` block
+- **THEN** the command MUST skip the gate and exit `0`
 
 ### Requirement: Atomic multi-output write and dry-run
 
@@ -109,9 +147,9 @@ When PackOutputs remote resolve spawns git (`ls-remote`, fetch, or equivalent) f
 - **WHEN** PackOutputs resolves an ado-class remote while `GITHUB_TOKEN` is set in the parent environment
 - **THEN** the git child MUST NOT inherit the GitHub token for credential use
 
-### Requirement: Claude and Codex marketplace outputs have explicit integration owners
+### Requirement: Claude, Codex, and Copilot marketplace outputs have explicit integration owners
 
-Claude marketplace output MUST be provided by `@b-apm/integration-claude`, and Codex marketplace output MUST be provided by `@b-apm/integration-codex`. `@b-apm/integration-claude` MUST continue to own Claude marketplace mapping and MAY also expose Claude runtime capabilities in the same package without removing marketplace-output selection. `@b-apm/integration-codex` MUST continue to own Codex marketplace mapping and MAY also expose Codex runtime capabilities in the same package without removing marketplace-output selection. Each marketplace owner MUST own its host-specific JSON mapping, default path, validation, and output metadata; `@b-apm/core` MUST provide only generic resolution, selection, atomic-write orchestration, and integration capability invocation. The CLI composition root MUST NOT eagerly static-register Claude or Codex marketplace-output integrations at registry construction. When pack’s effective format selection includes Claude and/or Codex, the composition path MUST dynamically resolve and register the corresponding package for that run when it is resolvable; if the package cannot be resolved or does not expose marketplace-output capability, pack MUST fail closed with guidance to install the integration package.
+Claude marketplace output MUST be provided by `@b-apm/integration-claude`, Codex marketplace output MUST be provided by `@b-apm/integration-codex`, and Copilot marketplace output MUST be provided by `@b-apm/integration-copilot`. `@b-apm/integration-claude` MUST continue to own Claude marketplace mapping and MAY also expose Claude runtime capabilities in the same package without removing marketplace-output selection. `@b-apm/integration-codex` MUST continue to own Codex marketplace mapping and MAY also expose Codex runtime capabilities in the same package without removing marketplace-output selection. `@b-apm/integration-copilot` MUST continue to own Copilot runtime capabilities and MAY additionally expose the Copilot marketplace-output mapper without changing that runtime behavior. Each marketplace owner MUST own its host-specific JSON mapping, default path, validation, and output metadata; `@b-apm/core` MUST provide only generic resolution, selection, atomic-write orchestration, and integration capability invocation. The CLI composition root MUST NOT eagerly static-register Claude, Codex, or Copilot marketplace-output integrations at registry construction. When pack’s effective format selection includes any of these formats, the composition path MUST dynamically resolve and register the corresponding package for that run when it is resolvable; if the package cannot be resolved or does not expose marketplace-output capability, pack MUST fail closed with guidance to install the integration package.
 
 #### Scenario: Claude output is selected
 
@@ -138,9 +176,19 @@ Claude marketplace output MUST be provided by `@b-apm/integration-claude`, and C
 - **WHEN** `@b-apm/integration-codex` exposes both marketplace-output and runtime capabilities
 - **THEN** pack MUST still be able to select marketplace-output without requiring runtime detect/materialize activation for that pack run
 
+#### Scenario: Copilot output is selected
+
+- **WHEN** pack selects Copilot marketplace output and `@b-apm/integration-copilot` resolves with marketplace-output capability
+- **THEN** the Copilot integration supplies the Copilot-shaped document and `.github/plugin/marketplace.json` default path through the generic integration capability contract
+
+#### Scenario: Missing Copilot package fails closed
+
+- **WHEN** pack selects Copilot marketplace output and `@b-apm/integration-copilot` cannot be resolved
+- **THEN** pack MUST exit non-zero with guidance to install the Copilot integration package and MUST NOT write a Copilot marketplace.json as if a built-in emitter existed
+
 ### Requirement: Marketplace outputs do not require runtime integration capabilities
 
-Marketplace-output integrations MUST be selectable independently of runtime detection, deploy, MCP, and compile capabilities. A project that emits only marketplace artifacts MUST NOT require a Cursor or other runtime integration to be installed or registered. Selecting Claude/Codex marketplace emit MUST still require the corresponding marketplace-output integration package to be installed and loadable for that run (not eager CLI built-ins). When a package exposes both marketplace-output and runtime (Claude or Codex), pack MUST use the marketplace capability path and MUST NOT require invoking runtime hooks.
+Marketplace-output integrations MUST be selectable independently of runtime detection, deploy, MCP, and compile capabilities. A project that emits only marketplace artifacts MUST NOT require a Cursor or other runtime integration to be installed or registered. Selecting Claude/Codex/Copilot marketplace emit MUST still require the corresponding marketplace-output integration package to be installed and loadable for that run (not eager CLI built-ins). When a package exposes both marketplace-output and runtime (Claude, Codex, or Copilot), pack MUST use the marketplace capability path and MUST NOT require invoking runtime hooks.
 
 #### Scenario: Pack uses a marketplace-only integration
 

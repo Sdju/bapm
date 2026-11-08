@@ -1,11 +1,48 @@
 import { RegistryError } from "./errors.ts";
+import { applyExtraCaBundleFromEnv } from "./tlsTrust.ts";
 import type { RegistryHttpRequest, RegistryHttpResponse, RegistryHttpTransport } from "./types.ts";
 import { fetchWithRedirectAuthDrop } from "@/modules/Auth";
+import {
+  isSharedHttpCacheableRequest,
+  lookupSharedHttpCache,
+  storeSharedHttpCache,
+} from "@/modules/SharedCache";
+import type { SharedCacheEnv } from "@/modules/SharedCache";
 
-/** Default real-fetch transport — redirect-safe for Authed requests (sc-003). */
-export function createFetchTransport(): RegistryHttpTransport {
+export type FetchTransportOptions = {
+  /** Env for the opt-in shared HTTP cache (default: `process.env`). */
+  env?: SharedCacheEnv;
+};
+
+/**
+ * Default real-fetch transport — redirect-safe for Authed requests (sc-003).
+ *
+ * GET 200 responses are cached when the opt-in shared HTTP cache is enabled
+ * (`BAPM_CACHE_DIR`, minus `BAPM_NO_CACHE=1` / `BAPM_HTTP_CACHE=0`). Requests
+ * carrying Authorization/Cookie headers, non-GET methods, and non-200
+ * responses are never cached. Cache errors fall back to the network.
+ */
+export function createFetchTransport(options: FetchTransportOptions = {}): RegistryHttpTransport {
+  const env = options.env ?? process.env;
   return {
     async fetch(request: RegistryHttpRequest): Promise<RegistryHttpResponse> {
+      // Additive corporate CA support; NODE_EXTRA_CA_CERTS is handled by Node itself.
+      applyExtraCaBundleFromEnv();
+
+      const cacheRequest = {
+        method: request.method,
+        url: request.url,
+        headers: request.headers,
+      };
+      if (isSharedHttpCacheableRequest(cacheRequest)) {
+        try {
+          const cached = lookupSharedHttpCache(cacheRequest, { env });
+          if (cached.hit) return cached.response;
+        } catch {
+          // Cache read must never break a registry request.
+        }
+      }
+
       const init: RequestInit = {
         method: request.method,
         headers: request.headers,
@@ -18,9 +55,10 @@ export function createFetchTransport(): RegistryHttpTransport {
       try {
         response = await fetchWithRedirectAuthDrop(request.url, init);
       } catch (cause) {
+        const message = cause instanceof Error ? cause.message : String(cause);
         throw new RegistryError(
           "REGISTRY_HTTP",
-          `Registry network error fetching ${request.method} ${request.url}: ${cause instanceof Error ? cause.message : String(cause)}`,
+          `Registry network error fetching ${request.method} ${request.url}: ${message}${tlsTrustHint(cause)}`,
           { cause, details: { url: request.url, method: request.method } },
         );
       }
@@ -29,11 +67,24 @@ export function createFetchTransport(): RegistryHttpTransport {
       response.headers.forEach((value, key) => {
         headers[key.toLowerCase()] = value;
       });
-      return {
+      const result: RegistryHttpResponse = {
         status: response.status,
         headers,
         body: new Uint8Array(ab),
       };
+
+      // Only idempotent GET 200 responses are cacheable. Redirects are
+      // followed manually inside fetchWithRedirectAuthDrop; the final 200 is
+      // stored under the original request URL only when the request is safe.
+      if (isSharedHttpCacheableRequest(cacheRequest)) {
+        try {
+          storeSharedHttpCache(cacheRequest, result, { env });
+        } catch {
+          // Cache write must never break a registry request.
+        }
+      }
+
+      return result;
     },
   };
 }
@@ -101,5 +152,26 @@ export function mapHttpError(
     "REGISTRY_HTTP",
     `Registry ${method} ${url} failed with HTTP ${status}. ${snippet}`,
     { status, details: { url, method } },
+  );
+}
+
+/** Append an actionable hint when fetch failed inside the TLS trust path. */
+function tlsTrustHint(cause: unknown): string {
+  const rawCode =
+    cause !== null && typeof cause === "object" && "code" in cause
+      ? (cause as { code?: unknown }).code
+      : undefined;
+  const code = typeof rawCode === "string" || typeof rawCode === "number" ? String(rawCode) : "";
+  const message = cause instanceof Error ? cause.message : String(cause);
+  const tlsLike =
+    /SELF_SIGNED_CERT|UNABLE_TO_VERIFY|UNABLE_TO_GET_ISSUER|CERT_|ERR_TLS|certificate|TLS|SSL/i.test(
+      `${code} ${message}`,
+    );
+  if (!tlsLike) return "";
+  return (
+    " TLS trust failure: for a private registry or TLS-inspecting proxy, set " +
+    "NODE_EXTRA_CA_CERTS=/path/to/ca.pem before starting bapm (Node fetch/undici), " +
+    "or BAPM_EXTRA_CA_BUNDLE=/path/to/ca.pem for an additive bapm-only bundle. " +
+    "See /guide/situations/tls-private-registry."
   );
 }

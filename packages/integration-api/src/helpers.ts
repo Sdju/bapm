@@ -14,12 +14,14 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, relative, resolve, sep, dirname, basename } from "node:path";
+import { applyBuildId } from "./buildId.ts";
 import type {
   AttributedPrimitive,
   AttributedPrimitiveSet,
   BapmIntegration,
   CompileReport,
   ConfigureMcpFn,
+  ConfigureLspFn,
   DeployedFile,
 } from "./types.ts";
 
@@ -329,6 +331,31 @@ export function getConfigureMcp(
   return undefined;
 }
 
+const LSP_CONFIGURE_ALIASES = ["configureLsp", "writeLspConfig", "deployLsp"] as const;
+
+/** True when the target exposes an LSP configure hook (any documented alias). */
+export function hasConfigureLsp(target: BapmIntegration | Record<string, unknown>): boolean {
+  return getConfigureLsp(target) !== undefined;
+}
+
+/**
+ * Resolve optional LSP configure from a registered target.
+ * Accepts `configureLsp` and documented aliases without requiring every host to
+ * use the same method name.
+ */
+export function getConfigureLsp(
+  target: BapmIntegration | Record<string, unknown>,
+): ConfigureLspFn | undefined {
+  const rec = target as Record<string, unknown>;
+  for (const key of LSP_CONFIGURE_ALIASES) {
+    const fn = rec[key];
+    if (typeof fn === "function") {
+      return (fn as ConfigureLspFn).bind(target);
+    }
+  }
+  return undefined;
+}
+
 /**
  * Assert deploy-root containment, mkdir parents, write content, return inventory row.
  */
@@ -410,12 +437,15 @@ export function compileMarkdownReport(args: {
   }
 
   const path = rel.split(sep).join("/");
+  // Every compiled Markdown output routes through this helper; stabilize the
+  // deterministic Build ID here so previews and durable writes agree.
+  const content = applyBuildId(args.content);
   const wrote = args.write;
   if (wrote) {
     mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, args.content, "utf8");
+    writeFileSync(outputPath, content, "utf8");
   }
-  return { path, content: args.content, wrote };
+  return { path, content, wrote };
 }
 
 /**
@@ -487,30 +517,178 @@ export function writeHookOwnershipSidecar(path: string, doc: HookOwnershipSideca
 }
 
 /**
- * Remove entries whose `command` appears in any owned `entries`.
- * Mutates `hooks` in place; does not delete files from disk.
+ * Remove bapm-managed MCP server entries that are absent from the incoming
+ * approved set. Mutates `servers` in place and returns the removed names.
+ * Foreign entries are never touched because only names from
+ * `ctx.managedServers` (recorded in the lock inventory) are considered.
+ */
+export function pruneManagedMcpServerNames<T>(
+  servers: Record<string, T>,
+  incomingNames: Iterable<string>,
+  managedServers: readonly string[] | undefined,
+): string[] {
+  const keep = new Set(incomingNames);
+  const removed: string[] = [];
+  for (const name of managedServers ?? []) {
+    if (keep.has(name) || !(name in servers)) continue;
+    delete servers[name];
+    removed.push(name);
+  }
+  return removed;
+}
+
+export type RewriteHookCommand = (command: string) => {
+  command: string;
+  scriptRel?: string;
+};
+
+export type RenderNativeHookEntriesArgs = {
+  entries: unknown[];
+  /** Injected only when neither the group nor the flat source entry declares a matcher. */
+  defaultMatcher?: string;
+  /** Claude: inject `type: "command"` into untyped flat command entries. */
+  defaultHandlerType?: boolean;
+  rewriteCommand?: RewriteHookCommand;
+};
+
+export type RenderNativeHookEntriesResult = {
+  entries: unknown[];
+  owned: Array<{ command: string }>;
+  scripts: string[];
+};
+
+function withoutOwnershipKey(record: Record<string, unknown>): Record<string, unknown> {
+  const { _apm_source: _drop, ...rest } = record;
+  void _drop;
+  return rest;
+}
+
+/**
+ * Render portable flat or nested hook entries in a host's matcher-group schema.
+ *
+ * Flat entries become `{ matcher?, hooks: [{ ...handler }] }`; entries that are
+ * already matcher groups keep their group metadata and nested handlers. Command
+ * fields are rewritten through `rewriteCommand` and reported through `owned`.
+ */
+export function renderNativeHookEntries(
+  args: RenderNativeHookEntriesArgs,
+): RenderNativeHookEntriesResult {
+  const { entries, defaultMatcher, defaultHandlerType, rewriteCommand } = args;
+  const rendered: unknown[] = [];
+  const owned: Array<{ command: string }> = [];
+  const scripts: string[] = [];
+
+  const rewriteHandler = (handler: Record<string, unknown>): Record<string, unknown> => {
+    const next = withoutOwnershipKey(handler);
+    const rawCommand = typeof next.command === "string" ? next.command : "";
+    const command = rawCommand.trim();
+    if (!command) return next;
+    if (!rewriteCommand) {
+      owned.push({ command });
+      return next;
+    }
+    const rewritten = rewriteCommand(command);
+    next.command = rewritten.command;
+    owned.push({ command: rewritten.command });
+    if (rewritten.scriptRel) scripts.push(rewritten.scriptRel);
+    return next;
+  };
+
+  for (const raw of entries) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      rendered.push(raw);
+      continue;
+    }
+    const source = raw as Record<string, unknown>;
+    const nested = source.hooks;
+
+    if (Array.isArray(nested)) {
+      const group = withoutOwnershipKey(source);
+      delete group.hooks;
+      const matcher = group.matcher;
+      delete group.matcher;
+      if (matcher) group.matcher = matcher;
+      else if (defaultMatcher !== undefined) group.matcher = defaultMatcher;
+      group.hooks = nested
+        .filter(
+          (handler): handler is Record<string, unknown> =>
+            Boolean(handler) && typeof handler === "object" && !Array.isArray(handler),
+        )
+        .map(rewriteHandler);
+      rendered.push(group);
+      continue;
+    }
+
+    const data = withoutOwnershipKey(source);
+    const matcher = data.matcher;
+    delete data.matcher;
+    delete data.hooks;
+    const handler = defaultHandlerType
+      ? {
+          ...(data.type === undefined && typeof data.command === "string"
+            ? { type: "command" }
+            : {}),
+          ...data,
+        }
+      : data;
+    const group: Record<string, unknown> = {};
+    if (matcher) group.matcher = matcher;
+    else if (defaultMatcher !== undefined) group.matcher = defaultMatcher;
+    group.hooks = [rewriteHandler(handler)];
+    rendered.push(group);
+  }
+
+  return { entries: rendered, owned, scripts };
+}
+
+/** Owned commands recorded in sidecar entries, used for nested and legacy flat shapes. */
+function ownedHookCommands(ownership: HookOwnershipSidecar): Set<string> {
+  const commands = new Set<string>();
+  for (const record of Object.values(ownership.owned ?? {})) {
+    for (const entry of record.entries ?? []) {
+      if (entry.command) commands.add(entry.command);
+    }
+  }
+  return commands;
+}
+
+/**
+ * Remove entries whose `command` appears in any owned `entries`, including
+ * handlers nested inside matcher groups. Mutates `hooks` in place; does not
+ * delete files from disk.
  */
 export function stripOwnedHookCommands(
   hooks: Record<string, unknown>,
   ownership: HookOwnershipSidecar,
 ): void {
-  const ownedCommands = new Set<string>();
-  for (const record of Object.values(ownership.owned ?? {})) {
-    for (const entry of record.entries ?? []) {
-      if (entry.command) ownedCommands.add(entry.command);
-    }
-  }
+  const ownedCommands = ownedHookCommands(ownership);
   if (ownedCommands.size === 0) return;
+
+  const isOwned = (value: unknown): boolean =>
+    typeof value === "string" && ownedCommands.has(value);
 
   for (const [event, entries] of Object.entries(hooks)) {
     if (!Array.isArray(entries)) continue;
-    hooks[event] = entries.filter((e) => {
-      const cmd =
-        e && typeof e === "object" && typeof (e as { command?: unknown }).command === "string"
-          ? (e as { command: string }).command
-          : "";
-      return !ownedCommands.has(cmd);
-    });
+    const kept: unknown[] = [];
+    for (const entry of entries) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        kept.push(entry);
+        continue;
+      }
+      const record = entry as Record<string, unknown>;
+      if (Array.isArray(record.hooks)) {
+        const handlers = record.hooks.filter((handler) => {
+          if (!handler || typeof handler !== "object" || Array.isArray(handler)) return true;
+          return !isOwned((handler as { command?: unknown }).command);
+        });
+        if (record.hooks.length > 0 && handlers.length === 0) continue;
+        kept.push({ ...record, hooks: handlers });
+        continue;
+      }
+      if (isOwned(record.command)) continue;
+      kept.push(entry);
+    }
+    hooks[event] = kept;
   }
 }
 

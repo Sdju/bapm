@@ -27,8 +27,17 @@ MCP-сервер есть в зависимостях, `bapm install` прошё
 
 - или только для себя: `bapm approve acme/mcp-tools` (запись в `~/.bapm/config.json`).
 
-::: warning Разрешения включаются для всех пакетов сразу
-Как только появляется хоть одно разрешение — `executables` в `bapm.yml` или первый `bapm approve` / `bapm deny` на машине, — bapm начинает требовать разрешение для **каждого** пакета с MCP. Пока хотя бы один такой пакет не разрешён, install падает с `MCP withheld: unapproved dependency executables`. Разрешите или запретите каждый пакет из сообщения.
+::: warning Один grant не делает остальные пакеты обязательными
+`executables.allow` в `bapm.yml` или первый `bapm approve` / `bapm deny` включает проверку MCP у зависимостей, но **не** требует решения для каждого пакета. Пакет, который вообще не упомянут в allow/deny, пропускается: его серверы не деплоятся, install продолжается, а в выводе появляется предупреждение `MCP_NOT_APPROVED` с подсказкой `bapm approve <пакет>` или `executables.allow.<пакет>.mcp: true`. Поэтому один `approve` или `executables.allow` для другого пакета больше не ломает install.
+
+Фатально install завершается только в двух случаях:
+
+- пакет **явно запрещён** — `bapm deny`, `executables.deny` в `bapm.yml` или org policy `executables.deny` / `deny_all` (deny всегда сильнее allow);
+- пакет **упомянут** в grant-поверхности, но MCP для него не разрешён — например `mcp: false` или указан только другой тип (`bin: true`).
+
+В этих случаях install печатает `MCP withheld: explicitly denied or unapproved dependency executables (...)` и перечисляет пакеты.
+
+Та же поверхность разрешений включает проверку hooks зависимостей: при наличии `executables.allow` (project или user) hook без `hook: true` отбрасывается с предупреждением `HOOK_TRUST_WITHHELD`, а остальные примитивы ставятся дальше.
 :::
 
 ### 2. Сервер запрещён
@@ -39,37 +48,59 @@ MCP-сервер есть в зависимостях, `bapm install` прошё
 - `executables.deny` в `bapm.yml`;
 - файл политики `apm-policy.yml` / `bapm-policy.yml` в репозитории или политика организации.
 
+Политика организации ищется в `<owner>/.github/apm-policy.yml`, если git remote `origin` (или единственный remote) указывает на тот же хост, что и implementation-default (обычно `github.com`). Запрос идёт по `https` через `curl` с таймаутом. Если локального файла нет и org-policy не загрузилась при `fetch_failure: block`, install завершится fail-closed, а не тихо пропустит запрет.
+
 Посмотрите, какая политика действует:
 
 ```bash
 bapm policy status
 ```
 
-Файл политики умеет только запрещать: `executables.deny` со списком пакетов или `executables.deny_all: true`. Секцию `mcp:` bapm игнорирует, `executables.allow` в файле политики — ошибка. На MCP-серверы из вашего собственного `dependencies.mcp` политика не действует.
+В отчёте `provider: github-owner-dotgithub` означает, что применена политика организации; `provider: local` — файл из репозитория; `absent` — ни локального файла, ни org-policy не нашлось.
 
-`bapm deny` не убирает сервер, который уже записан в конфиг агента: удалите его оттуда вручную.
+Файл политики умеет только запрещать: `executables.deny` со списком пакетов или `executables.deny_all: true`. Секцию `mcp:` и `executables.allow` bapm молча игнорирует: ошибки нет, но и правило не применяется. Разрешения для исполняемых задаются в `bapm.yml` (`executables.allow`) или через `bapm approve`. На MCP-серверы из вашего собственного `dependencies.mcp` политика не действует.
+
+`bapm deny <пакет>` не только пишет запрет в `~/.bapm/config.json`, но и пересобирает MCP-конфиг активных хостов: записи, которые bapm ранее записал для этого пакета, удаляются. Серверы, записанные не bapm, не трогаются. Если конфиг хоста переписать не удалось, команда печатает warning с именем сервера и просит удалить его вручную.
 
 ### 3. Выбран другой агент
 
-MCP пишется в конфиг того агента, для которого шёл install. Проверьте вывод (`bapm: installed for cursor`) и при необходимости укажите `--target`. Если в `active` перечислено несколько агентов, MCP в текущей версии получает только первый.
+MCP пишется в конфиг каждого активного агента, который его поддерживает. Проверьте вывод (`bapm: installed for cursor, claude`) и при необходимости оставьте одного агента через `--target`. Исключённые через `--exclude` агенты MCP не получают.
 
 ### 4. Агент не поддерживает MCP или пишет его в другое место
 
-Copilot и Windsurf пишут MCP в домашний каталог (`~/.copilot/`, `~/.codeium/windsurf/`), Grok Build MCP не поддерживает. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента существует к этому моменту. Если пакеты с skills в том же install его создали, MCP запишется; если ставятся одни MCP-серверы, они молча пропускаются. См. [таблицу агентов](/guide/supported-hosts#layout).
+Copilot и Windsurf пишут MCP в домашний каталог (`~/.copilot/`, `~/.codeium/windsurf/`), Grok Build и Grok Bot MCP не поддерживают. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента существует к этому моменту. Если пакеты с skills в том же install его создали, MCP запишется; если ставятся одни MCP-серверы, они молча пропускаются. См. [таблицу агентов](/guide/supported-hosts#layout).
 
 ### 5. У HTTP-сервера нет заголовков
 
-`headers` HTTP-серверов в текущей версии в конфиг агента не передаются. Сервер появится, но без авторизации. Добавьте заголовок в конфиг агента вручную.
+`headers` HTTP/SSE-серверов подставляются из окружения так же, как `env`, и записываются интеграциями, которые поддерживают заголовки. Если сервер отвечает 401, проверьте, что переменная задана и выбранный агент пишет `headers`.
+
+## Не появился `bin/` из зависимости
+
+Dependency `bin/` деплоится только с явным согласием — в интерактивном терминале тоже. Если install печатает diagnostic про `BIN_TRUST_WITHHOLD`, выберите один вариант:
+
+- разово: `bapm install --trust-bin`;
+- постоянно для себя: `bapm approve <пакет> --bin` (запись в `~/.bapm/config.json`);
+- для всей команды: `executables.allow` в `bapm.yml`:
+
+  ```yaml
+  executables:
+    allow:
+      acme/bin-tools:
+        bin: true
+  ```
+
+`--no-trust-bin`, org/project/user deny сильнее любого разрешения, включая `--trust-bin`.
 
 ## Если install падает
 
-| Сообщение                                         | Что делать                                                                                                                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `MCP withheld: unapproved dependency executables` | Разрешите (`approve` или `executables.allow` в `bapm.yml`) либо запретите (`deny`) каждый пакет с MCP                           |
-| `MCP env bake failed: unresolved placeholder`     | Задайте переменную окружения или `env` в `bapm.local.yml`. [Подробнее](/guide/manifest-dependencies#mcp-и-переменные-окружения) |
-| `Policy requires a non-empty string name`         | В файле политики есть `executables.allow` или нет `name`. Политика только запрещает; разрешения перенесите в `bapm.yml`         |
-| Другая ошибка политики                            | `bapm policy status`, затем правка файла политики                                                                               |
+| Сообщение                                                              | Что делать                                                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MCP withheld: explicitly denied or unapproved dependency executables` | Install упал из-за явного deny (`bapm deny`, `executables.deny`, org deny/`deny_all`) или потому что пакет упомянут в allow/deny без `mcp: true`. Разрешите MCP явно (`bapm approve <пакет>` или `executables.allow.<пакет>.mcp: true`), уберите deny либо удалите MCP из пакета |
+| `MCP_NOT_APPROVED` (warning)                                           | Пакет с MCP не упомянут в allow/deny: его серверы пропущены, install продолжился. Если сервер нужен — `bapm approve <пакет>` или `executables.allow.<пакет>.mcp: true`                                                                                                           |
+| `MCP env bake failed: unresolved placeholder`                          | Задайте переменную окружения или `env` в `bapm.local.yml`. [Подробнее](/guide/manifest-dependencies#mcp-и-переменные-окружения)                                                                                                                                                  |
+| `Policy requires a non-empty string name`                              | В файле политики нет поля `name` или оно пустое. `executables.allow` такой ошибки не вызывает: он молча игнорируется, разрешения перенесите в `bapm.yml`                                                                                                                         |
+| Другая ошибка политики                                                 | `bapm policy status`, затем правка файла политики                                                                                                                                                                                                                                |
 
-Отключить проверку политики для одного запуска можно флагом `--no-policy` или переменной `BAPM_POLICY_DISABLE=1`. Это отключает и запреты организации, поэтому используйте только для диагностики.
+Отключить проверку политики для одного запуска можно флагом `--no-policy`: он пропускает только файл политики в репозитории, а org policy (включая `executables.deny`/`deny_all`) продолжает действовать. Полный escape на один запуск — `--no-policy-all` или переменная `BAPM_POLICY_DISABLE=1`; он отключает и запреты организации, поэтому используйте только для диагностики.
 
 Справка: [policy, approve, deny](/reference/policy) · [install](/reference/install).

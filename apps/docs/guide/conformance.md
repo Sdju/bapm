@@ -21,20 +21,37 @@
 
 Пока проще, чем в APM:
 
-- `compile` собирает один файл (`AGENTS.md` и аналоги) для одного агента за запуск, без распределения инструкций по каталогам через `applyTo`;
-- при установке для нескольких агентов сразу MCP получает только первый;
+- `compile` по умолчанию собирает один файл (`AGENTS.md` и аналоги) на агента; opt-in `--distributed` раскладывает instructions по каталогам из `applyTo` (консервативный префикс пути, без APM-оптимизатора);
+- LSP (`dependencies.lsp`) разворачивается в Claude Code и Copilot CLI через executable trust типа `lsp`; хосты без LSP получают `LSP_UNSUPPORTED`;
+- canvas не разворачивается: install печатает `CANVAS_UNSUPPORTED`, а не игнорирует его молча;
 - установка из registry экспериментальная (`BAPM_EXPERIMENTAL_REGISTRIES=1`).
 
-## Поведение, которое отличается намеренно
+## Намеренные отличия от APM / OpenAPM
 
-- **Пересечение агентов.** Если и пакет, и ваша запись зависимости ограничивают список агентов, bapm берёт пересечение, а APM — первое найденное.
-- **YAML-якоря** обрабатываются строго по OpenAPM.
-- **Порядок записей в lock.** bapm сортирует зависимости по `repo_url` (как в OpenAPM), а APM — по глубине в дереве. Lock, переписанный bapm, может отличаться от записанного `apm` порядком записей.
-- **`local` и `bapm.local.yml`** — расширения bapm, их нет ни в APM, ни в OpenAPM. Для переносимых манифестов используйте `path:`.
+Это осознанные расхождения, а не баги и не скрытые pass в conformance. Каждое зафиксировано в [`CONFORMANCE.md`](https://github.com/Sdju/bapm/blob/master/CONFORMANCE.md).
+
+| Отличие                    | Поведение bapm                                                                            | APM / OpenAPM                                                  | Где подробнее                                        |
+| -------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------- |
+| Diamond-зависимости        | Пересечение semver-диапазонов; пустое пересечение — ошибка, без first-wins и git-fallback | APM: first-wins                                                | [Зависимости](/guide/manifest-dependencies)          |
+| Порядок записей в lock     | `(repo_url, virtual_path)`                                                                | APM: по глубине дерева                                         | [Lock-файл](/guide/lockfile)                         |
+| YAML                       | Строгий subset: якоря, алиасы и кастомные теги отвергаются при чтении                     | APM: свободный SafeLoader; OpenAPM: строгий subset             | [Манифест](/guide/config-manifest)                   |
+| Раскладка §8.5             | Не заявляется; пути задают пакеты `@b-apm/integration-*`                                  | OpenAPM: каноническая per-target карта                         | [Куда попадают файлы](/guide/supported-hosts#layout) |
+| `compile`                  | Один файл хоста по умолчанию; opt-in `--distributed` — буквальный префикс `applyTo`       | APM: раскладка через context optimizer                         | [compile](/reference/compile)                        |
+| `bapm.local.yml` и `local` | Личный оверлей настроек и личный пакет с отдельным lock                                   | Нет ни в APM, ни в OpenAPM                                     | [Личные настройки](/guide/manifest-overlay)          |
+| Registry                   | Клиент только за `BAPM_EXPERIMENTAL_REGISTRIES=1`; роль registry-хоста не заявляется      | APM: registry-клиент в обычном install; OpenAPM: роль Registry | [Registries](/guide/manifest-registries)             |
+
+Отдельно, вне таблицы:
+
+- **`audit` всегда гейт.** `bapm audit` и `bapm audit --ci` выполняют один набор проверок и возвращают один код выхода. `--ci` принимается только для совместимости со скриптами APM и ничего не переключает; «мягкого» отчёта без флага, как в APM, нет.
+- **`--no-policy` и org policy.** В bapm флаг `--no-policy` пропускает только файл политики в репозитории (`apm-policy.yml` / `bapm-policy.yml`). Org policy и её `executables.deny`/`deny_all` продолжают действовать. Полный escape — отдельный `--no-policy-all` или `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1`; это отличие от APM, где disable-флаг выключает проверку целиком.
+- **Org policy discovery.** Провайдеры `github-owner-dotgithub` и `azure-devops-org-policy` подключены в CLI. GitHub перебирает `.github-private` → `.github` → `.apm` → `_apm`; Azure DevOps — `apm/apm-policy` → legacy `_apm/_apm`.
 
 ## Что не заявлено
 
 - раскладка файлов по правилам OpenAPM 8.5;
+- GitLab policy discovery и произвольные ADO-каскады вне scope;
 - работа bapm в роли registry-сервера;
 - совместимость маркетплейсов и Agent Plugins со всеми клиентами;
-- полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP и `bin/` зависимостей; hooks пакетов не контролируются.
+- полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP, LSP, `bin/` и hooks зависимостей: при наличии `executables.allow` или org `executables.deny`/`deny_all` hook без grant отбрасывается с предупреждением `HOOK_TRUST_WITHHELD`. Без grant-поверхности hooks остаются в мягком режиме (раскладываются); canvas как primitive не реализован;
+- LSP deploy вне Claude Code и Copilot CLI: для остальных хостов записи читаются, но установка предупреждает `LSP_UNSUPPORTED` и не разворачивает серверы;
+- canvas: ключ `canvas:` или primitive типа `canvas` даёт `CANVAS_UNSUPPORTED`; путь материализации и trust-гейт не реализованы.

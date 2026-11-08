@@ -6,6 +6,7 @@ import {
   copyHookScript,
   readHookOwnershipSidecar,
   removeOwnedHookArtifacts,
+  renderNativeHookEntries,
   stripOwnedHookCommands,
   writeHookOwnershipSidecar,
   type HookOwnershipSidecar,
@@ -54,7 +55,99 @@ describe("hook ownership sidecar", () => {
   });
 });
 
+describe("renderNativeHookEntries", () => {
+  test("flat entries become matcher groups and keep handler metadata", () => {
+    const rendered = renderNativeHookEntries({
+      entries: [{ type: "command", command: "./run.sh", timeout: 5 }, { command: "./untyped.sh" }],
+      defaultMatcher: "*",
+      defaultHandlerType: true,
+      rewriteCommand: (command) => ({ command: `.claude/${command.slice(2)}` }),
+    });
+
+    expect(rendered.entries).toEqual([
+      {
+        matcher: "*",
+        hooks: [
+          {
+            type: "command",
+            command: ".claude/run.sh",
+            timeout: 5,
+          },
+        ],
+      },
+      { matcher: "*", hooks: [{ type: "command", command: ".claude/untyped.sh" }] },
+    ]);
+    expect(rendered.owned).toEqual([
+      { command: ".claude/run.sh" },
+      { command: ".claude/untyped.sh" },
+    ]);
+  });
+
+  test("nested groups keep matcher, group fields, and explicit handler types", () => {
+    const rendered = renderNativeHookEntries({
+      entries: [
+        {
+          matcher: "Bash",
+          env: { KEEP: "1" },
+          hooks: [
+            { type: "command", command: "./check.sh", timeout: 10 },
+            { type: "prompt", prompt: "review" },
+          ],
+        },
+      ],
+      defaultHandlerType: true,
+      rewriteCommand: (command) => ({ command: `.codex/${command.slice(2)}` }),
+    });
+
+    expect(rendered.entries).toEqual([
+      {
+        matcher: "Bash",
+        env: { KEEP: "1" },
+        hooks: [
+          { type: "command", command: ".codex/check.sh", timeout: 10 },
+          { type: "prompt", prompt: "review" },
+        ],
+      },
+    ]);
+    expect(rendered.owned).toEqual([{ command: ".codex/check.sh" }]);
+  });
+});
+
 describe("stripOwnedHookCommands", () => {
+  test("removes owned handlers nested in matcher groups and drops empty groups", () => {
+    const hooks: Record<string, unknown> = {
+      SessionStart: [
+        {
+          matcher: "Bash",
+          hooks: [
+            { type: "command", command: "./owned.sh" },
+            { type: "command", command: "./keep.sh" },
+          ],
+        },
+        {
+          matcher: "Read",
+          hooks: [{ type: "command", command: "./also-owned.sh" }],
+        },
+      ],
+    };
+    stripOwnedHookCommands(hooks, {
+      owned: {
+        x: {
+          entries: [
+            { event: "SessionStart", command: "./owned.sh" },
+            { event: "SessionStart", command: "./also-owned.sh" },
+          ],
+        },
+      },
+    });
+    expect(hooks.SessionStart).toEqual([
+      {
+        matcher: "Bash",
+        hooks: [{ type: "command", command: "./keep.sh" }],
+      },
+    ]);
+  });
+
   test("removes owned commands; empty ownership is a no-op; no disk deletes", () => {
     const hooks: Record<string, unknown> = {
       SessionStart: [{ command: "./owned.sh" }, { command: "./keep.sh" }],

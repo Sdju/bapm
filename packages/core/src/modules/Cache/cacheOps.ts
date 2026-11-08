@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { APM_MODULES_DIR } from "@/modules/Resolver";
+import { sharedGitCacheInfo, sharedHttpCacheInfo } from "@/modules/SharedCache";
 import type {
   CacheCleanOptions,
   CacheCleanResult,
@@ -10,7 +11,8 @@ import type {
 
 /**
  * Report modules-cache root + size/entry stats (project `apm_modules`).
- * Does not introduce a shared APM git/http cache (rs-016 identity preserved).
+ * Also exposes opt-in shared git-cache stats without changing modules-cache
+ * keys or rs-016 identity isolation.
  */
 export function cacheInfo(options: CacheInfoOptions = {}): CacheInfoResult {
   const cwd = resolve(options.cwd ?? process.cwd());
@@ -28,9 +30,17 @@ export function cacheInfo(options: CacheInfoOptions = {}): CacheInfoResult {
   }
 
   const empty = !exists || entries === 0;
-  const text = empty
+  const modulesText = empty
     ? `cache root: ${cacheRoot}\nentries: 0\nsize: 0 bytes\nstatus: empty`
     : `cache root: ${cacheRoot}\nentries: ${entries}\nsize: ${sizeBytes} bytes\nfiles/dirs under apm_modules`;
+
+  // Keep pre-existing output byte-stable when the shared cache is off; append
+  // the shared sections only when BAPM_CACHE_DIR configured one.
+  const shared = sharedGitCacheInfo({ env: options.env });
+  const sharedHttp = sharedHttpCacheInfo({ env: options.env });
+  const text = shared.cacheDir
+    ? `${modulesText}\n\n${shared.text}\n\n${sharedHttp.text}`
+    : modulesText;
 
   return {
     cacheRoot,
@@ -39,6 +49,8 @@ export function cacheInfo(options: CacheInfoOptions = {}): CacheInfoResult {
     sizeBytes,
     empty,
     text,
+    shared,
+    sharedHttp,
   };
 }
 

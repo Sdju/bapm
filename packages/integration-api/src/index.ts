@@ -12,7 +12,12 @@ export type {
   ConfigureMcpContext,
   ConfigureMcpFn,
   ConfigureMcpReport,
+  ConfigureLspContext,
+  ConfigureLspFn,
+  ConfigureLspReport,
   DeployedFile,
+  LspServerConfig,
+  DeploymentScope,
   MaterializeContext,
   MaterializeReport,
   McpEnvMode,
@@ -31,6 +36,17 @@ export type {
 
 export { createIntegrationRegistry, createMarketplaceOutputRegistry } from "./registry.ts";
 
+export {
+  BUILD_ID_LINE_PATTERN,
+  BUILD_ID_PLACEHOLDER,
+  applyBuildId,
+  buildIdBody,
+  computeBuildId,
+  hasBuildIdLine,
+  hasValidBuildId,
+  stabilizeBuildId,
+} from "./buildId.ts";
+
 export type {
   CopyHookScriptArgs,
   CopyHookScriptResult,
@@ -39,6 +55,9 @@ export type {
   PrimitiveMaterializeHandler,
   PrimitiveMaterializeHandlers,
   PrimitiveMaterializeKind,
+  RenderNativeHookEntriesArgs,
+  RenderNativeHookEntriesResult,
+  RewriteHookCommand,
 } from "./helpers.ts";
 
 export {
@@ -51,16 +70,20 @@ export {
   filterFrontmatterKeys,
   findPackageRoot,
   getConfigureMcp,
+  getConfigureLsp,
   hasConfigureMcp,
+  hasConfigureLsp,
   isUnderRoot,
   isWithin,
   listFiles,
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
+  renderNativeHookEntries,
   renderPrimitivesMarkdown,
   sanitizeName,
   stripOwnedHookCommands,

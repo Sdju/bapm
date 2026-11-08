@@ -173,7 +173,9 @@ dependencies:
       `name: withheld-mcp
 version: 0.0.1
 executables:
-  allow: {}
+  deny:
+    leaf:
+      mcp: true
 dependencies:
   apm:
     - path: ./leaf

@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import type {
@@ -18,8 +19,10 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
+  renderNativeHookEntries,
   renderPrimitivesMarkdown,
   sanitizeName,
   stripOwnedHookCommands,
@@ -53,10 +56,19 @@ export function createCodexIntegration(options?: {
   return {
     id,
     deployRoots,
+    // Codex has no runtime interpolation for stdio `env`, so install still
+    // bakes it. Header references are translated into native indirection.
+    mcpHeadersEnvMode: "translate",
     detect: ({ cwd }) => {
       const codexDir = join(cwd, ".codex");
       return existsSync(codexDir) && statSync(codexDir).isDirectory();
     },
+    detectGlobal: () => {
+      const codexDir = join(homedir(), ".codex");
+      return existsSync(codexDir) && statSync(codexDir).isDirectory();
+    },
+    supportsGlobalFiles: true,
+    globalCompileOutput: ".codex/AGENTS.md",
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
       const content = renderPrimitivesMarkdown({
@@ -150,10 +162,16 @@ export function createCodexIntegration(options?: {
       };
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
+      if (ctx?.scope === "global") {
+        throw new Error(
+          "Codex global MCP is not supported in this release; use --only apm for global file primitives",
+        );
+      }
       return writeCodexMcpConfig(servers, {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -316,6 +334,7 @@ function writeCodexMcpConfig(
       : {};
 
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(mcpServers, Object.keys(incoming), ctx.managedServers);
   for (const [name, entry] of Object.entries(incoming)) {
     const prior = mcpServers[name];
     mcpServers[name] =
@@ -380,14 +399,21 @@ function normalizeCodexServerEntries(
       });
       continue;
     }
+    if (mapped.diagnostics) diagnostics.push(...mapped.diagnostics);
     out[name] = mapped.entry;
   }
   return { entries: out, diagnostics };
 }
 
-function toCodexServerEntry(
-  server: McpServerConfig,
-): { ok: true; entry: Record<string, unknown> } | { ok: false; code: string; message: string } {
+type CodexServerEntryResult =
+  | {
+      ok: true;
+      entry: Record<string, unknown>;
+      diagnostics?: Array<{ code: string; message: string; server?: string }>;
+    }
+  | { ok: false; code: string; message: string };
+
+function toCodexServerEntry(server: McpServerConfig): CodexServerEntryResult {
   const transport = String(server.transport ?? server.type ?? "").toLowerCase();
   const name = String(server.name ?? "").trim() || "unknown";
 
@@ -432,7 +458,17 @@ function toCodexServerEntry(
     }
     entry.url = server.url;
     if (server.env && typeof server.env === "object") entry.env = server.env;
-    return { ok: true, entry };
+    const headerMapping = mapCodexHeaders(server.headers, name);
+    if (headerMapping.httpHeaders) entry.http_headers = headerMapping.httpHeaders;
+    if (headerMapping.envHttpHeaders) entry.env_http_headers = headerMapping.envHttpHeaders;
+    if (headerMapping.bearerTokenEnvVar) {
+      entry.bearer_token_env_var = headerMapping.bearerTokenEnvVar;
+    }
+    return {
+      ok: true,
+      entry,
+      ...(headerMapping.diagnostics.length > 0 ? { diagnostics: headerMapping.diagnostics } : {}),
+    };
   }
 
   // stdio default
@@ -450,10 +486,85 @@ function toCodexServerEntry(
   return { ok: true, entry };
 }
 
-type HookEntry = { command?: string; [key: string]: unknown };
+/**
+ * Codex reads remote headers only as static `http_headers`, or through
+ * `env_http_headers` / `bearer_token_env_var` for environment references.
+ * Values with literal text around a reference cannot be expressed and are
+ * skipped with a diagnostic rather than written as a static secret.
+ */
+function mapCodexHeaders(
+  headers: Record<string, string> | undefined,
+  serverName: string,
+): {
+  httpHeaders?: Record<string, string>;
+  envHttpHeaders?: Record<string, string>;
+  bearerTokenEnvVar?: string;
+  diagnostics: Array<{ code: string; message: string; server?: string }>;
+} {
+  const httpHeaders: Record<string, string> = {};
+  const envHttpHeaders: Record<string, string> = {};
+  const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
+  let bearerTokenEnvVar: string | undefined;
+
+  if (!headers || typeof headers !== "object" || Array.isArray(headers)) {
+    return { diagnostics };
+  }
+
+  for (const [header, raw] of Object.entries(headers)) {
+    if (typeof raw !== "string") continue;
+    if (!hasEnvReference(raw)) {
+      httpHeaders[header] = raw;
+      continue;
+    }
+
+    const bearer = /^Bearer\s+(.+)$/.exec(raw);
+    if (bearer && header.toLowerCase() === "authorization") {
+      const varName = extractSingleEnvRef(bearer[1]!.trim());
+      if (varName) {
+        bearerTokenEnvVar = varName;
+        continue;
+      }
+    }
+
+    const direct = extractSingleEnvRef(raw.trim());
+    if (direct) {
+      envHttpHeaders[header] = direct;
+      continue;
+    }
+
+    diagnostics.push({
+      code: "CODEX_MCP_HEADER_UNEXPRESSIBLE",
+      message:
+        `Codex cannot express header "${header}" for server "${serverName}" as a static value ` +
+        "or environment reference; header skipped (remove surrounding text or use a plain ${VAR})",
+      server: serverName,
+    });
+  }
+
+  return {
+    ...(Object.keys(httpHeaders).length > 0 ? { httpHeaders } : {}),
+    ...(Object.keys(envHttpHeaders).length > 0 ? { envHttpHeaders } : {}),
+    ...(bearerTokenEnvVar ? { bearerTokenEnvVar } : {}),
+    diagnostics,
+  };
+}
+
+function hasEnvReference(value: string): boolean {
+  return /\$\{|<[A-Z_][A-Z0-9_]*>|\{env:[A-Za-z_][A-Za-z0-9_]*\}/.test(value);
+}
+
+function extractSingleEnvRef(value: string): string | undefined {
+  const match =
+    /^\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
+    /^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
+    /^\{env:([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
+    /^<([A-Z_][A-Z0-9_]*)>$/.exec(value);
+  return match?.[1];
+}
+
 type HooksDoc = {
   version?: number;
-  hooks?: Record<string, HookEntry[]>;
+  hooks?: Record<string, unknown[]>;
   [key: string]: unknown;
 };
 
@@ -520,35 +631,34 @@ function materializeCodexHooks(args: {
       if (!Array.isArray(entries)) continue;
       const event = normalizeCodexHookEvent(rawEvent);
       const destList = Array.isArray(doc.hooks[event]) ? [...doc.hooks[event]!] : [];
-      for (const entry of entries) {
-        if (!entry || typeof entry !== "object") continue;
-        const command = typeof entry.command === "string" ? entry.command.trim() : "";
-        if (!command) {
-          destList.push({ ...entry });
-          continue;
-        }
-
-        const rewritten = copyHookScript({
-          cwd,
-          deployRoots: roots,
-          hookFile: srcPath,
-          command,
-          alreadyDeployedNeedle: ".codex/",
-          destRel: `.codex/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
-          commandAsDotSlash: true,
-        });
-        const nextEntry: HookEntry = { ...entry, command: rewritten.commandRel };
-        destList.push(nextEntry);
-        ownedEntries.push({ event, command: rewritten.commandRel });
-        if (rewritten.scriptRel) {
-          scripts.push(rewritten.scriptRel);
-          deployedFiles.push({
-            path: rewritten.scriptRel,
-            primitive: { name: String(p.name), packageName: p.packageName },
+      const rendered = renderNativeHookEntries({
+        entries: entries as unknown[],
+        rewriteCommand: (command) => {
+          const rewritten = copyHookScript({
+            cwd,
+            deployRoots: roots,
+            hookFile: srcPath,
+            command,
+            alreadyDeployedNeedle: ".codex/",
+            destRel: `.codex/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
+            commandAsDotSlash: true,
           });
-        }
+          return {
+            command: rewritten.commandRel,
+            ...(rewritten.scriptRel ? { scriptRel: rewritten.scriptRel } : {}),
+          };
+        },
+      });
+      for (const entry of rendered.owned) ownedEntries.push({ event, command: entry.command });
+      for (const scriptRel of rendered.scripts) {
+        if (scripts.includes(scriptRel)) continue;
+        scripts.push(scriptRel);
+        deployedFiles.push({
+          path: scriptRel,
+          primitive: { name: String(p.name), packageName: p.packageName },
+        });
       }
-      doc.hooks[event] = destList;
+      doc.hooks[event] = [...destList, ...rendered.entries];
     }
 
     nextOwned[name] = {

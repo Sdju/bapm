@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vite-plus/test";
-import { bakeMcpStringMap, McpEnvBakeError } from "../../src/modules/Mcp/bake.ts";
+import {
+  bakeMcpServerMaps,
+  bakeMcpStringMap,
+  McpEnvBakeError,
+} from "../../src/modules/Mcp/bake.ts";
 
 describe("bakeMcpStringMap", () => {
   test("resolves ${VAR}, ${env:VAR}, and <VAR>", () => {
@@ -124,5 +128,17 @@ describe("bakeMcpStringMap", () => {
       expect((error as Error).message).toMatch(/MISSING_SECRET/);
       expect((error as Error).message).not.toContain(secret);
     }
+  });
+
+  test("bakeMcpServerMaps can translate headers while baking env", () => {
+    const baked = bakeMcpServerMaps(
+      {
+        env: { API_TOKEN: "${API_TOKEN}" },
+        headers: { Authorization: "Bearer ${API_TOKEN}" },
+      },
+      { env: { API_TOKEN: "secret" }, headersMode: "translate" },
+    );
+    expect(baked.env).toEqual({ API_TOKEN: "secret" });
+    expect(baked.headers).toEqual({ Authorization: "Bearer ${API_TOKEN}" });
   });
 });

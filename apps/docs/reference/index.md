@@ -13,6 +13,8 @@
 | `outdated`  | [outdated](/reference/outdated)   |
 | `uninstall` | [uninstall](/reference/uninstall) |
 | `prune`     | [prune](/reference/prune)         |
+| `run`       | [run](/reference/run)             |
+| `preview`   | [run](/reference/run)             |
 
 ## Инспекция и проверка
 
@@ -24,6 +26,11 @@
 | `audit`                       | [audit](/reference/audit)     |
 | `doctor`                      | [doctor](/reference/doctor)   |
 | `compile`                     | [compile](/reference/compile) |
+| `targets`                     | [targets](/reference/targets) |
+| `runtime`                     | [runtime](/reference/runtime) |
+| `mcp`                         | [mcp](/reference/mcp)         |
+| `config`                      | [config](/reference/config)   |
+| `auth`                        | [auth](/reference/auth)       |
 | `policy` / `approve` / `deny` | [policy](/reference/policy)   |
 
 ## Реже

@@ -71,6 +71,30 @@ The registry HTTP transport MUST be injectable (port/adapter) so acceptance and 
 - **WHEN** resolve/install/publish tests inject a mock registry transport
 - **THEN** no outbound network to a real public registry MUST be required for those tests to pass
 
+### Requirement: Optional shared HTTP response cache for GET
+
+When the opt-in shared HTTP cache is enabled (`BAPM_CACHE_DIR` set, `BAPM_NO_CACHE` unset, `BAPM_HTTP_CACHE` not disabled), the production registry transport MUST look up a fresh cached response before fetching an idempotent `GET` and MUST store only `200` responses. Cache keys MUST include the request URL and request headers (`sha256(url + canonical headers)`, layout `<BAPM_CACHE_DIR>/http/<key>`). Requests with `Authorization` or `Cookie` headers MUST bypass the cache entirely. Non-GET methods and `4xx`/`5xx` responses MUST NOT be cached. `BAPM_HTTP_CACHE_TTL` MUST set freshness in seconds (default 300). Cache read/write errors MUST fall back to the network without changing the registry result.
+
+#### Scenario: Second anonymous GET is served from cache
+
+- **WHEN** the shared HTTP cache is enabled and two identical anonymous GET requests return `200`
+- **THEN** the first MUST populate `<BAPM_CACHE_DIR>/http/` and the second MUST be served from the cached status/headers/body without another network call
+
+#### Scenario: Authed GET bypasses cache
+
+- **WHEN** a GET carries `Authorization: Bearer …` or a `Cookie` header
+- **THEN** the transport MUST NOT read or write the shared HTTP cache for that request
+
+#### Scenario: Publish and error responses bypass cache
+
+- **WHEN** the client publishes via `PUT` or a GET returns `4xx`/`5xx`
+- **THEN** no shared HTTP cache entry MUST be created
+
+#### Scenario: Cache corruption does not break requests
+
+- **WHEN** a cached HTTP entry is unreadable or malformed
+- **THEN** the transport MUST fetch from the network and return the normal response
+
 ### Requirement: Authed registry requests use redirect Auth drop
 
 When the Registry HTTP client issues Authed requests (Authorization Bearer present), the production transport MUST follow redirects using the redirect-auth-drop capability: on cross-credential-host-class 3xx, origin Authorization and origin-class credential material MUST be dropped before the redirected request; destination-class credentials MAY be re-resolved. Default native fetch redirect following that forwards Authorization across credential host classes MUST NOT be used for Authed production Registry traffic.
@@ -84,3 +108,29 @@ When the Registry HTTP client issues Authed requests (Authorization Bearer prese
 
 - **WHEN** no registry token is configured
 - **THEN** list/download MUST still proceed without Authorization and MUST NOT invent a Bearer header
+
+### Requirement: MCP server registry discovery over the injectable transport
+
+The system MUST provide an MCP server registry client that queries the MCP Registry v0 API shape (`GET /v0/servers?search=<query>` and `GET /v0/servers/<url-encoded-name>/versions/<version>`) through the same injectable HTTP transport contract used by the package registry. Search results MUST normalize to stable summary fields (name, description, version, transports, packages); detail results MUST additionally expose packages, remotes, repository/website URLs, and argument/environment metadata. Public JSON/text output MUST NOT include registry-authored header values or a configured bearer token.
+
+Registry endpoint resolution MUST use `--registry` > `MCP_REGISTRY_URL` > persisted `mcp-registry-url` > `https://api.mcp.github.com`. Invalid scheme/host, embedded credentials, query strings, and fragments MUST fail closed before any request. Explicit flag/config URLs MAY use `http://`; the ambient env var MUST require `MCP_REGISTRY_ALLOW_HTTP=1`. A configured `MCP_REGISTRY_TOKEN` / `BAPM_MCP_REGISTRY_TOKEN` MUST be sent only as `Authorization: Bearer …` and MUST bypass the shared HTTP cache.
+
+#### Scenario: Search returns stable summaries without network in tests
+
+- **WHEN** a mock transport serves `{"servers":[{"server":{"name":"io.github.acme/tool","packages":[…],"remotes":[…]}}]}`
+- **THEN** `search` MUST return stable name/description/version/transports/packages fields and MUST require no live network
+
+#### Scenario: Show URL-encodes the server name
+
+- **WHEN** `getServer("io.github.acme/tool")` runs
+- **THEN** the request path MUST contain `io.github.acme%2Ftool/versions/latest` (or the pinned version)
+
+#### Scenario: Network and auth failures fail closed without secrets
+
+- **WHEN** the transport throws or returns 401/403 while a token is configured
+- **THEN** the client MUST return a non-zero diagnostic naming the registry and token env, and MUST NOT echo the token
+
+#### Scenario: Invalid registry URL is rejected before fetch
+
+- **WHEN** `--registry` is `not-a-url`, uses a non-http(s) scheme, contains credentials, or carries a query/fragment
+- **THEN** the lookup MUST fail closed without issuing an HTTP request and without echoing credentials

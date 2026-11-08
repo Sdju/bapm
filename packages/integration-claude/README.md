@@ -37,6 +37,8 @@ Auto-detect without force MUST NOT create `.claude/` solely for MCP opt-in.
 | command        | `.claude/commands/<name>.md` (shared frontmatter subset)                                   |
 | hook           | merge `.claude/settings.json` + scripts under `.claude/hooks/` + `.claude/bapm-hooks.json` |
 
+Hooks use Claude's native nested groups: `hooks[event] = [{ matcher, hooks: [{ type: "command", command }] }]`. Flat command entries get matcher `"*"` and `type: "command"` when absent; explicit handler types and source matchers are preserved. Ownership stays in `.claude/bapm-hooks.json`, so retries replace only bapm-owned nested handlers and keep foreign groups.
+
 MCP is **not** written by materialize — only via `configureMcp` → project `.mcp.json` when `.claude/` exists.
 
 ## Compile

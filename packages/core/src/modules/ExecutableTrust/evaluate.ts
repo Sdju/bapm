@@ -67,6 +67,9 @@ export function parseExecutableGrants(
  * Layered deny-wins resolver (sc-011):
  * org deny_all / org deny → project|user deny → project allow → user allow →
  * withhold if any grant surface present else skip.
+ *
+ * `executableType` is looked up verbatim in grant entries, so `mcp`, `bin`, and
+ * `hook` share the same ladder without per-type policy code.
  */
 export function resolveExecutableTrust(
   options: ResolveExecutableTrustOptions,
@@ -160,6 +163,39 @@ export function resolveExecutableTrust(
 
 /** Audit/trust classifier twin — identical to resolveExecutableTrust (sc-011). */
 export const classifyExecutableTrust = resolveExecutableTrust;
+
+/**
+ * True when `packageName` has any allow/deny entry (for any executable type) in
+ * the project or user grant maps, or is named by the org deny list/deny_all.
+ *
+ * Install uses this to distinguish an explicit decision from a package that the
+ * grant surface never mentioned. The latter still does not deploy (resolver
+ * returns `withhold`), but it is skipped with a warning instead of failing the
+ * whole install: one grant must not make every unrelated dependency fatal.
+ */
+export function isPackageMentionedInGrants(options: {
+  packageName: string;
+  projectSurface?: GrantSurfaceInput;
+  userSurface?: GrantSurfaceInput;
+  orgExecutables?: OrgExecutables | null;
+}): boolean {
+  const packageName = String(options.packageName ?? "").trim();
+  if (!packageName) return false;
+  const project = normalizeSurface(options.projectSurface);
+  const user = normalizeSurface(options.userSurface);
+  if (hasGrantEntry(project.allow, packageName) || hasGrantEntry(project.deny, packageName)) {
+    return true;
+  }
+  if (hasGrantEntry(user.allow, packageName) || hasGrantEntry(user.deny, packageName)) {
+    return true;
+  }
+  const org = normalizeOrg(options.orgExecutables);
+  return org.deny_all || org.deny.includes(packageName);
+}
+
+function hasGrantEntry(map: Record<string, ExecutableGrantEntry>, packageName: string): boolean {
+  return Object.prototype.hasOwnProperty.call(map, packageName);
+}
 
 /**
  * Evaluate whether a package may deploy an executable type (default: mcp).

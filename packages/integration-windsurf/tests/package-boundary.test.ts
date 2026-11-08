@@ -39,6 +39,7 @@ describe("@b-apm/integration-windsurf package boundary", () => {
     expect(target.deployRoots).toEqual(expect.arrayContaining([".windsurf", ".agents"]));
     expect(target.deployRoots).not.toContain(".");
     expect((target as { mcpEnvMode?: string }).mcpEnvMode).not.toBe("translate");
+    expect((target as { mcpScope?: string }).mcpScope).toBe("home");
   });
 
   test("@b-apm/core must not hard-depend on @b-apm/integration-windsurf", () => {

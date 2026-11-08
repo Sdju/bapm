@@ -19,6 +19,12 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
+const FORCE_WARNING = /--force has no effect in this version/g;
+
+function countForceWarnings(stderr: string[]): number {
+  return (stderr.join("\n").match(FORCE_WARNING) ?? []).length;
+}
+
 describe("CLI install project-scope flags + help", () => {
   let project: TempProject | undefined;
 
@@ -45,6 +51,7 @@ describe("CLI install project-scope flags + help", () => {
     expect(text).toMatch(/apm|mcp/i);
     // Force must not be conflated with refresh/update or frozen/policy bypass.
     expect(text).toMatch(/force[\s\S]{0,120}(refresh|frozen|policy)|does not (refresh|bypass)/i);
+    expect(text).toMatch(/--force[\s\S]{0,120}(no effect|has no effect)/i);
     expect(text).not.toMatch(/--refresh\b/);
     // Distinct from --target / forced-target.
     expect(text).toMatch(/--target\b/);
@@ -102,6 +109,39 @@ describe("CLI install project-scope flags + help", () => {
     expect(result).toBe(0);
   });
 
+  test("--force keeps the same exit code and warns exactly once", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "p7a-force-warning", { withCursor: true });
+
+    const withoutForce = await runInProject(project.cwd, ["install", "--dry-run"]);
+    const withForce = await runInProject(project.cwd, ["install", "--force", "--dry-run"]);
+
+    expect(withoutForce.result).toBe(0);
+    expect(withForce.result).toBe(withoutForce.result);
+    expect(withoutForce.combined).not.toMatch(/--force has no effect in this version/i);
+    expect(countForceWarnings(withForce.stderr)).toBe(1);
+    expect(withForce.stderr.join("\n")).toMatch(
+      /use --update to refresh refs, --trust-bin for bin consent, or remove the flag/i,
+    );
+  });
+
+  test("--force does not bypass mutually exclusive flag conflicts", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "p7a-force-conflict", { withCursor: true });
+
+    const { result, stderr, combined } = await runInProject(project.cwd, [
+      "install",
+      "--force",
+      "--frozen",
+      "--no-frozen",
+    ]);
+
+    expectKnownCommand(combined, "install");
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(/conflict|mutually|cannot combine|both/i);
+    expect(countForceWarnings(stderr)).toBe(1);
+  });
+
   test("invalid --only value rejected fail-closed", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p7a-only-bad", { withCursor: true });
@@ -137,16 +177,15 @@ describe("CLI install project-scope flags + help", () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "p7a-force-frozen", { withCursor: true });
 
-    const { result, combined } = await runInProject(project.cwd, [
-      "install",
-      "--force",
-      "--frozen",
-    ]);
+    const withoutForce = await runInProject(project.cwd, ["install", "--frozen"]);
+    const withForce = await runInProject(project.cwd, ["install", "--force", "--frozen"]);
 
-    expectKnownCommand(combined, "install");
-    expectKnownFlags(combined);
-    expect(result).not.toBe(0);
-    expect(combined).toMatch(/frozen|lock/i);
+    expectKnownCommand(withForce.combined, "install");
+    expectKnownFlags(withForce.combined);
+    expect(withForce.result).not.toBe(0);
+    expect(withForce.result).toBe(withoutForce.result);
+    expect(withForce.combined).toMatch(/frozen|lock/i);
+    expect(countForceWarnings(withForce.stderr)).toBe(1);
   });
 
   test("--force does not disable blocking policy", async () => {
@@ -154,11 +193,12 @@ describe("CLI install project-scope flags + help", () => {
     writeLeafProject(project.cwd, "p7a-force-policy", { withCursor: true });
     writePolicy(project.cwd, BLOCK_DENY_LEAF);
 
-    const { result, combined } = await runInProject(project.cwd, ["install", "--force"]);
+    const { result, stderr, combined } = await runInProject(project.cwd, ["install", "--force"]);
 
     expectKnownCommand(combined, "install");
     expectKnownFlags(combined);
     expect(result).not.toBe(0);
     expect(combined).toMatch(/policy|deny|block|violat|denied/i);
+    expect(countForceWarnings(stderr)).toBe(1);
   });
 });

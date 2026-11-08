@@ -4,6 +4,7 @@ import { discoverAgentPluginMcp, loadAgentPluginManifest } from "@/modules/Agent
 import { loadManifest } from "@/modules/Manifest";
 import {
   buildMarketplaceOutputs,
+  checkMarketplaceDrift,
   detectAuthoringConfigSource,
   loadMarketplaceAuthoringConfig,
   MarketplacePackOutputsError,
@@ -11,6 +12,7 @@ import {
   tryLoadMarketplaceAuthoring,
 } from "@/modules/Marketplace";
 import { checkReleaseTag } from "./checkRelease.ts";
+import { buildClaudePluginBundle } from "./claudeBundle.ts";
 import {
   assertProjectHasContent,
   collectPackFiles,
@@ -18,6 +20,8 @@ import {
   ensureCwdExists,
 } from "./collect.ts";
 import { PackError } from "./errors.ts";
+import { assertPortableAgentPluginPackSet } from "./portable.ts";
+import { validateMarketplaceStrictMetadata, validatePackStrictMetadata } from "./strictMetadata.ts";
 import type { RunPackOptions, RunPackResult } from "./types.ts";
 import { createZipArchive } from "./zip.ts";
 
@@ -39,6 +43,24 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
   const cwd = resolve(options.cwd ?? process.cwd());
   ensureCwdExists(cwd);
   const agentPlugins = options.agentPlugins === true;
+  const format = normalizePackFormat(options.format);
+
+  if (agentPlugins && format === "claude-plugin") {
+    throw new PackError(
+      "PACK_VALIDATION",
+      "Agent Plugins portable pack and Claude plugin pack are mutually exclusive",
+    );
+  }
+
+  // `--strict-metadata` is a preflight: validate every producer metadata source
+  // before any marketplace JSON or archive write can happen.
+  if (options.strictMetadata) {
+    validatePackStrictMetadata({
+      cwd,
+      agentPlugins,
+      ...(format === "claude-plugin" ? { pluginOnly: true } : {}),
+    });
+  }
 
   if (options.checkRelease) {
     const gate = await checkReleaseTag({ cwd, tag: options.tag });
@@ -47,9 +69,31 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
     }
   }
 
-  const format = options.format ?? "zip";
-  if (format !== "zip") {
-    throw new PackError("PACK_VALIDATION", `Unsupported pack format "${format}" (M7 supports zip)`);
+  if (options.checkClean) {
+    const checkClean = await checkMarketplaceDrift({
+      cwd,
+      marketplace: options.marketplace,
+      marketplacePaths: options.marketplacePaths,
+      offline: options.offline,
+      includePrerelease: options.includePrerelease,
+      lsRemote: options.lsRemote,
+      marketplaceOutputs: options.marketplaceOutputs,
+    });
+    return {
+      ok: true,
+      dryRun: true,
+      filesPacked: 0,
+      marketplaceWritten: false,
+      checkClean,
+    };
+  }
+
+  if (format === "claude-plugin") {
+    if (options.marketplace !== undefined) {
+      throw new PackError("PACK_VALIDATION", "Claude plugin pack cannot emit marketplace outputs");
+    }
+    const entries = collectPackFiles(cwd);
+    return writeClaudePluginArchive({ options, cwd, entries });
   }
 
   if (agentPlugins) {
@@ -83,6 +127,7 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
 
     const entries = collectPackFiles(cwd);
     assertProjectHasContent(entries, { agentPlugins: true });
+    assertPortableAgentPluginPackSet({ root: cwd, entries });
     return writePackArchive({
       options,
       cwd,
@@ -118,6 +163,9 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
     );
     const selected = selectOutputFormats(config, marketplaceFilter, knownFormats);
     if (selected.length > 0) {
+      if (options.strictMetadata) {
+        validateMarketplaceStrictMetadata(config);
+      }
       try {
         const built = await buildMarketplaceOutputs({
           cwd,
@@ -214,6 +262,43 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
 /** Alias accepted by acceptance helpers. */
 export const packProject = runPack;
 export const packArchive = runPack;
+
+function normalizePackFormat(value: string | undefined): "zip" | "claude-plugin" {
+  const key = (value ?? "zip").trim().toLowerCase();
+  if (key === "zip") return "zip";
+  if (key === "claude-plugin" || key === "claude" || key === "plugin") {
+    return "claude-plugin";
+  }
+  throw new PackError(
+    "PACK_VALIDATION",
+    `Unsupported pack format "${value}" (supported: zip, claude-plugin)`,
+  );
+}
+
+function writeClaudePluginArchive(input: {
+  options: RunPackOptions;
+  cwd: string;
+  entries: ReturnType<typeof collectPackFiles>;
+}): RunPackResult {
+  const bundle = buildClaudePluginBundle({ root: input.cwd, entries: input.entries });
+  const filesPacked = Object.keys(bundle.files).length;
+  if (input.options.dryRun === true) {
+    return { ok: true, dryRun: true, filesPacked };
+  }
+
+  const archivePath = resolve(
+    input.options.outputPath ?? resolve(input.cwd, defaultArchiveName(bundle.name, bundle.version)),
+  );
+  try {
+    writeFileSync(archivePath, createZipArchive(bundle.files));
+  } catch (cause) {
+    throw new PackError("PACK_IO", `Failed to write Claude plugin archive: ${archivePath}`, {
+      path: archivePath,
+      cause,
+    });
+  }
+  return { ok: true, dryRun: false, archivePath, filesPacked };
+}
 
 function writePackArchive(input: {
   options: RunPackOptions;

@@ -7,7 +7,7 @@ import { PolicyError } from "./errors.ts";
 import { isPolicyDisabled } from "./escape.ts";
 import type { LoadPolicyExtendedOptions } from "./load.ts";
 import { parsePolicyDocument } from "./parse.ts";
-import { discoverPolicyWithProviders } from "./providers.ts";
+import { discoverPolicyWithProviders, filterNonLocalPolicyProviders } from "./providers.ts";
 import { redactPolicyRef, redactValue } from "./redact.ts";
 import { resolvePolicyChain, type FetchAncestor } from "./resolve.ts";
 import type { GitRemoteEntry } from "./remotes.ts";
@@ -47,11 +47,15 @@ export type PolicyStatusOptions = {
   cwd?: string;
   policyPath?: string;
   policy?: string;
+  /** Full escape: report disabled (`--no-policy-all` / env disable). */
   noPolicy?: boolean;
+  /** Skip repository-local policy only; remote/org providers still run. */
+  noRepoPolicy?: boolean;
   providers?: string[];
   policyProviders?: string[];
   listGitRemotes?: (cwd?: string) => GitRemoteEntry[];
   remotes?: GitRemoteEntry[];
+  adoHosts?: string[];
   fetchAncestor?: FetchAncestor;
   fetchPolicyUrl?: LoadPolicyExtendedOptions["fetchPolicyUrl"];
   httpGet?: LoadPolicyExtendedOptions["httpGet"];
@@ -92,7 +96,7 @@ export function runPolicyStatus(options: PolicyStatusOptions = {}): PolicyStatus
       diagnostics: [
         {
           code: "POLICY_ESCAPED",
-          message: "Policy status skipped (escape hatch: --no-policy or POLICY_DISABLE env)",
+          message: "Policy status skipped (escape hatch: --no-policy-all or POLICY_DISABLE env)",
         },
       ],
     });
@@ -106,9 +110,12 @@ export function runPolicyStatus(options: PolicyStatusOptions = {}): PolicyStatus
 
     const discovered = discoverPolicyWithProviders({
       cwd: options.cwd,
-      providers: options.providers ?? options.policyProviders,
+      providers: options.noRepoPolicy
+        ? filterNonLocalPolicyProviders(options.providers ?? options.policyProviders)
+        : (options.providers ?? options.policyProviders),
       listGitRemotes: options.listGitRemotes,
       remotes: options.remotes,
+      adoHosts: options.adoHosts,
       fetchPolicyUrl: options.fetchPolicyUrl,
       httpGet: options.httpGet,
       defaultFetchFailure: options.defaultFetchFailure ?? "block",

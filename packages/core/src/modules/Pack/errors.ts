@@ -2,6 +2,7 @@
 
 export type PackErrorCode =
   | "PACK_VALIDATION"
+  | "PACK_METADATA"
   | "PACK_SECRET_REFUSED"
   | "PACK_IO"
   | "PACK_EXTRACT"

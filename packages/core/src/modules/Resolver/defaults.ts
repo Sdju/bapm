@@ -1,11 +1,29 @@
 import { spawn } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
+import { parseLsRemoteTagsWithPeel } from "@/common/gitLsRemoteTags.ts";
+import {
+  isCacheableGitRepoUrl,
+  materializeSharedGitCheckout,
+  resolveSharedGitCacheConfig,
+} from "@/modules/SharedCache";
 import type { Downloader, GitRemote, TagLister } from "./types.ts";
 import { identityToCacheDir, normalizeRepoIdentity } from "./identity.ts";
 import { APM_MODULES_DIR } from "./constants.ts";
+import { materializeLocalFileSnapshot } from "./localFile.ts";
+
+export type DefaultDownloaderOptions = {
+  /** Warning sink for shared-cache fallback messages (default: stderr). */
+  warn?: (message: string) => void;
+  /** Env used for shared-cache gating (default: `process.env`). */
+  env?: NodeJS.ProcessEnv;
+  /** Explicit shared cache root; overrides `BAPM_CACHE_DIR`. */
+  cacheDir?: string;
+  /** Explicit disable; overrides `BAPM_NO_CACHE`. */
+  noCache?: boolean;
+};
 
 /**
  * Default TagLister via `git ls-remote --tags --refs`.
@@ -38,40 +56,8 @@ export function createPeelAwareTagLister(): TagLister {
   };
 }
 
-/**
- * Parse `git ls-remote --tags` output; annotated = presence of peeled `^{}` line.
- * Commit for annotated tags is the peeled SHA (APM fence).
- */
-export function parseLsRemoteTagsWithPeel(output: string): Array<{
-  tag: string;
-  commit: string;
-  annotated: boolean;
-}> {
-  const tags = new Map<string, string>();
-  const annotated = new Set<string>();
-
-  for (const line of output.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const m = trimmed.match(/^([0-9a-f]{40})\s+refs\/tags\/(.+)$/i);
-    if (!m) continue;
-    const sha = m[1]!.toLowerCase();
-    let name = m[2]!;
-    if (name.endsWith("^{}")) {
-      name = name.slice(0, -3);
-      tags.set(name, sha);
-      annotated.add(name);
-    } else if (!tags.has(name)) {
-      tags.set(name, sha);
-    }
-  }
-
-  return [...tags.entries()].map(([tag, commit]) => ({
-    tag,
-    commit,
-    annotated: annotated.has(tag),
-  }));
-}
+/** Shared peel-aware tag parser; re-exported for the Resolver public API. */
+export { parseLsRemoteTagsWithPeel };
 
 /** Default GitRemote via `git ls-remote`. */
 export function createDefaultGitRemote(): GitRemote {
@@ -92,8 +78,10 @@ export function createDefaultGitRemote(): GitRemote {
   };
 }
 
-/** Default Downloader: local copy or shallow git clone into apm_modules. */
-export function createDefaultDownloader(): Downloader {
+/** Default Downloader: local copy or git clone into apm_modules. */
+export function createDefaultDownloader(options: DefaultDownloaderOptions = {}): Downloader {
+  const warn = options.warn ?? ((message: string) => console.error(`bapm: warning: ${message}`));
+
   return {
     async download(args) {
       // `path` is only a local source when there is no git source. With a
@@ -101,6 +89,10 @@ export function createDefaultDownloader(): Downloader {
       if (args.path && !args.repoUrl) {
         if (!existsSync(args.path)) {
           throw new Error(`Local path not found: ${args.path}`);
+        }
+        if (statSync(args.path).isFile()) {
+          materializeLocalFileSnapshot(args.path, args.dest);
+          return;
         }
         mkdirSync(args.dest, { recursive: true });
         cpSync(args.path, args.dest, { recursive: true });
@@ -119,9 +111,38 @@ export function createDefaultDownloader(): Downloader {
       // previously usable cache untouched.
       const temp = mkdtempSync(join(parent, `.${basename(args.dest)}.tmp-`));
       try {
-        await runGit(["clone", "--quiet", repoUrl, temp], { allowFail: false });
-        if (args.commit) {
-          await runGit(["-C", temp, "checkout", "--quiet", args.commit]);
+        let installedFromSharedCache = false;
+        const sharedConfig = resolveSharedGitCacheConfig({
+          env: options.env,
+          cacheDir: options.cacheDir,
+          noCache: options.noCache,
+        });
+        if (sharedConfig.enabled && isCacheableGitRepoUrl(repoUrl)) {
+          try {
+            await materializeSharedGitCheckout({
+              config: sharedConfig,
+              repoUrl,
+              identity: normalizeRepoIdentity(repoUrl),
+              commit: args.commit,
+              dest: temp,
+              env: options.env,
+              warn,
+            });
+            installedFromSharedCache = true;
+          } catch (error) {
+            warn(
+              `shared git cache unavailable for ${repoUrl}: ${errorMessage(error)}; ` +
+                "falling back to direct clone",
+            );
+            resetEmptyDir(temp);
+          }
+        }
+
+        if (!installedFromSharedCache) {
+          await runGit(["clone", "--quiet", repoUrl, temp], { allowFail: false });
+          if (args.commit) {
+            await runGit(["-C", temp, "checkout", "--quiet", args.commit]);
+          }
         }
         await swapIntoPlace(temp, args.dest, () => isCheckoutAt(args.dest, repoUrl, args.commit));
       } finally {
@@ -294,6 +315,12 @@ function combinedSwapError(original: unknown, restore: unknown, backup: string):
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/** Clear a mkdtemp path after a failed attempt so a fallback clone can reuse it. */
+function resetEmptyDir(path: string): void {
+  rmSync(path, { recursive: true, force: true });
+  mkdirSync(path, { recursive: true });
 }
 
 export function modulesCacheDest(cwd: string, identity: string, commit?: string): string {

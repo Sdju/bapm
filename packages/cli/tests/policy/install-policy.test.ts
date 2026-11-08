@@ -1,5 +1,5 @@
 /**
- * CLI M8: --policy / --no-policy / install blocked|warn / help / dual-conflict.
+ * CLI M8: --policy / --no-policy / --no-policy-all / install blocked|warn / help / dual-conflict.
  * Specs: cli-runtime-surface, policy-install-gate. Checklist C §25–29, 32.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
@@ -76,7 +76,7 @@ describe("CLI M8 install policy gate", () => {
     expect(hasModules(project.cwd)).toBe(false);
   });
 
-  test("--no-policy escapes blocking deny", async () => {
+  test("--no-policy skips repository-local deny", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "cli-m8-no-policy");
     writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
@@ -92,6 +92,42 @@ describe("CLI M8 install policy gate", () => {
     expect(hasModules(project.cwd) || hasLock(project.cwd)).toBe(true);
   });
 
+  test("--no-policy-all escapes blocking deny (full escape)", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "cli-m8-no-policy-all");
+    writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
+
+    const { result, combined } = await runInProject(project.cwd, [
+      "install",
+      "--no-policy-all",
+      "--target",
+      "cursor",
+    ]);
+    expectKnownInstallFlags(combined);
+    expect(result).toBe(0);
+    expect(hasModules(project.cwd) || hasLock(project.cwd)).toBe(true);
+  });
+
+  test("--no-policy still evaluates explicit --policy path", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "cli-m8-no-policy-explicit");
+    writePolicy(project.cwd, "bapm-policy.yml", MINIMAL_WARN);
+    const denyPath = writePolicy(project.cwd, "explicit-policy.yml", BLOCK_DENY_LEAF);
+
+    const { result, combined } = await runInProject(project.cwd, [
+      "install",
+      "--no-policy",
+      "--policy",
+      denyPath,
+      "--target",
+      "cursor",
+    ]);
+    expectKnownInstallFlags(combined);
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(/policy|deny|block|leaf|violat/i);
+    expect(hasModules(project.cwd)).toBe(false);
+  });
+
   test("dual-conflict at root → error before modules", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "cli-m8-dual");
@@ -105,7 +141,7 @@ describe("CLI M8 install policy gate", () => {
     expect(hasModules(project.cwd)).toBe(false);
   });
 
-  test("BAPM_POLICY_DISABLE=1 escapes like --no-policy", async () => {
+  test("BAPM_POLICY_DISABLE=1 is the full escape (like --no-policy-all)", async () => {
     project = createTempProject();
     writeLeafProject(project.cwd, "cli-m8-env");
     writePolicy(project.cwd, "bapm-policy.yml", BLOCK_DENY_LEAF);
@@ -123,7 +159,7 @@ describe("CLI M8 install policy gate", () => {
 });
 
 describe("CLI M8 install help documents policy flags", () => {
-  test("install help lists --policy and --no-policy", async () => {
+  test("install help lists --policy, --no-policy and --no-policy-all", async () => {
     const viaInstallHelp = await withCapturedIo(() => runCli(["install", "--help"]));
     const viaHelpInstall = await withCapturedIo(() => runCli(["help", "install"]));
     const text = [
@@ -135,7 +171,8 @@ describe("CLI M8 install help documents policy flags", () => {
 
     expect(viaInstallHelp.result === 0 || viaHelpInstall.result === 0).toBe(true);
     expect(text).toMatch(/--policy/);
-    expect(text).toMatch(/--no-policy/);
+    expect(text).toMatch(/--no-policy\b/);
+    expect(text).toMatch(/--no-policy-all\b/);
   });
 });
 

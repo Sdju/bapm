@@ -6,7 +6,9 @@ export type ManifestErrorCode =
   | "MANIFEST_MISSING_FILE"
   | "MANIFEST_YAML_PARSE"
   | "MANIFEST_YAML_SAFE_SUBSET"
-  | "MANIFEST_VALIDATION";
+  | "MANIFEST_VALIDATION"
+  | "MANIFEST_REPLACE_UNSUPPORTED"
+  | "MANIFEST_SCHEMA_UNSUPPORTED";
 
 export class ManifestError extends Error {
   readonly code: ManifestErrorCode;

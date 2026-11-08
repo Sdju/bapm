@@ -7,17 +7,7 @@ import type {
   CollectMcpServersOptions,
   CollectMcpServersResult,
 } from "./types.ts";
-
-type ParsedMcpEntry = {
-  name: string;
-  transport?: string;
-  type?: string;
-  command?: string;
-  args?: unknown[];
-  url?: string;
-  env?: Record<string, string>;
-  registry?: unknown;
-};
+import { parseMcpDeclarations, type ParsedMcpDeclaration } from "./parse.ts";
 
 /**
  * Collect MCP server definitions for deploy.
@@ -32,7 +22,7 @@ export function collectMcpServers(options: CollectMcpServersOptions): CollectMcp
   const dependencyPackages = new Set<string>();
   const diagnostics: unknown[] = [];
 
-  for (const entry of parseMcpList(root.dependencies?.mcp)) {
+  for (const entry of parseMcpDeclarations(root.dependencies?.mcp)) {
     servers.push(toCollected(entry, "direct", rootName));
   }
 
@@ -75,11 +65,11 @@ export function collectMcpServers(options: CollectMcpServersOptions): CollectMcp
       }
       let depManifest: BapmManifest;
       try {
-        depManifest = loadManifest({ cwd: resolve(node.packageRoot) }).document;
+        depManifest = loadManifest({ cwd: resolve(node.packageRoot), allowReplace: true }).document;
       } catch {
         continue;
       }
-      const mcpList = parseMcpList(depManifest.dependencies?.mcp);
+      const mcpList = parseMcpDeclarations(depManifest.dependencies?.mcp);
       if (mcpList.length === 0) continue;
       dependencyPackages.add(node.name);
       for (const entry of mcpList) {
@@ -96,7 +86,7 @@ function safeDataName(name: string): string {
 }
 
 function toCollected(
-  entry: ParsedMcpEntry,
+  entry: ParsedMcpDeclaration,
   origin: "direct" | "dependency",
   packageName: string,
 ): CollectedMcpServer {
@@ -108,33 +98,9 @@ function toCollected(
     args: entry.args,
     url: entry.url,
     env: entry.env,
+    headers: entry.headers,
     registry: entry.registry,
     origin,
     packageName,
   };
-}
-
-function parseMcpList(raw: unknown): ParsedMcpEntry[] {
-  if (!Array.isArray(raw)) return [];
-  const out: ParsedMcpEntry[] = [];
-  for (const item of raw) {
-    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
-    const rec = item as Record<string, unknown>;
-    const name = typeof rec.name === "string" ? rec.name.trim() : "";
-    if (!name) continue;
-    out.push({
-      name,
-      transport: typeof rec.transport === "string" ? rec.transport : undefined,
-      type: typeof rec.type === "string" ? rec.type : undefined,
-      command: typeof rec.command === "string" ? rec.command : undefined,
-      args: Array.isArray(rec.args) ? rec.args : undefined,
-      url: typeof rec.url === "string" ? rec.url : undefined,
-      env:
-        rec.env && typeof rec.env === "object" && !Array.isArray(rec.env)
-          ? (rec.env as Record<string, string>)
-          : undefined,
-      registry: rec.registry,
-    });
-  }
-  return out;
 }

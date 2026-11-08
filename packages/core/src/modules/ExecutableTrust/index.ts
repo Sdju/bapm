@@ -6,10 +6,12 @@
  *
  * - `parseExecutableGrants` — `executables.allow`/`deny` + `allowExecutables` alias
  * - `resolveExecutableTrust` / `classifyExecutableTrust` — org + project + user deny-wins
+ *   for executable types `mcp`, `lsp`, `bin`, and `hook`
  * - `evaluateExecutableTrust` — project-only thin wrapper (sc-009)
  * - `loadUserExecutableGrants` / `saveUserExecutableGrants` — `~/.bapm/config.json`
  * - `evaluateRequiredPackagePresence` — lock presence + distinct withheld (sc-012)
  * - `hasGrantSurface` — non-absent grant surface detection
+ * - `isPackageMentionedInGrants` — explicit allow/deny entry vs unmentioned package
  * - `resolveBinDeployConsent` — invocation `--trust-bin` overlay on type `bin`
  *
  * ## Example
@@ -66,6 +68,7 @@ export {
   gateExecutableMcp,
   checkExecutableTrust,
   hasGrantSurface,
+  isPackageMentionedInGrants,
   parseExecutableGrants,
   resolveExecutableTrust,
   classifyExecutableTrust,

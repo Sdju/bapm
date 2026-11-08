@@ -1,3 +1,4 @@
+import type { ManifestContract } from "./contract.ts";
 import type { ManifestWarning } from "./errors.ts";
 
 /** Declared agentic dependency (APM package, skill path, plugin, MCP server, …). */
@@ -77,13 +78,16 @@ export type BapmManifest = {
   registries?: Record<string, RegistryEntry | string>;
   default_host?: string;
   /**
-   * Host preference: legacy single id string, or object-map host→package
-   * (mutually exclusive with `targets`). Vendor ids `x-<vendor>-<name>` allowed.
+   * Host preference: legacy single id string, comma-separated (CSV) string,
+   * string array (`target: [a, b]` sugar), or object-map host→package
+   * (mutually exclusive with `targets`). Vendor ids `x-<vendor>-<name>`
+   * allowed. CSV / multi-value forms normalize to a canonical string array.
    */
-  target?: string | TargetIntegrationMap;
+  target?: string | string[] | TargetIntegrationMap;
   /**
-   * Host preferences: legacy string array, or object-map host→package
-   * (mutually exclusive with `target`). Prefer this field for multi-host maps.
+   * Host preferences: legacy id string / CSV string / string array, or
+   * object-map host→package (mutually exclusive with `target`). Prefer this
+   * field for multi-host maps.
    */
   targets?: string[] | TargetIntegrationMap;
   /**
@@ -101,6 +105,11 @@ export type BapmManifest = {
    * `bapm.local.yml` when present (local keys win).
    */
   env?: Record<string, string>;
+  /**
+   * npm-style project scripts (`bapm run <name>`). Values are shell command
+   * lines; bapm never evaluates them as JavaScript.
+   */
+  scripts?: Record<string, string>;
   [key: string]: unknown;
 };
 
@@ -139,7 +148,14 @@ export type DiscoveredManifest = {
   filename: string;
 };
 
-export type LoadManifestOptions = DiscoverManifestOptions;
+export type LoadManifestOptions = DiscoverManifestOptions & {
+  /**
+   * Dependency manifests may declare root `replace:` even though APM applies
+   * replacement rules only from the consumer root. Root loads keep the default
+   * (`false`) and fail closed with MANIFEST_REPLACE_UNSUPPORTED.
+   */
+  allowReplace?: boolean;
+};
 
 export type LoadManifestResult = {
   /** Validated document retaining unknown / `x-*` keys. */
@@ -149,4 +165,6 @@ export type LoadManifestResult = {
   /** Absolute path to `bapm.local.yml` when an overlay was merged. */
   localPath?: string;
   warnings?: ManifestWarning[];
+  /** Contract selected by `$schema`; absent means the working draft. */
+  contract: ManifestContract;
 };

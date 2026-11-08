@@ -27,6 +27,7 @@ const MARKETPLACE_KEYS = new Set([
   "metadata",
   "build",
   "codex",
+  "copilot",
   "packages",
   "versioning",
 ]);
@@ -233,6 +234,7 @@ function parseMarketplaceBlock(
   if (rawBlock.output !== undefined) config.output = rawBlock.output;
   if (rawBlock.claude !== undefined) config.claude = rawBlock.claude;
   if (rawBlock.codex !== undefined) config.codex = rawBlock.codex;
+  if (rawBlock.copilot !== undefined) config.copilot = rawBlock.copilot;
   if (rawBlock.metadata !== undefined) {
     config.metadata = asRecord(rawBlock.metadata, "metadata");
   }

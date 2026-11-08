@@ -1,6 +1,10 @@
-import { existsSync, statSync } from "node:fs";
+import { existsSync, lstatSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadManifest, withEffectiveDirectDeps } from "@/modules/Manifest";
+import {
+  collectManifestExtensions,
+  loadManifest,
+  withEffectiveDirectDeps,
+} from "@/modules/Manifest";
 import { loadAgentPluginManifest } from "@/modules/AgentPlugins";
 import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
@@ -28,6 +32,7 @@ import {
 import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity, toLockRepoUrl } from "./identity.ts";
 import { resolveLocalPath } from "./localPath.ts";
+import { admitLocalFile } from "./localFile.ts";
 import { effectiveLocalPath } from "./localSource.ts";
 import {
   pickHighestInIntersection,
@@ -89,11 +94,15 @@ type EdgeRecord = {
   registry_owner?: string;
   registry_repo?: string;
   marketplaceProvenance?: MarketplaceLockProvenance;
+  /** Vendor extension keys from the resolved dependency manifest. */
+  extensions?: Record<string, unknown>;
 };
 
 type WarmPin = {
   resolved_commit?: string;
   constraint?: string;
+  /** Pin identity recorded at resolve time (literal ref / picked tag). */
+  resolved_ref?: string;
   resolved_tag?: string;
   resolved_at?: string;
   repo_url: string;
@@ -362,6 +371,9 @@ function nodeToLockRow(n: ResolvedNode): Record<string, unknown> {
   if (n.marketplace_plugin_name) row.marketplace_plugin_name = n.marketplace_plugin_name;
   if (n.source_url) row.source_url = n.source_url;
   if (n.source_digest) row.source_digest = n.source_digest;
+  if (n.extensions && Object.keys(n.extensions).length > 0) {
+    row.extensions = n.extensions;
+  }
   if (n.personalLockScope) row["x-bapm-lock-scope"] = "local";
   return row;
 }
@@ -417,6 +429,7 @@ function indexWarmPins(
       repo_url: repo,
       resolved_commit: typeof d.resolved_commit === "string" ? d.resolved_commit : undefined,
       constraint: typeof d.constraint === "string" ? d.constraint : undefined,
+      resolved_ref: typeof d.resolved_ref === "string" ? d.resolved_ref : undefined,
       resolved_tag: typeof d.resolved_tag === "string" ? d.resolved_tag : undefined,
       resolved_at: typeof d.resolved_at === "string" ? d.resolved_at : undefined,
       name: typeof d.name === "string" ? d.name : undefined,
@@ -594,6 +607,7 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     personalLockScope: e.classified.personalLockScope === true,
     skillSubset: e.classified.skillSubset,
     targetSubset: e.classified.targetSubset,
+    extensions: e.extensions,
     ...e.marketplaceProvenance,
   };
 }
@@ -623,10 +637,29 @@ async function resolveLocal(
     throw new ResolverError("RESOLVE_FAILED", `Local dependency path not found: ${abs}`);
   }
 
+  let pathStats;
+  try {
+    pathStats = lstatSync(abs);
+  } catch (cause) {
+    throw new ResolverError("RESOLVE_FAILED", `Local dependency path not found: ${abs}`, {
+      cause,
+      details: { path: abs },
+    });
+  }
+  // Follow directory symlinks as before; a symlink to a file is rejected by
+  // single-file admission (APM requires a real primitive file, not a link).
+  const followedStats = pathStats.isSymbolicLink() ? statSync(abs) : pathStats;
+  if (!followedStats.isDirectory()) {
+    await resolveLocalFile(item, classified, { ...ctx, abs });
+    return;
+  }
+
   let childManifest;
   let portablePlugin;
+  let extensions: Record<string, unknown> | undefined;
   try {
-    childManifest = loadManifest({ cwd: abs });
+    childManifest = loadManifest({ cwd: abs, allowReplace: true });
+    extensions = collectManifestExtensions(childManifest.document);
   } catch (cause) {
     try {
       portablePlugin = loadAgentPluginManifest({ root: abs });
@@ -669,6 +702,7 @@ async function resolveLocal(
     artifactFormat: portablePlugin ? "agent-plugin" : "openapm",
     repo_url: identity,
     marketplaceProvenance: item.marketplaceProvenance,
+    extensions,
   };
   pushEdge(ctx.edgesByIdentity, record);
 
@@ -697,6 +731,59 @@ function isDirectory(path: string): boolean {
     return statSync(path).isDirectory();
   } catch {
     return false;
+  }
+}
+
+async function resolveLocalFile(
+  item: QueueItem,
+  classified: ClassifiedDependency,
+  ctx: {
+    cwd: string;
+    downloader: Downloader;
+    skipDownload?: boolean;
+    edgesByIdentity: Map<string, EdgeRecord[]>;
+    visitOrder: string[];
+    localMaterializations: DownloadArgs[];
+    abs: string;
+  },
+): Promise<void> {
+  // Admission validates regular-file kind, suffix, and frontmatter fail-closed.
+  const admitted = admitLocalFile(ctx.abs);
+  const name = admitted.filename;
+  const identity = `local:${normalizeLocalIdentity(ctx.abs, ctx.cwd)}`;
+  const chain = [...item.chain, name];
+  const resolved_by = chain.join("->");
+
+  if (item.ancestorIdentities.includes(identity)) {
+    throw new ResolverError(
+      "RESOLVE_CYCLE",
+      `Circular dependency / cycle detected: ${resolved_by}->${name}`,
+    );
+  }
+
+  // Materialize an APM-style virtual-file snapshot only after the graph passes.
+  const dest = modulesCacheDest(ctx.cwd, identity.replace(/^local:/, "local_"));
+  if (!ctx.skipDownload) {
+    ctx.localMaterializations.push({ path: ctx.abs, dest, identity });
+  }
+
+  const record: EdgeRecord = {
+    identity,
+    kind: "local",
+    classified,
+    depth: item.depth,
+    chain,
+    name,
+    path: ctx.abs,
+    packageRoot: !ctx.skipDownload ? dest : ctx.abs,
+    artifactFormat: "openapm",
+    repo_url: identity,
+    marketplaceProvenance: item.marketplaceProvenance,
+  };
+  pushEdge(ctx.edgesByIdentity, record);
+
+  if (item.depth === 1) {
+    ctx.visitOrder.push(name);
   }
 }
 
@@ -847,10 +934,12 @@ async function resolveGit(
   let childName = warm?.name ?? nameHint;
   let childDeps: DependencyEntry[] = [];
   let artifactFormat: EdgeRecord["artifactFormat"] = "openapm";
+  let extensions: Record<string, unknown> | undefined;
   try {
-    const child = loadManifest({ cwd: packageRoot });
+    const child = loadManifest({ cwd: packageRoot, allowReplace: true });
     childName = child.document.name || childName;
     childDeps = listApmDeps(child.document.dependencies);
+    extensions = collectManifestExtensions(child.document);
   } catch {
     try {
       const portable = loadAgentPluginManifest({ root: packageRoot });
@@ -881,7 +970,9 @@ async function resolveGit(
     artifactFormat,
     repo_url: lockUrl,
     marketplaceProvenance: item.marketplaceProvenance,
+    extensions,
   };
+  assertImmutableLiteralRequirement(record, ctx.edgesByIdentity);
   pushEdge(ctx.edgesByIdentity, record);
 
   if (item.depth === 1) {
@@ -908,6 +999,67 @@ async function resolveGit(
   }
 }
 
+/**
+ * APM 0.32 immutable-requirement admission: two literal `git`+`ref` edges to
+ * the same package identity must prove the same commit. Different ref names
+ * are not conflict evidence by themselves; only different commits fail.
+ * Semver ranges keep existing intersection-pick policy and are not checked
+ * here. Virtual packages are distinct identities (unique key includes path).
+ */
+function assertImmutableLiteralRequirement(
+  candidate: EdgeRecord,
+  edgesByIdentity: Map<string, EdgeRecord[]>,
+): void {
+  if (candidate.kind !== "git-literal") return;
+
+  const candidateRef = candidate.classified.ref ?? "HEAD";
+  const candidatePath = candidate.virtualPath ?? "";
+  const priorLiterals = (edgesByIdentity.get(candidate.identity) ?? []).filter(
+    (edge) => edge.kind === "git-literal" && (edge.virtualPath ?? "") === candidatePath,
+  );
+
+  // Identical literal requirement needs no equivalence check.
+  if (priorLiterals.some((edge) => (edge.classified.ref ?? "HEAD") === candidateRef)) {
+    return;
+  }
+
+  const conflict = priorLiterals.find(
+    (edge) => !sameCommit(edge.resolved_commit, candidate.resolved_commit),
+  );
+  if (!conflict) return;
+
+  const firstRef = conflict.classified.ref ?? "HEAD";
+  const firstChain = literalChainLabel(conflict, firstRef);
+  const nextChain = literalChainLabel(candidate, candidateRef);
+  throw new ResolverError(
+    "RESOLVE_IMMUTABLE_CONFLICT",
+    `Cannot resolve ${candidate.repo_url ?? candidate.identity}: incompatible immutable requirements.\n` +
+      `  ${firstChain} (ref ${firstRef}, commit ${conflict.resolved_commit ?? "?"})\n` +
+      `  ${nextChain} (ref ${candidateRef}, commit ${candidate.resolved_commit ?? "?"})\n` +
+      `Align the requested refs in the root or parent manifests to the same commit, ` +
+      `then run "bapm install" to regenerate the lockfile. Different ref names are not ` +
+      `a conflict when they resolve to the same commit.`,
+    {
+      details: {
+        identity: candidate.identity,
+        virtualPath: candidate.virtualPath,
+        refs: [firstRef, candidateRef],
+        commits: [conflict.resolved_commit, candidate.resolved_commit],
+        chains: [conflict.chain.join("->"), candidate.chain.join("->")],
+      },
+    },
+  );
+}
+
+function literalChainLabel(edge: EdgeRecord, ref: string): string {
+  return [...edge.chain.slice(0, -1), `${edge.name}@${ref}`].join("->");
+}
+
+function sameCommit(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b) return false;
+  return a.toLowerCase() === b.toLowerCase();
+}
+
 function warmConstraintMatchesLiteral(warm: WarmPin | undefined, ref: string): boolean {
   if (!warm?.resolved_commit) return false;
   // If lock has a constraint, this was git-semver — not literal warm
@@ -915,8 +1067,12 @@ function warmConstraintMatchesLiteral(warm: WarmPin | undefined, ref: string): b
     // Drift check for semver handled in git-semver branch
     return false;
   }
-  // Warm replay for literal: reuse without network when pin present (rs-015)
-  void ref;
+  // Warm replay for literal: reuse without network when the pinned ref is the
+  // same literal the manifest asks for (rs-015). A changed ref must re-resolve
+  // so a warm install never keeps the old commit under a new resolved_ref.
+  const pinned = warm.resolved_ref?.trim() ?? "";
+  if (pinned !== "") return pinned === ref.trim();
+  // Legacy lock without resolved_ref: no evidence of drift — keep warm replay.
   return true;
 }
 

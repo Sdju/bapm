@@ -41,10 +41,13 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).toMatch(/-v\b|--verbose\b/);
     expect(text).toMatch(/--verbose\b/);
     expect(text).toMatch(/--validate\b/);
+    expect(text).toMatch(/--distributed\b/);
+    expect(text).toMatch(/--strategy\b/);
+    expect(text).toMatch(/--clean\b/);
     expect(text).not.toMatch(/optimizer|distributed placement|multi-host/i);
   });
 
-  test("compile help omits deferred --no-links and multi-host flags", async () => {
+  test("compile help documents --watch and --global and omits deferred --no-links", async () => {
     const viaFlag = await withCapturedIo(() => runCli(["compile", "--help"]));
     const text = [
       [...viaFlag.stdout, ...viaFlag.stderr].join("\n"),
@@ -55,12 +58,15 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).not.toMatch(/--no-links\b/);
     expect(text).toMatch(/--target\s+<id>/);
     expect(text).toMatch(/\bactive\b/i);
-    expect(text).not.toMatch(/--all\b/);
-    expect(text).not.toMatch(/--global\b/);
-    expect(text).not.toMatch(/-g\b.*global|global.*-g\b/i);
-    expect(text).not.toMatch(/--watch\b/);
+    expect(text).toMatch(/--all\b/);
+    expect(text).toMatch(/--global\b/);
+    expect(text).toMatch(/-g\b.*global|global.*-g\b/i);
+    expect(text).toMatch(/\.cursor\/AGENTS\.md|\.claude\/CLAUDE\.md|\.codex\/AGENTS\.md/);
+    expect(text).toMatch(/--watch\b/);
+    expect(text).toMatch(/Ctrl\+C|SIGINT|SIGTERM/i);
+    expect(text).toMatch(/incompatible with --validate|--watch.*--validate/i);
     expect(text).not.toMatch(/--root\b/);
-    expect(text).not.toMatch(/--clean\b/);
+    expect(text).toMatch(/--clean\b/);
     expect(text).not.toMatch(/--single-agents\b/);
   });
 
@@ -90,6 +96,62 @@ describe("p7d CLI compile help + fail-closed", () => {
 
     const long = parseCompileArgs(["--output"]);
     expect(long.error).toBeTruthy();
+  });
+
+  test("parseCompileArgs accepts --watch / -w", () => {
+    const long = parseCompileArgs(["--watch"]);
+    expect(long.error).toBeUndefined();
+    expect(long.watch).toBe(true);
+
+    const short = parseCompileArgs(["-w", "--dry-run"]);
+    expect(short.error).toBeUndefined();
+    expect(short.watch).toBe(true);
+    expect(short.dryRun).toBe(true);
+
+    const omitted = parseCompileArgs([]);
+    expect(omitted.watch).toBe(false);
+  });
+
+  test("parseCompileArgs accepts --clean", () => {
+    const clean = parseCompileArgs(["--clean", "--dry-run"]);
+    expect(clean.error).toBeUndefined();
+    expect(clean.clean).toBe(true);
+    expect(clean.dryRun).toBe(true);
+
+    const omitted = parseCompileArgs([]);
+    expect(omitted.clean).toBe(false);
+  });
+
+  test("parseCompileArgs accepts --distributed and --strategy", () => {
+    const flag = parseCompileArgs(["--distributed"]);
+    expect(flag.error).toBeUndefined();
+    expect(flag.distributed).toBe(true);
+
+    const strategy = parseCompileArgs(["--strategy", "distributed"]);
+    expect(strategy.error).toBeUndefined();
+    expect(strategy.distributed).toBe(true);
+
+    const single = parseCompileArgs(["--strategy=single-file"]);
+    expect(single.error).toBeUndefined();
+    expect(single.distributed).toBe(false);
+
+    const invalid = parseCompileArgs(["--strategy", "nope"]);
+    expect(invalid.error).toMatch(/unknown compile strategy/i);
+  });
+
+  test("parseCompileArgs accepts comma-separated --target and --all", () => {
+    const multi = parseCompileArgs(["--target", "cursor, claude", "--dry-run"]);
+    expect(multi.error).toBeUndefined();
+    expect(multi.targets).toEqual(["cursor", "claude"]);
+    expect(multi.target).toBe("cursor");
+
+    const deduped = parseCompileArgs(["--target=cursor,cursor"]);
+    expect(deduped.error).toBeUndefined();
+    expect(deduped.targets).toEqual(["cursor"]);
+
+    const all = parseCompileArgs(["--all"]);
+    expect(all.error).toBeUndefined();
+    expect(all.all).toBe(true);
   });
 
   test("unknown compile flag fails closed", async () => {

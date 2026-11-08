@@ -8,5 +8,5 @@ CLI lock group: bare `bapm lock` (resolve + write lockfile, no deploy) and
 ## Public API
 
 - `createLock(deps)` — soft IoC factory (`resolveAndLock`, optional `exportSbom`)
-- `parseLockArgs` — `--update`, `--verbose`/`-v`, `--parallel-downloads` (incl. `0` = serial), `--policy`, `--no-policy`; unknown flags / unexpected positionals fail closed
+- `parseLockArgs` — `--update`, `--verbose`/`-v`, `--parallel-downloads` (incl. `0` = serial), `--policy`, `--no-policy` (repo-local only), `--no-policy-all` (full escape); unknown flags / unexpected positionals fail closed
 - `formatLockHelp` — usage including export + parallel `0`

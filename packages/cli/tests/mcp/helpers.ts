@@ -193,6 +193,7 @@ export function writeDirectMcpHttpProject(
     serverName?: string;
     url?: string;
     envYaml?: string;
+    headersYaml?: string;
     withCursorDir?: boolean;
   },
 ): void {
@@ -208,6 +209,11 @@ export function writeDirectMcpHttpProject(
       ? `      env:
 ${options.envYaml}`
       : "";
+  const headersBlock =
+    options?.headersYaml !== undefined
+      ? `      headers:
+${options.headersYaml}`
+      : "";
 
   writeFileSync(
     join(cwd, "bapm.yml"),
@@ -220,7 +226,7 @@ ${cursorMapYaml(linkCursorIntegration(cwd))}dependencies:
       registry: false
       transport: http
       url: ${url}
-${envBlock}
+${envBlock}${headersBlock}
 `,
     "utf8",
   );
@@ -276,21 +282,41 @@ export function writeDepMcpProject(
     approveDep?: boolean;
     aliasAllowExecutables?: boolean;
     withSkill?: boolean;
+    /** Grant surface present with an allow entry for an unrelated package. */
+    unrelatedAllow?: boolean;
+    /** Grant surface mentions mcp-dep but does not approve MCP (`mcp: false`). */
+    mentionedUnapproved?: boolean;
+    /** Explicit project deny for mcp-dep. */
+    denyDep?: boolean;
+    /** Omit the grant surface entirely (used with --trust-transitive-mcp). */
+    noGrants?: boolean;
   },
 ): void {
   const name = options?.name ?? "m9-dep-mcp";
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
   mkdirSync(join(cwd, "mcp-dep"), { recursive: true });
 
-  let grants: string;
-  if (options?.approveDep) {
+  let grants = "";
+  if (options?.noGrants) {
+    grants = "";
+  } else if (options?.denyDep) {
+    grants = `executables:\n  deny:\n    mcp-dep:\n      mcp: true\n`;
+  } else if (options?.mentionedUnapproved) {
+    grants = options.aliasAllowExecutables
+      ? `allowExecutables:\n  mcp-dep:\n    bin: true\n`
+      : `executables:\n  allow:\n    mcp-dep:\n      mcp: false\n`;
+  } else if (options?.approveDep) {
     if (options.aliasAllowExecutables) {
       grants = `allowExecutables:\n  mcp-dep:\n    mcp: true\n`;
     } else {
       grants = `executables:\n  allow:\n    mcp-dep:\n      mcp: true\n`;
     }
+  } else if (options?.unrelatedAllow) {
+    grants = options.aliasAllowExecutables
+      ? `allowExecutables:\n  acme/other:\n    mcp: true\n`
+      : `executables:\n  allow:\n    acme/other:\n      mcp: true\n`;
   } else {
-    // Non-absent grant surface with no approval for mcp-dep → fail-closed.
+    // Non-absent grant surface with no mention of mcp-dep → skipped with warning.
     grants = options?.aliasAllowExecutables
       ? `allowExecutables: {}\n`
       : `executables:\n  allow: {}\n`;

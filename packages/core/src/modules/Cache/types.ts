@@ -1,7 +1,11 @@
+import type { SharedGitCacheInfoResult, SharedHttpCacheInfoResult } from "@/modules/SharedCache";
+
 export type CacheInfoOptions = {
   cwd?: string;
   /** Override modules-cache root (default: `<cwd>/apm_modules`). */
   cacheRoot?: string;
+  /** Env for shared-cache reporting (default: `process.env`). */
+  env?: Record<string, string | undefined>;
 };
 
 export type CacheInfoResult = {
@@ -11,6 +15,10 @@ export type CacheInfoResult = {
   sizeBytes: number;
   empty: boolean;
   text: string;
+  /** Shared git-cache stats; present even when the shared cache is disabled. */
+  shared?: SharedGitCacheInfoResult;
+  /** Shared HTTP-cache stats; present even when the shared cache is disabled. */
+  sharedHttp?: SharedHttpCacheInfoResult;
 };
 
 export type CacheCleanOptions = {

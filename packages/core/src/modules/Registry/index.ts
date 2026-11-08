@@ -48,6 +48,16 @@ export const createRegistryHttpClient = createRegistryClient;
 export const createPackageRegistryClient = createRegistryClient;
 
 export { createFetchTransport, resolveRegistryToken, joinRegistryUrl } from "./transport.ts";
+export type { FetchTransportOptions } from "./transport.ts";
+
+export {
+  EXTRA_CA_BUNDLE_ENV,
+  DISABLE_EXTRA_CA_BUNDLE_ENV,
+  parseExtraCaBundlePem,
+  applyExtraCaBundle,
+  applyExtraCaBundleFromEnv,
+} from "./tlsTrust.ts";
+export type { ApplyExtraCaBundleOptions, ExtraCaBundleResult } from "./tlsTrust.ts";
 
 import { buildPublishArchive } from "./publishArchive.ts";
 export { buildPublishArchive };

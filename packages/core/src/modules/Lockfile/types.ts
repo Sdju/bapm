@@ -15,8 +15,23 @@ export type LockedDependency = {
   resolved_tag?: string;
   resolved_at?: string;
   tree_sha256?: string;
+  /** Local source wire fields (APM v0.35-compatible subset). */
+  local_path?: string;
+  declaring_parent?: string;
+  anchored_local_path?: string;
+  content_hash?: string;
+  package_type?: string;
+  depth?: number;
+  resolved_by?: string | string[];
+  is_dev?: boolean;
+  path?: string;
   deployed_files?: string[];
   deployed_file_hashes?: Record<string, string>;
+  /**
+   * Vendor extension keys copied from the dependency manifest (APM req-ext-003
+   * wire). Omitted when empty; values are not interpreted.
+   */
+  extensions?: Record<string, unknown>;
   [key: string]: unknown;
 };
 

@@ -1,0 +1,52 @@
+/**
+ * Package identity / thin surface for @b-apm/integration-grok-bot.
+ */
+import { describe, expect, test } from "vite-plus/test";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createGrokBotIntegration, createIntegration } from "../src/index.ts";
+
+const pkgRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = resolve(pkgRoot, "../..");
+const coreRoot = join(repoRoot, "packages/core");
+
+describe("@b-apm/integration-grok-bot package boundary", () => {
+  test("package is @b-apm/integration-grok-bot with integration-api only (no core hard-dep)", () => {
+    expect(existsSync(pkgRoot)).toBe(true);
+    const pkg = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")) as {
+      name?: string;
+      type?: string;
+      description?: string;
+      dependencies?: Record<string, string>;
+      scripts?: Record<string, string>;
+    };
+    expect(pkg.name).toBe("@b-apm/integration-grok-bot");
+    expect(pkg.type).toBe("module");
+    expect(pkg.dependencies?.["@b-apm/integration-api"]).toBeTruthy();
+    expect(pkg.dependencies?.["@b-apm/core"]).toBeUndefined();
+    expect(JSON.stringify(pkg.scripts ?? {})).toMatch(/vp/);
+    expect(String(pkg.description ?? "")).toMatch(/grok/i);
+  });
+
+  test("createIntegration aliases createGrokBotIntegration with id grok-bot, agent-data roots, no MCP/compile", () => {
+    expect(createIntegration).toBe(createGrokBotIntegration);
+    const target = createGrokBotIntegration();
+    expect(target.id).toBe("grok-bot");
+    expect(typeof target.detect).toBe("function");
+    expect(typeof target.materialize).toBe("function");
+    expect(target.configureMcp).toBeUndefined();
+    expect(target.compile).toBeUndefined();
+    expect(target.deployRoots).toEqual(["agent-data"]);
+  });
+
+  test("@b-apm/core must not hard-depend on @b-apm/integration-grok-bot", () => {
+    const corePkg = JSON.parse(readFileSync(join(coreRoot, "package.json"), "utf8")) as {
+      dependencies?: Record<string, string>;
+    };
+    expect(corePkg.dependencies).not.toHaveProperty("@b-apm/integration-grok-bot");
+
+    const viteConfig = readFileSync(join(coreRoot, "vite.config.ts"), "utf8");
+    expect(viteConfig).not.toMatch(/["']@b-apm\/integration-grok-bot["']\s*:/);
+  });
+});

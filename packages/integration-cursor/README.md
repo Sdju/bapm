@@ -40,6 +40,7 @@ When install invokes `configureMcp` with eligible servers:
 
 - Writes / updates `.cursor/mcp.json` under the registered `.cursor/` root only
 - Shape: `{ "mcpServers": { "<name>": { "command"|"url"|… } } }` (stdio / http)
+- `mcpEnvMode: "translate"` — `${VAR}`, `${env:VAR}`, and legacy `<VAR>` stay runtime references and are written as Cursor-native `${env:VAR}` in `env`, `headers`, and `args`; APM secrets are never baked into the project config. `{bake:NAME}` still resolves at install time (fail-closed)
 - Idempotent overwrite of bapm-owned server keys (keyed by server name); unknown user keys are preserved when present
 - Returns a `ConfigureMcpReport` (`configPath`, `servers`, `deployedFiles`) for lock `mcp_*` inventory
 

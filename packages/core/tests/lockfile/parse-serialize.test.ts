@@ -184,6 +184,37 @@ describe("M2 round-trip — unknown / x-* / deployments / self / inventory", () 
     expect(yaml).toMatch(/x-acme-attestation-id/);
   });
 
+  test("dependency extensions map round-trips and is omitted when empty", () => {
+    const doc = lockOf(
+      parseLockfile(`lockfile_version: "1"
+dependencies:
+  - repo_url: github.com/contoso/with-ext
+    resolved_commit: "7f3c9a4d2e1b8c7f0a9e6d5c4b3a2918f7e6d5c4"
+    extensions:
+      x-acme-owner: platform
+      x-acme-tier: 2
+  - repo_url: github.com/contoso/no-ext
+    resolved_commit: "8f3c9a4d2e1b8c7f0a9e6d5c4b3a2918f7e6d5c4"
+    extensions: {}
+`),
+    );
+    const deps = depsOf(doc);
+    const withExt = deps.find((d) => String(d.repo_url).includes("with-ext"))!;
+    expect(withExt.extensions).toEqual({ "x-acme-owner": "platform", "x-acme-tier": 2 });
+    const noExt = deps.find((d) => String(d.repo_url).includes("no-ext"))!;
+    expect(noExt.extensions).toBeUndefined();
+
+    const yaml = serializeLockfile(doc);
+    expect(yaml).toMatch(/extensions:/);
+    expect(yaml).toMatch(/x-acme-owner/);
+    const reparsed = parseYaml(yaml) as { dependencies: Record<string, unknown>[] };
+    const round = reparsed.dependencies.find((d) => String(d.repo_url).includes("with-ext"))!;
+    expect(round.extensions).toEqual({ "x-acme-owner": "platform", "x-acme-tier": 2 });
+    const omitted = reparsed.dependencies.find((d) => String(d.repo_url).includes("no-ext"))!;
+    expect(omitted.extensions).toBeUndefined();
+    expect(yaml).not.toMatch(/extensions:\s*\{\}/);
+  });
+
   test("preserve deployments and lsp_* as unknown bags", () => {
     const doc = lockOf(loadFixture("with-deployments-lsp.yml"));
     expect(doc.deployments).toBeTruthy();

@@ -12,7 +12,10 @@ export const CANONICAL_HOST_IDS = [
   "copilot",
   "windsurf",
   "kiro",
+  "grok-bot",
   "grok-build",
+  "hermes",
+  "intellij",
   "antigravity",
   "agent-skills",
   "claude",
@@ -41,32 +44,58 @@ function isFile(cwd: string, rel: string): boolean {
   return existsSync(p) && statSync(p).isFile();
 }
 
+type CanonicalHostMarkerProbe = {
+  id: CanonicalHostId;
+  path: string;
+  kind: "dir" | "file";
+};
+
+const CANONICAL_HOST_MARKER_PROBES: readonly CanonicalHostMarkerProbe[] = [
+  { id: "cursor", path: ".cursor", kind: "dir" },
+  { id: "cursor", path: ".cursorrules", kind: "file" },
+  { id: "opencode", path: ".opencode", kind: "dir" },
+  { id: "opencode", path: "opencode.json", kind: "file" },
+  { id: "opencode", path: "opencode.jsonc", kind: "file" },
+  { id: "copilot", path: ".github/copilot-instructions.md", kind: "file" },
+  { id: "copilot", path: ".github/instructions", kind: "dir" },
+  { id: "copilot", path: ".github/agents", kind: "dir" },
+  { id: "copilot", path: ".github/prompts", kind: "dir" },
+  { id: "copilot", path: ".github/hooks", kind: "dir" },
+  { id: "windsurf", path: ".windsurf", kind: "dir" },
+  { id: "kiro", path: ".kiro", kind: "dir" },
+  { id: "grok-build", path: ".grok", kind: "dir" },
+  { id: "claude", path: ".claude", kind: "dir" },
+  { id: "claude", path: "CLAUDE.md", kind: "file" },
+  { id: "codex", path: ".codex", kind: "dir" },
+  { id: "gemini", path: ".gemini", kind: "dir" },
+  { id: "gemini", path: "GEMINI.md", kind: "file" },
+];
+
+export type DetectedCanonicalHost = {
+  id: CanonicalHostId;
+  markers: string[];
+};
+
+/**
+ * Detailed marker probe: canonical `id` plus every matched relative marker.
+ * Mirrors the published integration `detect` checks without loading packages.
+ */
+export function probeCanonicalHostMarkersDetailed(cwd: string): DetectedCanonicalHost[] {
+  const byHost = new Map<CanonicalHostId, string[]>();
+  for (const probe of CANONICAL_HOST_MARKER_PROBES) {
+    const matched = probe.kind === "dir" ? isDir(cwd, probe.path) : isFile(cwd, probe.path);
+    if (!matched) continue;
+    const markers = byHost.get(probe.id) ?? [];
+    markers.push(probe.path);
+    byHost.set(probe.id, markers);
+  }
+  return [...byHost.entries()].map(([id, markers]) => ({ id, markers }));
+}
+
 /**
  * Lightweight filesystem probe mirroring published integration `detect` markers.
  * Used only for diagnostics when the package is not registered (not for selection).
  */
 export function probeCanonicalHostMarkers(cwd: string): string[] {
-  const found: string[] = [];
-
-  if (isDir(cwd, ".cursor") || isFile(cwd, ".cursorrules")) found.push("cursor");
-  if (isDir(cwd, ".opencode") || isFile(cwd, "opencode.json") || isFile(cwd, "opencode.jsonc")) {
-    found.push("opencode");
-  }
-  if (
-    isFile(cwd, ".github/copilot-instructions.md") ||
-    isDir(cwd, ".github/instructions") ||
-    isDir(cwd, ".github/agents") ||
-    isDir(cwd, ".github/prompts") ||
-    isDir(cwd, ".github/hooks")
-  ) {
-    found.push("copilot");
-  }
-  if (isDir(cwd, ".windsurf")) found.push("windsurf");
-  if (isDir(cwd, ".kiro")) found.push("kiro");
-  if (isDir(cwd, ".grok")) found.push("grok-build");
-  if (isDir(cwd, ".claude") || isFile(cwd, "CLAUDE.md")) found.push("claude");
-  if (isDir(cwd, ".codex")) found.push("codex");
-  if (isDir(cwd, ".gemini") || isFile(cwd, "GEMINI.md")) found.push("gemini");
-
-  return found;
+  return probeCanonicalHostMarkersDetailed(cwd).map((host) => host.id);
 }

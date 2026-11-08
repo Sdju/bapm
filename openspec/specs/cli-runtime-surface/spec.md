@@ -40,12 +40,12 @@ Invoking `version`, `-V`, or `--version` MUST print a single line containing the
 
 ### Requirement: Help command prints usage
 
-Invoking `help`, `-h`, `--help`, or omitting the command (default `help`) MUST print usage that lists at least the `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, and `self-update` commands and MUST return exit code `0`. Help text for `install` MUST describe real install behavior (agentic dependency install), including consumption of a local pack archive path when supported, not a permanent stub disclaimer, and MUST be consistent with the install-help requirement for the supported flag subset. Help MUST mention the MCP path (install-time MCP and/or thin `mcp` command when registered). Lifecycle and producer commands MUST NOT be described as permanent stubs.
+Invoking `help`, `-h`, `--help`, or omitting the command (default `help`) MUST print usage that lists at least the `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, `self-update`, `policy`, `approve`, and `deny` commands and MUST return exit code `0`. Help text for `install` MUST describe real install behavior (agentic dependency install), including consumption of a local pack archive path when supported, not a permanent stub disclaimer, and MUST be consistent with the install-help requirement for the supported flag subset. Help MUST mention the MCP path (install-time MCP plus the `approve`, `deny`, and `policy` commands used to manage grants). Lifecycle and producer commands MUST NOT be described as permanent stubs.
 
 #### Scenario: help subcommand succeeds
 
 - **WHEN** `runCli(["help"])` is called
-- **THEN** stdout MUST include usage text mentioning `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, and `self-update`, and the return code MUST be `0`
+- **THEN** stdout MUST include usage text mentioning `help`, `version`, `install`, `lock`, `update`, `outdated`, `uninstall`, `prune`, `deps`, `audit`, `doctor`, `init`, `pack`, `compile`, `cache`, `publish`, `self-update`, `policy`, `approve`, and `deny`, and the return code MUST be `0`
 
 #### Scenario: default command is help
 
@@ -343,13 +343,13 @@ Install help MUST document `--policy` and `--no-policy` (and MAY mention env dis
 - **WHEN** install help is requested
 - **THEN** stdout MUST mention `--policy` and `--no-policy`
 
-### Requirement: Optional thin policy status command
+### Requirement: Thin policy status command
 
-The CLI MAY register a thin `policy` / `policy status` command that reports whether a policy was discovered, its path/filename, and enforcement mode. If registered, unknown flags MUST hard-error and help MUST list it. If not registered in M8, conformance MUST document diagnostics-via-install only.
+The CLI MUST register a `policy` / `policy status` command that reports whether a policy was discovered, its path/filename, and enforcement mode. Unknown flags MUST hard-error and help MUST list it.
 
-#### Scenario: Policy status not unknown when registered
+#### Scenario: Policy status is not unknown
 
-- **WHEN** `policy status` is implemented and `runCli(["policy", "status"])` is invoked in a project with a local policy
+- **WHEN** `runCli(["policy", "status"])` is invoked in a project with a local policy
 - **THEN** the CLI MUST NOT treat `policy` as an unknown command and MUST report discovery outcome
 
 ### Requirement: Compile command emits AGENTS.md
@@ -373,17 +373,17 @@ Invoking `compile` MUST be recognized by CLI dispatch and MUST invoke a thin FEO
 
 ### Requirement: Compile help documents polish flags
 
-`bapm compile --help` / `-h` MUST document `-o` / `--output`, `--dry-run`, `-v` / `--verbose`, and `--validate`. Help MUST NOT list `--no-links`, `--target`, `--all`, `-g` / `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as supported flags in this change. Help MUST NOT claim multi-host optimizer or distributed placement behavior.
+`bapm compile --help` / `-h` MUST document `-o` / `--output`, `--target`, `--all`, `--distributed`, `--strategy`, `--dry-run`, `-v` / `--verbose`, and `--validate`. Help MUST NOT list `--no-links`, `-g` / `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as supported flags. Help MUST NOT claim APM context-optimizer parity.
 
-#### Scenario: Compile help lists polish flags
+#### Scenario: Compile help lists supported flags
 
 - **WHEN** `bapm compile --help` (or `-h`) runs
-- **THEN** exit code MUST be `0` and help text MUST mention `-o` or `--output`, `--dry-run`, `-v` or `--verbose`, and `--validate`
+- **THEN** exit code MUST be `0` and help text MUST mention `-o` or `--output`, `--target`, `--all`, `--distributed`, `--strategy`, `--dry-run`, `-v` or `--verbose`, and `--validate`
 
-#### Scenario: Compile help omits deferred and multi-host flags
+#### Scenario: Compile help omits deferred flags
 
 - **WHEN** `bapm compile --help` runs
-- **THEN** help text MUST NOT advertise `--no-links`, `--target`, `--all`, `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as available options
+- **THEN** help text MUST NOT advertise `--no-links`, `--global`, `--watch`, `--root`, `--clean`, or `--single-agents` as available options
 
 ### Requirement: Cache info and clean commands
 
@@ -499,7 +499,7 @@ The install command MUST accept `--parallel-downloads <int>` (default 4; `0` = s
 
 ### Requirement: CLI policy status subcommand
 
-The CLI MUST expose `bapm policy status` as a registered command path under group `policy` with **only** the `status` subcommand in this change (`explain` / approve-deny MUST NOT be added). Top-level help MUST mention `policy`. Status MUST accept `--json`, `--policy <path>`, `--no-policy`, and `--check`. Status MUST NOT expose `--no-cache` unless bapm discovery gains a truthful cache switch (omit rather than invent). Unknown flags MUST fail closed with non-zero exit for parse errors.
+The CLI MUST expose `bapm policy status` as a registered command path under group `policy` with **only** the `status` subcommand (`explain` MUST NOT be added; `approve` and `deny` are separate top-level commands, not subcommands of `policy`). Top-level help MUST mention `policy`. Status MUST accept `--json`, `--policy <path>`, `--no-policy`, and `--check`. Status MUST NOT expose `--no-cache` unless bapm discovery gains a truthful cache switch (omit rather than invent). Unknown flags MUST fail closed with non-zero exit for parse errors.
 
 #### Scenario: Help lists policy
 
@@ -756,7 +756,7 @@ Invoking `view` MUST be recognized by CLI dispatch and MUST route through the FE
 
 ### Requirement: Top-level approve and deny commands
 
-The CLI MUST register top-level `approve` and `deny` commands that invoke interactive user-local grant persistence. Interactive defaults MUST target the user store only and MUST NOT persist interactive decisions into project `bapm.yml`. Top-level help MUST mention both commands. Unknown flags MUST fail closed with non-zero exit for parse errors.
+The CLI MUST register top-level `approve` and `deny` commands that invoke interactive user-local grant persistence. Interactive defaults MUST target the user store only and MUST NOT persist interactive decisions into project `bapm.yml`. The commands MUST accept `--mcp` (default), `--bin`, and `--hook` executable-type flags. Top-level help MUST mention both commands. Unknown flags MUST fail closed with non-zero exit for parse errors.
 
 #### Scenario: Approve command registered
 
@@ -852,7 +852,7 @@ The install command MUST accept `--trust-bin` and `--no-trust-bin` as known flag
 
 ### Requirement: Install help documents trust-bin flags
 
-Invoking install help MUST document `--trust-bin` and `--no-trust-bin`, including that they are per-invocation consent for marketplace/plugin `bin/` executables, that non-interactive installs default to not deploying bin without consent or persisted allow, and that the flags cannot override org/project deny.
+Invoking install help MUST document `--trust-bin` and `--no-trust-bin`, including that they are per-invocation consent for marketplace/plugin `bin/` executables, that installs default to not deploying bin without consent or persisted allow in every mode (a TTY is not implicit consent), and that the flags cannot override org/project deny.
 
 #### Scenario: Install help lists trust-bin flags
 
@@ -863,3 +863,37 @@ Invoking install help MUST document `--trust-bin` and `--no-trust-bin`, includin
 
 - **WHEN** install help is requested
 - **THEN** stdout MUST note that non-interactive (or CI/frozen) installs do not deploy bin by default without consent or policy allow
+
+### Requirement: Project scripts run and preview are registered
+
+Invoking `run` and `preview` MUST be recognized by CLI dispatch and MUST route through a thin FEOD command → Run module. `bapm run [SCRIPT]` MUST default to the `start` script; when no name is given and `start` is absent it MUST exit non-zero and list available scripts. `bapm preview [SCRIPT]` MUST resolve and print the original command, parameter substitution, and resolved shell command without executing anything. Both commands MUST accept repeated `-p` / `--param name=value` and `-v` / `--verbose`; `run` MUST also accept `--dry-run` as a non-executing preview. Parameter values MUST NOT be evaluated as JavaScript and MUST be shell-escaped before substitution into the command. Scripts execute through a shell in the project directory with the invoking user's privileges. Unknown flags, invalid parameter syntax, missing scripts, and non-zero command exits MUST produce a non-zero CLI exit. Top-level help MUST mention `run` and `preview`.
+
+#### Scenario: run defaults to start
+
+- **WHEN** `runCli(["run"])` runs in a project whose manifest defines `scripts.start: "echo hello"`
+- **THEN** the exit code MUST be `0` and the command output MUST include `hello`
+
+#### Scenario: run boots a named script with parameters
+
+- **WHEN** `runCli(["run", "greet", "-p", "name=World"])` runs with `scripts.greet: "echo hello {{name}}"`
+- **THEN** the exit code MUST be `0` and the command output MUST include `hello World`
+
+#### Scenario: preview does not execute
+
+- **WHEN** `runCli(["preview", "start"])` runs with a script that would create a file
+- **THEN** stdout MUST include the resolved command and the file MUST NOT be created
+
+#### Scenario: missing script fails and lists names
+
+- **WHEN** `runCli(["run", "missing"])` runs and no such script exists
+- **THEN** the return code MUST be non-zero and output MUST list available script names
+
+#### Scenario: command failure propagates
+
+- **WHEN** `runCli(["run", "fail"])` runs a script whose command exits non-zero
+- **THEN** the CLI return code MUST be non-zero
+
+#### Scenario: parameter values cannot inject shell commands
+
+- **WHEN** a parameter value contains shell metacharacters or command substitution and is substituted into a script
+- **THEN** the value MUST remain a quoted argument and MUST NOT create the side-effect file named in the injected command

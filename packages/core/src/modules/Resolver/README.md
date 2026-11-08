@@ -17,6 +17,7 @@ Transitive dependency classify, BFS resolve, modules-cache download, and lock po
 ## M3 defaults
 
 - **Modules dir:** `apm_modules` (APM wire parity; `bapm_modules` alias deferred)
+- **Shared git cache:** opt-in via `BAPM_CACHE_DIR` (`BAPM_NO_CACHE=1` disables); default direct clone
 - **Diamond policy:** OpenAPM **intersection-pick** (highest in ∩); **not** APM first-wins
 - **Policy gate:** plan → gate → download (M8); see `@/modules/Policy`
 - **Registry:** classify works; fetch fails closed as deferred/unsupported

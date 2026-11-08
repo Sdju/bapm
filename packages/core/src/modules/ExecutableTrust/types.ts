@@ -1,6 +1,15 @@
-/** Grant entry for one package under allow/deny. */
+/**
+ * Grant entry for one package under allow/deny.
+ *
+ * `mcp`, `lsp`, `bin`, and `hook` are the executable types the trust ladder
+ * resolves. Keys are not restricted: the resolver looks up the requested type
+ * verbatim (so `hook: true` approves hooks, `hook: false` denies them).
+ */
 export type ExecutableGrantEntry = {
   mcp?: boolean;
+  lsp?: boolean;
+  bin?: boolean;
+  hook?: boolean;
   [key: string]: unknown;
 };
 

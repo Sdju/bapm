@@ -44,6 +44,30 @@ When frozen mode is active, install MUST fail closed before modules, lock, or ta
 - **WHEN** install is invoked with frozen mode combined with an update/re-resolve flag
 - **THEN** the invocation MUST be rejected without mutation
 
+### Requirement: Frozen rejects under-recorded deploys and local drift
+
+When frozen mode is active, install MUST compare the resolved primitive set with the lock before any target/harness write or lock mutation. Every non-root package that would contribute at least one primitive MUST have a non-empty `deployed_file_hashes` (or `deployed_files`) inventory in its lock row. If the inventory is absent or empty, install MUST fail closed with `INSTALL_FROZEN_UNDER_RECORDED`, naming the package and a sample of the would-be deployed primitives/files and instructing the user to run a non-frozen `bapm install` and commit the lock. Local packages that contribute primitives MUST also record `content_hash` or `tree_sha256`; install MUST recompute the canonical local tree hash and MUST fail with the same code when the field is missing or the tree changed. Root project primitives, direct `dependencies.mcp` entries, and packages contributing no primitives MUST NOT be forced to carry a file inventory. A frozen install against a fully recorded lock MUST pass without rewriting the lock or changing the deploy result.
+
+#### Scenario: Missing deployed inventory fails before writes
+
+- **WHEN** `--frozen` resolves a package primitive set whose lock row lacks `deployed_file_hashes`/`deployed_files`
+- **THEN** install MUST fail with `INSTALL_FROZEN_UNDER_RECORDED` before target/harness or lock writes and MUST list the package and sample files/primitives
+
+#### Scenario: Fully recorded lock passes
+
+- **WHEN** `--frozen` runs against a lock that records deployed inventory for every primitive-contributing package
+- **THEN** install MUST pass without rewriting the lock
+
+#### Scenario: Local content drift fails frozen
+
+- **WHEN** a local package contributing primitives has a `content_hash`/`tree_sha256` that is missing or does not match the recomputed canonical tree hash
+- **THEN** install MUST fail with `INSTALL_FROZEN_UNDER_RECORDED` and instruct the user to run `bapm install` and commit the lock
+
+#### Scenario: Root-only project is not forced to record files
+
+- **WHEN** frozen runs for a root project with only root primitives and/or direct `dependencies.mcp`
+- **THEN** it MUST NOT require a lock file inventory for the root and MUST NOT fail solely for that reason
+
 ### Requirement: CI environment defaults install to frozen
 
 Install MUST treat the process as frozen when the `CI` environment variable is truthy per OpenAPM req-lk-018 — present and not the literal strings `""`, `"0"`, or `"false"` (case-insensitive) — unless the caller explicitly opts out of frozen mode. Explicit frozen requests MUST still activate frozen mode regardless of `CI`. When CI-default or explicit frozen is effective, all existing frozen gates (missing lock/pins, lock immutability, deployed-hash and `tree_sha256` re-verify, reject update/re-resolve) MUST apply identically. An explicit non-frozen opt-out under a truthy `CI` MUST run the non-frozen install path (lock write-back allowed when otherwise permitted). Absent or non-truthy `CI` MUST leave the default non-frozen unless frozen is requested explicitly.
@@ -741,3 +765,34 @@ When Copilot is an effective target, install MUST NOT materialize loose Copilot 
 
 - **WHEN** install runs with effective targets including both `copilot` and `cursor` against one admitted portable plugin
 - **THEN** Copilot MUST use native registration without loose `.agents/skills/` projection from that plugin for Copilot, and Cursor MAY still materialize portable skills/MCP per existing Cursor rules
+
+### Requirement: Install deploys LSP to supported hosts and surfaces unsupported declarations
+
+Install MUST NOT silently ignore `dependencies.lsp` / `devDependencies.lsp` entries or canvas declarations. When at least one active host exposes `configureLsp` (Claude Code or Copilot CLI in this release), install MUST collect root and dependency LSP declarations, validate them fail-closed, gate dependency entries through ExecutableTrust type `lsp`, write native host config, record `lsp_servers` / `lsp_configs` / `lsp_target_servers` / `lsp_config_provenance`, and remove previously owned entries that are no longer declared. Invalid entries MUST fail the install with `INSTALL_LSP_INVALID` before any host write; explicit deny or mentioned-but-unapproved dependency LSP MUST fail with `INSTALL_LSP_TRUST`; unmentioned dependency LSP under a grant surface MUST be skipped with an `LSP_NOT_APPROVED` warning. When no active host exposes LSP support, install MUST add an `LSP_UNSUPPORTED` warning to the install result naming the declaring package and declared server labels and MUST NOT write host LSP config; the warning MUST NOT also be emitted when a supported host configured the same declarations. Frozen install MUST NOT rewrite LSP lock inventory, and a frozen unsupported host MUST NOT write LSP config.
+
+When the root/dependency manifest declares a non-null `canvas:` key, or primitive resolution yields a primitive of type `canvas`, install MUST add a `CANVAS_UNSUPPORTED` warning naming the package/primitive. All diagnostics MUST reach the CLI warning output, MUST be inspectable in the install result, and MUST NOT change the deploy/trust behavior of projects without LSP or canvas declarations. Canvas MUST remain outside the executable trust gates until it has a materialize path.
+
+#### Scenario: Root and dependency LSP declarations deploy
+
+- **WHEN** a project and one of its path dependencies both declare valid non-empty `dependencies.lsp`, and Claude is active
+- **THEN** install MUST write both servers to the Claude LSP plugin config, record them in `lsp_servers` / `lsp_target_servers` / `lsp_config_provenance`, and MUST NOT emit `LSP_UNSUPPORTED`
+
+#### Scenario: Unsupported host keeps LSP warning
+
+- **WHEN** an active host set has no `configureLsp` support and a project declares non-empty `dependencies.lsp`
+- **THEN** install MUST emit one `LSP_UNSUPPORTED` warning per declaring package, name the package and servers, write no LSP entry, and still complete successfully
+
+#### Scenario: Frozen unsupported host writes no LSP config
+
+- **WHEN** a frozen install runs with an active host that has no LSP support
+- **THEN** install MUST not create or rewrite host LSP config and MUST leave LSP lock inventory unchanged
+
+#### Scenario: Canvas manifest key and primitive warn
+
+- **WHEN** a manifest declares a `canvas:` key or a resolved primitive has type `canvas`
+- **THEN** install MUST emit `CANVAS_UNSUPPORTED` for that package/primitive instead of dropping it silently and MUST NOT gate canvas through ExecutableTrust
+
+#### Scenario: Normal install is unchanged
+
+- **WHEN** neither LSP nor canvas is declared
+- **THEN** install MUST emit no `LSP_UNSUPPORTED` or `CANVAS_UNSUPPORTED` diagnostic and MUST keep existing deploy behavior

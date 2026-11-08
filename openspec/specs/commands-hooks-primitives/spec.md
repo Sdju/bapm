@@ -34,6 +34,25 @@ bapm MUST discover hook primitives from `.apm/hooks/*.json` and from top-level `
 - **WHEN** a package contains top-level `hooks/post-merge.json`
 - **THEN** discovery MUST yield a `hook` primitive for that file
 
+### Requirement: Hosts render hooks into native shapes
+
+Hook source documents MUST accept both flat command handlers (`{ "type"?: "command", "command": "./run.sh" }`) and matcher groups (`{ "matcher"?: "Bash", "hooks": [ … ] }`). Flat command entries MUST render as host-native matcher groups where the host requires them: Claude Code uses `{ "matcher": <matcher|"*">, "hooks": [ … ] }`, and Codex uses `{ "matcher"?: <matcher>, "hooks": [ … ] }`. Claude Code MUST inject `"type": "command"` into flat command entries that omit `type`; explicit handler types MUST be preserved. Matcher values, handler fields, and group fields present in the source MUST be preserved in the rendered native output. Cursor keeps its documented flat handler shape. Hosts MUST continue to record bapm ownership in their sidecar files rather than native private keys.
+
+#### Scenario: Flat hook renders as Claude matcher group
+
+- **WHEN** a hook source contains `{ "hooks": { "SessionStart": [{ "command": "./run.sh" }] } }` for Claude
+- **THEN** `.claude/settings.json` MUST contain a `SessionStart` group with `matcher: "*"` and a nested handler with `type: "command"`
+
+#### Scenario: Flat hook renders as Codex nested group
+
+- **WHEN** a hook source contains a flat `SessionStart` command entry for Codex
+- **THEN** `.codex/hooks.json` MUST contain an intermediate group with a nested `hooks` array and no invented matcher
+
+#### Scenario: Existing matcher group is preserved
+
+- **WHEN** a hook source contains `{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "./check.sh" }] }`
+- **THEN** the rendered native group MUST keep matcher `Bash` and the nested handler fields
+
 ### Requirement: Hosts apply target matrix for commands and hooks
 
 After conflict resolution, install materialize MUST pass `command` and `hook` primitives to active host integrations. Cursor MUST deploy both commands and hooks under registered roots per `integration-cursor-runtime`. OpenCode MUST deploy commands and MUST NOT deploy hooks, emitting an inspectable skip for hooks per `integration-opencode-runtime`. Undeployed skips MUST NOT erase successful deployment of other primitive types in the same install when the host documents skip as non-fatal for that type.

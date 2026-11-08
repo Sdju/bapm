@@ -46,7 +46,7 @@ describe("mcpEnvMode install bake dispatch", () => {
     });
   });
 
-  test("install: Cursor bake receives literals; translate target receives placeholders", async () => {
+  test("install: bake-mode target receives literals; translate target receives placeholders", async () => {
     previousToken = process.env.API_TOKEN;
     process.env.API_TOKEN = "super-secret-literal";
 

@@ -27,21 +27,28 @@ Commands:
   audit        Integrity checks (--ci gate)
   doctor       Environment and project sanity checks
   compile      Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
-  cache        Modules-cache info | clean (apm_modules)
+  cache        Modules-cache info | clean; shared-cache prune
   policy       Policy status (read-only governance posture)
-  approve      Persist user-local MCP allow (~/.bapm/config.json; not project yml)
-  deny         Persist user-local MCP deny (~/.bapm/config.json; not project yml)
+  approve      Persist user-local allow (-y/--all, --pending; not project yml)
+  deny         Persist user-local MCP/LSP deny (~/.bapm/config.json; not project yml)
   marketplace  Consumer registry + authoring (init/package/check)
   search       Search plugins in a registered marketplace (QUERY@MARKETPLACE)
   find         Trace a deployed path to locked package(s) (--source / --path)
   view         Inspect a locally installed package (offline; lock + modules)
+  targets      Inspect registered host targets (--json / --all; read-only)
+  mcp          Inspect MCP servers from manifest/lock (list | show | search)
+  config       Inspect / update user defaults in ~/.bapm/config.json (get/list/set/unset)
+  auth         Report credentials for a git host (--check / --export; read-only)
+  run          Run a script from ${deps.manifestFile} scripts: (default: start)
+  preview      Resolve and print a script command without executing it
+  runtime      Inspect AI runtime CLIs (list | status; read-only; setup/remove deferred)
 
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present
   --no-frozen              Opt out of frozen (including when CI defaults to frozen)
   --target <id>            Force a registered host target (overrides manifest active)
   --trust-transitive-mcp   Deploy dependency MCP (default: direct dependencies.mcp only)
-  --trust-bin / --no-trust-bin   Per-invocation bin/ consent (non-interactive defaults to skip)
+  --trust-bin / --no-trust-bin   Per-invocation bin/ consent (default: skip without explicit grant)
 
 Experimental registries:
   Set BAPM_EXPERIMENTAL_REGISTRIES=1 to enable registry resolve/install and publish.
@@ -68,14 +75,15 @@ Options:
   --target <id>            Force activation of a registered host target (overrides manifest active)
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
-  --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
+  --no-policy              Skip repository-local policy only; org/remote deny still applies
+  --no-policy-all          Full escape: skip local and org policy (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
   --trust-bin              Consent to deploy dependency/plugin bin/ for this run (when policy allows)
   --no-trust-bin           Skip bin/ deploy for this run (even when policy would allow)
   --help, -h               Show this help
 
 Host selection:
-  Priority: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
+  Priority: --target <id> → local-overlay active → manifest active → config target → sole auto-detect → fail.
   Use active in bapm.yml / apm.yml when detect is missing or ambiguous.
 
 MCP:
@@ -85,9 +93,9 @@ MCP:
   bapm approve / deny), every dependency with MCP must be approved or denied.
 
 Bin consent:
-  Non-interactive (CI / frozen / non-TTY) installs skip dependency bin/ unless --trust-bin or a
-  persisted executables.allow bin grant applies. Interactive installs deploy with a warning.
-  Flags cannot override org/project deny.
+  All installs (interactive and non-interactive) skip dependency bin/ unless --trust-bin or a
+  persisted executables.allow bin grant applies. A TTY is not implicit consent; pass --trust-bin
+  or approve bin persistently (bapm approve <pkg> --bin). Flags cannot override org/project deny.
 
 Unknown flags are rejected. --frozen and --no-frozen cannot be combined.
 --trust-bin and --no-trust-bin cannot be combined.

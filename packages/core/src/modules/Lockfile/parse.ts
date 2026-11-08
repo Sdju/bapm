@@ -55,6 +55,25 @@ export function parseLockfileDocument(input: unknown): LockfileDocument {
   if (versionRaw === undefined || versionRaw === null) {
     versionRaw = "1";
   }
+  if (versionRaw === "3") {
+    throw new LockfileError(
+      "LOCKFILE_V3_UNSUPPORTED",
+      `Lockfile version "3" is not supported by bapm. ` +
+        `APM 0.35 introduced v3 for root replacement rules (manifest "replace:") and ` +
+        `per-dependency "replacement:" evidence; bapm cannot apply those semantics and ` +
+        `refuses to read the lock rather than install the upstream source. ` +
+        `Remediation: remove the replacement rules and regenerate the lock with bapm ` +
+        `(bapm lock), or use APM 0.35+ for this project. Supported versions: "1", "2".`,
+      {
+        path: "lockfile_version",
+        details: {
+          found: "3",
+          supported: ["1", "2"],
+          apmFeature: "dependency replacement (replace:/replacements)",
+        },
+      },
+    );
+  }
   if (typeof versionRaw !== "string" || !SUPPORTED_VERSIONS.has(versionRaw)) {
     throw new LockfileError(
       "LOCKFILE_UNSUPPORTED_VERSION",
@@ -115,15 +134,24 @@ function validateDependencyEntry(entry: unknown, path: string): LockedDependency
   const registryPrefix = typeof raw.registry_prefix === "string" ? raw.registry_prefix : undefined;
 
   const originalRepoUrl = raw.repo_url;
+  // APM local rows use `_local/<name>`; bapm uses `local:<rel>`. Either form,
+  // or an explicit `local_path`, identifies a local source even if `source`
+  // was omitted by an older/cross-tool writer.
+  const looksLocal =
+    source === "local" ||
+    source === "marketplace" ||
+    originalRepoUrl.startsWith("_local/") ||
+    originalRepoUrl.startsWith("local:") ||
+    (typeof raw.local_path === "string" && raw.local_path.length > 0);
   const canonicalRepoUrl = normalizePackageRepoUrl(originalRepoUrl, {
-    source,
+    source: looksLocal && source === undefined ? "local" : source,
     host,
     registryPrefix,
   });
 
   if (typeof raw.materialization_repo_url === "string" && raw.materialization_repo_url.length > 0) {
     const materializationIdentity = normalizePackageRepoUrl(raw.materialization_repo_url, {
-      source,
+      source: looksLocal && source === undefined ? "local" : source,
       host,
       registryPrefix,
     });
@@ -153,7 +181,7 @@ function validateDependencyEntry(entry: unknown, path: string): LockedDependency
         { path: `${path}.resolved_hash` },
       );
     }
-  } else if (source !== "local" && source !== "marketplace") {
+  } else if (!looksLocal) {
     // Git identity (default / git): require resolved_commit shape half of lk-003.
     if (typeof raw.resolved_commit !== "string" || !raw.resolved_commit.trim()) {
       throw new LockfileError(
@@ -186,6 +214,27 @@ function validateDependencyEntry(entry: unknown, path: string): LockedDependency
   for (const key of DEP_HASH_SCALAR_KEYS) {
     if (key in dep && dep[key] != null) {
       dep[key] = normalizeHashValue(dep[key]) as string;
+    }
+  }
+
+  if ("extensions" in dep) {
+    const rawExtensions = dep.extensions;
+    if (
+      rawExtensions !== null &&
+      typeof rawExtensions === "object" &&
+      !Array.isArray(rawExtensions) &&
+      Object.keys(rawExtensions as Record<string, unknown>).length > 0
+    ) {
+      // APM `_copy_extension_map`: string keys, declaration order retained.
+      dep.extensions = Object.fromEntries(
+        Object.entries(rawExtensions as Record<string, unknown>).map(([key, value]) => [
+          String(key),
+          value,
+        ]),
+      );
+    } else {
+      // Non-mapping / empty values carry no evidence; omit on round-trip.
+      delete dep.extensions;
     }
   }
 

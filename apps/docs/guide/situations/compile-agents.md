@@ -28,11 +28,69 @@ compile --dry-run: would write AGENTS.md (1 primitives)
 
 ```bash
 bapm compile
-bapm compile -o docs/AGENTS.md   # в другой путь
-bapm compile -v                  # показать, из каких файлов собрано
+bapm compile -o docs/AGENTS.md         # в другой путь (один хост)
+bapm compile -v                        # показать, из каких файлов собрано
+bapm compile --target cursor,claude    # два хоста за один запуск
+bapm compile --all                     # все compile-capable хосты
+bapm compile --distributed             # разложить applyTo по каталогам
+bapm compile --clean --dry-run         # показать осиротевшие generated-файлы
+bapm compile --clean                   # собрать и удалить осиротевшие generated-файлы
+bapm compile --watch                   # пересобирать при изменении входов (Ctrl+C — стоп)
 ```
 
-Имя файла зависит от агента: [таблица](/guide/supported-hosts#layout). Агент выбирается так же, как для install; если в `active` указано несколько агентов, передайте `--target`: `compile` работает с одним агентом за запуск.
+Имя файла зависит от агента: [таблица](/guide/supported-hosts#layout). Агент выбирается так же, как для install; если в `active` указано несколько агентов, передайте `--target` или `--all`. В multi-target режиме каждый хост пишет свой файл за один запуск.
+
+::: warning Общий `AGENTS.md`
+Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes и Antigravity используют один и тот же `AGENTS.md`. Если два выбранных хоста пишут в один путь, `bapm compile` падает с диагностикой collision, перечисляет хосты и путь и ничего не записывает — молчаливой перезаписи нет. Выберите один хост на путь: например, `--target cursor` и отдельный запуск для `claude` или с `-o`.
+:::
+
+## Пример: два хоста за один запуск {#multi}
+
+```bash
+bapm compile --target cursor,claude
+```
+
+```text
+Wrote AGENTS.md (cursor) (2 primitives)
+Wrote CLAUDE.md (claude) (2 primitives)
+```
+
+`--all` работает так же, но выбирает все зарегистрированные compile-capable хосты. Если среди них есть несколько хостов с `AGENTS.md` (обычный случай), запуск завершится collision-ошибкой: выберите явный список без дублей путей.
+
+## Пример: инструкции по каталогам {#distributed}
+
+По умолчанию compile собирает один файл на хост. Если instruction-примитивы размечены `applyTo`, включите distributed mode:
+
+```markdown
+---
+description: TypeScript style
+applyTo: "src/**"
+---
+
+# TypeScript
+
+Use explicit types in src.
+```
+
+```bash
+bapm compile --target cursor --distributed
+```
+
+```text
+Wrote src/AGENTS.md (2 primitives)
+```
+
+Glob `src/**` даёт каталог `src/`, `docs/*.md` — `docs/`. Имя файла остаётся хостовым: `src/AGENTS.md`, `src/CLAUDE.md`, `.github/src/copilot-instructions.md`. Instructions без `applyTo` и не-instruction примитивы остаются в корневом `AGENTS.md`. Root-only globs (`**/*.ts`, `*.ts`) тоже остаются в корне. `--strategy distributed` — синоним `--distributed`; `--strategy single-file` возвращает обычный режим.
+
+`--distributed` не принимает `-o`: у каждого каталога свой выходной путь. Абсолютные `applyTo`, `..`, `.git`/`node_modules` и симлинки в пути отвергаются без записи.
+
+## Build ID и очистка {#build-id-clean}
+
+Каждый собранный файл заканчивается строкой `<!-- Build ID: <12 hex> -->`. Она считается по содержимому без самой строки: одинаковый вход даёт одинаковый id, изменённый — другой. Build ID нужен, чтобы отличить generated-файл от ручного и заметить правку после сборки.
+
+`bapm compile --clean` удаляет только осиротевшие generated-выходы выбранных хостов: файлы с валидным Build ID, которых больше нет в текущем плане (например, старый `src/AGENTS.md` после смены `applyTo`). Файл без Build ID или с невалидным Build ID (ручная правка) не удаляется. `--clean --dry-run` только печатает список; `--clean --validate` ничего не удаляет. Явный `--target` для clean не обязателен, если хост выбирается через sole `active`, config или auto-detect.
+
+`bapm compile --watch` (`-w`) делает первый compile и затем пересобирает файл при изменении `bapm.yml` / `apm.yml`, `.apm/`, `apm_modules/`, корневых `skills/` / `hooks/` / `SKILL.md` / `*.prompt.md`, `.agents/local/` и каталогов локальных зависимостей. Изменения склеиваются примерно за 200 мс, сборки не пересекаются. Ошибка compile не завершает watch: печатается сообщение, следующее изменение запускает новую попытку. Ctrl+C/SIGTERM останавливает с кодом `0`. `--watch --validate` запрещён; `--watch --dry-run` только показывает would-write на каждом прогоне. Watch не устанавливает зависимости и не пересобирает git-пакеты в `apm_modules` — для этого запустите `bapm install`.
 
 ## Что попадает в файл {#contents}
 
@@ -46,21 +104,24 @@ bapm compile -v                  # показать, из каких файло�
 | Copilot                             | `.github/copilot-instructions.md` | всё, кроме instructions                   |
 | Gemini CLI                          | `GEMINI.md`                       | только instructions                       |
 
-Число в `would write … (N primitives)` считается до этого фильтра, поэтому может быть больше, чем реально попадёт в файл.
+Число в `would write … (N primitives)` считается до этого фильтра, поэтому может быть больше, чем реально попадёт в файл. Grok Bot и Windsurf `compile` не поддерживают.
 
 ## Что нужно знать
 
 - `compile` требует `bapm.yml` в текущем каталоге. Без него он сообщит, что интеграция «not installed», хотя дело в манифесте.
-- `-o` меняет каталог, но не всегда имя: для Codex, OpenCode и Grok Build файл должен называться `AGENTS.md`, для Gemini — `GEMINI.md`.
-- `AGENTS.md` общий для Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity. Если собирать его для нескольких агентов, файл каждый раз перезаписывается.
+- `-o` меняет каталог, но не всегда имя: для Codex, OpenCode, Grok Build и Hermes файл должен называться `AGENTS.md`, для Gemini — `GEMINI.md`. `-o` допустим только при выборе одного хоста.
+- `--target` и `--all` взаимоисключающие.
+- `--watch` не принимает `--validate`; `--watch --dry-run` ничего не пишет. Watch не запускает `bapm install` и не обновляет git-пакеты в `apm_modules`.
 - Файл генерируется целиком: ручные правки пропадут при следующем `compile`. Пишите инструкции в пакете, а не в сгенерированном файле.
-- `compile` проще, чем `apm compile` из microsoft/apm: он собирает один файл без распределения по каталогам через `applyTo`.
+- Distributed mode — консервативное подмножество `apm compile`: берётся буквальный префикс пути из `applyTo`, без файлового scoring и наследования контекста APM-оптимизатора. По умолчанию режим выключен.
 
 ## Если не получилось
 
-| Проблема                                   | Что делать                                                                                                       |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `Target detection is missing or ambiguous` | Передайте `--target <id>` или задайте `active`                                                                   |
-| Несколько агентов в `active`               | Передайте `--target <id>`                                                                                        |
-| Файл пустой                                | Сначала выполните `bapm install`: compile собирает установленное. Для Gemini в файл попадают только instructions |
-| `… is not installed`, хотя интеграция есть | Запускайте из каталога с `bapm.yml`                                                                              |
+| Проблема                                             | Что делать                                                                                                       |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `Target detection is missing or ambiguous`           | Передайте `--target <id>` или задайте `active`                                                                   |
+| Несколько агентов в `active`                         | Передайте `--target <id>` (или список через запятую, если пути не совпадают)                                     |
+| `Compile target collision`                           | Два выбранных хоста пишут в один путь. Оставьте один хост из пары или используйте отдельные запуски              |
+| `multiple compile targets cannot share one --output` | Уберите `-o` или выберите один хост                                                                              |
+| Файл пустой                                          | Сначала выполните `bapm install`: compile собирает установленное. Для Gemini в файл попадают только instructions |
+| `… is not installed`, хотя интеграция есть           | Запускайте из каталога с `bapm.yml`                                                                              |

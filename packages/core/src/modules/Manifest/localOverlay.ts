@@ -16,7 +16,7 @@ const OVERLAY_ALLOWLIST = new Set(["active", "target", "targets", "env", "regist
 
 export type LocalOverlayFields = {
   active?: ActiveEntry[];
-  target?: string | TargetIntegrationMap;
+  target?: string | string[] | TargetIntegrationMap;
   targets?: string[] | TargetIntegrationMap;
   env?: Record<string, string>;
   registries?: Record<string, RegistryEntry | string>;
@@ -154,7 +154,11 @@ function validateOverlayEnv(value: unknown, sourcePath?: string): Record<string,
 /**
  * Merge allowlisted local fields over a validated base document, then re-validate.
  */
-export function mergeLocalOverlay(base: BapmManifest, overlay: LocalOverlayFields): BapmManifest {
+export function mergeLocalOverlay(
+  base: BapmManifest,
+  overlay: LocalOverlayFields,
+  options: { allowReplace?: boolean } = {},
+): BapmManifest {
   const merged: Record<string, unknown> = { ...base };
 
   if (overlay.active !== undefined) {
@@ -196,7 +200,7 @@ export function mergeLocalOverlay(base: BapmManifest, overlay: LocalOverlayField
     }
   }
 
-  return parseManifestDocument(merged).document;
+  return parseManifestDocument(merged, options).document;
 }
 
 function mergeRegistriesMaps(

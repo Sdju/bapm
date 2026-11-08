@@ -114,6 +114,8 @@ export type ResolvedNode = {
   skillSubset?: string[];
   /** Consumer per-dep target subset carried from classifying object-form entry. */
   targetSubset?: string[];
+  /** Vendor extension keys from the dependency manifest (APM lock wire). */
+  extensions?: Record<string, unknown>;
 };
 
 export type ResolveGraphResult = {
@@ -200,8 +202,10 @@ export type ResolveAndLockOptions = ResolvePorts & {
   policyPath?: string;
   /** Alias for `policyPath`. */
   policy?: string;
-  /** Skip policy discovery + checks. */
+  /** Full escape: skip policy discovery + checks. */
   noPolicy?: boolean;
+  /** Skip only repository-local policy; org/remote policy still applies. */
+  noRepoPolicy?: boolean;
   /** Override ordered policy discovery providers. */
   policyProviders?: string[];
   providers?: string[];

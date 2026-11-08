@@ -1,9 +1,11 @@
 import { existsSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { resolve } from "node:path";
 import {
   createDefaultDownloader,
   createDefaultGitRemote,
   createDefaultTagLister,
+  createMcpRegistryClient,
   extractPackArchive,
   loadManifest,
   resolveEffectiveFrozen,
@@ -16,6 +18,9 @@ import {
 } from "@/modules/Integrations";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import { formatErrorCauseChain, formatErrorMessage } from "@/common/formatErrorCauseChain.ts";
+import { resolvePolicyPorts } from "@/common/policyFetcher.ts";
+import { readConfiguredMcpRegistryUrl, readConfiguredTarget } from "@/modules/Config";
+import { ensureGlobalProject, resolveGlobalProjectRoot } from "@/common/globalProject.ts";
 
 export function formatInstallHelp(deps: InstallDeps): string {
   return `${deps.name} install — Install agentic dependencies from ${deps.manifestFile}
@@ -24,24 +29,34 @@ Usage:
   bapm install [options]
   bapm install <package-ref...>   Add package ref(s) to dependencies.apm (or --dev → devDependencies.apm), then install
   bapm install <archive.zip>      Install from a pack-produced plain zip archive
+  bapm install -g                 Install user-global packages + file primitives from ~/.bapm
+  bapm install -g --only mcp      Configure user-global MCP from ~/.bapm (BAPM_HOME override)
 
 Options:
+  --global, -g             Use the user-global project root (~/.bapm, or BAPM_HOME)
+                           for bapm.yml/bapm.lock.yaml and deploy file primitives
+                           into the user's home harness dirs (~/.cursor, ~/.claude,
+                           ~/.codex, ~/.agents). Supported file hosts: cursor,
+                           claude, codex, agent-skills. Global MCP: cursor,
+                           opencode.
+  --mcp                    Alias for --only mcp.
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
   --dry-run                Preview direct deps / would-add; no durable project writes
-  --force                  Accepted for APM parity; currently has no effect (does not refresh refs or bypass frozen/policy)
+  --force                  Accepted for APM compatibility only; has no effect (does not refresh refs or bypass frozen/policy)
   --allow-insecure         Allow direct http:// deps that also set allow_insecure: true (dual consent)
   --allow-insecure-host <hostname>
                            Allow transitive http:// deps from this FQDN (repeatable)
   --dev                    With package-ref add: write under devDependencies.apm (no-op without positional)
   --only <apm|mcp>         Install only APM packages (skip MCP) or only MCP configure (skip APM materialize)
   --target <id>            Force activation of a registered host target (overrides manifest active)
-  --exclude <id>           Skip MCP configure for runtime id (e.g. cursor); does not skip install
+  --exclude <id>[,<id>]    Skip MCP configure for runtime ids (repeatable; comma list); does not skip install
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
   -v, --verbose            Richer progress / diagnostics (does not weaken frozen/policy)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
-  --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
+  --no-policy              Skip repository-local policy only; org/remote deny still applies
+  --no-policy-all          Full escape: skip local and org policy (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
   --trust-bin              Consent to deploy dependency/plugin bin/ for this run (when policy allows)
   --no-trust-bin           Skip bin/ deploy for this run (even when policy would allow)
@@ -54,18 +69,25 @@ Notes:
   Frozen re-verifies lock pins, deployed file hashes and package tree hashes.
   When the CI environment variable is truthy (not "", "0", or "false"), install
   defaults to frozen unless --no-frozen is passed.
-  Non-interactive installs (CI, BAPM_NON_INTERACTIVE, non-TTY, or frozen) do not deploy
-  dependency bin/ by default without --trust-bin or a persisted executables.allow bin grant;
-  interactive installs deploy it with a warning.
+  All installs (interactive and non-interactive) skip dependency bin/ unless
+  --trust-bin or a persisted executables.allow bin grant applies. An interactive
+  terminal is not implicit consent; pass --trust-bin or approve bin persistently.
   --trust-bin / --no-trust-bin are per-invocation consent and cannot override org/project deny.
   A local .zip path is installed as a pack archive: members are added to the current directory,
   nothing else is removed, and existing files with different content are never overwritten.
   Non-zip positionals are package refs added to dependencies.apm (auto-creates
   a minimal manifest when missing). Frozen rejects positional package-ref add.
   --exclude filters MCP/runtime configure only — not a full skip-install.
-  Host selection: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
+  Copilot and Windsurf write user-global MCP shared by every project; install warns
+  with the path. Use --exclude copilot,windsurf or BAPM_NO_GLOBAL_MCP=1 to skip it.
+  Host selection: --target <id> → local-overlay active → manifest active → config target → sole auto-detect → fail.
   Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
   Eligible MCP servers are written to the active agent's MCP config (direct mcp by default).
+  Global MCP: Cursor → ~/.cursor/mcp.json, OpenCode → ~/.config/opencode/opencode.json.
+  Global files: Cursor → ~/.agents/skills + ~/.cursor, Claude → ~/.claude,
+  Codex → ~/.agents/skills + ~/.codex, agent-skills → ~/.agents/skills.
+  Global compile is not supported yet.
+  Project manifests and locks are never read or written with --global.
 `;
 }
 
@@ -75,6 +97,7 @@ export type ParseInstallArgsOptions = {
 };
 
 export type ParsedInstallArgs = {
+  global: boolean;
   frozen: boolean;
   noFrozen: boolean;
   update: boolean;
@@ -91,7 +114,10 @@ export type ParsedInstallArgs = {
   exclude?: string[];
   parallelDownloads?: number;
   policyPath?: string;
+  /** Full escape (`--no-policy-all`): skip every policy source. */
   noPolicy: boolean;
+  /** Repo-local escape (`--no-policy`): org/remote policy still applies. */
+  noRepoPolicy: boolean;
   trustTransitiveMcp: boolean;
   /** Invocation bin consent: allow | deny | default. */
   trustBin: "allow" | "deny" | "default";
@@ -103,6 +129,7 @@ export function parseInstallArgs(
   argv: string[],
   options: ParseInstallArgsOptions = {},
 ): ParsedInstallArgs {
+  let global = false;
   let frozenFlag = false;
   let noFrozen = false;
   let update = false;
@@ -120,12 +147,14 @@ export function parseInstallArgs(
   let parallelDownloads: number | undefined;
   let policyPath: string | undefined;
   let noPolicy = false;
+  let noRepoPolicy = false;
   let trustTransitiveMcp = false;
   let trustBinAllow = false;
   let trustBinDeny = false;
   let help = false;
 
   const partial = (): ParsedInstallArgs => ({
+    global,
     frozen: frozenFlag,
     noFrozen,
     update,
@@ -143,6 +172,7 @@ export function parseInstallArgs(
     parallelDownloads,
     policyPath,
     noPolicy,
+    noRepoPolicy,
     trustTransitiveMcp,
     trustBin: trustBinAllow ? "allow" : trustBinDeny ? "deny" : "default",
   });
@@ -151,6 +181,17 @@ export function parseInstallArgs(
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") {
       help = true;
+      continue;
+    }
+    if (arg === "--global" || arg === "-g") {
+      global = true;
+      continue;
+    }
+    if (arg === "--mcp") {
+      if (only !== undefined && only !== "mcp") {
+        return { ...partial(), error: "Cannot combine --mcp with --only apm" };
+      }
+      only = "mcp";
       continue;
     }
     if (arg === "--frozen") {
@@ -186,6 +227,10 @@ export function parseInstallArgs(
       continue;
     }
     if (arg === "--no-policy") {
+      noRepoPolicy = true;
+      continue;
+    }
+    if (arg === "--no-policy-all") {
       noPolicy = true;
       continue;
     }
@@ -424,6 +469,7 @@ export function parseInstallArgs(
   }
 
   return {
+    global,
     frozen,
     noFrozen,
     update,
@@ -441,6 +487,7 @@ export function parseInstallArgs(
     parallelDownloads,
     policyPath,
     noPolicy,
+    noRepoPolicy,
     trustTransitiveMcp,
     trustBin,
     help,
@@ -483,6 +530,33 @@ function resolveLocalZipArchive(
   return abs;
 }
 
+/**
+ * Reconcile host MCP configs without resolving or deploying APM packages.
+ * Used after a user-local deny so already-written servers disappear from host
+ * configs. Policy discovery is skipped: this is a cleanup pass, not a deploy.
+ */
+export async function runMcpReconfigure(options: { cwd?: string } = {}): Promise<{
+  ok: boolean;
+  message?: string;
+}> {
+  const cwd = options.cwd ?? process.cwd();
+  const registry = createCliIntegrationRegistry();
+  try {
+    await registerManifestIntegrationsFromCwd(registry, cwd);
+    await coreRunInstall({
+      cwd,
+      only: "mcp",
+      noPolicy: true,
+      integrationRegistry: registry,
+      configTarget: readConfiguredTarget(),
+      env: process.env as Record<string, string | undefined>,
+    });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, message: formatErrorMessage(error) };
+  }
+}
+
 export async function runInstall(
   deps: InstallDeps,
   options: InstallOptions,
@@ -492,26 +566,62 @@ export async function runInstall(
     console.log(formatInstallHelp(deps));
     return { ok: true };
   }
+  if (parsed.force) {
+    console.error(
+      `${deps.name}: warning: --force has no effect in this version; use --update to refresh refs, --trust-bin for bin consent, or remove the flag`,
+    );
+  }
   if (parsed.error) {
     console.error(`${deps.name}: ${parsed.error}`);
     return { ok: false, message: parsed.error };
   }
 
-  const archivePath = resolveLocalZipArchive(parsed.archivePath, options.cwd);
-  if (parsed.archivePath && !archivePath) {
+  let effectiveOptions = options;
+  const effectiveParsed = parsed;
+  if (parsed.global) {
+    if (parsed.archivePath) {
+      const message =
+        "--global does not install archive .zip files; archive install is project-scoped.";
+      console.error(`${deps.name}: ${message}`);
+      return { ok: false, message };
+    }
+
+    const globalRoot = resolveGlobalProjectRoot(options.env);
+    if (!parsed.dryRun) {
+      try {
+        ensureGlobalProject(globalRoot);
+      } catch (error) {
+        const message = formatErrorMessage(error);
+        console.error(`${deps.name}: ${message}`);
+        return { ok: false, message };
+      }
+    }
+    effectiveOptions = {
+      ...options,
+      cwd: globalRoot,
+      // Manifest/lock resolve under the global root; file primitives and hooks
+      // deploy into the user home harness layout.
+      deployCwd: homedir(),
+      configDir: globalRoot,
+      marketplaceConfigDir: globalRoot,
+    };
+  }
+
+  const archivePath = resolveLocalZipArchive(effectiveParsed.archivePath, effectiveOptions.cwd);
+  if (effectiveParsed.archivePath && !archivePath) {
     // Explicit path that looks like zip but is missing / not a file — still try core
     // with resolved path so corrupt/missing fails closed with install error.
-    const attempted = resolve(options.cwd ?? process.cwd(), parsed.archivePath);
-    if (parsed.archivePath.toLowerCase().endsWith(".zip")) {
+    const attempted = resolve(effectiveOptions.cwd ?? process.cwd(), effectiveParsed.archivePath);
+    if (effectiveParsed.archivePath.toLowerCase().endsWith(".zip")) {
       // Pass through so core extract fails closed on corrupt/missing.
-      return runCoreInstall(deps, options, parsed, attempted);
+      return runCoreInstall(deps, effectiveOptions, effectiveParsed, attempted);
     }
-    const message = `Unknown install argument (expected options or a local .zip): ${parsed.archivePath}`;
+    const message = `Unknown install argument (expected options or a local .zip): ${effectiveParsed.archivePath}`;
     console.error(`${deps.name}: ${message}`);
     return { ok: false, message };
   }
 
-  return runCoreInstall(deps, options, parsed, archivePath);
+  return runCoreInstall(deps, effectiveOptions, effectiveParsed, archivePath);
 }
 
 async function runCoreInstall(
@@ -539,7 +649,9 @@ async function runCoreInstall(
 
     await registerManifestIntegrationsFromCwd(registry, cwd);
     const result = await coreRunInstall({
-      cwd: options.cwd,
+      cwd,
+      deployCwd: options.deployCwd,
+      scope: parsed.global ? "global" : "project",
       archivePath: archiveLanded ? undefined : archivePath,
       dryRun: parsed.dryRun,
       packageRefs: parsed.packageRefs,
@@ -557,24 +669,54 @@ async function runCoreInstall(
       only: parsed.only,
       forcedTarget: parsed.target,
       forceTarget: parsed.target,
+      configTarget: readConfiguredTarget(
+        options.configDir ? { configRoot: options.configDir } : undefined,
+      ),
       integrationRegistry: registry,
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
+      noRepoPolicy: parsed.noRepoPolicy,
+      ...resolvePolicyPorts({
+        noPolicy: parsed.noPolicy,
+        env: options.env,
+        policyPorts: options.policyPorts,
+      }),
       trustTransitiveMcp: parsed.trustTransitiveMcp,
       trustBin: parsed.trustBin,
+      configDir: options.configDir,
+      marketplaceConfigDir: options.marketplaceConfigDir,
       env: options.env ?? (process.env as Record<string, string | undefined>),
+      mcpRegistry: {
+        // Lazy: installs without registry-only MCP entries never validate or
+        // contact the MCP registry.
+        getServer(name: string, lookupOptions?: { version?: string; registryUrl?: string }) {
+          const client = createMcpRegistryClient({
+            configuredUrl: readConfiguredMcpRegistryUrl(),
+            env: options.env ?? (process.env as Record<string, string | undefined>),
+          });
+          return client.getServer(name, lookupOptions);
+        },
+      },
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),
     });
-    emitPolicyDiagnostics(deps.name, result.policyDiagnostics ?? result.diagnostics);
-    emitTrustDiagnostics(deps.name, result.diagnostics);
+    const policyEmitted = emitPolicyDiagnostics(
+      deps.name,
+      result.policyDiagnostics ?? result.diagnostics,
+    );
+    const trustEmitted = emitTrustDiagnostics(deps.name, result.diagnostics);
+    emitDiagnosticWarnings(deps.name, result.diagnostics, policyEmitted, trustEmitted);
     if (parsed.dryRun || result.dryRun) {
       emitDryRunPreview(deps.name, result.diagnostics);
-      console.log(`${deps.name}: dry-run preview complete; no changes made`);
+      console.log(
+        `${deps.name}: dry-run preview complete; no changes made${parsed.global ? " (global scope)" : ""}`,
+      );
     } else if (result.activeTargets && result.activeTargets.length > 0) {
-      console.log(`${deps.name}: installed for ${result.activeTargets.join(", ")}`);
+      console.log(
+        `${deps.name}: installed for ${result.activeTargets.join(", ")}${parsed.global ? " (global scope)" : ""}`,
+      );
     }
     return { ok: true };
   } catch (error) {
@@ -601,7 +743,8 @@ function emitDryRunPreview(name: string, diagnostics: unknown[]): void {
   }
 }
 
-function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): void {
+function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): Set<string> {
+  const emitted = new Set<string>();
   for (const d of diagnostics) {
     if (!d || typeof d !== "object") continue;
     const rec = d as Record<string, unknown>;
@@ -609,10 +752,13 @@ function emitPolicyDiagnostics(name: string, diagnostics: unknown[]): void {
     const message = typeof rec.message === "string" ? rec.message : "";
     if (!/policy|enforcement|violat|denied/i.test(`${code}\n${message}`)) continue;
     console.error(`${name}: policy warning: ${message || code}`);
+    emitted.add(message || code);
   }
+  return emitted;
 }
 
-function emitTrustDiagnostics(name: string, diagnostics: unknown[]): void {
+function emitTrustDiagnostics(name: string, diagnostics: unknown[]): Set<string> {
+  const emitted = new Set<string>();
   for (const d of diagnostics) {
     if (!d || typeof d !== "object") continue;
     const rec = d as Record<string, unknown>;
@@ -620,5 +766,45 @@ function emitTrustDiagnostics(name: string, diagnostics: unknown[]): void {
     const message = typeof rec.message === "string" ? rec.message : "";
     if (!/withhold|unapproved|mcp_trust|trust/i.test(`${code}\n${message}`)) continue;
     console.error(`${name}: ${message || code}`);
+    emitted.add(message || code);
   }
+  return emitted;
+}
+
+/**
+ * Surface adapter/selection diagnostics that are warnings even when they do not
+ * match the policy/trust message filters — skipped primitives, opt-in MCP
+ * directory skips, and target allow-list filtering. Dedupe against the policy
+ * and trust emitters so one diagnostic never prints twice.
+ */
+function emitDiagnosticWarnings(
+  name: string,
+  diagnostics: unknown[],
+  policyEmitted: Set<string>,
+  trustEmitted: Set<string>,
+): void {
+  const emitted = new Set<string>([...policyEmitted, ...trustEmitted]);
+  for (const d of diagnostics) {
+    if (!d || typeof d !== "object") continue;
+    const rec = d as Record<string, unknown>;
+    const code = typeof rec.code === "string" ? rec.code : "";
+    const message = typeof rec.message === "string" ? rec.message : "";
+    const text = message || code;
+    if (!text || emitted.has(text)) continue;
+    if (!isWarningDiagnostic(rec, code)) continue;
+    emitted.add(text);
+    console.error(`${name}: warning: ${text}`);
+  }
+}
+
+function isWarningDiagnostic(rec: Record<string, unknown>, code: string): boolean {
+  if (rec.warn === true) return true;
+  const normalized = code.toUpperCase();
+  if (!normalized) return false;
+  return (
+    /_UNSUPPORTED(?:$|_)/.test(normalized) ||
+    /MCP_DIR_/.test(normalized) ||
+    /_MCP_SKIP_NO_.*_DIR$/.test(normalized) ||
+    /_SKIP_/.test(normalized)
+  );
 }

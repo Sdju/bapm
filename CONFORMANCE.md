@@ -28,7 +28,7 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 |-------|-------:|--------:|----:|
 | Producer | 12 | 0 | 0 |
 | Consumer | 73 | 9 | 0 |
-| Governance | 17 | 0 | 1 |
+| Governance | 18 | 0 | 0 |
 | Registry | 0 | 0 | 1 |
 
 ## Limitations / non-conformance
@@ -37,20 +37,21 @@ A requirement marked `status=n/a` is outside the claimed class surface.
 - Registry host / rg-001 not claimed (N/A)
 - Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names
 - Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes
-- ADO / multi-candidate policy cascades are out of scope
-- Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) remains soft; bin is gated via ExecutableTrust (type bin) plus install --trust-bin / --no-trust-bin consent; hooks/canvas executable gates remain soft (ungated relative to the MCP trust surface)
+- compile defaults to one host file per invocation; opt-in --distributed places instructions by the literal applyTo directory prefix without APM context-optimizer scoring or inheritance
+- bapm.local.yml and the local: dependency source are bapm-only extensions, absent from APM and OpenAPM
+- Registry client is opt-in behind BAPM_EXPERIMENTAL_REGISTRIES=1; bapm does not claim the OpenAPM registry-host role
+- Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) remains soft; dependency bin is gated via ExecutableTrust (type bin) plus install --trust-bin / --no-trust-bin consent; dependency hooks are gated via ExecutableTrust (type hook) when a project/user grant surface or org executables.deny/deny_all is active, and keep the legacy soft (ungated) deploy only when no grant surface exists; LSP entries under dependencies.lsp deploy to Claude Code and Copilot CLI through ExecutableTrust (type lsp) and host-native configs, while hosts without LSP support emit an LSP_UNSUPPORTED warning naming the package and servers; canvas has no primitive/materialize path, remains unimplemented/soft, and a manifest canvas key or canvas primitive emits CANVAS_UNSUPPORTED instead of being silently dropped
 - Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
-- Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)
+- Default discovery providers: local, github-owner-dotgithub (.github-private → .github → .apm → _apm), azure-devops-org-policy (apm/apm-policy → _apm/_apm)
 - P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install
 
 ### Scope out
 
 - multi-target
 - registry host
-- full ADO cascade
 - residual Auth depth (gh CLI / az bearer / credential-helper / try_with_fallback)
 - soft §10 tar.gz-only container (zip + caps shipped)
-- hooks/canvas executable gates (soft / ungated; bin gated via ExecutableTrust + trust-bin consent)
+- hooks are soft only without a grant surface (gated via ExecutableTrust type hook when a project/user surface or org deny is active); canvas executable gates remain unimplemented/soft (no primitive path, explicit CANVAS_UNSUPPORTED diagnostic); LSP deploys to Claude Code and Copilot CLI through ExecutableTrust type lsp and host-native configs, with explicit LSP_UNSUPPORTED on hosts without LSP support; bin gated via ExecutableTrust + trust-bin consent
 - full Python Mode B port
 
 ## Repository case rules
@@ -129,13 +130,13 @@ entries byte-exactly (fold at match time only).
 | req-pl-008 | MUST | 6.3.1 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-009 | MUST | 6.6 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-010 | MUST | 6.2 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
-| req-pl-011 | MUST | 6.1.1 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts · tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml |
-| req-pl-012 | MUST | 6.1.1 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts · tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml |
+| req-pl-011 | MUST | 6.1.1 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts; packages/cli/tests/policy/remote-fetch.test.ts · tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml |
+| req-pl-012 | MUST | 6.1.1 | governance | active | packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/cli/tests/policy/remote-fetch.test.ts · tests/fixtures/spec-conformance/policy/valid-extends.yml; tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml |
 | req-pl-013 | MUST | 6.8 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/policy/security-integrity.yml |
 | req-pl-014 | MUST | 6.8 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts; packages/core/tests/spec-conformance/seed-oracles.test.ts · tests/fixtures/spec-conformance/policy/security-integrity.yml |
 | req-pl-015 | MUST | 6.3.5 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
 | req-pl-016 | MUST | 6.8 | governance | active | packages/core/tests/policy/parse.test.ts; packages/core/tests/policy/discovery.test.ts; packages/core/tests/policy/evaluate.test.ts; packages/core/tests/policy/install-gate.test.ts |
-| req-pl-017 | MUST | 6.3 | governance | n/a |  — ADO org-policy discovery / multi-candidate cascades are out of scope (see scope_out) |
+| req-pl-017 | MUST | 6.3 | governance | active | packages/core/tests/policy/provider-cascade.test.ts; packages/core/tests/policy/remote-discovery.test.ts — GitHub multi-candidate and Azure DevOps org-policy discovery are implemented via ordered providers with injected HTTP fetchers. |
 | req-pl-018 | MUST | 6.5 | governance | active | packages/core/tests/policy/identity-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/evaluate-casing.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/gate-fail-closed.test.ts; packages/core/tests/acceptance/policy-canonical-identity-casing/merge-byte-exact.test.ts |
 | req-pr-001 | MUST | 8.2 | consumer | active | packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts |
 | req-pr-002 | MUST | 8.3 | consumer | active | packages/core/tests/primitives/primitives.test.ts; packages/core/tests/install/install-pipeline.test.ts |
@@ -185,7 +186,6 @@ entries byte-exactly (fold at match time only).
 
 ## Waivers
 
-- **req-pl-017** (n/a): ADO org-policy discovery / multi-candidate cascades are out of scope (see scope_out)
 - **req-rg-001** (n/a): Registry host not shipped; class N/A (no rg-001 claim)
 - **req-sc-004** (skipped): Soft: registry/pack archives remain zip with default 10k-entry / 100MB uncompressed caps enforced; OpenAPM tar.gz-only / reject-zip container format still soft debt (not claimed)
 - **req-tg-002** (skipped): OpenAPM §8.5 per-target layout not verified: each host ships its own @b-apm/integration-* layout without §8.5 conformance fixtures

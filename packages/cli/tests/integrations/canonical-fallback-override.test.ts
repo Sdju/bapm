@@ -47,7 +47,7 @@ describe("CLI integrations · map override + canonical fallback + custom map-onl
     expect(registry.get("x-custom-unmapped")).toBeUndefined();
   });
 
-  test("map entry overrides canonical cursor; unmapped claude still loads via canonical fallback", async () => {
+  test("map entry overrides canonical cursor; unmapped claude registers but install is narrowed out", async () => {
     project = createTempProject();
     linkCursorIntegration(project.cwd);
     linkClaudeIntegration(project.cwd);
@@ -74,10 +74,13 @@ describe("CLI integrations · map override + canonical fallback + custom map-onl
     // Canonical cursor layout skills must not be the only proof — override marker is authoritative.
     expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(false);
 
+    // Registry canonical fallback resolves claude, but the root `targets` map is an
+    // allowlist: installing a host outside it must fail loudly, not silently no-op.
     const claudeInstall = await runInProject(project.cwd, ["install", "--target", "claude"]);
     expectKnownFlags(claudeInstall.combined);
     expect(claudeInstall.combined).not.toMatch(/unknown or unregistered target:\s*claude/i);
-    expect(claudeInstall.result).toBe(0);
+    expect(claudeInstall.result).not.toBe(0);
+    expect(claudeInstall.combined).toMatch(/targets|intersection|declared/i);
   });
 
   test("custom host id only via map — without map entry stays unregistered / fail-closed", async () => {

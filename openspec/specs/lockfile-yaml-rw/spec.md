@@ -96,6 +96,20 @@ On serialize, dependency entries MUST be ordered lexicographically by `(repo_url
 - **WHEN** two lockfiles differ only in `generated_at` and/or `apm_version`
 - **THEN** semantic equivalence MUST report them equivalent
 
+### Requirement: Dependency extensions map round-trips
+
+A lock dependency row MAY carry an `extensions` mapping containing vendor extension fields copied from the dependency manifest (APM req-ext-003 wire). On read, a mapping-valued `extensions` MUST be retained with string keys and declaration order; non-mapping or empty values MUST NOT raise and MUST be omitted on write. On write, a non-empty `extensions` map MUST be emitted and the field MUST be omitted when empty so extension-free locks stay byte-identical. Values MUST NOT be interpreted.
+
+#### Scenario: Extensions round-trip
+
+- **WHEN** a lock row carries `extensions: { x-acme-owner: platform }`
+- **THEN** load→serialize MUST retain `extensions` and its values
+
+#### Scenario: Empty extensions omitted
+
+- **WHEN** a lock row has an empty or non-mapping `extensions` value
+- **THEN** parse MUST NOT fail and serialize MUST omit the field
+
 ### Requirement: Omit unset fields and preserve unknowns on round-trip
 
 Serialize MUST omit unset/empty optional fields and MUST NOT emit `null` placeholders for absent keys (req-lk-011). Unknown fields at top-level and per-entry, including APM-only blocks such as `deployments` and `lsp_*` when not first-class modeled, MUST be preserved on load→serialize round-trip. Top-level and per-entry `x-*` keys MUST be preserved (req-lk-014).

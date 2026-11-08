@@ -1,6 +1,6 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { APM_MODULES_DIR } from "@/modules/Resolver";
+import { APM_MODULES_DIR, localFileInfo } from "@/modules/Resolver";
 import type {
   AttributedPrimitive,
   DiscoverPrimitivesOptions,
@@ -30,8 +30,21 @@ export function discoverPrimitives(options: DiscoverPrimitivesOptions = {}): Att
         : []
       : uniquePackageRoots(cwd, options.packageRoots);
   for (const pkg of packageRoots) {
-    const name = readPackageName(pkg) ?? basename(pkg);
+    const fileInfo = statRegularFile(pkg) ? localFileInfo(pkg) : undefined;
+    const name = fileInfo ? basename(pkg) : (readPackageName(pkg) ?? basename(pkg));
     const source: PrimitiveSource = `dependency:${name}`;
+    if (fileInfo) {
+      found.push(
+        makePrimitive({
+          name: fileInfo.name,
+          type: fileInfo.type,
+          source,
+          path: pkg,
+          packageName: name,
+        }),
+      );
+      continue;
+    }
     scanPackageRoot(pkg, source, name, found);
   }
 
@@ -46,7 +59,8 @@ function uniquePackageRoots(cwd: string, roots: string[]): string[] {
     const abs = resolve(cwd, root);
     if (seen.has(abs)) continue;
     try {
-      if (!statSync(abs).isDirectory()) continue;
+      const stats = lstatSync(abs);
+      if (!stats.isDirectory() && !(stats.isFile() && localFileInfo(abs))) continue;
     } catch {
       continue;
     }
@@ -256,6 +270,14 @@ function hasManifest(dir: string): boolean {
   return MANIFEST_NAMES.some((f) => existsSync(join(dir, f)));
 }
 
+function statRegularFile(path: string): boolean {
+  try {
+    return lstatSync(path).isFile();
+  } catch {
+    return false;
+  }
+}
+
 function readPackageName(pkgRoot: string): string | undefined {
   for (const file of MANIFEST_NAMES) {
     const p = join(pkgRoot, file);
@@ -291,9 +313,24 @@ function inferName(filePath: string, type: PrimitiveType): string {
   }
   const file = basename(filePath);
   if (/\.prompt\.md$/i.test(file)) return promptStem(file);
+  const typedName = nameFromTypedSuffix(file, type);
+  if (typedName) return typedName;
   const base = file.replace(/\.(md|mdc|yml|yaml|json)$/i, "");
   if (base && base !== type) return base;
   return basename(dirname(filePath));
+}
+
+/** APM primitive suffixes: `foo.agent.md` → `foo`, not `foo.agent`. */
+function nameFromTypedSuffix(file: string, type: PrimitiveType): string | undefined {
+  const suffixes: Array<[PrimitiveType, RegExp]> = [
+    ["agent", /\.agent\.md$/i],
+    ["instruction", /\.instructions\.md$/i],
+    ["command", /\.prompt\.md$/i],
+  ];
+  for (const [expected, pattern] of suffixes) {
+    if (expected === type && pattern.test(file)) return file.replace(pattern, "");
+  }
+  return undefined;
 }
 
 /** Stem of `name.prompt.md` → `name` (APM command naming). */

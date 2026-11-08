@@ -3,16 +3,33 @@ export interface PackDeps {
   runPack: (options: {
     cwd?: string;
     agentPlugins?: boolean;
+    format?: string;
     archive?: boolean;
     dryRun?: boolean;
     checkRelease?: boolean;
     checkVersions?: boolean;
+    checkClean?: boolean;
+    strictMetadata?: boolean;
     tag?: string;
     marketplace?: string | string[];
     marketplacePaths?: Record<string, string> | string[];
     offline?: boolean;
     includePrerelease?: boolean;
-  }) => Promise<{ archivePath?: string; ok?: boolean; marketplaceWritten?: boolean }>;
+  }) => Promise<{
+    archivePath?: string;
+    ok?: boolean;
+    marketplaceWritten?: boolean;
+    checkClean?: {
+      ok: boolean;
+      skipped: boolean;
+      outputs: Array<{
+        format: string;
+        path: string;
+        status: string;
+        differences: Array<{ path: string; old: unknown; new: unknown }>;
+      }>;
+    };
+  }>;
   checkReleaseTag: (options: {
     cwd?: string;
     tag?: string;

@@ -15,6 +15,7 @@ import {
   copyHookScript,
   materializeSkill,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
@@ -53,6 +54,7 @@ export function createWindsurfIntegration(options?: {
   return {
     id,
     deployRoots,
+    mcpScope: "home",
     detect: ({ cwd }) => {
       const dir = join(cwd, ".windsurf");
       return existsSync(dir) && statSync(dir).isDirectory();
@@ -132,6 +134,7 @@ export function createWindsurfIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -179,6 +182,7 @@ function writeWindsurfMcpConfig(
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
   const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
 
   for (const [name, entry] of Object.entries(incoming)) {
     const prior = existingServers[name];

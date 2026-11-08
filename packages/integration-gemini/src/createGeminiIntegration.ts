@@ -18,6 +18,7 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   renderPrimitivesMarkdown,
@@ -159,6 +160,7 @@ export function createGeminiIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -241,7 +243,10 @@ function writeGeminiMcpConfig(
         {
           code: "GEMINI_MCP_SKIP_NO_GEMINI_DIR",
           message:
-            "Skipping project MCP write: .gemini/ directory is absent (Gemini project-scope MCP is opt-in)",
+            "Skipping project MCP write for gemini: .gemini/ directory is absent (Gemini project-scope MCP is opt-in; create .gemini/ and re-run install)",
+          target: ctx.targetId,
+          dir: ".gemini/",
+          warn: true,
         },
       ],
     };
@@ -264,6 +269,7 @@ function writeGeminiMcpConfig(
   const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
 
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
   for (const [name, entry] of Object.entries(incoming)) {
     nextServers[name] = { ...entry };
     writtenNames.push(name);

@@ -42,6 +42,60 @@ describe("CLI approve/deny user-local (sc-010)", () => {
     expect(readText(ymlPath)).not.toMatch(/mcp-dep/);
   });
 
+  test("approve --hook persists a hook grant in the user store", async () => {
+    env = createIsolatedHome();
+    const ymlPath = writeMinimalProject(env.cwd);
+    const before = readText(ymlPath);
+
+    const { result, combined } = await runInEnv(env, ["approve", "hook-dep", "--hook"]);
+    expect(result, `approve --hook should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    const entry = cfg.executables?.allow?.["hook-dep"] as Record<string, unknown> | undefined;
+    expect(entry?.hook, "hook grant must persist under executables.allow.<pkg>.hook").toBe(true);
+    expect(entry?.mcp).toBeUndefined();
+    expect(readText(ymlPath)).toBe(before);
+  });
+
+  test("approve --bin persists a bin grant (persistent bin consent)", async () => {
+    env = createIsolatedHome();
+    const ymlPath = writeMinimalProject(env.cwd);
+    const before = readText(ymlPath);
+
+    const { result, combined } = await runInEnv(env, ["approve", "bin-dep", "--bin"]);
+    expect(result, `approve --bin should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    expect(cfg.executables?.allow?.["bin-dep"]).toMatchObject({ bin: true });
+    expect(cfg.executables?.allow?.["bin-dep"]).not.toMatchObject({ mcp: true });
+    expect(readText(ymlPath)).toBe(before);
+  });
+
+  test("approve --lsp persists an lsp grant", async () => {
+    env = createIsolatedHome();
+    const ymlPath = writeMinimalProject(env.cwd);
+    const before = readText(ymlPath);
+
+    const { result, combined } = await runInEnv(env, ["approve", "lsp-dep", "--lsp"]);
+    expect(result, `approve --lsp should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    expect(cfg.executables?.allow?.["lsp-dep"]).toMatchObject({ lsp: true });
+    expect(cfg.executables?.allow?.["lsp-dep"]).not.toMatchObject({ mcp: true });
+    expect(readText(ymlPath)).toBe(before);
+  });
+
+  test("approve without a type flag still persists mcp (compatibility)", async () => {
+    env = createIsolatedHome();
+    writeMinimalProject(env.cwd);
+
+    const { result } = await runInEnv(env, ["approve", "mcp-compat"]);
+    expect(result).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    expect(cfg.executables?.allow?.["mcp-compat"]).toMatchObject({ mcp: true });
+  });
+
   test("deny persists to user store and does not write project bapm.yml", async () => {
     env = createIsolatedHome();
     const ymlPath = writeMinimalProject(env.cwd);
@@ -57,5 +111,27 @@ describe("CLI approve/deny user-local (sc-010)", () => {
     const cfg = readUserConfig(env.home);
     expect(cfg.executables?.deny?.["mcp-dep"]).toBeTruthy();
     expect(readText(ymlPath)).toBe(before);
+  });
+
+  test("deny --bin persists a bin deny grant", async () => {
+    env = createIsolatedHome();
+    writeMinimalProject(env.cwd);
+
+    const { result, combined } = await runInEnv(env, ["deny", "bin-dep", "--bin"]);
+    expect(result, `deny --bin should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    expect(cfg.executables?.deny?.["bin-dep"]).toMatchObject({ bin: true });
+  });
+
+  test("deny --lsp persists an lsp deny grant", async () => {
+    env = createIsolatedHome();
+    writeMinimalProject(env.cwd);
+
+    const { result, combined } = await runInEnv(env, ["deny", "lsp-dep", "--lsp"]);
+    expect(result, `deny --lsp should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    expect(cfg.executables?.deny?.["lsp-dep"]).toMatchObject({ lsp: true });
   });
 });

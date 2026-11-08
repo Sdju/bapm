@@ -17,6 +17,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect } from "vite-plus/test";
 import { runCli } from "../../src/index.ts";
+import { withIsolatedModuleResolution } from "../isolation.ts";
 
 export type TempProject = { cwd: string; root: string; cleanup: () => void };
 
@@ -52,6 +53,10 @@ export function linkClaudeIntegration(projectCwd: string): string {
 
 export function linkCodexIntegration(projectCwd: string): string {
   return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-codex"));
+}
+
+export function linkCopilotIntegration(projectCwd: string): string {
+  return linkPackageDir(projectCwd, join(PACKAGES_ROOT, "integration-copilot"));
 }
 
 export async function withCapturedIo<T>(
@@ -90,7 +95,9 @@ export async function runInProject(
   cwd: string,
   argv: string[],
 ): Promise<{ result: number; stdout: string[]; stderr: string[]; combined: string }> {
-  const { result, stdout, stderr } = await withCwd(cwd, () => withCapturedIo(() => runCli(argv)));
+  const { result, stdout, stderr } = await withCwd(cwd, () =>
+    withCapturedIo(() => withIsolatedModuleResolution(() => runCli(argv))),
+  );
   return {
     result,
     stdout,
@@ -134,6 +141,10 @@ export function codexMarketplacePath(cwd: string): string {
   return join(cwd, ".agents", "plugins", "marketplace.json");
 }
 
+export function copilotMarketplacePath(cwd: string): string {
+  return join(cwd, ".github", "plugin", "marketplace.json");
+}
+
 export function hasClaudeMarketplaceJson(cwd: string): boolean {
   return existsSync(claudeMarketplacePath(cwd));
 }
@@ -142,8 +153,14 @@ export function hasCodexMarketplaceJson(cwd: string): boolean {
   return existsSync(codexMarketplacePath(cwd));
 }
 
+export function hasCopilotMarketplaceJson(cwd: string): boolean {
+  return existsSync(copilotMarketplacePath(cwd));
+}
+
 export function hasAnyHostMarketplaceJson(cwd: string): boolean {
-  return hasClaudeMarketplaceJson(cwd) || hasCodexMarketplaceJson(cwd);
+  return (
+    hasClaudeMarketplaceJson(cwd) || hasCodexMarketplaceJson(cwd) || hasCopilotMarketplaceJson(cwd)
+  );
 }
 
 /** Conforming dual-read manifest (packable M7 tree). */
@@ -224,6 +241,39 @@ export function writeCodexLocalAuthoring(
     ]
       .filter((line) => line !== "")
       .join("\n"),
+  );
+  writeText(cwd, "plugins/demo/README.md", "# demo\n");
+}
+
+/** Authoring with Copilot output; name is intentionally not kebab-case. */
+export function writeCopilotLocalAuthoring(
+  cwd: string,
+  opts?: { name?: string; linkIntegration?: boolean },
+): void {
+  if (opts?.linkIntegration !== false) {
+    linkCopilotIntegration(cwd);
+  }
+  const name = opts?.name ?? "Copilot.Marketplace";
+  writeText(
+    cwd,
+    "bapm.yml",
+    [
+      `name: ${name}`,
+      `version: "0.3.0"`,
+      `description: Copilot marketplace pack fixture`,
+      `marketplace:`,
+      `  owner:`,
+      `    name: acme-org`,
+      `    email: dev@example.com`,
+      `  outputs:`,
+      `    copilot: true`,
+      `  packages:`,
+      `    - name: demo`,
+      `      source: ./plugins/demo`,
+      `      description: Demo plugin`,
+      `      version: "1.0.0"`,
+      ``,
+    ].join("\n"),
   );
   writeText(cwd, "plugins/demo/README.md", "# demo\n");
 }

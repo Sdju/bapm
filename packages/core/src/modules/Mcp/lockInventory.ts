@@ -51,31 +51,46 @@ export function applyMcpInventoryToLock(options: ApplyMcpInventoryOptions): Lock
 
   const targetId = typeof options.targetId === "string" ? options.targetId.trim() : "";
   const configPath = typeof options.configPath === "string" ? options.configPath.trim() : "";
-  const targetConfigured = targetId !== "" && configPath !== "";
+  const configuredTargets: Array<{ targetId: string; configPath: string }> = [];
+  if (targetId !== "" && configPath !== "") {
+    configuredTargets.push({ targetId, configPath });
+  }
+  for (const target of options.targets ?? []) {
+    const id = typeof target.targetId === "string" ? target.targetId.trim() : "";
+    const path = typeof target.configPath === "string" ? target.configPath.trim() : "";
+    if (id === "" || path === "") continue;
+    if (configuredTargets.some((existing) => existing.targetId === id)) continue;
+    configuredTargets.push({ targetId: id, configPath: path });
+  }
+  const targetConfigured = configuredTargets.length > 0;
 
   if (targetConfigured) {
     const configs = new Map<string, unknown>(Object.entries(asRecord(doc.mcp_configs)));
-    configs.set(targetId, {
-      path: configPath,
-      // Fresh array — shared refs cause YAML anchors rejected by safe-subset load.
-      servers: [...names],
-    });
-    doc.mcp_configs = Object.fromEntries(configs);
-
     const targetServers = new Map<string, unknown>(
       Object.entries(asRecord(doc.mcp_target_servers)),
     );
-    targetServers.set(targetId, [...names]);
+    for (const target of configuredTargets) {
+      configs.set(target.targetId, {
+        path: target.configPath,
+        // Fresh array — shared refs cause YAML anchors rejected by safe-subset load.
+        servers: [...names],
+      });
+      targetServers.set(target.targetId, [...names]);
+    }
+    doc.mcp_configs = Object.fromEntries(configs);
     doc.mcp_target_servers = Object.fromEntries(targetServers);
   }
 
   const provenance = new Map<string, unknown>(Object.entries(asRecord(doc.mcp_config_provenance)));
   if (targetConfigured) {
+    // Provenance records a single path per server; with multiple targets the
+    // last configured one wins, matching the historical single-target field.
+    const lastConfigPath = configuredTargets[configuredTargets.length - 1]!.configPath;
     for (const s of servers) {
       if (!s.name) continue;
       provenance.set(s.name, {
         package: s.packageName,
-        path: configPath,
+        path: lastConfigPath,
       });
     }
   }

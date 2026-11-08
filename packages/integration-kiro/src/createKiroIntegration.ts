@@ -17,6 +17,7 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
@@ -98,7 +99,8 @@ export function createKiroIntegration(options?: {
       const content = renderPrimitivesMarkdown({
         primitives: primitivesList(primitives),
         title: "# AGENTS.md",
-        filter: (p) => !/instruction/i.test(String(p.type ?? "")),
+        filter: (p) =>
+          context.includeInstructions === true || !/instruction/i.test(String(p.type ?? "")),
       });
       return compileMarkdownReport({
         cwd: context.cwd,
@@ -203,6 +205,7 @@ export function createKiroIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -224,7 +227,10 @@ function writeKiroMcpConfig(
         {
           code: "KIRO_MCP_SKIP_NO_KIRO_DIR",
           message:
-            "Skipping project MCP write: .kiro/ directory is absent (Kiro project-scope MCP is opt-in)",
+            "Skipping project MCP write for kiro: .kiro/ directory is absent (Kiro project-scope MCP is opt-in; create .kiro/ and re-run install)",
+          target: ctx.targetId,
+          dir: ".kiro/",
+          warn: true,
         },
       ],
     };
@@ -243,6 +249,7 @@ function writeKiroMcpConfig(
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
   const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
 
   for (const [name, entry] of Object.entries(incoming)) {
     const prior = existingServers[name];

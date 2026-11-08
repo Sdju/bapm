@@ -17,6 +17,7 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
@@ -59,7 +60,8 @@ export function createAntigravityIntegration(options?: {
       const content = renderPrimitivesMarkdown({
         primitives: primitivesList(primitives),
         title: "# AGENTS.md",
-        filter: (p) => !/instruction/i.test(String(p.type ?? "")),
+        filter: (p) =>
+          context.includeInstructions === true || !/instruction/i.test(String(p.type ?? "")),
       });
       return compileMarkdownReport({
         cwd: context.cwd,
@@ -144,6 +146,7 @@ export function createAntigravityIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -241,7 +244,10 @@ function writeAntigravityMcpConfig(
         {
           code: "ANTIGRAVITY_MCP_SKIP_NO_AGENTS_DIR",
           message:
-            "Skipping project MCP write: .agents/ directory is absent (Antigravity project-scope MCP is opt-in)",
+            "Skipping project MCP write for antigravity: .agents/ directory is absent (Antigravity project-scope MCP is opt-in; create .agents/ and re-run install)",
+          target: ctx.targetId,
+          dir: ".agents/",
+          warn: true,
         },
       ],
     };
@@ -264,6 +270,7 @@ function writeAntigravityMcpConfig(
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
   const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
   for (const [name, entry] of Object.entries(incoming)) {
     nextServers[name] = { ...entry };
     writtenNames.push(name);

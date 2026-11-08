@@ -53,6 +53,46 @@ After expanding `local` to an effective path, the system MUST classify and resol
 - **WHEN** a dependency uses only `path: ./pkgs/a` (no `local` key)
 - **THEN** parse, classify, and resolve MUST behave as before this capability (no new gitignore ensure obligation for plain `path:`)
 
+### Requirement: Local single-file dependencies are virtual packages
+
+When a local `path:` (or bapm `local:`) references a regular file whose name ends with `.agent.md`, `.instructions.md`, or `.prompt.md`, the system MUST resolve it as a `kind: local` virtual-file package without requiring a package directory or manifest. The suffix MUST select the primitive type and snapshot subdirectory: `.agent.md` → `agent`/`.apm/agents`, `.instructions.md` → `instruction`/`.apm/instructions`, `.prompt.md` → `command`/`.apm/prompts`. The package name MUST be the source filename (including the suffix), matching APM local virtual-package identity.
+
+Materialization MUST copy only the selected file into a snapshot package at `<modules>/…/.apm/<subdirectory>/<filename>` with a generated `apm.yml`, and target deployment MUST use the existing primitive/materializer helpers rather than inventing per-host layouts. The lock row MUST use the normal local wire fields (`repo_url: local:<project-rel>`, `source: local`, `path`, `local_path`, `package_type: local`, `content_hash`). The recorded `content_hash` MUST cover the virtual-file snapshot content and MUST change when the source file changes.
+
+#### Scenario: Each supported suffix resolves
+
+- **WHEN** a dependency declares `path: ./ai/scout.agent.md`, `path: ./ai/style.instructions.md`, or `path: ./ai/review.prompt.md`
+- **THEN** resolve MUST create a local virtual-file package for each with the corresponding primitive type and lock row fields
+
+#### Scenario: Snapshot materializes one file
+
+- **WHEN** install materializes a local single-file dependency
+- **THEN** the modules snapshot MUST contain the file under the suffix-selected `.apm/<subdirectory>/` path plus a generated manifest, and no companion files from the source directory
+
+#### Scenario: Frozen replays the snapshot hash
+
+- **WHEN** `--frozen` resolves a local single-file dependency whose source file content matches the recorded `content_hash`
+- **THEN** install MUST pass; when the file changes, the system MUST fail with `INSTALL_FROZEN_UNDER_RECORDED` before host writes
+
+### Requirement: Local single-file admission fails closed
+
+A local single-file dependency MUST fail closed when the path is a symlink, the file suffix is not one of the three supported suffixes, the file is not a regular file, the content is not UTF-8 Markdown, or the YAML frontmatter is missing or malformed. The system MUST NOT write a lock entry or deploy primitives for a rejected file.
+
+#### Scenario: Symlink rejected
+
+- **WHEN** `path:` names a symlink whose target is a supported primitive file
+- **THEN** resolution MUST fail with a local-file symlink diagnostic
+
+#### Scenario: Unknown suffix rejected
+
+- **WHEN** `path:` names a regular file such as `notes.md` without a supported suffix
+- **THEN** resolution MUST fail with an unsupported single-file diagnostic
+
+#### Scenario: Missing or malformed frontmatter rejected
+
+- **WHEN** a supported single-file path has no leading `---` frontmatter block or has invalid YAML frontmatter
+- **THEN** resolution MUST fail with an invalid-frontmatter diagnostic
+
 ### Requirement: Ensure effective local root is not git-tracked
 
 Before durable resolve/install success that consumes a `local` source, the system MUST ensure the effective local root directory is ignored by git for the project. When a project `.gitignore` (or equivalent documented ignore file the tool manages) lacks a pattern covering that root, the system MUST append a covering ignore rule. When the project is a git work tree and git already indexes one or more paths under the effective local root, the system MUST fail closed with actionable guidance (including untracking via `git rm --cached` and confirming the ignore rule) and MUST NOT report successful install/resolve for that operation.
@@ -104,6 +144,32 @@ When resolve/install/lock succeeds for a graph that includes at least one depend
 
 - **WHEN** the manifest declares only `path: ./pkgs/a` and resolve succeeds
 - **THEN** the pin MUST land in the shared lockfile and `bapm.local.lock.yaml` MUST NOT be required
+
+### Requirement: Local lock rows use APM-compatible wire fields
+
+When resolve/install/lock writes a lock row for a `kind: local` node, the row MUST retain bapm's backward-compatible identity aliases (`repo_url` in `local:<project-rel>` form and `path` as a project-relative POSIX path) AND ALSO emit the APM v0.35 local wire fields: `local_path`, `declaring_parent`, `content_hash`, `depth`, `resolved_by`, and `package_type: local`. `local_path` MUST equal the project-relative `path` for direct dependencies and SHOULD be relative to the declaring package for transitive local dependencies. `content_hash` MUST be a `sha256:<hex>` envelope over the local package content tree. `is_dev` MUST be emitted only when a reliable prior lock value exists.
+
+When loading a lock that uses APM local identity (`repo_url: _local/<name>`) and/or only `local_path`, the system MUST recognize the row as local (even when `source` is absent), MUST match it to the current local node by `local_path` and/or name for lock rewrite and pin-presence checks, and MUST NOT drop or reclassify it as a git dependency. On rewrite bapm MAY keep writing its own `repo_url: local:<rel>` identity until a full identity switch is supported.
+
+#### Scenario: bapm local row is APM-readable
+
+- **WHEN** resolve/lock writes a local package row
+- **THEN** the row MUST contain `local_path`, `declaring_parent`, `content_hash`, `depth`, `resolved_by`, and `package_type: local` in addition to `repo_url`/`path`
+
+#### Scenario: Content hash changes with local content
+
+- **WHEN** files under the local package root change and the lock is regenerated
+- **THEN** the row's `content_hash` MUST change
+
+#### Scenario: APM `_local/<name>` row is read and preserved
+
+- **WHEN** an existing lock contains `repo_url: _local/foo` with `local_path: ./pkgs/foo` for a currently resolved local package
+- **THEN** lock rewrite MUST keep a single row for that package, preserve its deploy hash inventory, and MUST NOT treat it as a git row requiring `tree_sha256`
+
+#### Scenario: Non-local rows are unchanged
+
+- **WHEN** a git or registry lock row is rewritten
+- **THEN** it MUST NOT gain `local_path`, `package_type`, `declaring_parent`, `content_hash`, or `is_dev` solely because local wire support exists
 
 ### Requirement: Ensure personal lockfile is gitignored with local sources
 

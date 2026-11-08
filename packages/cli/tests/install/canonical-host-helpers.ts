@@ -15,6 +15,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runCli } from "../../src/index.ts";
+import { withIsolatedModuleResolution } from "../isolation.ts";
 
 export type TempProject = { cwd: string; cleanup: () => void };
 
@@ -99,7 +100,9 @@ export async function runInProject(
     else process.env[k] = v;
   }
   try {
-    const { result, stdout, stderr } = await withCwd(cwd, () => withCapturedIo(() => runCli(argv)));
+    const { result, stdout, stderr } = await withCwd(cwd, () =>
+      withCapturedIo(() => withIsolatedModuleResolution(() => runCli(argv))),
+    );
     return {
       result,
       stdout,

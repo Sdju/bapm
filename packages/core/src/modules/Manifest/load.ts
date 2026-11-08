@@ -31,13 +31,16 @@ export function loadBaseManifest(options: LoadManifestOptions = {}): LoadManifes
   }
 
   const raw = loadYamlDocument(text, discovered.path);
-  const { document, warnings } = parseManifestDocument(raw);
+  const { document, warnings, contract } = parseManifestDocument(raw, {
+    allowReplace: options.allowReplace,
+  });
 
   return {
     document,
     sourcePath: discovered.path,
     sourceFilename: discovered.filename,
     ...(warnings.length > 0 ? { warnings } : {}),
+    contract,
   };
 }
 
@@ -56,13 +59,16 @@ export function loadEffectiveManifest(options: LoadManifestOptions = {}): LoadMa
     return base;
   }
 
-  const document = mergeLocalOverlay(base.document, local.fields);
+  const document = mergeLocalOverlay(base.document, local.fields, {
+    allowReplace: options.allowReplace,
+  });
   return {
     document,
     sourcePath: base.sourcePath,
     sourceFilename: base.sourceFilename,
     localPath: local.localPath,
     ...(base.warnings !== undefined ? { warnings: base.warnings } : {}),
+    contract: base.contract,
   };
 }
 

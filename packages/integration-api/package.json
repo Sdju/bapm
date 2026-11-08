@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-api",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Shared contracts and registry for bapm host integrations",
   "keywords": [
     "b-apm",

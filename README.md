@@ -57,7 +57,7 @@ npx bapm install
 
 Для Cursor skills окажутся в `.agents/skills/`, rules, агенты и MCP — в `.cursor/`, версии — в `bapm.lock.yaml`. Для другого агента поставьте его интеграцию (`@b-apm/integration-claude`, `-codex`, `-copilot`…) и укажите его id: [поддерживаемые агенты](https://sdju.github.io/bapm/guide/supported-hosts).
 
-`init --target cursor` добавляет в `bapm.yml` блок `targets`: он ограничивает раскладку одним Cursor, поэтому удалите его, если в проекте работают и в других агентах.
+`init --target cursor` записывает активацию в `active` и не создаёт блок `targets`. Поле `targets` добавляют вручную только для своей интеграции; помните, что оно ограничивает раскладку перечисленными агентами.
 
 ## Файлы
 

@@ -8,6 +8,7 @@ export default defineConfig({
       "packages/core/tests/manifest/fixtures/**",
       "packages/core/tests/lockfile/fixtures/**",
       "packages/core/tests/resolve/fixtures/**",
+      "packages/*/src/*.d.ts",
       "CONFORMANCE.md",
       "CONFORMANCE.json",
       "AGENT_PLUGINS_COMPATIBILITY.md",
@@ -20,7 +21,7 @@ export default defineConfig({
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
     options: { typeAware: true, typeCheck: true },
     // Vendored FEOD skill is synced from upstream and must stay byte-identical.
-    ignorePatterns: [".apm/skills/**"],
+    ignorePatterns: [".apm/skills/**", "packages/*/src/*.d.ts"],
   },
   // https://viteplus.dev/guide/commit-hooks
   staged: {

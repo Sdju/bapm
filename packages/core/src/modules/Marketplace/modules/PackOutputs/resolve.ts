@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
+import { parseLsRemoteTagsWithPeel } from "@/common/gitLsRemoteTags.ts";
 import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
 import { classifyMarketplaceHost } from "../../hostClassify.ts";
 import {
@@ -100,8 +101,40 @@ function satisfiesSimpleRange(version: string, range: string): boolean {
   return version === r || version === `v${r}` || `v${version}` === r;
 }
 
-async function defaultLsRemote(repoUrl: string, ref?: string): Promise<LsRemoteResult> {
-  const args = ref ? ["ls-remote", repoUrl, ref] : ["ls-remote", repoUrl, "HEAD"];
+const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
+
+function normalizeTagRef(ref: string): string {
+  return ref.replace(/^refs\/tags\//, "").replace(/\^\{\}$/, "");
+}
+
+/** Explicit peel pattern: `git ls-remote <repo> <tag>` alone never prints `^{}`. */
+function tagPeelPattern(ref: string): string {
+  return `refs/tags/${normalizeTagRef(ref)}^{}`;
+}
+
+type LsRemoteLine = { sha: string; name: string };
+
+function parseLsRemoteLines(output: string): LsRemoteLine[] {
+  const entries: LsRemoteLine[] = [];
+  for (const line of output.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const [sha, name] = trimmed.split(/\s+/);
+    if (!sha || !name || !FULL_COMMIT_SHA.test(sha)) continue;
+    entries.push({ sha: sha.toLowerCase(), name });
+  }
+  return entries;
+}
+
+/**
+ * Peel-aware single-ref ls-remote.
+ * Annotated/signed tags emit the tag object plus a peeled `^{}` commit; the
+ * peeled commit is the APM marketplace `source.sha` fence.
+ */
+export async function defaultLsRemote(repoUrl: string, ref?: string): Promise<LsRemoteResult> {
+  const args = ref
+    ? ["ls-remote", repoUrl, ref, tagPeelPattern(ref)]
+    : ["ls-remote", repoUrl, "HEAD"];
   const env = gitEnvForUrl(repoUrl);
   return new Promise((resolvePromise, reject) => {
     const child = spawn("git", args, { stdio: ["ignore", "pipe", "pipe"], env });
@@ -123,29 +156,41 @@ async function defaultLsRemote(repoUrl: string, ref?: string): Promise<LsRemoteR
         );
         return;
       }
-      const line = stdout.trim().split("\n")[0]!;
-      const [sha, name] = line.split("\t");
-      if (!sha || sha.length < 7) {
-        reject(new Error(`git ls-remote returned no sha for ${repoUrl}`));
+      const entries = parseLsRemoteLines(stdout);
+      if (entries.length === 0) {
+        reject(new Error(`git ls-remote returned no full commit sha for ${repoUrl}`));
         return;
       }
-      let resolvedRef = ref ?? "HEAD";
-      if (name) {
-        resolvedRef = name.replace(/^refs\/(?:heads|tags)\//, "").replace(/\^\{\}$/, "");
-      }
-      resolvePromise({ sha: sha.trim(), ref: resolvedRef });
+      // Prefer the peeled tag commit over the annotated tag object. Only trust a
+      // peel for an actual tag ref: a branch named like a tag must stay a branch.
+      const first = entries[0]!;
+      const chosen = first.name.startsWith("refs/tags/")
+        ? (entries.find((entry) => entry.name === `${first.name}^{}`) ?? first)
+        : first;
+      const resolvedRef = chosen.name.replace(/^refs\/(?:heads|tags)\//, "").replace(/\^\{\}$/, "");
+      resolvePromise({ sha: chosen.sha, ref: resolvedRef });
     });
   });
 }
 
-async function listRemoteTags(lsRemote: LsRemoteFn, repoUrl: string): Promise<Map<string, string>> {
-  // Request all refs; injectable may only support single-ref — fall back empty.
-  try {
-    const result = await lsRemote(repoUrl, "refs/tags/*");
-    // Single-result injectables return one; still usable as one tag.
-    return new Map([[result.ref.replace(/^refs\/tags\//, ""), result.sha]]);
-  } catch {
-    // Try bare ls-remote HEAD listing is not enough; spawn full tags list via default when injectable fails pattern
+/**
+ * List remote tags with annotated/signed tags peeled to their commit.
+ *
+ * A single-ref injectable (tests) may only return one tag; otherwise run
+ * `git ls-remote --tags` without `--refs` so `refs/tags/X^{}` evidence is kept.
+ */
+export async function listRemoteTags(
+  repoUrl: string,
+  injectableLsRemote?: LsRemoteFn,
+): Promise<Map<string, string>> {
+  if (injectableLsRemote) {
+    try {
+      const result = await injectableLsRemote(repoUrl, "refs/tags/*");
+      // Single-result injectables return one; still usable as one tag.
+      return new Map([[normalizeTagRef(result.ref), result.sha]]);
+    } catch {
+      // Injectable cannot list all tags; use the real peel-aware listing below.
+    }
   }
 
   return new Promise((resolvePromise, reject) => {
@@ -172,16 +217,21 @@ async function listRemoteTags(lsRemote: LsRemoteFn, repoUrl: string): Promise<Ma
         return;
       }
       const map = new Map<string, string>();
-      for (const line of stdout.split("\n")) {
-        const [sha, name] = line.trim().split("\t");
-        if (!sha || !name) continue;
-        if (name.endsWith("^{}")) continue;
-        const tag = name.replace(/^refs\/tags\//, "");
-        map.set(tag, sha.trim());
+      for (const { tag, commit } of parseLsRemoteTagsWithPeel(stdout)) {
+        map.set(tag, commit);
       }
       resolvePromise(map);
     });
   });
+}
+
+function assertFullCommitSha(pkg: PackageEntry, sha: string): string {
+  if (!FULL_COMMIT_SHA.test(sha)) {
+    throw new MarketplacePackOutputsError(
+      `Package '${pkg.name}': abbreviated SHA '${sha}' is not allowed; use a full 40-character commit SHA`,
+    );
+  }
+  return sha.toLowerCase();
 }
 
 function loadConfig(options: ResolveMarketplacePackagesOptions): MarketplaceAuthoringConfig {
@@ -199,6 +249,8 @@ async function resolveRemotePackage(
     offline: boolean;
     includePrerelease: boolean;
     lsRemote: LsRemoteFn;
+    /** Raw injectable (tests); undefined means default peel-aware tag listing. */
+    tagListLsRemote?: LsRemoteFn;
   },
 ): Promise<ResolvedPackage> {
   if (options.offline) {
@@ -253,7 +305,7 @@ async function resolveRemotePackage(
       source: pkg.source,
       subdir: pkg.subdir,
       ref: remote.ref || pkg.ref,
-      sha: remote.sha,
+      sha: assertFullCommitSha(pkg, remote.sha),
       requestedVersion: pkg.version,
       tags: pkg.tags ?? [],
       isLocal: false,
@@ -267,7 +319,7 @@ async function resolveRemotePackage(
   }
 
   if (pkg.version) {
-    const tags = await listRemoteTags(options.lsRemote, repoUrl);
+    const tags = await listRemoteTags(repoUrl, options.tagListLsRemote);
     const re = globToRegExp(tagPattern);
     const candidates: {
       tag: string;
@@ -295,7 +347,7 @@ async function resolveRemotePackage(
       source: pkg.source,
       subdir: pkg.subdir,
       ref: best.tag,
-      sha: best.sha,
+      sha: assertFullCommitSha(pkg, best.sha),
       requestedVersion: pkg.version,
       tags: pkg.tags ?? [],
       isLocal: false,
@@ -316,7 +368,7 @@ async function resolveRemotePackage(
     source: pkg.source,
     subdir: pkg.subdir,
     ref: remote.ref,
-    sha: remote.sha,
+    sha: assertFullCommitSha(pkg, remote.sha),
     requestedVersion: undefined,
     tags: pkg.tags ?? [],
     isLocal: false,
@@ -364,7 +416,12 @@ export async function resolveMarketplacePackages(
       continue;
     }
     resolved.push(
-      await resolveRemotePackage(pkg, config, { offline, includePrerelease, lsRemote }),
+      await resolveRemotePackage(pkg, config, {
+        offline,
+        includePrerelease,
+        lsRemote,
+        tagListLsRemote: options.lsRemote,
+      }),
     );
   }
 

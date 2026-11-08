@@ -1,6 +1,7 @@
 /**
- * Cursor install bakes MCP env placeholders before mcp.json write
- * (promoted from mcp-env-bake-time / manifest-env-bake).
+ * Cursor install keeps APM `${VAR}` references as native `${env:VAR}`
+ * placeholders (no secrets in .cursor/mcp.json) and only resolves bapm
+ * `{bake:NAME}` directives at install time.
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync } from "node:fs";
@@ -15,7 +16,7 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-describe("CLI Cursor install MCP env bake", () => {
+describe("CLI Cursor install MCP env translate/bake", () => {
   let project: TempProject | undefined;
   const prevEnv: Record<string, string | undefined> = {};
 
@@ -35,9 +36,9 @@ describe("CLI Cursor install MCP env bake", () => {
     project = undefined;
   });
 
-  test("install --target cursor bakes ${API_TOKEN} into mcp.json literal", async () => {
+  test("install --target cursor keeps ${API_TOKEN} as ${env:API_TOKEN} (no literal)", async () => {
     project = createTempProject();
-    const secret = "cursor-bake-literal-token-9f3a";
+    const secret = "cursor-literal-token-9f3a";
     setEnv("API_TOKEN", secret);
     writeDirectMcpEnvProject(project.cwd, {
       envYaml: `        API_TOKEN: "\${API_TOKEN}"\n`,
@@ -50,12 +51,11 @@ describe("CLI Cursor install MCP env bake", () => {
     const servers = readMcpServers(project.cwd);
     expect(servers).toHaveProperty("bake-stdio-server");
     const entry = servers["bake-stdio-server"] as { env?: Record<string, string> };
-    expect(entry.env?.API_TOKEN).toBe(secret);
-    expect(entry.env?.API_TOKEN).not.toBe("${API_TOKEN}");
-    expect(readMcpJsonRaw(project.cwd)).not.toContain("${API_TOKEN}");
+    expect(entry.env?.API_TOKEN).toBe("${env:API_TOKEN}");
+    expect(readMcpJsonRaw(project.cwd)).not.toContain(secret);
   });
 
-  test("${env:VAR} and legacy <VAR> bake on Cursor install", async () => {
+  test("${env:VAR} and legacy <VAR> become Cursor-native ${env:VAR}", async () => {
     project = createTempProject();
     setEnv("MY_TOKEN", "env-syntax-token");
     setEnv("ANGLE_TOKEN", "angle-syntax-token");
@@ -73,8 +73,10 @@ describe("CLI Cursor install MCP env bake", () => {
     const entry = readMcpServers(project.cwd)["multi-syntax-server"] as {
       env?: Record<string, string>;
     };
-    expect(entry.env?.FROM_ENV).toBe("env-syntax-token");
-    expect(entry.env?.FROM_ANGLE).toBe("angle-syntax-token");
+    expect(entry.env?.FROM_ENV).toBe("${env:MY_TOKEN}");
+    expect(entry.env?.FROM_ANGLE).toBe("${env:ANGLE_TOKEN}");
+    expect(readMcpJsonRaw(project.cwd)).not.toContain("env-syntax-token");
+    expect(readMcpJsonRaw(project.cwd)).not.toContain("angle-syntax-token");
   });
 
   test("plain env without placeholders still writes", async () => {
@@ -94,7 +96,7 @@ describe("CLI Cursor install MCP env bake", () => {
     expect(entry.env?.FOO).toBe("bar");
   });
 
-  test("unresolved ${MISSING_SECRET} aborts before placeholder mcp.json write", async () => {
+  test("unset ${MISSING_SECRET} remains a runtime placeholder instead of aborting", async () => {
     project = createTempProject();
     setEnv("MISSING_SECRET", undefined);
     writeDirectMcpEnvProject(project.cwd, {
@@ -104,37 +106,13 @@ describe("CLI Cursor install MCP env bake", () => {
 
     const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
-    expect(result).not.toBe(0);
-    expect(combined).toMatch(/MISSING_SECRET/);
-
-    const raw = readMcpJsonRaw(project.cwd);
-    if (raw !== undefined) {
-      expect(raw).not.toContain("${MISSING_SECRET}");
-    }
-    // Prefer no durable write at all for this failed install.
-    const servers = readMcpServers(project.cwd);
-    const entry = servers["missing-secret-server"] as { env?: Record<string, string> } | undefined;
-    if (entry?.env) {
-      expect(entry.env.SECRET).not.toBe("${MISSING_SECRET}");
-    }
-  });
-
-  test("baked config stores literals, not Cursor runtime placeholders", async () => {
-    project = createTempProject();
-    const secret = "no-runtime-placeholder-token";
-    setEnv("API_TOKEN", secret);
-    writeDirectMcpEnvProject(project.cwd, {
-      envYaml: `        API_TOKEN: "\${API_TOKEN}"\n`,
-    });
-
-    const { result } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expect(result).toBe(0);
-    expect(existsSync(mcpJsonPath(project.cwd))).toBe(true);
-    const entry = readMcpServers(project.cwd)["bake-stdio-server"] as {
+    expect(combined).not.toMatch(/MISSING_SECRET/);
+
+    const entry = readMcpServers(project.cwd)["missing-secret-server"] as {
       env?: Record<string, string>;
     };
-    expect(entry.env?.API_TOKEN).toBe(secret);
-    expect(JSON.stringify(entry.env)).not.toMatch(/\$\{API_TOKEN\}|\$\{env:API_TOKEN\}/);
+    expect(entry.env?.SECRET).toBe("${env:MISSING_SECRET}");
   });
 
   test("install --target cursor bakes {bake:API_TOKEN} into mcp.json literal", async () => {
@@ -218,7 +196,7 @@ describe("CLI Cursor install MCP env bake", () => {
     expect(readMcpJsonRaw(project.cwd)).not.toContain("{bake:PLUGIN_TOKEN}");
   });
 
-  test("manifest env fills ${PLUGIN_TOKEN} on Cursor install when process unset", async () => {
+  test("manifest env is not baked into a Cursor runtime placeholder", async () => {
     project = createTempProject();
     setEnv("PLUGIN_TOKEN", undefined);
     writeDirectMcpEnvProject(project.cwd, {
@@ -234,11 +212,12 @@ describe("CLI Cursor install MCP env bake", () => {
     const entry = readMcpServers(project.cwd)["apm-fill-server"] as {
       env?: Record<string, string>;
     };
-    expect(entry.env?.TOKEN).toBe("yml-apm-fill");
+    expect(entry.env?.TOKEN).toBe("${env:PLUGIN_TOKEN}");
+    expect(readMcpJsonRaw(project.cwd)).not.toContain("yml-apm-fill");
     expect(existsSync(mcpJsonPath(project.cwd))).toBe(true);
   });
 
-  test("process env wins over manifest env on Cursor install", async () => {
+  test("{bake:} prefers process env over manifest env on Cursor install", async () => {
     project = createTempProject();
     setEnv("API_TOKEN", "from-process");
     writeDirectMcpEnvProject(project.cwd, {
@@ -257,7 +236,7 @@ describe("CLI Cursor install MCP env bake", () => {
     expect(entry.env?.TOKEN).toBe("from-process");
   });
 
-  test("missing in process and manifest aborts before unresolved mcp.json write", async () => {
+  test("missing {bake:} in process and manifest aborts before unresolved mcp.json write", async () => {
     project = createTempProject();
     setEnv("MISSING_SECRET", undefined);
     writeDirectMcpEnvProject(project.cwd, {

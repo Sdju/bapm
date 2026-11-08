@@ -20,6 +20,9 @@ export type {
   RegistryEntry,
   ResolvedActive,
   TargetIntegrationMap,
+  ParseManifestOptions,
+  ParseManifestResult,
+  ManifestContract,
   ManifestErrorCode,
   ManifestWarning,
   WriteManifestOptions,
@@ -34,6 +37,14 @@ export type {
 
 export {
   ManifestError,
+  OPENAPM_V01_SCHEMA_URI,
+  OPENAPM_V0141_SCHEMA_URI,
+  OPENAPM_V0148_SCHEMA_URI,
+  SOURCE_REPLACEMENTS_V1_SCHEMA_URI,
+  SUPPORTED_MANIFEST_SCHEMA_URIS,
+  negotiateManifestContract,
+  collectManifestExtensions,
+  isManifestExtensionKey,
   APM_MANIFEST_FILE,
   BAPM_MANIFEST_FILE,
   BAPM_LOCAL_MANIFEST_FILE,
@@ -57,6 +68,7 @@ export {
   unionPresetDependencies,
   withEffectiveDirectDeps,
   validateManifestEnv,
+  validateManifestScripts,
   loadYamlDocument,
   serializeManifest,
   writeManifest,
@@ -77,9 +89,11 @@ export {
   writePluginJsonFile,
   emitPluginJson,
   CANONICAL_TARGET_TOKENS,
+  TARGET_ALIAS_TO_CANONICAL,
   TARGET_ALIAS_TOKENS,
   VENDOR_TARGET_RE,
   isValidTargetToken,
+  normalizeTargetToken,
   isExemptInsecureHost,
   parseDepSkillSubset,
   parseDepTargetSubset,
@@ -165,6 +179,10 @@ export type {
   TagLister,
   ResolverErrorCode,
   PurgeInstallPathArgs,
+  AdmittedLocalFile,
+  LocalFileInfo,
+  LocalFilePrimitiveType,
+  DefaultDownloaderOptions,
 } from "@/modules/Resolver";
 
 export {
@@ -194,6 +212,11 @@ export {
   collectLocalSourcePaths,
   ensureLocalRootUntracked,
   ensureLocalSourcesUntracked,
+  admitLocalFile,
+  computeLocalSourceContentHash,
+  isLocalSingleFile,
+  localFileInfo,
+  materializeLocalFileSnapshot,
 } from "@/modules/Resolver";
 
 export type {
@@ -420,6 +443,8 @@ export type {
   CheckReleaseTagOptions,
   CheckReleaseTagResult,
   PackErrorCode,
+  StrictMetadataIssue,
+  ValidatePackStrictMetadataOptions,
 } from "@/modules/Pack";
 
 export {
@@ -448,9 +473,13 @@ export {
   collectPackFiles,
   assertProjectHasContent,
   defaultArchiveName,
+  assertPortableAgentPluginPackSet,
+  formatStrictMetadataIssues,
+  validateMarketplaceStrictMetadata,
+  validatePackStrictMetadata,
 } from "@/modules/Pack";
 
-export type { BapmIgnoreRules, PackFileEntry } from "@/modules/Pack";
+export type { BapmIgnoreRules, PackFileEntry, PortablePackValidationInput } from "@/modules/Pack";
 
 export type {
   DiscoverPolicyOptions,
@@ -486,6 +515,7 @@ export {
   defaultPolicyProviders,
   POLICY_PROVIDER_LOCAL,
   POLICY_PROVIDER_GITHUB_OWNER_DOTGITHUB,
+  POLICY_PROVIDER_AZURE_DEVOPS_ORG_POLICY,
   discoverPolicyPath,
   discoverLocalPolicyPath,
   discoverPolicyWithProviders,
@@ -518,6 +548,12 @@ export {
   runPolicyGate,
   assertPolicyGateAllows,
   runPolicyStatus,
+  isAzureDevOpsHost,
+  parseAdoRepoFromRemoteUrl,
+  buildAdoPolicyApiUrl,
+  ADO_POLICY_COORDINATES,
+  ADO_API_HOST,
+  ADO_SSH_HOST,
   redactPolicyRef,
   identityMatchesPattern,
   identitySatisfiesRequire,
@@ -598,6 +634,7 @@ export {
   gateExecutableMcp,
   checkExecutableTrust,
   hasGrantSurface,
+  isPackageMentionedInGrants,
   parseExecutableGrants,
   resolveExecutableTrust,
   classifyExecutableTrust,
@@ -625,12 +662,56 @@ export {
 } from "@/modules/ExecutableTrust";
 
 export type {
+  ExecutableType,
+  PendingExecutablePackage,
+  PendingExecutablesOptions,
+  PendingExecutablesResult,
+  UserExecutableGrantEntry,
+  UserExecutableGrantList,
+} from "@/modules/ExecutableInventory";
+
+export {
+  EXECUTABLE_TYPES,
+  EXECUTABLE_TYPE_ORDER,
+  listUserExecutableGrants,
+  listPendingExecutablePackages,
+} from "@/modules/ExecutableInventory";
+
+export type {
   CollectedMcpServer,
   CollectMcpServersOptions,
   CollectMcpServersResult,
   ApplyMcpInventoryOptions,
   BakeMcpStringMapOptions,
   BakeableMcpServer,
+  McpApprovalState,
+  McpInventoryOptions,
+  McpInventoryResult,
+  McpInventoryTarget,
+  McpSearchResult,
+  McpServerDetails,
+  McpServerSummary,
+  McpShowResult,
+  ParsedMcpDeclaration,
+  CreateMcpRegistryClientOptions,
+  McpRegistryClient,
+  McpRegistryDeclOverlay,
+  McpRegistryEnv,
+  McpRegistryEnvironmentVariable,
+  McpRegistryErrorCode,
+  McpRegistryGetServerOptions,
+  McpRegistryLookup,
+  McpRegistryPackage,
+  McpRegistryRemote,
+  McpRegistryRemoteHeader,
+  McpRegistrySearchOptions,
+  McpRegistryServerDetails,
+  McpRegistryServerResolution,
+  McpRegistryServerSummary,
+  McpRegistrySource,
+  McpRegistryTransport,
+  ResolvedMcpRegistryUrl,
+  ResolveMcpRegistryUrlOptions,
 } from "@/modules/Mcp";
 
 export {
@@ -640,21 +721,136 @@ export {
   bakeMcpStringValue,
   bakeMcpServerMaps,
   McpEnvBakeError,
+  listMcpInventory,
+  searchMcpInventory,
+  showMcpServer,
+  parseMcpDeclarations,
+  BAPM_MCP_REGISTRY_TOKEN_ENV,
+  DEFAULT_MCP_REGISTRY_URL,
+  MCP_REGISTRY_ALLOW_HTTP_ENV,
+  MCP_REGISTRY_TOKEN_ENV,
+  MCP_REGISTRY_URL_ENV,
+  McpRegistryError,
+  createMcpRegistryClient,
+  normalizeMcpRegistryUrl,
+  redactMcpRegistryDetails,
+  redactMcpRegistryUrl,
+  resolveMcpRegistryUrl,
+  resolveMcpServerFromRegistry,
 } from "@/modules/Mcp";
 
 export type {
   CompileAgentsMdOptions,
   CompileAgentsMdResult,
   CompileAttributionEntry,
+  CompileCleanResult,
+  CompileCleanSkip,
+  CompileCleanSkipReason,
+  CompileOutput,
+  CompileOutputShape,
+  CompileWatchFactory,
+  CompileWatchFactoryOptions,
+  CompileWatchHandle,
+  CompileWatchOptions,
+  CompileWatchResult,
+  CompileWatchTarget,
 } from "@/modules/Compile";
 
-export { compileAgentsMd, compileProject, runCompile, emitAgentsMd } from "@/modules/Compile";
+export {
+  cleanCompileOutputs,
+  compileAgentsMd,
+  compileProject,
+  createNodeCompileWatchFactory,
+  DEFAULT_COMPILE_WATCH_DEBOUNCE_MS,
+  emitAgentsMd,
+  outputShapeFromPath,
+  resolveCompileWatchTargets,
+  runCompile,
+  watchCompile,
+} from "@/modules/Compile";
+
+export type {
+  DetectLifecycleUnsupportedOptions,
+  LifecycleUnsupportedDiagnostic,
+} from "@/modules/Lifecycle";
+
+export {
+  collectLifecycleUnsupported,
+  detectLifecycleUnsupported,
+  hasLifecycleDeclaration,
+} from "@/modules/Lifecycle";
+
+export type {
+  CanvasUnsupportedDiagnostic,
+  DetectCanvasUnsupportedOptions,
+  DetectLspUnsupportedOptions,
+  DetectUnsupportedDeclarationsOptions,
+  LspUnsupportedDiagnostic,
+  UnsupportedDeclarationDiagnostic,
+} from "@/modules/LspCanvas";
+
+export {
+  collectUnsupportedDeclarations,
+  detectCanvasUnsupported,
+  detectLspUnsupported,
+  detectUnsupportedDeclarations,
+} from "@/modules/LspCanvas";
+
+export type {
+  ApplyLspInventoryOptions,
+  CollectedLspServer,
+  CollectLspServersOptions,
+  CollectLspServersResult,
+  LspDeclarationContext,
+  ParsedLspServer,
+} from "@/modules/Lsp";
+
+export {
+  applyLspInventoryToLock,
+  collectLspServers,
+  parseLspDeclaration,
+  parseLspDeclarations,
+  LspDeclarationError,
+  readLspTargetInventory,
+} from "@/modules/Lsp";
 
 export type {
   CacheCleanOptions,
   CacheCleanResult,
   CacheInfoOptions,
   CacheInfoResult,
+  SharedCacheEnv,
+  SharedGitCacheCleanOptions,
+  SharedGitCacheCleanResult,
+  SharedGitCacheConfig,
+  SharedGitCacheInfoOptions,
+  SharedGitCacheInfoResult,
+  SharedGitCacheOverride,
+  SharedGitCachePruneCandidate,
+  SharedGitCachePruneFailure,
+  SharedGitCachePruneOptions,
+  SharedGitCachePruneResult,
+  SharedGitCacheReason,
+  SharedGitMirrorEntry,
+  SharedHttpCacheCleanOptions,
+  SharedHttpCacheCleanResult,
+  SharedHttpCacheConfig,
+  SharedHttpCacheHit,
+  SharedHttpCacheInfoOptions,
+  SharedHttpCacheInfoResult,
+  SharedHttpCacheLookupResult,
+  SharedHttpCacheMiss,
+  SharedHttpCacheMissReason,
+  SharedHttpCacheOverride,
+  SharedHttpCachePruneCandidate,
+  SharedHttpCachePruneFailure,
+  SharedHttpCachePruneOptions,
+  SharedHttpCachePruneResult,
+  SharedHttpCacheReason,
+  SharedHttpCacheRequest,
+  SharedHttpCacheResponse,
+  SharedHttpCacheStoreReason,
+  SharedHttpCacheStoreResult,
 } from "@/modules/Cache";
 
 export {
@@ -663,6 +859,29 @@ export {
   modulesCacheInfo,
   cacheClean,
   cleanModulesCache,
+  BAPM_CACHE_DIR_ENV,
+  BAPM_NO_CACHE_ENV,
+  DEFAULT_SHARED_GIT_PRUNE_DAYS,
+  SHARED_GIT_CACHE_SUBDIR,
+  isCacheableGitRepoUrl,
+  pruneSharedCache,
+  resolveSharedGitCacheConfig,
+  sharedGitCacheClean,
+  sharedGitCacheInfo,
+  sharedGitMirrorName,
+  BAPM_HTTP_CACHE_ENV,
+  BAPM_HTTP_CACHE_TTL_ENV,
+  DEFAULT_SHARED_HTTP_PRUNE_DAYS,
+  DEFAULT_SHARED_HTTP_TTL_SECONDS,
+  SHARED_HTTP_CACHE_SUBDIR,
+  isSharedHttpCacheableRequest,
+  lookupSharedHttpCache,
+  pruneSharedHttpCache,
+  resolveSharedHttpCacheConfig,
+  sharedHttpCacheClean,
+  sharedHttpCacheInfo,
+  sharedHttpCacheKey,
+  storeSharedHttpCache,
 } from "@/modules/Cache";
 
 export type {
@@ -671,12 +890,15 @@ export type {
   CheckSelfUpdateOptions,
   CheckSelfUpdateResult,
   CreateRegistryClientOptions,
+  FetchTransportOptions,
   RegistryClient,
   RegistryHttpRequest,
   RegistryHttpResponse,
   RegistryHttpTransport,
   RegistryVersionInfo,
   RegistryErrorCode,
+  ApplyExtraCaBundleOptions,
+  ExtraCaBundleResult,
 } from "@/modules/Registry";
 
 export {
@@ -694,6 +916,11 @@ export {
   verifyArchiveDigest,
   createFetchTransport,
   resolveRegistryToken,
+  EXTRA_CA_BUNDLE_ENV,
+  DISABLE_EXTRA_CA_BUNDLE_ENV,
+  parseExtraCaBundlePem,
+  applyExtraCaBundle,
+  applyExtraCaBundleFromEnv,
   buildPublishArchive,
   createPublishArchive,
   packPublishArchive,
@@ -783,7 +1010,13 @@ export type {
   LsRemoteFn,
   BuildMarketplaceOutputsOptions,
   MarketplaceOutputWritten,
+  MarketplaceOutputDocument,
   BuildMarketplaceOutputsResult,
+  MarketplaceDriftDifference,
+  MarketplaceDriftStatus,
+  MarketplaceDriftOutput,
+  CheckMarketplaceDriftResult,
+  CheckMarketplaceDriftOptions,
   ResolveMarketplacePackagesOptions,
   ResolveMarketplacePackagesResult,
   ResolveEffectiveOutputPathOptions,
@@ -881,6 +1114,8 @@ export {
   runMarketplaceBuilder,
   writeMarketplacePackOutputs,
   tryLoadMarketplaceAuthoring,
+  checkMarketplaceDrift,
+  diffMarketplaceJson,
 } from "@/modules/Marketplace";
 
 export const BAPM_NAME = "bapm";

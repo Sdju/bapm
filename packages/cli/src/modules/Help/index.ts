@@ -4,6 +4,9 @@ import { formatPublishHelp } from "@/modules/Publish";
 import { formatSelfUpdateHelp } from "@/modules/SelfUpdate";
 import { formatLockHelp } from "@/modules/Lock";
 import { formatMarketplaceHelp } from "@/modules/Marketplace";
+import { formatMcpHelp } from "@/modules/Mcp";
+import { formatAuthHelp } from "@/modules/Auth";
+import { formatScriptHelp } from "@/modules/Run";
 
 export type { HelpContentDeps };
 
@@ -14,6 +17,13 @@ export function createHelp(deps: HelpDeps) {
     format(topic?: string): string {
       if (topic === "install") return formatInstallTopicHelp(deps);
       if (topic === "lock") return formatLockHelp();
+      if (topic === "mcp") {
+        return formatMcpHelp({
+          name: deps.name,
+          manifestFile: deps.manifestFile,
+          lockFile: "bapm.lock.yaml",
+        });
+      }
       if (topic === "marketplace") {
         return formatMarketplaceHelp({
           name: deps.name,
@@ -48,6 +58,16 @@ export function createHelp(deps: HelpDeps) {
             message: "",
           }),
         });
+      }
+      if (topic === "auth") {
+        return formatAuthHelp({
+          name: deps.name,
+          manifestFile: deps.manifestFile,
+          lockFile: "bapm.lock.yaml",
+        });
+      }
+      if (topic === "run" || topic === "preview") {
+        return formatScriptHelp(deps, topic);
       }
       return formatHelp(deps);
     },

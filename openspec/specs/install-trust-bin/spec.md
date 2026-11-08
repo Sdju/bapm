@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines per-invocation consent for marketplace/plugin `bin/` executables on install: `--trust-bin` / `--no-trust-bin`, non-interactive default skip, and layering over existing ExecutableTrust without a second policy store.
+Defines per-invocation consent for marketplace/plugin `bin/` executables on install: `--trust-bin` / `--no-trust-bin`, default skip without explicit consent or persisted allow in every mode (TTY is not implicit consent), and layering over existing ExecutableTrust without a second policy store.
 
 ## Requirements
 
@@ -54,19 +54,24 @@ When install is non-interactive—truthy `CI`, truthy `BAPM_NON_INTERACTIVE`, st
 - **WHEN** bin content is withheld by non-interactive default or `--no-trust-bin` and the same dependency provides a skill
 - **THEN** the skill MUST still be eligible to materialize per existing install rules
 
-### Requirement: Interactive default warns then deploys when ladder allows
+### Requirement: Default requires explicit consent in every mode
 
-When install is interactive (none of the non-interactive signals above) and neither trust-bin flag is set, and the ExecutableTrust ladder for type `bin` does not deny/withhold the package, install MUST be allowed to deploy `bin/` content and MUST emit a clear trust-posture warning that advises passing `--trust-bin` for explicit consent (or using `approve` / project grants for persistence). `--trust-bin` MUST suppress that warning for allowed packages. Absent grant surface (resolver skip) MUST NOT by itself block interactive bin deploy under this default.
+When neither trust-bin flag is set, install MUST deploy dependency/plugin `bin/` content only when the ExecutableTrust ladder for type `bin` returns `allow` from a persisted project/user grant (for example `executables.allow.<pkg>.bin: true`). An interactive terminal MUST NOT be treated as implicit consent. When the ladder returns skip (no grant surface) or the package is not allowed, install MUST withhold bin deploy and leave a clear diagnostic. `--trust-bin` MUST remain the per-invocation explicit consent for packages the ladder does not deny/withhold; it MUST NOT override deny/withhold. When install is interactive and bin deploy is withheld for missing consent, the diagnostic MUST advise passing `--trust-bin` or persisting a `bin` grant with `bapm approve <pkg> --bin`.
 
-#### Scenario: Interactive neither flag warns and deploys
+#### Scenario: Interactive default withholds without consent
 
-- **WHEN** an interactive install finds deployable `bin/` for a package that is not denied/withheld by the `bin` trust ladder and neither flag is set
-- **THEN** bin deploy MUST proceed and stdout or stderr MUST include a trust-posture warning mentioning `--trust-bin`
+- **WHEN** an interactive install finds deployable `bin/` for a package with no `--trust-bin` and no project/user `bin` allow
+- **THEN** bin deploy MUST NOT proceed and a withhold diagnostic MUST mention `--trust-bin` or a persisted `bin` approval
 
 #### Scenario: Interactive --trust-bin deploys without warning
 
-- **WHEN** an interactive install runs with `--trust-bin` for an allowed package with `bin/`
-- **THEN** bin deploy MUST proceed and the trust-posture warning for that consent MUST NOT be required
+- **WHEN** an interactive install runs with `--trust-bin` for a package the `bin` ladder does not deny/withhold
+- **THEN** bin deploy MUST proceed and a trust-posture warning for that consent MUST NOT be emitted
+
+#### Scenario: Interactive persisted bin allow deploys
+
+- **WHEN** an interactive install runs without `--trust-bin` but the project or user grant surface allows the package for `bin` and no deny applies
+- **THEN** bin deploy for that package MUST remain eligible
 
 ### Requirement: Shared ExecutableTrust ladder for bin type
 

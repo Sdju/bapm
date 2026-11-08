@@ -2,7 +2,7 @@
 
 ## Ситуация
 
-Вы поддерживаете набор плагинов (skills, агенты, MCP) и хотите, чтобы пользователи Claude Code или Codex могли подключить их как маркетплейс. Для этого нужен `marketplace.json` в формате каждого агента.
+Вы поддерживаете набор плагинов (skills, агенты, MCP) и хотите, чтобы пользователи Claude Code, Codex или GitHub Copilot могли подключить их как маркетплейс. Для этого нужен `marketplace.json` в формате каждого агента.
 
 Это задача автора пакетов. Чтобы просто поставить чужие пакеты в свой проект, достаточно `bapm install`.
 
@@ -27,21 +27,23 @@ bapm pack --dry-run
 ### 3. Соберите
 
 ```bash
-bapm pack --marketplace all       # для Claude Code и Codex
+bapm pack --marketplace all       # для Claude Code, Codex и Copilot (что включено)
 bapm pack --marketplace claude    # только для Claude Code
+bapm pack --marketplace copilot   # только для GitHub Copilot
 bapm pack --marketplace-path claude=./dist/claude-marketplace.json
 ```
 
-Нужны пакеты `@b-apm/integration-claude` и/или `@b-apm/integration-codex`: они знают формат `marketplace.json` своего агента.
+Нужны пакеты `@b-apm/integration-claude`, `@b-apm/integration-codex` и/или `@b-apm/integration-copilot`: они знают формат `marketplace.json` своего агента. Пути по умолчанию: `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, `.github/plugin/marketplace.json`.
 
 ### 4. Перед релизом
 
 ```bash
 bapm pack --check-release   # версия в bapm.yml совпадает с git-тегом
 bapm pack --check-versions  # версии пакетов маркетплейса согласованы
+bapm pack --check-clean     # закоммиченный marketplace.json совпадает с генерируемым
 ```
 
-Обе проверки ничего не собирают и не создают тегов.
+`--check-clean` ничего не пишет: он заново собирает выбранные `marketplace.json` в памяти и сравнивает с файлами на диске. Drift или отсутствующий файл — exit `4`.
 
 ## Другие форматы
 

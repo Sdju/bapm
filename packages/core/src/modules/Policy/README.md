@@ -8,20 +8,21 @@ and install/lock/update gate helpers.
 
 ## Public API
 
-| Export                                     | Kind                                                        |
-| ------------------------------------------ | ----------------------------------------------------------- |
-| `APM_POLICY_FILE` / `BAPM_POLICY_FILE`     | constants (`apm-policy.yml` / `bapm-policy.yml`)            |
-| `DEFAULT_POLICY_PROVIDERS`                 | `["local", "github-owner-dotgithub"]` (documented order)    |
-| `discoverPolicyPath`                       | local dual-read / explicit; neither → absent                |
-| `discoverPolicyWithProviders`              | ordered providers; `discovery:` / injectable remotes + HTTP |
-| `selectProjectRemote`                      | pl-012 origin / single / multi fail-closed / none skip      |
-| `parsePolicy` / `loadPolicy`               | mapping-root parse; extends resolve; pl-005/009             |
-| `resolvePolicyChain`                       | depth ≤5, cycle reject, host-class pin, §6.4 merge          |
-| `mergePolicies` / `hostClassOf`            | §6.4 gate families + eTLD+1 host class                      |
-| `evaluateInstallPolicy`                    | deny/allow/require/max_depth/pinned + enforcement           |
-| `runPolicyGate` / `assertPolicyGateAllows` | discover → resolve → evaluate; escape hatch                 |
-| `isPolicyDisabled`                         | `noPolicy` / `BAPM_POLICY_DISABLE` / `APM_POLICY_DISABLE`   |
-| `PolicyError`                              | typed errors                                                |
+| Export                                     | Kind                                                                   |
+| ------------------------------------------ | ---------------------------------------------------------------------- |
+| `APM_POLICY_FILE` / `BAPM_POLICY_FILE`     | constants (`apm-policy.yml` / `bapm-policy.yml`)                       |
+| `DEFAULT_POLICY_PROVIDERS`                 | `["local", "github-owner-dotgithub"]` (documented order)               |
+| `discoverPolicyPath`                       | local dual-read / explicit; neither → absent                           |
+| `discoverPolicyWithProviders`              | ordered providers; `discovery:` / injectable remotes + HTTP            |
+| `selectProjectRemote`                      | pl-012 origin / single / multi fail-closed / none skip                 |
+| `parsePolicy` / `loadPolicy`               | mapping-root parse; extends resolve; pl-005/009                        |
+| `resolvePolicyChain`                       | depth ≤5, cycle reject, host-class pin, §6.4 merge                     |
+| `mergePolicies` / `hostClassOf`            | §6.4 gate families + eTLD+1 host class                                 |
+| `evaluateInstallPolicy`                    | deny/allow/require/max_depth/pinned + enforcement                      |
+| `runPolicyGate` / `assertPolicyGateAllows` | discover → resolve → evaluate; escape hatch                            |
+| `filterNonLocalPolicyProviders`            | org-only provider list for `noRepoPolicy`                              |
+| `isPolicyDisabled`                         | full escape: `noPolicy` / `BAPM_POLICY_DISABLE` / `APM_POLICY_DISABLE` |
+| `PolicyError`                              | typed errors                                                           |
 
 ## Discovery providers (P4)
 
@@ -51,5 +52,9 @@ Gate evaluates the **merged** effective document.
 
 ## Escape
 
-`noPolicy: true`, `BAPM_POLICY_DISABLE=1`, or `APM_POLICY_DISABLE=1` — skip
-discovery and checks (not modeled as a provider).
+- `noRepoPolicy: true` (`--no-policy`) skips only repository-local discovery.
+  Remote/org providers still run, so org `deny` / `deny_all` applies. An
+  explicit `--policy <path>` still wins.
+- `noPolicy: true` (`--no-policy-all`), `BAPM_POLICY_DISABLE=1`, or
+  `APM_POLICY_DISABLE=1` — full escape: skip every source (not modeled as a
+  provider).

@@ -78,6 +78,7 @@ export default defineConfig({
           { text: "Команда с разными агентами", link: "/guide/situations/team-local-active" },
           { text: "Личные пакеты", link: "/guide/situations/personal-local-lock" },
           { text: "CI по lock-файлу", link: "/guide/situations/ci-frozen" },
+          { text: "Private registry и TLS", link: "/guide/situations/tls-private-registry" },
           { text: "Обновить зависимости", link: "/guide/situations/update-deps" },
           { text: "MCP-сервер не появился", link: "/guide/situations/policy-mcp" },
           { text: "Собрать AGENTS.md", link: "/guide/situations/compile-agents" },
@@ -106,7 +107,19 @@ export default defineConfig({
           { text: "audit", link: "/reference/audit" },
           { text: "doctor", link: "/reference/doctor" },
           { text: "cache", link: "/reference/cache" },
+          { text: "targets", link: "/reference/targets" },
+          { text: "mcp", link: "/reference/mcp" },
+          { text: "config", link: "/reference/config" },
+          { text: "auth", link: "/reference/auth" },
         ],
+      },
+      {
+        text: "Скрипты проекта",
+        items: [{ text: "run / preview", link: "/reference/run" }],
+      },
+      {
+        text: "AI runtime",
+        items: [{ text: "runtime", link: "/reference/runtime" }],
       },
       {
         text: "Агент и политика",

@@ -9,7 +9,7 @@ import {
 import { loadMarketplaceAuthoringConfig } from "@b-apm/core";
 
 /** Known marketplace format ids that follow `@b-apm/integration-<id>` packages. */
-const KNOWN_MARKETPLACE_FORMATS = ["claude", "codex"] as const;
+const KNOWN_MARKETPLACE_FORMATS = ["claude", "codex", "copilot"] as const;
 
 type KnownFormat = (typeof KNOWN_MARKETPLACE_FORMATS)[number];
 
@@ -38,6 +38,7 @@ function formatsEnabledInAuthoring(config: {
   outputs?: Record<string, unknown>;
   claude?: unknown;
   codex?: unknown;
+  copilot?: unknown;
 }): string[] {
   const out: string[] = [];
   const outputs = config.outputs ?? {};
@@ -48,6 +49,7 @@ function formatsEnabledInAuthoring(config: {
     }
     if (format === "claude" && outputEntryEnabled(config.claude)) out.push(format);
     if (format === "codex" && outputEntryEnabled(config.codex)) out.push(format);
+    if (format === "copilot" && outputEntryEnabled(config.copilot)) out.push(format);
   }
   return out;
 }
@@ -190,6 +192,7 @@ export async function loadCliMarketplaceOutputsForPack(options: {
         outputs?: Record<string, unknown>;
         claude?: unknown;
         codex?: unknown;
+        copilot?: unknown;
       },
     );
   } catch {

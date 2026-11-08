@@ -2,11 +2,14 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import type {
   BapmIntegration,
+  ConfigureLspReport,
   ConfigureMcpReport,
+  DeploymentScope,
   MaterializeReport,
   IntegrationRegistry,
+  McpServerConfig,
 } from "@b-apm/integration-api";
-import { getConfigureMcp } from "@b-apm/integration-api";
+import { getConfigureLsp, getConfigureMcp } from "@b-apm/integration-api";
 import {
   loadManifest,
   resolveActive,
@@ -29,6 +32,7 @@ import {
   materializeRegistryNodes,
   resolveAndLock,
   resolveDependencyGraph,
+  type DownloadPackageSpec,
   type ResolvedNode,
 } from "@/modules/Resolver";
 import {
@@ -52,22 +56,35 @@ import {
   filterPrimitivesForCopilotNative,
   rebuildCopilotNativeRegistration,
 } from "@/modules/CopilotNativeRegistration";
+import { detectLifecycleUnsupported } from "@/modules/Lifecycle";
+import { detectUnsupportedDeclarations } from "@/modules/LspCanvas";
+import {
+  applyLspInventoryToLock,
+  collectLspServers,
+  LspDeclarationError,
+  readLspTargetInventory,
+  type CollectedLspServer,
+} from "@/modules/Lsp";
 import { extractPackArchive } from "@/modules/Pack";
 import {
+  isPackageMentionedInGrants,
   loadUserExecutableGrants,
   normalizeTrustBin,
   parseExecutableGrants,
   resolveBinDeployConsent,
   resolveExecutableTrust,
   userGrantsToSurface,
+  type ExecutableGrantSurface,
 } from "@/modules/ExecutableTrust";
 import {
   applyMcpInventoryToLock,
   bakeMcpServerMaps,
   collectMcpServers,
   McpEnvBakeError,
+  resolveMcpServerFromRegistry,
   scrubMcpInventory,
   type CollectedMcpServer,
+  type McpRegistryLookup,
 } from "@/modules/Mcp";
 import { defaultBinDeployRoot, discoverPackageBinFiles, materializeBinFiles } from "./binDeploy.ts";
 import {
@@ -78,6 +95,7 @@ import {
 } from "./deployedInventory.ts";
 import { InstallError } from "./errors.ts";
 import { enforceFrozen } from "./frozen.ts";
+import { assertFrozenDeployInventory } from "./frozenUnderRecorded.ts";
 import { gateInsecureBeforeFetch, normalizeAllowInsecureHosts } from "./insecurePolicy.ts";
 import {
   assertMarketplacePackageRefsResolvable,
@@ -101,18 +119,27 @@ import type { InstallOnlyMode, InstallResult, RunInstallOptions } from "./types.
  */
 export async function runInstall(options: RunInstallOptions = {}): Promise<InstallResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
+  /**
+   * Project installs deploy under `cwd`. Global installs keep the manifest and
+   * lock under the `~/.bapm` root but materialize harness files under the user
+   * home, so every deploy path (and its lock hash key) is rooted here.
+   */
+  const deployCwd = resolve(options.deployCwd ?? cwd);
   const frozen = options.frozen === true;
   const dryRun = options.dryRun === true;
   const updateRefs = options.updateRefs === true || options.update === true;
   const forcedTargetId = options.forcedTarget ?? options.forceTarget;
+  const configTargetId = options.configTarget?.trim() || undefined;
   const policyPath = options.policyPath ?? options.policy;
   const noPolicy = options.noPolicy === true;
+  const noRepoPolicy = options.noRepoPolicy === true;
   const trustTransitiveMcp = options.trustTransitiveMcp === true;
   const trustBin = normalizeTrustBin(options.trustBin);
   const packageRefs = normalizePackageRefs(options.packageRefs);
   const excludeIds = normalizeExcludeIds(options);
   const excludeSet = new Set(excludeIds);
   const only = normalizeOnlyMode(options.only);
+  const scope = options.scope === "global" ? "global" : "project";
   const skipApmMaterialize = only === "mcp";
   const skipMcpConfigure = only === "apm";
   // Accepted for CLI parity; must not refresh refs / bypass frozen / disable policy.
@@ -196,12 +223,19 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       allowInsecureHosts,
       policyPath,
       noPolicy,
+      noRepoPolicy,
       policyPorts,
       activeTargets: [],
     });
   }
 
-  const { document: loadedRoot } = loadManifest({ cwd });
+  const { document: loadedRoot, warnings: rootManifestWarnings } = loadManifest({ cwd });
+  const manifestWarningDiagnostics = (rootManifestWarnings ?? []).map((warning) => ({
+    code: warning.code,
+    message: warning.message,
+    ...(warning.path !== undefined ? { path: warning.path } : {}),
+    warn: true,
+  }));
   // Preset expansion for deps; host selection uses resolved target ids only.
   const rootManifest = withEffectiveDirectDeps(loadedRoot);
   const { targetIds: resolvedTargetIds } = resolveActive(loadedRoot);
@@ -223,6 +257,12 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   let nodes: ResolvedNode[] = [];
   let lockDocument: LockfileDocument | undefined;
   let policyDiagnostics: unknown[] = [];
+  /**
+   * Frozen package materialization is deferred until after the under-record gate
+   * so a lock that cannot prove the would-be deploy set fails before local
+   * package copies (and before any lock/harness mutation).
+   */
+  let frozenPackages: DownloadPackageSpec[] | undefined;
 
   const ports = {
     gitRemote: options.gitRemote,
@@ -250,6 +290,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         cwd,
         policyPath,
         noPolicy,
+        noRepoPolicy,
         nodes,
         ...policyPorts,
       });
@@ -262,12 +303,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
           identity: n.identity,
           name: n.name,
         }));
-      await downloadPackages({
-        cwd,
-        packages,
-        parallelDownloads: options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS,
-        downloader: options.downloader,
-      });
+      frozenPackages = packages;
       await materializeRegistryNodes(nodes, {
         cwd,
         mirrorUrl: options.mirrorUrl,
@@ -278,7 +314,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
       // lk-017 lite: re-verify deployed_file_hashes when present (before harness mutation)
       if (lockDocument) {
-        verifyDeployedFileHashes({ cwd, document: lockDocument });
+        verifyDeployedFileHashes({ cwd: deployCwd, document: lockDocument });
         // lk-015: re-verify git tree_sha256 fail-closed
         verifyTreeSha256OrThrow({ cwd, document: lockDocument });
       }
@@ -292,6 +328,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         policyPath,
         policy: policyPath,
         noPolicy,
+        noRepoPolicy,
         marketplaceConfigDir: options.marketplaceConfigDir ?? options.configDir,
         configDir: options.configDir ?? options.marketplaceConfigDir,
         ...ports,
@@ -312,6 +349,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       cwd,
       policyPath,
       noPolicy,
+      noRepoPolicy,
       nodes: [],
       candidatesOverride: extractDeclarationOrder(rootManifest).map((name) => ({
         id: name,
@@ -328,9 +366,16 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
   const currentDepNames = new Set(nodes.map((n) => n.name).filter(Boolean));
 
+  // `lifecycle:` is retained by the manifest parser but never executed. Surface
+  // one warning per declaring package (root and dependency packages).
+  const lifecycleDiagnostics = detectLifecycleUnsupported({
+    rootManifest,
+    nodes: skipApmMaterialize ? [] : nodes,
+  });
+
   if (!frozen && !skipApmMaterialize) {
     cleanupOrphanDeployedFiles({
-      cwd,
+      cwd: deployCwd,
       previous: previousLock?.document,
       currentDepNames,
     });
@@ -386,6 +431,31 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         declarationOrder,
       });
 
+  // `dependencies.lsp` deploy and canvas diagnostics are resolved after active
+  // targets are known (LSP warnings only when no active host can deploy).
+
+  // Frozen must not deploy primitives that the lock does not record, and local
+  // snapshots must be re-verified before target materialize / lock writes.
+  if (frozen && !skipApmMaterialize && lockDocument) {
+    assertFrozenDeployInventory({
+      cwd,
+      document: lockDocument,
+      nodes,
+      primitives: resolved.primitives,
+    });
+  }
+
+  // Deferred frozen package copy (local modules) runs only after the gate.
+  if (frozenPackages) {
+    await downloadPackages({
+      cwd,
+      packages: frozenPackages,
+      parallelDownloads: options.parallelDownloads ?? DEFAULT_PARALLEL_DOWNLOADS,
+      downloader: options.downloader,
+    });
+    frozenPackages = undefined;
+  }
+
   // Resolve target state only after independent preconditions (manifest,
   // frozen, resolution, and policy) pass, but before target harness writes.
   assertForcedTargetRegistered(forcedTargetId, registry);
@@ -396,8 +466,90 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     override: options.activeTargets,
     forcedTargetId,
     manifestActive: resolvedTargetIds,
+    configTargetId,
+    scope,
   });
   assertActiveTargetsRegistered(activeTargets, registry);
+  // LSP configuration is project-scoped in this release; a global install must
+  // not write host LSP files into the `~/.bapm` manifest root.
+  const lspTargets =
+    scope === "global" ? [] : resolveLspTargets(registry, activeTargets, excludeSet);
+
+  // `dependencies.lsp` and canvas declarations are retained by the manifest
+  // parser. LSP is deployable on Claude/Copilot; other hosts keep the explicit
+  // unsupported warning. Canvas stays outside the executable trust gates.
+  const unsupportedDiagnostics = detectUnsupportedDeclarations({
+    rootManifest,
+    nodes: skipApmMaterialize ? [] : nodes,
+    primitives: resolved.primitives,
+    lspDeployable: lspTargets.length > 0,
+  });
+  const globalScopeDiagnostics: unknown[] = [];
+  let mcpTargets = activeTargets;
+  if (scope === "global") {
+    if (!skipApmMaterialize) {
+      assertGlobalFilesSupported(activeTargets, registry);
+    }
+    if (only === "mcp") {
+      // An MCP-only global pass remains fail-closed for hosts that have no
+      // user-scope MCP layout.
+      assertGlobalMcpSupported(activeTargets, registry, excludeSet);
+    } else if (!skipMcpConfigure) {
+      // A full global install still deploys file primitives for hosts without
+      // a user-scope MCP config; skip their MCP half with a visible warning.
+      mcpTargets = filterGlobalMcpTargets(activeTargets, registry, excludeSet);
+      for (const targetId of activeTargets) {
+        if (mcpTargets.includes(targetId) || excludeSet.has(targetId)) continue;
+        globalScopeDiagnostics.push({
+          code: "MCP_GLOBAL_CONFIG_SKIPPED",
+          message: `Skipping global MCP for target "${targetId}": this host has no supported user-scope MCP config in this release. File primitives were installed; use --target for a host with global MCP (cursor, opencode).`,
+          target: targetId,
+          skip: true,
+          warn: true,
+        });
+      }
+    }
+  }
+
+  // Root `target` / `targets` is a deployment allow-list (tg-008), not active
+  // selection. Fail closed when it excludes every active host; otherwise warn
+  // for each filtered host instead of silently materializing nothing.
+  const targetSelectionDiagnostics: unknown[] = [];
+  const rootDeclaredTargets = declaredTargetIds(rootManifest);
+  if (rootDeclaredTargets.length > 0) {
+    const declaredSet = new Set(rootDeclaredTargets);
+    const skippedActiveTargets = activeTargets.filter((id) => !declaredSet.has(id));
+    if (skippedActiveTargets.length === activeTargets.length) {
+      rollbackFreshLock({ previousLock, lockPath, cwd });
+      throw new InstallError(
+        "INSTALL_TARGETS_EMPTY_INTERSECTION",
+        `No active target is declared in the root target/targets: active=[${activeTargets.join(
+          ", ",
+        )}], declared=[${rootDeclaredTargets.join(
+          ", ",
+        )}]. Remove target/targets or add the active host to it.`,
+        {
+          details: {
+            activeTargets: [...activeTargets],
+            declaredTargets: [...rootDeclaredTargets],
+          },
+        },
+      );
+    }
+    if (skippedActiveTargets.length > 0) {
+      targetSelectionDiagnostics.push({
+        code: "INSTALL_TARGET_SKIPPED_BY_TARGETS",
+        message: `Active target(s) ${skippedActiveTargets.join(
+          ", ",
+        )} are not declared in the root target/targets [${rootDeclaredTargets.join(
+          ", ",
+        )}]; their package primitives will be skipped. Add them to target/targets or remove the restriction.`,
+        warn: true,
+        skippedTargets: [...skippedActiveTargets],
+        declaredTargets: [...rootDeclaredTargets],
+      });
+    }
+  }
 
   const copilotActive = activeTargets.includes("copilot");
   let admittedNativePackages = new Set<string>();
@@ -413,19 +565,33 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     }
   }
 
+  const installTrustContext = resolveInstallTrustContext({
+    cwd,
+    rootManifest,
+    configDir: options.configDir ?? options.marketplaceConfigDir,
+    policyPath,
+    noPolicy,
+    noRepoPolicy,
+    policyPorts,
+  });
+
   const allDeployed: ReturnType<typeof collectDeployedHashes> = [];
   const materializedPrimitives: AttributedPrimitive[] = [];
   const subsetDiagnostics: unknown[] = [];
+  const materializeDiagnostics: unknown[] = [];
+  const hookTrustDiagnostics: unknown[] = [];
 
   if (!skipApmMaterialize && registry && activeTargets.length > 0) {
     const packageTargets = collectPackageDeclaredTargets(nodes, raw);
     const afterSkillFilter = applySkillSubsets(resolved.primitives, nodes, subsetDiagnostics);
+    const afterHookTrust = gateDependencyHooksWithTrust(afterSkillFilter, installTrustContext);
+    hookTrustDiagnostics.push(...afterHookTrust.diagnostics);
     for (const targetId of activeTargets) {
       const target = findTarget(registry, targetId);
       if (!target) continue;
 
       let filtered = filterByIntersection(
-        afterSkillFilter,
+        afterHookTrust.primitives,
         targetId,
         packageTargets,
         rootManifest,
@@ -436,12 +602,21 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       }
       materializedPrimitives.push(...filtered);
       const report = (await target.materialize(filtered, {
-        cwd,
+        // Global targets receive the user home so their normal home-relative
+        // roots (`.cursor`, `.claude`, `.codex`, `.agents/skills`) are reused.
+        cwd: deployCwd,
         targetId,
         deployRoots: [...target.deployRoots],
+        scope,
         skipNativeRegisteredPackages: [...admittedNativePackages],
       })) as void | MaterializeReport;
-      allDeployed.push(...collectTargetDeployedHashes(cwd, target, report));
+      // Adapter skip diagnostics must reach the install result (and CLI), not
+      // just the per-target report. Normalize visibility before deployment
+      // hashes so result inspection can distinguish skipped primitives.
+      for (const diagnostic of report?.diagnostics ?? []) {
+        materializeDiagnostics.push(markSkipDiagnosticWarn(diagnostic));
+      }
+      allDeployed.push(...collectTargetDeployedHashes(deployCwd, target, report));
     }
   }
 
@@ -478,6 +653,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     binDiagnostics.push(
       ...deployBinsAfterConsent({
         cwd,
+        deployCwd,
         rootManifest,
         nodes,
         trustBin,
@@ -489,7 +665,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         configDir: options.configDir ?? options.marketplaceConfigDir,
         policyPath,
         noPolicy,
+        noRepoPolicy,
         policyPorts,
+        trustContext: installTrustContext,
       }),
     );
   }
@@ -501,7 +679,8 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       rootManifest,
       nodes,
       registry,
-      activeTargets,
+      activeTargets: mcpTargets,
+      only,
       trustTransitiveMcp,
       frozen,
       excludeSet,
@@ -512,7 +691,12 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       configDir: options.configDir ?? options.marketplaceConfigDir,
       policyPath,
       noPolicy,
+      noRepoPolicy,
       policyPorts,
+      trustContext: installTrustContext,
+      env: options.env,
+      mcpRegistry: options.mcpRegistry,
+      scope,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
     if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
@@ -521,10 +705,35 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       throw new InstallError(
         "INSTALL_MCP_TRUST",
         mcpResult.withholdMessage ??
-          "MCP withheld: unapproved dependency executables (sc-009 fail-closed)",
+          "MCP withheld: explicitly denied or unapproved dependency executables (sc-009)",
         { details: { withheld: mcpResult.withheldPackages } },
       );
     }
+  }
+
+  const lspDiagnostics: unknown[] = [];
+  if (!skipMcpConfigure) {
+    const lspResult = await deployLspAfterPolicy({
+      cwd,
+      rootManifest,
+      nodes: skipApmMaterialize ? [] : nodes,
+      registry,
+      lspTargets,
+      frozen,
+      lockDocument,
+      lockPath,
+      previousLockFilename: previousLock?.sourceFilename,
+      diagnostics: lspDiagnostics,
+      configDir: options.configDir ?? options.marketplaceConfigDir,
+      policyPath,
+      noPolicy,
+      noRepoPolicy,
+      policyPorts,
+      trustContext: installTrustContext,
+      only,
+    });
+    if (lspResult.lockPath) lockPath = lspResult.lockPath;
+    if (lspResult.lockDocument) lockDocument = lspResult.lockDocument;
   }
 
   return {
@@ -534,13 +743,21 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     activeTargets,
     primitivesCount: resolved.primitives.length,
     diagnostics: [
+      ...manifestWarningDiagnostics,
+      ...lifecycleDiagnostics,
+      ...unsupportedDiagnostics,
       ...insecureDiagnostics,
       ...policyDiagnostics,
       ...resolved.diagnostics,
       ...portablePluginDiagnostics,
       ...subsetDiagnostics,
+      ...globalScopeDiagnostics,
+      ...targetSelectionDiagnostics,
+      ...hookTrustDiagnostics,
+      ...materializeDiagnostics,
       ...binDiagnostics,
       ...mcpDiagnostics,
+      ...lspDiagnostics,
     ],
     policyDiagnostics,
   };
@@ -604,6 +821,40 @@ function portablePluginRoot(node: ResolvedNode): string | undefined {
   return undefined;
 }
 
+/**
+ * Adapter diagnostics for unsupported/skipped primitives are user-visible
+ * warnings. Keep the adapter payload intact while normalizing `warn` so the
+ * CLI generic warning emitter can surface it.
+ */
+function markSkipDiagnosticWarn(diagnostic: unknown): unknown {
+  if (!diagnostic || typeof diagnostic !== "object") return diagnostic;
+  const rec = diagnostic as Record<string, unknown>;
+  if (rec.warn === true) return rec;
+  const code = typeof rec.code === "string" ? rec.code.toUpperCase() : "";
+  if (!/_UNSUPPORTED(?:$|_)|_SKIP_|_MCP_SKIP_NO_/.test(code)) return diagnostic;
+  return { ...rec, warn: true };
+}
+
+/**
+ * Home-scoped MCP is a host contract (Copilot/Windsurf), but it writes a file
+ * shared by every project. Prefer the declared `mcpScope`; the canonical ids
+ * are a fallback for older/injected registries that omit the optional field.
+ */
+const HOME_SCOPED_MCP_TARGET_IDS = new Set(["copilot", "windsurf"]);
+
+function isHomeScopedMcpTarget(target: BapmIntegration): boolean {
+  if (target.mcpScope === "home") return true;
+  return HOME_SCOPED_MCP_TARGET_IDS.has(String(target.id ?? "").toLowerCase());
+}
+
+function isEnvFlagEnabled(
+  env: Record<string, string | undefined> | undefined,
+  key: string,
+): boolean {
+  const value = (env?.[key] ?? process.env[key])?.trim().toLowerCase();
+  return value === "1" || value === "true";
+}
+
 /** Best-effort: drop a lock written by this install when a later gate fails closed. */
 function rollbackFreshLock(args: {
   previousLock: ReturnType<typeof loadEffectiveLockfileOrNull>;
@@ -648,6 +899,7 @@ async function runDryRunPreview(args: {
   allowInsecureHosts?: string[];
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   policyPorts: {
     policyProviders?: string[];
     providers?: string[];
@@ -677,7 +929,16 @@ async function runDryRunPreview(args: {
 
   let rootManifest: BapmManifest | undefined;
   if (manifestExistsAt(args.cwd)) {
-    rootManifest = loadManifest({ cwd: args.cwd }).document;
+    const loaded = loadManifest({ cwd: args.cwd });
+    rootManifest = loaded.document;
+    for (const warning of loaded.warnings ?? []) {
+      diagnostics.push({
+        code: warning.code,
+        message: warning.message,
+        ...(warning.path !== undefined ? { path: warning.path } : {}),
+        warn: true,
+      });
+    }
   } else if (args.packageRefs.length === 0) {
     // Preserve bare-install fail-closed (no auto-create without positional).
     loadManifest({ cwd: args.cwd });
@@ -755,6 +1016,7 @@ async function runDryRunPreview(args: {
         cwd: args.cwd,
         policyPath: args.policyPath,
         noPolicy: args.noPolicy,
+        noRepoPolicy: args.noRepoPolicy,
         nodes: [],
         candidatesOverride: candidates,
         ...args.policyPorts,
@@ -767,7 +1029,12 @@ async function runDryRunPreview(args: {
     modulesDir: join(args.cwd, APM_MODULES_DIR),
     activeTargets: args.activeTargets,
     primitivesCount: 0,
-    diagnostics: [...policyDiagnostics, ...diagnostics],
+    diagnostics: [
+      ...(rootManifest ? detectLifecycleUnsupported({ rootManifest }) : []),
+      ...(rootManifest ? detectUnsupportedDeclarations({ rootManifest }) : []),
+      ...policyDiagnostics,
+      ...diagnostics,
+    ],
     policyDiagnostics,
     dryRun: true,
   };
@@ -783,12 +1050,162 @@ function summarizeDirectEntry(entry: DependencyEntry): string {
   return entryNameHint(entry) ?? "(dep)";
 }
 
+type InstallTrustContext = {
+  projectSurface: ExecutableGrantSurface;
+  userSurface: ExecutableGrantSurface;
+  combinedSurface: ExecutableGrantSurface;
+  orgExecutables: PolicyExecutables;
+};
+
+type InstallTrustContextArgs = {
+  cwd: string;
+  rootManifest: BapmManifest;
+  configDir?: string;
+  policyPath?: string;
+  noPolicy: boolean;
+  noRepoPolicy?: boolean;
+  policyPorts?: Parameters<typeof loadOrgExecutablesForTrust>[0]["policyPorts"];
+};
+
+/**
+ * Load the effective executable-trust inputs once per install so hooks, bin,
+ * and MCP share identical project/user/org policy (no duplicated policy logic).
+ */
+function resolveInstallTrustContext(args: InstallTrustContextArgs): InstallTrustContext {
+  const projectSurface = parseExecutableGrants({
+    manifest: args.rootManifest as Record<string, unknown>,
+  });
+  const userLoaded = loadUserExecutableGrants({
+    configDir: args.configDir,
+    configRoot: args.configDir,
+  });
+  const userSurface = userGrantsToSurface(userLoaded);
+  const combinedSurface: ExecutableGrantSurface = {
+    present: projectSurface.present || userSurface.present,
+    allow: { ...projectSurface.allow, ...userSurface.allow },
+    deny: { ...projectSurface.deny, ...userSurface.deny },
+  };
+  return {
+    projectSurface,
+    userSurface,
+    combinedSurface,
+    orgExecutables: loadOrgExecutablesForTrust({
+      cwd: args.cwd,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy,
+      noRepoPolicy: args.noRepoPolicy === true,
+      policyPorts: args.policyPorts,
+    }),
+  };
+}
+
+/**
+ * Gate dependency hooks through ExecutableTrust (type `hook`) before any target
+ * materializes them. Root/local hooks (`source: "local"`) are never gated, and
+ * with no grant surface and no org deny the resolver returns `skip` (legacy
+ * soft behavior: dependency hooks deploy).
+ */
+function gateDependencyHooksWithTrust(
+  primitives: AttributedPrimitive[],
+  trust: InstallTrustContext,
+): { primitives: AttributedPrimitive[]; diagnostics: unknown[] } {
+  const kept: AttributedPrimitive[] = [];
+  const diagnostics: unknown[] = [];
+  for (const primitive of primitives) {
+    if (primitive.type !== "hook" || !primitive.source.startsWith("dependency:")) {
+      kept.push(primitive);
+      continue;
+    }
+    const packageName =
+      primitive.packageName?.trim() || primitive.source.slice("dependency:".length);
+    const decision = resolveExecutableTrust({
+      packageName,
+      executableType: "hook",
+      orgExecutables: trust.orgExecutables,
+      projectSurface: trust.projectSurface,
+      userSurface: trust.userSurface,
+      grantSurface: trust.combinedSurface,
+    });
+    if (decision.allowed) {
+      kept.push(primitive);
+      continue;
+    }
+    diagnostics.push({
+      code: "HOOK_TRUST_WITHHELD",
+      message: `hook "${primitive.name}" from dependency "${packageName}" withheld: ${
+        decision.reason ?? `ExecutableTrust ${decision.outcome}`
+      }`,
+      warn: true,
+      packageName,
+      hook: primitive.name,
+      path: primitive.path,
+      withhold: true,
+      unapproved: true,
+      outcome: decision.outcome,
+    });
+  }
+  return { primitives: kept, diagnostics };
+}
+
+function isRegistryOnlyMcpServer(server: CollectedMcpServer): boolean {
+  const registry = server.registry;
+  // `registry: false` means self-defined (fully described here). Absent also
+  // means no lookup in bapm's current model. True/string request a registry.
+  const requestsLookup =
+    registry !== undefined &&
+    registry !== null &&
+    registry !== false &&
+    !(typeof registry === "string" && registry.trim().length === 0);
+  if (!requestsLookup) return false;
+  const hasCommand = typeof server.command === "string" && server.command.trim().length > 0;
+  const hasUrl = typeof server.url === "string" && server.url.trim().length > 0;
+  return !hasCommand && !hasUrl;
+}
+
+function registryUrlForDeclaration(registry: unknown): { registryUrl: string } | undefined {
+  if (typeof registry === "string" && registry.trim().length > 0) {
+    return { registryUrl: registry.trim() };
+  }
+  if (registry && typeof registry === "object" && !Array.isArray(registry)) {
+    const url = (registry as { url?: unknown }).url;
+    if (typeof url === "string" && url.trim().length > 0) {
+      return { registryUrl: url.trim() };
+    }
+  }
+  return undefined;
+}
+
+function registryUnsupportedError(servers: CollectedMcpServer[], cause?: unknown): InstallError {
+  const names = servers.map((server) => server.name).join(", ");
+  const hint =
+    `declare "command" for stdio or "url" for http/streamable-http (and set registry: false), ` +
+    `or inspect the server with \`bapm mcp show ${servers[0]?.name ?? "<name>"}\` / ` +
+    `\`bapm mcp install ${servers[0]?.name ?? "<name>"} --dry-run\``;
+  return new InstallError(
+    "MCP_REGISTRY_UNSUPPORTED",
+    `MCP server${servers.length === 1 ? "" : "s"} ${names} could not be resolved from an MCP registry; ${hint}`,
+    {
+      ...(cause !== undefined ? { cause } : {}),
+      details: {
+        servers: servers.map((server) => ({
+          name: server.name,
+          packageName: server.packageName,
+          origin: server.origin,
+          registry: server.registry,
+        })),
+      },
+    },
+  );
+}
+
 async function deployMcpAfterPolicy(args: {
   cwd: string;
   rootManifest: BapmManifest;
   nodes: ResolvedNode[];
   registry?: IntegrationRegistry;
   activeTargets: string[];
+  /** Explicit `install --only` surface; MCP-only reconciliation must not assume nodes. */
+  only?: InstallOnlyMode;
   forcedTargetId?: string;
   trustTransitiveMcp: boolean;
   frozen: boolean;
@@ -800,6 +1217,7 @@ async function deployMcpAfterPolicy(args: {
   configDir?: string;
   policyPath?: string;
   noPolicy?: boolean;
+  noRepoPolicy?: boolean;
   policyPorts?: {
     policyProviders?: string[];
     providers?: string[];
@@ -811,6 +1229,12 @@ async function deployMcpAfterPolicy(args: {
     defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
     implementationDefaultHost?: string;
   };
+  trustContext?: InstallTrustContext;
+  /** Env overlay; `BAPM_NO_GLOBAL_MCP` skips home-scoped MCP configure when truthy. */
+  env?: Record<string, string | undefined>;
+  mcpRegistry?: McpRegistryLookup;
+  /** Project (default) or user-global configure path selection. */
+  scope?: DeploymentScope;
 }): Promise<{
   lockPath?: string;
   lockDocument?: LockfileDocument;
@@ -818,25 +1242,17 @@ async function deployMcpAfterPolicy(args: {
   withholdMessage?: string;
   withheldPackages: string[];
 }> {
-  const projectSurface = parseExecutableGrants({
-    manifest: args.rootManifest as Record<string, unknown>,
-  });
-  const userLoaded = loadUserExecutableGrants({
-    configDir: args.configDir,
-    configRoot: args.configDir,
-  });
-  const userSurface = userGrantsToSurface(userLoaded);
-  const combinedSurface = {
-    present: projectSurface.present || userSurface.present,
-    allow: { ...projectSurface.allow, ...userSurface.allow },
-    deny: { ...projectSurface.deny, ...userSurface.deny },
-  };
-  const orgExecutables = loadOrgExecutablesForTrust({
-    cwd: args.cwd,
-    policyPath: args.policyPath,
-    noPolicy: args.noPolicy === true,
-    policyPorts: args.policyPorts,
-  });
+  const { projectSurface, userSurface, combinedSurface, orgExecutables } =
+    args.trustContext ??
+    resolveInstallTrustContext({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      configDir: args.configDir,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy === true,
+      noRepoPolicy: args.noRepoPolicy === true,
+      policyPorts: args.policyPorts,
+    });
 
   const collected = collectMcpServers({
     cwd: args.cwd,
@@ -849,7 +1265,31 @@ async function deployMcpAfterPolicy(args: {
 
   const rootName = String(args.rootManifest.name ?? "root");
 
+  // Records written by this target in the previous lock let a configure pass
+  // remove entries bapm owns without touching foreign host servers. Compute
+  // this before the empty-collection fast path: an MCP-only cleanup pass after
+  // `deny` collects no dependency servers but must still prune host configs.
   if (collected.servers.length === 0) {
+    const pruneByTarget = resolveMcpPruneInventory({
+      document: args.lockDocument,
+      activeTargets: args.activeTargets,
+      approved: [],
+      only: args.only,
+      rootName,
+      orgExecutables,
+      projectSurface,
+      userSurface,
+      diagnostics: args.diagnostics,
+    });
+    await pruneTargetMcpConfigs({
+      cwd: args.cwd,
+      registry: args.registry,
+      activeTargets: args.activeTargets,
+      excludeSet: args.excludeSet,
+      pruneByTarget,
+      diagnostics: args.diagnostics,
+      scope: args.scope,
+    });
     return {
       ...refreshMcpLockInventory({
         cwd: args.cwd,
@@ -872,8 +1312,9 @@ async function deployMcpAfterPolicy(args: {
     };
   }
 
-  const approved: typeof collected.servers = [];
+  let approved: typeof collected.servers = [];
   const withheldPackages: string[] = [];
+  const skippedPackages: string[] = [];
 
   for (const server of collected.servers) {
     if (server.origin === "direct" || server.packageName === rootName) {
@@ -896,6 +1337,36 @@ async function deployMcpAfterPolicy(args: {
       approved.push(server);
       continue;
     }
+
+    // Explicit deny (project/user/org) and mentioned-but-unapproved entries
+    // (e.g. `mcp: false` or another executable type only) stay fatal. A package
+    // the surface never mentions is merely skipped with a warning: one grant
+    // must not make every unrelated dependency MCP package fatal.
+    const mentioned =
+      decision.outcome === "deny" ||
+      isPackageMentionedInGrants({
+        packageName: server.packageName,
+        projectSurface,
+        userSurface,
+        orgExecutables,
+      });
+    if (!mentioned) {
+      if (!skippedPackages.includes(server.packageName)) {
+        skippedPackages.push(server.packageName);
+        args.diagnostics.push({
+          code: "MCP_NOT_APPROVED",
+          message: `MCP from dependency "${server.packageName}" skipped: not approved. Run "bapm approve ${server.packageName}" or add executables.allow.${server.packageName}.mcp: true to bapm.yml.`,
+          warn: true,
+          packageName: server.packageName,
+          server: server.name,
+          skip: true,
+          unapproved: true,
+          outcome: decision.outcome,
+        });
+      }
+      continue;
+    }
+
     withheldPackages.push(server.packageName);
     args.diagnostics.push({
       code: "MCP_TRUST_WITHHOLD",
@@ -909,13 +1380,78 @@ async function deployMcpAfterPolicy(args: {
   }
 
   const uniqueWithheld = [...new Set(withheldPackages)];
-  const orgDenyActive = orgExecutables.deny_all === true || (orgExecutables.deny?.length ?? 0) > 0;
-  const withholdFatal = uniqueWithheld.length > 0 && (combinedSurface.present || orgDenyActive);
+  // Non-empty only for explicit denies / org deny / mentioned-but-unapproved.
+  const withholdFatal = uniqueWithheld.length > 0;
   const withholdMessage = withholdFatal
-    ? `MCP withheld: unapproved dependency executables (${uniqueWithheld.join(", ")}). Add to executables.allow / allowExecutables or remove MCP.`
+    ? `MCP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(", ")}). Remove the deny or add to executables.allow / allowExecutables; otherwise remove MCP.`
     : undefined;
 
+  // Resolve registry-only declarations through the injected MCP registry port.
+  // Without a port (library callers/tests that did not opt in) keep the legacy
+  // fail-closed behavior: fail before any host config or MCP lock inventory is
+  // written so a `{type:"stdio"}` shell never reaches a host.
+  const registryOnly = approved.filter(isRegistryOnlyMcpServer);
+  if (registryOnly.length > 0) {
+    if (!args.mcpRegistry) {
+      throw registryUnsupportedError(registryOnly);
+    }
+    const resolvedByName = new Map<string, CollectedMcpServer>();
+    for (const server of registryOnly) {
+      try {
+        const details = await args.mcpRegistry.getServer(
+          server.name,
+          registryUrlForDeclaration(server.registry),
+        );
+        const resolution = resolveMcpServerFromRegistry(details, {
+          transport: server.transport,
+          type: server.type,
+          command: server.command,
+          args: server.args,
+          url: server.url,
+          env: server.env,
+          headers: server.headers,
+        });
+        args.diagnostics.push(...resolution.diagnostics);
+        resolvedByName.set(server.name, {
+          ...server,
+          ...resolution.server,
+          // The declaration name remains the stable host key.
+          name: server.name,
+          origin: server.origin,
+          packageName: server.packageName,
+          registry: false,
+        });
+      } catch (cause) {
+        throw registryUnsupportedError([server], cause);
+      }
+    }
+    approved = approved.map((server) => resolvedByName.get(server.name) ?? server);
+  }
+
+  // Records written by this target in the previous lock let a configure pass
+  // remove entries bapm owns without touching foreign host servers.
+  const pruneByTarget = resolveMcpPruneInventory({
+    document: args.lockDocument,
+    activeTargets: args.activeTargets,
+    approved,
+    only: args.only,
+    rootName,
+    orgExecutables,
+    projectSurface,
+    userSurface,
+    diagnostics: args.diagnostics,
+  });
+
   if (approved.length === 0) {
+    await pruneTargetMcpConfigs({
+      cwd: args.cwd,
+      registry: args.registry,
+      activeTargets: args.activeTargets,
+      excludeSet: args.excludeSet,
+      pruneByTarget,
+      diagnostics: args.diagnostics,
+      scope: args.scope,
+    });
     return {
       ...refreshMcpLockInventory({
         cwd: args.cwd,
@@ -953,10 +1489,8 @@ async function deployMcpAfterPolicy(args: {
     };
   }
 
-  let wroteConfig = false;
-  let configPath: string | undefined;
-  let configuredTargetId: string | undefined;
-  let configuredServers: typeof approved | undefined;
+  const configuredTargets: Array<{ targetId: string; configPath: string }> = [];
+  const warnedGlobalTargets = new Set<string>();
 
   for (const targetId of args.activeTargets) {
     const target = findTarget(args.registry, targetId);
@@ -975,32 +1509,62 @@ async function deployMcpAfterPolicy(args: {
       continue;
     }
 
+    const homeScopedMcp = isHomeScopedMcpTarget(target);
+    if (homeScopedMcp && isEnvFlagEnabled(args.env, "BAPM_NO_GLOBAL_MCP")) {
+      args.diagnostics.push({
+        code: "MCP_GLOBAL_CONFIG_SKIPPED",
+        message: `Skipping MCP configure for "${targetId}": BAPM_NO_GLOBAL_MCP avoids writing the user-global MCP config shared by every project`,
+        target: targetId,
+        skip: true,
+      });
+      continue;
+    }
+
     // Per-target bake: omit APM placeholder bake when mcpEnvMode === "translate".
-    // Missing mode ⇒ bake (Cursor default). `{bake:NAME}` still resolved fail-closed.
+    // `mcpHeadersEnvMode` may translate headers while env still bakes (Codex).
+    // Missing modes ⇒ bake. `{bake:NAME}` still resolved fail-closed.
     // Lookup: overrides → process.env → effective manifest `env` (fills gaps).
     const bakeMode = target.mcpEnvMode === "translate" ? "translate" : "bake";
+    const headersBakeMode =
+      target.mcpHeadersEnvMode === "translate" || target.mcpHeadersEnvMode === "bake"
+        ? target.mcpHeadersEnvMode
+        : bakeMode;
     const manifestEnv = args.rootManifest.env;
+    let configuredServers: McpServerConfig[];
     try {
-      configuredServers = approved.map((server) =>
-        bakeMcpServerMaps(server, {
+      configuredServers = approved.map((server) => {
+        const baked = bakeMcpServerMaps(server, {
           mode: bakeMode,
+          headersMode: headersBakeMode,
           ...(manifestEnv !== undefined ? { manifestEnv } : {}),
-        }),
-      );
+        });
+        // Internal provenance stays on `approved` for trust/lock inventory; the
+        // host only receives the portable MCP server contract.
+        const { origin: _origin, packageName: _packageName, ...hostServer } = baked;
+        return hostServer;
+      });
     } catch (error) {
       if (error instanceof McpEnvBakeError) {
         throw new InstallError("INSTALL_MCP_ENV_BAKE", error.message, {
-          details: { missing: error.missing, targetId, mcpEnvMode: bakeMode },
+          details: {
+            missing: error.missing,
+            targetId,
+            mcpEnvMode: bakeMode,
+            mcpHeadersEnvMode: headersBakeMode,
+          },
           cause: error,
         });
       }
       throw error;
     }
 
+    const managedServers = pruneByTarget.get(targetId);
     const report = (await configureMcp(configuredServers, {
       cwd: args.cwd,
       targetId,
       deployRoots: [...target.deployRoots],
+      scope: args.scope,
+      ...(managedServers && managedServers.length > 0 ? { managedServers } : {}),
     })) as ConfigureMcpReport;
     if (!report || report.targetId !== targetId) {
       throw new InstallError(
@@ -1012,7 +1576,9 @@ async function deployMcpAfterPolicy(args: {
     const adapterDiagnostics = (
       report as (ConfigureMcpReport & { diagnostics?: unknown[] }) | undefined
     )?.diagnostics;
-    if (adapterDiagnostics) args.diagnostics.push(...adapterDiagnostics);
+    if (adapterDiagnostics) {
+      args.diagnostics.push(...adapterDiagnostics.map(markSkipDiagnosticWarn));
+    }
 
     const reportedConfigPath =
       typeof report?.configPath === "string" ? report.configPath.trim() : "";
@@ -1025,10 +1591,23 @@ async function deployMcpAfterPolicy(args: {
       );
     }
 
-    wroteConfig = true;
-    configuredTargetId = targetId;
-    configPath = normalizedConfigPath;
-    break;
+    configuredTargets.push({ targetId, configPath: normalizedConfigPath });
+
+    if (args.scope !== "global" && homeScopedMcp && !warnedGlobalTargets.has(targetId)) {
+      warnedGlobalTargets.add(targetId);
+      args.diagnostics.push({
+        code: "MCP_GLOBAL_CONFIG_WARN",
+        message:
+          `MCP config for "${targetId}" was written to ${reportedConfigPath}, ` +
+          "a user-global file shared by every project on this machine. " +
+          "Servers with the same name are overwritten by the last install. " +
+          `Use --exclude ${targetId} (or --exclude copilot,windsurf for both) to skip global MCP, ` +
+          "or project-local MCP if the host supports it.",
+        target: targetId,
+        path: reportedConfigPath,
+        warn: true,
+      });
+    }
   }
 
   const updated = refreshMcpLockInventory({
@@ -1040,9 +1619,7 @@ async function deployMcpAfterPolicy(args: {
     update: {
       kind: "declarations",
       servers: approved,
-      ...(wroteConfig && configPath && configuredTargetId
-        ? { target: { targetId: configuredTargetId, configPath } }
-        : {}),
+      ...(configuredTargets.length > 0 ? { targets: configuredTargets } : {}),
     },
   });
 
@@ -1054,11 +1631,458 @@ async function deployMcpAfterPolicy(args: {
   };
 }
 
+/**
+ * Compute per-target names that must be removed from host config.
+ *
+ * Full installs know the complete approved set, so any previously managed name
+ * missing from it is stale (removed manifest entry or deny). MCP-only runs do
+ * not resolve dependency nodes, so they only prune names whose recorded lock
+ * package is explicitly denied — never sweeping other servers blindly.
+ */
+function resolveMcpPruneInventory(args: {
+  document?: LockfileDocument;
+  activeTargets: string[];
+  approved: CollectedMcpServer[];
+  only?: InstallOnlyMode;
+  rootName: string;
+  orgExecutables: PolicyExecutables;
+  projectSurface: ExecutableGrantSurface;
+  userSurface: ExecutableGrantSurface;
+  diagnostics: unknown[];
+}): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  if (args.activeTargets.length === 0 || !args.document) return result;
+
+  const previous = readMcpTargetInventory(args.document);
+  const approvedNames = new Set(args.approved.map((server) => server.name).filter(Boolean));
+
+  for (const targetId of args.activeTargets) {
+    const names = previous.get(targetId);
+    if (!names || names.length === 0) continue;
+    const prune: string[] = [];
+    for (const name of names) {
+      if (approvedNames.has(name)) continue;
+      if (args.only === "mcp") {
+        const packageName = readLockedMcpPackage(args.document, name);
+        if (!packageName || packageName === args.rootName) continue;
+        const decision = resolveExecutableTrust({
+          packageName,
+          executableType: "mcp",
+          orgExecutables: args.orgExecutables,
+          projectSurface: args.projectSurface,
+          userSurface: args.userSurface,
+        });
+        if (decision.outcome !== "deny") continue;
+      }
+      prune.push(name);
+    }
+    if (prune.length > 0) result.set(targetId, prune);
+  }
+  return result;
+}
+
+function readMcpTargetInventory(document: LockfileDocument): Map<string, string[]> {
+  const doc = document as LockfileDocument & Record<string, unknown>;
+  const out = new Map<string, string[]>();
+
+  const targetServers = asUnknownRecord(doc.mcp_target_servers);
+  for (const [targetId, raw] of Object.entries(targetServers)) {
+    if (!Array.isArray(raw)) continue;
+    const names = raw.filter((name): name is string => typeof name === "string" && name.length > 0);
+    if (names.length > 0) out.set(targetId, names);
+  }
+
+  const configs = asUnknownRecord(doc.mcp_configs);
+  for (const [targetId, raw] of Object.entries(configs)) {
+    const config = asUnknownRecord(raw);
+    if (!Array.isArray(config.servers)) continue;
+    const names = config.servers.filter(
+      (name): name is string => typeof name === "string" && name.length > 0,
+    );
+    if (names.length === 0) continue;
+    const merged = new Set([...(out.get(targetId) ?? []), ...names]);
+    out.set(targetId, [...merged]);
+  }
+
+  return out;
+}
+
+function readLockedMcpPackage(document: LockfileDocument, serverName: string): string {
+  const doc = document as LockfileDocument & Record<string, unknown>;
+  const entry = asUnknownRecord(asUnknownRecord(doc.mcp_servers)[serverName]);
+  if (typeof entry.package === "string" && entry.package.trim()) return entry.package.trim();
+  const provenance = asUnknownRecord(asUnknownRecord(doc.mcp_config_provenance)[serverName]);
+  return typeof provenance.package === "string" ? provenance.package.trim() : "";
+}
+
+function asUnknownRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+/**
+ * Cleanup-only configure pass for `approved.length === 0`: rewrite host configs
+ * just enough to drop bapm-managed entries. Failures stay warnings so a deny
+ * grant is never reported as failed because a host file could not be rewritten.
+ */
+async function pruneTargetMcpConfigs(args: {
+  cwd: string;
+  registry?: IntegrationRegistry;
+  activeTargets: string[];
+  excludeSet: Set<string>;
+  pruneByTarget: Map<string, string[]>;
+  diagnostics: unknown[];
+  scope?: DeploymentScope;
+}): Promise<void> {
+  if (!args.registry || args.pruneByTarget.size === 0) return;
+
+  for (const targetId of args.activeTargets) {
+    const managedServers = args.pruneByTarget.get(targetId);
+    if (!managedServers || managedServers.length === 0) continue;
+    if (args.excludeSet.has(targetId)) continue;
+    const target = findTarget(args.registry, targetId);
+    if (!target) continue;
+    const configureMcp = getConfigureMcp(target);
+    if (!configureMcp) continue;
+
+    try {
+      const report = (await configureMcp([], {
+        cwd: args.cwd,
+        targetId,
+        deployRoots: [...target.deployRoots],
+        scope: args.scope,
+        managedServers: [...managedServers],
+      })) as ConfigureMcpReport | undefined;
+      const adapterDiagnostics = report?.diagnostics;
+      if (adapterDiagnostics) {
+        args.diagnostics.push(...adapterDiagnostics.map(markSkipDiagnosticWarn));
+      }
+    } catch (error) {
+      args.diagnostics.push({
+        code: "MCP_MANAGED_PRUNE_FAILED",
+        message: `Could not remove bapm-managed MCP entries for "${targetId}": ${
+          error instanceof Error ? error.message : String(error)
+        }. Remove the server(s) from the host config manually: ${managedServers.join(", ")}`,
+        target: targetId,
+        servers: [...managedServers],
+        warn: true,
+      });
+    }
+  }
+}
+
+function resolveLspTargets(
+  registry: IntegrationRegistry | undefined,
+  activeTargets: readonly string[],
+  excludeSet: ReadonlySet<string>,
+): string[] {
+  if (!registry) return [];
+  const out: string[] = [];
+  for (const targetId of activeTargets) {
+    if (excludeSet.has(targetId)) continue;
+    const target = findTarget(registry, targetId);
+    if (target && getConfigureLsp(target)) out.push(targetId);
+  }
+  return out;
+}
+
+/**
+ * Reconcile `dependencies.lsp` after MCP/policy.
+ *
+ * No supported active host => no collection and no writes; the caller keeps the
+ * existing `LSP_UNSUPPORTED` warning. Supported hosts are gated by
+ * ExecutableTrust type `lsp`, then written through `configureLsp`.
+ */
+async function deployLspAfterPolicy(args: {
+  cwd: string;
+  rootManifest: BapmManifest;
+  nodes: ResolvedNode[];
+  registry?: IntegrationRegistry;
+  lspTargets: string[];
+  frozen: boolean;
+  lockDocument?: LockfileDocument;
+  lockPath?: string;
+  previousLockFilename?: string;
+  diagnostics: unknown[];
+  configDir?: string;
+  policyPath?: string;
+  noPolicy?: boolean;
+  noRepoPolicy?: boolean;
+  policyPorts?: {
+    policyProviders?: string[];
+    providers?: string[];
+    listGitRemotes?: RunInstallOptions["listGitRemotes"];
+    remotes?: RunInstallOptions["remotes"];
+    fetchPolicyUrl?: RunInstallOptions["fetchPolicyUrl"];
+    httpGet?: RunInstallOptions["httpGet"];
+    fetchAncestor?: RunInstallOptions["fetchAncestor"];
+    defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
+    implementationDefaultHost?: string;
+  };
+  trustContext?: InstallTrustContext;
+  only?: InstallOnlyMode;
+}): Promise<{ lockPath?: string; lockDocument?: LockfileDocument }> {
+  if (args.only === "mcp" || args.lspTargets.length === 0) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const { projectSurface, userSurface, orgExecutables } =
+    args.trustContext ??
+    resolveInstallTrustContext({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      configDir: args.configDir,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy === true,
+      noRepoPolicy: args.noRepoPolicy === true,
+      policyPorts: args.policyPorts,
+    });
+
+  let collected: ReturnType<typeof collectLspServers>;
+  try {
+    collected = collectLspServers({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      nodes: args.nodes,
+    });
+  } catch (error) {
+    if (error instanceof LspDeclarationError) {
+      throw new InstallError("INSTALL_LSP_INVALID", error.message, {
+        details: {
+          server: error.server,
+          packageName: error.packageName,
+          path: error.path,
+        },
+        cause: error,
+      });
+    }
+    throw error;
+  }
+
+  const rootName = String(args.rootManifest.name ?? "root");
+  const approved: CollectedLspServer[] = [];
+  const withheldPackages: string[] = [];
+  const warnedPackages = new Set<string>();
+
+  for (const server of collected.servers) {
+    if (server.origin === "direct" || server.packageName === rootName) {
+      approved.push(server);
+      continue;
+    }
+    const decision = resolveExecutableTrust({
+      packageName: server.packageName,
+      executableType: "lsp",
+      orgExecutables,
+      projectSurface,
+      userSurface,
+    });
+    if (decision.outcome === "skip" || decision.allowed) {
+      approved.push(server);
+      continue;
+    }
+
+    const mentioned =
+      decision.outcome === "deny" ||
+      isPackageMentionedInGrants({
+        packageName: server.packageName,
+        projectSurface,
+        userSurface,
+        orgExecutables,
+      });
+    if (!mentioned) {
+      if (!warnedPackages.has(server.packageName)) {
+        warnedPackages.add(server.packageName);
+        args.diagnostics.push({
+          code: "LSP_NOT_APPROVED",
+          message:
+            `LSP from dependency "${server.packageName}" skipped: not approved. ` +
+            `Run "bapm approve ${server.packageName} --lsp" or add ` +
+            `executables.allow.${server.packageName}.lsp: true to bapm.yml.`,
+          warn: true,
+          packageName: server.packageName,
+          server: server.name,
+          skip: true,
+          unapproved: true,
+          outcome: decision.outcome,
+        });
+      }
+      continue;
+    }
+
+    withheldPackages.push(server.packageName);
+    args.diagnostics.push({
+      code: "LSP_TRUST_WITHHOLD",
+      message: decision.reason ?? `unapproved LSP from "${server.packageName}" withheld`,
+      packageName: server.packageName,
+      server: server.name,
+      withhold: true,
+      unapproved: true,
+      outcome: decision.outcome,
+    });
+  }
+
+  const uniqueWithheld = [...new Set(withheldPackages)];
+  if (uniqueWithheld.length > 0) {
+    throw new InstallError(
+      "INSTALL_LSP_TRUST",
+      `LSP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(
+        ", ",
+      )}). Remove the deny or add executables.allow / allowExecutables with 'lsp: true'.`,
+      { details: { withheldPackages: uniqueWithheld } },
+    );
+  }
+
+  const previousTargets = readLspTargetInventory(
+    args.lockDocument as Record<string, unknown> | undefined,
+  );
+  const hasPreviousInventory = previousTargets.size > 0;
+  if (collected.servers.length === 0 && !hasPreviousInventory) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const approvedNames = new Set(approved.map((server) => server.name));
+  const activeLspTargets = new Set(args.lspTargets);
+  const nextTargets: Record<string, string[]> = {};
+  for (const [targetId, names] of previousTargets) {
+    if (activeLspTargets.has(targetId)) continue;
+    const kept = names.filter((name) => approvedNames.has(name));
+    if (kept.length > 0) nextTargets[targetId] = [...new Set(kept)].sort();
+  }
+
+  for (const targetId of args.lspTargets) {
+    const target = findTarget(args.registry!, targetId);
+    const configureLsp = target ? getConfigureLsp(target) : undefined;
+    if (!target || !configureLsp) continue;
+
+    const stale = (previousTargets.get(targetId) ?? []).filter((name) => !approvedNames.has(name));
+    const hostServers = approved.map(
+      ({ origin: _origin, packageName: _packageName, owner: _owner, raw: _raw, ...server }) => {
+        void _origin;
+        void _packageName;
+        void _owner;
+        void _raw;
+        return server;
+      },
+    );
+
+    let report: ConfigureLspReport;
+    try {
+      report = (await configureLsp(hostServers, {
+        cwd: args.cwd,
+        targetId,
+        deployRoots: [...target.deployRoots],
+        ...(stale.length > 0 ? { managedServers: stale } : {}),
+      })) as ConfigureLspReport;
+    } catch (error) {
+      throw new InstallError(
+        "INSTALL_LSP_CONFIG",
+        `Target "${targetId}" failed to configure LSP: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        { details: { targetId }, cause: error },
+      );
+    }
+
+    if (!report || report.targetId !== targetId) {
+      throw new InstallError(
+        "INSTALL_FAILED",
+        `Target "${targetId}" configured LSP without target-owned deployment attribution`,
+        { details: { targetId, reportTargetId: report?.targetId } },
+      );
+    }
+    const reportedPath = typeof report.configPath === "string" ? report.configPath.trim() : "";
+    if (!reportedPath) {
+      throw new InstallError(
+        "INSTALL_FAILED",
+        `Target "${targetId}" configured LSP without a usable config path`,
+        { details: { targetId } },
+      );
+    }
+    if (report.diagnostics) {
+      args.diagnostics.push(...report.diagnostics.map(markSkipDiagnosticWarn));
+    }
+
+    const written = (report.servers ?? [...approvedNames]).filter(
+      (name): name is string => typeof name === "string" && name.length > 0,
+    );
+    if (written.length > 0) {
+      nextTargets[targetId] = [...new Set(written)].sort((left, right) =>
+        left.localeCompare(right),
+      );
+    }
+  }
+
+  // Previously configured hosts that are not active in this run still release
+  // server names that were removed from the approved declaration set. Passing
+  // an empty incoming list plus `managedServers` preserves foreign entries.
+  for (const [targetId, names] of previousTargets) {
+    if (activeLspTargets.has(targetId)) continue;
+    const stale = names.filter((name) => !approvedNames.has(name));
+    if (stale.length === 0) continue;
+    const target = findTarget(args.registry!, targetId);
+    const configureLsp = target ? getConfigureLsp(target) : undefined;
+    if (!target || !configureLsp) continue;
+    try {
+      const report = (await configureLsp([], {
+        cwd: args.cwd,
+        targetId,
+        deployRoots: [...target.deployRoots],
+        managedServers: stale,
+      })) as ConfigureLspReport;
+      if (report?.diagnostics) {
+        args.diagnostics.push(...report.diagnostics.map(markSkipDiagnosticWarn));
+      }
+    } catch (error) {
+      throw new InstallError(
+        "INSTALL_LSP_CONFIG",
+        `Target "${targetId}" failed to remove stale LSP servers: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        { details: { targetId, servers: stale }, cause: error },
+      );
+    }
+  }
+
+  if (args.frozen || !args.lockDocument) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const doc = args.lockDocument as LockfileDocument & Record<string, unknown>;
+  const before = lspInventoryFingerprint(doc);
+  applyLspInventoryToLock({
+    document: doc,
+    servers: approved,
+    targetServers: nextTargets,
+  });
+  if (lspInventoryFingerprint(doc) === before) {
+    return { lockPath: args.lockPath, lockDocument: args.lockDocument };
+  }
+
+  const lockPath = partitionAndWriteLockfiles(args.lockDocument, {
+    cwd: args.cwd,
+    sourcePath: args.lockPath,
+    sourceFilename: args.previousLockFilename,
+  }).sharedPath;
+  return { lockPath, lockDocument: args.lockDocument };
+}
+
+function lspInventoryFingerprint(doc: Record<string, unknown>): string {
+  return JSON.stringify([
+    doc.lsp_servers ?? null,
+    doc.lsp_configs ?? null,
+    doc.lsp_target_servers ?? null,
+    doc.lsp_config_provenance ?? null,
+  ]);
+}
+
 type McpLockInventoryUpdate =
   | {
       kind: "declarations";
       servers: CollectedMcpServer[];
       target?: { targetId: string; configPath: string };
+      /** All targets configured this run; each gets `mcp_configs`/`mcp_target_servers`. */
+      targets?: Array<{ targetId: string; configPath: string }>;
     }
   | { kind: "prune"; rootPackageName: string; livePackageNames?: string[] }
   | { kind: "clear" };
@@ -1096,9 +2120,15 @@ function refreshMcpLockInventory(args: {
       document: args.document,
       servers: update.servers,
       ...update.target,
+      ...(update.targets ? { targets: update.targets } : {}),
     });
     // Nothing existed and nothing is authored: avoid a redundant second lock write.
-    if (!hadInventory && update.servers.length === 0 && !update.target) {
+    if (
+      !hadInventory &&
+      update.servers.length === 0 &&
+      !update.target &&
+      !(update.targets && update.targets.length > 0)
+    ) {
       return { lockPath: args.lockPath, lockDocument: args.document };
     }
   } else if (update.kind === "prune") {
@@ -1145,6 +2175,8 @@ function hasMcpEntries(value: unknown): boolean {
 /** Discover + gate + materialize dependency package-root `bin/` (install-trust-bin). */
 function deployBinsAfterConsent(args: {
   cwd: string;
+  /** Deploy root default; user home for global installs. */
+  deployCwd?: string;
   rootManifest: BapmManifest;
   nodes: ResolvedNode[];
   trustBin: "allow" | "deny" | "default";
@@ -1156,6 +2188,7 @@ function deployBinsAfterConsent(args: {
   configDir?: string;
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   policyPorts?: {
     policyProviders?: string[];
     providers?: string[];
@@ -1167,27 +2200,23 @@ function deployBinsAfterConsent(args: {
     defaultFetchFailure?: RunInstallOptions["defaultFetchFailure"];
     implementationDefaultHost?: string;
   };
+  trustContext?: InstallTrustContext;
 }): unknown[] {
   const diagnostics: unknown[] = [];
-  const projectSurface = parseExecutableGrants({
-    manifest: args.rootManifest as Record<string, unknown>,
-  });
-  const userLoaded = loadUserExecutableGrants({
-    configDir: args.configDir,
-    configRoot: args.configDir,
-  });
-  const userSurface = userGrantsToSurface(userLoaded);
-  const orgExecutables = loadOrgExecutablesForTrust({
-    cwd: args.cwd,
-    policyPath: args.policyPath,
-    noPolicy: args.noPolicy,
-    policyPorts: args.policyPorts,
-  });
+  const { projectSurface, userSurface, orgExecutables } =
+    args.trustContext ??
+    resolveInstallTrustContext({
+      cwd: args.cwd,
+      rootManifest: args.rootManifest,
+      configDir: args.configDir,
+      policyPath: args.policyPath,
+      noPolicy: args.noPolicy,
+      noRepoPolicy: args.noRepoPolicy === true,
+      policyPorts: args.policyPorts,
+    });
   const deployRoot = args.binDeployRoot
     ? resolve(args.binDeployRoot)
-    : defaultBinDeployRoot(args.cwd);
-  let trustPostureWarned = false;
-
+    : defaultBinDeployRoot(args.deployCwd ?? args.cwd);
   for (const node of args.nodes) {
     const packageRoot = dependencyPackageRoot(node);
     if (!packageRoot) continue;
@@ -1214,6 +2243,7 @@ function deployBinsAfterConsent(args: {
         packageName: node.name,
         withhold: true,
         skip: true,
+        warn: consent.warn,
         trustBin: args.trustBin,
         ladderOutcome: consent.ladderOutcome,
         outcome: consent.outcome,
@@ -1222,17 +2252,6 @@ function deployBinsAfterConsent(args: {
     }
 
     materializeBinFiles({ files, deployRoot });
-    if (consent.warn && !trustPostureWarned) {
-      trustPostureWarned = true;
-      diagnostics.push({
-        code: "BIN_TRUST_POSTURE_WARN",
-        message:
-          "Trust posture warning: dependency bin/ deployed under interactive default; pass --trust-bin for explicit consent (or approve / project executables.allow with bin: true for persistence)",
-        warn: true,
-        trustPosture: true,
-        packageName: node.name,
-      });
-    }
   }
 
   return diagnostics;
@@ -1250,6 +2269,7 @@ function loadOrgExecutablesForTrust(args: {
   cwd: string;
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   policyPorts?: {
     policyProviders?: string[];
     providers?: string[];
@@ -1269,6 +2289,7 @@ function loadOrgExecutablesForTrust(args: {
       policyPath: args.policyPath,
       policy: args.policyPath,
       noPolicy: args.noPolicy,
+      noRepoPolicy: args.noRepoPolicy === true,
       providers: args.policyPorts?.providers ?? args.policyPorts?.policyProviders,
       policyProviders: args.policyPorts?.policyProviders ?? args.policyPorts?.providers,
       listGitRemotes: args.policyPorts?.listGitRemotes,
@@ -1316,6 +2337,7 @@ function applyPolicyGate(args: {
   cwd: string;
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   nodes: ResolvedNode[];
   /** When set (dry-run), use these candidates instead of deriving from nodes. */
   candidatesOverride?: PolicyCandidate[];
@@ -1335,6 +2357,7 @@ function applyPolicyGate(args: {
     policyPath: args.policyPath,
     policy: args.policyPath,
     noPolicy: args.noPolicy,
+    noRepoPolicy: args.noRepoPolicy === true,
     providers: args.providers ?? args.policyProviders,
     policyProviders: args.policyProviders ?? args.providers,
     listGitRemotes: args.listGitRemotes,
@@ -1454,12 +2477,69 @@ function dedupePreserveOrder(ids: string[]): string[] {
   return out;
 }
 
+/**
+ * Global file deployment is opt-in per integration. A target without the flag
+ * would write project-relative harness files under `~/.bapm`, so fail before
+ * any target materialize instead of leaving stray global-root files.
+ */
+function assertGlobalFilesSupported(
+  activeTargets: string[],
+  registry: IntegrationRegistry | undefined,
+): void {
+  const unsupported: string[] = [];
+  for (const id of activeTargets) {
+    const target = registry ? findTarget(registry, id) : undefined;
+    if (target && target.supportsGlobalFiles !== true) unsupported.push(id);
+  }
+  if (unsupported.length === 0) return;
+  throw new InstallError(
+    "INSTALL_GLOBAL_UNSUPPORTED",
+    `Global file install is not supported for target(s): ${unsupported.join(", ")}. Supported global file hosts in this release: cursor, claude, codex, agent-skills.`,
+    { details: { unsupported, activeTargets: [...activeTargets] } },
+  );
+}
+
+/** Active hosts that know how to write a user-scope MCP config. */
+function filterGlobalMcpTargets(
+  activeTargets: string[],
+  registry: IntegrationRegistry | undefined,
+  excludeSet: Set<string>,
+): string[] {
+  return activeTargets.filter((id) => {
+    if (excludeSet.has(id)) return false;
+    const target = registry ? findTarget(registry, id) : undefined;
+    return target?.supportsGlobalMcp === true;
+  });
+}
+
+/** Global MCP is opt-in per integration; refuse unsupported hosts clearly. */
+function assertGlobalMcpSupported(
+  activeTargets: string[],
+  registry: IntegrationRegistry | undefined,
+  excludeSet: Set<string>,
+): void {
+  const unsupported: string[] = [];
+  for (const id of activeTargets) {
+    if (excludeSet.has(id)) continue;
+    const target = registry ? findTarget(registry, id) : undefined;
+    if (target && target.supportsGlobalMcp !== true) unsupported.push(id);
+  }
+  if (unsupported.length === 0) return;
+  throw new InstallError(
+    "INSTALL_GLOBAL_UNSUPPORTED",
+    `Global MCP is not supported for target(s): ${unsupported.join(", ")}. Supported global MCP hosts in this release: cursor, opencode.`,
+    { details: { unsupported, activeTargets: [...activeTargets] } },
+  );
+}
+
 async function resolveActiveTargets(args: {
   cwd: string;
   registry?: IntegrationRegistry;
   override?: string[];
   forcedTargetId?: string;
   manifestActive?: string[];
+  configTargetId?: string;
+  scope?: DeploymentScope;
 }): Promise<string[]> {
   // 1. CLI / forced --target wins over everything.
   if (args.forcedTargetId) {
@@ -1471,12 +2551,17 @@ async function resolveActiveTargets(args: {
     return dedupePreserveOrder(args.override);
   }
 
-  // 3. Manifest `active` (already non-empty when present after parse).
+  // 3. Manifest `active` (local overlay already merged; non-empty when present).
   if (args.manifestActive && args.manifestActive.length > 0) {
     return dedupePreserveOrder(args.manifestActive);
   }
 
-  // 4. Sole auto-detect, else fail-closed.
+  // 4. User config default target (before detect, after explicit project selection).
+  if (args.configTargetId) {
+    return [args.configTargetId];
+  }
+
+  // 5. Sole auto-detect, else fail-closed.
   if (!args.registry) {
     throw new InstallError(
       "INSTALL_UNKNOWN_TARGET",
@@ -1485,11 +2570,13 @@ async function resolveActiveTargets(args: {
     );
   }
 
-  const detection = await detectRegisteredTargets(args.registry, args.cwd);
+  const detection = await detectRegisteredTargets(args.registry, args.cwd, args.scope);
   if (detection.detectedIds.length === 1) return detection.detectedIds;
   throw new InstallError(
     "INSTALL_UNKNOWN_TARGET",
-    "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
+    args.scope === "global"
+      ? `Global target detection is missing or ambiguous; pass --target <id> (supported file hosts: cursor, claude, codex, agent-skills; MCP-only: opencode) or set active in ~/.bapm/bapm.yml`
+      : "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
     { details: { detectedTargets: detection.detectedIds, diagnostics: detection.diagnostics } },
   );
 }
@@ -1497,14 +2584,18 @@ async function resolveActiveTargets(args: {
 async function detectRegisteredTargets(
   registry: IntegrationRegistry,
   cwd: string,
+  scope: DeploymentScope = "project",
 ): Promise<{ detectedIds: string[]; diagnostics: unknown[] }> {
-  if (typeof registry.detect === "function") return registry.detect(cwd);
+  // A custom registry `detect(cwd)` is project-only; global detection must use
+  // each target's user-scope detector.
+  if (scope !== "global" && typeof registry.detect === "function") return registry.detect(cwd);
 
   const detectedIds: string[] = [];
   const diagnostics: unknown[] = [];
   for (const target of listRegistry(registry)) {
     try {
-      if (await target.detect({ cwd })) detectedIds.push(target.id);
+      const detect = scope === "global" ? target.detectGlobal : target.detect;
+      if (detect && (await detect({ cwd }))) detectedIds.push(target.id);
     } catch {
       diagnostics.push({
         targetId: target.id,
@@ -1629,7 +2720,7 @@ function collectPackageDeclaredTargets(
     const root = n.packageRoot;
     if (!root || !existsSync(root)) continue;
     try {
-      const { document } = loadManifest({ cwd: root });
+      const { document } = loadManifest({ cwd: root, allowReplace: true });
       map.set(n.name, declaredTargetIds(document));
     } catch {
       map.set(n.name, []);
@@ -1645,7 +2736,7 @@ function collectPackageDeclaredTargets(
       continue;
     }
     try {
-      const { document } = loadManifest({ cwd: pkgRoot });
+      const { document } = loadManifest({ cwd: pkgRoot, allowReplace: true });
       map.set(p.packageName, declaredTargetIds(document));
     } catch {
       map.set(p.packageName, []);

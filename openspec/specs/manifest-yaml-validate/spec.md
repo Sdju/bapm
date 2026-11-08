@@ -218,19 +218,43 @@ When a `registries` block is present, the system MUST validate registry entries 
 - **WHEN** a registry entry is a bare string `http://example.com/...` (no object, no insecure flag) and the host is not exempt
 - **THEN** the system MUST reject the manifest naming that registry
 
+### Requirement: $schema contract negotiation
+
+The system MUST negotiate the manifest contract from the standard top-level `$schema` identity. Absence of `$schema` MUST select the working draft. The known OpenAPM v0.1 identities `manifest-v0.1.schema.json`, `manifest-v0.1.41.schema.json`, and `manifest-v0.1.48.schema.json` MUST be accepted and MUST select the `openapm-v0.1` contract while remaining retained on the document for round-trip. The `manifest-source-replacements-v1.schema.json` candidate MAY remain unsupported but MUST fail closed with a specific diagnostic that names source replacements and does not claim to apply `replace:` semantics. Any other `$schema` identity MUST fail closed with a diagnostic that lists the supported identities; it MUST NOT fall back to the working draft.
+
+#### Scenario: Known OpenAPM v0.1 schema accepted
+
+- **WHEN** a manifest declares `$schema` as one of the published OpenAPM v0.1 identities
+- **THEN** parse/load MUST succeed, retain `$schema`, and report the `openapm-v0.1` contract
+
+#### Scenario: Absent schema is the working draft
+
+- **WHEN** a manifest omits `$schema`
+- **THEN** parse/load MUST succeed and report the `working-draft` contract
+
+#### Scenario: Unknown schema fails closed
+
+- **WHEN** a manifest declares an unrecognized `$schema` URI
+- **THEN** parse/load MUST reject with a diagnostic naming the unsupported identity and the supported list
+
+#### Scenario: Replacements schema is a specific unsupported diagnostic
+
+- **WHEN** a manifest declares the source-replacements-v1 candidate URI
+- **THEN** parse/load MUST reject with a diagnostic that specifically names source replacements / `replace:` support
+
 ### Requirement: Unknown top-level keys and x-* extensions
 
-On read, the system MUST accept unknown top-level keys and `x-*` extension keys without failing validation. The in-memory document model MUST retain them for a future rewrite path (req-ext-001, req-ext-002 policy: bapm MUST NOT define normative `x-*` keys). Rewrite preserve (req-mf-006) is deferred past M1.
+On read, the system MUST accept unknown top-level keys and `x-*` extension keys without failing validation. The in-memory document model MUST retain them for a future rewrite path (req-ext-001, req-ext-002 policy: bapm MUST NOT define normative `x-*` keys). A key matching `x-[a-z][a-z0-9-]*` MUST be treated as a vendor extension. Any other unrecognized top-level key MUST produce a non-blocking `MF_*` warning that names the key and recommends the `x-*` form (APM 0.35 parity); the warning MUST NOT reject the load or drop the key. Rewrite preserve (req-mf-006) is deferred past M1.
 
 #### Scenario: Unknown top-level key accepted
 
 - **WHEN** a valid minimal manifest also contains an unrecognized top-level key
-- **THEN** the system MUST accept the load and retain the key on the document model
+- **THEN** the system MUST accept the load, retain the key on the document model, and attach a non-blocking MF_* warning identifying the key
 
 #### Scenario: x-extension accepted
 
 - **WHEN** a manifest includes `x-*` keys and optional `default_host` (req-mf-019)
-- **THEN** the system MUST accept the load and retain those fields on the document model
+- **THEN** the system MUST accept the load and retain those fields on the document model without an unknown-key warning
 
 ### Requirement: workspaces key rejected on v0.1 parse
 
@@ -266,7 +290,7 @@ If both `target` and `targets` are present, the system MUST reject the manifest 
 
 ### Requirement: Object-map target and targets accept host→package bindings
 
-When `target` or `targets` is a YAML mapping (object), the system MUST treat it as a **bapm extension** host→integration-package map: each key MUST be a valid OpenAPM mf-005 target token (canonical host id, documented alias, or `x-<vendor>-<name>`); each value MUST be a non-empty string (npm package specifier, trimmed). Empty mappings MUST be rejected. Legacy forms remain valid: `target` as a non-empty string token, `targets` as a non-empty-string array. The system MUST reject non-string map values, non-string/non-mapping `target`, and `targets` that are neither a string array nor a string-valued mapping. Mutual exclusion of the two fields MUST still apply regardless of form. Successful parse MUST retain the object map on the in-memory document model. Dual-read `apm.yml` MUST use the same rules as `bapm.yml`.
+When `target` or `targets` is a YAML mapping (object), the system MUST treat it as a **bapm extension** host→integration-package map: each key MUST be a valid OpenAPM mf-005 target token (canonical host id, documented alias, or `x-<vendor>-<name>`); each value MUST be a non-empty string (npm package specifier, trimmed). Empty mappings MUST be rejected. Legacy scalar and CSV forms remain valid and MUST normalize to canonical arrays where APM does: `targets: cursor` → `[cursor]`; `targets: "cursor,claude"` and `target: "claude,copilot"` → token arrays; `target: [cursor, claude]` list sugar MUST be accepted. A single-token `target` MAY remain a string projection. The system MUST reject non-string map values, unsupported non-string/non-mapping/non-list `target`, and `targets` that are not a scalar, string array, or string-valued mapping. Mutual exclusion of the two fields MUST still apply regardless of form. Successful parse MUST retain the normalized form on the in-memory document model. Dual-read `apm.yml` MUST use the same rules as `bapm.yml`.
 
 #### Scenario: targets object map accepted
 
@@ -282,6 +306,16 @@ When `target` or `targets` is a YAML mapping (object), the system MUST treat it 
 
 - **WHEN** a manifest declares `target: cursor` or `targets: [cursor, claude]`
 - **THEN** parse/validate MUST succeed unchanged from prior behavior
+
+#### Scenario: Scalar and CSV target forms normalize
+
+- **WHEN** a manifest declares `targets: cursor`, `targets: "cursor,claude"`, or `target: "claude,copilot"`
+- **THEN** parse/validate MUST succeed and expose canonical token arrays (`target` may stay a single string when only one token remains)
+
+#### Scenario: Invalid CSV token rejected
+
+- **WHEN** a scalar/CSV `target` or `targets` contains an invalid mf-005 token
+- **THEN** the system MUST reject with a diagnostic that names the bad token
 
 #### Scenario: Invalid map key rejected
 
@@ -323,7 +357,7 @@ Any producer path that serializes or writes a project manifest (init scaffold, r
 
 ### Requirement: Target tokens validated on emit and validate
 
-When `target` or `targets` is present on emit/validate, every host token MUST be a canonical host id, a documented alias, or a vendor id matching `x-<vendor>-<name>`. For legacy string / string-array forms, that means each string token. For object-map forms, that means each map key. Invalid tokens MUST be rejected with a diagnostic that names the bad token (OpenAPM mf-005). Object-map values MUST be validated as non-empty strings under the object-map requirement; they are not themselves mf-005 host tokens.
+When `target` or `targets` is present on emit/validate, every host token MUST be a canonical host id, a documented alias, or a vendor id matching `x-<vendor>-<name>`. The canonical set MUST include every published `@b-apm/integration-<id>` host (`cursor`, `opencode`, `copilot`, `windsurf`, `kiro`, `grok-bot`, `grok-build`, `hermes`, `intellij`, `antigravity`, `agent-skills`, `claude`, `codex`, `gemini`) plus `all`. The documented aliases `vscode` and `agents` MUST be accepted on input and normalized to `copilot` on parse across `target`, `targets`, object-map keys, and structured `active` target ids, so consumers never observe the alias; emit MUST write the canonical id. For legacy string / string-array forms, that means each string token. For object-map forms, that means each map key; distinct input keys that normalize to the same canonical host MUST fail closed rather than silently overwrite. Invalid tokens MUST be rejected with a diagnostic that names the bad token (OpenAPM mf-005). Object-map values MUST be validated as non-empty strings under the object-map requirement; they are not themselves mf-005 host tokens.
 
 #### Scenario: Invalid target token rejected
 
@@ -342,7 +376,7 @@ When `target` or `targets` is present on emit/validate, every host token MUST be
 
 ### Requirement: active field is structured preset and target selection
 
-When top-level `active` is present on a project manifest, the system MUST accept only the structured forms defined by `manifest-presets`: a non-empty sequence of single-key `{ preset: … }` / `{ target: … }` mappings, or a non-empty mapping with `preset` and/or `target` keys whose values are a non-empty string or non-empty string sequence. Each preset/target string MAY begin with `!` for negation; the id after an optional `!` for `target` MUST be a valid OpenAPM mf-005 host token; the id for `preset` MUST be a non-empty name token. Successful parse MUST retain structured `active` on the in-memory document. Empty `active: []`, empty `active: {}`, legacy bare string sequences such as `active: [cursor]`, scalars, multi-key map entries in the list form, empty string elements, or invalid target tokens MUST be rejected with a diagnostic naming the path or bad token. Dual-read `apm.yml` MUST use the same rules as `bapm.yml`. Absence of `active` MUST remain valid.
+When top-level `active` is present on a project manifest, the system MUST accept only the structured forms defined by `manifest-presets`: a non-empty sequence of single-key `{ preset: … }` / `{ target: … }` mappings, or a non-empty mapping with `preset` and/or `target` keys whose values are a non-empty string or non-empty string sequence. Each preset/target string MAY begin with `!` for negation; the id after an optional `!` for `target` MUST be a valid OpenAPM mf-005 host token (legacy aliases `vscode` / `agents` MUST normalize to `copilot`); the id for `preset` MUST be a non-empty name token. Successful parse MUST retain structured `active` on the in-memory document. Empty `active: []`, empty `active: {}`, legacy bare string sequences such as `active: [cursor]`, scalars, multi-key map entries in the list form, empty string elements, or invalid target tokens MUST be rejected with a diagnostic naming the path or bad token. Dual-read `apm.yml` MUST use the same rules as `bapm.yml`. Absence of `active` MUST remain valid.
 
 #### Scenario: List-of-maps active accepted
 

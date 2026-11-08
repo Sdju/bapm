@@ -33,4 +33,9 @@ export function normalizeHashMap(value: unknown): unknown {
   return out;
 }
 
-export const DEP_HASH_SCALAR_KEYS = ["resolved_hash", "tree_sha256", "source_digest"] as const;
+export const DEP_HASH_SCALAR_KEYS = [
+  "resolved_hash",
+  "tree_sha256",
+  "source_digest",
+  "content_hash",
+] as const;
