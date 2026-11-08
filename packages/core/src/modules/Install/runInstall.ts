@@ -585,6 +585,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       noRepoPolicy,
       policyPorts,
       trustContext: installTrustContext,
+      env: options.env,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
     if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
@@ -691,6 +692,26 @@ function markSkipDiagnosticWarn(diagnostic: unknown): unknown {
   const code = typeof rec.code === "string" ? rec.code.toUpperCase() : "";
   if (!/_UNSUPPORTED(?:$|_)|_SKIP_|_MCP_SKIP_NO_/.test(code)) return diagnostic;
   return { ...rec, warn: true };
+}
+
+/**
+ * Home-scoped MCP is a host contract (Copilot/Windsurf), but it writes a file
+ * shared by every project. Prefer the declared `mcpScope`; the canonical ids
+ * are a fallback for older/injected registries that omit the optional field.
+ */
+const HOME_SCOPED_MCP_TARGET_IDS = new Set(["copilot", "windsurf"]);
+
+function isHomeScopedMcpTarget(target: BapmIntegration): boolean {
+  if (target.mcpScope === "home") return true;
+  return HOME_SCOPED_MCP_TARGET_IDS.has(String(target.id ?? "").toLowerCase());
+}
+
+function isEnvFlagEnabled(
+  env: Record<string, string | undefined> | undefined,
+  key: string,
+): boolean {
+  const value = (env?.[key] ?? process.env[key])?.trim().toLowerCase();
+  return value === "1" || value === "true";
 }
 
 /** Best-effort: drop a lock written by this install when a later gate fails closed. */
@@ -1001,6 +1022,8 @@ async function deployMcpAfterPolicy(args: {
     implementationDefaultHost?: string;
   };
   trustContext?: InstallTrustContext;
+  /** Env overlay; `BAPM_NO_GLOBAL_MCP` skips home-scoped MCP configure when truthy. */
+  env?: Record<string, string | undefined>;
 }): Promise<{
   lockPath?: string;
   lockDocument?: LockfileDocument;
@@ -1167,6 +1190,7 @@ async function deployMcpAfterPolicy(args: {
   }
 
   const configuredTargets: Array<{ targetId: string; configPath: string }> = [];
+  const warnedGlobalTargets = new Set<string>();
 
   for (const targetId of args.activeTargets) {
     const target = findTarget(args.registry, targetId);
@@ -1181,6 +1205,17 @@ async function deployMcpAfterPolicy(args: {
         message: `Skipping configureMcp for excluded target "${targetId}" (MCP filter; install continues)`,
         exclude: targetId,
         warn: true,
+      });
+      continue;
+    }
+
+    const homeScopedMcp = isHomeScopedMcpTarget(target);
+    if (homeScopedMcp && isEnvFlagEnabled(args.env, "BAPM_NO_GLOBAL_MCP")) {
+      args.diagnostics.push({
+        code: "MCP_GLOBAL_CONFIG_SKIPPED",
+        message: `Skipping MCP configure for "${targetId}": BAPM_NO_GLOBAL_MCP avoids writing the user-global MCP config shared by every project`,
+        target: targetId,
+        skip: true,
       });
       continue;
     }
@@ -1243,6 +1278,22 @@ async function deployMcpAfterPolicy(args: {
     }
 
     configuredTargets.push({ targetId, configPath: normalizedConfigPath });
+
+    if (homeScopedMcp && !warnedGlobalTargets.has(targetId)) {
+      warnedGlobalTargets.add(targetId);
+      args.diagnostics.push({
+        code: "MCP_GLOBAL_CONFIG_WARN",
+        message:
+          `MCP config for "${targetId}" was written to ${reportedConfigPath}, ` +
+          "a user-global file shared by every project on this machine. " +
+          "Servers with the same name are overwritten by the last install. " +
+          `Use --exclude ${targetId} (or --exclude copilot,windsurf for both) to skip global MCP, ` +
+          "or project-local MCP if the host supports it.",
+        target: targetId,
+        path: reportedConfigPath,
+        warn: true,
+      });
+    }
   }
 
   const updated = refreshMcpLockInventory({

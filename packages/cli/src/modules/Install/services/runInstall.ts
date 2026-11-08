@@ -36,7 +36,7 @@ Options:
   --dev                    With package-ref add: write under devDependencies.apm (no-op without positional)
   --only <apm|mcp>         Install only APM packages (skip MCP) or only MCP configure (skip APM materialize)
   --target <id>            Force activation of a registered host target (overrides manifest active)
-  --exclude <id>           Skip MCP configure for runtime id (e.g. cursor); does not skip install
+  --exclude <id>[,<id>]    Skip MCP configure for runtime ids (repeatable; comma list); does not skip install
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
   -v, --verbose            Richer progress / diagnostics (does not weaken frozen/policy)
@@ -64,6 +64,8 @@ Notes:
   Non-zip positionals are package refs added to dependencies.apm (auto-creates
   a minimal manifest when missing). Frozen rejects positional package-ref add.
   --exclude filters MCP/runtime configure only — not a full skip-install.
+  Copilot and Windsurf write user-global MCP shared by every project; install warns
+  with the path. Use --exclude copilot,windsurf or BAPM_NO_GLOBAL_MCP=1 to skip it.
   Host selection: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
   Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
   Eligible MCP servers are written to the active agent's MCP config (direct mcp by default).

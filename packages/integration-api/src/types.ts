@@ -204,6 +204,12 @@ export type BapmIntegration = {
    * Install reads this through the api contract — no host-id allowlists in core.
    */
   mcpEnvMode?: McpEnvMode;
+  /**
+   * Where `configureMcp` writes by contract. `home` means a user-global file
+   * shared by every project on the machine; install warns about the collision
+   * and supports `--exclude` as the opt-out. Omitted ⇒ `project`.
+   */
+  mcpScope?: "project" | "home";
   [key: string]: unknown;
 };
 

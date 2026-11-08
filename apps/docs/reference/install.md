@@ -16,28 +16,28 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 
 ## Параметры
 
-| Флаг                     | Значение       | Эффект                                                                                                | Default                   |
-| ------------------------ | -------------- | ----------------------------------------------------------------------------------------------------- | ------------------------- |
-| `--frozen`               | —              | Fail, если lock нет или пины дрейфуют; при наличии — re-verify `deployed_file_hashes`                 | off (но см. CI ниже)      |
-| `--no-frozen`            | —              | Отключить frozen, в том числе CI-default                                                              | —                         |
-| `--dry-run`              | —              | Превью direct deps / would-add; без durable project writes                                            | off                       |
-| `--force`                | —              | Принимается только для совместимости с APM; без эффекта. Не обновляет refs и не обходит frozen/policy | off                       |
-| `--allow-insecure`       | —              | Dual consent для direct `http://` deps с `allow_insecure: true`                                       | off                       |
-| `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                             | —                         |
-| `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                           | off                       |
-| `--only`                 | `apm` \| `mcp` | Только APM packages (без MCP) или только MCP configure (без APM materialize)                          | оба                       |
-| `--target`               | `<id>`         | Принудительно активировать registered host target (игнорирует `active` и detect)                      | `active` → auto-detect    |
-| `--exclude`              | `<id>`         | Пропустить MCP configure для runtime id; **не** полный skip install (повторяемый)                     | —                         |
-| `--update`               | —              | Переразрешить mutable refs; нельзя с frozen / CI-default frozen                                       | off                       |
-| `--parallel-downloads`   | `<n>`          | Параллельные загрузки; `0` = serial                                                                   | `4`                       |
-| `-v`, `--verbose`        | —              | Богаче progress / diagnostics (не ослабляет frozen/policy)                                            | off                       |
-| `--policy`               | `<path>`       | Явный policy-файл (побеждает `apm-policy.yml` / `bapm-policy.yml`)                                    | discovery                 |
-| `--no-policy`            | —              | Пропустить только repo-local `apm-policy.yml`/`bapm-policy.yml`; org deny остаётся                    | off                       |
-| `--no-policy-all`        | —              | Полный escape: пропустить local и org policy (также `BAPM_POLICY_DISABLE=1`)                          | off                       |
-| `--trust-transitive-mcp` | —              | Деплоить MCP из зависимостей; по умолчанию только direct `dependencies.mcp`                           | off                       |
-| `--trust-bin`            | —              | Согласие на deploy dependency/plugin `bin/` для этого запуска (если policy/ExecutableTrust позволяет) | off (нужен явный consent) |
-| `--no-trust-bin`         | —              | Пропустить deploy `bin/` для этого запуска (даже если policy allow)                                   | —                         |
-| `--help`, `-h`           | —              | Показать help                                                                                         | —                         |
+| Флаг                     | Значение       | Эффект                                                                                                                       | Default                   |
+| ------------------------ | -------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `--frozen`               | —              | Fail, если lock нет или пины дрейфуют; при наличии — re-verify `deployed_file_hashes`                                        | off (но см. CI ниже)      |
+| `--no-frozen`            | —              | Отключить frozen, в том числе CI-default                                                                                     | —                         |
+| `--dry-run`              | —              | Превью direct deps / would-add; без durable project writes                                                                   | off                       |
+| `--force`                | —              | Принимается только для совместимости с APM; без эффекта. Не обновляет refs и не обходит frozen/policy                        | off                       |
+| `--allow-insecure`       | —              | Dual consent для direct `http://` deps с `allow_insecure: true`                                                              | off                       |
+| `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                                                    | —                         |
+| `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                                                  | off                       |
+| `--only`                 | `apm` \| `mcp` | Только APM packages (без MCP) или только MCP configure (без APM materialize)                                                 | оба                       |
+| `--target`               | `<id>`         | Принудительно активировать registered host target (игнорирует `active` и detect)                                             | `active` → auto-detect    |
+| `--exclude`              | `<id>[,<id>]`  | Пропустить MCP configure для runtime id; список через запятую или несколько флагов; **не** полный skip install (повторяемый) | —                         |
+| `--update`               | —              | Переразрешить mutable refs; нельзя с frozen / CI-default frozen                                                              | off                       |
+| `--parallel-downloads`   | `<n>`          | Параллельные загрузки; `0` = serial                                                                                          | `4`                       |
+| `-v`, `--verbose`        | —              | Богаче progress / diagnostics (не ослабляет frozen/policy)                                                                   | off                       |
+| `--policy`               | `<path>`       | Явный policy-файл (побеждает `apm-policy.yml` / `bapm-policy.yml`)                                                           | discovery                 |
+| `--no-policy`            | —              | Пропустить только repo-local `apm-policy.yml`/`bapm-policy.yml`; org deny остаётся                                           | off                       |
+| `--no-policy-all`        | —              | Полный escape: пропустить local и org policy (также `BAPM_POLICY_DISABLE=1`)                                                 | off                       |
+| `--trust-transitive-mcp` | —              | Деплоить MCP из зависимостей; по умолчанию только direct `dependencies.mcp`                                                  | off                       |
+| `--trust-bin`            | —              | Согласие на deploy dependency/plugin `bin/` для этого запуска (если policy/ExecutableTrust позволяет)                        | off (нужен явный consent) |
+| `--no-trust-bin`         | —              | Пропустить deploy `bin/` для этого запуска (даже если policy allow)                                                          | —                         |
+| `--help`, `-h`           | —              | Показать help                                                                                                                | —                         |
 
 ## Замечания
 
@@ -57,6 +57,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Если пакет убран из манифеста вручную, обычный (не-frozen) `install` удаляет файлы, которые предыдущий lock записал за этим пакетом в `deployed_file_hashes`. Если inventory нет (старый lock или путь не записан), файлы остаются. `install --frozen` (включая CI-default) cleanup не выполняет. Пустые каталоги после удаления не убираются. Надёжнее сначала выполнить `bapm uninstall <name>`: он чистит deployed-файлы по старому inventory до перезаписи lock.
 - Grant-поверхность (`executables.allow` в `bapm.yml` или `bapm approve`/`deny`) не делает все dependency MCP обязательными: пакет, которого нет в allow/deny, пропускается с предупреждением `MCP_NOT_APPROVED`, а install продолжается. Фатально завершают install только явный deny (project/user/org, включая org `deny_all`) и пакет, упомянутый в grant-поверхности без `mcp: true`. `--trust-transitive-mcp` без grant-поверхности по-прежнему деплоит dependency MCP.
 - MCP для Cursor пишется в `.cursor/mcp.json`; каталог создаётся при необходимости. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента уже есть или создан в этом же install; иначе install печатает `bapm: warning: …` с путём каталога. См. [Поддерживаемые агенты](/guide/supported-hosts#layout).
+- Copilot и Windsurf пишут MCP в user-global файлы `~/.copilot/mcp-config.json` и `~/.codeium/windsurf/mcp_config.json` (`COPILOT_HOME` / `CODEIUM_HOME`), общие для всех проектов на машине. Install печатает `bapm: warning: MCP config for "<id>" was written to <path> …`: одноимённые серверы перезаписывает последний install. Чтобы не трогать общий файл, используйте `--exclude copilot,windsurf` (или `BAPM_NO_GLOBAL_MCP=1` для обоих хостов в CI); MCP при этом не конфигурируется, остальная установка продолжается. Для изоляции задайте отдельный `COPILOT_HOME`/`CODEIUM_HOME` на проект или контейнер.
 
 - `install <archive.zip>` добавляет файлы архива в текущий каталог и ничего не удаляет. Если файл из архива уже есть с другим содержимым (обычно `bapm.yml`), install завершается ошибкой `Refusing to overwrite existing files` до записи чего-либо. Поэтому ставьте архив в пустой каталог.
 

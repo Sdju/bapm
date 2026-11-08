@@ -53,6 +53,7 @@ export function createWindsurfIntegration(options?: {
   return {
     id,
     deployRoots,
+    mcpScope: "home",
     detect: ({ cwd }) => {
       const dir = join(cwd, ".windsurf");
       return existsSync(dir) && statSync(dir).isDirectory();

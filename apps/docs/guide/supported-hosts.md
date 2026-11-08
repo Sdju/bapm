@@ -49,7 +49,7 @@ Skill раскладывается как полный каталог: `SKILL.md
 
 Обратите внимание:
 
-- **Copilot и Windsurf пишут MCP в домашний каталог**, а не в проект. Эти настройки общие для всех ваших проектов.
+- **Copilot и Windsurf пишут MCP в домашний каталог**, а не в проект: Copilot — `~/.copilot/mcp-config.json` (override `COPILOT_HOME`), Windsurf — `~/.codeium/windsurf/mcp_config.json` (override `CODEIUM_HOME`). Файл общий для всех проектов на машине: серверы с разными именами накапливаются, а одноимённый сервер перезаписывается последним `install`. После успешного configure install печатает `bapm: warning: …` с абсолютным путём этого файла. Чтобы не менять общий файл, исключите хосты из MCP: `bapm install --exclude copilot,windsurf` (эквивалентно `--exclude copilot --exclude windsurf`); остальная установка продолжится. Для изоляции также можно задать отдельный `COPILOT_HOME`/`CODEIUM_HOME` на проект или контейнер; проектный MCP эти интеграции не используют. В CI вместо списка исключений можно выставить `BAPM_NO_GLOBAL_MCP=1` — MCP configure для Copilot/Windsurf будет пропущен.
 - **Claude Code, Gemini CLI, Kiro и Antigravity пишут MCP, только если каталог агента существует** (`.claude/`, `.gemini/`, `.kiro/`, `.agents/`). Каталог может создать и сам install, если пакеты приносят skills или rules. Если ставятся только MCP-серверы, а каталога нет, install печатает предупреждение `bapm: warning: …` с путём каталога: создайте каталог и повторите `install`.
 - **Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют один `AGENTS.md`**. Если вы запускаете `compile` для нескольких из них, файл перезаписывает последний запуск.
 
