@@ -11,6 +11,7 @@
  * - `loadUserExecutableGrants` / `saveUserExecutableGrants` — `~/.bapm/config.json`
  * - `evaluateRequiredPackagePresence` — lock presence + distinct withheld (sc-012)
  * - `hasGrantSurface` — non-absent grant surface detection
+ * - `isPackageMentionedInGrants` — explicit allow/deny entry vs unmentioned package
  * - `resolveBinDeployConsent` — invocation `--trust-bin` overlay on type `bin`
  *
  * ## Example
@@ -67,6 +68,7 @@ export {
   gateExecutableMcp,
   checkExecutableTrust,
   hasGrantSurface,
+  isPackageMentionedInGrants,
   parseExecutableGrants,
   resolveExecutableTrust,
   classifyExecutableTrust,

@@ -39,7 +39,9 @@ bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 
 Без имени пакета команда печатает help и завершается с ошибкой. Без type-флага команда по-прежнему пишет `mcp: true` (approve или deny) — для совместимости. Несколько флагов можно передать сразу: каждый тип сохраняется отдельно.
 
-Первый `approve` или `deny` включает режим явных разрешений: дальше install требует решение для каждого пакета с MCP и падает с `MCP withheld: unapproved dependency executables`, пока его нет. `bapm approve <пакет> --bin` выдаёт persisted consent на `bin/`: после него `bapm install` деплоит `bin/` без `--trust-bin` (но deny по-прежнему сильнее). `approve <пакет> --hook` разрешает dependency hooks; в `bapm.yml` это `executables.allow.<pkg>.hook: true`.
+Первый `approve` или `deny` включает проверку MCP и hooks у зависимостей, но не требует решения по каждому пакету. Пакет, которого нет ни в `allow`, ни в `deny`, пропускается с предупреждением `MCP_NOT_APPROVED` — install продолжается. Фатальное сообщение `MCP withheld: explicitly denied or unapproved dependency executables` остаётся только для явного deny (project/user/org, включая org `deny_all`) и для пакета, упомянутого в grant-поверхности без `mcp: true` (например `mcp: false` или только `bin: true`). Deny всегда сильнее allow.
+
+`bapm approve <пакет> --bin` выдаёт persisted consent на `bin/`: после него `bapm install` деплоит `bin/` без `--trust-bin` (но deny по-прежнему сильнее). `approve <пакет> --hook` разрешает dependency hooks; в `bapm.yml` это `executables.allow.<pkg>.hook: true`.
 
 Dependency hooks проверяются, когда есть project/user grant-поверхность или org `executables.deny`/`deny_all`. Без grant-поверхности и без org deny hooks раскладываются по legacy-поведению. Root/local hooks проекта под гейт не попадают.
 
