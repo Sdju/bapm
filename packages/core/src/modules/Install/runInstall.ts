@@ -55,6 +55,7 @@ import {
 } from "@/modules/CopilotNativeRegistration";
 import { extractPackArchive } from "@/modules/Pack";
 import {
+  isPackageMentionedInGrants,
   loadUserExecutableGrants,
   normalizeTrustBin,
   parseExecutableGrants,
@@ -592,7 +593,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       throw new InstallError(
         "INSTALL_MCP_TRUST",
         mcpResult.withholdMessage ??
-          "MCP withheld: unapproved dependency executables (sc-009 fail-closed)",
+          "MCP withheld: explicitly denied or unapproved dependency executables (sc-009)",
         { details: { withheld: mcpResult.withheldPackages } },
       );
     }
@@ -1055,6 +1056,7 @@ async function deployMcpAfterPolicy(args: {
 
   const approved: typeof collected.servers = [];
   const withheldPackages: string[] = [];
+  const skippedPackages: string[] = [];
 
   for (const server of collected.servers) {
     if (server.origin === "direct" || server.packageName === rootName) {
@@ -1077,6 +1079,36 @@ async function deployMcpAfterPolicy(args: {
       approved.push(server);
       continue;
     }
+
+    // Explicit deny (project/user/org) and mentioned-but-unapproved entries
+    // (e.g. `mcp: false` or another executable type only) stay fatal. A package
+    // the surface never mentions is merely skipped with a warning: one grant
+    // must not make every unrelated dependency MCP package fatal.
+    const mentioned =
+      decision.outcome === "deny" ||
+      isPackageMentionedInGrants({
+        packageName: server.packageName,
+        projectSurface,
+        userSurface,
+        orgExecutables,
+      });
+    if (!mentioned) {
+      if (!skippedPackages.includes(server.packageName)) {
+        skippedPackages.push(server.packageName);
+        args.diagnostics.push({
+          code: "MCP_NOT_APPROVED",
+          message: `MCP from dependency "${server.packageName}" skipped: not approved. Run "bapm approve ${server.packageName}" or add executables.allow.${server.packageName}.mcp: true to bapm.yml.`,
+          warn: true,
+          packageName: server.packageName,
+          server: server.name,
+          skip: true,
+          unapproved: true,
+          outcome: decision.outcome,
+        });
+      }
+      continue;
+    }
+
     withheldPackages.push(server.packageName);
     args.diagnostics.push({
       code: "MCP_TRUST_WITHHOLD",
@@ -1090,10 +1122,10 @@ async function deployMcpAfterPolicy(args: {
   }
 
   const uniqueWithheld = [...new Set(withheldPackages)];
-  const orgDenyActive = orgExecutables.deny_all === true || (orgExecutables.deny?.length ?? 0) > 0;
-  const withholdFatal = uniqueWithheld.length > 0 && (combinedSurface.present || orgDenyActive);
+  // Non-empty only for explicit denies / org deny / mentioned-but-unapproved.
+  const withholdFatal = uniqueWithheld.length > 0;
   const withholdMessage = withholdFatal
-    ? `MCP withheld: unapproved dependency executables (${uniqueWithheld.join(", ")}). Add to executables.allow / allowExecutables or remove MCP.`
+    ? `MCP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(", ")}). Remove the deny or add to executables.allow / allowExecutables; otherwise remove MCP.`
     : undefined;
 
   if (approved.length === 0) {

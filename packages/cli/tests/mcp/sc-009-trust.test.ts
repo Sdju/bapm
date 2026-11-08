@@ -1,9 +1,13 @@
 /**
- * M9 MUST: sc-009 fail-closed executable trust for dependency MCP.
+ * M9 MUST: sc-009 executable trust for dependency MCP.
  * Specs: executable-mcp-trust. Checklist D §8–9.
+ *
+ * One project/user grant must not make every unrelated dependency MCP package
+ * fatal: unmentioned packages are skipped with `MCP_NOT_APPROVED`. Explicit
+ * deny (project/user/org) and mentioned-but-unapproved entries stay fatal.
  */
 import { expect, test, describe, afterEach } from "vite-plus/test";
-import { existsSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   createTempProject,
@@ -14,8 +18,9 @@ import {
   type TempProject,
 } from "./helpers.ts";
 
-const WITHHOLD =
-  /withhold|unapproved|not approved|executables|allowExecutables|denied|trust|mcp.*(block|deny|refus)/i;
+const SKIP_MESSAGE = /MCP_NOT_APPROVED|not approved|bapm approve mcp-dep/i;
+const FATAL_MESSAGE =
+  /withhold|unapproved|denied|executables|allowExecutables|trust|mcp.*(block|deny|refus)/i;
 
 describe("CLI M9 sc-009 executable trust for MCP", () => {
   let project: TempProject;
@@ -24,19 +29,78 @@ describe("CLI M9 sc-009 executable trust for MCP", () => {
     project?.cleanup();
   });
 
-  test("grant surface present + dep MCP unapproved → no mcpServers entry; fail-closed signal", async () => {
+  test("unrelated allow + unmentioned dep MCP → install succeeds, server skipped with warning", async () => {
     project = createTempProject();
-    writeDepMcpProject(project.cwd, { approveDep: false, withSkill: true });
+    writeDepMcpProject(project.cwd, { unrelatedAllow: true, withSkill: true });
 
     const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
     expectKnownFlags(combined);
 
-    const servers = readMcpServers(project.cwd);
-    expect(servers).not.toHaveProperty("test-stdio-server");
+    expect(result).toBe(0);
+    expect(readMcpServers(project.cwd)).not.toHaveProperty("test-stdio-server");
+    expect(combined).toMatch(SKIP_MESSAGE);
+    expect(combined).toMatch(/MCP_NOT_APPROVED|warning/i);
+    // Non-executable primitives still materialize.
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
+  });
 
-    // Fail-closed: non-zero OR explicit withhold diagnostic (silent success is not enough).
-    const failClosed = result !== 0 || WITHHOLD.test(combined);
-    expect(failClosed).toBe(true);
+  test("explicit project deny → install fails; server not deployed", async () => {
+    project = createTempProject();
+    writeDepMcpProject(project.cwd, { denyDep: true });
+
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
+    expectKnownFlags(combined);
+
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(FATAL_MESSAGE);
+    expect(readMcpServers(project.cwd)).not.toHaveProperty("test-stdio-server");
+  });
+
+  test("mentioned-but-not-approved dep (mcp: false) → install fails", async () => {
+    project = createTempProject();
+    writeDepMcpProject(project.cwd, { mentionedUnapproved: true });
+
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
+    expectKnownFlags(combined);
+
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(FATAL_MESSAGE);
+    expect(readMcpServers(project.cwd)).not.toHaveProperty("test-stdio-server");
+  });
+
+  test("org executables.deny still fails even when package is otherwise unmentioned", async () => {
+    project = createTempProject();
+    writeDepMcpProject(project.cwd, { unrelatedAllow: true });
+    writeFileSync(
+      join(project.cwd, "bapm-policy.yml"),
+      `name: org-deny-mcp\nenforcement: warn\nexecutables:\n  deny:\n    - mcp-dep\n`,
+      "utf8",
+    );
+
+    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
+    expectKnownFlags(combined);
+
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(FATAL_MESSAGE);
+    expect(combined).toMatch(/org|deny|mcp-dep/i);
+    expect(readMcpServers(project.cwd)).not.toHaveProperty("test-stdio-server");
+  });
+
+  test("--trust-transitive-mcp still deploys dependency MCP without a grant surface", async () => {
+    project = createTempProject();
+    writeDepMcpProject(project.cwd, { noGrants: true });
+
+    const { result, combined } = await runInProject(project.cwd, [
+      "install",
+      "--target",
+      "cursor",
+      "--trust-transitive-mcp",
+    ]);
+    expectKnownFlags(combined);
+
+    expect(result).toBe(0);
+    expect(readMcpServers(project.cwd)).toHaveProperty("test-stdio-server");
+    expect(combined).not.toMatch(SKIP_MESSAGE);
   });
 
   test("approved dep MCP writes under .cursor/mcp.json", async () => {
@@ -57,18 +121,5 @@ describe("CLI M9 sc-009 executable trust for MCP", () => {
     expectKnownFlags(combined);
     expect(result).toBe(0);
     expect(readMcpServers(project.cwd)).toHaveProperty("test-stdio-server");
-  });
-
-  test("skills still materialize when MCP withheld under sc-009", async () => {
-    project = createTempProject();
-    writeDepMcpProject(project.cwd, { approveDep: false, withSkill: true });
-
-    const { result, combined } = await runInProject(project.cwd, ["install", "--target", "cursor"]);
-    expectKnownFlags(combined);
-
-    expect(readMcpServers(project.cwd)).not.toHaveProperty("test-stdio-server");
-    // Gate must be visible; silent ignore of MCP is not sc-009.
-    expect(result !== 0 || WITHHOLD.test(combined)).toBe(true);
-    expect(existsSync(join(project.cwd, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
   });
 });

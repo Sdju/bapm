@@ -598,6 +598,7 @@ export {
   gateExecutableMcp,
   checkExecutableTrust,
   hasGrantSurface,
+  isPackageMentionedInGrants,
   parseExecutableGrants,
   resolveExecutableTrust,
   classifyExecutableTrust,
