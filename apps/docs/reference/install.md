@@ -21,7 +21,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--frozen`               | —              | Fail, если lock нет или пины дрейфуют; при наличии — re-verify `deployed_file_hashes`                 | off (но см. CI ниже)      |
 | `--no-frozen`            | —              | Отключить frozen, в том числе CI-default                                                              | —                         |
 | `--dry-run`              | —              | Превью direct deps / would-add; без durable project writes                                            | off                       |
-| `--force`                | —              | Сейчас без эффекта (см. замечания). Не обновляет refs и не обходит frozen/policy                      | off                       |
+| `--force`                | —              | Принимается только для совместимости с APM; без эффекта. Не обновляет refs и не обходит frozen/policy | off                       |
 | `--allow-insecure`       | —              | Dual consent для direct `http://` deps с `allow_insecure: true`                                       | off                       |
 | `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                             | —                         |
 | `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                           | off                       |
@@ -45,7 +45,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Non-interactive (CI, `BAPM_NON_INTERACTIVE`, non-TTY или frozen) по умолчанию **не** деплоит dependency `bin/` без `--trust-bin` или persisted `executables.allow` с `bin: true`.
 - Frozen (явный или CI-default) нельзя сочетать с `--update`.
 - Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen`.
-- `--force` в текущей версии ничего не меняет: флаг принимается, но не влияет на установку. Он не связан с `--target`.
+- `--force` в текущей версии ничего не меняет: флаг принимается для совместимости с APM, но не влияет на установку, не обновляет refs и не обходит frozen/policy. Install печатает об этом warning в stderr. Он не связан с `--target`.
 - В интерактивном терминале `bin/` зависимостей раскладывается и без `--trust-bin`, с предупреждением. `bapm approve` разрешение на `bin/` не выдаёт.
 - `--no-policy` отключает и политику организации, включая её запреты.
 - Frozen проверяет наличие lock, пины прямых зависимостей и хэши развёрнутых файлов, а также сверяет `#ref` прямых git-зависимостей с `resolved_ref` в lock. Расхождение ref при неизменном lock — ошибка `Frozen install ref drift`. См. [CI по lock-файлу](/guide/situations/ci-frozen).
