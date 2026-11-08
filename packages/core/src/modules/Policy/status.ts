@@ -55,6 +55,7 @@ export type PolicyStatusOptions = {
   policyProviders?: string[];
   listGitRemotes?: (cwd?: string) => GitRemoteEntry[];
   remotes?: GitRemoteEntry[];
+  adoHosts?: string[];
   fetchAncestor?: FetchAncestor;
   fetchPolicyUrl?: LoadPolicyExtendedOptions["fetchPolicyUrl"];
   httpGet?: LoadPolicyExtendedOptions["httpGet"];
@@ -114,6 +115,7 @@ export function runPolicyStatus(options: PolicyStatusOptions = {}): PolicyStatus
         : (options.providers ?? options.policyProviders),
       listGitRemotes: options.listGitRemotes,
       remotes: options.remotes,
+      adoHosts: options.adoHosts,
       fetchPolicyUrl: options.fetchPolicyUrl,
       httpGet: options.httpGet,
       defaultFetchFailure: options.defaultFetchFailure ?? "block",

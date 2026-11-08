@@ -24,11 +24,12 @@ bapm policy status [options]
 Порядок discovery по умолчанию:
 
 1. **repo-local** — `apm-policy.yml` или `bapm-policy.yml` в корне проекта (dual-read; оба файла одновременно — ошибка).
-2. **`github-owner-dotgithub`** — если локального файла нет, bapm берёт git remote `origin` (или единственный remote), проверяет, что его хост совпадает с implementation-default (по умолчанию `github.com`), и загружает `https://<host>/<owner>/.github/apm-policy.yml`.
+2. **`github-owner-dotgithub`** — если локального файла нет, bapm берёт git remote `origin` (или единственный remote), проверяет, что его хост совпадает с implementation-default (по умолчанию `github.com`), и перебирает по порядку `.github-private` → `.github` → `.apm` → `_apm`, загружая первый найденный `<owner>/<repo>/apm-policy.yml`.
+3. **`azure-devops-org-policy`** — для Azure DevOps remote (`dev.azure.com`, `*.visualstudio.com`, `ssh.dev.azure.com:v3/...`, а также on-prem хостов из `ADO_HOST`/`APM_ADO_HOSTS`) bapm запрашивает `apm/apm-policy`, затем legacy `_apm/_apm` через ADO Items API.
 
 Remote-запрос идёт синхронно через `curl` (`-fsSL`, `--max-time 10`, только `https`). Если remote-хост не GitHub или remote не выбран, org-policy не ищется. Если remote-политика не загрузилась и effective `fetch_failure: block`, install/lock/update завершаются fail-closed с диагностикой; `policy status` показывает `outcome: error` с сетевым диагнозом.
 
-Полные каскады APM/Azure DevOps (`.apm`, `_apm`, ADO org-policy, multi-candidate) не реализованы и не заявлены.
+GitHub multi-candidate и Azure DevOps org-policy реализованы. GitLab-провайдер и произвольные ADO-каскады вне scope.
 
 `--no-policy` отключает только шаг 1, поэтому org-policy продолжает применяться. `--no-policy-all` и `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1` отключают и удалённый поиск: сетевого запроса не будет.
 

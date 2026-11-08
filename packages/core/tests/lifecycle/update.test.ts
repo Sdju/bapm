@@ -432,7 +432,7 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
     );
 
     expect(error).toBeTruthy();
-    expect(fetched).toEqual(["https://github.com/acme/.github/apm-policy.yml"]);
+    expect(fetched).toEqual(["https://github.com/acme/.github-private/apm-policy.yml"]);
     const deps = loadLockDeps(project.cwd);
     const pkg = deps.find((d) => nameOfDep(d).includes("one"));
     expect(pinOf(pkg!)).toBe(oldCommit);

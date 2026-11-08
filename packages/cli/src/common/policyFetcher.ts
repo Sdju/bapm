@@ -108,6 +108,7 @@ export type PolicyCliPorts = {
   policyProviders?: string[];
   listGitRemotes?: (cwd?: string) => Array<{ name: string; url: string }>;
   remotes?: Array<{ name: string; url: string }>;
+  adoHosts?: string[];
   fetchAncestor?: (
     ref: string,
     context: { leafHostClass: string; chain: string[] },

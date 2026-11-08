@@ -42,12 +42,12 @@
 
 - **`audit` всегда гейт.** `bapm audit` и `bapm audit --ci` выполняют один набор проверок и возвращают один код выхода. `--ci` принимается только для совместимости со скриптами APM и ничего не переключает; «мягкого» отчёта без флага, как в APM, нет.
 - **`--no-policy` и org policy.** В bapm флаг `--no-policy` пропускает только файл политики в репозитории (`apm-policy.yml` / `bapm-policy.yml`). Org policy и её `executables.deny`/`deny_all` продолжают действовать. Полный escape — отдельный `--no-policy-all` или `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1`; это отличие от APM, где disable-флаг выключает проверку целиком.
-- **Org policy discovery.** Провайдер `github-owner-dotgithub` заявлен и подключён в CLI: при GitHub-remote он загружает `<owner>/.github/apm-policy.yml` для `policy status`, `install`, `lock` и `update`. Полные APM/ADO каскады (`.apm`/`_apm`/Azure DevOps, multi-candidate) не реализованы.
+- **Org policy discovery.** Провайдеры `github-owner-dotgithub` и `azure-devops-org-policy` подключены в CLI. GitHub перебирает `.github-private` → `.github` → `.apm` → `_apm`; Azure DevOps — `apm/apm-policy` → legacy `_apm/_apm`.
 
 ## Что не заявлено
 
 - раскладка файлов по правилам OpenAPM 8.5;
-- полные каскады policy discovery для Azure DevOps и multi-candidate (`.apm`/`_apm`); поддерживается только `github-owner-dotgithub`;
+- GitLab policy discovery и произвольные ADO-каскады вне scope;
 - работа bapm в роли registry-сервера;
 - совместимость маркетплейсов и Agent Plugins со всеми клиентами;
 - полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP и `bin/` зависимостей, а также hooks зависимостей: при наличии `executables.allow` или org `executables.deny`/`deny_all` hook без grant отбрасывается с предупреждением `HOOK_TRUST_WITHHELD`. Без grant-поверхности hooks остаются в мягком режиме (раскладываются); canvas как primitive не реализован.

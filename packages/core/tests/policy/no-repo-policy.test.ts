@@ -39,7 +39,12 @@ function remotePolicyArgs(text: string) {
   return {
     remotes: REMOTES,
     listGitRemotes: () => REMOTES,
-    fetchPolicyUrl: (url: string) => ({ ok: true, text, url }),
+    fetchPolicyUrl: (url: string) => {
+      if (url === "https://github.com/acme/.github/apm-policy.yml") {
+        return { ok: true, text, url };
+      }
+      return { ok: false, status: 404, url };
+    },
   };
 }
 
