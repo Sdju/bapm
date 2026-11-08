@@ -124,9 +124,9 @@ describe("CLI install · published target tokens", () => {
     expect(combined).not.toMatch(/Invalid target token/i);
     expect(result).toBe(0);
     expect(combined).toMatch(/installed for grok-bot/);
-    expect(
-      existsSync(join(project.cwd, "agent-data", "workflows", "hello", "SKILL.md")),
-    ).toBe(true);
+    expect(existsSync(join(project.cwd, "agent-data", "workflows", "hello", "SKILL.md"))).toBe(
+      true,
+    );
     expect(existsSync(join(project.cwd, ".agents", "skills", "hello"))).toBe(false);
     expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });

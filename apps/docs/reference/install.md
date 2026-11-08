@@ -90,7 +90,10 @@ Claude Code — `.claude/settings.json` (matcher-группы):
 {
   "hooks": {
     "SessionStart": [
-      { "matcher": "*", "hooks": [{ "type": "command", "command": "./.claude/hooks/<hook>/run.sh" }] }
+      {
+        "matcher": "*",
+        "hooks": [{ "type": "command", "command": "./.claude/hooks/<hook>/run.sh" }]
+      }
     ]
   }
 }

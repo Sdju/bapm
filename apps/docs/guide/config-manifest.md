@@ -31,21 +31,21 @@ active:
 
 ## Поля
 
-| Поле              | Обязательно | Зачем                                                                                                                                |
-| ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`, `version` | да          | Имя и версия проекта                                                                                                                 |
-| `$schema`         | нет         | Контракт манифеста; без него — рабочий черновик, см. ниже                                                                             |
+| Поле              | Обязательно | Зачем                                                                                                                                              |
+| ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`, `version` | да          | Имя и версия проекта                                                                                                                               |
+| `$schema`         | нет         | Контракт манифеста; без него — рабочий черновик, см. ниже                                                                                          |
 | `dependencies`    | нет         | `apm` — пакеты агента, `mcp` — MCP-серверы, `lsp` — сохраняется, но не деплоится (`LSP_UNSUPPORTED`). [Формы записи](/guide/manifest-dependencies) |
-| `devDependencies` | нет         | То же, что `dependencies`; сюда пишет `bapm install --dev <ref>`                                                                     |
-| `active`          | нет         | Какого агента и какие пресеты использовать. [Подробнее](/guide/manifest-hosts#active)                                                |
-| `presets`         | нет         | Именованные наборы зависимостей, см. ниже                                                                                            |
-| `env`             | нет         | Значения по умолчанию для переменных в MCP-конфигах, см. ниже                                                                        |
-| `targets`         | нет         | Своя интеграция агента; заодно ограничивает, каким агентам раскладываются файлы. [Подробнее](/guide/manifest-hosts#targets-и-target) |
-| `executables`     | нет         | Разрешения для MCP и `bin/` из зависимостей для всей команды. [Подробнее](/guide/situations/policy-mcp)                              |
-| `lifecycle`       | нет         | Сохраняется, но **не исполняется**: install печатает `LIFECYCLE_UNSUPPORTED`. См. [install](/reference/install)                      |
-| `canvas`          | нет         | **Не реализован**: install печатает `CANVAS_UNSUPPORTED` и ничего не разворачивает. См. [install](/reference/install)                |
-| `registries`      | нет         | Приватные registry (экспериментально). [Подробнее](/guide/manifest-registries)                                                       |
-| `marketplace`     | нет         | Описание маркетплейса для `bapm pack`. [Подробнее](/guide/manifest-registries#marketplace)                                           |
+| `devDependencies` | нет         | То же, что `dependencies`; сюда пишет `bapm install --dev <ref>`                                                                                   |
+| `active`          | нет         | Какого агента и какие пресеты использовать. [Подробнее](/guide/manifest-hosts#active)                                                              |
+| `presets`         | нет         | Именованные наборы зависимостей, см. ниже                                                                                                          |
+| `env`             | нет         | Значения по умолчанию для переменных в MCP-конфигах, см. ниже                                                                                      |
+| `targets`         | нет         | Своя интеграция агента; заодно ограничивает, каким агентам раскладываются файлы. [Подробнее](/guide/manifest-hosts#targets-и-target)               |
+| `executables`     | нет         | Разрешения для MCP и `bin/` из зависимостей для всей команды. [Подробнее](/guide/situations/policy-mcp)                                            |
+| `lifecycle`       | нет         | Сохраняется, но **не исполняется**: install печатает `LIFECYCLE_UNSUPPORTED`. См. [install](/reference/install)                                    |
+| `canvas`          | нет         | **Не реализован**: install печатает `CANVAS_UNSUPPORTED` и ничего не разворачивает. См. [install](/reference/install)                              |
+| `registries`      | нет         | Приватные registry (экспериментально). [Подробнее](/guide/manifest-registries)                                                                     |
+| `marketplace`     | нет         | Описание маркетплейса для `bapm pack`. [Подробнее](/guide/manifest-registries#marketplace)                                                         |
 
 Личные настройки, которые не должны попадать в git (ваш агент, ваши значения переменных), кладите в [`bapm.local.yml`](/guide/manifest-overlay).
 
@@ -67,10 +67,10 @@ $schema: https://microsoft.github.io/apm/specs/schemas/manifest-v0.1.schema.json
 Кроме массива и object-map, принимаются APM-формы со скаляром и CSV:
 
 ```yaml
-targets: cursor              # → [cursor]
-targets: "cursor,claude"     # → [cursor, claude]
-target: "claude,copilot"     # → [claude, copilot]
-target: [cursor, claude]     # list sugar
+targets: cursor # → [cursor]
+targets: "cursor,claude" # → [cursor, claude]
+target: "claude,copilot" # → [claude, copilot]
+target: [cursor, claude] # list sugar
 ```
 
 Одновременно `target` и `targets` указывать по-прежнему нельзя. Алиасы (`vscode`, `agents`) нормализуются в `copilot`.

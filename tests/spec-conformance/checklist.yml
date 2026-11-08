@@ -561,8 +561,7 @@ requirements:
     section: "6.3"
     status: active
     rationale: GitHub multi-candidate and Azure DevOps org-policy discovery are implemented via ordered providers with injected HTTP fetchers.
-    tests:
-      packages/core/tests/policy/provider-cascade.test.ts; packages/core/tests/policy/remote-discovery.test.ts
+    tests: packages/core/tests/policy/provider-cascade.test.ts; packages/core/tests/policy/remote-discovery.test.ts
   - id: req-pl-018
     class: governance
     keyword: MUST

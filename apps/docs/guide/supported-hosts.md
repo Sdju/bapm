@@ -53,11 +53,11 @@ Agents, commands и hooks раскладываются в каталог аге�
 
 Hook-примитивы (`hooks/*.json`, `.apm/hooks/*.json`) можно писать плоско (`{ "hooks": { "SessionStart": [{ "type": "command", "command": "./run.sh" }] } }`) или уже готовыми matcher-группами (`{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "./check.sh" }] }`). При install bapm приводит их к схеме хоста:
 
-| Хост        | Файл                    | Форма handler                                                                                         |
-| ----------- | ----------------------- | ----------------------------------------------------------------------------------------------------- |
+| Хост        | Файл                    | Форма handler                                                                                          |
+| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------ |
 | Cursor      | `.cursor/hooks.json`    | плоский: `{ "type": "command", "command": ".cursor/hooks/…", "matcher"?: … }`                          |
 | Claude Code | `.claude/settings.json` | группа: `{ "matcher": "Bash" \| "*", "hooks": [{ "type": "command", "command": ".claude/hooks/…" }] }` |
-| Codex CLI   | `.codex/hooks.json`     | группа: `{ "matcher"?: "Bash", "hooks": [{ "type": "command", "command": ".codex/hooks/…" }] }`         |
+| Codex CLI   | `.codex/hooks.json`     | группа: `{ "matcher"?: "Bash", "hooks": [{ "type": "command", "command": ".codex/hooks/…" }] }`        |
 
 Для Claude плоская команда без `type` получает обязательный `"type": "command"` и matcher `"*"`, если matcher не задан. Для Codex matcher не подставляется, если его не было в источнике. Остальные поля handler и группы (например, `timeout` или `env`) сохраняются.
 
