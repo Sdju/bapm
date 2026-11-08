@@ -1,7 +1,7 @@
 # Паритет bapm ↔ microsoft/apm — новый раунд
 
-**Дата:** 08.11.2026  
-**bapm:** `0.2.1`, HEAD `2e55597`  
+**Дата:** 09.11.2026  
+**bapm:** `0.2.1`, текущий HEAD ветки `docs/report-discrepancies-audit`  
 **APM:** `v0.35.0` (`17a2fc4d`, 2026-10-22), `.samples/apm`
 
 Анализ read-only: код, спеки, docs и changelog. Runtime-поведение, помеченное «не проверено», требует отдельного acceptance-теста.
@@ -15,18 +15,18 @@
 
 ## Вердикт
 
-| Ось                  | Verdict | Комментарий                                                                                          |
-| -------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| manifest             | partial | dual-read, но нет `$schema`; `replace:` игнорируется; токены `kiro`/`grok-build` не приняты          |
-| lockfile             | partial | v1/v2; нет `replacements`/v3 и APM local wire (`local_path`, `content_hash`)                         |
-| resolve              | diverge | bapm ∩-pick (OpenAPM) vs APM first-wins; нет immutable-ref equivalence                               |
-| install/adapters     | partial | 11 хостов vs 18 APM target ids; нет user-scope; frozen под-учёт файлов                               |
-| MCP                  | partial | multi-target/headers/lock inventory/deny prune есть; registry MCP, Codex headers и secret bake — нет |
-| compile              | partial | один файл на запуск, 9 хостов; нет applyTo/distributed/build-id/watch                                |
-| policy/trust         | partial | local + GitHub org, per-package grants; нет ADO/multi-candidate, LSP/canvas, полного approve UX      |
-| CLI surface          | partial | lifecycle/marketplace есть; нет `auth`, `mcp`, `targets`, `config`, `run`, `global`                  |
-| registry/marketplace | partial | registry client за флагом, host N/A; нет Copilot marketplace output                                  |
-| pack/plugin          | partial | zip + Agent Plugins; нет `--check-clean`/`--strict-metadata`, Claude bundle, hooks/assets producer   |
+| Ось                  | Verdict | Комментарий                                                                                                         |
+| -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| manifest             | partial | `$schema`, scalar/CSV targets, неизвестные ключи, extensions, immutable refs — сделано; full `replace:` не ratified |
+| lockfile             | partial | local wire (`local_path`, `content_hash`), v3 diagnostics; full `replacements` — отложено                           |
+| resolve              | diverge | bapm ∩-pick (OpenAPM) vs APM first-wins — осознанно                                                                 |
+| install/adapters     | partial | 14 хостов; нет user-scope и LSP deploy                                                                              |
+| MCP                  | partial | multi-target, headers, inventory, deny prune — есть; registry lookup и `mcp install` — нет                          |
+| compile              | partial | multi-target, `applyTo`/distributed — есть; build-id/watch/clean — нет                                              |
+| policy/trust         | partial | ADO/multi-candidate, approve all/pending/list — есть; LSP/canvas deploy — нет                                       |
+| CLI surface          | partial | auth/targets/config/mcp/run/runtime/init — есть; user-scope, runtime setup/remove, experimental, view -g — нет      |
+| registry/marketplace | partial | Copilot output — есть; registry host N/A, HTTP cache — нет                                                          |
+| pack/plugin          | partial | check-clean/strict-metadata/Claude bundle/portable validation — есть; annotated tag pin — нет                       |
 
 ## Приоритеты
 
@@ -114,21 +114,15 @@
 
 Обновлённые проверки: core 268 файлов / 1447 тестов, CLI 127 / 660, `vp check` 0 ошибок, conformance/specs OK.
 
-## P2 — паритетные разрывы
+## Остаток
 
-- User-scope/global install и native user MCP.
-- `bapm auth`, `targets`, `config`, `mcp`, `init --discover`, `run/preview`, `runtime`, `lifecycle`.
-- Approve/deny: APM project-default + `--pending/--all/--recommended`; bapm user-only.
-- Native hook shapes: Codex nested, Claude nested/typed.
-- Compile: multi-target, `applyTo`, distributed dirs, build-id, `--watch/--clean`.
-- Pack: `--check-clean`, `--strict-metadata`, Claude bundle, plugin hooks/assets.
-- Copilot marketplace output.
-- Missing stable hosts: `hermes`, `intellij`, `grok-bot`; experimental — defer.
-- Policy ADO/multi-candidate; LSP/canvas gates.
-- Lock sort/identity interop, `$schema`, unknown-key warnings, `targets` scalar/CSV.
-- Shared git/http cache; registry MCP CLI.
+Актуальный замороженный список: [`remaining.md`](remaining.md).
 
-Подробности: [p2-gaps.md](p2-gaps.md).
+- **Actionable:** user-scope/global install, registry MCP lookup, LSP deploy, compile build-id/watch/clean, shared HTTP cache, annotated tag `source.sha`.
+- **Follow-up уже принятых решений:** stored-only config keys, `runtime setup/remove`, `view -g`, lifecycle executor, experimental CLI, `mcp install`, canvas.
+- **Намеренно не делаем / N/A:** resolve ∩-pick, lock sort, full `replace`, manifest-v0.1.48, registry host, APM installer/gh-aw/contributor dashboard, project-default approve.
+
+Правило: новый пункт не попадает в «Осталось» автоматически из risk-заметки субагента; сначала классификация actionable / follow-up / N/A.
 
 ## Что уже паритет или сильнее APM
 
