@@ -17,6 +17,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect } from "vite-plus/test";
 import { runCli } from "../../src/index.ts";
+import { withIsolatedModuleResolution } from "../isolation.ts";
 
 export type TempProject = { cwd: string; root: string; cleanup: () => void };
 
@@ -90,7 +91,9 @@ export async function runInProject(
   cwd: string,
   argv: string[],
 ): Promise<{ result: number; stdout: string[]; stderr: string[]; combined: string }> {
-  const { result, stdout, stderr } = await withCwd(cwd, () => withCapturedIo(() => runCli(argv)));
+  const { result, stdout, stderr } = await withCwd(cwd, () =>
+    withCapturedIo(() => withIsolatedModuleResolution(() => runCli(argv))),
+  );
   return {
     result,
     stdout,
