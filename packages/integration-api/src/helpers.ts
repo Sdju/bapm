@@ -487,6 +487,27 @@ export function writeHookOwnershipSidecar(path: string, doc: HookOwnershipSideca
 }
 
 /**
+ * Remove bapm-managed MCP server entries that are absent from the incoming
+ * approved set. Mutates `servers` in place and returns the removed names.
+ * Foreign entries are never touched because only names from
+ * `ctx.managedServers` (recorded in the lock inventory) are considered.
+ */
+export function pruneManagedMcpServerNames<T>(
+  servers: Record<string, T>,
+  incomingNames: Iterable<string>,
+  managedServers: readonly string[] | undefined,
+): string[] {
+  const keep = new Set(incomingNames);
+  const removed: string[] = [];
+  for (const name of managedServers ?? []) {
+    if (keep.has(name) || !(name in servers)) continue;
+    delete servers[name];
+    removed.push(name);
+  }
+  return removed;
+}
+
+/**
  * Remove entries whose `command` appears in any owned `entries`.
  * Mutates `hooks` in place; does not delete files from disk.
  */

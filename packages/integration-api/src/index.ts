@@ -58,6 +58,7 @@ export {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   removeOwnedHookArtifacts,

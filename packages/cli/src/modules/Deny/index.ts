@@ -14,6 +14,7 @@ export function createDeny(deps?: Partial<DenyCliDeps>) {
     name: deps?.name ?? "bapm",
     manifestFile: deps?.manifestFile ?? "bapm.yml",
     saveGrant: deps?.saveGrant,
+    applyDenied: deps?.applyDenied,
   };
   return {
     async run(options: { args?: string[]; cwd?: string } = {}): Promise<LifecycleResult> {

@@ -56,6 +56,8 @@ bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 
 `bapm approve <пакет> --bin` выдаёт persisted consent на `bin/`: после него `bapm install` деплоит `bin/` без `--trust-bin` (но deny по-прежнему сильнее). `approve <пакет> --hook` разрешает dependency hooks; в `bapm.yml` это `executables.allow.<pkg>.hook: true`.
 
+`bapm deny <пакет> --mcp` (или `deny` без type-флага) после записи запрета пересобирает MCP-конфиг активных хостов и удаляет записи, которыми bapm владел для этого пакета. Чужие серверы остаются. Если конфиг хоста недоступен или не переписывается, команда завершается успешно, но печатает warning и просит удалить сервер вручную.
+
 Dependency hooks проверяются, когда есть project/user grant-поверхность или org `executables.deny`/`deny_all`. Без grant-поверхности и без org deny hooks раскладываются по legacy-поведению. Root/local hooks проекта под гейт не попадают.
 
 Разрешение для всей команды задаётся не в файле политики, а в `bapm.yml` проекта:

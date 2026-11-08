@@ -1,8 +1,13 @@
-import { runInstall, formatInstallHelp, parseInstallArgs } from "./services/runInstall.ts";
+import {
+  runInstall,
+  runMcpReconfigure,
+  formatInstallHelp,
+  parseInstallArgs,
+} from "./services/runInstall.ts";
 import type { InstallDeps, InstallOptions, InstallResult } from "./types/install.types.ts";
 
 export type { InstallDeps, InstallOptions, InstallResult };
-export { formatInstallHelp, parseInstallArgs };
+export { formatInstallHelp, parseInstallArgs, runMcpReconfigure };
 
 export function createInstall(deps?: InstallDeps) {
   const resolved: InstallDeps = deps ?? {

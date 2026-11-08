@@ -18,6 +18,7 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   renderPrimitivesMarkdown,
@@ -154,6 +155,7 @@ export function createCodexIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -316,6 +318,11 @@ function writeCodexMcpConfig(
       : {};
 
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(
+    mcpServers,
+    Object.keys(incoming),
+    ctx.managedServers,
+  );
   for (const [name, entry] of Object.entries(incoming)) {
     const prior = mcpServers[name];
     mcpServers[name] =

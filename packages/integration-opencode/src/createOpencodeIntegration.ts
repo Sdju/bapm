@@ -14,6 +14,7 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readPrimitiveContent,
   renderPrimitivesMarkdown,
   writeDeployedFile,
@@ -138,6 +139,7 @@ export function createOpencodeIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -167,6 +169,11 @@ function writeOpencodeMcpConfig(
   const nextMcp: Record<string, Record<string, unknown>> = { ...existingMcp };
 
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(
+    nextMcp,
+    Object.keys(incoming),
+    ctx.managedServers,
+  );
   for (const [name, entry] of Object.entries(incoming)) {
     nextMcp[name] = entry;
     writtenNames.push(name);

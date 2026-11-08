@@ -572,6 +572,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       nodes,
       registry,
       activeTargets,
+      only,
       trustTransitiveMcp,
       frozen,
       excludeSet,
@@ -998,6 +999,8 @@ async function deployMcpAfterPolicy(args: {
   nodes: ResolvedNode[];
   registry?: IntegrationRegistry;
   activeTargets: string[];
+  /** Explicit `install --only` surface; MCP-only reconciliation must not assume nodes. */
+  only?: InstallOnlyMode;
   forcedTargetId?: string;
   trustTransitiveMcp: boolean;
   frozen: boolean;
@@ -1054,7 +1057,30 @@ async function deployMcpAfterPolicy(args: {
 
   const rootName = String(args.rootManifest.name ?? "root");
 
+  // Records written by this target in the previous lock let a configure pass
+  // remove entries bapm owns without touching foreign host servers. Compute
+  // this before the empty-collection fast path: an MCP-only cleanup pass after
+  // `deny` collects no dependency servers but must still prune host configs.
   if (collected.servers.length === 0) {
+    const pruneByTarget = resolveMcpPruneInventory({
+      document: args.lockDocument,
+      activeTargets: args.activeTargets,
+      approved: [],
+      only: args.only,
+      rootName,
+      orgExecutables,
+      projectSurface,
+      userSurface,
+      diagnostics: args.diagnostics,
+    });
+    await pruneTargetMcpConfigs({
+      cwd: args.cwd,
+      registry: args.registry,
+      activeTargets: args.activeTargets,
+      excludeSet: args.excludeSet,
+      pruneByTarget,
+      diagnostics: args.diagnostics,
+    });
     return {
       ...refreshMcpLockInventory({
         cwd: args.cwd,
@@ -1151,7 +1177,29 @@ async function deployMcpAfterPolicy(args: {
     ? `MCP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(", ")}). Remove the deny or add to executables.allow / allowExecutables; otherwise remove MCP.`
     : undefined;
 
+  // Records written by this target in the previous lock let a configure pass
+  // remove entries bapm owns without touching foreign host servers.
+  const pruneByTarget = resolveMcpPruneInventory({
+    document: args.lockDocument,
+    activeTargets: args.activeTargets,
+    approved,
+    only: args.only,
+    rootName,
+    orgExecutables,
+    projectSurface,
+    userSurface,
+    diagnostics: args.diagnostics,
+  });
+
   if (approved.length === 0) {
+    await pruneTargetMcpConfigs({
+      cwd: args.cwd,
+      registry: args.registry,
+      activeTargets: args.activeTargets,
+      excludeSet: args.excludeSet,
+      pruneByTarget,
+      diagnostics: args.diagnostics,
+    });
     return {
       ...refreshMcpLockInventory({
         cwd: args.cwd,
@@ -1247,10 +1295,12 @@ async function deployMcpAfterPolicy(args: {
       throw error;
     }
 
+    const managedServers = pruneByTarget.get(targetId);
     const report = (await configureMcp(configuredServers, {
       cwd: args.cwd,
       targetId,
       deployRoots: [...target.deployRoots],
+      ...(managedServers && managedServers.length > 0 ? { managedServers } : {}),
     })) as ConfigureMcpReport;
     if (!report || report.targetId !== targetId) {
       throw new InstallError(
@@ -1315,6 +1365,145 @@ async function deployMcpAfterPolicy(args: {
     withholdMessage,
     withheldPackages: uniqueWithheld,
   };
+}
+
+/**
+ * Compute per-target names that must be removed from host config.
+ *
+ * Full installs know the complete approved set, so any previously managed name
+ * missing from it is stale (removed manifest entry or deny). MCP-only runs do
+ * not resolve dependency nodes, so they only prune names whose recorded lock
+ * package is explicitly denied — never sweeping other servers blindly.
+ */
+function resolveMcpPruneInventory(args: {
+  document?: LockfileDocument;
+  activeTargets: string[];
+  approved: CollectedMcpServer[];
+  only?: InstallOnlyMode;
+  rootName: string;
+  orgExecutables: PolicyExecutables;
+  projectSurface: ExecutableGrantSurface;
+  userSurface: ExecutableGrantSurface;
+  diagnostics: unknown[];
+}): Map<string, string[]> {
+  const result = new Map<string, string[]>();
+  if (args.activeTargets.length === 0 || !args.document) return result;
+
+  const previous = readMcpTargetInventory(args.document);
+  const approvedNames = new Set(args.approved.map((server) => server.name).filter(Boolean));
+
+  for (const targetId of args.activeTargets) {
+    const names = previous.get(targetId);
+    if (!names || names.length === 0) continue;
+    const prune: string[] = [];
+    for (const name of names) {
+      if (approvedNames.has(name)) continue;
+      if (args.only === "mcp") {
+        const packageName = readLockedMcpPackage(args.document, name);
+        if (!packageName || packageName === args.rootName) continue;
+        const decision = resolveExecutableTrust({
+          packageName,
+          executableType: "mcp",
+          orgExecutables: args.orgExecutables,
+          projectSurface: args.projectSurface,
+          userSurface: args.userSurface,
+        });
+        if (decision.outcome !== "deny") continue;
+      }
+      prune.push(name);
+    }
+    if (prune.length > 0) result.set(targetId, prune);
+  }
+  return result;
+}
+
+function readMcpTargetInventory(document: LockfileDocument): Map<string, string[]> {
+  const doc = document as LockfileDocument & Record<string, unknown>;
+  const out = new Map<string, string[]>();
+
+  const targetServers = asUnknownRecord(doc.mcp_target_servers);
+  for (const [targetId, raw] of Object.entries(targetServers)) {
+    if (!Array.isArray(raw)) continue;
+    const names = raw.filter((name): name is string => typeof name === "string" && name.length > 0);
+    if (names.length > 0) out.set(targetId, names);
+  }
+
+  const configs = asUnknownRecord(doc.mcp_configs);
+  for (const [targetId, raw] of Object.entries(configs)) {
+    const config = asUnknownRecord(raw);
+    if (!Array.isArray(config.servers)) continue;
+    const names = config.servers.filter(
+      (name): name is string => typeof name === "string" && name.length > 0,
+    );
+    if (names.length === 0) continue;
+    const merged = new Set([...(out.get(targetId) ?? []), ...names]);
+    out.set(targetId, [...merged]);
+  }
+
+  return out;
+}
+
+function readLockedMcpPackage(document: LockfileDocument, serverName: string): string {
+  const doc = document as LockfileDocument & Record<string, unknown>;
+  const entry = asUnknownRecord(asUnknownRecord(doc.mcp_servers)[serverName]);
+  if (typeof entry.package === "string" && entry.package.trim()) return entry.package.trim();
+  const provenance = asUnknownRecord(asUnknownRecord(doc.mcp_config_provenance)[serverName]);
+  return typeof provenance.package === "string" ? provenance.package.trim() : "";
+}
+
+function asUnknownRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+/**
+ * Cleanup-only configure pass for `approved.length === 0`: rewrite host configs
+ * just enough to drop bapm-managed entries. Failures stay warnings so a deny
+ * grant is never reported as failed because a host file could not be rewritten.
+ */
+async function pruneTargetMcpConfigs(args: {
+  cwd: string;
+  registry?: IntegrationRegistry;
+  activeTargets: string[];
+  excludeSet: Set<string>;
+  pruneByTarget: Map<string, string[]>;
+  diagnostics: unknown[];
+}): Promise<void> {
+  if (!args.registry || args.pruneByTarget.size === 0) return;
+
+  for (const targetId of args.activeTargets) {
+    const managedServers = args.pruneByTarget.get(targetId);
+    if (!managedServers || managedServers.length === 0) continue;
+    if (args.excludeSet.has(targetId)) continue;
+    const target = findTarget(args.registry, targetId);
+    if (!target) continue;
+    const configureMcp = getConfigureMcp(target);
+    if (!configureMcp) continue;
+
+    try {
+      const report = (await configureMcp([], {
+        cwd: args.cwd,
+        targetId,
+        deployRoots: [...target.deployRoots],
+        managedServers: [...managedServers],
+      })) as ConfigureMcpReport | undefined;
+      const adapterDiagnostics = report?.diagnostics;
+      if (adapterDiagnostics) {
+        args.diagnostics.push(...adapterDiagnostics.map(markSkipDiagnosticWarn));
+      }
+    } catch (error) {
+      args.diagnostics.push({
+        code: "MCP_MANAGED_PRUNE_FAILED",
+        message: `Could not remove bapm-managed MCP entries for "${targetId}": ${
+          error instanceof Error ? error.message : String(error)
+        }. Remove the server(s) from the host config manually: ${managedServers.join(", ")}`,
+        target: targetId,
+        servers: [...managedServers],
+        warn: true,
+      });
+    }
+  }
 }
 
 type McpLockInventoryUpdate =

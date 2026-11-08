@@ -19,6 +19,7 @@ import {
   materializeSkill,
   primitivesList,
   primitivesMaterialize,
+  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
   readPrimitiveContent,
   renderPrimitivesMarkdown,
@@ -168,6 +169,7 @@ export function createClaudeIntegration(options?: {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
         targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
       });
     },
   };
@@ -219,6 +221,11 @@ function writeClaudeMcpConfig(
   const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
 
   const writtenNames: string[] = [];
+  pruneManagedMcpServerNames(
+    nextServers,
+    Object.keys(incoming),
+    ctx.managedServers,
+  );
   for (const [name, entry] of Object.entries(incoming)) {
     const prior = existingServers[name];
     nextServers[name] = prior && typeof prior === "object" ? { ...prior, ...entry } : { ...entry };

@@ -137,6 +137,13 @@ export type ConfigureMcpContext = {
   targetId?: TargetId;
   /** Deploy roots declared by the target (relative to cwd). */
   deployRoots?: string[];
+  /**
+   * Server names bapm previously wrote for this target that are no longer in
+   * the approved set (for example after `bapm deny`). Targets that own a
+   * mergeable config must remove these entries while leaving foreign servers
+   * untouched.
+   */
+  managedServers?: string[];
   [key: string]: unknown;
 };
 
