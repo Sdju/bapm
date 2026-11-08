@@ -22,6 +22,7 @@
 Пока проще, чем в APM:
 
 - `compile` собирает один файл (`AGENTS.md` и аналоги) для одного агента за запуск, без распределения инструкций по каталогам через `applyTo`;
+- LSP (`dependencies.lsp`) и canvas не разворачиваются: install печатает `LSP_UNSUPPORTED` / `CANVAS_UNSUPPORTED`, а не игнорирует их молча;
 - установка из registry экспериментальная (`BAPM_EXPERIMENTAL_REGISTRIES=1`).
 
 ## Намеренные отличия от APM / OpenAPM
@@ -50,4 +51,6 @@
 - полные каскады policy discovery для Azure DevOps и multi-candidate (`.apm`/`_apm`); поддерживается только `github-owner-dotgithub`;
 - работа bapm в роли registry-сервера;
 - совместимость маркетплейсов и Agent Plugins со всеми клиентами;
-- полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP и `bin/` зависимостей, а также hooks зависимостей: при наличии `executables.allow` или org `executables.deny`/`deny_all` hook без grant отбрасывается с предупреждением `HOOK_TRUST_WITHHELD`. Без grant-поверхности hooks остаются в мягком режиме (раскладываются); canvas как primitive не реализован.
+- полный интерактивный `approve` из APM. Политика и разрешения покрывают MCP и `bin/` зависимостей, а также hooks зависимостей: при наличии `executables.allow` или org `executables.deny`/`deny_all` hook без grant отбрасывается с предупреждением `HOOK_TRUST_WITHHELD`. Без grant-поверхности hooks остаются в мягком режиме (раскладываются); canvas как primitive не реализован;
+- deploy LSP-серверов из `dependencies.lsp`: записи читаются, но установка только предупреждает `LSP_UNSUPPORTED` и не разворачивает серверы;
+- canvas: ключ `canvas:` или primitive типа `canvas` даёт `CANVAS_UNSUPPORTED`; путь материализации и trust-гейт не реализованы.

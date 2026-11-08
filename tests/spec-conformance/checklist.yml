@@ -26,7 +26,7 @@ limitations:
   - "bapm.local.yml and the local: dependency source are bapm-only extensions, absent from APM and OpenAPM"
   - Registry client is opt-in behind BAPM_EXPERIMENTAL_REGISTRIES=1; bapm does not claim the OpenAPM registry-host role
   - ADO / multi-candidate policy cascades are out of scope
-  - Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) remains soft; dependency bin is gated via ExecutableTrust (type bin) plus install --trust-bin / --no-trust-bin consent; dependency hooks are gated via ExecutableTrust (type hook) when a project/user grant surface or org executables.deny/deny_all is active, and keep the legacy soft (ungated) deploy only when no grant surface exists; canvas has no primitive/materialize path and remains unimplemented/soft
+  - Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) remains soft; dependency bin is gated via ExecutableTrust (type bin) plus install --trust-bin / --no-trust-bin consent; dependency hooks are gated via ExecutableTrust (type hook) when a project/user grant surface or org executables.deny/deny_all is active, and keep the legacy soft (ungated) deploy only when no grant surface exists; LSP entries under dependencies.lsp are not deployed and emit an LSP_UNSUPPORTED warning naming the package and servers; canvas has no primitive/materialize path, remains unimplemented/soft, and a manifest canvas key or canvas primitive emits CANVAS_UNSUPPORTED instead of being silently dropped
   - Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft
   - "Default discovery providers: local, then github-owner-dotgithub (implementation-default host github.com)"
   - "P6a install UX: frozen keeps lk-015/017/018 integrity; fail-closed MCP config sync vs pins is optional/default-off (SHOULD); --exclude filters MCP configure only, not skip-install"
@@ -36,7 +36,7 @@ scope_out:
   - full ADO cascade
   - residual Auth depth (gh CLI / az bearer / credential-helper / try_with_fallback)
   - soft §10 tar.gz-only container (zip + caps shipped)
-  - hooks are soft only without a grant surface (gated via ExecutableTrust type hook when a project/user surface or org deny is active); canvas executable gates remain unimplemented/soft (no primitive path); bin gated via ExecutableTrust + trust-bin consent
+  - hooks are soft only without a grant surface (gated via ExecutableTrust type hook when a project/user surface or org deny is active); canvas executable gates remain unimplemented/soft (no primitive path, explicit CANVAS_UNSUPPORTED diagnostic); LSP deploy is not implemented (explicit LSP_UNSUPPORTED warning, no trust type); bin gated via ExecutableTrust + trust-bin consent
   - full Python Mode B port
 requirements:
   - id: req-mf-001

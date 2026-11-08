@@ -676,6 +676,22 @@ export {
 } from "@/modules/Lifecycle";
 
 export type {
+  CanvasUnsupportedDiagnostic,
+  DetectCanvasUnsupportedOptions,
+  DetectLspUnsupportedOptions,
+  DetectUnsupportedDeclarationsOptions,
+  LspUnsupportedDiagnostic,
+  UnsupportedDeclarationDiagnostic,
+} from "@/modules/LspCanvas";
+
+export {
+  collectUnsupportedDeclarations,
+  detectCanvasUnsupported,
+  detectLspUnsupported,
+  detectUnsupportedDeclarations,
+} from "@/modules/LspCanvas";
+
+export type {
   CacheCleanOptions,
   CacheCleanResult,
   CacheInfoOptions,

@@ -128,6 +128,14 @@ dependencies:
 
 `headers` у HTTP/SSE-серверов обрабатываются так же, как `env`. Cursor и OpenCode сохраняют ссылку на переменную; Codex переводит её в `http_headers` / `env_http_headers` / `bearer_token_env_var`; в lock сохраняются исходные `${VAR}`. Если заголовок не появился в конфиге, проверьте, что выбранный хост умеет писать `headers`.
 
+## LSP и canvas
+
+`dependencies.lsp` bapm читает и сохраняет, но LSP-серверы пока **не деплоит**. Непустой `dependencies.lsp` (или `devDependencies.lsp`) в корневом или зависимом манифесте даёт предупреждение `LSP_UNSUPPORTED` с именем пакета и серверов; установка остальных файлов продолжается.
+
+Ключ `canvas:` в манифесте или primitive с типом `canvas` даёт `CANVAS_UNSUPPORTED`: canvas не реализован, ничего не разворачивается и в trust-гейты не попадает. Это не ошибка конфигурации — просто явное предупреждение вместо молчаливого игнорирования.
+
+Подробнее: [install](/reference/install#dependencies-lsp-не-деплоится), [Совместимость](/guide/conformance).
+
 ## Частые ошибки
 
 | Сообщение                                         | Что делать                                                                |

@@ -55,6 +55,7 @@ import {
   rebuildCopilotNativeRegistration,
 } from "@/modules/CopilotNativeRegistration";
 import { detectLifecycleUnsupported } from "@/modules/Lifecycle";
+import { detectUnsupportedDeclarations } from "@/modules/LspCanvas";
 import { extractPackArchive } from "@/modules/Pack";
 import {
   isPackageMentionedInGrants,
@@ -412,6 +413,15 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         declarationOrder,
       });
 
+  // `dependencies.lsp` and canvas declarations are retained by the manifest
+  // parser but have no deploy path. Surface them explicitly instead of silently
+  // dropping; canvas stays outside the executable trust gates.
+  const unsupportedDiagnostics = detectUnsupportedDeclarations({
+    rootManifest,
+    nodes: skipApmMaterialize ? [] : nodes,
+    primitives: resolved.primitives,
+  });
+
   // Frozen must not deploy primitives that the lock does not record, and local
   // snapshots must be re-verified before target materialize / lock writes.
   if (frozen && !skipApmMaterialize && lockDocument) {
@@ -651,6 +661,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     diagnostics: [
       ...manifestWarningDiagnostics,
       ...lifecycleDiagnostics,
+      ...unsupportedDiagnostics,
       ...insecureDiagnostics,
       ...policyDiagnostics,
       ...resolved.diagnostics,
@@ -934,6 +945,7 @@ async function runDryRunPreview(args: {
     primitivesCount: 0,
     diagnostics: [
       ...(rootManifest ? detectLifecycleUnsupported({ rootManifest }) : []),
+      ...(rootManifest ? detectUnsupportedDeclarations({ rootManifest }) : []),
       ...policyDiagnostics,
       ...diagnostics,
     ],
