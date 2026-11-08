@@ -47,7 +47,19 @@ and `validate` suppresses cleaning. Hand-authored and edited generated files are
 deleted. `clean` uses the same target selection as compile, so `--target` is not required
 when `active` / config / sole detect applies.
 
+## Watch
+
+`watchCompile({ compile, ... })` runs one compile, then asks a watch factory to report changed
+paths and recompiles after a debounce window (`DEFAULT_COMPILE_WATCH_DEBOUNCE_MS`, 200 ms).
+The CLI passes a compile callback so registry selection and output printing stay there.
+Runs are serial: an event during an active compile queues one follow-up. Compile errors are
+reported and do not stop the loop. `signal` stops the loop and closes the watcher; `once: true`
+runs only the initial compile. Tests inject `watchFactory` and/or `resolveTargets`.
+`resolveCompileWatchTargets` covers manifests, `.apm/`, `apm_modules/`, root skills/hooks/prompts,
+`.agents/local/`, and local dependency directories.
+
 ## Non-goals
 
-Full APM optimizer placement, `--watch`, `--global`, and APM prompt compiler behavior
-remain out of scope.
+Full APM optimizer placement, `--global`, and APM prompt compiler behavior remain out of scope.
+`--watch` does not install dependencies or refresh git packages in `apm_modules`; run
+`bapm install` separately.

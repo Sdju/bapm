@@ -216,7 +216,7 @@ When both `--validate` and `--dry-run` are set, compile MUST follow validate-fir
 
 ### Requirement: Clean removes only orphaned generated outputs with a valid Build ID
 
-`bapm compile --clean` (and the core `clean` option) MUST remove orphaned generated compile outputs for the selected hosts: files matching a selected target's output shape (basename and host directory prefix) that are absent from the current invocation's planned output set. Deleting a file MUST require exactly one canonical Build ID line whose id matches the normalized content. Compile MUST NEVER delete a hand-authored file without a Build ID, or a generated file whose Build ID no longer matches its content (edited after compile). Current planned outputs MUST NOT be deleted by the clean phase. `--dry-run` MUST list every would-remove path and MUST NOT delete or write any file. `--validate` MUST suppress cleaning. `--clean` MUST use the same target selection as compile; an explicit `--target` is not required when a sole manifest `active`, config target, or sole auto-detect applies. Multi-target selection MUST consider every selected host's output shape; distributed mode MUST also find stale nested placements. `--watch` remains unimplemented.
+`bapm compile --clean` (and the core `clean` option) MUST remove orphaned generated compile outputs for the selected hosts: files matching a selected target's output shape (basename and host directory prefix) that are absent from the current invocation's planned output set. Deleting a file MUST require exactly one canonical Build ID line whose id matches the normalized content. Compile MUST NEVER delete a hand-authored file without a Build ID, or a generated file whose Build ID no longer matches its content (edited after compile). Current planned outputs MUST NOT be deleted by the clean phase. `--dry-run` MUST list every would-remove path and MUST NOT delete or write any file. `--validate` MUST suppress cleaning. `--clean` MUST use the same target selection as compile; an explicit `--target` is not required when a sole manifest `active`, config target, or sole auto-detect applies. Multi-target selection MUST consider every selected host's output shape; distributed mode MUST also find stale nested placements. `--watch` is separate from clean and MUST NOT suppress it.
 
 #### Scenario: Clean removes a stale generated output
 
@@ -247,6 +247,45 @@ When both `--validate` and `--dry-run` are set, compile MUST follow validate-fir
 
 - **WHEN** `compile --target a,b --clean` or `compile --distributed --clean` runs
 - **THEN** orphan candidates MUST be limited to the selected hosts' output shapes, including stale nested distributed placements
+
+### Requirement: Watch recompiles when relevant inputs change
+
+`bapm compile --watch` (`-w`) MUST perform one initial compile with the same target selection, write, distributed, clean, and dry-run semantics as a normal invocation, then keep running and recompile when relevant project inputs change. Watched inputs MUST include the root manifest (`bapm.yml` / `apm.yml` and the local overlay), `.apm/`, `apm_modules/`, package-root `SKILL.md` / `skills/` / `hooks/` / `*.prompt.md`, and directories of local manifest dependencies. Filesystem events MUST be debounced (approximately 200 ms) and compile runs MUST NOT overlap; an event during an active run MUST queue at most one follow-up run. When the manifest changes the watched local directory set, it MUST be re-resolved. A compile error MUST be reported and MUST NOT stop the watcher, and `--watch` MUST NOT add network access beyond the normal compile. `--watch` MUST be rejected when combined with `--validate`. On SIGINT or SIGTERM the watcher MUST close and the command MUST exit `0`. A watch factory (or equivalent injection) and a single-run mode MUST be available so tests can drive the loop without real filesystem watchers.
+
+#### Scenario: Watch performs an initial compile
+
+- **WHEN** `bapm compile --watch` starts in a project with discoverable primitives
+- **THEN** it MUST write the selected target output once before waiting for changes
+
+#### Scenario: Watch recompiles on a relevant input change
+
+- **WHEN** a watched instruction primitive under `.apm/` changes while `compile --watch` runs
+- **THEN** the command MUST recompile after the debounce window and update the target output
+
+#### Scenario: Debounce coalesces a burst of events
+
+- **WHEN** several filesystem events arrive within the debounce window
+- **THEN** compile MUST run once for that burst rather than once per event
+
+#### Scenario: Transient compile error keeps watching
+
+- **WHEN** a watched-input compile fails and the watcher is running
+- **THEN** the command MUST print the error, MUST keep watching, and a later change MUST trigger another compile attempt
+
+#### Scenario: Watch and validate are incompatible
+
+- **WHEN** compile runs with both `--watch` and `--validate`
+- **THEN** it MUST fail with a clear diagnostic and MUST NOT start a watcher or write output
+
+#### Scenario: Signal stops the watcher with exit 0
+
+- **WHEN** `compile --watch` receives SIGINT or SIGTERM
+- **THEN** it MUST close the watcher, stop cleanly, and exit `0`
+
+#### Scenario: Watcher is injectable
+
+- **WHEN** tests run the watch loop with an injected watch factory or single-run mode
+- **THEN** the loop MUST use that factory (or return after the initial compile) without requiring a real filesystem watcher
 
 ### Requirement: Verbose emits thin source attribution
 
@@ -365,14 +404,14 @@ Distributed output paths MUST remain inside the project cwd. Compile MUST reject
 
 The default per-host single-file compile is **intentional**. Multi-target `--target a,b` / `--all` is supported, and opt-in `--distributed` places instructions by the literal `applyTo` directory prefix. Full APM `AgentsCompiler` context-optimizer parity remains product tech debt (not silent omissions, not OpenAPM MUST failures). Canonical IDs: `.samples/apm-knowledge/topics/tech-debt-compile.md`.
 
-| ID            | Gap                                                                    | Status                                               |
-| ------------- | ---------------------------------------------------------------------- | ---------------------------------------------------- |
-| TD-COMPILE-01 | Emit all primitives vs APM instructions-only                           | debt                                                 |
-| TD-COMPILE-02 | Full APM context-optimizer placement (file-match scoring, inheritance) | debt (opt-in literal-prefix `--distributed` ships)   |
-| TD-COMPILE-03 | No markdown link inline / `--no-links`                                 | debt (SHOULD deferred)                               |
-| TD-COMPILE-05 | Missing APM UX flags (`--watch`, `--global`, …); `--clean` ships       | debt (`--clean` implemented; `--watch` still absent) |
-| TD-COMPILE-06 | Unicode write gate (deterministic Build ID ships)                      | debt (Build ID implemented; Unicode gate remains)    |
-| TD-COMPILE-07 | Thinner `--validate` than APM                                          | debt                                                 |
-| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections                         | debt                                                 |
+| ID            | Gap                                                                    | Status                                                         |
+| ------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------- |
+| TD-COMPILE-01 | Emit all primitives vs APM instructions-only                           | debt                                                           |
+| TD-COMPILE-02 | Full APM context-optimizer placement (file-match scoring, inheritance) | debt (opt-in literal-prefix `--distributed` ships)             |
+| TD-COMPILE-03 | No markdown link inline / `--no-links`                                 | debt (SHOULD deferred)                                         |
+| TD-COMPILE-05 | Missing APM UX flags (`--global`, …); `--clean` and `--watch` ship     | debt (`--clean` and `--watch` implemented; `--global` remains) |
+| TD-COMPILE-06 | Unicode write gate (deterministic Build ID ships)                      | debt (Build ID implemented; Unicode gate remains)              |
+| TD-COMPILE-07 | Thinner `--validate` than APM                                          | debt                                                           |
+| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections                         | debt                                                           |
 
 Closing a `debt` row REQUIRES a dedicated OpenSpec change that updates this section and the knowledge inventory. Specs MUST NOT claim APM AgentsCompiler parity while these rows remain open.

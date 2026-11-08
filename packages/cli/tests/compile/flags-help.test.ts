@@ -47,7 +47,7 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).not.toMatch(/optimizer|distributed placement|multi-host/i);
   });
 
-  test("compile help omits deferred --no-links, global and watch flags", async () => {
+  test("compile help documents --watch and omits deferred --no-links and global flags", async () => {
     const viaFlag = await withCapturedIo(() => runCli(["compile", "--help"]));
     const text = [
       [...viaFlag.stdout, ...viaFlag.stderr].join("\n"),
@@ -61,7 +61,9 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).toMatch(/--all\b/);
     expect(text).not.toMatch(/--global\b/);
     expect(text).not.toMatch(/-g\b.*global|global.*-g\b/i);
-    expect(text).toMatch(/--watch\b.*not implemented|not implemented.*--watch\b/i);
+    expect(text).toMatch(/--watch\b/);
+    expect(text).toMatch(/Ctrl\+C|SIGINT|SIGTERM/i);
+    expect(text).toMatch(/incompatible with --validate|--watch.*--validate/i);
     expect(text).not.toMatch(/--root\b/);
     expect(text).toMatch(/--clean\b/);
     expect(text).not.toMatch(/--single-agents\b/);
@@ -93,6 +95,20 @@ describe("p7d CLI compile help + fail-closed", () => {
 
     const long = parseCompileArgs(["--output"]);
     expect(long.error).toBeTruthy();
+  });
+
+  test("parseCompileArgs accepts --watch / -w", () => {
+    const long = parseCompileArgs(["--watch"]);
+    expect(long.error).toBeUndefined();
+    expect(long.watch).toBe(true);
+
+    const short = parseCompileArgs(["-w", "--dry-run"]);
+    expect(short.error).toBeUndefined();
+    expect(short.watch).toBe(true);
+    expect(short.dryRun).toBe(true);
+
+    const omitted = parseCompileArgs([]);
+    expect(omitted.watch).toBe(false);
   });
 
   test("parseCompileArgs accepts --clean", () => {
