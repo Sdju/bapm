@@ -124,6 +124,7 @@ export type McpServerConfig = {
   args?: unknown[];
   url?: string;
   env?: Record<string, string>;
+  headers?: Record<string, string>;
   /** Package provenance (dependency name or local). */
   packageName?: string;
   [key: string]: unknown;

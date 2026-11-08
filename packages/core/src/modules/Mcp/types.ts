@@ -35,6 +35,12 @@ export type ApplyMcpInventoryOptions = {
   targetId?: string;
   /** Host config path; only written together with `targetId`. */
   configPath?: string;
+  /**
+   * Every target configured during this run. Complements the legacy single
+   * `targetId`/`configPath` pair; each entry is recorded in `mcp_configs` and
+   * `mcp_target_servers`.
+   */
+  targets?: Array<{ targetId: string; configPath: string }>;
 };
 
 export type ScrubMcpInventoryOptions = {
