@@ -441,6 +441,8 @@ export type {
   CheckReleaseTagOptions,
   CheckReleaseTagResult,
   PackErrorCode,
+  StrictMetadataIssue,
+  ValidatePackStrictMetadataOptions,
 } from "@/modules/Pack";
 
 export {
@@ -469,6 +471,9 @@ export {
   collectPackFiles,
   assertProjectHasContent,
   defaultArchiveName,
+  formatStrictMetadataIssues,
+  validateMarketplaceStrictMetadata,
+  validatePackStrictMetadata,
 } from "@/modules/Pack";
 
 export type { BapmIgnoreRules, PackFileEntry } from "@/modules/Pack";

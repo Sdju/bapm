@@ -36,6 +36,13 @@ export type {
 export type { PackErrorCode } from "./errors.ts";
 export { PackError } from "./errors.ts";
 
+export {
+  formatStrictMetadataIssues,
+  validateMarketplaceStrictMetadata,
+  validatePackStrictMetadata,
+} from "./strictMetadata.ts";
+export type { StrictMetadataIssue, ValidatePackStrictMetadataOptions } from "./strictMetadata.ts";
+
 export { runPack, packProject, packArchive } from "./runPack.ts";
 export { extractPackArchive, unpackArchive, extractPack } from "./extract.ts";
 export {

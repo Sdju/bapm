@@ -18,6 +18,8 @@ bapm pack [options]
 
 Режим `--check-clean` — read-only drift gate по APM-семантике: `pack` заново собирает выбранные host `marketplace.json` в памяти и сравнивает их с файлами на диске. Отсутствующий или отличающийся артефакт даёт exit `4`; ничего не записывается (ни zip, ни JSON). Проверяются только marketplace outputs, а не произвольные uncommitted-файлы git.
 
+Режим `--strict-metadata` — preflight перед любой записью: проверяет метаданные producer-пакета и выбранных marketplace-пакетов. При ошибке команда завершается с exit `5`, не создавая ни zip, ни `marketplace.json`. Если одновременно запрошен `--check-versions` и версии не выровнены, побеждает exit `3`.
+
 ## Параметры
 
 | Флаг                   | Значение                | Эффект                                                                                         | Default        |
@@ -28,6 +30,7 @@ bapm pack [options]
 | `--check-release`      | —                       | Проверить, что версия в манифесте совпадает с git-тегом                                        | off            |
 | `--check-versions`     | —                       | Marketplace version alignment для local packages (`lockstep` / `tag_pattern` / `per_package`)  | off            |
 | `--check-clean`        | —                       | Read-only drift gate: regenerate selected `marketplace.json` и diff с on-disk; exit `4`        | off            |
+| `--strict-metadata`    | —                       | Проверить метаданные manifest / `plugin.json` / marketplace packages; exit `5`, без записи     | off            |
 | `--tag`                | `<name>`                | Tag под check (опционально с `--check-release`; иначе HEAD)                                    | HEAD           |
 | `--marketplace`, `-m`  | `all` \| `none` \| list | Фильтр host marketplace emit (`claude`, `codex`, `copilot`)                                    | all configured |
 | `--marketplace-path`   | `FORMAT=PATH`           | Override output path (повторяемый; путь под project root)                                      | —              |
@@ -42,10 +45,21 @@ bapm pack [options]
 - Gate-only: `--check-release` / `--check-versions` / `--check-clean` без `--archive` и без marketplace emit intent.
 - `--check-versions` без marketplace block — skip с informational сообщением, exit 0.
 - `--check-clean` без marketplace block — skip, exit 0. При drift/missing — exit `4`; при `--check-versions`-misalignment exit `3` имеет приоритет.
+- `--strict-metadata` — не gate-only: без `--archive` он всё равно собирает обычный pack (zip; marketplace-only проект может пропустить пустой zip). Ошибки метаданных дают exit `5`; при одновременном `--check-versions` exit `3` имеет приоритет.
 - Из архива опускаются `bapm.local.yml` и `bapm.local.lock.yaml` (unpublished surface).
 - Пример `.bapmignore`: `README.md`, `CHANGELOG.md`, `docs/**` — типичные authoring-файлы вне дистрибутива; игнорированный `.env` не вызывает secret-refuse.
 - Нечитаемый `.bapmignore` (например, каталог вместо файла) — fail closed, архив не создаётся.
 - Zip ставится через `bapm install ./file.zip` в пустой каталог: файлы, которые уже есть с другим содержимым, install не перезаписывает ([подробнее](/reference/install#замечания)).
+
+### Что проверяет `--strict-metadata`
+
+APM использует exit `5`, когда не может подтвердить (certify) remote-метаданные marketplace-пакетов. bapm не скачивает remote `apm.yml` при pack, поэтому реализована консервативная схема-проверка; она документирует ровно то, что гарантирует:
+
+- **manifest** (`bapm.yml` / `apm.yml`): обязательные `name` (непустая строка) и `version` (semver 2.0.0). Опциональные `description`, `license`, `repository` — непустые строки; `author` — непустая строка (OpenAPM); `homepage` — абсолютный `http(s)` URL; `keywords` / `tags` — массивы строк. Неизвестные ключи не валят strict-проверку.
+- **`plugin.json`** в корне и стандартных APM-путях (`.claude-plugin/`, `.github/plugin/`, `.cursor-plugin/`): обязательный `name`; непустые строки для `description`, `license`, `repository`; `version` — semver 2.0.0, если задан; `homepage` — `http(s)` URL; `author` — строка или объект с непустым `name` и строковыми `email` / `url`; `keywords` — массив строк. Для `bapm pack --agent-plugins` дополнительно требуется канонический `$schema` Agent Plugins v1 и валидное portable-имя.
+- **marketplace packages** (только для выбранных outputs): локальные `source: ./…` записи проходят как есть (local metadata certifiable). Для remote-записей нужен явный непустой `description` и фиксированный display-`version` semver без range (`^`, `~`, `>=`, `*` и т.п.): bapm не фетчит remote-метаданные, поэтому иначе подтвердить их нельзя.
+
+Диагностика содержит путь поля, например `bapm.yml#/version`, `plugin.json#/author/name` или `marketplace.packages[0].description`. Проверка выполняется до записи zip и `marketplace.json`, поэтому при exit `5` артефактов не остаётся.
 
 ### Пример `.bapmignore`
 

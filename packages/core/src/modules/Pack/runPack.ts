@@ -19,6 +19,7 @@ import {
   ensureCwdExists,
 } from "./collect.ts";
 import { PackError } from "./errors.ts";
+import { validateMarketplaceStrictMetadata, validatePackStrictMetadata } from "./strictMetadata.ts";
 import type { RunPackOptions, RunPackResult } from "./types.ts";
 import { createZipArchive } from "./zip.ts";
 
@@ -40,6 +41,12 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
   const cwd = resolve(options.cwd ?? process.cwd());
   ensureCwdExists(cwd);
   const agentPlugins = options.agentPlugins === true;
+
+  // `--strict-metadata` is a preflight: validate every producer metadata source
+  // before any marketplace JSON or archive write can happen.
+  if (options.strictMetadata) {
+    validatePackStrictMetadata({ cwd, agentPlugins });
+  }
 
   if (options.checkRelease) {
     const gate = await checkReleaseTag({ cwd, tag: options.tag });
@@ -138,6 +145,9 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
     );
     const selected = selectOutputFormats(config, marketplaceFilter, knownFormats);
     if (selected.length > 0) {
+      if (options.strictMetadata) {
+        validateMarketplaceStrictMetadata(config);
+      }
       try {
         const built = await buildMarketplaceOutputs({
           cwd,

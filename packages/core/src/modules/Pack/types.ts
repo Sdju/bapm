@@ -17,6 +17,8 @@ export type RunPackOptions = {
   checkRelease?: boolean;
   /** Read-only marketplace drift gate (`--check-clean`, exit 4 on drift). */
   checkClean?: boolean;
+  /** Validate producer package metadata before any write (`--strict-metadata`, exit 5). */
+  strictMetadata?: boolean;
   /** Tag override for `--check-release`. */
   tag?: string;
   /**

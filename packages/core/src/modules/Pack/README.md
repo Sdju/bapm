@@ -6,13 +6,14 @@ Plain-zip producer archive for OpenAPM Producer (M7): pack, extract, sc-007 secr
 
 ## Public API
 
-| Export                                               | Kind             |
-| ---------------------------------------------------- | ---------------- |
-| `runPack`, `packProject`, `packArchive`              | pack zip         |
-| `extractPackArchive`, `unpackArchive`, `extractPack` | extract          |
-| `checkReleaseTag`, `checkRelease`, `runCheckRelease` | pr-004 gate      |
-| `isSecretPackPath`                                   | sc-007           |
-| `PackError`, types                                   | errors / options |
+| Export                                                            | Kind                          |
+| ----------------------------------------------------------------- | ----------------------------- |
+| `runPack`, `packProject`, `packArchive`                           | pack zip                      |
+| `extractPackArchive`, `unpackArchive`, `extractPack`              | extract                       |
+| `checkReleaseTag`, `checkRelease`, `runCheckRelease`              | pr-004 gate                   |
+| `validatePackStrictMetadata`, `validateMarketplaceStrictMetadata` | `--strict-metadata` preflight |
+| `isSecretPackPath`                                                | sc-007                        |
+| `PackError`, types                                                | errors / options              |
 
 ## Notes
 

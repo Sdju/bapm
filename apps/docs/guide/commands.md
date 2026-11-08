@@ -70,6 +70,8 @@ bapm find .agents/skills/code-review/SKILL.md
 | `bapm search`      | Ищет плагины в подключённом маркетплейсе       |
 | `bapm publish`     | Публикует пакет в registry (экспериментально)  |
 
+`bapm pack --strict-metadata` проверяет метаданные manifest / `plugin.json` / marketplace packages до записи и падает с exit `5` (при одновременном `--check-versions` приоритет у exit `3`). Подробности — в [reference/pack](/reference/pack).
+
 ## Служебные
 
 `bapm help`, `bapm version` (`-V`), `bapm self-update --check`.

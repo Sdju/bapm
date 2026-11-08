@@ -8,6 +8,7 @@ export interface PackDeps {
     checkRelease?: boolean;
     checkVersions?: boolean;
     checkClean?: boolean;
+    strictMetadata?: boolean;
     tag?: string;
     marketplace?: string | string[];
     marketplacePaths?: Record<string, string> | string[];
