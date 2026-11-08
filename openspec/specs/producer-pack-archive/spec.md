@@ -72,7 +72,7 @@ Invoking `pack` MUST be recognized by CLI dispatch and MUST invoke a thin FEOD c
 
 ### Requirement: No APM plugin pack format in M7
 
-Pack MUST NOT require APM `--format plugin` host directory bundles, tar plugin layouts, or marketplace `--check-clean` / `--check-versions` as M7 success criteria. Optional emission of external host `marketplace.json` files (Claude/Codex paths) when authoring `marketplace:` outputs are selected is allowed and orthogonal to plain-zip success. Those JSON files MUST NOT be treated as OpenAPM normative consumer marketplace resolution claims.
+Pack MUST NOT require APM `--format plugin` host directory bundles or tar plugin layouts as M7 success criteria. Optional emission of external host `marketplace.json` files (Claude/Codex/Copilot paths) when authoring `marketplace:` outputs are selected is allowed and orthogonal to plain-zip success. Optional `--check-clean` (marketplace drift gate) and `--check-versions` MUST NOT be treated as required M7 success criteria. Those JSON files MUST NOT be treated as OpenAPM normative consumer marketplace resolution claims.
 
 #### Scenario: Default pack is plain archive not plugin format
 
@@ -86,7 +86,7 @@ Pack MUST NOT require APM `--format plugin` host directory bundles, tar plugin l
 
 ### Requirement: Pack emits host marketplace.json when authoring outputs selected
 
-When the project has a loadable `marketplace:` authoring config and the effective output selection includes Claude and/or Codex, `bapm pack` MUST invoke marketplace pack emit and write the corresponding host `marketplace.json` artifact(s) under the project root (or configured jailed paths). Plain-zip archive production MUST remain available and MUST NOT be replaced by host JSON emit. Host marketplace.json paths are project-tree artifacts; pack MUST NOT treat nesting marketplace.json inside the zip as the only distribution mechanism for those hosts.
+When the project has a loadable `marketplace:` authoring config and the effective output selection includes Claude, Codex, and/or Copilot, `bapm pack` MUST invoke marketplace pack emit and write the corresponding host `marketplace.json` artifact(s) under the project root (or configured jailed paths). Plain-zip archive production MUST remain available and MUST NOT be replaced by host JSON emit. Host marketplace.json paths are project-tree artifacts; pack MUST NOT treat nesting marketplace.json inside the zip as the only distribution mechanism for those hosts.
 
 #### Scenario: Pack with marketplace writes Claude JSON and zip
 
@@ -109,7 +109,7 @@ When `marketplace:` is present, marketplace outputs are selected, and the projec
 
 ### Requirement: Pack marketplace CLI flags
 
-`bapm pack` MUST accept `--marketplace` (`all` | `none` | comma-separated format list), repeatable `--marketplace-path FORMAT=PATH`, and marketplace-aware `--offline`. Unknown pack flags MUST still fail closed. Pack help MUST document marketplace emit mode. Existing `--archive`, `--dry-run`, `--check-release`, `--check-versions`, and `--tag` behaviors MUST remain; sc-007 secret refuse and pr-004 `--check-release` MUST NOT regress. Marketplace `--check-versions` remains optional and orthogonal to M7 plain-zip success (see `producer-pack-check-versions`).
+`bapm pack` MUST accept `--marketplace` (`all` | `none` | comma-separated format list), repeatable `--marketplace-path FORMAT=PATH`, marketplace-aware `--offline`, and optional `--check-clean`. Unknown pack flags MUST still fail closed. Pack help MUST document marketplace emit mode and the read-only drift gate. Existing `--archive`, `--dry-run`, `--check-release`, `--check-versions`, and `--tag` behaviors MUST remain; sc-007 secret refuse and pr-004 `--check-release` MUST NOT regress. Marketplace `--check-versions` and `--check-clean` remain optional and orthogonal to M7 plain-zip success (see `producer-pack-check-versions` and `marketplace-pack-outputs`).
 
 #### Scenario: Pack help mentions marketplace
 

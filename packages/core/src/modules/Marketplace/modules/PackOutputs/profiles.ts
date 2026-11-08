@@ -31,6 +31,13 @@ export function resolveEffectiveOutputPath(options: ResolveEffectiveOutputPathOp
       if (typeof pathVal === "string" && pathVal.trim()) configured = pathVal.trim();
     }
   }
+  if (configured === undefined && options.config) {
+    const legacy = (options.config as Record<string, unknown>)[format];
+    if (legacy && typeof legacy === "object" && !Array.isArray(legacy)) {
+      const outputVal = (legacy as Record<string, unknown>).output;
+      if (typeof outputVal === "string" && outputVal.trim()) configured = outputVal.trim();
+    }
+  }
   if (configured === undefined) configured = options.defaultOutput;
 
   const absolute = isAbsolute(configured) ? configured : resolve(cwd, configured);
@@ -66,6 +73,7 @@ export function formatsEnabledInConfig(
     // Legacy single-format keys on marketplace block
     if (name === "claude" && outputEntryEnabled(config.claude)) out.push(name);
     if (name === "codex" && outputEntryEnabled(config.codex)) out.push(name);
+    if (name === "copilot" && outputEntryEnabled(config.copilot)) out.push(name);
   }
   return out;
 }

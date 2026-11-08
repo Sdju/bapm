@@ -56,12 +56,13 @@ describe("mp-pack-outputs core Marketplace builder layout", () => {
     expect(hasBuilder, "missing marketplace pack-outputs builder export").toBe(true);
   });
 
-  test("builder sources mention Claude and Codex mappers", () => {
+  test("builder sources mention Claude, Codex, and Copilot profiles", () => {
     const files = listFilesRecursive(marketplaceSrc).filter((f) => f.endsWith(".ts"));
     const builderFiles = files.filter((f) => /PackOutputs|Builder|mapper|output.?profile/i.test(f));
     expect(builderFiles.length).toBeGreaterThan(0);
     const body = builderFiles.map((f) => readFileSync(f, "utf8")).join("\n");
     expect(body).toMatch(/claude/i);
     expect(body).toMatch(/codex/i);
+    expect(body).toMatch(/copilot/i);
   });
 });

@@ -8,7 +8,7 @@ Defines the greenfield `@b-apm/integration-copilot` package: GitHub Copilot proj
 
 ### Requirement: Package @b-apm/integration-copilot exists and depends only on integration API
 
-The monorepo MUST include package directory `packages/integration-copilot` with package name `@b-apm/integration-copilot`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@b-apm/integration-*` packages. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createCopilotIntegration` as an alias. Runtime integration `id` MUST be `copilot`. The package MUST NOT expose a marketplace-output mapper in this capability.
+The monorepo MUST include package directory `packages/integration-copilot` with package name `@b-apm/integration-copilot`. The package MUST be TypeScript ESM with vite-plus tooling consistent with other `@b-apm/integration-*` packages. Among bapm packages it MUST depend on `@b-apm/integration-api` for types and contracts and MUST NOT require `@b-apm/core` as a hard dependency for host capability implementation. The package MUST export a runtime factory usable as `createIntegration` and MAY export `createCopilotIntegration` as an alias. Runtime integration `id` MUST be `copilot`. The package MAY additionally expose a Copilot marketplace-output mapper (`format: "copilot"`, default `.github/plugin/marketplace.json`) owned by `marketplace-pack-outputs` without changing runtime behavior.
 
 #### Scenario: Package identity and dependency edge
 

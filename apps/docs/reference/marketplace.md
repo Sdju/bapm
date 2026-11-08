@@ -10,6 +10,8 @@ bapm marketplace <subcommand> [options]
 
 Реестр consumer + authoring для манифеста. Host marketplace outputs пишет [`bapm pack`](/reference/pack), не эта команда. В этом релизе не реализованы (по help): `outdated`, `audit` под `marketplace`.
 
+`bapm pack` понимает три host-профиля: `claude` → `.claude-plugin/marketplace.json`, `codex` → `.agents/plugins/marketplace.json`, `copilot` → `.github/plugin/marketplace.json`. Профиль включается через `marketplace.outputs.<format>` (boolean или map с `path`); legacy-ключи `marketplace.claude`/`codex`/`copilot` тоже принимаются. Опция `pack --check-clean` сверяет сгенерированные JSON с файлами на диске и завершается exit `4` при drift или missing.
+
 ## Consumer
 
 | Подкоманда      | Назначение                                                       |

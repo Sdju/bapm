@@ -4,6 +4,7 @@ import { discoverAgentPluginMcp, loadAgentPluginManifest } from "@/modules/Agent
 import { loadManifest } from "@/modules/Manifest";
 import {
   buildMarketplaceOutputs,
+  checkMarketplaceDrift,
   detectAuthoringConfigSource,
   loadMarketplaceAuthoringConfig,
   MarketplacePackOutputsError,
@@ -45,6 +46,25 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
     for (const w of gate.warnings) {
       console.error(`bapm: warning: ${w}`);
     }
+  }
+
+  if (options.checkClean) {
+    const checkClean = await checkMarketplaceDrift({
+      cwd,
+      marketplace: options.marketplace,
+      marketplacePaths: options.marketplacePaths,
+      offline: options.offline,
+      includePrerelease: options.includePrerelease,
+      lsRemote: options.lsRemote,
+      marketplaceOutputs: options.marketplaceOutputs,
+    });
+    return {
+      ok: true,
+      dryRun: true,
+      filesPacked: 0,
+      marketplaceWritten: false,
+      checkClean,
+    };
   }
 
   const format = options.format ?? "zip";

@@ -52,6 +52,8 @@ export type BuildMarketplaceOutputsOptions = {
   /** CLI `--marketplace-path FORMAT=PATH` overrides. */
   marketplacePaths?: Record<string, string> | Array<string | { format: string; path: string }>;
   dryRun?: boolean;
+  /** Suppress progress logging (used by read-only drift checks). */
+  quiet?: boolean;
   offline?: boolean;
   includePrerelease?: boolean;
   /** Injectable ls-remote for tests. */
@@ -68,6 +70,12 @@ export type MarketplaceOutputWritten = {
   dryRun: boolean;
 };
 
+export type MarketplaceOutputDocument = {
+  format: MarketplaceOutputFormat;
+  path: string;
+  body: string;
+};
+
 export type BuildMarketplaceOutputsResult = {
   ok: true;
   success: true;
@@ -76,6 +84,8 @@ export type BuildMarketplaceOutputsResult = {
   packages: ResolvedPackage[];
   resolved: ResolvedPackage[];
   written: MarketplaceOutputWritten[];
+  /** Serialized documents the run composed (also populated for dry-run). */
+  documents: MarketplaceOutputDocument[];
   warnings: string[];
 };
 

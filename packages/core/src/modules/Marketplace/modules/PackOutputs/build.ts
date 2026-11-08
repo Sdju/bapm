@@ -15,6 +15,7 @@ import { resolveMarketplacePackages } from "./resolve.ts";
 import type {
   BuildMarketplaceOutputsOptions,
   BuildMarketplaceOutputsResult,
+  MarketplaceOutputDocument,
   MarketplaceOutputWritten,
 } from "./types.ts";
 import { atomicWriteMarketplaceJson } from "./write.ts";
@@ -70,6 +71,7 @@ export async function buildMarketplaceOutputs(
       packages: [],
       resolved: [],
       written: [],
+      documents: [],
       warnings: [],
     };
   }
@@ -84,6 +86,7 @@ export async function buildMarketplaceOutputs(
   });
 
   const written: MarketplaceOutputWritten[] = [];
+  const documents: MarketplaceOutputDocument[] = [];
   const warnings: string[] = [];
 
   for (const format of formats) {
@@ -102,15 +105,17 @@ export async function buildMarketplaceOutputs(
     });
     const doc = integration.marketplaceOutput.map(config, resolved);
     const body = serializeMarketplaceJson(doc);
+    documents.push({ format, path: outPath, body });
 
     if (dryRun) {
-      console.log(`Dry-run: would write ${format} marketplace.json → ${outPath}`);
+      if (!options.quiet)
+        console.log(`Dry-run: would write ${format} marketplace.json → ${outPath}`);
       written.push({ format, path: outPath, dryRun: true });
       continue;
     }
 
     atomicWriteMarketplaceJson(outPath, body);
-    console.log(`Wrote ${format} marketplace.json → ${outPath}`);
+    if (!options.quiet) console.log(`Wrote ${format} marketplace.json → ${outPath}`);
     written.push({ format, path: outPath, dryRun: false });
   }
 
@@ -122,6 +127,7 @@ export async function buildMarketplaceOutputs(
     packages,
     resolved,
     written,
+    documents,
     warnings,
   };
 }

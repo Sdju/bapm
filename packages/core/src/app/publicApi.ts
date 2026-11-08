@@ -805,7 +805,13 @@ export type {
   LsRemoteFn,
   BuildMarketplaceOutputsOptions,
   MarketplaceOutputWritten,
+  MarketplaceOutputDocument,
   BuildMarketplaceOutputsResult,
+  MarketplaceDriftDifference,
+  MarketplaceDriftStatus,
+  MarketplaceDriftOutput,
+  CheckMarketplaceDriftResult,
+  CheckMarketplaceDriftOptions,
   ResolveMarketplacePackagesOptions,
   ResolveMarketplacePackagesResult,
   ResolveEffectiveOutputPathOptions,
@@ -903,6 +909,8 @@ export {
   runMarketplaceBuilder,
   writeMarketplacePackOutputs,
   tryLoadMarketplaceAuthoring,
+  checkMarketplaceDrift,
+  diffMarketplaceJson,
 } from "@/modules/Marketplace";
 
 export const BAPM_NAME = "bapm";

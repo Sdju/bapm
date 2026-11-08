@@ -25,6 +25,7 @@ describe("mp-pack-outputs CLI help surface", () => {
     expectKnownCommand(combined, "pack");
     expect(result).toBe(0);
     expect(combined).toMatch(/--marketplace\b/i);
+    expect(combined).toMatch(/--check-clean\b/i);
     expect(combined).toMatch(/marketplace/i);
   });
 
