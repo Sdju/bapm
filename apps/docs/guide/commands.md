@@ -25,19 +25,26 @@ bapm update -y                   # обновить
 
 ## Разобраться, что установлено
 
-| Команда                   | Что делает                                |
-| ------------------------- | ----------------------------------------- |
-| `bapm deps list` / `tree` | Список и дерево зависимостей из lock      |
-| `bapm deps why <пакет>`   | Почему пакет оказался в проекте           |
-| `bapm find <путь>`        | Какой пакет положил этот файл             |
-| `bapm view <пакет>`       | Информация об установленном пакете        |
-| `bapm targets`            | Какие агенты зарегистрированы и активны   |
-| `bapm mcp list` / `show`  | Какие MCP-серверы объявлены и куда попали |
-| `bapm config`             | Личный target по умолчанию и grant-ы      |
+| Команда                   | Что делает                                                                  |
+| ------------------------- | --------------------------------------------------------------------------- |
+| `bapm deps list` / `tree` | Список и дерево зависимостей из lock                                        |
+| `bapm deps why <пакет>`   | Почему пакет оказался в проекте                                             |
+| `bapm find <путь>`        | Какой пакет положил этот файл                                               |
+| `bapm view <пакет>`       | Информация об установленном пакете                                          |
+| `bapm targets`            | Какие агенты зарегистрированы и активны                                     |
+| `bapm mcp list` / `show`  | Какие MCP-серверы объявлены и куда попали                                   |
+| `bapm config`             | Личные defaults: target, registry URL, temp-dir, канал self-update, grant-ы |
 
 ```bash
 bapm find .agents/skills/code-review/SKILL.md
+bapm config get target                    # прочитать личный default
+bapm config set target cursor             # записать target
+bapm config list --json                   # все известные ключи + grant-ы
+bapm config set temp-dir ~/.cache/bapm-tmp
+bapm config unset temp-dir
 ```
+
+Подробности о ключах, валидации и приоритете — в [reference/config](/reference/config).
 
 ## Проверить и починить
 

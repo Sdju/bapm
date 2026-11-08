@@ -80,7 +80,11 @@ export function setConfigValue(
   return next;
 }
 
-/** Immutable-ish dotted unset. Missing keys are a no-op. */
+/**
+ * Immutable-ish dotted unset. Missing keys are a no-op. Empty parent objects
+ * created only for the removed leaf are pruned, while unrelated user keys
+ * under the same parent are kept.
+ */
 export function unsetConfigValue(document: UserConfigDocument, key: string): UserConfigDocument {
   const parts = key.split(".").filter(Boolean);
   if (parts.length === 0) return document;
@@ -95,15 +99,50 @@ export function unsetConfigValue(document: UserConfigDocument, key: string): Use
     cursor = clone as UserConfigDocument;
   }
   delete cursor[parts[parts.length - 1]!];
+
+  for (let i = parts.length - 2; i >= 0; i -= 1) {
+    let parent: UserConfigDocument = next;
+    for (let j = 0; j < i; j += 1) {
+      const child = parent[parts[j]!];
+      if (!child || typeof child !== "object" || Array.isArray(child)) return next;
+      parent = child as UserConfigDocument;
+    }
+    const branch = parent[parts[i]!];
+    if (!branch || typeof branch !== "object" || Array.isArray(branch)) return next;
+    if (Object.keys(branch as Record<string, unknown>).length > 0) return next;
+    delete parent[parts[i]!];
+  }
   return next;
+}
+
+function readConfiguredString(key: string, options?: UserConfigStoreOptions): string | undefined {
+  const value = getConfigValue(loadUserConfig(options), key);
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
 }
 
 /** Read the persisted `target` default, when present and non-empty. */
 export function readConfiguredTarget(options?: UserConfigStoreOptions): string | undefined {
-  const value = getConfigValue(loadUserConfig(options), "target");
-  if (typeof value !== "string") return undefined;
-  const trimmed = value.trim();
-  return trimmed || undefined;
+  return readConfiguredString("target", options);
+}
+
+/** Read the persisted MCP registry URL. Stored-only until a lookup consumer exists. */
+export function readConfiguredMcpRegistryUrl(options?: UserConfigStoreOptions): string | undefined {
+  return readConfiguredString("mcp-registry-url", options);
+}
+
+/** Read the persisted temp directory. Stored-only until an operation consumes it. */
+export function readConfiguredTempDir(options?: UserConfigStoreOptions): string | undefined {
+  return readConfiguredString("temp-dir", options);
+}
+
+/** Read the persisted self-update channel, falling back to `stable`. */
+export function readConfiguredSelfUpdateChannel(
+  options?: UserConfigStoreOptions,
+): "stable" | "prerelease" {
+  const value = readConfiguredString("self-update.channel", options)?.toLowerCase();
+  return value === "prerelease" ? "prerelease" : "stable";
 }
 
 /**

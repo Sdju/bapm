@@ -1,8 +1,13 @@
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 import {
+  CONFIG_KEY_DEFINITIONS,
+  findConfigKey,
+  unknownConfigKeyMessage,
+  validateConfigValue,
+} from "../keys.ts";
+import {
   getConfigValue,
   loadUserConfig,
-  readConfiguredTarget,
   setConfigValue,
   unsetConfigValue,
   userConfigPath,
@@ -26,8 +31,11 @@ export type ParsedConfigArgs = {
   error?: string;
 };
 
-const TARGET_KEY = "target";
-const TARGET_ID_RE = /^[a-z0-9][a-z0-9._-]*$/;
+function keyLines(): string {
+  return CONFIG_KEY_DEFINITIONS.map(
+    (definition) => `  ${definition.id.padEnd(20)} ${definition.summary}`,
+  ).join("\n");
+}
 
 export function formatConfigHelp(deps: ConfigCliDeps): string {
   return `${deps.name} config — Inspect or update user defaults (~/.bapm/config.json)
@@ -36,17 +44,25 @@ Usage:
   bapm config
   bapm config list [--json]
   bapm config get <key>
-  bapm config set target <id>
-  bapm config unset target
+  bapm config set <key> <value>
+  bapm config unset <key>
 
 Keys:
-  target         Default host target when --target, active, and auto-detect yield nothing
+${keyLines()}
+
+Value rules:
+  target                Lowercase id: letters, digits, ".", "_", "-" (e.g. cursor)
+  mcp-registry-url      http:// or https:// URL with a host; no credentials/query/fragment
+  temp-dir              Existing, writable directory (stored absolute; ~ is expanded)
+  self-update.channel   "stable" (default) or "prerelease"
 
 Options:
   --json         Machine-readable list output
   --help, -h     Show this help
 
 Notes:
+  Unknown keys are rejected. mcp-registry-url, temp-dir, and self-update.channel are
+  currently stored-only: no install/MCP lookup/self-update consumer reads them yet.
   Read-merge-write preserves existing keys, including executables.allow/deny grants
   written by bapm approve / bapm deny. Writes are atomic (temp file + rename).
   Host selection precedence: --target → local overlay active → manifest active →
@@ -91,43 +107,51 @@ export function parseConfigArgs(argv: string[]): ParsedConfigArgs {
     if (positionals.length !== 1) {
       return { sub: "get", error: "Usage: bapm config get <key>" };
     }
-    return { sub: "get", key: positionals[0] };
+    const key = positionals[0]!;
+    if (!findConfigKey(key)) {
+      return { sub: "get", key, error: unknownConfigKeyMessage(key) };
+    }
+    return { sub: "get", key };
   }
 
   if (first === "set") {
     if (positionals.length !== 2) {
-      return { sub: "set", error: "Usage: bapm config set target <id>" };
+      return { sub: "set", error: "Usage: bapm config set <key> <value>" };
     }
-    const [key, value] = positionals as [string, string];
-    if (key !== TARGET_KEY) {
-      return { sub: "set", key, error: `config set only supports "${TARGET_KEY}" (got "${key}")` };
+    const [key, raw] = positionals as [string, string];
+    if (!findConfigKey(key)) {
+      return { sub: "set", key, error: unknownConfigKeyMessage(key) };
     }
-    const target = value.trim();
-    if (!target || !TARGET_ID_RE.test(target)) {
-      return { sub: "set", key, value, error: `Invalid target id "${value}"` };
+    const parsed = validateConfigValue(key, raw);
+    if (!parsed.ok) {
+      return { sub: "set", key, value: raw, error: parsed.error };
     }
-    return { sub: "set", key, value: target };
+    return { sub: "set", key, value: parsed.value };
   }
 
   if (positionals.length !== 1) {
-    return { sub: "unset", error: "Usage: bapm config unset target" };
+    return { sub: "unset", error: "Usage: bapm config unset <key>" };
   }
   const key = positionals[0]!;
-  if (key !== TARGET_KEY) {
-    return {
-      sub: "unset",
-      key,
-      error: `config unset only supports "${TARGET_KEY}" (got "${key}")`,
-    };
+  if (!findConfigKey(key)) {
+    return { sub: "unset", key, error: unknownConfigKeyMessage(key) };
   }
   return { sub: "unset", key };
 }
 
 function shapeForJson(document: UserConfigDocument): Record<string, unknown> {
-  return {
-    target: typeof document.target === "string" ? document.target : null,
-    ...Object.fromEntries(Object.entries(document).filter(([key]) => key !== "target")),
-  };
+  const knownRoots = new Set(
+    CONFIG_KEY_DEFINITIONS.map((definition) => definition.path.split(".")[0]),
+  );
+  const shaped: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(document)) {
+    if (!knownRoots.has(key)) shaped[key] = value;
+  }
+  for (const definition of CONFIG_KEY_DEFINITIONS) {
+    const value = getConfigValue(document, definition.path);
+    shaped[definition.id] = typeof value === "string" ? value : null;
+  }
+  return shaped;
 }
 
 function grantSummary(value: unknown): string {
@@ -136,10 +160,16 @@ function grantSummary(value: unknown): string {
 }
 
 function printList(deps: ConfigCliDeps, document: UserConfigDocument): void {
-  const target = readConfiguredTarget(
-    deps.configRoot ? { configRoot: deps.configRoot } : undefined,
-  );
-  console.log(`${TARGET_KEY}\t${target ?? "(unset)"}`);
+  for (const definition of CONFIG_KEY_DEFINITIONS) {
+    const value = getConfigValue(document, definition.path);
+    const rendered =
+      typeof value === "string"
+        ? value
+        : definition.defaultValue
+          ? `${definition.defaultValue} (default)`
+          : "(unset)";
+    console.log(`${definition.id}\t${rendered}`);
+  }
   const executables =
     document.executables && typeof document.executables === "object"
       ? (document.executables as Record<string, unknown>)

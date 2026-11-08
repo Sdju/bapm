@@ -1,6 +1,6 @@
 # bapm config — пользовательские настройки
 
-Тонкая обёртка над `~/.bapm/config.json`. Тот же файл хранит grant-ы `bapm approve` / `bapm deny`; `config` не удаляет их.
+Обёртка над `~/.bapm/config.json`: валидируемые личные defaults и просмотр ключей. Тот же файл хранит grant-ы `bapm approve` / `bapm deny`; `config` не удаляет их.
 
 ## Использование
 
@@ -8,21 +8,30 @@
 bapm config
 bapm config list [--json]
 bapm config get <key>
-bapm config set target <id>
-bapm config unset target
+bapm config set <key> <value>
+bapm config unset <key>
 ```
 
-| Команда                  | Эффект                                                       |
-| ------------------------ | ------------------------------------------------------------ |
-| `config` / `config list` | Показать `target`, число allow/deny grant-ов и путь к файлу  |
-| `config list --json`     | Весь документ конфига в JSON (`target: null`, если не задан) |
-| `config get target`      | Напечатать значение target; exit 1, если не задан            |
-| `config set target <id>` | Записать target по умолчанию                                 |
-| `config unset target`    | Удалить target; остальные ключи остаются                     |
+| Команда                  | Эффект                                                                   |
+| ------------------------ | ------------------------------------------------------------------------ |
+| `config` / `config list` | Показать известные ключи, число allow/deny grant-ов и путь к файлу       |
+| `config list --json`     | JSON с известными ключами (`null`, если не задан) и остальным документом |
+| `config get <key>`       | Напечатать сохранённое значение; exit 1, если не задано                  |
+| `config set <key> <v>`   | Проверить значение и записать ключ                                       |
+| `config unset <key>`     | Удалить ключ; остальные ключи и grant-ы остаются                         |
 
-`--help`, `-h` показывают справку. Неизвестные флаги и ключи отвергаются.
+`--help`, `-h` показывают справку. Неизвестные флаги и ключи отвергаются с exit 1; в ошибке перечислены допустимые ключи.
 
-## `target`: агент по умолчанию
+## Ключи
+
+| Ключ                  | Тип                   | По умолчанию | Что делает                                                        |
+| --------------------- | --------------------- | ------------ | ----------------------------------------------------------------- |
+| `target`              | target id             | не задан     | Личный агент по умолчанию перед автоопределением                  |
+| `mcp-registry-url`    | `http(s)://host`      | не задан     | Хранит базовый URL приватного MCP registry (пока только хранение) |
+| `temp-dir`            | путь                  | не задан     | Хранит абсолютный temp-каталог (пока только хранение)             |
+| `self-update.channel` | `stable`/`prerelease` | `stable`     | Хранит канал self-update (пока только хранение)                   |
+
+### `target`
 
 `target` — последний явный источник перед автоопределением. Полный порядок выбора:
 
@@ -41,15 +50,57 @@ bapm targets --json             # STATUS=active, SOURCE=config (если active 
 bapm config unset target
 ```
 
-Изменить target можно только валидным id: строчные буквы, цифры, `.`, `_`, `-`; например `cursor`, `claude`, `grok-build`, `hermes`, `intellij`, `x-acme-editor`.
+Допустимый id: строчные буквы, цифры, `.`, `_`, `-`; например `cursor`, `claude`, `grok-build`, `hermes`, `intellij`, `x-acme-editor`.
+
+### `mcp-registry-url`
+
+Принимает только `http://` или `https://` URL с хостом. Отвергаются:
+
+- другие схемы (`ws://`, `wss://`, `file://`, URL без схемы);
+- встроенные credentials (`https://user:pass@host`);
+- query string и fragment;
+- пустой хост, некорректный порт, управляющие символы и URL длиннее 2048 символов.
+
+Завершающие `/` нормализуются. Пока значение только хранится: registry-lookup MCP в bapm ещё не реализован, поэтому `install` / `mcp` его не читают. Ключ можно безопасно задать заранее; при появлении consumer-а приоритет будет `--registry` → `MCP_REGISTRY_URL` → `mcp-registry-url` → встроенный default.
+
+```bash
+bapm config set mcp-registry-url https://mcp.internal.example.com
+bapm config get mcp-registry-url
+bapm config unset mcp-registry-url
+```
+
+### `temp-dir`
+
+Путь раскрывается (`~`) и сохраняется абсолютным. Каталог должен существовать, быть каталогом и быть доступным на запись. Пока значение только хранится: операции clone/download в bapm используют системный temp напрямую.
+
+```bash
+mkdir -p ~/.cache/bapm-tmp
+bapm config set temp-dir ~/.cache/bapm-tmp
+bapm config unset temp-dir
+```
+
+### `self-update.channel`
+
+Допустимые значения: `stable` и `prerelease` (регистр не важен). Пока значение только хранится: `bapm self-update --check` продолжает смотреть npm dist-tag `latest`, переменные `BAPM_SELF_UPDATE_DIST_TAG` / `BAPM_SELF_UPDATE_METADATA_URL` остаются действующим способом настройки.
+
+```bash
+bapm config set self-update.channel prerelease
+bapm config get self-update.channel
+bapm config unset self-update.channel   # эффективно снова stable
+```
 
 ## Хранение и grant-ы
 
-`config set` / `unset` делают read-merge-write: читают текущий JSON, меняют только `target`, пишут через временный файл и `rename` (атомарно). `executables.allow` / `executables.deny`, созданные `bapm approve` / `bapm deny`, сохраняются без изменений. Права на файл — `0600`, каталог — `0700` (best-effort на платформах без POSIX mode).
+`config set` / `unset` делают read-merge-write: читают текущий JSON, меняют только выбранный ключ, пишут через временный файл и `rename` (атомарно). `executables.allow` / `executables.deny`, созданные `bapm approve` / `bapm deny`, и любые неизвестные пользовательские ключи сохраняются без изменений. Права на файл — `0600`, каталог — `0700` (best-effort на платформах без POSIX mode).
+
+Dotted-ключи хранятся вложенно: `self-update.channel` → `"self-update": { "channel": "prerelease" }`. При `unset` пустая родительская ветка удаляется, но соседние неизвестные ключи остаются.
 
 ```json
 {
   "target": "cursor",
+  "mcp-registry-url": "https://mcp.internal.example.com",
+  "temp-dir": "/home/me/.cache/bapm-tmp",
+  "self-update": { "channel": "prerelease" },
   "executables": {
     "allow": { "mcp-dep": { "mcp": true } },
     "deny": {}
@@ -57,10 +108,11 @@ bapm config unset target
 }
 ```
 
-Секретов в этом файле нет: только id target и grant-ы пакетов.
+`config list --json` выводит известные ключи плоскими полями (dotted-ключ остаётся dotted, независимо от вложенности в файле). Незаданные получают `null`, поэтому форма стабильна для скриптов; `executables` и неизвестные ключи верхнего уровня выводятся как есть. Секретов в этом файле нет: только id target, URL, пути, канал и grant-ы пакетов.
 
 ## См. также
 
 - [targets](/reference/targets)
 - [Выбор агента](/guide/host-selection)
 - [MCP и политика](/guide/situations/policy-mcp)
+- [self-update](/reference/self-update)
