@@ -4,6 +4,7 @@
 import { expect, test, describe, afterEach } from "vite-plus/test";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { loadLockfile, resolveAndLock } from "@b-apm/core";
 import {
   createFakePorts,
   createTempProject,
@@ -112,6 +113,40 @@ describe("basic frozen install (lk-006)", () => {
       "bapm.lock.yaml",
       `lockfile_version: "1"\ndependencies:\n  - repo_url: leaf\n    resolved_commit: "${COMMIT}"\n    path: leaf\n`,
     );
+    const before = readLockBytes(project.cwd);
+
+    const runInstall = getRunInstall();
+    await runInstall({
+      cwd: project.cwd,
+      frozen: true,
+      gitRemote: ports.gitRemote,
+      tagLister: ports.tagLister,
+      downloader: ports.downloader,
+    });
+
+    expect(Buffer.compare(readLockBytes(project.cwd), before)).toBe(0);
+  });
+
+  test("frozen install passes with generated project-relative path lock", async () => {
+    project = createTempProject();
+    const ports = createFakePorts({ commitsByRef: { main: COMMIT } });
+    mkdirSync(join(project.cwd, "leaf"), { recursive: true });
+    writeManifest(
+      project.cwd,
+      "bapm.yml",
+      `name: frozen-relative-ok\nversion: 0.0.1\ndependencies:\n  apm:\n    - path: ./leaf\n`,
+    );
+    writeFileSync(
+      join(project.cwd, "leaf", "apm.yml"),
+      `name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n`,
+      "utf8",
+    );
+
+    await resolveAndLock({ cwd: project.cwd });
+    const generated = loadLockfile({ cwd: project.cwd });
+    const generatedDep = (generated.document.dependencies ?? []).find((d) => d.name === "leaf");
+    expect(generatedDep).toBeTruthy();
+    expect(generatedDep!.path).toBe("leaf");
     const before = readLockBytes(project.cwd);
 
     const runInstall = getRunInstall();
