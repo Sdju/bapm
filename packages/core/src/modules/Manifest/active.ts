@@ -2,7 +2,7 @@
  * Structured `active` parse / emit helpers (preset | target, optional `!` negate).
  */
 import { ManifestError } from "./errors.ts";
-import { isValidTargetToken } from "./targets.ts";
+import { isValidTargetToken, normalizeTargetToken } from "./targets.ts";
 import type { ActiveEntry } from "./types.ts";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -54,6 +54,7 @@ function parseSignedId(
   }
   if (kind === "target") {
     assertValidTargetToken(id, path);
+    return { id: normalizeTargetToken(id), negate };
   }
   return { id, negate };
 }
@@ -138,7 +139,11 @@ function parseObjectFormValue(
 export function parseActiveField(value: unknown, pathPrefix = "active"): ActiveEntry[] {
   // Internal round-trip: already-normalized ActiveEntry[]
   if (Array.isArray(value) && value.length > 0 && value.every(isNormalizedActiveEntry)) {
-    return value.map((e) => ({ kind: e.kind, id: e.id, negate: e.negate }));
+    return value.map((e) => ({
+      kind: e.kind,
+      id: e.kind === "target" ? normalizeTargetToken(e.id) : e.id,
+      negate: e.negate,
+    }));
   }
 
   if (Array.isArray(value)) {
