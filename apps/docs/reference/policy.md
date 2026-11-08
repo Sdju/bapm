@@ -39,6 +39,7 @@ User-local executable grants в `~/.bapm/config.json` (`executables.allow` / `ex
 
 ```text
 bapm approve <package-name> [--bin|--hook|--mcp] [--user]
+bapm approve --all [--recommended] [-y|--yes] [--json]
 bapm approve --list [--json]
 bapm approve --pending [--json]
 bapm deny <package-name> [--bin|--hook|--mcp] [--user]
@@ -46,19 +47,26 @@ bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 
 | Флаг / аргумент  | Значение   | Эффект                                                                   | Default |
 | ---------------- | ---------- | ------------------------------------------------------------------------ | ------- |
-| `<package-name>` | имя пакета | Обязательный positional                                                  | —       |
+| `<package-name>` | имя пакета | Обязательный positional (кроме `--all` / `--list` / `--pending`)         | —       |
 | `--mcp`          | —          | Разрешить/запретить MCP-серверы пакета                                   | да      |
 | `--bin`          | —          | Разрешить/запретить deploy `bin/` пакета (persisted consent для install) | —       |
 | `--hook`         | —          | Разрешить/запретить hooks пакета                                         | —       |
 | `--user`         | —          | Принимается для совместимости с APM; запись всегда в `~/.bapm`           | —       |
+| `--all`          | —          | Approve всех pending dependency-пакетов и их типов (mcp/bin/hook)        | —       |
+| `--recommended`  | —          | Пока алиас `--all` (поведение идентично)                                 | —       |
+| `-y`, `--yes`    | —          | Подтвердить запись `--all` без интерактивного prompt                     | —       |
 | `--list`         | —          | Показать user-local grants: package, types, allow/deny, source           | —       |
 | `--pending`      | —          | Найти dependency MCP/bin/hook без решения в project/user/org             | —       |
-| `--json`         | —          | Stable JSON для `--list` / `--pending`                                   | off     |
+| `--json`         | —          | Stable JSON для `--list` / `--pending` / `--all`                         | off     |
 | `--help`, `-h`   | —          | Показать help                                                            | —       |
 
 Без имени пакета команда печатает help и завершается с ошибкой. Без type-флага команда по-прежнему пишет `mcp: true` (approve или deny) — для совместимости. Несколько флагов можно передать сразу: каждый тип сохраняется отдельно.
 
-`bapm approve --list` — только чтение `~/.bapm/config.json`: строки с `package`, `types`, `grant` (`allow` / `deny`) и `source` (`user`). `--pending` — только чтение manifest/lock: dependency-пакеты с типами `mcp`, `bin`, `hook`, которые не имеют явного allow/deny в project manifest, user config или org policy. MCP берётся из lock `mcp_servers` (и manifest `dependencies.mcp`, но root/direct серверы не требуют approve), `bin` — из `bin/` в materialized package roots, `hook` — из dependency primitives. JSON-формы: `{source, path, present, grants}` для `--list` и `{lockfile, manifest, pending}` для `--pending`, где pending-строка — `{package, types, reason}`. Оба режима ничего не пишут и не меняют lock/manifest/модули; `--json` без `--list`/`--pending` отклоняется. `bapm deny --list/--pending` не добавлены: используйте `approve --list` для просмотра и `deny <пакет>` для запрета.
+`bapm approve --list` — только чтение `~/.bapm/config.json`: строки с `package`, `types`, `grant` (`allow` / `deny`) и `source` (`user`). `--pending` — только чтение manifest/lock: dependency-пакеты с типами `mcp`, `bin`, `hook`, которые не имеют явного allow/deny в project manifest, user config или org policy. MCP берётся из lock `mcp_servers` (и manifest `dependencies.mcp`, но root/direct серверы не требуют approve), `bin` — из `bin/` в materialized package roots, `hook` — из dependency primitives. JSON-формы: `{source, path, present, grants}` для `--list` и `{lockfile, manifest, pending}` для `--pending`, где pending-строка — `{package, types, reason}`. Оба режима ничего не пишут и не меняют lock/manifest/модули; `--json` без `--list`/`--pending`/`--all` отклоняется. `bapm deny --list/--pending` не добавлены: используйте `approve --list` для просмотра и `deny <пакет>` для запрета.
+
+`bapm approve --all` берёт ровно тот список, который показывает `--pending`, и пишет user-local allow для каждого пакета и **каждого** его pending-типа (`mcp`, `bin`, `hook`) в `~/.bapm/config.json`. Существующие grants сохраняются: другие allow-типы и deny-записи не перетираются, пакеты с deny в pending не попадают. Project `bapm.yml` не меняется. `--recommended` сейчас — задокументированный алиас `--all`; более консервативное подмножество появится отдельно. `--all` нельзя комбинировать с именем пакета, `--list` или `--pending`.
+
+Запись `--all` требует явного подтверждения: в TTY печатается план и prompt `[y/N]`, в non-interactive сессии (pipe/CI) обязателен `-y`/`--yes`, иначе команда выходит с кодом 1 и ничего не пишет. `--json` без `-y` печатает только план (`wrote: false`) и не является неявной записью; с `-y` JSON возвращает `wrote: true` после записи. JSON-форма: `{mode, wrote, configPath, lockfile, manifest, plan}`, где `plan` — `{package, types}[]`. Если pending-пакетов нет, команда — no-op (exit 0) и не создаёт config.
 
 Первый `approve` или `deny` включает проверку MCP и hooks у зависимостей, но не требует решения по каждому пакету. Пакет, которого нет ни в `allow`, ни в `deny`, пропускается с предупреждением `MCP_NOT_APPROVED` — install продолжается. Фатальное сообщение `MCP withheld: explicitly denied or unapproved dependency executables` остаётся только для явного deny (project/user/org, включая org `deny_all`) и для пакета, упомянутого в grant-поверхности без `mcp: true` (например `mcp: false` или только `bin: true`). Deny всегда сильнее allow.
 
