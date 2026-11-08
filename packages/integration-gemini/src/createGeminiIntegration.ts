@@ -269,11 +269,7 @@ function writeGeminiMcpConfig(
   const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
 
   const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(
-    nextServers,
-    Object.keys(incoming),
-    ctx.managedServers,
-  );
+  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
   for (const [name, entry] of Object.entries(incoming)) {
     nextServers[name] = { ...entry };
     writtenNames.push(name);

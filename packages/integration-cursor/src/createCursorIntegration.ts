@@ -194,11 +194,7 @@ function writeCursorMcpConfig(
   const next: Record<string, Record<string, unknown>> = { ...existing };
 
   const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(
-    next,
-    Object.keys(incoming),
-    ctx.managedServers,
-  );
+  pruneManagedMcpServerNames(next, Object.keys(incoming), ctx.managedServers);
   for (const [name, entry] of Object.entries(incoming)) {
     next[name] = entry;
     writtenNames.push(name);

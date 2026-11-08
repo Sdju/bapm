@@ -318,11 +318,7 @@ function writeCodexMcpConfig(
       : {};
 
   const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(
-    mcpServers,
-    Object.keys(incoming),
-    ctx.managedServers,
-  );
+  pruneManagedMcpServerNames(mcpServers, Object.keys(incoming), ctx.managedServers);
   for (const [name, entry] of Object.entries(incoming)) {
     const prior = mcpServers[name];
     mcpServers[name] =

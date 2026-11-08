@@ -100,9 +100,7 @@ async function cleanupDeniedMcp(
   if (!deps.applyDenied) return;
 
   const manifestCandidates = [...new Set([deps.manifestFile, "apm.yml"])];
-  const hasManifest = manifestCandidates.some((file) =>
-    existsSync(join(resolve(args.cwd), file)),
-  );
+  const hasManifest = manifestCandidates.some((file) => existsSync(join(resolve(args.cwd), file)));
   if (!hasManifest) {
     manualCleanupHint(deps.name, args.packageName, "no project manifest found");
     return;

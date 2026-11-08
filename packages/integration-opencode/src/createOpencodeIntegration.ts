@@ -169,11 +169,7 @@ function writeOpencodeMcpConfig(
   const nextMcp: Record<string, Record<string, unknown>> = { ...existingMcp };
 
   const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(
-    nextMcp,
-    Object.keys(incoming),
-    ctx.managedServers,
-  );
+  pruneManagedMcpServerNames(nextMcp, Object.keys(incoming), ctx.managedServers);
   for (const [name, entry] of Object.entries(incoming)) {
     nextMcp[name] = entry;
     writtenNames.push(name);
