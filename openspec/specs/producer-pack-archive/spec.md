@@ -145,6 +145,30 @@ When `marketplace:` is present, marketplace outputs are selected, and the projec
 - **WHEN** pack `--archive` runs on a conforming project without `--check-versions`
 - **THEN** plain-zip success MUST NOT require version-alignment gate execution
 
+### Requirement: Pack accepts --strict-metadata
+
+`bapm pack` MUST accept `--strict-metadata` as a known flag. Default pack behavior without the flag MUST remain unchanged. With the flag, pack MUST validate producer metadata before writing any durable archive or host `marketplace.json` and MUST exit with code `5` when metadata is missing or invalid. Diagnostics MUST identify the offending field path (for example `bapm.yml#/version`, `plugin.json#/author/name`, or `marketplace.packages[0].description`). The validation MUST cover the dual-read manifest (`name`, semver `version`, and the shape of optional `description`/`author`/`license`/`homepage`/`repository`/`keywords`/`tags`), root and standard-location `plugin.json` metadata, and selected remote marketplace package entries that lack explicit certifiable `description` and fixed display `version`. When `--check-versions` is also requested and version alignment fails, exit `3` MUST take precedence over strict-metadata exit `5`. Unknown pack flags MUST still fail closed. Existing `--archive`, `--dry-run`, `--check-release`, `--check-versions`, `--tag`, `--marketplace`, `--marketplace-path`, `--offline`, `--include-prerelease`, `--agent-plugins`, and `--check-clean` behaviors MUST remain.
+
+#### Scenario: Strict metadata failure writes no artifact
+
+- **WHEN** pack runs with `--strict-metadata` against a manifest whose `version` is not semver 2.0.0
+- **THEN** the exit code MUST be `5`, the diagnostic MUST name the `version` field path, and no zip or marketplace JSON MUST be written
+
+#### Scenario: Valid strict metadata still packs
+
+- **WHEN** pack runs with `--strict-metadata` against a project with a conforming manifest and valid optional metadata
+- **THEN** the command MUST succeed under the normal pack write rules
+
+#### Scenario: Check-versions precedence
+
+- **WHEN** pack runs with both `--check-versions` and `--strict-metadata`, and version alignment fails while metadata would also fail
+- **THEN** the exit code MUST be `3` and no durable artifact MUST be written
+
+#### Scenario: Default pack ignores strict metadata
+
+- **WHEN** pack runs without `--strict-metadata` against metadata that the strict schema would reject
+- **THEN** the default pack behavior MUST remain unchanged
+
 ### Requirement: Pack remains distinct from registry publish flat zip
 
 M7 plain pack archive semantics MUST remain unchanged as the producer pack product. Registry publish builds a separate **flat** APM-wire zip (see `producer-publish`). Pack MAY share low-level zip create/extract helpers with publish but MUST NOT be rewritten into the registry publish layout or require registry HTTP.

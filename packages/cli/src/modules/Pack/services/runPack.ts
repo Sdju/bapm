@@ -16,6 +16,9 @@ Options:
   --check-clean                Read-only marketplace drift gate: regenerate selected
                                marketplace.json and diff against the on-disk artifact.
                                Exit 4 when missing/drift; writes no zip or JSON
+  --strict-metadata            Validate producer metadata (manifest, plugin.json,
+                               marketplace package entries) before writing.
+                               Exit 5 on missing/invalid metadata; no zip or JSON
   --tag <name>                 Tag under check (optional with --check-release; else HEAD)
   --marketplace <all|none|list>
                                Filter host marketplace emit (claude,codex,copilot); default: all configured
@@ -34,6 +37,9 @@ Notes:
   When marketplace: is present with outputs selected, pack emits Claude/Codex/Copilot marketplace.json.
   Marketplace-only projects (no dependencies:) emit JSON and skip empty zip.
   --check-clean is read-only: drift/missing marketplace.json exits 4 without writing anything.
+  --strict-metadata exits 5 before writing when producer metadata is missing/invalid
+  (manifest name/version, plugin.json metadata, remote marketplace package metadata).
+  --check-versions misalignment exits 3 even when --strict-metadata would also fail.
   --agent-plugins never emits marketplace output and requires root plugin.json.
 `;
 }
@@ -45,6 +51,7 @@ export type ParsedPackArgs = {
   checkRelease: boolean;
   checkVersions: boolean;
   checkClean: boolean;
+  strictMetadata: boolean;
   tag?: string;
   marketplace?: string;
   marketplacePaths: string[];
@@ -61,6 +68,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
   let checkRelease = false;
   let checkVersions = false;
   let checkClean = false;
+  let strictMetadata = false;
   let tag: string | undefined;
   let marketplace: string | undefined;
   const marketplacePaths: string[] = [];
@@ -75,6 +83,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     checkRelease,
     checkVersions,
     checkClean,
+    strictMetadata,
     tag,
     marketplace,
     marketplacePaths,
@@ -110,6 +119,10 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     }
     if (arg === "--check-clean") {
       checkClean = true;
+      continue;
+    }
+    if (arg === "--strict-metadata") {
+      strictMetadata = true;
       continue;
     }
     if (arg === "--offline") {
@@ -185,6 +198,16 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
 
 const VERSION_ALIGNMENT_EXIT = 3;
 const CHECK_CLEAN_EXIT = 4;
+const STRICT_METADATA_EXIT = 5;
+
+function isStrictMetadataError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "PACK_METADATA"
+  );
+}
 
 function runCheckVersionsGate(deps: PackDeps, cwd: string | undefined): PackResult {
   const root = cwd ?? process.cwd();
@@ -272,6 +295,7 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
     // Gate-only when --check-versions without --archive and without marketplace emit intent
     if (
       parsed.checkVersions &&
+      !parsed.strictMetadata &&
       !parsed.archive &&
       parsed.marketplace === undefined &&
       !parsed.checkClean
@@ -289,6 +313,7 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
     // Gate-only when --check-release without --archive and without marketplace emit intent
     if (
       parsed.checkRelease &&
+      !parsed.strictMetadata &&
       !parsed.archive &&
       parsed.marketplace === undefined &&
       !parsed.checkClean
@@ -298,6 +323,12 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
         console.error(`${deps.name}: warning: ${w}`);
       }
       return { ok: true };
+    }
+
+    if (!parsed.archive && !parsed.checkClean && parsed.strictMetadata) {
+      // `--strict-metadata` is a normal pack preflight (APM default build), not a
+      // gate-only mode. Marketplace-only projects may still skip the zip in core.
+      parsed.archive = true;
     }
 
     if (!parsed.archive && !parsed.checkRelease && !parsed.checkVersions && !parsed.checkClean) {
@@ -317,6 +348,7 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
       dryRun: parsed.dryRun,
       checkRelease: parsed.checkRelease,
       checkClean: parsed.checkClean,
+      strictMetadata: parsed.strictMetadata,
       tag: parsed.tag,
       marketplace: parsed.marketplace,
       marketplacePaths: parsed.marketplacePaths.length ? parsed.marketplacePaths : undefined,
@@ -384,6 +416,10 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
           ? String((error as { message: unknown }).message)
           : String(error);
     console.error(`${deps.name}: ${message}`);
-    return { ok: false, message };
+    return {
+      ok: false,
+      message,
+      ...(isStrictMetadataError(error) ? { exitCode: STRICT_METADATA_EXIT } : {}),
+    };
   }
 }
