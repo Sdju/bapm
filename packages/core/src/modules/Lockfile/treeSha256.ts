@@ -99,6 +99,9 @@ export function isGitSourcedLockEntry(dep: LockedDependency): boolean {
   if (source === "local" || source === "registry") return false;
   const repo = String(dep.repo_url ?? "");
   if (!repo || repo.startsWith("local:")) return false;
+  // APM local rows: `_local/<name>` with `local_path` (may omit source on older locks).
+  if (repo.startsWith("_local/")) return false;
+  if (typeof dep.local_path === "string" && dep.local_path.length > 0) return false;
   // Registry materialization without git commit
   if (
     typeof dep.resolved_url === "string" &&

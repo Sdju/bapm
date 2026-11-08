@@ -134,15 +134,24 @@ function validateDependencyEntry(entry: unknown, path: string): LockedDependency
   const registryPrefix = typeof raw.registry_prefix === "string" ? raw.registry_prefix : undefined;
 
   const originalRepoUrl = raw.repo_url;
+  // APM local rows use `_local/<name>`; bapm uses `local:<rel>`. Either form,
+  // or an explicit `local_path`, identifies a local source even if `source`
+  // was omitted by an older/cross-tool writer.
+  const looksLocal =
+    source === "local" ||
+    source === "marketplace" ||
+    originalRepoUrl.startsWith("_local/") ||
+    originalRepoUrl.startsWith("local:") ||
+    (typeof raw.local_path === "string" && raw.local_path.length > 0);
   const canonicalRepoUrl = normalizePackageRepoUrl(originalRepoUrl, {
-    source,
+    source: looksLocal && source === undefined ? "local" : source,
     host,
     registryPrefix,
   });
 
   if (typeof raw.materialization_repo_url === "string" && raw.materialization_repo_url.length > 0) {
     const materializationIdentity = normalizePackageRepoUrl(raw.materialization_repo_url, {
-      source,
+      source: looksLocal && source === undefined ? "local" : source,
       host,
       registryPrefix,
     });
@@ -172,7 +181,7 @@ function validateDependencyEntry(entry: unknown, path: string): LockedDependency
         { path: `${path}.resolved_hash` },
       );
     }
-  } else if (source !== "local" && source !== "marketplace") {
+  } else if (!looksLocal) {
     // Git identity (default / git): require resolved_commit shape half of lk-003.
     if (typeof raw.resolved_commit !== "string" || !raw.resolved_commit.trim()) {
       throw new LockfileError(

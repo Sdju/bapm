@@ -6,7 +6,7 @@ import {
   type ObjectDependency,
 } from "@/modules/Manifest";
 import { loadEffectiveLockfileOrNull, type LockedDependency } from "@/modules/Lockfile";
-import { normalizeRepoIdentity, toLockRepoUrl } from "@/modules/Resolver";
+import { effectiveLocalPath, normalizeRepoIdentity, toLockRepoUrl } from "@/modules/Resolver";
 import { InstallError } from "./errors.ts";
 import type { EnforceFrozenOptions } from "./types.ts";
 
@@ -134,25 +134,10 @@ function hasPin(entry: DependencyEntry, lockDeps: LockedDependency[]): boolean {
     return lockDeps.some((d) => gitLockMatches(obj.git!, d));
   }
   if (obj.path) {
-    const pathKey = obj.path.replace(/^\.\//, "").replace(/\/+$/, "");
-    const base = pathKey.split("/").filter(Boolean).pop() ?? pathKey;
-    return lockDeps.some((d) => {
-      const raw = d as Record<string, unknown>;
-      const dPath = typeof raw.path === "string" ? raw.path.replace(/^\.\//, "") : "";
-      const repo = String(d.repo_url ?? "");
-      const name = String(d.name ?? "");
-      return (
-        dPath === pathKey ||
-        dPath === base ||
-        dPath.endsWith(base) ||
-        repo === pathKey ||
-        repo === base ||
-        repo.endsWith(`/${base}`) ||
-        repo.includes(`local:${pathKey}`) ||
-        repo.includes(`local_${base}`) ||
-        name === base
-      );
-    });
+    return hasLocalPin(obj.path, lockDeps);
+  }
+  if ("local" in obj && obj.local !== false) {
+    return hasLocalPin(effectiveLocalPath(obj.local), lockDeps);
   }
   // registry/id — soft: require some lock entry with matching id/name
   if (obj.id) {
@@ -161,6 +146,39 @@ function hasPin(entry: DependencyEntry, lockDeps: LockedDependency[]): boolean {
     );
   }
   return false;
+}
+
+function normalizePinPath(value: string): string {
+  return value.replaceAll("\\", "/").replace(/^\.\//, "").replace(/\/+$/, "");
+}
+
+/**
+ * Local pin presence: accept bapm (`local:<rel>` + `path`) and APM
+ * (`_local/<name>` + `local_path`) wire forms.
+ */
+function hasLocalPin(declaredPath: string, lockDeps: LockedDependency[]): boolean {
+  const pathKey = normalizePinPath(declaredPath);
+  const base = pathKey.split("/").filter(Boolean).pop() ?? pathKey;
+  return lockDeps.some((d) => {
+    const raw = d as Record<string, unknown>;
+    const fieldPaths = ["path", "local_path"]
+      .map((field) => raw[field])
+      .filter((value): value is string => typeof value === "string")
+      .map(normalizePinPath);
+    const repo = String(d.repo_url ?? "");
+    const name = String(d.name ?? "");
+    return (
+      fieldPaths.some(
+        (dPath) => dPath === pathKey || dPath === base || dPath.endsWith(`/${base}`),
+      ) ||
+      repo === pathKey ||
+      repo === base ||
+      repo.endsWith(`/${base}`) ||
+      repo.includes(`local:${pathKey}`) ||
+      repo.includes(`local_${base}`) ||
+      name === base
+    );
+  });
 }
 
 function normalizeEntry(entry: DependencyEntry): unknown {
