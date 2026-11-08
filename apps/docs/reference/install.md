@@ -21,7 +21,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--frozen`               | —              | Fail, если lock нет или пины дрейфуют; при наличии — re-verify `deployed_file_hashes`                 | off (но см. CI ниже)      |
 | `--no-frozen`            | —              | Отключить frozen, в том числе CI-default                                                              | —                         |
 | `--dry-run`              | —              | Превью direct deps / would-add; без durable project writes                                            | off                       |
-| `--force`                | —              | Сейчас без эффекта (см. замечания). Не обновляет refs и не обходит frozen/policy                      | off                       |
+| `--force`                | —              | Принимается только для совместимости с APM; без эффекта. Не обновляет refs и не обходит frozen/policy | off                       |
 | `--allow-insecure`       | —              | Dual consent для direct `http://` deps с `allow_insecure: true`                                       | off                       |
 | `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                             | —                         |
 | `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                           | off                       |
@@ -47,9 +47,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - TTY не считается согласием: интерактивный install тоже **не** деплоит dependency `bin/` без `--trust-bin` или persisted grant. Если deploy удержан, install печатает diagnostic с подсказкой передать `--trust-bin` или выполнить `bapm approve <пакет> --bin`.
 - Frozen (явный или CI-default) нельзя сочетать с `--update`.
 - Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen`.
-- `--force` в текущей версии ничего не меняет: флаг принимается, но не влияет на установку. Он не связан с `--target`.
-- Dependency hooks проверяются через ExecutableTrust (type `hook`) только когда есть project/user grant-поверхность или org `executables.deny`/`deny_all`; иначе hooks раскладываются по legacy-поведению. Root/local hooks проекта не гейтятся, `--trust-bin` на hooks не влияет.
-- В интерактивном терминале `bin/` зависимостей **не** раскладывается без явного согласия: нужен `--trust-bin` или persisted grant (`executables.allow` с `bin: true` / `bapm approve <пакет> --bin`).
+- `--force` в текущей версии ничего не меняет: флаг принимается для совместимости с APM, но не влияет на установку, не обновляет refs и не обходит frozen/policy. Install печатает об этом warning в stderr. Он не связан с `--target`.
 - `--no-policy` отключает и политику организации, включая её запреты.
 - `--no-policy` отключает только файл политики в репозитории (`apm-policy.yml` / `bapm-policy.yml`). Org policy и её `executables.deny`/`deny_all` продолжают действовать. Явный `--policy <path>` всё равно проверяется.
 - `--no-policy-all` и `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1` — полный escape: отключают и локальную, и org policy. Используйте только для диагностики.

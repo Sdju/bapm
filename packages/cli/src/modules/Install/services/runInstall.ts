@@ -29,7 +29,7 @@ Options:
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
   --dry-run                Preview direct deps / would-add; no durable project writes
-  --force                  Accepted for APM parity; currently has no effect (does not refresh refs or bypass frozen/policy)
+  --force                  Accepted for APM compatibility only; has no effect (does not refresh refs or bypass frozen/policy)
   --allow-insecure         Allow direct http:// deps that also set allow_insecure: true (dual consent)
   --allow-insecure-host <hostname>
                            Allow transitive http:// deps from this FQDN (repeatable)
@@ -502,6 +502,11 @@ export async function runInstall(
   if (parsed.help) {
     console.log(formatInstallHelp(deps));
     return { ok: true };
+  }
+  if (parsed.force) {
+    console.error(
+      `${deps.name}: warning: --force has no effect in this version; use --update to refresh refs, --trust-bin for bin consent, or remove the flag`,
+    );
   }
   if (parsed.error) {
     console.error(`${deps.name}: ${parsed.error}`);
