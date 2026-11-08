@@ -43,10 +43,11 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).toMatch(/--validate\b/);
     expect(text).toMatch(/--distributed\b/);
     expect(text).toMatch(/--strategy\b/);
+    expect(text).toMatch(/--clean\b/);
     expect(text).not.toMatch(/optimizer|distributed placement|multi-host/i);
   });
 
-  test("compile help omits deferred --no-links, global, watch and clean flags", async () => {
+  test("compile help omits deferred --no-links, global and watch flags", async () => {
     const viaFlag = await withCapturedIo(() => runCli(["compile", "--help"]));
     const text = [
       [...viaFlag.stdout, ...viaFlag.stderr].join("\n"),
@@ -60,9 +61,9 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).toMatch(/--all\b/);
     expect(text).not.toMatch(/--global\b/);
     expect(text).not.toMatch(/-g\b.*global|global.*-g\b/i);
-    expect(text).not.toMatch(/--watch\b/);
+    expect(text).toMatch(/--watch\b.*not implemented|not implemented.*--watch\b/i);
     expect(text).not.toMatch(/--root\b/);
-    expect(text).not.toMatch(/--clean\b/);
+    expect(text).toMatch(/--clean\b/);
     expect(text).not.toMatch(/--single-agents\b/);
   });
 
@@ -92,6 +93,16 @@ describe("p7d CLI compile help + fail-closed", () => {
 
     const long = parseCompileArgs(["--output"]);
     expect(long.error).toBeTruthy();
+  });
+
+  test("parseCompileArgs accepts --clean", () => {
+    const clean = parseCompileArgs(["--clean", "--dry-run"]);
+    expect(clean.error).toBeUndefined();
+    expect(clean.clean).toBe(true);
+    expect(clean.dryRun).toBe(true);
+
+    const omitted = parseCompileArgs([]);
+    expect(omitted.clean).toBe(false);
   });
 
   test("parseCompileArgs accepts --distributed and --strategy", () => {

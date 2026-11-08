@@ -22,6 +22,8 @@ export type ParsedCompileArgs = {
   all?: boolean;
   /** Opt-in per-directory applyTo placement. */
   distributed: boolean;
+  /** Remove orphaned generated outputs for the selected hosts. */
+  clean: boolean;
   help?: boolean;
   error?: string;
 };
@@ -53,6 +55,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
   let verbose = false;
   let all = false;
   let distributed = false;
+  let clean = false;
   let outputFile: string | undefined;
   let targets: string[] | undefined;
 
@@ -62,6 +65,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     verbose,
     all,
     distributed,
+    clean,
     outputFile,
     target: targets?.[0],
     targets,
@@ -90,6 +94,10 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     }
     if (arg === "--distributed") {
       distributed = true;
+      continue;
+    }
+    if (arg === "--clean") {
+      clean = true;
       continue;
     }
     if (arg === "--strategy") {
@@ -170,7 +178,7 @@ export function formatCompileHelp(deps: LifecycleCliDeps): string {
   return `${deps.name} compile — Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
 
 Usage:
-  bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--dry-run] [-v] [--validate]
+  bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--clean] [--dry-run] [-v] [--validate]
 
 Options:
   -o, --output PATH   Override the target's default output path (single target only)
@@ -178,14 +186,25 @@ Options:
   --all               Emit for every registered compile-capable host in one run
   --distributed       Place instruction applyTo globs in matching project directories
   --strategy <name>   single-file (default) or distributed
-  --dry-run           Preview every would-write path; do not write
+  --clean             Remove orphaned generated outputs for the selected hosts
+  --dry-run           Preview every would-write path and --clean removal; do not mutate
   -v, --verbose       Print thin source attribution (name, type, path)
-  --validate          Discover/validate only; do not write
+  --validate          Discover/validate only; do not write or clean
   --help, -h          Show this help
 
 Host selection: --target / --all → local-overlay active → manifest active → config target → sole auto-detect → fail.
+--clean uses the same selection; it does not require --target when a sole active/config/detect target applies.
 When active lists multiple hosts, pass --target <id> or --target <id>,<id>, or --all.
 Missing or ambiguous detection requires an explicit --target.
+
+Build ID: every compiled Markdown output ends with one deterministic
+<!-- Build ID: <12 hex> --> line hashed over the normalized body. Identical
+inputs keep the same id; changed inputs change it.
+
+--clean removes only orphaned target-shaped outputs that carry a valid Build ID
+and are absent from this run's planned output set. Hand-authored files and
+generated files edited after compile are never deleted. --validate suppresses
+cleaning. --watch is not implemented yet.
 
 Multi-target: each selected host writes its own file in one invocation. If two selected
 hosts share an output path (Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, Antigravity
@@ -247,6 +266,7 @@ export async function runCompileCli(
       forcedTargets: multi && !parsed.all ? parsed.targets : undefined,
       all: parsed.all === true,
       distributed: parsed.distributed,
+      clean: parsed.clean,
       configTarget: readConfiguredTarget(),
       integrationRegistry: registry,
       validate: parsed.validate,
@@ -291,6 +311,34 @@ export async function runCompileCli(
       }
     } else if (result.wrote) {
       console.log(`Wrote ${result.path ?? "AGENTS.md"} (${result.primitivesCount} primitives)`);
+    }
+
+    if (parsed.clean && !parsed.validate) {
+      const clean = result.clean;
+      if (parsed.dryRun) {
+        const paths = clean?.wouldRemove ?? [];
+        if (paths.length === 0) {
+          console.log("compile --clean --dry-run: no orphaned generated outputs to remove");
+        } else {
+          for (const path of paths) {
+            console.log(`compile --clean --dry-run: would remove ${path}`);
+          }
+        }
+      } else {
+        const paths = clean?.removed ?? [];
+        if (paths.length === 0) {
+          console.log("compile --clean: no orphaned generated outputs to remove");
+        } else {
+          for (const path of paths) {
+            console.log(`compile --clean: removed ${path}`);
+          }
+        }
+      }
+      if (parsed.verbose) {
+        for (const entry of clean?.skipped ?? []) {
+          console.log(`compile --clean: kept ${entry.path} (${entry.reason})`);
+        }
+      }
     }
 
     return { ok: result.ok, exitCode: result.ok ? 0 : 1 };

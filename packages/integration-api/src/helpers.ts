@@ -14,6 +14,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, relative, resolve, sep, dirname, basename } from "node:path";
+import { applyBuildId } from "./buildId.ts";
 import type {
   AttributedPrimitive,
   AttributedPrimitiveSet,
@@ -410,12 +411,15 @@ export function compileMarkdownReport(args: {
   }
 
   const path = rel.split(sep).join("/");
+  // Every compiled Markdown output routes through this helper; stabilize the
+  // deterministic Build ID here so previews and durable writes agree.
+  const content = applyBuildId(args.content);
   const wrote = args.write;
   if (wrote) {
     mkdirSync(dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, args.content, "utf8");
+    writeFileSync(outputPath, content, "utf8");
   }
-  return { path, content: args.content, wrote };
+  return { path, content, wrote };
 }
 
 /**

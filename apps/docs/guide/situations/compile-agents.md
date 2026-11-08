@@ -33,6 +33,8 @@ bapm compile -v                        # показать, из каких фа�
 bapm compile --target cursor,claude    # два хоста за один запуск
 bapm compile --all                     # все compile-capable хосты
 bapm compile --distributed             # разложить applyTo по каталогам
+bapm compile --clean --dry-run         # показать осиротевшие generated-файлы
+bapm compile --clean                   # собрать и удалить осиротевшие generated-файлы
 ```
 
 Имя файла зависит от агента: [таблица](/guide/supported-hosts#layout). Агент выбирается так же, как для install; если в `active` указано несколько агентов, передайте `--target` или `--all`. В multi-target режиме каждый хост пишет свой файл за один запуск.
@@ -80,6 +82,14 @@ Wrote src/AGENTS.md (2 primitives)
 Glob `src/**` даёт каталог `src/`, `docs/*.md` — `docs/`. Имя файла остаётся хостовым: `src/AGENTS.md`, `src/CLAUDE.md`, `.github/src/copilot-instructions.md`. Instructions без `applyTo` и не-instruction примитивы остаются в корневом `AGENTS.md`. Root-only globs (`**/*.ts`, `*.ts`) тоже остаются в корне. `--strategy distributed` — синоним `--distributed`; `--strategy single-file` возвращает обычный режим.
 
 `--distributed` не принимает `-o`: у каждого каталога свой выходной путь. Абсолютные `applyTo`, `..`, `.git`/`node_modules` и симлинки в пути отвергаются без записи.
+
+## Build ID и очистка {#build-id-clean}
+
+Каждый собранный файл заканчивается строкой `<!-- Build ID: <12 hex> -->`. Она считается по содержимому без самой строки: одинаковый вход даёт одинаковый id, изменённый — другой. Build ID нужен, чтобы отличить generated-файл от ручного и заметить правку после сборки.
+
+`bapm compile --clean` удаляет только осиротевшие generated-выходы выбранных хостов: файлы с валидным Build ID, которых больше нет в текущем плане (например, старый `src/AGENTS.md` после смены `applyTo`). Файл без Build ID или с невалидным Build ID (ручная правка) не удаляется. `--clean --dry-run` только печатает список; `--clean --validate` ничего не удаляет. Явный `--target` для clean не обязателен, если хост выбирается через sole `active`, config или auto-detect.
+
+`--watch` пока не реализован — compile запускается вручную.
 
 ## Что попадает в файл {#contents}
 

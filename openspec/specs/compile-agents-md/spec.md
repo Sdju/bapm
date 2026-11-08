@@ -158,14 +158,24 @@ Before durable write, compile MUST resolve the output path of every selected tar
 - **WHEN** compile is given `-o ../OUT.md` or another cwd-escaping path
 - **THEN** compile MUST fail without writing outside the project cwd
 
-### Requirement: Deterministic emit when inputs unchanged
+### Requirement: Deterministic Build ID when inputs unchanged
 
-The compile emitter MUST order discovered primitives deterministically. When inputs (discovered primitive set and compile options) are unchanged and no volatile fields are included, two consecutive compiles MUST produce an identical instruction-file body or an identical build-id section (APM build-id spirit).
+The compile emitter MUST order discovered primitives deterministically. Every compiled Markdown output MUST end with exactly one canonical line `<!-- Build ID: <12 hex> -->` (or contain an equivalent APM-compatible build-id section). The id MUST be a truncated SHA-256 of the normalized content with every Build ID line excluded (line endings, BOM, and trailing line whitespace normalized). When inputs (discovered primitive set and compile options) are unchanged and no volatile fields are included, two consecutive compiles MUST produce byte-identical instruction-file content with the same Build ID. Changed content MUST produce a changed Build ID. The Build ID detects drift; it is not a provenance or security attestation.
 
-#### Scenario: Stable body across two compiles
+#### Scenario: Stable body and Build ID across two compiles
 
 - **WHEN** `bapm compile` runs twice without changing discovered inputs
-- **THEN** the emitted instruction-file content MUST be byte-identical or share an identical build-id section
+- **THEN** the emitted instruction-file content MUST be byte-identical and the Build ID line MUST be identical
+
+#### Scenario: Changed content changes the Build ID
+
+- **WHEN** a discovered primitive body changes between two compiles
+- **THEN** the Build ID line MUST change
+
+#### Scenario: Hand-authored content has no Build ID
+
+- **WHEN** a Markdown file is written by hand rather than by compile
+- **THEN** it MUST NOT be treated as having a valid Build ID
 
 ### Requirement: Validate mode does not write
 
@@ -203,6 +213,40 @@ When both `--validate` and `--dry-run` are set, compile MUST follow validate-fir
 
 - **WHEN** `bapm compile --validate --dry-run` runs and the output file is absent
 - **THEN** exit code MUST be `0`, the output file MUST remain absent, and stdout MUST match validate-style messaging (not dry-run would-write as the sole/primary success line)
+
+### Requirement: Clean removes only orphaned generated outputs with a valid Build ID
+
+`bapm compile --clean` (and the core `clean` option) MUST remove orphaned generated compile outputs for the selected hosts: files matching a selected target's output shape (basename and host directory prefix) that are absent from the current invocation's planned output set. Deleting a file MUST require exactly one canonical Build ID line whose id matches the normalized content. Compile MUST NEVER delete a hand-authored file without a Build ID, or a generated file whose Build ID no longer matches its content (edited after compile). Current planned outputs MUST NOT be deleted by the clean phase. `--dry-run` MUST list every would-remove path and MUST NOT delete or write any file. `--validate` MUST suppress cleaning. `--clean` MUST use the same target selection as compile; an explicit `--target` is not required when a sole manifest `active`, config target, or sole auto-detect applies. Multi-target selection MUST consider every selected host's output shape; distributed mode MUST also find stale nested placements. `--watch` remains unimplemented.
+
+#### Scenario: Clean removes a stale generated output
+
+- **WHEN** `compile --clean` finds a target-shaped generated file that is not in the current plan and whose Build ID matches its content
+- **THEN** it MUST delete that file and report the removal
+
+#### Scenario: Clean never deletes a hand-authored file
+
+- **WHEN** a target-shaped file exists without a Build ID
+- **THEN** `compile --clean` MUST leave it untouched
+
+#### Scenario: Clean never deletes an edited generated file
+
+- **WHEN** a generated file's content was edited after compile so its Build ID no longer matches
+- **THEN** `compile --clean` MUST keep it and MUST NOT delete it
+
+#### Scenario: Clean dry-run lists removals
+
+- **WHEN** `compile --clean --dry-run` finds a stale generated output
+- **THEN** it MUST print `would remove <path>` (or equivalent), MUST NOT delete the file, and MUST NOT write the current output
+
+#### Scenario: Clean validate performs no deletion
+
+- **WHEN** `compile --clean --validate` runs
+- **THEN** no generated output MAY be deleted
+
+#### Scenario: Clean respects multi-target and distributed shapes
+
+- **WHEN** `compile --target a,b --clean` or `compile --distributed --clean` runs
+- **THEN** orphan candidates MUST be limited to the selected hosts' output shapes, including stale nested distributed placements
 
 ### Requirement: Verbose emits thin source attribution
 
@@ -321,14 +365,14 @@ Distributed output paths MUST remain inside the project cwd. Compile MUST reject
 
 The default per-host single-file compile is **intentional**. Multi-target `--target a,b` / `--all` is supported, and opt-in `--distributed` places instructions by the literal `applyTo` directory prefix. Full APM `AgentsCompiler` context-optimizer parity remains product tech debt (not silent omissions, not OpenAPM MUST failures). Canonical IDs: `.samples/apm-knowledge/topics/tech-debt-compile.md`.
 
-| ID            | Gap                                                                    | Status                                             |
-| ------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
-| TD-COMPILE-01 | Emit all primitives vs APM instructions-only                           | debt                                               |
-| TD-COMPILE-02 | Full APM context-optimizer placement (file-match scoring, inheritance) | debt (opt-in literal-prefix `--distributed` ships) |
-| TD-COMPILE-03 | No markdown link inline / `--no-links`                                 | debt (SHOULD deferred)                             |
-| TD-COMPILE-05 | Missing APM UX flags (watch/clean/global/…)                            | debt                                               |
-| TD-COMPILE-06 | No deterministic Build ID / Unicode write gate                         | debt                                               |
-| TD-COMPILE-07 | Thinner `--validate` than APM                                          | debt                                               |
-| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections                         | debt                                               |
+| ID            | Gap                                                                    | Status                                               |
+| ------------- | ---------------------------------------------------------------------- | ---------------------------------------------------- |
+| TD-COMPILE-01 | Emit all primitives vs APM instructions-only                           | debt                                                 |
+| TD-COMPILE-02 | Full APM context-optimizer placement (file-match scoring, inheritance) | debt (opt-in literal-prefix `--distributed` ships)   |
+| TD-COMPILE-03 | No markdown link inline / `--no-links`                                 | debt (SHOULD deferred)                               |
+| TD-COMPILE-05 | Missing APM UX flags (`--watch`, `--global`, …); `--clean` ships       | debt (`--clean` implemented; `--watch` still absent) |
+| TD-COMPILE-06 | Unicode write gate (deterministic Build ID ships)                      | debt (Build ID implemented; Unicode gate remains)    |
+| TD-COMPILE-07 | Thinner `--validate` than APM                                          | debt                                                 |
+| TD-COMPILE-08 | Flat `## name (type)` vs APM template sections                         | debt                                                 |
 
 Closing a `debt` row REQUIRES a dedicated OpenSpec change that updates this section and the knowledge inventory. Specs MUST NOT claim APM AgentsCompiler parity while these rows remain open.

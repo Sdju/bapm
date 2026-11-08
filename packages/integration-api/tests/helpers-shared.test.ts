@@ -6,6 +6,7 @@ import {
   SHARED_COMMAND_FRONTMATTER_KEYS,
   compileMarkdownReport,
   filterFrontmatterKeys,
+  hasValidBuildId,
   renderPrimitivesMarkdown,
   writeDeployedFile,
 } from "../src/index.ts";
@@ -94,7 +95,10 @@ describe("compileMarkdownReport", () => {
       write: false,
       content: "# hi\n",
     });
-    expect(report).toEqual({ path: "AGENTS.md", content: "# hi\n", wrote: false });
+    expect(report.path).toBe("AGENTS.md");
+    expect(report.wrote).toBe(false);
+    expect(report.content).toMatch(/^# hi\n\n<!-- Build ID: [0-9a-f]{12} -->\n$/);
+    expect(hasValidBuildId(report.content)).toBe(true);
     expect(existsSync(join(cwd, "AGENTS.md"))).toBe(false);
   });
 
@@ -108,7 +112,10 @@ describe("compileMarkdownReport", () => {
       requireBasename: "GEMINI.md",
     });
     expect(report.wrote).toBe(true);
-    expect(readFileSync(join(cwd, "GEMINI.md"), "utf8")).toBe("# g\n");
+    const written = readFileSync(join(cwd, "GEMINI.md"), "utf8");
+    expect(written).toBe(report.content);
+    expect(written).toMatch(/^# g\n\n<!-- Build ID: [0-9a-f]{12} -->\n$/);
+    expect(hasValidBuildId(written)).toBe(true);
   });
 
   test("rejects escape and wrong basename", () => {
