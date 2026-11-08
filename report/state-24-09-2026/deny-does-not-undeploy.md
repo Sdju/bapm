@@ -80,5 +80,3 @@ node -e 'console.log(Object.keys(require("./.cursor/mcp.json").mcpServers))'
 После deny нужен ручной edit конфига агента. Второй агент теперь тоже конфигурируется (multi-target исправлен), но deny по-прежнему не чистит уже записанный сервер. Lock-inventory может обновиться, а host JSON остаётся источником фактического запуска сервера.
 
 ## Связанные
-
-- [grant-surface-all-or-nothing.md](./grant-surface-all-or-nothing.md) — почему deny включает режим явных разрешений.
