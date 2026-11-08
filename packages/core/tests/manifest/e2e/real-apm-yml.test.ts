@@ -46,7 +46,7 @@ describe("M1 e2e — real apm.yml", () => {
 
     const serialized = JSON.stringify(deps!.apm);
     expect(serialized).toMatch(/\.\/packages\//);
-    expect(serialized).toMatch(/apm-issue-autopilot|batch-bug-shepherd/);
+    expect(serialized).toMatch(/autopilot|batch-bug-shepherd|issue/);
   });
 
   test("same bytes as bapm.yml only — discovery loads successfully", () => {

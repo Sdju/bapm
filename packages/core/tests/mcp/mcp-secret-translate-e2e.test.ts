@@ -7,7 +7,7 @@ import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { IntegrationRegistry } from "@b-apm/integration-api";
-import { createCodexIntegration } from "@b-apm/integration-codex";
+import { createCodexIntegration } from "../../../integration-codex/src/index.ts";
 import { createCursorIntegration } from "@b-apm/integration-cursor";
 import { createOpencodeIntegration } from "@b-apm/integration-opencode";
 import { runInstall } from "../../src/index.ts";
@@ -48,7 +48,7 @@ describe("MCP secret translate end-to-end", () => {
   ): Promise<IntegrationRegistry> {
     const api = await importIntegrationApi();
     const registry = getCreateIntegrationRegistry(api)();
-    registry.register(target);
+    (registry as IntegrationRegistry).register(target);
     return registry as IntegrationRegistry;
   }
 

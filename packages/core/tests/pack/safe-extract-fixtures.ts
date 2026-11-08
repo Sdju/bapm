@@ -209,7 +209,7 @@ export function buildOverEntryCapZip(count = MAX_SAFE_ENTRIES + 1): Uint8Array {
 }
 
 /**
- * Uncompressed payload over 100 MB (zeros + DEFLATE → small archive).
+ * Uncompressed payload over 100 MB (zeros + DEFLATE → small archive).
  * CD/local uncompressed sizes reflect the real inflated byte count.
  */
 export function buildOverSizeCapZip(

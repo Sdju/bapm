@@ -41,7 +41,7 @@ active:
 | `env`             | нет         | Значения по умолчанию для переменных в MCP-конфигах, см. ниже                                                                        |
 | `targets`         | нет         | Своя интеграция агента; заодно ограничивает, каким агентам раскладываются файлы. [Подробнее](/guide/manifest-hosts#targets-и-target) |
 | `executables`     | нет         | Разрешения для MCP и `bin/` из зависимостей для всей команды. [Подробнее](/guide/situations/policy-mcp)                              |
-| `lifecycle`       | нет         | Сохраняется, но **не исполняется**: install печатает `LIFECYCLE_UNSUPPORTED`. См. [install](/reference/install)                       |
+| `lifecycle`       | нет         | Сохраняется, но **не исполняется**: install печатает `LIFECYCLE_UNSUPPORTED`. См. [install](/reference/install)                      |
 | `registries`      | нет         | Приватные registry (экспериментально). [Подробнее](/guide/manifest-registries)                                                       |
 | `marketplace`     | нет         | Описание маркетплейса для `bapm pack`. [Подробнее](/guide/manifest-registries#marketplace)                                           |
 

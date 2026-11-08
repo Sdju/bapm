@@ -16,14 +16,14 @@ Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют о
 
 ## Параметры
 
-| Флаг              | Значение | Эффект                                                                                             | Default                       |
-| ----------------- | -------- | -------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `-o`, `--output`  | `PATH`   | Другой путь. Для Codex, OpenCode, Grok Build имя должно быть `AGENTS.md`, для Gemini — `GEMINI.md` | путь агента                   |
+| Флаг              | Значение | Эффект                                                                                             | Default                                |
+| ----------------- | -------- | -------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `-o`, `--output`  | `PATH`   | Другой путь. Для Codex, OpenCode, Grok Build имя должно быть `AGENTS.md`, для Gemini — `GEMINI.md` | путь агента                            |
 | `--target`        | `<id>`   | Force host (перекрывает `active`; обязателен при multi-`active` или неоднозначном detect)          | `active` (sole) → config → auto-detect |
-| `--dry-run`       | —        | Превью would-write path; не писать файл                                                            | off                           |
-| `-v`, `--verbose` | —        | Thin source attribution (name, type, path)                                                         | off                           |
-| `--validate`      | —        | Только discover/validate; не писать                                                                | off                           |
-| `--help`, `-h`    | —        | Показать help                                                                                      | —                             |
+| `--dry-run`       | —        | Превью would-write path; не писать файл                                                            | off                                    |
+| `-v`, `--verbose` | —        | Thin source attribution (name, type, path)                                                         | off                                    |
+| `--validate`      | —        | Только discover/validate; не писать                                                                | off                                    |
+| `--help`, `-h`    | —        | Показать help                                                                                      | —                                      |
 
 `--dry-run` и `--validate` не пишут выходной файл.
 

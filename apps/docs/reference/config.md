@@ -12,13 +12,13 @@ bapm config set target <id>
 bapm config unset target
 ```
 
-| Команда                      | Эффект                                                       |
-| ---------------------------- | ------------------------------------------------------------ |
-| `config` / `config list`     | Показать `target`, число allow/deny grant-ов и путь к файлу    |
-| `config list --json`         | Весь документ конфига в JSON (`target: null`, если не задан)  |
-| `config get target`          | Напечатать значение target; exit 1, если не задан             |
-| `config set target <id>`     | Записать target по умолчанию                                  |
-| `config unset target`        | Удалить target; остальные ключи остаются                      |
+| Команда                  | Эффект                                                       |
+| ------------------------ | ------------------------------------------------------------ |
+| `config` / `config list` | Показать `target`, число allow/deny grant-ов и путь к файлу  |
+| `config list --json`     | Весь документ конфига в JSON (`target: null`, если не задан) |
+| `config get target`      | Напечатать значение target; exit 1, если не задан            |
+| `config set target <id>` | Записать target по умолчанию                                 |
+| `config unset target`    | Удалить target; остальные ключи остаются                     |
 
 `--help`, `-h` показывают справку. Неизвестные флаги и ключи отвергаются.
 

@@ -22,7 +22,7 @@ export type LockedDependency = {
   content_hash?: string;
   package_type?: string;
   depth?: number;
-  resolved_by?: string;
+  resolved_by?: string | string[];
   is_dev?: boolean;
   path?: string;
   deployed_files?: string[];
