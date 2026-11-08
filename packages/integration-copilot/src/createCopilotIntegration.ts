@@ -63,6 +63,7 @@ export function createCopilotIntegration(options?: {
     id,
     deployRoots,
     mcpEnvMode: "translate",
+    mcpScope: "home",
     detect: ({ cwd }) => detectCopilot(cwd),
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {

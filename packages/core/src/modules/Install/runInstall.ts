@@ -55,6 +55,7 @@ import {
 } from "@/modules/CopilotNativeRegistration";
 import { extractPackArchive } from "@/modules/Pack";
 import {
+  isPackageMentionedInGrants,
   loadUserExecutableGrants,
   normalizeTrustBin,
   parseExecutableGrants,
@@ -585,6 +586,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       noRepoPolicy,
       policyPorts,
       trustContext: installTrustContext,
+      env: options.env,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
     if (mcpResult.lockDocument) lockDocument = mcpResult.lockDocument;
@@ -593,7 +595,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       throw new InstallError(
         "INSTALL_MCP_TRUST",
         mcpResult.withholdMessage ??
-          "MCP withheld: unapproved dependency executables (sc-009 fail-closed)",
+          "MCP withheld: explicitly denied or unapproved dependency executables (sc-009)",
         { details: { withheld: mcpResult.withheldPackages } },
       );
     }
@@ -691,6 +693,26 @@ function markSkipDiagnosticWarn(diagnostic: unknown): unknown {
   const code = typeof rec.code === "string" ? rec.code.toUpperCase() : "";
   if (!/_UNSUPPORTED(?:$|_)|_SKIP_|_MCP_SKIP_NO_/.test(code)) return diagnostic;
   return { ...rec, warn: true };
+}
+
+/**
+ * Home-scoped MCP is a host contract (Copilot/Windsurf), but it writes a file
+ * shared by every project. Prefer the declared `mcpScope`; the canonical ids
+ * are a fallback for older/injected registries that omit the optional field.
+ */
+const HOME_SCOPED_MCP_TARGET_IDS = new Set(["copilot", "windsurf"]);
+
+function isHomeScopedMcpTarget(target: BapmIntegration): boolean {
+  if (target.mcpScope === "home") return true;
+  return HOME_SCOPED_MCP_TARGET_IDS.has(String(target.id ?? "").toLowerCase());
+}
+
+function isEnvFlagEnabled(
+  env: Record<string, string | undefined> | undefined,
+  key: string,
+): boolean {
+  const value = (env?.[key] ?? process.env[key])?.trim().toLowerCase();
+  return value === "1" || value === "true";
 }
 
 /** Best-effort: drop a lock written by this install when a later gate fails closed. */
@@ -1003,6 +1025,8 @@ async function deployMcpAfterPolicy(args: {
     implementationDefaultHost?: string;
   };
   trustContext?: InstallTrustContext;
+  /** Env overlay; `BAPM_NO_GLOBAL_MCP` skips home-scoped MCP configure when truthy. */
+  env?: Record<string, string | undefined>;
 }): Promise<{
   lockPath?: string;
   lockDocument?: LockfileDocument;
@@ -1081,6 +1105,7 @@ async function deployMcpAfterPolicy(args: {
 
   const approved: typeof collected.servers = [];
   const withheldPackages: string[] = [];
+  const skippedPackages: string[] = [];
 
   for (const server of collected.servers) {
     if (server.origin === "direct" || server.packageName === rootName) {
@@ -1103,6 +1128,36 @@ async function deployMcpAfterPolicy(args: {
       approved.push(server);
       continue;
     }
+
+    // Explicit deny (project/user/org) and mentioned-but-unapproved entries
+    // (e.g. `mcp: false` or another executable type only) stay fatal. A package
+    // the surface never mentions is merely skipped with a warning: one grant
+    // must not make every unrelated dependency MCP package fatal.
+    const mentioned =
+      decision.outcome === "deny" ||
+      isPackageMentionedInGrants({
+        packageName: server.packageName,
+        projectSurface,
+        userSurface,
+        orgExecutables,
+      });
+    if (!mentioned) {
+      if (!skippedPackages.includes(server.packageName)) {
+        skippedPackages.push(server.packageName);
+        args.diagnostics.push({
+          code: "MCP_NOT_APPROVED",
+          message: `MCP from dependency "${server.packageName}" skipped: not approved. Run "bapm approve ${server.packageName}" or add executables.allow.${server.packageName}.mcp: true to bapm.yml.`,
+          warn: true,
+          packageName: server.packageName,
+          server: server.name,
+          skip: true,
+          unapproved: true,
+          outcome: decision.outcome,
+        });
+      }
+      continue;
+    }
+
     withheldPackages.push(server.packageName);
     args.diagnostics.push({
       code: "MCP_TRUST_WITHHOLD",
@@ -1116,10 +1171,10 @@ async function deployMcpAfterPolicy(args: {
   }
 
   const uniqueWithheld = [...new Set(withheldPackages)];
-  const orgDenyActive = orgExecutables.deny_all === true || (orgExecutables.deny?.length ?? 0) > 0;
-  const withholdFatal = uniqueWithheld.length > 0 && (combinedSurface.present || orgDenyActive);
+  // Non-empty only for explicit denies / org deny / mentioned-but-unapproved.
+  const withholdFatal = uniqueWithheld.length > 0;
   const withholdMessage = withholdFatal
-    ? `MCP withheld: unapproved dependency executables (${uniqueWithheld.join(", ")}). Add to executables.allow / allowExecutables or remove MCP.`
+    ? `MCP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(", ")}). Remove the deny or add to executables.allow / allowExecutables; otherwise remove MCP.`
     : undefined;
 
   // Records written by this target in the previous lock let a configure pass
@@ -1183,6 +1238,7 @@ async function deployMcpAfterPolicy(args: {
   }
 
   const configuredTargets: Array<{ targetId: string; configPath: string }> = [];
+  const warnedGlobalTargets = new Set<string>();
 
   for (const targetId of args.activeTargets) {
     const target = findTarget(args.registry, targetId);
@@ -1197,6 +1253,17 @@ async function deployMcpAfterPolicy(args: {
         message: `Skipping configureMcp for excluded target "${targetId}" (MCP filter; install continues)`,
         exclude: targetId,
         warn: true,
+      });
+      continue;
+    }
+
+    const homeScopedMcp = isHomeScopedMcpTarget(target);
+    if (homeScopedMcp && isEnvFlagEnabled(args.env, "BAPM_NO_GLOBAL_MCP")) {
+      args.diagnostics.push({
+        code: "MCP_GLOBAL_CONFIG_SKIPPED",
+        message: `Skipping MCP configure for "${targetId}": BAPM_NO_GLOBAL_MCP avoids writing the user-global MCP config shared by every project`,
+        target: targetId,
+        skip: true,
       });
       continue;
     }
@@ -1261,6 +1328,22 @@ async function deployMcpAfterPolicy(args: {
     }
 
     configuredTargets.push({ targetId, configPath: normalizedConfigPath });
+
+    if (homeScopedMcp && !warnedGlobalTargets.has(targetId)) {
+      warnedGlobalTargets.add(targetId);
+      args.diagnostics.push({
+        code: "MCP_GLOBAL_CONFIG_WARN",
+        message:
+          `MCP config for "${targetId}" was written to ${reportedConfigPath}, ` +
+          "a user-global file shared by every project on this machine. " +
+          "Servers with the same name are overwritten by the last install. " +
+          `Use --exclude ${targetId} (or --exclude copilot,windsurf for both) to skip global MCP, ` +
+          "or project-local MCP if the host supports it.",
+        target: targetId,
+        path: reportedConfigPath,
+        warn: true,
+      });
+    }
   }
 
   const updated = refreshMcpLockInventory({

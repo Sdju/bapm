@@ -22,12 +22,17 @@ The system MUST load and save executable grants from a user-local JSON config fi
 
 ### Requirement: Interactive approve and deny CLI write user store only
 
-The CLI MUST expose interactive `bapm approve` and `bapm deny` that persist decisions to the user-local executables store. Interactive defaults MUST target user scope only (always user-local, or require `--user`). Interactive approve/deny MUST NOT write approval or deny decisions into the project `bapm.yml` / `apm.yml` manifest. The commands MUST accept `--mcp` (default for compatibility), `--bin`, and `--hook` type flags; `bapm approve <pkg> --bin` MUST persist a `bin` allow grant so install does not require `--trust-bin` for that package.
+The CLI MUST expose interactive `bapm approve` and `bapm deny` that persist decisions to the user-local executables store. Interactive defaults MUST target user scope only (always user-local, or require `--user`). Interactive approve/deny MUST NOT write approval or deny decisions into the project `bapm.yml` / `apm.yml` manifest. The commands MUST accept `--mcp` (default for compatibility), `--bin`, and `--hook` type flags; `bapm approve <pkg> --bin` MUST persist a `bin` allow grant so install does not require `--trust-bin` for that package. A user grant makes the grant surface present for trust evaluation but MUST NOT by itself require a decision for every unrelated package: packages unmentioned in project/user allow/deny are skipped with a non-fatal `MCP_NOT_APPROVED` warning (see executable-mcp-trust), while explicit deny remains fatal.
 
 #### Scenario: Approve persists outside project manifest
 
 - **WHEN** the user runs interactive `bapm approve` for a package in a project that has a `bapm.yml`
 - **THEN** the user config store MUST gain the grant and the project manifest MUST remain unchanged for that decision
+
+#### Scenario: One user grant does not decide unrelated packages
+
+- **WHEN** the user store approves one package and a different dependency provides MCP without any allow/deny entry
+- **THEN** install MUST NOT fail solely because of the unrelated grant; the unmentioned package MUST be skipped with `MCP_NOT_APPROVED`
 
 #### Scenario: Deny persists outside project manifest
 

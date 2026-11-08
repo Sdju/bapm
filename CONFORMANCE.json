@@ -20,6 +20,9 @@
     "Registry host / rg-001 not claimed (N/A)",
     "Writer may canonicalize to bapm.yml / bapm.lock.yaml branding; dual-read accepts OpenAPM wire names",
     "Intentional OpenAPM-vs-APM diffs (intersection-pick, OpenAPM-strict YAML anchors, lock sort) are limitations not silent passes",
+    "compile writes one host file per invocation and does not implement per-path applyTo; use --target plus -o for additional outputs",
+    "bapm.local.yml and the local: dependency source are bapm-only extensions, absent from APM and OpenAPM",
+    "Registry client is opt-in behind BAPM_EXPERIMENTAL_REGISTRIES=1; bapm does not claim the OpenAPM registry-host role",
     "ADO / multi-candidate policy cascades are out of scope",
     "Interactive user-local approve/deny (sc-010) and org executables.deny/deny_all deny-wins + install≡audit twin (sc-011) + lockfile require presence vs withheld (sc-012) are claimed; full APM approve UX (--all/--recommended/policy explain) remains soft; dependency bin is gated via ExecutableTrust (type bin) plus install --trust-bin / --no-trust-bin consent; dependency hooks are gated via ExecutableTrust (type hook) when a project/user grant surface or org executables.deny/deny_all is active, and keep the legacy soft (ungated) deploy only when no grant surface exists; canvas has no primitive/materialize path and remains unimplemented/soft",
     "Claimed PSL eTLD+1 / credential host-class floor with redirect Auth drop and ambient suppress (OpenAPM §10.3; https-only git-HTTP attach refuse also claimed); residual Auth depth beyond that floor remains soft (gh CLI / az bearer / credential-helper / try_with_fallback); pack/registry archives remain zip with default 10k-entry / 100MB uncompressed caps (sc-002); OpenAPM tar.gz-only container format (sc-004) stays soft",
@@ -638,7 +641,7 @@
         "tests/fixtures/spec-conformance/policy/valid-extends.yml",
         "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
       ],
-      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/providers-parse.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/core/tests/acceptance/p4-governance-remote-extends/conformance-governance.test.ts; packages/cli/tests/policy/remote-fetch.test.ts"
     },
     {
       "id": "req-pl-012",
@@ -650,7 +653,7 @@
         "tests/fixtures/spec-conformance/policy/valid-extends.yml",
         "tests/fixtures/spec-conformance/policy/invalid-extends-cycle.yml"
       ],
-      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts"
+      "citation": "packages/core/tests/acceptance/p4-governance-remote-extends/remote-discovery.test.ts; packages/cli/tests/policy/remote-fetch.test.ts"
     },
     {
       "id": "req-pl-013",

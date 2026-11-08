@@ -11,11 +11,9 @@
 | Важность | Карточек | Что означает                                                                                                                                               |
 | -------- | -------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | критично |        0 | молчаливая потеря/порча файлов, утечка секрета, принципиально небезопасная команда, дыра в обязательном security-гейте                                     |
-| высокая  |        1 | в частом сценарии команда молча делает не то; дыра в CI-гейте; обходится security-контроль; заявленная возможность не работает; ломается совместная работа |
-| средняя  |        3 | неверное поведение в узком сценарии; вводящий в заблуждение UX/JSON/диагностика; дрейф спеки; неполная фича с обходом                                      |
-| низкая   |        7 | осознанное отличие без вреда, формулировки docs, редкий edge case с простым обходом                                                                        |
-
-Осталось: общая grant-поверхность (высокая), remote policy, `deny` без очистки host-конфига, user-global MCP Copilot/Windsurf и осознанные отличия от APM.
+| высокая  |        0 | в частом сценарии команда молча делает не то; дыра в CI-гейте; обходится security-контроль; заявленная возможность не работает; ломается совместная работа |
+| средняя  |        1 | неверное поведение в узком сценарии; вводящий в заблуждение UX/JSON/диагностика; дрейф спеки; неполная фича с обходом                                      |
+| низкая   |        0 | осознанное отличие без вреда, формулировки docs, редкий edge case с простым обходом                                                                        |
 
 ## Как читать карточку
 
@@ -30,38 +28,22 @@
 
 ## Индекс
 
-### Намеренные отличия от APM (формат OpenAPM)
-
-| Файл                                                                             | Тема                                                          | Важность |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------- | -------- |
-| [diamond-intersection-vs-first-wins.md](./diamond-intersection-vs-first-wins.md) | Ромб зависимостей: пересечение диапазонов vs первое найденное | низкая   |
-| [lock-sort-order.md](./lock-sort-order.md)                                       | Порядок записей в lock: `repo_url` vs глубина                 | низкая   |
-| [yaml-anchors-strict.md](./yaml-anchors-strict.md)                               | YAML-якоря: строгий OpenAPM vs APM                            | низкая   |
-| [openapm-8-5-layout.md](./openapm-8-5-layout.md)                                 | Раскладка файлов по агентам (§8.5) не заявлена                | низкая   |
-| [compile-single-file.md](./compile-single-file.md)                               | `compile` пишет один файл, без `applyTo`                      | низкая   |
-| [local-overlay-extension.md](./local-overlay-extension.md)                       | `bapm.local.yml` / `local` — только bapm                      | низкая   |
-| [experimental-registries.md](./experimental-registries.md)                       | Registry-клиент за флагом, роль сервера не заявлена           | низкая   |
-
-### Незавершённое или спорное поведение CLI
-
-| Файл                                                           | Тема                                    | Важность |
-| -------------------------------------------------------------- | --------------------------------------- | -------- |
-| [deny-does-not-undeploy.md](./deny-does-not-undeploy.md)       | `deny` не убирает уже записанный сервер | средняя  |
-| [copilot-windsurf-home-mcp.md](./copilot-windsurf-home-mcp.md) | Copilot и Windsurf пишут MCP в `$HOME`  | средняя  |
-
-### Policy / MCP / trust
-
-| Файл                                                                 | Тема                                                | Важность |
-| -------------------------------------------------------------------- | --------------------------------------------------- | -------- |
-| [grant-surface-all-or-nothing.md](./grant-surface-all-or-nothing.md) | Любое разрешение включает проверку всех MCP-пакетов | высокая  |
-
-### Спека vs код / тесты
-
-| Файл                                                       | Тема                                         | Важность |
-| ---------------------------------------------------------- | -------------------------------------------- | -------- |
-| [policy-remote-not-wired.md](./policy-remote-not-wired.md) | Remote/ADO policy cascade не подключён к CLI | средняя  |
+| Файл                                                     | Тема                                    | Важность |
+| -------------------------------------------------------- | --------------------------------------- | -------- |
+| [deny-does-not-undeploy.md](./deny-does-not-undeploy.md) | `deny` не убирает уже записанный сервер | средняя  |
 
 ## Исправлено и удалено
+
+### Пачка 4 (08.11.2026)
+
+| Что                                                   | Коммит                                    |
+| ----------------------------------------------------- | ----------------------------------------- |
+| Unmentioned dependency MCP пропускается с warning     | `72a7e04` (`fix/grant-surface-skip`)      |
+| Remote org policy подключён через CLI fetcher         | `2a771ae` (`fix/policy-remote-fetch`)     |
+| Copilot/Windsurf: warning о user-global MCP + opt-out | `4d70564` (`fix/global-mcp-warning`)      |
+| 7 намеренных отличий сведены в conformance-таблицу    | `878b2da` (`fix/intentional-differences`) |
+
+Удалены как исправленные/задокументированные: `grant-surface-all-or-nothing`, `policy-remote-not-wired`, `copilot-windsurf-home-mcp`, `compile-single-file`, `diamond-intersection-vs-first-wins`, `experimental-registries`, `local-overlay-extension`, `lock-sort-order`, `openapm-8-5-layout`, `yaml-anchors-strict`.
 
 ### Пачка 3 (08.11.2026)
 
@@ -73,8 +55,6 @@
 | Спеки `compile-agents-md` и `cursor-mcp-deploy` переписаны | `8ed4f2e` (`fix/stale-specs`)           |
 | `--no-policy` не отключает org deny                        | `4b6b22c` (`fix/no-policy-org`)         |
 | `install --force` печатает предупреждение о no-op          | `99b167e` (`fix/install-force-warning`) |
-
-Удалены как исправленные: `policy-hooks-ungated`, `trust-bin-interactive`, `cli-tests-cursor-resolves`, `stale-specs-compile-and-cursor`, `no-policy-disables-org`, `install-force-noop`.
 
 ### Пачка 2 (08.11.2026)
 

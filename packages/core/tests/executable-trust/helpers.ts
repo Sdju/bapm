@@ -75,6 +75,13 @@ export function getClassifyExecutableTrust(): ReturnType<typeof getResolveExecut
   return getResolveExecutableTrust();
 }
 
+/** Explicit allow/deny mention (any executable type) across project/user/org. */
+export function getIsPackageMentionedInGrants(): (options: Record<string, unknown>) => boolean {
+  return pickExport(["isPackageMentionedInGrants"], "isPackageMentionedInGrants") as (
+    options: Record<string, unknown>,
+  ) => boolean;
+}
+
 export function getLoadUserExecutableGrants(): (options: {
   configRoot?: string;
   configDir?: string;

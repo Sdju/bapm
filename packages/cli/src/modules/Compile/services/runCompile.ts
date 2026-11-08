@@ -141,6 +141,10 @@ Options:
 Host selection: --target <id> → sole manifest active → sole auto-detect → fail.
 When active lists multiple hosts, pass --target <id>. Compile stays single-host.
 The selected target determines the default output path and rendering.
+
+Warning: Cursor, Codex, OpenCode, Kiro, Grok Build, and Antigravity share AGENTS.md.
+Compiling for another of these hosts overwrites that file; pass -o PATH to write
+elsewhere (keep the file name AGENTS.md for Codex/OpenCode/Grok Build).
 Run from the directory that contains ${deps.manifestFile}.
 `;
 }

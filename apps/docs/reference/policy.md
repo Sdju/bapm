@@ -19,6 +19,19 @@ bapm policy status [options]
 | `--check`         | —        | Non-zero exit, если нет usable policy                       | off (exit 0 для found / absent / disabled / soft diagnostics) |
 | `--help`, `-h`    | —        | Help для `policy` или `policy status`                       | —                                                             |
 
+## Откуда берётся политика
+
+Порядок discovery по умолчанию:
+
+1. **repo-local** — `apm-policy.yml` или `bapm-policy.yml` в корне проекта (dual-read; оба файла одновременно — ошибка).
+2. **`github-owner-dotgithub`** — если локального файла нет, bapm берёт git remote `origin` (или единственный remote), проверяет, что его хост совпадает с implementation-default (по умолчанию `github.com`), и загружает `https://<host>/<owner>/.github/apm-policy.yml`.
+
+Remote-запрос идёт синхронно через `curl` (`-fsSL`, `--max-time 10`, только `https`). Если remote-хост не GitHub или remote не выбран, org-policy не ищется. Если remote-политика не загрузилась и effective `fetch_failure: block`, install/lock/update завершаются fail-closed с диагностикой; `policy status` показывает `outcome: error` с сетевым диагнозом.
+
+Полные каскады APM/Azure DevOps (`.apm`, `_apm`, ADO org-policy, multi-candidate) не реализованы и не заявлены.
+
+`--no-policy` отключает только шаг 1, поэтому org-policy продолжает применяться. `--no-policy-all` и `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1` отключают и удалённый поиск: сетевого запроса не будет.
+
 ## approve / deny
 
 User-local executable grants в `~/.bapm/config.json` (`executables.allow` / `executables.deny`). **Никогда** не пишут project `bapm.yml` / `apm.yml`.
@@ -39,7 +52,9 @@ bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 
 Без имени пакета команда печатает help и завершается с ошибкой. Без type-флага команда по-прежнему пишет `mcp: true` (approve или deny) — для совместимости. Несколько флагов можно передать сразу: каждый тип сохраняется отдельно.
 
-Первый `approve` или `deny` включает режим явных разрешений: дальше install требует решение для каждого пакета с MCP и падает с `MCP withheld: unapproved dependency executables`, пока его нет. `bapm approve <пакет> --bin` выдаёт persisted consent на `bin/`: после него `bapm install` деплоит `bin/` без `--trust-bin` (но deny по-прежнему сильнее). `approve <пакет> --hook` разрешает dependency hooks; в `bapm.yml` это `executables.allow.<pkg>.hook: true`.
+Первый `approve` или `deny` включает проверку MCP и hooks у зависимостей, но не требует решения по каждому пакету. Пакет, которого нет ни в `allow`, ни в `deny`, пропускается с предупреждением `MCP_NOT_APPROVED` — install продолжается. Фатальное сообщение `MCP withheld: explicitly denied or unapproved dependency executables` остаётся только для явного deny (project/user/org, включая org `deny_all`) и для пакета, упомянутого в grant-поверхности без `mcp: true` (например `mcp: false` или только `bin: true`). Deny всегда сильнее allow.
+
+`bapm approve <пакет> --bin` выдаёт persisted consent на `bin/`: после него `bapm install` деплоит `bin/` без `--trust-bin` (но deny по-прежнему сильнее). `approve <пакет> --hook` разрешает dependency hooks; в `bapm.yml` это `executables.allow.<pkg>.hook: true`.
 
 Dependency hooks проверяются, когда есть project/user grant-поверхность или org `executables.deny`/`deny_all`. Без grant-поверхности и без org deny hooks раскладываются по legacy-поведению. Root/local hooks проекта под гейт не попадают.
 

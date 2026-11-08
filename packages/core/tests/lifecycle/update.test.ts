@@ -382,4 +382,59 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
     expect(listFilesRecursive(mod)).toEqual(beforeMods);
     expect(readFileSync(join(mod, "keep.txt"), "utf8")).toBe("keep\n");
   });
+
+  test("policy ports reach the update gate (remote org deny fails closed)", async () => {
+    project = createTempProject();
+    const oldCommit = fakeCommit("policy-old");
+    const newCommit = fakeCommit("policy-new");
+    const ports = createFakePorts({
+      tagsByRepo: {
+        "example/one": [
+          { tag: "v1.0.0", commit: oldCommit },
+          { tag: "v1.1.0", commit: newCommit },
+        ],
+      },
+    });
+    writeManifest(
+      project.cwd,
+      "bapm.yml",
+      `name: update-policy\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/one.git\n      ref: "^1.0.0"\n`,
+    );
+    writeLock(
+      project.cwd,
+      "bapm.lock.yaml",
+      `lockfile_version: "1"\ndependencies:\n  - repo_url: github.com/example/one\n    name: one\n    resolved_commit: "${oldCommit}"\n    resolved_tag: v1.0.0\n`,
+    );
+
+    const fetched: string[] = [];
+    const runUpdate = getRunUpdate();
+    const error = await expectRejectsMatching(
+      () =>
+        runUpdate({
+          cwd: project.cwd,
+          yes: true,
+          env: {},
+          remotes: [{ name: "origin", url: "https://github.com/acme/app.git" }],
+          fetchPolicyUrl: (url: string) => {
+            fetched.push(url);
+            return {
+              ok: true,
+              status: 200,
+              text: "name: org-remote\nenforcement: block\ndependencies:\n  deny:\n    - one\n",
+              url,
+            };
+          },
+          gitRemote: ports.gitRemote,
+          tagLister: ports.tagLister,
+          downloader: ports.downloader,
+        }),
+      /policy|deny|block|one|violat/i,
+    );
+
+    expect(error).toBeTruthy();
+    expect(fetched).toEqual(["https://github.com/acme/.github/apm-policy.yml"]);
+    const deps = loadLockDeps(project.cwd);
+    const pkg = deps.find((d) => nameOfDep(d).includes("one"));
+    expect(pinOf(pkg!)).toBe(oldCommit);
+  });
 });
