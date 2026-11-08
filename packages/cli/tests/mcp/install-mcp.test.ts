@@ -41,9 +41,9 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     expect(entry.command === "echo" || entry.type === "stdio").toBe(true);
   });
 
-  test("README-shaped HTTP MCP + ${API_TOKEN} bake → .cursor/mcp.json", async () => {
+  test("README-shaped HTTP MCP + ${API_TOKEN} stays a Cursor runtime placeholder", async () => {
     project = createTempProject();
-    const secret = "readme-http-bake-token";
+    const secret = "readme-http-token";
     writeDirectMcpHttpProject(project.cwd, {
       envYaml: `        API_TOKEN: "\${API_TOKEN}"\n`,
     });
@@ -61,13 +61,13 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
     const entry = servers.github as { type?: string; url?: string; env?: Record<string, string> };
     expect(entry.type === "http" || entry.url !== undefined).toBe(true);
     expect(entry.url).toBe("https://api.githubcopilot.com/mcp/");
-    expect(entry.env?.API_TOKEN).toBe(secret);
-    expect(readMcpJsonRaw(project.cwd)).not.toContain("${API_TOKEN}");
+    expect(entry.env?.API_TOKEN).toBe("${env:API_TOKEN}");
+    expect(readMcpJsonRaw(project.cwd)).not.toContain(secret);
   });
 
-  test("HTTP headers bake into Cursor config while lock keeps the placeholder", async () => {
+  test("HTTP headers stay Cursor runtime placeholders while lock keeps the authored form", async () => {
     project = createTempProject();
-    const secret = "cursor-header-bake-token-1c7e";
+    const secret = "cursor-header-token-1c7e";
     writeDirectMcpHttpProject(project.cwd, {
       headersYaml: `        Authorization: "Bearer \${MCP_TOKEN}"\n`,
     });
@@ -86,9 +86,10 @@ describe("CLI M9 Cursor MCP deploy on install", () => {
       origin?: unknown;
       packageName?: unknown;
     };
-    expect(entry.headers?.Authorization).toBe(`Bearer ${secret}`);
+    expect(entry.headers?.Authorization).toBe("Bearer ${env:MCP_TOKEN}");
     expect(entry.origin).toBeUndefined();
     expect(entry.packageName).toBeUndefined();
+    expect(readMcpJsonRaw(project.cwd)).not.toContain(secret);
 
     const lock = readLockText(project.cwd);
     expect(lock).toContain("Bearer ${MCP_TOKEN}");

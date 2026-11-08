@@ -144,14 +144,14 @@ The active Cursor integration specification MUST describe `@b-apm/integration-cu
 - **WHEN** install or compile selects the registered Cursor integration after the active specification rename
 - **THEN** the observable files, registered-root safety, and reports remain equivalent to the pre-cleanup behavior
 
-### Requirement: configureMcp persists bake-resolved env and headers
+### Requirement: configureMcp writes Cursor-native env placeholders
 
-When Cursor `configureMcp` writes `mcpServers` entries, `env` and `headers` values that participated in bake-time resolution MUST be the baked literals (or omit unresolved maps by failing before write). The integration MUST NOT invent Cursor runtime env-substitution as a replacement for bake. Literal env maps without placeholders MUST continue to round-trip as today.
+When Cursor `configureMcp` writes `mcpServers` entries, APM env references in `env`, `headers`, and optional `args` MUST be written in Cursor's native `${env:VAR}` form. Authored `${VAR}` and legacy `<VAR>` MUST be translated to `${env:VAR}`; authored `${env:VAR}` MUST be preserved. Bapm `{bake:NAME}` directives are resolved at install time before configure and MAY therefore appear as literals. Cursor MUST NOT receive an install-time-baked secret for an APM `${VAR}` reference. Literal env maps without placeholders MUST continue to round-trip as today.
 
-#### Scenario: configureMcp writes baked env literals
+#### Scenario: configureMcp writes native placeholders
 
-- **WHEN** configureMcp receives (or bake-resolves) a server whose env placeholder resolved to a literal
-- **THEN** `.cursor/mcp.json` under the registered `.cursor/` root MUST store that literal under `mcpServers.<name>.env`
+- **WHEN** configureMcp receives a server whose env uses `${API_TOKEN}` and `API_TOKEN` is set
+- **THEN** `.cursor/mcp.json` under the registered `.cursor/` root MUST store `${env:API_TOKEN}` rather than the literal value
 
 #### Scenario: Plain env without placeholders still writes
 

@@ -1,10 +1,11 @@
 /**
  * Bake-time resolution of MCP env/header placeholder syntaxes.
- * Cursor path: legacy bake only (literals), no runtime translate-mode.
  *
  * Supported forms:
  * - APM: `${VAR}` / `${env:VAR}` / legacy `<VAR>` (uppercase identifier only)
  * - bapm-only: `{bake:NAME}` / `{bake:env:NAME}`
+ *
+ * Install chooses bake vs translate per host (`mcpEnvMode` / `mcpHeadersEnvMode`).
  */
 
 /**
@@ -146,12 +147,18 @@ export type BakeableMcpServer = {
   [key: string]: unknown;
 };
 
+export type BakeMcpServerMapsOptions = BakeMcpStringMapOptions & {
+  /** Header-map mode; defaults to `mode`. */
+  headersMode?: "bake" | "translate";
+};
+
 /**
  * Bake `env` and `headers` on a server config; other fields unchanged.
+ * `headersMode` lets a host bake env while translating header references.
  */
 export function bakeMcpServerMaps<T extends BakeableMcpServer>(
   server: T,
-  options?: BakeMcpStringMapOptions,
+  options?: BakeMcpServerMapsOptions,
 ): T {
   const next: BakeableMcpServer = { ...server };
   if (server.env && typeof server.env === "object") {
@@ -164,7 +171,10 @@ export function bakeMcpServerMaps<T extends BakeableMcpServer>(
       if (typeof v === "string") stringHeaders[k] = v;
     }
     if (Object.keys(stringHeaders).length > 0) {
-      next.headers = bakeMcpStringMap(stringHeaders, options);
+      next.headers = bakeMcpStringMap(stringHeaders, {
+        ...options,
+        ...(options?.headersMode ? { mode: options.headersMode } : {}),
+      });
     }
   }
   return next as T;

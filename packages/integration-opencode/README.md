@@ -42,6 +42,7 @@ Skills stay under `.opencode/skills/` (not APM `.agents/skills/`). Writes never 
 - Creates/updates project-root `opencode.json` under top-level `mcp`
 - Portable/`stdio` → `{ type: "local", command: [command, ...args], environment? }`
 - Portable `streamable-http` / host `http` → `{ type: "remote", url, headers? }`
+- `mcpEnvMode: "translate"` — `${VAR}`, `${env:VAR}`, and legacy `<VAR>` become OpenCode-native `{env:VAR}` in `environment`, command arguments, and remote `headers`; secrets are not baked into `opencode.json`. `{bake:NAME}` still resolves at install time (fail-closed)
 - Portable `sse` (and undocumented transports) fail closed — diagnostic, no invented entry
 - Preserves unrelated top-level keys and other `mcp` server names
 - Returns `ConfigureMcpReport` (`configPath: "opencode.json"`, `servers`, `deployedFiles`) for lock inventory

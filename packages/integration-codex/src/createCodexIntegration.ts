@@ -54,6 +54,9 @@ export function createCodexIntegration(options?: {
   return {
     id,
     deployRoots,
+    // Codex has no runtime interpolation for stdio `env`, so install still
+    // bakes it. Header references are translated into native indirection.
+    mcpHeadersEnvMode: "translate",
     detect: ({ cwd }) => {
       const codexDir = join(cwd, ".codex");
       return existsSync(codexDir) && statSync(codexDir).isDirectory();
@@ -383,14 +386,21 @@ function normalizeCodexServerEntries(
       });
       continue;
     }
+    if (mapped.diagnostics) diagnostics.push(...mapped.diagnostics);
     out[name] = mapped.entry;
   }
   return { entries: out, diagnostics };
 }
 
-function toCodexServerEntry(
-  server: McpServerConfig,
-): { ok: true; entry: Record<string, unknown> } | { ok: false; code: string; message: string } {
+type CodexServerEntryResult =
+  | {
+      ok: true;
+      entry: Record<string, unknown>;
+      diagnostics?: Array<{ code: string; message: string; server?: string }>;
+    }
+  | { ok: false; code: string; message: string };
+
+function toCodexServerEntry(server: McpServerConfig): CodexServerEntryResult {
   const transport = String(server.transport ?? server.type ?? "").toLowerCase();
   const name = String(server.name ?? "").trim() || "unknown";
 
@@ -435,7 +445,17 @@ function toCodexServerEntry(
     }
     entry.url = server.url;
     if (server.env && typeof server.env === "object") entry.env = server.env;
-    return { ok: true, entry };
+    const headerMapping = mapCodexHeaders(server.headers, name);
+    if (headerMapping.httpHeaders) entry.http_headers = headerMapping.httpHeaders;
+    if (headerMapping.envHttpHeaders) entry.env_http_headers = headerMapping.envHttpHeaders;
+    if (headerMapping.bearerTokenEnvVar) {
+      entry.bearer_token_env_var = headerMapping.bearerTokenEnvVar;
+    }
+    return {
+      ok: true,
+      entry,
+      ...(headerMapping.diagnostics.length > 0 ? { diagnostics: headerMapping.diagnostics } : {}),
+    };
   }
 
   // stdio default
@@ -451,6 +471,82 @@ function toCodexServerEntry(
   if (server.env && typeof server.env === "object") entry.env = server.env;
   if (typeof server.cwd === "string") entry.cwd = server.cwd;
   return { ok: true, entry };
+}
+
+/**
+ * Codex reads remote headers only as static `http_headers`, or through
+ * `env_http_headers` / `bearer_token_env_var` for environment references.
+ * Values with literal text around a reference cannot be expressed and are
+ * skipped with a diagnostic rather than written as a static secret.
+ */
+function mapCodexHeaders(
+  headers: Record<string, string> | undefined,
+  serverName: string,
+): {
+  httpHeaders?: Record<string, string>;
+  envHttpHeaders?: Record<string, string>;
+  bearerTokenEnvVar?: string;
+  diagnostics: Array<{ code: string; message: string; server?: string }>;
+} {
+  const httpHeaders: Record<string, string> = {};
+  const envHttpHeaders: Record<string, string> = {};
+  const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
+  let bearerTokenEnvVar: string | undefined;
+
+  if (!headers || typeof headers !== "object" || Array.isArray(headers)) {
+    return { diagnostics };
+  }
+
+  for (const [header, raw] of Object.entries(headers)) {
+    if (typeof raw !== "string") continue;
+    if (!hasEnvReference(raw)) {
+      httpHeaders[header] = raw;
+      continue;
+    }
+
+    const bearer = /^Bearer\s+(.+)$/.exec(raw);
+    if (bearer && header.toLowerCase() === "authorization") {
+      const varName = extractSingleEnvRef(bearer[1]!.trim());
+      if (varName) {
+        bearerTokenEnvVar = varName;
+        continue;
+      }
+    }
+
+    const direct = extractSingleEnvRef(raw.trim());
+    if (direct) {
+      envHttpHeaders[header] = direct;
+      continue;
+    }
+
+    diagnostics.push({
+      code: "CODEX_MCP_HEADER_UNEXPRESSIBLE",
+      message:
+        `Codex cannot express header "${header}" for server "${serverName}" as a static value ` +
+        "or environment reference; header skipped (remove surrounding text or use a plain ${VAR})",
+      server: serverName,
+    });
+  }
+
+  return {
+    ...(Object.keys(httpHeaders).length > 0 ? { httpHeaders } : {}),
+    ...(Object.keys(envHttpHeaders).length > 0 ? { envHttpHeaders } : {}),
+    ...(bearerTokenEnvVar ? { bearerTokenEnvVar } : {}),
+    diagnostics,
+  };
+}
+
+function hasEnvReference(value: string): boolean {
+  return /\$\{|<[A-Z_][A-Z0-9_]*>|\{env:[A-Za-z_][A-Za-z0-9_]*\}/.test(value);
+}
+
+function extractSingleEnvRef(value: string): string | undefined {
+  const match =
+    /^\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
+    /^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
+    /^\{env:([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
+    /^<([A-Z_][A-Z0-9_]*)>$/.exec(value);
+  return match?.[1];
 }
 
 type HookEntry = { command?: string; [key: string]: unknown };

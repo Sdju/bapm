@@ -993,6 +993,21 @@ function gateDependencyHooksWithTrust(
   return { primitives: kept, diagnostics };
 }
 
+function isRegistryOnlyMcpServer(server: CollectedMcpServer): boolean {
+  const registry = server.registry;
+  // `registry: false` means self-defined (fully described here). Absent also
+  // means no lookup in bapm's current model. True/string request a registry.
+  const requestsLookup =
+    registry !== undefined &&
+    registry !== null &&
+    registry !== false &&
+    !(typeof registry === "string" && registry.trim().length === 0);
+  if (!requestsLookup) return false;
+  const hasCommand = typeof server.command === "string" && server.command.trim().length > 0;
+  const hasUrl = typeof server.url === "string" && server.url.trim().length > 0;
+  return !hasCommand && !hasUrl;
+}
+
 async function deployMcpAfterPolicy(args: {
   cwd: string;
   rootManifest: BapmManifest;
@@ -1177,6 +1192,27 @@ async function deployMcpAfterPolicy(args: {
     ? `MCP withheld: explicitly denied or unapproved dependency executables (${uniqueWithheld.join(", ")}). Remove the deny or add to executables.allow / allowExecutables; otherwise remove MCP.`
     : undefined;
 
+  // Registry lookup is not implemented. Fail before any host config or MCP
+  // lock inventory is written so a `{type:"stdio"}` shell never reaches a host.
+  const registryOnly = approved.filter(isRegistryOnlyMcpServer);
+  if (registryOnly.length > 0) {
+    const names = registryOnly.map((server) => server.name).join(", ");
+    throw new InstallError(
+      "MCP_REGISTRY_UNSUPPORTED",
+      `MCP server${registryOnly.length === 1 ? "" : "s"} ${names} request registry lookup, which bapm does not support; declare "command" for stdio or "url" for http/streamable-http (and set registry: false)`,
+      {
+        details: {
+          servers: registryOnly.map((server) => ({
+            name: server.name,
+            packageName: server.packageName,
+            origin: server.origin,
+            registry: server.registry,
+          })),
+        },
+      },
+    );
+  }
+
   // Records written by this target in the previous lock let a configure pass
   // remove entries bapm owns without touching foreign host servers.
   const pruneByTarget = resolveMcpPruneInventory({
@@ -1269,15 +1305,21 @@ async function deployMcpAfterPolicy(args: {
     }
 
     // Per-target bake: omit APM placeholder bake when mcpEnvMode === "translate".
-    // Missing mode ⇒ bake (Cursor default). `{bake:NAME}` still resolved fail-closed.
+    // `mcpHeadersEnvMode` may translate headers while env still bakes (Codex).
+    // Missing modes ⇒ bake. `{bake:NAME}` still resolved fail-closed.
     // Lookup: overrides → process.env → effective manifest `env` (fills gaps).
     const bakeMode = target.mcpEnvMode === "translate" ? "translate" : "bake";
+    const headersBakeMode =
+      target.mcpHeadersEnvMode === "translate" || target.mcpHeadersEnvMode === "bake"
+        ? target.mcpHeadersEnvMode
+        : bakeMode;
     const manifestEnv = args.rootManifest.env;
     let configuredServers: McpServerConfig[];
     try {
       configuredServers = approved.map((server) => {
         const baked = bakeMcpServerMaps(server, {
           mode: bakeMode,
+          headersMode: headersBakeMode,
           ...(manifestEnv !== undefined ? { manifestEnv } : {}),
         });
         // Internal provenance stays on `approved` for trust/lock inventory; the
@@ -1288,7 +1330,12 @@ async function deployMcpAfterPolicy(args: {
     } catch (error) {
       if (error instanceof McpEnvBakeError) {
         throw new InstallError("INSTALL_MCP_ENV_BAKE", error.message, {
-          details: { missing: error.missing, targetId, mcpEnvMode: bakeMode },
+          details: {
+            missing: error.missing,
+            targetId,
+            mcpEnvMode: bakeMode,
+            mcpHeadersEnvMode: headersBakeMode,
+          },
           cause: error,
         });
       }

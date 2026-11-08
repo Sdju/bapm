@@ -4,7 +4,7 @@
  * ## Public API
  *
  * - `collectMcpServers` — direct + optional transitive (trust-transitive / grant)
- * - `bakeMcpStringMap` / `bakeMcpServerMaps` — install-time placeholder bake for Cursor
+ * - `bakeMcpStringMap` / `bakeMcpServerMaps` — per-host placeholder bake / translate for MCP env and headers
  * - `applyMcpInventoryToLock` — populate `mcp_servers` / related fields (target optional)
  * - `scrubMcpInventory` — prune stale root-owned MCP inventory / clear all MCP bags
  *
@@ -24,7 +24,11 @@ export type {
   ScrubMcpInventoryOptions,
 } from "./types.ts";
 
-export type { BakeMcpStringMapOptions, BakeableMcpServer } from "./bake.ts";
+export type {
+  BakeMcpStringMapOptions,
+  BakeMcpServerMapsOptions,
+  BakeableMcpServer,
+} from "./bake.ts";
 export {
   bakeMcpStringMap,
   bakeMcpStringValue,
