@@ -2148,7 +2148,7 @@ function collectPackageDeclaredTargets(
     const root = n.packageRoot;
     if (!root || !existsSync(root)) continue;
     try {
-      const { document } = loadManifest({ cwd: root });
+      const { document } = loadManifest({ cwd: root, allowReplace: true });
       map.set(n.name, declaredTargetIds(document));
     } catch {
       map.set(n.name, []);
@@ -2164,7 +2164,7 @@ function collectPackageDeclaredTargets(
       continue;
     }
     try {
-      const { document } = loadManifest({ cwd: pkgRoot });
+      const { document } = loadManifest({ cwd: pkgRoot, allowReplace: true });
       map.set(p.packageName, declaredTargetIds(document));
     } catch {
       map.set(p.packageName, []);

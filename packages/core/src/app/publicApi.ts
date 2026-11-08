@@ -20,6 +20,7 @@ export type {
   RegistryEntry,
   ResolvedActive,
   TargetIntegrationMap,
+  ParseManifestOptions,
   ManifestErrorCode,
   ManifestWarning,
   WriteManifestOptions,
@@ -691,6 +692,8 @@ export type {
   RegistryHttpTransport,
   RegistryVersionInfo,
   RegistryErrorCode,
+  ApplyExtraCaBundleOptions,
+  ExtraCaBundleResult,
 } from "@/modules/Registry";
 
 export {
@@ -708,6 +711,11 @@ export {
   verifyArchiveDigest,
   createFetchTransport,
   resolveRegistryToken,
+  EXTRA_CA_BUNDLE_ENV,
+  DISABLE_EXTRA_CA_BUNDLE_ENV,
+  parseExtraCaBundlePem,
+  applyExtraCaBundle,
+  applyExtraCaBundleFromEnv,
   buildPublishArchive,
   createPublishArchive,
   packPublishArchive,

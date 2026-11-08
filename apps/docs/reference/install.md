@@ -59,6 +59,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Copilot и Windsurf пишут MCP в user-global файлы `~/.copilot/mcp-config.json` и `~/.codeium/windsurf/mcp_config.json` (`COPILOT_HOME` / `CODEIUM_HOME`), общие для всех проектов на машине. Install печатает `bapm: warning: MCP config for "<id>" was written to <path> …`: одноимённые серверы перезаписывает последний install. Чтобы не трогать общий файл, используйте `--exclude copilot,windsurf` (или `BAPM_NO_GLOBAL_MCP=1` для обоих хостов в CI); MCP при этом не конфигурируется, остальная установка продолжается. Для изоляции задайте отдельный `COPILOT_HOME`/`CODEIUM_HOME` на проект или контейнер.
 
 - `install <archive.zip>` добавляет файлы архива в текущий каталог и ничего не удаляет. Если файл из архива уже есть с другим содержимым (обычно `bapm.yml`), install завершается ошибкой `Refusing to overwrite existing files` до записи чего-либо. Поэтому ставьте архив в пустой каталог.
+- Приватный registry с внутренним CA или TLS-inspecting proxy: задайте `NODE_EXTRA_CA_CERTS` до запуска Node или `BAPM_EXTRA_CA_BUNDLE` для additive CA bundle. См. [Private registry и TLS](/guide/situations/tls-private-registry).
 
 ## `lifecycle:` не исполняется
 

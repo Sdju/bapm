@@ -49,6 +49,15 @@ export type ParseManifestResult = {
   warnings: ManifestWarning[];
 };
 
+export type ParseManifestOptions = {
+  /**
+   * APM applies root `replace:` rules only to the consumer manifest; dependency
+   * manifests may still declare the block. bapm rejects it by default so a root
+   * consumer never installs an upstream source by mistake.
+   */
+  allowReplace?: boolean;
+};
+
 /**
  * Validate top-level (or overlay) `env` as string→string with env-safe keys.
  * Empty string values are allowed (shape); bake still requires non-empty at lookup.
@@ -86,7 +95,10 @@ export function validateManifestEnv(value: unknown, pathPrefix = "env"): Record<
  * Validate a pre-parsed JS value as an OpenAPM/APM project manifest.
  * Retains unknown top-level and `x-*` keys on the returned document.
  */
-export function parseManifestDocument(input: unknown): ParseManifestResult {
+export function parseManifestDocument(
+  input: unknown,
+  options: ParseManifestOptions = {},
+): ParseManifestResult {
   const warnings: ManifestWarning[] = [];
 
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
@@ -97,6 +109,8 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
   }
 
   const raw = input as Record<string, unknown>;
+
+  assertReplaceSupported(raw, options);
 
   if ("workspaces" in raw) {
     throw new ManifestError("MANIFEST_VALIDATION", 'OpenAPM v0.1 rejects top-level "workspaces"', {
@@ -198,8 +212,64 @@ export function parseManifestDocument(input: unknown): ParseManifestResult {
 }
 
 /** Back-compat entry for already-loaded JS objects. */
-export function parseManifest(input: unknown): BapmManifest {
-  return parseManifestDocument(input).document;
+export function parseManifest(input: unknown, options: ParseManifestOptions = {}): BapmManifest {
+  return parseManifestDocument(input, options).document;
+}
+
+/**
+ * Root `replace:` (APM 0.35 replacement rules) is unsupported. Refuse instead
+ * of silently installing the upstream source where the user configured a fork
+ * or local checkout.
+ */
+function assertReplaceSupported(raw: Record<string, unknown>, options: ParseManifestOptions): void {
+  if (options.allowReplace) return;
+  if (!("replace" in raw)) return;
+  const value = raw.replace;
+  // Absent/empty rules have no semantic effect; mirror APM's `parse_replace_block`.
+  if (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) {
+    return;
+  }
+
+  const rules = describeReplacementRules(value);
+  throw new ManifestError(
+    "MANIFEST_REPLACE_UNSUPPORTED",
+    `Manifest declares root "replace:" (${rules.join("; ")}), which bapm does not support. ` +
+      `Refusing to continue because the replacement would be ignored and bapm would install ` +
+      `the upstream source instead of the configured local checkout/fork. ` +
+      `Remove the replace: block or use APM 0.35+ for this project.`,
+    { path: "replace", details: { rules } },
+  );
+}
+
+/** Describe replacement rules for the diagnostic without fully re-parsing them. */
+function describeReplacementRules(value: unknown): string[] {
+  const entries = Array.isArray(value) ? value : [value];
+  return entries.map((entry, index) => {
+    const label = `replace[${index}]`;
+    if (!isPlainObject(entry)) {
+      return `${label}=${JSON.stringify(entry) ?? String(entry)}`;
+    }
+    const selector = isPlainObject(entry.for) ? entry.for : undefined;
+    const source = isPlainObject(entry.with) ? entry.with : undefined;
+
+    const selectorParts = [selector?.git, selector?.path]
+      .filter((part): part is string => typeof part === "string" && part.trim().length > 0)
+      .map((part) => part.trim());
+    const selectorText = selectorParts.length > 0 ? selectorParts.join(" ") : "?";
+
+    let sourceText = "?";
+    if (source) {
+      const git = typeof source.git === "string" ? source.git.trim() : "";
+      const path = typeof source.path === "string" ? source.path.trim() : "";
+      const ref = typeof source.ref === "string" ? source.ref.trim() : "";
+      if (git) {
+        sourceText = `git:${git}${ref ? `#${ref}` : ""}${path ? ` path:${path}` : ""}`;
+      } else if (path) {
+        sourceText = `path:${path}`;
+      }
+    }
+    return `${label} ${selectorText} -> ${sourceText}`;
+  });
 }
 
 function validateDependencyBlock(value: unknown, field: string): DependencyLists {

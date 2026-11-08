@@ -129,7 +129,7 @@ function pinOf(d: LockedDependency): string {
 
 function readPackageSummary(modulesPath: string): string | undefined {
   try {
-    const { document } = loadManifest({ cwd: modulesPath });
+    const { document } = loadManifest({ cwd: modulesPath, allowReplace: true });
     const summary =
       (typeof document.summary === "string" && document.summary.trim()) ||
       (typeof document.description === "string" && document.description.trim()) ||

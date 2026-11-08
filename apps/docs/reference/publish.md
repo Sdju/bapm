@@ -28,6 +28,7 @@ Experimental PUT flat registry zip. Требует `BAPM_EXPERIMENTAL_REGISTRIES
 - `registries.default` — registry, куда публиковать ([Registries](/guide/manifest-registries));
 - непустой каталог `.apm/`;
 - `BAPM_EXPERIMENTAL_REGISTRIES=1`;
-- для закрытого registry — токен в `BAPM_REGISTRY_<NAME>_TOKEN` (имя registry в верхнем регистре) или общий `BAPM_REGISTRY_TOKEN`.
+- для закрытого registry — токен в `BAPM_REGISTRY_<NAME>_TOKEN` (имя registry в верхнем регистре) или общий `BAPM_REGISTRY_TOKEN`;
+- для registry с внутренним CA или TLS-inspecting proxy — `NODE_EXTRA_CA_CERTS` до запуска Node или `BAPM_EXTRA_CA_BUNDLE` с PEM-файлом CA. См. [Private registry и TLS](/guide/situations/tls-private-registry).
 
 См. также: [pack](/reference/pack) (`.bapmignore`, producer zip / marketplace.json), [lock-файл](/guide/lockfile), карта [команд](/guide/commands).

@@ -76,7 +76,7 @@ export function collectMcpServers(options: CollectMcpServersOptions): CollectMcp
       }
       let depManifest: BapmManifest;
       try {
-        depManifest = loadManifest({ cwd: resolve(node.packageRoot) }).document;
+        depManifest = loadManifest({ cwd: resolve(node.packageRoot), allowReplace: true }).document;
       } catch {
         continue;
       }

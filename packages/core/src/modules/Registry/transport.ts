@@ -1,4 +1,5 @@
 import { RegistryError } from "./errors.ts";
+import { applyExtraCaBundleFromEnv } from "./tlsTrust.ts";
 import type { RegistryHttpRequest, RegistryHttpResponse, RegistryHttpTransport } from "./types.ts";
 import { fetchWithRedirectAuthDrop } from "@/modules/Auth";
 
@@ -6,6 +7,8 @@ import { fetchWithRedirectAuthDrop } from "@/modules/Auth";
 export function createFetchTransport(): RegistryHttpTransport {
   return {
     async fetch(request: RegistryHttpRequest): Promise<RegistryHttpResponse> {
+      // Additive corporate CA support; NODE_EXTRA_CA_CERTS is handled by Node itself.
+      applyExtraCaBundleFromEnv();
       const init: RequestInit = {
         method: request.method,
         headers: request.headers,
@@ -18,9 +21,10 @@ export function createFetchTransport(): RegistryHttpTransport {
       try {
         response = await fetchWithRedirectAuthDrop(request.url, init);
       } catch (cause) {
+        const message = cause instanceof Error ? cause.message : String(cause);
         throw new RegistryError(
           "REGISTRY_HTTP",
-          `Registry network error fetching ${request.method} ${request.url}: ${cause instanceof Error ? cause.message : String(cause)}`,
+          `Registry network error fetching ${request.method} ${request.url}: ${message}${tlsTrustHint(cause)}`,
           { cause, details: { url: request.url, method: request.method } },
         );
       }
@@ -101,5 +105,26 @@ export function mapHttpError(
     "REGISTRY_HTTP",
     `Registry ${method} ${url} failed with HTTP ${status}. ${snippet}`,
     { status, details: { url, method } },
+  );
+}
+
+/** Append an actionable hint when fetch failed inside the TLS trust path. */
+function tlsTrustHint(cause: unknown): string {
+  const rawCode =
+    cause !== null && typeof cause === "object" && "code" in cause
+      ? (cause as { code?: unknown }).code
+      : undefined;
+  const code = typeof rawCode === "string" || typeof rawCode === "number" ? String(rawCode) : "";
+  const message = cause instanceof Error ? cause.message : String(cause);
+  const tlsLike =
+    /SELF_SIGNED_CERT|UNABLE_TO_VERIFY|UNABLE_TO_GET_ISSUER|CERT_|ERR_TLS|certificate|TLS|SSL/i.test(
+      `${code} ${message}`,
+    );
+  if (!tlsLike) return "";
+  return (
+    " TLS trust failure: for a private registry or TLS-inspecting proxy, set " +
+    "NODE_EXTRA_CA_CERTS=/path/to/ca.pem before starting bapm (Node fetch/undici), " +
+    "or BAPM_EXTRA_CA_BUNDLE=/path/to/ca.pem for an additive bapm-only bundle. " +
+    "See /guide/situations/tls-private-registry."
   );
 }
