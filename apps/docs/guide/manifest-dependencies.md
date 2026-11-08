@@ -49,6 +49,22 @@ dependencies:
 
 Для личных черновиков, которые есть только у вас, используйте `local` — см. [Личные пакеты](/guide/situations/personal-local-lock).
 
+### Локальный одиночный файл
+
+`path:` может указывать на один файл примитива вместо каталога пакета. Суффикс определяет тип, как в APM 0.35:
+
+```yaml
+dependencies:
+  apm:
+    - path: ./ai/scout.agent.md # agent
+    - path: ./ai/style.instructions.md # instruction
+    - path: ./ai/review.prompt.md # prompt (command)
+```
+
+Поддерживаются только эти суффиксы: `.agent.md`, `.instructions.md`, `.prompt.md`. Файл должен быть обычным (не symlink), в UTF-8 и с YAML frontmatter в начале (`---` … `---`); иначе install падает до записи lock и файлов агента. Соседние файлы не копируются: если нужны companion-ассеты, оформите каталог с `bapm.yml`/`apm.yml`.
+
+bapm копирует файл в snapshot-пакет `apm_modules/…` по раскладке `.apm/agents|instructions|prompts/<имя файла>` и записывает в lock `path`/`local_path`, `package_type: local` и `content_hash`. В `--frozen` тот же snapshot пересчитывается из исходного файла: изменение содержимого, symlink, неизвестный суффикс или отсутствие frontmatter — ошибка.
+
 ### Только часть пакета
 
 Если из большого пакета нужно несколько skills или пакет нужен только одному из агентов, сузьте установку:

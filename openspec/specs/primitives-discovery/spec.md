@@ -57,6 +57,25 @@ Discovery MUST recognize a package-root `SKILL.md` as one skill unit attributed 
 - **WHEN** a package or project contains `.apm/prompts/*.prompt.md` or `.apm/hooks/*.json`
 - **THEN** discovery MUST include corresponding `command` and `hook` primitives in the attributed set
 
+### Requirement: Single-file dependency packages discover their primitive
+
+When discovery receives a dependency package root that is a supported single primitive file (`.agent.md`, `.instructions.md`, `.prompt.md`), it MUST yield exactly one attributed primitive with `source: dependency:<filename>`, `packageName` equal to the source filename, and the suffix-selected type (`agent`, `instruction`, or `command`). Discovery MUST NOT require the file to be nested under `.apm/` for this case.
+
+#### Scenario: Agent file package root
+
+- **WHEN** a dependency package root is `scout.agent.md`
+- **THEN** discovery MUST yield an `agent` primitive named `scout` attributed to `dependency:scout.agent.md`
+
+#### Scenario: Instruction and prompt file package roots
+
+- **WHEN** dependency package roots are `style.instructions.md` and `review.prompt.md`
+- **THEN** discovery MUST yield an `instruction` named `style` and a `command` named `review` with matching dependency attribution
+
+#### Scenario: Typed `.apm` suffix names are stripped
+
+- **WHEN** discovery finds `.apm/agents/scout.agent.md` or `.apm/instructions/style.instructions.md`
+- **THEN** the primitive names MUST be `scout` and `style` (the APM suffix is not part of the name)
+
 ### Requirement: Directory-backed skills expose their complete skill directory
 
 When discovery finds a skill as `.apm/skills/<name>/SKILL.md` or `skills/<name>/SKILL.md`, the primitive MUST carry `skillDirectory` pointing at `<name>` so targets can materialize the complete skill unit (references, scripts, nested assets). A package-root `SKILL.md` MUST NOT carry `skillDirectory`, because its containing directory is the whole package; only that file is the skill unit.

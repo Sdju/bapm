@@ -30,6 +30,7 @@ import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity } from "./identity.ts";
 import { ensureLocalSourcesUntracked } from "./ensureLocalUntracked.ts";
 import { effectiveLocalPath } from "./localSource.ts";
+import { computeLocalSourceContentHash } from "./localFile.ts";
 
 /**
  * Orchestrate: load manifest → resolve plan → policy gate → download → write lock.
@@ -472,7 +473,7 @@ function computeLocalContentHash(node: ResolvedNode): string {
     );
   }
   try {
-    return computeCanonicalTreeSha256(root);
+    return computeLocalSourceContentHash(root);
   } catch (cause) {
     throw new ResolverError(
       "RESOLVE_FAILED",

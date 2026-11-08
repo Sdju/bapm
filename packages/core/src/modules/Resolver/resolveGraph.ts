@@ -1,4 +1,4 @@
-import { existsSync, statSync } from "node:fs";
+import { existsSync, lstatSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
   collectManifestExtensions,
@@ -32,6 +32,7 @@ import {
 import { ResolverError } from "./errors.ts";
 import { normalizeRepoIdentity, toLockRepoUrl } from "./identity.ts";
 import { resolveLocalPath } from "./localPath.ts";
+import { admitLocalFile } from "./localFile.ts";
 import { effectiveLocalPath } from "./localSource.ts";
 import {
   pickHighestInIntersection,
@@ -636,6 +637,23 @@ async function resolveLocal(
     throw new ResolverError("RESOLVE_FAILED", `Local dependency path not found: ${abs}`);
   }
 
+  let pathStats;
+  try {
+    pathStats = lstatSync(abs);
+  } catch (cause) {
+    throw new ResolverError("RESOLVE_FAILED", `Local dependency path not found: ${abs}`, {
+      cause,
+      details: { path: abs },
+    });
+  }
+  // Follow directory symlinks as before; a symlink to a file is rejected by
+  // single-file admission (APM requires a real primitive file, not a link).
+  const followedStats = pathStats.isSymbolicLink() ? statSync(abs) : pathStats;
+  if (!followedStats.isDirectory()) {
+    await resolveLocalFile(item, classified, { ...ctx, abs });
+    return;
+  }
+
   let childManifest;
   let portablePlugin;
   let extensions: Record<string, unknown> | undefined;
@@ -713,6 +731,59 @@ function isDirectory(path: string): boolean {
     return statSync(path).isDirectory();
   } catch {
     return false;
+  }
+}
+
+async function resolveLocalFile(
+  item: QueueItem,
+  classified: ClassifiedDependency,
+  ctx: {
+    cwd: string;
+    downloader: Downloader;
+    skipDownload?: boolean;
+    edgesByIdentity: Map<string, EdgeRecord[]>;
+    visitOrder: string[];
+    localMaterializations: DownloadArgs[];
+    abs: string;
+  },
+): Promise<void> {
+  // Admission validates regular-file kind, suffix, and frontmatter fail-closed.
+  const admitted = admitLocalFile(ctx.abs);
+  const name = admitted.filename;
+  const identity = `local:${normalizeLocalIdentity(ctx.abs, ctx.cwd)}`;
+  const chain = [...item.chain, name];
+  const resolved_by = chain.join("->");
+
+  if (item.ancestorIdentities.includes(identity)) {
+    throw new ResolverError(
+      "RESOLVE_CYCLE",
+      `Circular dependency / cycle detected: ${resolved_by}->${name}`,
+    );
+  }
+
+  // Materialize an APM-style virtual-file snapshot only after the graph passes.
+  const dest = modulesCacheDest(ctx.cwd, identity.replace(/^local:/, "local_"));
+  if (!ctx.skipDownload) {
+    ctx.localMaterializations.push({ path: ctx.abs, dest, identity });
+  }
+
+  const record: EdgeRecord = {
+    identity,
+    kind: "local",
+    classified,
+    depth: item.depth,
+    chain,
+    name,
+    path: ctx.abs,
+    packageRoot: !ctx.skipDownload ? dest : ctx.abs,
+    artifactFormat: "openapm",
+    repo_url: identity,
+    marketplaceProvenance: item.marketplaceProvenance,
+  };
+  pushEdge(ctx.edgesByIdentity, record);
+
+  if (item.depth === 1) {
+    ctx.visitOrder.push(name);
   }
 }
 

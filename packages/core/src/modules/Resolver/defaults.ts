@@ -1,11 +1,12 @@
 import { spawn } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
 import type { Downloader, GitRemote, TagLister } from "./types.ts";
 import { identityToCacheDir, normalizeRepoIdentity } from "./identity.ts";
 import { APM_MODULES_DIR } from "./constants.ts";
+import { materializeLocalFileSnapshot } from "./localFile.ts";
 
 /**
  * Default TagLister via `git ls-remote --tags --refs`.
@@ -101,6 +102,10 @@ export function createDefaultDownloader(): Downloader {
       if (args.path && !args.repoUrl) {
         if (!existsSync(args.path)) {
           throw new Error(`Local path not found: ${args.path}`);
+        }
+        if (statSync(args.path).isFile()) {
+          materializeLocalFileSnapshot(args.path, args.dest);
+          return;
         }
         mkdirSync(args.dest, { recursive: true });
         cpSync(args.path, args.dest, { recursive: true });

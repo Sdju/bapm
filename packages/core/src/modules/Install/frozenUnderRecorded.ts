@@ -9,12 +9,8 @@
  */
 import { existsSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import {
-  computeCanonicalTreeSha256,
-  type LockedDependency,
-  type LockfileDocument,
-} from "@/modules/Lockfile";
-import type { ResolvedNode } from "@/modules/Resolver";
+import { type LockedDependency, type LockfileDocument } from "@/modules/Lockfile";
+import { computeLocalSourceContentHash, type ResolvedNode } from "@/modules/Resolver";
 import type { AttributedPrimitive } from "@/modules/Primitives";
 import { InstallError } from "./errors.ts";
 
@@ -131,7 +127,7 @@ function verifyLocalContentHash(
 
   let observed: string;
   try {
-    observed = computeCanonicalTreeSha256(root);
+    observed = computeLocalSourceContentHash(root);
   } catch (cause) {
     throw new InstallError(
       "INSTALL_FROZEN_UNDER_RECORDED",
