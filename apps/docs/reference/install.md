@@ -158,10 +158,10 @@ bapm: warning: LIFECYCLE_UNSUPPORTED: Package "lifecycle-leaf" declares a "lifec
 
 Корневой манифест и манифесты зависимостей могут объявлять LSP-серверы в `dependencies.lsp` (и `devDependencies.lsp`). bapm разворачивает их только в два хоста с нативной поддержкой:
 
-| Хост        | Файл                                                          | Форма                                      |
-| ----------- | ------------------------------------------------------------- | ------------------------------------------ |
-| Claude Code | `.claude/skills/apm-lsp/.claude-plugin/plugin.json`           | `{ "name": "apm-lsp", "lspServers": … }`   |
-| Copilot CLI | `.github/lsp.json`                                            | `{ "lspServers": … }`                      |
+| Хост        | Файл                                                | Форма                                    |
+| ----------- | --------------------------------------------------- | ---------------------------------------- |
+| Claude Code | `.claude/skills/apm-lsp/.claude-plugin/plugin.json` | `{ "name": "apm-lsp", "lspServers": … }` |
+| Copilot CLI | `.github/lsp.json`                                  | `{ "lspServers": … }`                    |
 
 Claude использует `extensionToLanguage` и `startupTimeout`; Copilot — `fileExtensions` и `warmupTimeoutMs`. bapm переводит канонические `extensionToLanguage` / `startupTimeout` в родную форму хоста. Пользовательские (user-global) LSP-конфиги bapm не пишет.
 

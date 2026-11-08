@@ -37,21 +37,21 @@ npm i -D @b-apm/cli @b-apm/integration-<id>
 
 ## Куда попадают файлы {#layout}
 
-| Агент       | Skills                  | Rules / instructions    | MCP                                          | LSP                                                             | `bapm compile`                    |
-| ----------- | ----------------------- | ----------------------- | -------------------------------------------- | --------------------------------------------------------------- | --------------------------------- |
-| Cursor      | `.agents/skills/`       | `.cursor/rules/`        | `.cursor/mcp.json`                           | —                                                               | `AGENTS.md`                       |
-| Claude Code | `.claude/skills/`       | `.claude/rules/`        | `.mcp.json`                                  | `.claude/skills/apm-lsp/.claude-plugin/plugin.json`              | `CLAUDE.md`                       |
-| Codex CLI   | `.agents/skills/`       | только через compile    | `.codex/config.toml`                         | —                                                               | `AGENTS.md`                       |
-| Copilot     | `.agents/skills/`       | `.github/instructions/` | `~/.copilot/mcp-config.json`                 | `.github/lsp.json`                                               | `.github/copilot-instructions.md` |
-| OpenCode    | `.opencode/skills/`     | только через compile    | `opencode.json`                              | —                                                               | `AGENTS.md`                       |
-| Windsurf    | `.agents/skills/`       | `.windsurf/rules/`      | `~/.codeium/windsurf/mcp_config.json`        | —                                                               | не поддерживается                 |
-| Gemini CLI  | `.agents/skills/`       | только через compile    | `.gemini/settings.json`                      | —                                                               | `GEMINI.md`                       |
-| Kiro        | `.kiro/skills/`         | `.kiro/steering/`       | `.kiro/settings/mcp.json`                    | —                                                               | `AGENTS.md`                       |
-| Grok Build  | `.grok/skills/`         | `.grok/rules/`          | не поддерживается                            | —                                                               | `AGENTS.md`                       |
-| Grok Bot    | `agent-data/workflows/` | не поддерживается       | не поддерживается                            | —                                                               | не поддерживается                 |
-| Hermes      | `.agents/skills/`       | только через compile    | `~/.hermes/config.yaml`                      | —                                                               | `AGENTS.md`                       |
-| IntelliJ    | не поддерживается       | не поддерживается       | `~/.config/github-copilot/intellij/mcp.json` | —                                                               | не поддерживается                 |
-| Antigravity | `.agents/skills/`       | `.agents/rules/`        | `.agents/mcp_config.json`                    | —                                                               | `AGENTS.md`                       |
+| Агент       | Skills                  | Rules / instructions    | MCP                                          | LSP                                                 | `bapm compile`                    |
+| ----------- | ----------------------- | ----------------------- | -------------------------------------------- | --------------------------------------------------- | --------------------------------- |
+| Cursor      | `.agents/skills/`       | `.cursor/rules/`        | `.cursor/mcp.json`                           | —                                                   | `AGENTS.md`                       |
+| Claude Code | `.claude/skills/`       | `.claude/rules/`        | `.mcp.json`                                  | `.claude/skills/apm-lsp/.claude-plugin/plugin.json` | `CLAUDE.md`                       |
+| Codex CLI   | `.agents/skills/`       | только через compile    | `.codex/config.toml`                         | —                                                   | `AGENTS.md`                       |
+| Copilot     | `.agents/skills/`       | `.github/instructions/` | `~/.copilot/mcp-config.json`                 | `.github/lsp.json`                                  | `.github/copilot-instructions.md` |
+| OpenCode    | `.opencode/skills/`     | только через compile    | `opencode.json`                              | —                                                   | `AGENTS.md`                       |
+| Windsurf    | `.agents/skills/`       | `.windsurf/rules/`      | `~/.codeium/windsurf/mcp_config.json`        | —                                                   | не поддерживается                 |
+| Gemini CLI  | `.agents/skills/`       | только через compile    | `.gemini/settings.json`                      | —                                                   | `GEMINI.md`                       |
+| Kiro        | `.kiro/skills/`         | `.kiro/steering/`       | `.kiro/settings/mcp.json`                    | —                                                   | `AGENTS.md`                       |
+| Grok Build  | `.grok/skills/`         | `.grok/rules/`          | не поддерживается                            | —                                                   | `AGENTS.md`                       |
+| Grok Bot    | `agent-data/workflows/` | не поддерживается       | не поддерживается                            | —                                                   | не поддерживается                 |
+| Hermes      | `.agents/skills/`       | только через compile    | `~/.hermes/config.yaml`                      | —                                                   | `AGENTS.md`                       |
+| IntelliJ    | не поддерживается       | не поддерживается       | `~/.config/github-copilot/intellij/mcp.json` | —                                                   | не поддерживается                 |
+| Antigravity | `.agents/skills/`       | `.agents/rules/`        | `.agents/mcp_config.json`                    | —                                                   | `AGENTS.md`                       |
 
 Agents, commands и hooks раскладываются в каталог агента (`.cursor/agents/`, `.claude/commands/` и т. п.), если агент их поддерживает. Неподдерживаемый тип пропускается с предупреждением `bapm: warning: …` в `stderr` — см. ниже.
 
