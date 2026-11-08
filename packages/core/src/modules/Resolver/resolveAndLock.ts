@@ -333,6 +333,155 @@ function normalizeLockedLocalPath(prevPath: string, cwd: string): string | undef
   return escapesProjectRoot(relPosix) || relPosix === "" ? undefined : relPosix;
 }
 
+type ExistingLocalIndex = {
+  byProjectPath: Map<string, LockedDependency>;
+  byName: Map<string, LockedDependency[]>;
+};
+
+function isExistingLocalRow(dep: LockedDependency): boolean {
+  const raw = dep as Record<string, unknown>;
+  const repo = typeof raw.repo_url === "string" ? raw.repo_url : "";
+  return (
+    raw.source === "local" ||
+    repo.startsWith("local:") ||
+    repo.startsWith("_local/") ||
+    (typeof raw.local_path === "string" && raw.local_path.length > 0)
+  );
+}
+
+/**
+ * Index APM/bapm local lock rows for rewrite matching. APM writes
+ * `repo_url: _local/<name>` with `local_path`; bapm writes `local:<rel>` with
+ * `path`, so matching cannot rely on repo identity alone.
+ */
+function buildExistingLocalIndex(
+  existing: LockfileDocument | null,
+  cwd: string,
+): ExistingLocalIndex {
+  const byProjectPath = new Map<string, LockedDependency>();
+  const byName = new Map<string, LockedDependency[]>();
+  for (const dep of existing?.dependencies ?? []) {
+    if (!isExistingLocalRow(dep)) continue;
+    const raw = dep as Record<string, unknown>;
+    for (const field of ["path", "local_path"] as const) {
+      const value = raw[field];
+      if (typeof value !== "string") continue;
+      const normalized = normalizeLockedLocalPath(value, cwd);
+      if (normalized) byProjectPath.set(normalized, dep);
+    }
+    const name = typeof raw.name === "string" ? raw.name : "";
+    if (name) {
+      const list = byName.get(name) ?? [];
+      list.push(dep);
+      byName.set(name, list);
+    }
+  }
+  return { byProjectPath, byName };
+}
+
+function findExistingLocal(
+  node: ResolvedNode,
+  index: ExistingLocalIndex,
+  byIdentity: Map<string, LockedDependency>,
+  cwd: string,
+): LockedDependency | undefined {
+  const direct = byIdentity.get(node.repo_url ?? node.identity);
+  if (direct && isExistingLocalRow(direct)) return direct;
+
+  const currentPath = node.path ? toProjectRelativeLockPath(node.path, cwd) : undefined;
+  if (currentPath) {
+    const byPath = index.byProjectPath.get(currentPath);
+    if (byPath) return byPath;
+  }
+
+  const byApmIdentity = byIdentity.get(`_local/${node.name}`);
+  if (byApmIdentity && isExistingLocalRow(byApmIdentity)) return byApmIdentity;
+
+  const nameMatches = index.byName.get(node.name) ?? [];
+  return nameMatches.length === 1 ? nameMatches[0] : undefined;
+}
+
+function stringifyResolvedBy(value: string | string[] | undefined): string | undefined {
+  if (Array.isArray(value)) {
+    const parts = value.map((part) => String(part).trim()).filter(Boolean);
+    return parts.length > 0 ? parts.join("->") : undefined;
+  }
+  const text = typeof value === "string" ? value.trim() : "";
+  return text ? text : undefined;
+}
+
+function resolvedBySegments(node: ResolvedNode): string[] {
+  const raw = (node as { resolved_by?: unknown }).resolved_by;
+  if (Array.isArray(raw)) return raw.map((part) => String(part).trim()).filter(Boolean);
+  const text = typeof raw === "string" ? raw.trim() : "";
+  if (!text) return [];
+  return text
+    .split("->")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Parent package name from the resolve chain (`root->parent->child`).
+ * APM stores the parent identity in `declaring_parent`; bapm's chain segment
+ * is the declaring package's manifest name, the closest available identity.
+ */
+function declaringParentOf(node: ResolvedNode): string | undefined {
+  const segments = resolvedBySegments(node);
+  if (segments.length < 2) return undefined;
+  let parentIndex = segments.length - 2;
+  // Be tolerant of a chain that omits the leaf segment.
+  if (segments[parentIndex] === node.name && parentIndex > 0) parentIndex -= 1;
+  return segments[parentIndex] || undefined;
+}
+
+/**
+ * Local path wire value. Direct deps use the project-relative path (same as
+ * `path`). Transitive deps prefer a path relative to the declaring package
+ * (APM `local_path` semantics); `path` remains the project-relative alias.
+ */
+function localPathForLock(
+  node: ResolvedNode,
+  nodes: ResolvedNode[],
+  projectRelative: string | undefined,
+): string | undefined {
+  if (node.depth <= 1 || !node.path) return projectRelative;
+  const parentName = declaringParentOf(node);
+  if (!parentName) return projectRelative;
+  const parentCandidates = nodes.filter(
+    (candidate) =>
+      candidate !== node &&
+      candidate.name === parentName &&
+      candidate.depth === node.depth - 1 &&
+      (candidate.path || candidate.packageRoot),
+  );
+  if (parentCandidates.length !== 1) return projectRelative;
+  const parentRoot = parentCandidates[0]!.path ?? parentCandidates[0]!.packageRoot!;
+  const rel = toPosixPath(relative(resolve(parentRoot), resolve(node.path)));
+  if (!rel || isAbsolutePortablePath(rel)) return projectRelative;
+  return rel;
+}
+
+function computeLocalContentHash(node: ResolvedNode): string {
+  const root = node.packageRoot ?? node.path;
+  if (!root || !existsSync(root)) {
+    throw new ResolverError(
+      "RESOLVE_FAILED",
+      `Cannot compute content_hash: missing local package tree for ${node.name} (${node.repo_url ?? node.identity})`,
+      { details: { name: node.name, packageRoot: root } },
+    );
+  }
+  try {
+    return computeCanonicalTreeSha256(root);
+  } catch (cause) {
+    throw new ResolverError(
+      "RESOLVE_FAILED",
+      `Failed to compute content_hash for local entry ${node.name} (${node.repo_url ?? node.identity})`,
+      { cause, details: { name: node.name, packageRoot: root } },
+    );
+  }
+}
+
 function buildLockDocument(
   nodes: ResolvedNode[],
   existing: LockfileDocument | null,
@@ -340,6 +489,7 @@ function buildLockDocument(
 ): LockfileDocument {
   const deps: LockedDependency[] = [];
   const existingByIdentity = new Map<string, LockedDependency>();
+  const existingLocal = buildExistingLocalIndex(existing, cwd);
   for (const d of existing?.dependencies ?? []) {
     const repo = String(d.repo_url ?? "");
     if (repo) existingByIdentity.set(repo, d);
@@ -347,7 +497,7 @@ function buildLockDocument(
 
   for (const n of nodes) {
     if (n.kind === "local") {
-      const prev = existingByIdentity.get(n.repo_url ?? n.identity);
+      const prev = findExistingLocal(n, existingLocal, existingByIdentity, cwd);
       const entry: LockedDependency = {
         name: n.name,
         repo_url: n.repo_url ?? n.identity,
@@ -355,14 +505,45 @@ function buildLockDocument(
         version: n.version,
       };
       if (prev?.deployed_file_hashes) entry.deployed_file_hashes = prev.deployed_file_hashes;
-      const pathField = (prev as Record<string, unknown> | undefined)?.path;
+      const prevPathField = (prev as Record<string, unknown> | undefined)?.path;
+      const prevLocalPathField = (prev as Record<string, unknown> | undefined)?.local_path;
       const prevPath =
-        typeof pathField === "string" ? normalizeLockedLocalPath(pathField, cwd) : undefined;
+        typeof prevPathField === "string"
+          ? normalizeLockedLocalPath(prevPathField, cwd)
+          : undefined;
+      // APM lock rows may carry only `local_path` (direct deps are project-relative).
+      const prevLocalPath =
+        typeof prevLocalPathField === "string"
+          ? normalizeLockedLocalPath(prevLocalPathField, cwd)
+          : undefined;
       const currentPath = n.path ? toProjectRelativeLockPath(n.path, cwd) : undefined;
-      const lockPath = prevPath ?? currentPath;
+      const lockPath = prevPath ?? prevLocalPath ?? currentPath;
       if (lockPath) {
         (entry as Record<string, unknown>).path = lockPath;
       }
+
+      const resolvedBy = stringifyResolvedBy(n.resolved_by);
+      const declaringParent = declaringParentOf(n);
+      const localPath = localPathForLock(n, nodes, lockPath);
+      if (resolvedBy) (entry as Record<string, unknown>).resolved_by = resolvedBy;
+      if (declaringParent) {
+        (entry as Record<string, unknown>).declaring_parent = declaringParent;
+      }
+      if (localPath) (entry as Record<string, unknown>).local_path = localPath;
+      (entry as Record<string, unknown>).package_type = "local";
+      (entry as Record<string, unknown>).depth = n.depth;
+      // `is_dev` has no reliable source in the local resolve graph yet. Preserve
+      // an APM-authored value on rewrite instead of inventing a guess.
+      const prevIsDev = (prev as Record<string, unknown> | undefined)?.is_dev;
+      if (prevIsDev === true) (entry as Record<string, unknown>).is_dev = true;
+      // APM-only absolute anchor: carry when present so a round-trip does not
+      // discard evidence bapm cannot recompute.
+      const prevAnchor = (prev as Record<string, unknown> | undefined)?.anchored_local_path;
+      if (typeof prevAnchor === "string" && prevAnchor) {
+        (entry as Record<string, unknown>).anchored_local_path = prevAnchor;
+      }
+      entry.content_hash = computeLocalContentHash(n);
+
       applyMarketplaceProvenance(entry, n);
       if (n.personalLockScope) {
         deps.push(stampPersonalScope(entry as Record<string, unknown>) as LockedDependency);
