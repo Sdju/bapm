@@ -12,12 +12,17 @@ Plain-zip producer archive for OpenAPM Producer (M7): pack, extract, sc-007 secr
 | `extractPackArchive`, `unpackArchive`, `extractPack`              | extract                       |
 | `checkReleaseTag`, `checkRelease`, `runCheckRelease`              | pr-004 gate                   |
 | `validatePackStrictMetadata`, `validateMarketplaceStrictMetadata` | `--strict-metadata` preflight |
+| `assertPortableAgentPluginPackSet`                                | portable declared-path guard  |
 | `isSecretPackPath`                                                | sc-007                        |
 | `PackError`, types                                                | errors / options              |
 
 ## Notes
 
 - Archive format is **plain zip** (not APM `--format plugin`).
+- `--agent-plugins`: portable `plugin.json` root; the pack set preserves `commands/`,
+  `hooks/`, `agents/`, `skills/`, root `mcp.json`, native manifests, and sibling assets
+  at their original relative paths. Declared paths are validated against the collected
+  set; missing / traversal / symlink / `.bapmignore`-excluded declarations fail closed.
 - Secrets: `.env`, `.env.*`, `*.pem`, `*.key`, `id_rsa`, `id_ed25519` — fail closed before durable zip.
 - `--check-release`: compare tag (optional `v`) to manifest `version`; never create/push tags.
 - pr-005: unsigned tags are advisory warnings only in M7.

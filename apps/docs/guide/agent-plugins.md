@@ -56,6 +56,8 @@ bapm pack --agent-plugins
 
 Собирает архив плагина. Это не публикация в маркетплейс: для маркетплейсов Claude Code и Codex см. [Сборка маркетплейса](/guide/situations/marketplace-pack).
 
+Архив сохраняет portable-раскладку целиком: `plugin.json`, `mcp.json`, объявленные `commands` и `hooks`, `skills/` с вспомогательными файлами, `agents/`, нативные manifest-файлы и скрипты рядом с хуками. Пути в `plugin.json` не переписываются. Перед записью zip bapm проверяет declared `commands` / `hooks` / `skills`: отсутствующий путь, traversal, symlink или путь, исключённый `.bapmignore`, дают ошибку и не создают архив. `.bapmignore` подходит для authoring-файлов, но не для объявленных компонентов плагина.
+
 ## Ограничения
 
 - Нет изоляции: хуки и MCP плагина исполняются с вашими правами.

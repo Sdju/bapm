@@ -215,6 +215,39 @@ When collecting the default pack file set, the system MUST omit `bapm.local.lock
 - **WHEN** pack `--archive` runs on a conforming project that also has `bapm.local.lock.yaml`
 - **THEN** the resulting zip MUST NOT contain a member named `bapm.local.lock.yaml`
 
+### Requirement: Portable Agent Plugin pack preserves declared components
+
+When `pack --agent-plugins` runs against a portable Agent Plugins v1 root, the archive MUST preserve the portable tree layout: root `plugin.json` and `mcp.json`, declared `commands` / `hooks` paths at their original relative locations, complete declared `skills/<name>/` directories including auxiliary files, `agents/` content, native manifest files (for example `.claude-plugin/plugin.json`), and sibling assets such as hook scripts. The producer MUST NOT relocate these files or rewrite hook/command paths in `plugin.json`, because the preserved relative layout is the consumer contract.
+
+#### Scenario: Hook script and sibling asset round-trip
+
+- **WHEN** a portable root declares a hook JSON that references a sibling script and also contains a declared command, skill directory, `agents/`, `mcp.json`, and a native manifest
+- **THEN** `pack --agent-plugins` MUST write a zip that, after extraction, still contains all of those files at the same relative paths and the extracted root MUST pass consumer declared-path and skill discovery
+
+#### Scenario: Archive can be repacked
+
+- **WHEN** a pack-produced portable archive is extracted and packed again with `--agent-plugins`
+- **THEN** the second archive MUST preserve the same declared paths and sibling assets
+
+### Requirement: Portable Agent Plugin pack fails closed on invalid declared paths
+
+Before writing a portable Agent Plugin zip, the producer MUST resolve every `plugin.json` declared `commands` / `hooks` path and every declared skill directory under the plugin root. A missing path, path traversal, escaping symlink, symlink entry, or a declared path/file omitted from the collected pack set by `.bapmignore` or hard pack rules MUST fail with a non-zero outcome and MUST NOT leave a successful archive. Undeclared authoring files MAY still be omitted by `.bapmignore`.
+
+#### Scenario: Missing declared path fails before write
+
+- **WHEN** `plugin.json` declares a command file that does not exist
+- **THEN** `pack --agent-plugins` MUST fail with a diagnostic naming the declared path and MUST NOT write a zip
+
+#### Scenario: Ignored declared path fails closed
+
+- **WHEN** `.bapmignore` matches a declared command, or an auxiliary file inside a declared skill directory
+- **THEN** `pack --agent-plugins` MUST fail and MUST NOT write a zip
+
+#### Scenario: Traversal or symlink declared path fails closed
+
+- **WHEN** a declared `commands` / `hooks` path escapes the plugin root via `..` or a symbolic link
+- **THEN** `pack --agent-plugins` MUST fail before writing the archive
+
 ### Requirement: Pack collection honors .bapmignore
 
 When collecting the default pack file set for M7 plain-zip archive mode (including dry-run validation of the collect set), the system MUST apply project-root `.bapmignore` rules defined by `pack-bapmignore`. Matched paths MUST be silently omitted from the zip. Existing hard excludes, personal-omit basenames, symlink refuse, and secret-pattern refuse for non-ignored paths MUST remain unchanged. Pack MUST still require a dual-read root manifest in the collected set after ignore application.

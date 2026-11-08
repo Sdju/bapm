@@ -61,6 +61,20 @@ APM использует exit `5`, когда не может подтверди
 
 Диагностика содержит путь поля, например `bapm.yml#/version`, `plugin.json#/author/name` или `marketplace.packages[0].description`. Проверка выполняется до записи zip и `marketplace.json`, поэтому при exit `5` артефактов не остаётся.
 
+### `--agent-plugins`: portable Agent Plugin archive
+
+`bapm pack --agent-plugins` собирает plain-zip с portable-деревом Agent Plugins v1. В архив попадают (если они есть в корне и не исключены `.bapmignore`):
+
+- корневые `plugin.json` и `mcp.json`;
+- объявленные в `plugin.json` `commands` и `hooks` — по тем же относительным путям, что и в исходном плагине;
+- `skills/` вместе с `SKILL.md` и вспомогательными файлами skill-каталогов;
+- `agents/` и прочие sibling-assets (скрипты и файлы рядом с hooks/commands);
+- нативные manifest-файлы вроде `.claude-plugin/plugin.json`.
+
+Пути в `plugin.json` не переписываются: архив сохраняет исходную раскладку, поэтому consumer находит declared paths после распаковки.
+
+Producer проверяет declared `commands` / `hooks` / `skills` до записи zip. Отсутствующий путь, path traversal, symlink или путь, вырезанный `.bapmignore` / hard-exclude-правилами, дают non-zero exit и не оставляют архив. `.bapmignore` можно использовать для authoring-файлов (`README.md`, `docs/**`), но не для компонентов, которые объявлены в `plugin.json`.
+
 ### Пример `.bapmignore`
 
 ```gitignore

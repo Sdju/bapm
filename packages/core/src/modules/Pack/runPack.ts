@@ -19,6 +19,7 @@ import {
   ensureCwdExists,
 } from "./collect.ts";
 import { PackError } from "./errors.ts";
+import { assertPortableAgentPluginPackSet } from "./portable.ts";
 import { validateMarketplaceStrictMetadata, validatePackStrictMetadata } from "./strictMetadata.ts";
 import type { RunPackOptions, RunPackResult } from "./types.ts";
 import { createZipArchive } from "./zip.ts";
@@ -110,6 +111,7 @@ export async function runPack(options: RunPackOptions = {}): Promise<RunPackResu
 
     const entries = collectPackFiles(cwd);
     assertProjectHasContent(entries, { agentPlugins: true });
+    assertPortableAgentPluginPackSet({ root: cwd, entries });
     return writePackArchive({
       options,
       cwd,
