@@ -31,7 +31,7 @@ export function loadBaseManifest(options: LoadManifestOptions = {}): LoadManifes
   }
 
   const raw = loadYamlDocument(text, discovered.path);
-  const { document, warnings } = parseManifestDocument(raw, {
+  const { document, warnings, contract } = parseManifestDocument(raw, {
     allowReplace: options.allowReplace,
   });
 
@@ -40,6 +40,7 @@ export function loadBaseManifest(options: LoadManifestOptions = {}): LoadManifes
     sourcePath: discovered.path,
     sourceFilename: discovered.filename,
     ...(warnings.length > 0 ? { warnings } : {}),
+    contract,
   };
 }
 
@@ -67,6 +68,7 @@ export function loadEffectiveManifest(options: LoadManifestOptions = {}): LoadMa
     sourceFilename: base.sourceFilename,
     localPath: local.localPath,
     ...(base.warnings !== undefined ? { warnings: base.warnings } : {}),
+    contract: base.contract,
   };
 }
 

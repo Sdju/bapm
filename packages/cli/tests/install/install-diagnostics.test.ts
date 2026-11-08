@@ -61,6 +61,37 @@ describe("CLI install · diagnostics visibility", () => {
     expect(existsSync(join(project.cwd, ".opencode", "hooks.json"))).toBe(false);
   });
 
+  test("unknown top-level manifest key prints a warning during install", async () => {
+    project = createTempProject();
+    linkCursorIntegration(project.cwd);
+    writeLeafSkill(project.cwd);
+    writeText(
+      project.cwd,
+      "bapm.yml",
+      [
+        "name: unknown-key-warning",
+        "version: 0.0.1",
+        "target: cursor",
+        "future_feature_flag: true",
+        "dependencies:",
+        "  apm:",
+        "    - path: ./leaf",
+        "",
+      ].join("\n"),
+    );
+
+    const { result, stderr, combined } = await runInProject(project.cwd, [
+      "install",
+      "--target",
+      "cursor",
+    ]);
+
+    expect(result, combined).toBe(0);
+    expect(stderr.join("\n")).toMatch(/bapm: warning:/i);
+    expect(stderr.join("\n")).toMatch(/future_feature_flag/);
+    expect(stderr.join("\n")).toMatch(/x-\[a-z\]|vendor extension|unknown top-level/i);
+  });
+
   test("targets {cursor} + --target claude fails with empty intersection and writes no claude files", async () => {
     project = createTempProject();
     const cursorSpec = linkCursorIntegration(project.cwd);

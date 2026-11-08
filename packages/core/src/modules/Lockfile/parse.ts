@@ -217,6 +217,27 @@ function validateDependencyEntry(entry: unknown, path: string): LockedDependency
     }
   }
 
+  if ("extensions" in dep) {
+    const rawExtensions = dep.extensions;
+    if (
+      rawExtensions !== null &&
+      typeof rawExtensions === "object" &&
+      !Array.isArray(rawExtensions) &&
+      Object.keys(rawExtensions as Record<string, unknown>).length > 0
+    ) {
+      // APM `_copy_extension_map`: string keys, declaration order retained.
+      dep.extensions = Object.fromEntries(
+        Object.entries(rawExtensions as Record<string, unknown>).map(([key, value]) => [
+          String(key),
+          value,
+        ]),
+      );
+    } else {
+      // Non-mapping / empty values carry no evidence; omit on round-trip.
+      delete dep.extensions;
+    }
+  }
+
   if (dep.deployed_file_hashes != null) {
     dep.deployed_file_hashes = normalizeHashMap(dep.deployed_file_hashes) as Record<string, string>;
   }

@@ -16,7 +16,7 @@ const OVERLAY_ALLOWLIST = new Set(["active", "target", "targets", "env", "regist
 
 export type LocalOverlayFields = {
   active?: ActiveEntry[];
-  target?: string | TargetIntegrationMap;
+  target?: string | string[] | TargetIntegrationMap;
   targets?: string[] | TargetIntegrationMap;
   env?: Record<string, string>;
   registries?: Record<string, RegistryEntry | string>;

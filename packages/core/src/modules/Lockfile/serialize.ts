@@ -127,6 +127,7 @@ function dependencyToPlain(dep: LockedDependency): Record<string, unknown> {
     "constraint",
     "resolved_tag",
     "resolved_at",
+    "extensions",
     "tree_sha256",
     "virtual_path",
     "depth",

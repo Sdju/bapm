@@ -43,6 +43,21 @@
 
 bapm читает и пишет `lockfile_version: "1"` и `"2"`. Версия `"3"` появилась в APM 0.35 для root-правил `replace:` (секция `replacements:` и per-dependency `replacement:`). bapm не реализует replacement: такой lock отвергается с `LOCKFILE_V3_UNSUPPORTED`, а манифест с непустым `replace:` — с `MANIFEST_REPLACE_UNSUPPORTED`, чтобы не установить upstream вместо настроенного fork/local checkout. Уберите `replace:` и перегенерируйте lock командой `bapm lock` либо используйте для этого проекта APM 0.35+.
 
+## Immutable literal refs
+
+Если два ребра графа требуют один и тот же пакет с разными literal `git` + `ref`, bapm не выбирает одно из них молча. Resolve сверяет коммиты: разные имена ref допустимы, только если они указывают на один коммит; иначе установка падает с `RESOLVE_IMMUTABLE_CONFLICT` и печатает обе цепочки, оба ref и оба коммита. Приведите refs в манифестах к одному коммиту и перегенерируйте lock. Semver-диапазоны по-прежнему разрешаются через intersection-pick.
+
+## Расширения зависимости в lock
+
+Верхнеуровневые `x-*` поля манифеста зависимости копируются в строку lock как `extensions` (APM-поле). Если расширений нет, поле не пишется. Значения не интерпретируются; поле сохраняется при чтении и перезаписи lock.
+
+```yaml
+- repo_url: github.com/acme/tools
+  resolved_commit: "…"
+  extensions:
+    x-acme-owner: platform
+```
+
 ## Локальные записи в lock
 
 Для пакетов с источником `local` / `path:` bapm пишет строку, совместимую по полям с APM 0.35, но сохраняет свои прежние alias-поля:

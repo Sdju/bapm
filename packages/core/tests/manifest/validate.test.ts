@@ -158,6 +158,19 @@ describe("M1 validate — extensions / unknowns (read-side; no rewrite)", () => 
     expect(doc.future_feature_flag).toBe(true);
   });
 
+  test("unknown top-level key emits a non-blocking MF_* warning", () => {
+    const result = loadFixture("valid-unknown-toplevel.yml");
+    const warnings = (
+      result as { warnings?: Array<{ code: string; message: string; path?: string }> }
+    ).warnings;
+    expect(warnings).toBeTruthy();
+    const warning = warnings!.find((w) => w.code.startsWith("MF_"));
+    expect(warning).toBeTruthy();
+    expect(warning!.path).toBe("future_feature_flag");
+    expect(warning!.message).toMatch(/future_feature_flag/);
+    expect(warning!.message).toMatch(/x-\[a-z\]|vendor extension/i);
+  });
+
   test("x-* and default_host accepted and retained", () => {
     const result = loadFixture("x-extension-roundtrip.yml");
     const doc = documentOf(result);
@@ -165,6 +178,13 @@ describe("M1 validate — extensions / unknowns (read-side; no rewrite)", () => 
     expect(doc.default_host).toBe("github.com");
     expect(doc["x-acme-telemetry"]).toBeTruthy();
     expect(doc["x-vendor-experimental"]).toBeTruthy();
+  });
+
+  test("x-* extensions do not produce unknown-key warnings", () => {
+    const result = loadFixture("x-extension-roundtrip.yml");
+    const warnings =
+      (result as { warnings?: Array<{ code: string; path?: string }> }).warnings ?? [];
+    expect(warnings.filter((w) => w.code === "MF_006_UNKNOWN_TOP_LEVEL")).toEqual([]);
   });
 
   test("workspaces rejected (mf-021)", () => {

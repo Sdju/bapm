@@ -445,3 +445,41 @@ When the modules-cache destination for a git package already holds a checkout of
 
 - **WHEN** the destination directory exists but contains files that are not a git checkout of the requested commit
 - **THEN** download MUST replace it and the result MUST be a checkout at the requested commit
+
+### Requirement: Immutable literal refs must agree on a commit
+
+Before deduplicating a package identity, the system MUST admit every literal `git` + `ref` requirement as immutable. When two edges to the same identity (including the same virtual path) declare different literal refs, they MAY proceed only when both resolve to the same commit. When their commits differ, resolve MUST fail closed with a clear `RESOLVE_IMMUTABLE_CONFLICT` diagnostic that names both chains, both refs, and both commits and advises aligning the refs. Identical literal refs MUST pass without an equivalence failure. Distinct virtual paths are distinct identities for this check. Semver range edges MUST NOT be subjected to this admission check; their existing intersection-pick policy MUST remain unchanged.
+
+#### Scenario: Conflicting literal refs fail closed
+
+- **WHEN** two edges to one package identity request `#main` and `#v1` and those refs resolve to different commits
+- **THEN** resolve MUST fail with an immutable-conflict diagnostic listing both chains/refs/commits
+
+#### Scenario: Equivalent refs pass
+
+- **WHEN** two different literal ref names resolve to the same commit
+- **THEN** resolve MUST succeed and produce one package node
+
+#### Scenario: Same literal ref passes
+
+- **WHEN** two edges declare the same literal ref
+- **THEN** resolve MUST NOT fail for immutable reasons
+
+#### Scenario: Semver collisions keep intersection-pick
+
+- **WHEN** two edges declare non-overlapping semver ranges for one identity
+- **THEN** resolve MUST still fail with the existing empty-intersection diagnostic, not the immutable-conflict diagnostic
+
+### Requirement: Dependency manifest extensions reach the lock row
+
+When resolve reads a dependency package manifest, its top-level `x-*` extension fields MUST be carried to the resolved node and written as the lock row `extensions` mapping (APM req-ext-003 wire). The field MUST be omitted when the dependency declares no extensions. Registry rows whose package manifest was not read MAY retain prior lock evidence on rewrite. Values MUST NOT be interpreted and MUST NOT affect identity, policy, or download.
+
+#### Scenario: Git dependency extensions copied
+
+- **WHEN** a resolved git package manifest declares `x-acme-owner: platform`
+- **THEN** its lock row MUST carry `extensions: { x-acme-owner: platform }`
+
+#### Scenario: Extension-free dependency omits field
+
+- **WHEN** a resolved package manifest declares no `x-*` keys
+- **THEN** its lock row MUST NOT carry `extensions`
