@@ -4,7 +4,8 @@
  * ## Public API
  *
  * - `cacheInfo` / `getCacheInfo` / `modulesCacheInfo`
- * - `cacheClean` / `cleanModulesCache`
+ * - `cacheClean` / `cleanModulesCache` — project modules-cache only
+ * - `sharedGitCacheInfo`, `sharedGitCacheClean` — opt-in shared mirror cache
  *
  * ## Example
  *
@@ -29,3 +30,26 @@ export {
   cacheClean,
   cleanModulesCache,
 } from "./cacheOps.ts";
+
+export type {
+  SharedCacheEnv,
+  SharedGitCacheCleanOptions,
+  SharedGitCacheCleanResult,
+  SharedGitCacheConfig,
+  SharedGitCacheInfoOptions,
+  SharedGitCacheInfoResult,
+  SharedGitCacheOverride,
+  SharedGitCacheReason,
+  SharedGitMirrorEntry,
+} from "@/modules/SharedCache";
+
+export {
+  BAPM_CACHE_DIR_ENV,
+  BAPM_NO_CACHE_ENV,
+  SHARED_GIT_CACHE_SUBDIR,
+  isCacheableGitRepoUrl,
+  resolveSharedGitCacheConfig,
+  sharedGitCacheClean,
+  sharedGitCacheInfo,
+  sharedGitMirrorName,
+} from "@/modules/SharedCache";

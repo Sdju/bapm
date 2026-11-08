@@ -57,6 +57,7 @@ export {
   createPeelAwareTagLister,
   parseLsRemoteTagsWithPeel,
 } from "./defaults.ts";
+export type { DefaultDownloaderOptions } from "./defaults.ts";
 
 export type {
   ClassifiedDependency,

@@ -137,6 +137,21 @@ env:
 
 Не кладите секреты в `env` файла `bapm.yml`: он в git. Как значения попадают в конфиги агента и чем это грозит: [MCP и переменные окружения](/guide/manifest-dependencies#mcp-и-переменные-окружения).
 
+## Shared git cache (opt-in)
+
+По умолчанию bapm клонирует git-зависимости прямо в `apm_modules`, без общего кеша. Чтобы несколько проектов на машине переиспользовали bare mirror, задайте корень кеша:
+
+```bash
+export BAPM_CACHE_DIR="$HOME/.cache/bapm"
+bapm install
+```
+
+Layout: `<BAPM_CACHE_DIR>/git/<sha256(normalized repo url)>.git`. Один mirror на репозиторий, не на ref. Local `path`, `file://` и `local:` источники не кешируются. Cache не меняет ключи `apm_modules` и изоляцию identity (rs-016).
+
+Отключить использование кеша в одном запуске или в CI можно `BAPM_NO_CACHE=1`; `BAPM_CACHE_DIR` при этом можно оставить заданным. При ошибке кеша install печатает warning и делает обычный clone, поэтому opt-in не должен ломать установку.
+
+Посмотреть путь/размер и очистить только mirrors: `bapm cache info`, `bapm cache info --shared`, `bapm cache clean --shared -y`. Обычный `bapm cache clean -y` по-прежнему очищает `apm_modules`. Подробнее: [cache](/reference/cache).
+
 ## Какие правки делать вручную
 
 | Задача                            | Как                                                                                                       |
