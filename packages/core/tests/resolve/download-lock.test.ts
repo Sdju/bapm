@@ -100,7 +100,7 @@ describe("M3 resolveAndLock — download + lock write", () => {
     writeLock(
       project.cwd,
       "bapm.lock.yaml",
-      `lockfile_version: "1"\ndependencies:\n  - repo_url: github.com/example/one\n    resolved_commit: "${COMMIT_MAIN}"\n`,
+      `lockfile_version: "1"\ndependencies:\n  - repo_url: github.com/example/one\n    resolved_commit: "${COMMIT_MAIN}"\n    resolved_ref: main\n`,
     );
     await resolveAndLock({
       cwd: project.cwd,
@@ -113,6 +113,38 @@ describe("M3 resolveAndLock — download + lock write", () => {
     expect(ports.tagListCalls.length).toBe(0);
     // materialize MAY still download if modules missing
     expect(existsSync(join(project.cwd, APM_MODULES_DIR))).toBe(true);
+  });
+
+  test("warm replay — changed literal ref re-resolves instead of replaying old pin", async () => {
+    project = createTempProject();
+    const oldCommit = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const newCommit = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    const ports = createFakePorts({ commitsByRef: { v2: newCommit } });
+    writeManifest(
+      project.cwd,
+      "bapm.yml",
+      `name: warm-ref-drift\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/one.git\n      ref: v2\n`,
+    );
+    writeLock(
+      project.cwd,
+      "bapm.lock.yaml",
+      `lockfile_version: "1"\ndependencies:\n  - repo_url: github.com/example/one\n    resolved_commit: "${oldCommit}"\n    resolved_ref: v1\n`,
+    );
+
+    await resolveAndLock({
+      cwd: project.cwd,
+      updateRefs: false,
+      gitRemote: ports.gitRemote,
+      tagLister: ports.tagLister,
+      downloader: ports.downloader,
+    });
+
+    const deps = depsOf(lockOf(loadLockfile({ cwd: project.cwd })));
+    const one = deps.find((d) => String(d.repo_url).includes("example/one"));
+    expect(one).toBeTruthy();
+    expect(String(one!.resolved_ref)).toBe("v2");
+    expect(String(one!.resolved_commit)).toBe(newCommit);
+    expect(ports.lsRemoteCalls.some((c) => c.includes("#v2"))).toBe(true);
   });
 
   test("semver constraint drift — lock ^1.0.0 vs manifest ^2.0.0 re-resolves (rs-004)", async () => {

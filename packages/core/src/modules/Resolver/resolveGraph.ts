@@ -94,6 +94,8 @@ type EdgeRecord = {
 type WarmPin = {
   resolved_commit?: string;
   constraint?: string;
+  /** Pin identity recorded at resolve time (literal ref / picked tag). */
+  resolved_ref?: string;
   resolved_tag?: string;
   resolved_at?: string;
   repo_url: string;
@@ -417,6 +419,7 @@ function indexWarmPins(
       repo_url: repo,
       resolved_commit: typeof d.resolved_commit === "string" ? d.resolved_commit : undefined,
       constraint: typeof d.constraint === "string" ? d.constraint : undefined,
+      resolved_ref: typeof d.resolved_ref === "string" ? d.resolved_ref : undefined,
       resolved_tag: typeof d.resolved_tag === "string" ? d.resolved_tag : undefined,
       resolved_at: typeof d.resolved_at === "string" ? d.resolved_at : undefined,
       name: typeof d.name === "string" ? d.name : undefined,
@@ -915,8 +918,12 @@ function warmConstraintMatchesLiteral(warm: WarmPin | undefined, ref: string): b
     // Drift check for semver handled in git-semver branch
     return false;
   }
-  // Warm replay for literal: reuse without network when pin present (rs-015)
-  void ref;
+  // Warm replay for literal: reuse without network when the pinned ref is the
+  // same literal the manifest asks for (rs-015). A changed ref must re-resolve
+  // so a warm install never keeps the old commit under a new resolved_ref.
+  const pinned = warm.resolved_ref?.trim() ?? "";
+  if (pinned !== "") return pinned === ref.trim();
+  // Legacy lock without resolved_ref: no evidence of drift — keep warm replay.
   return true;
 }
 
