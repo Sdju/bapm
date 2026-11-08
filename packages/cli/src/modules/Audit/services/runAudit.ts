@@ -125,10 +125,13 @@ export function formatAuditHelp(deps: LifecycleCliDeps): string {
   return `${deps.name} audit — Integrity checks
 
 Usage:
-  bapm audit --ci [-f text|json|sarif] [-o path]
+  bapm audit [--ci] [-f text|json|sarif] [-o path]
+
+The integrity gate is always on: missing lock, missing deployed files, and
+hash/tree mismatches exit non-zero with or without --ci.
 
 Options:
-  --ci              CI gate: lock present + deployed presence + hash re-verify
+  --ci              Accepted for APM script compatibility; the gate is always enabled
   -f, --format      Output format: text (default), json, or sarif
   -o, --output      Write json/sarif report to file (mkdir parents); text always prints to stdout
 `;
