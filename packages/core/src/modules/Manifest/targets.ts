@@ -14,6 +14,7 @@ export const CANONICAL_TARGET_TOKENS = new Set([
   "opencode",
   "windsurf",
   "kiro",
+  "grok-bot",
   "grok-build",
   "agent-skills",
   "all",

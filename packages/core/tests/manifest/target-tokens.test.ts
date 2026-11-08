@@ -25,6 +25,7 @@ const PUBLISHED_HOST_IDS = [
   "opencode",
   "windsurf",
   "kiro",
+  "grok-bot",
   "grok-build",
   "agent-skills",
 ] as const;
@@ -62,7 +63,7 @@ describe("published host ids are valid manifest tokens", () => {
     ]);
   });
 
-  test.each(["kiro", "grok-build"] as const)("%s object-map key is retained", (id) => {
+  test.each(["kiro", "grok-bot", "grok-build"] as const)("%s object-map key is retained", (id) => {
     const spec = `@b-apm/integration-${id}`;
     const doc = parse({ targets: { [id]: spec } });
     expect(doc.targets).toEqual({ [id]: spec });

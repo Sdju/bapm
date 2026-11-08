@@ -50,7 +50,7 @@ Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют о
 | Copilot                             | `.github/copilot-instructions.md` | всё, кроме instructions                   |
 | Gemini CLI                          | `GEMINI.md`                       | только instructions                       |
 
-Число в `would write … (N primitives)` считается до этого фильтра, поэтому может быть больше, чем реально попадёт в файл.
+Число в `would write … (N primitives)` считается до этого фильтра, поэтому может быть больше, чем реально попадёт в файл. Grok Bot и Windsurf `compile` не поддерживают.
 
 ## Что нужно знать
 

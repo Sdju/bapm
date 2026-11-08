@@ -12,6 +12,7 @@ export const CANONICAL_HOST_IDS = [
   "copilot",
   "windsurf",
   "kiro",
+  "grok-bot",
   "grok-build",
   "antigravity",
   "agent-skills",

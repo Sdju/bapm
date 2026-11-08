@@ -21,10 +21,11 @@ npm i -D @b-apm/cli @b-apm/integration-<id>
 | Gemini CLI     | `gemini`       | `@b-apm/integration-gemini`       | `.gemini/` или `GEMINI.md`                                                           |
 | Kiro           | `kiro`         | `@b-apm/integration-kiro`         | `.kiro/`                                                                             |
 | Grok Build     | `grok-build`   | `@b-apm/integration-grok-build`   | `.grok/`                                                                             |
+| Grok Bot       | `grok-bot`     | `@b-apm/integration-grok-bot`     | нет, только `--target` или `active`                                                  |
 | Antigravity    | `antigravity`  | `@b-apm/integration-antigravity`  | нет, только `--target` или `active`                                                  |
 | Agent Skills   | `agent-skills` | `@b-apm/integration-agent-skills` | нет, только `--target` или `active`                                                  |
 
-`agent-skills` кладёт только skills в `.agents/skills/` и подходит для агентов, которые читают этот общий каталог, но своей интеграции не имеют.
+`agent-skills` кладёт только skills в `.agents/skills/` и подходит для агентов, которые читают этот общий каталог, но своей интеграции не имеют. `grok-bot` — explicit-only хост Grok Bot: только skills в `agent-data/workflows/`, без автоопределения, MCP и `compile`; bapm поддерживает его только в project scope.
 
 Устаревшие id `vscode` и `agents` в `target` / `targets` / `active` означают `copilot`: bapm нормализует их при разборе манифеста. Подробнее — [Агенты в манифесте](/guide/manifest-hosts#targets-и-target).
 
@@ -32,18 +33,19 @@ npm i -D @b-apm/cli @b-apm/integration-<id>
 
 ## Куда попадают файлы {#layout}
 
-| Агент       | Skills              | Rules / instructions    | MCP                                   | `bapm compile`                    |
-| ----------- | ------------------- | ----------------------- | ------------------------------------- | --------------------------------- |
-| Cursor      | `.agents/skills/`   | `.cursor/rules/`        | `.cursor/mcp.json`                    | `AGENTS.md`                       |
-| Claude Code | `.claude/skills/`   | `.claude/rules/`        | `.mcp.json`                           | `CLAUDE.md`                       |
-| Codex CLI   | `.agents/skills/`   | только через compile    | `.codex/config.toml`                  | `AGENTS.md`                       |
-| Copilot     | `.agents/skills/`   | `.github/instructions/` | `~/.copilot/mcp-config.json`          | `.github/copilot-instructions.md` |
-| OpenCode    | `.opencode/skills/` | только через compile    | `opencode.json`                       | `AGENTS.md`                       |
-| Windsurf    | `.agents/skills/`   | `.windsurf/rules/`      | `~/.codeium/windsurf/mcp_config.json` | не поддерживается                 |
-| Gemini CLI  | `.agents/skills/`   | только через compile    | `.gemini/settings.json`               | `GEMINI.md`                       |
-| Kiro        | `.kiro/skills/`     | `.kiro/steering/`       | `.kiro/settings/mcp.json`             | `AGENTS.md`                       |
-| Grok Build  | `.grok/skills/`     | `.grok/rules/`          | не поддерживается                     | `AGENTS.md`                       |
-| Antigravity | `.agents/skills/`   | `.agents/rules/`        | `.agents/mcp_config.json`             | `AGENTS.md`                       |
+| Агент       | Skills                  | Rules / instructions    | MCP                                   | `bapm compile`                    |
+| ----------- | ----------------------- | ----------------------- | ------------------------------------- | --------------------------------- |
+| Cursor      | `.agents/skills/`       | `.cursor/rules/`        | `.cursor/mcp.json`                    | `AGENTS.md`                       |
+| Claude Code | `.claude/skills/`       | `.claude/rules/`        | `.mcp.json`                           | `CLAUDE.md`                       |
+| Codex CLI   | `.agents/skills/`       | только через compile    | `.codex/config.toml`                  | `AGENTS.md`                       |
+| Copilot     | `.agents/skills/`       | `.github/instructions/` | `~/.copilot/mcp-config.json`          | `.github/copilot-instructions.md` |
+| OpenCode    | `.opencode/skills/`     | только через compile    | `opencode.json`                       | `AGENTS.md`                       |
+| Windsurf    | `.agents/skills/`       | `.windsurf/rules/`      | `~/.codeium/windsurf/mcp_config.json` | не поддерживается                 |
+| Gemini CLI  | `.agents/skills/`       | только через compile    | `.gemini/settings.json`               | `GEMINI.md`                       |
+| Kiro        | `.kiro/skills/`         | `.kiro/steering/`       | `.kiro/settings/mcp.json`             | `AGENTS.md`                       |
+| Grok Build  | `.grok/skills/`         | `.grok/rules/`          | не поддерживается                     | `AGENTS.md`                       |
+| Grok Bot    | `agent-data/workflows/` | не поддерживается       | не поддерживается                     | не поддерживается                 |
+| Antigravity | `.agents/skills/`       | `.agents/rules/`        | `.agents/mcp_config.json`             | `AGENTS.md`                       |
 
 Agents, commands и hooks раскладываются в каталог агента (`.cursor/agents/`, `.claude/commands/` и т. п.), если агент их поддерживает. Неподдерживаемый тип пропускается с предупреждением `bapm: warning: …` в `stderr` — см. ниже.
 
@@ -86,6 +88,7 @@ Skill раскладывается как полный каталог: `SKILL.md
 | Gemini CLI   | agents            | commands — в `.gemini/commands/*.toml`; instructions — через `compile` |
 | Kiro         | commands          |                                                                        |
 | Grok Build   | hooks, prompts    | commands — в `.grok/commands/`                                         |
+| Grok Bot     | всё, кроме skills | только project scope; MCP и compile не поддерживаются                  |
 | Antigravity  | agents, commands  |                                                                        |
 | Agent Skills | всё, кроме skills |                                                                        |
 

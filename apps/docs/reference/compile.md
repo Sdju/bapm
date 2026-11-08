@@ -8,7 +8,7 @@
 bapm compile [-o PATH] [--target <id>] [--dry-run] [-v] [--validate]
 ```
 
-Выбранный агент задаёт путь по умолчанию и состав файла: `AGENTS.md` (Cursor, Codex, OpenCode, Kiro, Grok Build, Antigravity; последний запуск перезаписывает файл), `CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`. Windsurf compile не поддерживает. Что попадает в файл у каждого агента: [Собрать AGENTS.md](/guide/situations/compile-agents#contents). Нужен `bapm.yml` в текущем каталоге. Неизвестные флаги отвергаются.
+Выбранный агент задаёт путь по умолчанию и состав файла: `AGENTS.md` (Cursor, Codex, OpenCode, Kiro, Grok Build, Antigravity; последний запуск перезаписывает файл), `CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`. Windsurf и Grok Bot compile не поддерживают. Что попадает в файл у каждого агента: [Собрать AGENTS.md](/guide/situations/compile-agents#contents). Нужен `bapm.yml` в текущем каталоге. Неизвестные флаги отвергаются.
 
 ::: warning Общий `AGENTS.md`
 Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют один и тот же `AGENTS.md`. `bapm compile` пишет один файл за запуск, поэтому сборка для другого агента из этого списка перезапишет предыдущий файл. Чтобы сохранить оба результата, задайте разные пути через `-o` (для Codex, OpenCode и Grok Build имя файла должно остаться `AGENTS.md`).

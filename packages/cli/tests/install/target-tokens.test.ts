@@ -59,7 +59,7 @@ describe("CLI lock · published target tokens", () => {
     project = undefined;
   });
 
-  test.each(["kiro", "grok-build"] as const)("lock accepts target: %s", async (id) => {
+  test.each(["kiro", "grok-bot", "grok-build"] as const)("lock accepts target: %s", async (id) => {
     project = createTempProject("bapm-lock-target-token-");
     writeProject(project.cwd, { name: `lock-${id}`, target: id, withLeafSkill: true });
 
@@ -106,6 +106,29 @@ describe("CLI install · published target tokens", () => {
     expect(result).toBe(0);
     expect(combined).toMatch(/installed for kiro/);
     expect(existsSync(join(project.cwd, ".kiro", "skills", "hello", "SKILL.md"))).toBe(true);
+  });
+
+  test("--target grok-bot materializes skills into agent-data/workflows", async () => {
+    project = createTempProject("bapm-install-grok-bot-");
+    linkHost(project.cwd, "grok-bot");
+    writeProject(project.cwd, { name: "install-grok-bot", target: "grok-bot" });
+
+    const { result, combined } = await runInProject(project.cwd, [
+      "install",
+      "--target",
+      "grok-bot",
+    ]);
+
+    expectKnownFlags(combined);
+    expect(combined).not.toMatch(/unknown or unregistered target:\s*grok-bot/i);
+    expect(combined).not.toMatch(/Invalid target token/i);
+    expect(result).toBe(0);
+    expect(combined).toMatch(/installed for grok-bot/);
+    expect(
+      existsSync(join(project.cwd, "agent-data", "workflows", "hello", "SKILL.md")),
+    ).toBe(true);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "hello"))).toBe(false);
+    expect(existsSync(join(project.cwd, "AGENTS.md"))).toBe(false);
   });
 
   test("active grok-build resolves canonical package and materializes", async () => {

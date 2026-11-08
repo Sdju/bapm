@@ -68,7 +68,7 @@ MCP пишется в конфиг каждого активного агент�
 
 ### 4. Агент не поддерживает MCP или пишет его в другое место
 
-Copilot и Windsurf пишут MCP в домашний каталог (`~/.copilot/`, `~/.codeium/windsurf/`), Grok Build MCP не поддерживает. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента существует к этому моменту. Если пакеты с skills в том же install его создали, MCP запишется; если ставятся одни MCP-серверы, они молча пропускаются. См. [таблицу агентов](/guide/supported-hosts#layout).
+Copilot и Windsurf пишут MCP в домашний каталог (`~/.copilot/`, `~/.codeium/windsurf/`), Grok Build и Grok Bot MCP не поддерживают. Claude Code, Gemini, Kiro и Antigravity пишут MCP, только если каталог агента существует к этому моменту. Если пакеты с skills в том же install его создали, MCP запишется; если ставятся одни MCP-серверы, они молча пропускаются. См. [таблицу агентов](/guide/supported-hosts#layout).
 
 ### 5. У HTTP-сервера нет заголовков
 
