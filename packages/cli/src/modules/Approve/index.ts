@@ -18,6 +18,7 @@ export function createApprove(deps?: Partial<ApproveCliDeps>) {
   const resolved: ApproveCliDeps = {
     name: deps?.name ?? "bapm",
     manifestFile: deps?.manifestFile ?? "bapm.yml",
+    configRoot: deps?.configRoot,
     saveGrant: deps?.saveGrant,
   };
   return {

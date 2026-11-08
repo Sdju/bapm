@@ -654,6 +654,22 @@ export {
 } from "@/modules/ExecutableTrust";
 
 export type {
+  ExecutableType,
+  PendingExecutablePackage,
+  PendingExecutablesOptions,
+  PendingExecutablesResult,
+  UserExecutableGrantEntry,
+  UserExecutableGrantList,
+} from "@/modules/ExecutableInventory";
+
+export {
+  EXECUTABLE_TYPES,
+  EXECUTABLE_TYPE_ORDER,
+  listUserExecutableGrants,
+  listPendingExecutablePackages,
+} from "@/modules/ExecutableInventory";
+
+export type {
   CollectedMcpServer,
   CollectMcpServersOptions,
   CollectMcpServersResult,
