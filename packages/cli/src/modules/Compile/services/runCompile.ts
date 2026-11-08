@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import {
   compileAgentsMd,
   watchCompile,
@@ -10,6 +11,7 @@ import {
   registerManifestIntegrationsFromCwd,
 } from "@/modules/Integrations";
 import { readConfiguredTarget } from "@/modules/Config";
+import { inspectGlobalProject, resolveGlobalProjectRoot } from "@/common/globalProject.ts";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
@@ -28,6 +30,8 @@ export type ParsedCompileArgs = {
   validate: boolean;
   dryRun: boolean;
   verbose: boolean;
+  /** Compile user-scope root contexts from ~/.bapm into the user home. */
+  global: boolean;
   /** Recompile when relevant inputs change. */
   watch: boolean;
   outputFile?: string;
@@ -70,6 +74,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
   let validate = false;
   let dryRun = false;
   let verbose = false;
+  let global = false;
   let watch = false;
   let all = false;
   let distributed = false;
@@ -81,6 +86,7 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     validate,
     dryRun,
     verbose,
+    global,
     watch,
     all,
     distributed,
@@ -105,6 +111,10 @@ export function parseCompileArgs(argv: string[]): ParsedCompileArgs {
     }
     if (arg === "--verbose" || arg === "-v") {
       verbose = true;
+      continue;
+    }
+    if (arg === "--global" || arg === "-g") {
+      global = true;
       continue;
     }
     if (arg === "--watch" || arg === "-w") {
@@ -202,12 +212,14 @@ export function formatCompileHelp(deps: LifecycleCliDeps): string {
 
 Usage:
   bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--clean] [--dry-run] [-v] [--watch] [--validate]
+  bapm compile --global [--target <id>[,<id>…]] [--all] [--distributed] [--clean] [--dry-run] [-v] [--watch]
 
 Options:
   -o, --output PATH   Override the target's default output path (single target only)
   --target <ids>      Force one host, or a comma-separated list (cursor,claude)
   --all               Emit for every registered compile-capable host in one run
-  --distributed       Place instruction applyTo globs in matching project directories
+  --global, -g        Compile user-scope root files from ~/.bapm (BAPM_HOME) into the home harness dirs
+  --distributed       Place instruction applyTo globs in matching output directories
   --strategy <name>   single-file (default) or distributed
   --clean             Remove orphaned generated outputs for the selected hosts
   --dry-run           Preview every would-write path and --clean removal; do not mutate
@@ -220,6 +232,17 @@ Host selection: --target / --all → local-overlay active → manifest active �
 --clean uses the same selection; it does not require --target when a sole active/config/detect target applies.
 When active lists multiple hosts, pass --target <id> or --target <id>,<id>, or --all.
 Missing or ambiguous detection requires an explicit --target.
+
+--global (-g) reads ~/.bapm/bapm.yml (BAPM_HOME override) and writes user-scope
+root context files under $HOME: ~/.cursor/AGENTS.md, ~/.claude/CLAUDE.md and
+~/.codex/AGENTS.md. Project manifests, locks and harness files are never read or
+written. Global selection uses --target / --all → ~/.bapm manifest active →
+~/.bapm/config.json target → detectGlobal → fail. Supported global compile hosts
+are Cursor, Claude Code and Codex; other hosts fail with an unsupported-for-global
+error (agent-skills has no compile). -o / --output is rejected with --global because
+each host owns its home-relative path. --distributed and multi-target work when the
+selected hosts' home paths are distinct. --clean scans only the selected home
+harness roots; --watch watches the global root.
 
 Build ID: every compiled Markdown output ends with one deterministic
 <!-- Build ID: <12 hex> --> line hashed over the normalized body. Identical
@@ -247,10 +270,12 @@ Distributed mode (opt-in) reads instruction applyTo (scalar, comma list, or YAML
 uses the literal directory prefix of each glob (src/** → src/AGENTS.md, docs/*.md → docs/),
 keeps global/unmatched instructions in the root output, and preserves each host's default
 basename (CLAUDE.md, GEMINI.md, .github/copilot-instructions.md). Root-only globs such as
-**/*.ts stay in the root file. Outputs never leave the project; symlinked or escaping paths
-fail closed. -o is rejected in distributed mode because each directory gets its own file.
+**/*.ts stay in the root file. Outputs stay inside the project (or, with --global, inside the
+selected host's home root); symlinked or escaping paths fail closed. -o is rejected in
+distributed mode because each directory gets its own file.
 
-Run from the directory that contains ${deps.manifestFile}.
+Run from the directory that contains ${deps.manifestFile}, or use --global to
+compile the user-scope root under ~/.bapm.
 `;
 }
 
@@ -269,6 +294,12 @@ export async function runCompileCli(
   }
   if (parsed.all && parsed.targets?.length) {
     const message = "use either --target or --all, not both";
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, exitCode: 1, message };
+  }
+  if (parsed.global && parsed.outputFile) {
+    const message =
+      "--global does not accept --output / -o; each host owns its user-scope output path";
     console.error(`${deps.name}: ${message}`);
     return { ok: false, exitCode: 1, message };
   }
@@ -291,41 +322,87 @@ export async function runCompileCli(
     return { ok: false, exitCode: 1, message };
   }
   const multi = parsed.all === true || explicitMulti;
-  const cwd = options.cwd ?? process.cwd();
-
-  if (parsed.watch) {
-    return runCompileWatch(deps, options, parsed, cwd, multi);
-  }
-
-  try {
-    await runCompileOnce(deps, parsed, cwd, multi);
-    return { ok: true, exitCode: 0 };
-  } catch (error) {
-    const message = compileErrorMessage(error, cwd);
+  const context = resolveCompileRunContext(parsed, options);
+  if (context.scope === "global" && !context.manifestPath) {
+    const message = `Global compile requires a manifest at ${context.cwd}/bapm.yml; run bapm install --global first`;
     console.error(`${deps.name}: ${message}`);
     return { ok: false, exitCode: 1, message };
   }
+
+  if (parsed.watch) {
+    return runCompileWatch(deps, options, parsed, context, multi);
+  }
+
+  try {
+    await runCompileOnce(deps, parsed, context, multi);
+    return { ok: true, exitCode: 0 };
+  } catch (error) {
+    const message = compileErrorMessage(error, context.cwd);
+    console.error(`${deps.name}: ${message}`);
+    return { ok: false, exitCode: 1, message };
+  }
+}
+
+type CompileRunContext = {
+  /** Manifest, lock and primitive discovery root. */
+  cwd: string;
+  /** Host output root (same as cwd for project scope). */
+  deployCwd: string;
+  scope: "project" | "global";
+  /** Global user config root (`~/.bapm`), if any. */
+  configRoot?: string;
+  /** Present for global runs when a bapm.yml/apm.yml exists. */
+  manifestPath?: string;
+};
+
+function resolveCompileRunContext(
+  parsed: ParsedCompileArgs,
+  options: CompileOptions,
+): CompileRunContext {
+  if (!parsed.global) {
+    const cwd = options.cwd ?? process.cwd();
+    return { cwd, deployCwd: cwd, scope: "project" };
+  }
+
+  const globalRoot = resolveGlobalProjectRoot();
+  const project = inspectGlobalProject(globalRoot);
+  return {
+    cwd: globalRoot,
+    deployCwd: homedir(),
+    scope: "global",
+    configRoot: globalRoot,
+    ...(project.manifestPath ? { manifestPath: project.manifestPath } : {}),
+  };
 }
 
 /** One compile invocation: fresh registry, target selection, output printing. */
 async function runCompileOnce(
   deps: LifecycleCliDeps,
   parsed: ParsedCompileArgs,
-  cwd: string,
+  context: CompileRunContext,
   multi: boolean,
 ): Promise<CompileAgentsMdResult> {
   // Fresh registry per run so object-map loads do not leak across projects.
   const registry = createCliIntegrationRegistry();
-  await registerManifestIntegrationsFromCwd(registry, cwd);
+  await registerManifestIntegrationsFromCwd(registry, context.cwd);
   const result = await compileAgentsMd({
-    cwd,
+    cwd: context.cwd,
+    ...(context.scope === "global"
+      ? {
+          manifestCwd: context.cwd,
+          deployCwd: context.deployCwd,
+          scope: "global" as const,
+        }
+      : {}),
     outputFile: parsed.outputFile,
     forcedTarget: multi ? undefined : parsed.target,
     forcedTargets: multi && !parsed.all ? parsed.targets : undefined,
     all: parsed.all === true,
     distributed: parsed.distributed,
     clean: parsed.clean,
-    configTarget: readConfiguredTarget(),
+    configTarget: readConfiguredTarget(
+      context.configRoot ? { configRoot: context.configRoot } : undefined,
+    ),
     integrationRegistry: registry,
     validate: parsed.validate,
     dryRun: parsed.dryRun,
@@ -409,7 +486,7 @@ async function runCompileWatch(
   deps: LifecycleCliDeps,
   options: CompileOptions,
   parsed: ParsedCompileArgs,
-  cwd: string,
+  context: CompileRunContext,
   multi: boolean,
 ): Promise<LifecycleResult> {
   const controller = new AbortController();
@@ -431,15 +508,16 @@ async function runCompileWatch(
 
   try {
     const result = await watchCompile({
-      cwd,
-      compile: async () => runCompileOnce(deps, parsed, cwd, multi),
+      cwd: context.cwd,
+      deployCwd: context.deployCwd,
+      compile: async () => runCompileOnce(deps, parsed, context, multi),
       watchFactory: options.watch?.watchFactory,
       once: options.watch?.once,
       debounceMs: options.watch?.debounceMs,
       signal: controller.signal,
       resolveTargets: options.watch?.resolveTargets,
       onStatus: (message) => console.log(message),
-      onError: (error) => console.error(`${deps.name}: ${compileErrorMessage(error, cwd)}`),
+      onError: (error) => console.error(`${deps.name}: ${compileErrorMessage(error, context.cwd)}`),
     });
 
     if (result.stopped === "once") {
@@ -448,7 +526,7 @@ async function runCompileWatch(
     }
     return { ok: true, exitCode: 0 };
   } catch (error) {
-    const message = compileErrorMessage(error, cwd);
+    const message = compileErrorMessage(error, context.cwd);
     console.error(`${deps.name}: ${message}`);
     return { ok: false, exitCode: 1, message };
   } finally {

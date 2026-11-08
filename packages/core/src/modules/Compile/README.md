@@ -7,7 +7,8 @@ Discover primitives → emit deterministic instruction files for one or several 
 ## Public API
 
 - `compileAgentsMd` / `compileProject` / `runCompile` / `emitAgentsMd`
-- Options: `validate` (no durable write), `dryRun`, `verbose`, `cwd`, `outputFile`,
+- Options: `validate` (no durable write), `dryRun`, `verbose`, `cwd`, `manifestCwd` (input root),
+  `deployCwd` (output root), `scope` (`project` / `global`), `outputFile`,
   `forcedTarget` (single), `forcedTargets` (comma-separated ids from `--target a,b`), `all` (`--all`),
   `distributed` (opt-in `applyTo` placement), `clean` (orphan generated-output cleanup)
 - Result: single-target `path` / `content` / `wrote` stay for compatibility; `outputs` lists
@@ -38,6 +39,16 @@ instructions are placed below the root. Unsafe patterns (absolute, `..`, control
 and symlinked output paths fail closed before any write. Full APM context-optimizer placement
 (file-match scoring, inheritance analysis) is not implemented.
 
+## Global scope (user root)
+
+`scope: "global"` separates `manifestCwd` (the `~/.bapm` / `BAPM_HOME` root where the
+manifest, modules and primitives are discovered) from `deployCwd` (the user home where host
+outputs land). Selected integrations must declare a home-relative
+`globalCompileOutput`; this release opts in Cursor (`.cursor/AGENTS.md`), Claude
+(`.claude/CLAUDE.md`) and Codex (`.codex/AGENTS.md`). Other hosts fail closed before any
+write. `outputFile` is rejected in global scope. Multi-target and distributed runs keep
+distinct home-relative paths; global `clean` scans only the selected hosts' home roots.
+
 ## Build ID and clean
 
 Every output ends with `<!-- Build ID: <12 hex> -->`, hashed over normalized content
@@ -60,6 +71,6 @@ runs only the initial compile. Tests inject `watchFactory` and/or `resolveTarget
 
 ## Non-goals
 
-Full APM optimizer placement, `--global`, and APM prompt compiler behavior remain out of scope.
-`--watch` does not install dependencies or refresh git packages in `apm_modules`; run
-`bapm install` separately.
+Full APM optimizer placement and APM prompt compiler behavior remain out of scope. Global
+compile covers only hosts with a declared user-scope root path. `--watch` does not install
+dependencies or refresh git packages in `apm_modules`; run `bapm install` separately.

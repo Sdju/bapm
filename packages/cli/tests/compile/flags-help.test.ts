@@ -47,7 +47,7 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).not.toMatch(/optimizer|distributed placement|multi-host/i);
   });
 
-  test("compile help documents --watch and omits deferred --no-links and global flags", async () => {
+  test("compile help documents --watch and --global and omits deferred --no-links", async () => {
     const viaFlag = await withCapturedIo(() => runCli(["compile", "--help"]));
     const text = [
       [...viaFlag.stdout, ...viaFlag.stderr].join("\n"),
@@ -59,8 +59,9 @@ describe("p7d CLI compile help + fail-closed", () => {
     expect(text).toMatch(/--target\s+<id>/);
     expect(text).toMatch(/\bactive\b/i);
     expect(text).toMatch(/--all\b/);
-    expect(text).not.toMatch(/--global\b/);
-    expect(text).not.toMatch(/-g\b.*global|global.*-g\b/i);
+    expect(text).toMatch(/--global\b/);
+    expect(text).toMatch(/-g\b.*global|global.*-g\b/i);
+    expect(text).toMatch(/\.cursor\/AGENTS\.md|\.claude\/CLAUDE\.md|\.codex\/AGENTS\.md/);
     expect(text).toMatch(/--watch\b/);
     expect(text).toMatch(/Ctrl\+C|SIGINT|SIGTERM/i);
     expect(text).toMatch(/incompatible with --validate|--watch.*--validate/i);

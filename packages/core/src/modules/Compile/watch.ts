@@ -44,7 +44,13 @@ export type CompileWatchFactoryOptions = {
 export type CompileWatchFactory = (options: CompileWatchFactoryOptions) => CompileWatchHandle;
 
 export type CompileWatchOptions = {
+  /** Manifest/input root to watch. */
   cwd?: string;
+  /**
+   * Root for compile outputs when it differs from the input root. A global
+   * compile watches `~/.bapm` but writes under the user home.
+   */
+  deployCwd?: string;
   /**
    * Performs one full compile. Throwing is safe: the loop reports the error and
    * keeps watching instead of exiting.
@@ -250,6 +256,7 @@ function nearestExistingParent(path: string): string {
  */
 export async function watchCompile(options: CompileWatchOptions): Promise<CompileWatchResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
+  const deployCwd = resolve(options.deployCwd ?? cwd);
   const debounceMs = options.debounceMs ?? DEFAULT_COMPILE_WATCH_DEBOUNCE_MS;
   const status = options.onStatus ?? ((message: string) => console.log(message));
   const reportError =
@@ -278,7 +285,7 @@ export async function watchCompile(options: CompileWatchOptions): Promise<Compil
     for (const output of outputs) {
       if (output === null || typeof output !== "object") continue;
       const path = (output as { path?: unknown }).path;
-      if (typeof path === "string" && path.trim()) generatedOutputs.add(resolve(cwd, path));
+      if (typeof path === "string" && path.trim()) generatedOutputs.add(resolve(deployCwd, path));
     }
   };
 
@@ -353,8 +360,14 @@ export async function watchCompile(options: CompileWatchOptions): Promise<Compil
         onChange: (paths) => {
           if (closed) return;
           // Ignore compile's own writes when an output lives under a watched
-          // input root (for example distributed `skills/AGENTS.md`).
-          const relevant = paths.filter((path) => !generatedOutputs.has(resolve(cwd, path)));
+          // input root (for example distributed `skills/AGENTS.md`). Global
+          // outputs resolve against the deploy root, which may be outside the
+          // watched manifest root entirely.
+          const isGenerated = (path: string): boolean =>
+            generatedOutputs.has(resolve(path)) ||
+            generatedOutputs.has(resolve(deployCwd, path)) ||
+            generatedOutputs.has(resolve(cwd, path));
+          const relevant = paths.filter((path) => !isGenerated(path));
           if (relevant.length > 0) schedule();
         },
         onError: reportError,

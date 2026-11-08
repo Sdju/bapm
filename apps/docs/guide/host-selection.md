@@ -1,6 +1,6 @@
 # Выбор агента
 
-`bapm install` раскладывает файлы для одного или нескольких агентов, `bapm compile` — всегда для одного. Эта страница объясняет, как агенты выбираются и как закрепить выбор.
+`bapm install` раскладывает файлы для одного или нескольких агентов; `bapm compile` собирает один хост или несколько через `--target a,b` / `--all`. Эта страница объясняет, как агенты выбираются и как закрепить выбор.
 
 ## Порядок выбора
 
@@ -47,20 +47,30 @@ harness-каталогов, а не для файлов проекта. Global r
 Global auto-detect использует `detectGlobal` интеграции, а не проектные маркеры.
 Если найдено несколько хостов, укажите `--target`.
 
-| Host         | Global files | Global MCP |
-| ------------ | ------------ | ---------- |
-| Cursor       | да           | да         |
-| Claude Code  | да           | —          |
-| Codex CLI    | да           | —          |
-| agent-skills | да (skills)  | —          |
-| OpenCode     | —            | да         |
+| Host         | Global files | Global compile        | Global MCP |
+| ------------ | ------------ | --------------------- | ---------- |
+| Cursor       | да           | `~/.cursor/AGENTS.md` | да         |
+| Claude Code  | да           | `~/.claude/CLAUDE.md` | —          |
+| Codex CLI    | да           | `~/.codex/AGENTS.md`  | —          |
+| agent-skills | да (skills)  | — (compile нет)       | —          |
+| OpenCode     | —            | —                     | да         |
 
 Файловые примитивы для global поддерживают Cursor, Claude Code, Codex CLI и
 agent-skills. Полный `bapm install -g` для Claude/Codex ставит файлы и
 пропускает MCP с warning; `--only mcp` для них возвращает понятную ошибку.
 Другие хосты без user-scope раскладки (например `opencode` для файлов или
 custom target) дают `Global file install is not supported for target(s): …`.
-Global `compile` пока не поддержан (см. [compile](/reference/compile#global)).
+
+`bapm compile --global` (`-g`) использует тот же global root `~/.bapm`, но
+пишет только user-scope root context.
+
+Выбор для `compile -g`: `--target` / `--all` → `active` из
+`~/.bapm/bapm.yml` → `target` из `~/.bapm/config.json` → `detectGlobal` по
+home-каталогу. `agent-skills` не имеет compile; Gemini, Copilot, OpenCode,
+Windsurf, Kiro и custom targets дают
+`Global compile is not supported for target(s): …`. `-o` с `--global`
+запрещён, потому что путь принадлежит хосту. Подробнее:
+[compile](/reference/compile#global).
 
 `grok-bot`, `hermes` и `intellij` — explicit-only: у них нет проектного маркера, поэтому auto-detect их никогда не выберет. Указывайте `--target <id>` или `active`. `intellij` к тому же MCP-only и не поддерживает `compile`.
 

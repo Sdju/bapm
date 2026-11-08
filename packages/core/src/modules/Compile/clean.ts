@@ -12,7 +12,7 @@
  */
 
 import { readdirSync, readFileSync, rmSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { hasBuildIdLine, hasValidBuildId } from "@b-apm/integration-api";
 import type { CompileCleanResult, CompileCleanSkip } from "./types.ts";
 
@@ -51,8 +51,9 @@ function matchesShape(path: string, shape: CompileOutputShape): boolean {
   return dir === shape.dir || dir.startsWith(`${shape.dir}/`);
 }
 
-function walkProject(cwd: string): string[] {
+function walkProject(cwd: string, searchDirs?: string[]): string[] {
   const files: string[] = [];
+  const root = resolve(cwd);
   const walk = (absDir: string, relDir: string): void => {
     let entries;
     try {
@@ -74,8 +75,21 @@ function walkProject(cwd: string): string[] {
       if (entry.isFile()) files.push(rel);
     }
   };
-  walk(resolve(cwd), "");
-  return files;
+  // Global clean scans only the selected hosts' home harness roots instead of
+  // walking the entire user home.
+  const roots = searchDirs?.length ? searchDirs : [""];
+  for (const relDir of roots) {
+    const normalized = toPosixRel(relDir);
+    const abs = resolve(root, normalized);
+    if (!isWithin(root, abs)) continue;
+    walk(abs, normalized);
+  }
+  return [...new Set(files)];
+}
+
+function isWithin(root: string, candidate: string): boolean {
+  const rel = relative(root, candidate).split("\\").join("/");
+  return rel === "" || (rel !== ".." && !rel.startsWith("../") && !isAbsolute(rel));
 }
 
 /**
@@ -87,6 +101,8 @@ export function cleanCompileOutputs(args: {
   shapes: CompileOutputShape[];
   keep: string[];
   dryRun: boolean;
+  /** Relative directories to scan instead of the whole `cwd` tree. */
+  searchDirs?: string[];
 }): CompileCleanResult {
   const shapes = dedupeShapes(args.shapes);
   const keep = new Set(args.keep.map(toPosixRel));
@@ -95,7 +111,7 @@ export function cleanCompileOutputs(args: {
   const skipped: CompileCleanSkip[] = [];
   if (shapes.length === 0) return { removed, wouldRemove, skipped };
 
-  for (const rel of walkProject(args.cwd)) {
+  for (const rel of walkProject(args.cwd, args.searchDirs)) {
     if (keep.has(rel)) continue;
     if (!shapes.some((shape) => matchesShape(rel, shape))) continue;
 

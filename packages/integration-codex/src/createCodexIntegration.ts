@@ -68,6 +68,7 @@ export function createCodexIntegration(options?: {
       return existsSync(codexDir) && statSync(codexDir).isDirectory();
     },
     supportsGlobalFiles: true,
+    globalCompileOutput: ".codex/AGENTS.md",
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
       const content = renderPrimitivesMarkdown({
