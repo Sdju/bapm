@@ -24,23 +24,23 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------------------- |
-| APM          | Часть адаптеров логирует skip.                                                                                       |
-| OpenAPM      | Неподдерживаемый primitive MAY быть пропущен; MUST ли говорить — не жёстко.                                          |
-| Спека bapm   | Host materialize пропускает неизвестные типы; skip-diagnostic требуется для Grok hooks/prompts.                      |
-| Код bapm     | Интеграции формируют diagnostics; install их теряет. OpenCode дополнительно пропускает `sse` и hooks.                |
-| Тесты        | Adapter-тесты проверяют diagnostics; install-теста на их вывод нет.                                                  |
-| Документация | `guide/supported-hosts.md:60` обещает «ничего не пишет»; таблица `:72` устарела по Grok.                             |
+| Источник     | Позиция                                                                                               |
+| ------------ | ----------------------------------------------------------------------------------------------------- |
+| APM          | Часть адаптеров логирует skip.                                                                        |
+| OpenAPM      | Неподдерживаемый primitive MAY быть пропущен; MUST ли говорить — не жёстко.                           |
+| Спека bapm   | Host materialize пропускает неизвестные типы; skip-diagnostic требуется для Grok hooks/prompts.       |
+| Код bapm     | Интеграции формируют diagnostics; install их теряет. OpenCode дополнительно пропускает `sse` и hooks. |
+| Тесты        | Adapter-тесты проверяют diagnostics; install-теста на их вывод нет.                                   |
+| Документация | `guide/supported-hosts.md:60` обещает «ничего не пишет»; таблица `:72` устарела по Grok.              |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/core/src/modules/Install/runInstall.ts:438` — `target.materialize(...)`, `:444` — только `collectTargetDeployedHashes(report)`, diagnostics не пушатся; `packages/cli/src/modules/Install/services/runInstall.ts:615` — `emitTrustDiagnostics` фильтрует только trust-текст; адаптеры: `packages/integration-codex/src/createCodexIntegration.ts:113`, `packages/integration-windsurf/src/createWindsurfIntegration.ts:102`, `packages/integration-grok-build/src/createGrokBuildIntegration.ts:124`, `packages/integration-agent-skills/src/createAgentSkillsIntegration.ts:39`, `packages/integration-opencode/src/createOpencodeIntegration.ts:121`. |
-| Тесты    | `packages/core/tests/install/commands-hooks-opencode.test.ts:53`; `packages/integration-agent-skills/tests/materialize.test.ts:109`; `packages/integration-grok-build/tests/materialize.test.ts:129`. |
-| Спека    | `openspec/specs/integration-grok-build-runtime/spec.md:78` — commands поддерживаются; `:92` — hooks/prompts skip с diagnostic. |
-| Docs     | `apps/docs/guide/supported-hosts.md:60`, таблица `:72`. |
+| Тесты    | `packages/core/tests/install/commands-hooks-opencode.test.ts:53`; `packages/integration-agent-skills/tests/materialize.test.ts:109`; `packages/integration-grok-build/tests/materialize.test.ts:129`.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Спека    | `openspec/specs/integration-grok-build-runtime/spec.md:78` — commands поддерживаются; `:92` — hooks/prompts skip с diagnostic.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Docs     | `apps/docs/guide/supported-hosts.md:60`, таблица `:72`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 Воспроизведение:
 

@@ -23,23 +23,23 @@ bapm канонизирует порядок при каждой сериали�
 
 ## Состояние
 
-| Источник     | Позиция                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| APM          | Сортировка по глубине в дереве разрешения `(depth, repo_url)`.                                |
-| OpenAPM      | Стабильный порядок по идентификатору пакета (`repo_url`, затем `virtual_path`).               |
-| Спека bapm   | `lockfile-yaml-rw`: serialize MUST сортировать по `(repo_url, virtual_path)`, не по depth.    |
+| Источник     | Позиция                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------- |
+| APM          | Сортировка по глубине в дереве разрешения `(depth, repo_url)`.                                    |
+| OpenAPM      | Стабильный порядок по идентификатору пакета (`repo_url`, затем `virtual_path`).                   |
+| Спека bapm   | `lockfile-yaml-rw`: serialize MUST сортировать по `(repo_url, virtual_path)`, не по depth.        |
 | Код bapm     | `packages/core/src/modules/Lockfile/serialize.ts:17` — `.sort(compareDeps)`; `:102` — компаратор. |
-| Тесты        | `packages/core/tests/lockfile/parse-serialize.test.ts:135` — порядок `(repo_url, virtual_path)`. |
-| Документация | `apps/docs/guide/conformance.md:32`; `CONFORMANCE.md:39` называют это намеренным отличием.     |
+| Тесты        | `packages/core/tests/lockfile/parse-serialize.test.ts:135` — порядок `(repo_url, virtual_path)`.  |
+| Документация | `apps/docs/guide/conformance.md:32`; `CONFORMANCE.md:39` называют это намеренным отличием.        |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
-| Код      | `packages/core/src/modules/Lockfile/serialize.ts:102-108` — `repo_url`, затем `virtual_path`; `depth` не читается. |
+| Артефакт | Где смотреть                                                                                                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Lockfile/serialize.ts:102-108` — `repo_url`, затем `virtual_path`; `depth` не читается.                                               |
 | Тесты    | `packages/core/tests/lockfile/parse-serialize.test.ts:135` — фикстура `unordered-deps-for-sort.yml` с depth 0/99/1 переупорядочивается в alpha/a, alpha/z, zeta. |
-| Спека    | `openspec/specs/lockfile-yaml-rw/spec.md:87` — MUST `(repo_url, virtual_path)`, MUST NOT `(depth, repo_url)`. |
-| Docs     | `apps/docs/guide/conformance.md:32` — «bapm сортирует по `repo_url`, APM — по глубине». |
+| Спека    | `openspec/specs/lockfile-yaml-rw/spec.md:87` — MUST `(repo_url, virtual_path)`, MUST NOT `(depth, repo_url)`.                                                    |
+| Docs     | `apps/docs/guide/conformance.md:32` — «bapm сортирует по `repo_url`, APM — по глубине».                                                                          |
 
 Воспроизведение:
 

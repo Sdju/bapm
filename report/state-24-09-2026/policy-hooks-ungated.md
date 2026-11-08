@@ -24,23 +24,23 @@ Canvas в текущем дереве как primitive не реализован
 
 ## Состояние
 
-| Источник       | Позиция                                                                                                                |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| APM            | Approve UX шире (в т.ч. recommended/all); hooks не обязательно в той же лестнице.                                      |
-| OpenAPM sc-009 | Executable governance; bapm заявляет MCP + bin, не hooks/canvas.                                                       |
-| Спека bapm     | `executable-mcp-trust`: hooks/canvas MUST оставаться ungated, `bin` — gated.                                           |
+| Источник       | Позиция                                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| APM            | Approve UX шире (в т.ч. recommended/all); hooks не обязательно в той же лестнице.                                       |
+| OpenAPM sc-009 | Executable governance; bapm заявляет MCP + bin, не hooks/canvas.                                                        |
+| Спека bapm     | `executable-mcp-trust`: hooks/canvas MUST оставаться ungated, `bin` — gated.                                            |
 | Код bapm       | Materialize hooks (`runInstall.ts:438`) не зовёт `resolveExecutableTrust`; резолвер вызывается только для MCP (`:883`). |
-| Тесты          | Hook-deploy без grant закреплён (`commands-hooks-cursor.test.ts:98`); теста «surface present + unapproved hook» нет.   |
-| Документация   | `CONFORMANCE.md:41,53`, `guide/conformance.md:40`.                                                                     |
+| Тесты          | Hook-deploy без grant закреплён (`commands-hooks-cursor.test.ts:98`); теста «surface present + unapproved hook» нет.    |
+| Документация   | `CONFORMANCE.md:41,53`, `guide/conformance.md:40`.                                                                      |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                                                   |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/core/src/modules/Install/runInstall.ts:438` — `target.materialize(filtered, …)` для всех primitives, до MCP; `:883` — резолвер только для `mcp`; `:1197` — `resolveBinDeployConsent` для `bin`; `packages/integration-cursor/src/createCursorIntegration.ts:151` — hooks пишутся без проверки grant. |
-| Тесты    | `packages/core/tests/install/commands-hooks-cursor.test.ts:98` — hook деплоится без `executables`; `packages/core/tests/spec-conformance/install-trust-bin-soft-honesty.test.ts:35` — проверяет только формулировку docs. |
-| Спека    | `openspec/specs/executable-mcp-trust/spec.md:102` — hooks/canvas ungated, `bin` gated. |
-| Docs     | `CONFORMANCE.md:41`, `CONFORMANCE.md:53`, `apps/docs/guide/conformance.md:40`. |
+| Тесты    | `packages/core/tests/install/commands-hooks-cursor.test.ts:98` — hook деплоится без `executables`; `packages/core/tests/spec-conformance/install-trust-bin-soft-honesty.test.ts:35` — проверяет только формулировку docs.                                                                                      |
+| Спека    | `openspec/specs/executable-mcp-trust/spec.md:102` — hooks/canvas ungated, `bin` gated.                                                                                                                                                                                                                         |
+| Docs     | `CONFORMANCE.md:41`, `CONFORMANCE.md:53`, `apps/docs/guide/conformance.md:40`.                                                                                                                                                                                                                                 |
 
 Воспроизведение:
 

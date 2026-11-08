@@ -23,23 +23,23 @@ OpenAPM описывает Registry как отдельный класс: хос
 
 ## Состояние
 
-| Источник     | Позиция                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| APM          | Клиент registry в обычном install/publish.                                                    |
-| OpenAPM      | Класс Registry (`req-rg-001`) — отдельная роль.                                               |
-| Спека bapm   | `CONFORMANCE.md:23,145`: Registry = `n/a`, host не заявлен.                                   |
+| Источник     | Позиция                                                                                                                |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| APM          | Клиент registry в обычном install/publish.                                                                             |
+| OpenAPM      | Класс Registry (`req-rg-001`) — отдельная роль.                                                                        |
+| Спека bapm   | `CONFORMANCE.md:23,145`: Registry = `n/a`, host не заявлен.                                                            |
 | Код bapm     | `Registry/gate.ts:9` — гейт; `Resolver/resolveGraph.ts:236` — отказ без флага; клиент — `Registry/createClient.ts:19`. |
-| Тесты        | `packages/core/tests/registry/resolve-install.test.ts` — только gate-on; отдельного gate-off теста нет. |
-| Документация | `apps/docs/guide/conformance.md:26`; `apps/docs/guide/manifest-registries.md:8`.               |
+| Тесты        | `packages/core/tests/registry/resolve-install.test.ts` — только gate-on; отдельного gate-off теста нет.                |
+| Документация | `apps/docs/guide/conformance.md:26`; `apps/docs/guide/manifest-registries.md:8`.                                       |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
-| Код      | `Registry/gate.ts:7` — имя env; `:13-16` — значения; `:23-34` — `REGISTRY_GATE`; `Resolver/resolveGraph.ts:236-241` — `RESOLVE_REGISTRY_DEFERRED`. |
+| Артефакт | Где смотреть                                                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `Registry/gate.ts:7` — имя env; `:13-16` — значения; `:23-34` — `REGISTRY_GATE`; `Resolver/resolveGraph.ts:236-241` — `RESOLVE_REGISTRY_DEFERRED`.    |
 | Тесты    | `resolve-install.test.ts:43` — happy path под флагом; `:205` — недоступный registry не падает в git; `helpers.ts:485` — `withExperimentalRegistries`. |
-| Спека    | `CONFORMANCE.md:23,145`; `tests/spec-conformance/checklist.yml` — `req-rg-001` `n/a`.          |
-| Docs     | `apps/docs/guide/manifest-registries.md:8` — флаг обязателен для install и publish; `conformance.md:26`. |
+| Спека    | `CONFORMANCE.md:23,145`; `tests/spec-conformance/checklist.yml` — `req-rg-001` `n/a`.                                                                 |
+| Docs     | `apps/docs/guide/manifest-registries.md:8` — флаг обязателен для install и publish; `conformance.md:26`.                                              |
 
 Воспроизведение:
 

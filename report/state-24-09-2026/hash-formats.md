@@ -23,26 +23,26 @@
 
 ## Состояние
 
-| Источник       | Позиция                                                                                                                                       |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| APM            | Смесь hex / алгоритмических префиксов в разных полях; в `real-apm-root.lock.yaml` карта уже с `sha256:`.                                      |
-| OpenAPM lk-016 | Скалярные хеши зависимостей — envelope `algo:hex`.                                                                                            |
-| Спека bapm     | `lockfile-yaml-rw`:118-130 — на чтении bare 64-hex → `sha256:<hex>`, на записи hash-поля — envelope; исключение для карты не описано.          |
+| Источник       | Позиция                                                                                                                                                                                                     |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APM            | Смесь hex / алгоритмических префиксов в разных полях; в `real-apm-root.lock.yaml` карта уже с `sha256:`.                                                                                                    |
+| OpenAPM lk-016 | Скалярные хеши зависимостей — envelope `algo:hex`.                                                                                                                                                          |
+| Спека bapm     | `lockfile-yaml-rw`:118-130 — на чтении bare 64-hex → `sha256:<hex>`, на записи hash-поля — envelope; исключение для карты не описано.                                                                       |
 | Код bapm       | `packages/core/src/modules/Lockfile/hash.ts:9-22,36` — нормализует `resolved_hash`, `tree_sha256`, `source_digest`; `packages/core/src/modules/Install/deployedInventory.ts:3,16-18` — карта как голый hex. |
-| Код bapm       | `packages/core/src/modules/Lockfile/parse.ts:77-79,186-194` — карта и скаляры нормализуются при чтении; `packages/core/src/modules/Lockfile/serialize.ts:137` — запись без отдельной нормализации. |
-| Документация   | `apps/docs/guide/lockfile.md` не сводит форматы в таблицу; `CONFORMANCE.md:91` фиксирует lk-016 как consumer.                                 |
-| Тесты          | `packages/core/tests/lockfile/parse-serialize.test.ts:159-169` — только скаляр `resolved_hash`; формат карты не закреплён.                     |
+| Код bapm       | `packages/core/src/modules/Lockfile/parse.ts:77-79,186-194` — карта и скаляры нормализуются при чтении; `packages/core/src/modules/Lockfile/serialize.ts:137` — запись без отдельной нормализации.          |
+| Документация   | `apps/docs/guide/lockfile.md` не сводит форматы в таблицу; `CONFORMANCE.md:91` фиксирует lk-016 как consumer.                                                                                               |
+| Тесты          | `packages/core/tests/lockfile/parse-serialize.test.ts:159-169` — только скаляр `resolved_hash`; формат карты не закреплён.                                                                                  |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                                          |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/Lockfile/hash.ts:9-22` — bare 64-hex → `sha256:`; `:36` — список скалярных полей.                                          |
-| Код      | `packages/core/src/modules/Install/deployedInventory.ts:16-18` — `hashFileBytes` возвращает голый hex; `:99-103` — сравнение принимает оба вида.        |
-| Код      | `packages/core/src/modules/Lockfile/parse.ts:186-194` — нормализация скаляров и карты; `packages/core/src/modules/Lockfile/treeSha256.ts:27-29` — envelope для tree.              |
-| Тесты    | `packages/core/tests/lockfile/parse-serialize.test.ts:159-169` — скаляр; `fixtures/real-apm-root.lock.yaml:41` — APM-карта с `sha256:`.                |
-| Спека    | `openspec/specs/lockfile-yaml-rw/spec.md:118-130` — envelope on write.                                                                                |
-| Docs     | `apps/docs/guide/lockfile.md` — форматы не описаны.                                                                                                    |
+| Артефакт | Где смотреть                                                                                                                                                         |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Lockfile/hash.ts:9-22` — bare 64-hex → `sha256:`; `:36` — список скалярных полей.                                                         |
+| Код      | `packages/core/src/modules/Install/deployedInventory.ts:16-18` — `hashFileBytes` возвращает голый hex; `:99-103` — сравнение принимает оба вида.                     |
+| Код      | `packages/core/src/modules/Lockfile/parse.ts:186-194` — нормализация скаляров и карты; `packages/core/src/modules/Lockfile/treeSha256.ts:27-29` — envelope для tree. |
+| Тесты    | `packages/core/tests/lockfile/parse-serialize.test.ts:159-169` — скаляр; `fixtures/real-apm-root.lock.yaml:41` — APM-карта с `sha256:`.                              |
+| Спека    | `openspec/specs/lockfile-yaml-rw/spec.md:118-130` — envelope on write.                                                                                               |
+| Docs     | `apps/docs/guide/lockfile.md` — форматы не описаны.                                                                                                                  |
 
 Воспроизведение:
 
@@ -78,5 +78,5 @@ grep -n 'tree_sha256' bapm.lock.yaml | head -1                        # sha256:�
 
 ## Связанные
 
-- [frozen-ignores-ref-change.md](./frozen-ignores-ref-change.md) — frozen проверяет эти хеши, но не ref.
-- [path-absolute-in-lock.md](./path-absolute-in-lock.md) — второй непортируемый формат в том же lock.
+- frozen сверяет эти хеши; ref-дрейф теперь отдельный гейт.
+- `path` в lock теперь project-relative; форматы `sha256:`/голый hex остаются разными.

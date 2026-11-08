@@ -33,14 +33,14 @@ APM умеет раскладывать инструкции по каталог
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
-| Код      | `packages/core/src/modules/Compile/compileAgentsMd.ts:29-45` — один `target.compile(...)` за вызов. |
-| Код      | `packages/core/src/modules/Compile/compileAgentsMd.ts:107-121` — multi-active без `--target` → ошибка. |
+| Артефакт | Где смотреть                                                                                                                                                                                                    |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Compile/compileAgentsMd.ts:29-45` — один `target.compile(...)` за вызов.                                                                                                             |
+| Код      | `packages/core/src/modules/Compile/compileAgentsMd.ts:107-121` — multi-active без `--target` → ошибка.                                                                                                          |
 | Код      | `packages/integration-cursor/src/createCursorIntegration.ts:70`, `integration-codex/...:68`, `integration-kiro/...:105`, `integration-grok-build/...:51`, `integration-antigravity/...:66` — общий `AGENTS.md`. |
-| Тесты    | `packages/cli/tests/compile/{target-selection,active-selection,output-path}.test.ts`; `packages/core/tests/compile/target-capability-orchestration.test.ts`. |
-| Спека    | `openspec/specs/cli-runtime-surface/spec.md` — один compile-capable id за запуск. |
-| Docs     | `apps/docs/guide/situations/compile-agents.md:43-57` — таблица имён и отличие от APM. |
+| Тесты    | `packages/cli/tests/compile/{target-selection,active-selection,output-path}.test.ts`; `packages/core/tests/compile/target-capability-orchestration.test.ts`.                                                    |
+| Спека    | `openspec/specs/cli-runtime-surface/spec.md` — один compile-capable id за запуск.                                                                                                                               |
+| Docs     | `apps/docs/guide/situations/compile-agents.md:43-57` — таблица имён и отличие от APM.                                                                                                                           |
 
 Воспроизведение:
 
@@ -78,5 +78,5 @@ ls AGENTS.md            # один файл, перезаписан вторым
 
 ## Связанные
 
-- [conformance-beyond-cursor.md](./conformance-beyond-cursor.md) — §8.5 и честность заявленного покрытия.
+- §8.5 и честность заявленного покрытия — см. `CONFORMANCE.md` и [openapm-8-5-layout.md](./openapm-8-5-layout.md).
 - [stale-specs-compile-and-cursor.md](./stale-specs-compile-and-cursor.md) — устаревшая спека `compile-agents-md`.

@@ -23,23 +23,23 @@ OpenAPM требует безопасное подмножество YAML: як�
 
 ## Состояние
 
-| Источник     | Позиция                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| APM          | Более свободный YAML; якоря и алиасы проходят в пределах бюджета SafeLoader.                  |
-| OpenAPM      | Строгий subset: якоря, алиасы и кастомные теги запрещены.                                      |
-| Спека bapm   | `manifest-yaml-validate` и `lockfile-yaml-rw`: reject anchors/aliases/tags при загрузке.       |
-| Код bapm     | `packages/core/src/common/yaml/loadDocument.ts:39-59` — обход `Alias` / `Node`.                |
+| Источник     | Позиция                                                                                                         |
+| ------------ | --------------------------------------------------------------------------------------------------------------- |
+| APM          | Более свободный YAML; якоря и алиасы проходят в пределах бюджета SafeLoader.                                    |
+| OpenAPM      | Строгий subset: якоря, алиасы и кастомные теги запрещены.                                                       |
+| Спека bapm   | `manifest-yaml-validate` и `lockfile-yaml-rw`: reject anchors/aliases/tags при загрузке.                        |
+| Код bapm     | `packages/core/src/common/yaml/loadDocument.ts:39-59` — обход `Alias` / `Node`.                                 |
 | Тесты        | `packages/core/tests/manifest/validate.test.ts:180`; `packages/core/tests/lockfile/parse-serialize.test.ts:74`. |
-| Документация | `apps/docs/guide/conformance.md:31`: «YAML-якоря обрабатываются строго по OpenAPM».           |
+| Документация | `apps/docs/guide/conformance.md:31`: «YAML-якоря обрабатываются строго по OpenAPM».                             |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
-| Код      | `packages/core/src/common/yaml/loadDocument.ts:42` — alias; `:49` — anchor; `:54` — custom tag; `:61-70` — `YAML_SAFE_SUBSET`. |
+| Артефакт | Где смотреть                                                                                                                                        |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/common/yaml/loadDocument.ts:42` — alias; `:49` — anchor; `:54` — custom tag; `:61-70` — `YAML_SAFE_SUBSET`.                      |
 | Тесты    | `packages/core/tests/manifest/validate.test.ts:180` и `packages/core/tests/lockfile/parse-serialize.test.ts:74` — фикстура с `&` / `*` отвергается. |
-| Спека    | `openspec/specs/manifest-yaml-validate/spec.md:244-246`; `openspec/specs/lockfile-yaml-rw/spec.md:45`. |
-| Docs     | `apps/docs/guide/conformance.md:31` — строгая обработка заявлена пользователю. |
+| Спека    | `openspec/specs/manifest-yaml-validate/spec.md:244-246`; `openspec/specs/lockfile-yaml-rw/spec.md:45`.                                              |
+| Docs     | `apps/docs/guide/conformance.md:31` — строгая обработка заявлена пользователю.                                                                      |
 
 Воспроизведение:
 
@@ -57,6 +57,7 @@ dependencies:
 YAML
 (cd "$tmp" && node "$repo/packages/cli/dist/cli.mjs" install)
 ```
+
 Ожидание: файл отвергнут, код выхода 1.  
 Факт: `bapm: YAML anchor (&base) is not allowed (OpenAPM safe subset)`; воспроизведено 08.11.2026.
 

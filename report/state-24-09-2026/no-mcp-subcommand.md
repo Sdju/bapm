@@ -23,25 +23,25 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| APM          | Интерактивный approve ближе к `apm` подкомандам policy/mcp.                                   |
-| OpenAPM      | Не фиксирует имя бинаря.                                                                      |
-| Спека bapm   | Смесь: approve/deny shipped; условный «thin `mcp` command»; milestone M8.                     |
-| Код bapm     | Отдельной `bapm mcp` нет; зарегистрированы `policy`, `approve`, `deny`.                       |
-| Документация | `guide/commands.md`, `reference/policy.md` — approve/deny/policy без `mcp`.                   |
+| Источник     | Позиция                                                                     |
+| ------------ | --------------------------------------------------------------------------- |
+| APM          | Интерактивный approve ближе к `apm` подкомандам policy/mcp.                 |
+| OpenAPM      | Не фиксирует имя бинаря.                                                    |
+| Спека bapm   | Смесь: approve/deny shipped; условный «thin `mcp` command»; milestone M8.   |
+| Код bapm     | Отдельной `bapm mcp` нет; зарегистрированы `policy`, `approve`, `deny`.     |
+| Документация | `guide/commands.md`, `reference/policy.md` — approve/deny/policy без `mcp`. |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Артефакт | Где смотреть                                                                                                                   |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Код      | `packages/cli/src/common/constants/commands.ts:1-25` — `COMMAND_POLICY`, `COMMAND_APPROVE`, `COMMAND_DENY`; `COMMAND_MCP` нет. |
-| Код      | `packages/cli/src/app/registry.ts:101-102` — маршруты `approve`/`deny`; `mcp` не зарегистрирован.                          |
-| Спека    | `openspec/specs/cli-runtime-surface/spec.md:43` — «thin `mcp` command when registered».                                   |
-| Спека    | `openspec/specs/cli-runtime-surface/spec.md:348` — milestone M8; `:502` — «only status… approve-deny MUST NOT be added».   |
-| Спека    | `openspec/specs/cli-runtime-surface/spec.md:757-774` — top-level approve/deny и help.                                     |
-| Docs     | `apps/docs/guide/commands.md:51-52` — `approve`/`deny`; `apps/docs/reference/policy.md` — флаги и user store.             |
-| Тесты    | `packages/cli/tests/mcp/approve-deny.test.ts:25`, `approve-deny-help.test.ts:9`.                                          |
+| Код      | `packages/cli/src/app/registry.ts:101-102` — маршруты `approve`/`deny`; `mcp` не зарегистрирован.                              |
+| Спека    | `openspec/specs/cli-runtime-surface/spec.md:43` — «thin `mcp` command when registered».                                        |
+| Спека    | `openspec/specs/cli-runtime-surface/spec.md:348` — milestone M8; `:502` — «only status… approve-deny MUST NOT be added».       |
+| Спека    | `openspec/specs/cli-runtime-surface/spec.md:757-774` — top-level approve/deny и help.                                          |
+| Docs     | `apps/docs/guide/commands.md:51-52` — `approve`/`deny`; `apps/docs/reference/policy.md` — флаги и user store.                  |
+| Тесты    | `packages/cli/tests/mcp/approve-deny.test.ts:25`, `approve-deny-help.test.ts:9`.                                               |
 
 Воспроизведение:
 

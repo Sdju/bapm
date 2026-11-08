@@ -34,12 +34,12 @@ Cursor создаёт `.cursor/` при необходимости и пишет
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/integration-claude/src/createClaudeIntegration.ts:183` — early return без `.claude/`; `packages/integration-gemini/src/createGeminiIntegration.ts:234`; `packages/integration-kiro/src/createKiroIntegration.ts:217`; `packages/integration-antigravity/src/createAntigravityIntegration.ts:234`; `packages/integration-cursor/src/createCursorIntegration.ts:188` — `mkdirSync(.cursor)`; `packages/core/src/modules/Install/runInstall.ts:438` — materialize до MCP (`:498`). |
-| Тесты    | `integration-claude/tests/mcp/configure-mcp.test.ts:54`, Gemini `:72`, Kiro `:65`, Antigravity `:53` — skip без каталога. |
-| Спека    | `openspec/specs/integration-claude-runtime/spec.md:118`, `integration-gemini-runtime/spec.md:103`, `integration-kiro-runtime/spec.md:89`, `integration-antigravity-runtime/spec.md:101`. |
-| Docs     | `apps/docs/guide/supported-hosts.md:53`, `apps/docs/reference/install.md:55`. |
+| Тесты    | `integration-claude/tests/mcp/configure-mcp.test.ts:54`, Gemini `:72`, Kiro `:65`, Antigravity `:53` — skip без каталога.                                                                                                                                                                                                                                                                                                                                                                 |
+| Спека    | `openspec/specs/integration-claude-runtime/spec.md:118`, `integration-gemini-runtime/spec.md:103`, `integration-kiro-runtime/spec.md:89`, `integration-antigravity-runtime/spec.md:101`.                                                                                                                                                                                                                                                                                                  |
+| Docs     | `apps/docs/guide/supported-hosts.md:53`, `apps/docs/reference/install.md:55`.                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 Воспроизведение:
 

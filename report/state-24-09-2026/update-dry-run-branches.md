@@ -23,25 +23,25 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| APM          | `outdated` показывает drift ветки; plan update может отличаться от apply.                                                                     |
-| OpenAPM      | Mutable ref vs pinned commit — разные операции.                                                                                               |
-| Спека bapm   | `lifecycle-update`:41-58 — dry-run и apply; :69-85 — keep-строки скрываются без verbose. Отдельного требования «план видит ветки» нет.          |
+| Источник     | Позиция                                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| APM          | `outdated` показывает drift ветки; plan update может отличаться от apply.                                                                                                |
+| OpenAPM      | Mutable ref vs pinned commit — разные операции.                                                                                                                          |
+| Спека bapm   | `lifecycle-update`:41-58 — dry-run и apply; :69-85 — keep-строки скрываются без verbose. Отдельного требования «план видит ветки» нет.                                   |
 | Код bapm     | `packages/core/src/modules/Update/runUpdate.ts:45-49` — dry-run; `planWithoutMutation`:115-182; constraint/`resolved_tag` — :149-154; `keep` — :170-172; apply — :71-83. |
-| Документация | `apps/docs/guide/situations/update-deps.md:25`: «пакеты на ветках помечены `keep`, хотя `update -y` их сдвинет»; :62 — та же оговорка.          |
-| Тесты        | `packages/core/tests/lifecycle/update-plan-verbose.test.ts:29-80` — фильтрация keep на semver-фикстуре; кейса с веткой нет.                      |
+| Документация | `apps/docs/guide/situations/update-deps.md:25`: «пакеты на ветках помечены `keep`, хотя `update -y` их сдвинет»; :62 — та же оговорка.                                   |
+| Тесты        | `packages/core/tests/lifecycle/update-plan-verbose.test.ts:29-80` — фильтрация keep на semver-фикстуре; кейса с веткой нет.                                              |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                                                  |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/Update/runUpdate.ts:149-154` — constraint из lock или `^major` из `resolved_tag`; для ветки оба пусты.                              |
-| Код      | `packages/core/src/modules/Update/runUpdate.ts:170-172` — fallback `action: "keep"`; `:230-234` — без verbose keep не печатается.                              |
-| Код      | `packages/core/src/modules/Update/runUpdate.ts:71-83` — apply вызывает `resolveAndLock` с `updateRefs: true`.                                                  |
-| Тесты    | `packages/core/tests/lifecycle/update.test.ts:204-246` — dry-run не мутирует; `update-plan-verbose.test.ts` — только semver keep.                             |
-| Спека    | `openspec/specs/lifecycle-update/spec.md:41-58` — dry-run; :69-85 — verbosity.                                                                                |
-| Docs     | `apps/docs/guide/situations/update-deps.md:25,62` — предупреждение про ветки.                                                                                 |
+| Артефакт | Где смотреть                                                                                                                      |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Update/runUpdate.ts:149-154` — constraint из lock или `^major` из `resolved_tag`; для ветки оба пусты. |
+| Код      | `packages/core/src/modules/Update/runUpdate.ts:170-172` — fallback `action: "keep"`; `:230-234` — без verbose keep не печатается. |
+| Код      | `packages/core/src/modules/Update/runUpdate.ts:71-83` — apply вызывает `resolveAndLock` с `updateRefs: true`.                     |
+| Тесты    | `packages/core/tests/lifecycle/update.test.ts:204-246` — dry-run не мутирует; `update-plan-verbose.test.ts` — только semver keep. |
+| Спека    | `openspec/specs/lifecycle-update/spec.md:41-58` — dry-run; :69-85 — verbosity.                                                    |
+| Docs     | `apps/docs/guide/situations/update-deps.md:25,62` — предупреждение про ветки.                                                     |
 
 Воспроизведение:
 
@@ -78,4 +78,3 @@ bapm update -y;                   # "[~] dep: old → new", lock сдвинут
 ## Связанные
 
 - [update-not-blocked-in-ci.md](./update-not-blocked-in-ci.md) — update в CI применяет план без запрета.
-- [frozen-ignores-ref-change.md](./frozen-ignores-ref-change.md) — ref/пин расходятся и в frozen-сценарии.

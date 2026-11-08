@@ -23,24 +23,24 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                                                                                         |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| APM          | Повторный install/uninstall опирается на inventory в lock.                                                                                                                                      |
-| OpenAPM      | lk-017: сверка развёрнутых файлов с хешами; orphan cleanup — производное.                                                                                                                       |
-| Спека bapm   | `install-pipeline:120`: install MUST удалить orphaned harness paths из предыдущего inventory.                                                                                                  |
-| Код bapm     | `runInstall.ts:331-337` — вызов только не-frozen; `deployedInventory.ts:42-69` — удаление лишь по `deployed_file_hashes`, пустые каталоги и ошибки unlink игнорируются.                        |
-| Документация | `reference/install.md:54`: «файлы не удаляются» — жёстче кода; верно только без inventory или в frozen.                                                                                          |
+| Источник     | Позиция                                                                                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APM          | Повторный install/uninstall опирается на inventory в lock.                                                                                                              |
+| OpenAPM      | lk-017: сверка развёрнутых файлов с хешами; orphan cleanup — производное.                                                                                               |
+| Спека bapm   | `install-pipeline:120`: install MUST удалить orphaned harness paths из предыдущего inventory.                                                                           |
+| Код bapm     | `runInstall.ts:331-337` — вызов только не-frozen; `deployedInventory.ts:42-69` — удаление лишь по `deployed_file_hashes`, пустые каталоги и ошибки unlink игнорируются. |
+| Документация | `reference/install.md:54`: «файлы не удаляются» — жёстче кода; верно только без inventory или в frozen.                                                                 |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                         |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Код      | `packages/core/src/modules/Install/runInstall.ts:331` — `!frozen && !skipApmMaterialize`.                                            |
-| Код      | `packages/core/src/modules/Install/deployedInventory.ts:54-66` — удаляются только ключи `deployed_file_hashes`.                      |
-| Код      | `packages/core/src/modules/Uninstall/runUninstall.ts:108-112` — cleanup вызывается до `partitionAndWriteLockfiles`.                    |
+| Артефакт | Где смотреть                                                                                                                                 |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Install/runInstall.ts:331` — `!frozen && !skipApmMaterialize`.                                                    |
+| Код      | `packages/core/src/modules/Install/deployedInventory.ts:54-66` — удаляются только ключи `deployed_file_hashes`.                              |
+| Код      | `packages/core/src/modules/Uninstall/runUninstall.ts:108-112` — cleanup вызывается до `partitionAndWriteLockfiles`.                          |
 | Тесты    | `packages/core/tests/install/cleanup-hashes-forced-target.test.ts:188` — удаление записанного orphan-файла; кейсов «нет хешей» и frozen нет. |
-| Спека    | `openspec/specs/install-pipeline/spec.md:120` — cleanup обязателен.                                                                  |
-| Docs     | `apps/docs/reference/install.md:54` — противоположное утверждение.                                                                   |
+| Спека    | `openspec/specs/install-pipeline/spec.md:120` — cleanup обязателен.                                                                          |
+| Docs     | `apps/docs/reference/install.md:54` — противоположное утверждение.                                                                           |
 
 Воспроизведение:
 
@@ -81,6 +81,5 @@ ls .agents/skills/hello/SKILL.md   # файла нет: hash был в lock
 
 ## Связанные
 
-- [uninstall-incomplete.md](./uninstall-incomplete.md) — uninstall тоже очищает inventory, но может оставить манифест.
 - [install-force-noop.md](./install-force-noop.md) — force не помогает обойти frozen и не запускает cleanup.
 - [hash-formats.md](./hash-formats.md) — формат хешей, по которым ищутся сироты.

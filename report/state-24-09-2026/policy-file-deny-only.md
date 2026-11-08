@@ -21,23 +21,23 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| APM          | Policy file ближе к общему документу allow/deny/mcp.                                          |
-| OpenAPM      | Governance policy: deny-wins; allow может жить в проекте отдельно.                            |
-| Спека bapm   | `policy-yaml-parse`: typed floor — `deny_all`/`deny`; прочие ключи MAY игнорироваться/warn.   |
-| Код bapm     | `parseExecutables` читает только `deny_all`/`deny`; `allow` и `mcp` не дают ошибки.           |
-| Тесты        | Есть parse/merge для `deny`; теста на отказ/предупреждение для `executables.allow` нет.       |
+| Источник     | Позиция                                                                                        |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| APM          | Policy file ближе к общему документу allow/deny/mcp.                                           |
+| OpenAPM      | Governance policy: deny-wins; allow может жить в проекте отдельно.                             |
+| Спека bapm   | `policy-yaml-parse`: typed floor — `deny_all`/`deny`; прочие ключи MAY игнорироваться/warn.    |
+| Код bapm     | `parseExecutables` читает только `deny_all`/`deny`; `allow` и `mcp` не дают ошибки.            |
+| Тесты        | Есть parse/merge для `deny`; теста на отказ/предупреждение для `executables.allow` нет.        |
 | Документация | `reference/policy.md:49` — корректно; `guide/situations/policy-mcp.md:48,70` — обещает ошибку. |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                     |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/core/src/modules/Policy/parse.ts:126` — `parseExecutables`; `:134`/`:137` — только `deny_all` и `deny`; `:19` — `mcp` в `KNOWN_TOP_LEVEL`; `packages/core/src/modules/Policy/evaluate.ts:38` — evaluator читает `dependencies`, `:58` — `dependencies.allow` работает. |
-| Тесты    | `packages/core/tests/policy/executables-parse-merge.test.ts:15` — закреплён parse `deny_all`/`deny`; кейса `allow`/`mcp` нет. |
-| Спека    | `openspec/specs/policy-yaml-parse/spec.md:89` — поля сверх floor не должны падать, MAY игнорироваться или warning. |
-| Docs     | `apps/docs/reference/policy.md:49` — «понимает только запреты»; `apps/docs/guide/situations/policy-mcp.md:48` — «ошибка». |
+| Тесты    | `packages/core/tests/policy/executables-parse-merge.test.ts:15` — закреплён parse `deny_all`/`deny`; кейса `allow`/`mcp` нет.                                                                                                                                                    |
+| Спека    | `openspec/specs/policy-yaml-parse/spec.md:89` — поля сверх floor не должны падать, MAY игнорироваться или warning.                                                                                                                                                               |
+| Docs     | `apps/docs/reference/policy.md:49` — «понимает только запреты»; `apps/docs/guide/situations/policy-mcp.md:48` — «ошибка».                                                                                                                                                        |
 
 Воспроизведение:
 
@@ -71,12 +71,14 @@ node "$repo/packages/cli/dist/cli.mjs" policy status --policy "$d/bapm-policy.ym
 ## Поведение сейчас
 
 Команда пишет:
+
 ```yaml
 # bapm.yml
 executables:
   allow:
     acme/mcp-tools: { mcp: true }
 ```
+
 Org/repo policy может только запретить. Прямые `dependencies.mcp` корня политика не режет. `bapm policy status` покажет `found` и нулевые `rule_counts`, но не скажет, что `executables.allow`/`mcp:` пропущены.
 
 ## Связанные

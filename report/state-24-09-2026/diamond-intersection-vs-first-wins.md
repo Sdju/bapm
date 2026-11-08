@@ -30,16 +30,16 @@
 | Спека bapm   | `dependency-resolve`: diamond policy OpenAPM, не APM; пустое ∩ — fail closed.                                           |
 | Код bapm     | `packages/core/src/modules/Resolver/resolveGraph.ts:934` — `applyIntersectionPick`.                                     |
 | Тесты        | `packages/core/tests/resolve/intersection-pick.test.ts` закрепляет пересечение и диагностику.                           |
-| Документация | `CONFORMANCE.md:39` — intersection-pick назван намеренным отличием; отдельного раздела в `apps/docs` нет. |
+| Документация | `CONFORMANCE.md:39` — intersection-pick назван намеренным отличием; отдельного раздела в `apps/docs` нет.               |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/core/src/modules/Resolver/resolveGraph.ts:953` — `pickHighestInIntersection`; `:957` — `RESOLVE_EMPTY_INTERSECTION`; `:963` — цепочки через `->`. |
-| Тесты    | `packages/core/tests/resolve/intersection-pick.test.ts:39` — overlapping ranges дают `v1.2.9`; `:107` — пустое ∩ падает с `->`. |
-| Спека    | `openspec/specs/dependency-resolve/spec.md:161` — MUST intersection-pick, MUST NOT first-wins (req-rs-001/010). |
-| Docs     | `CONFORMANCE.md:39,146` — отличие и citation на тест. `apps/docs/guide/conformance.md:30` — про пересечение агентов, не версий. |
+| Тесты    | `packages/core/tests/resolve/intersection-pick.test.ts:39` — overlapping ranges дают `v1.2.9`; `:107` — пустое ∩ падает с `->`.                             |
+| Спека    | `openspec/specs/dependency-resolve/spec.md:161` — MUST intersection-pick, MUST NOT first-wins (req-rs-001/010).                                             |
+| Docs     | `CONFORMANCE.md:39,146` — отличие и citation на тест. `apps/docs/guide/conformance.md:30` — про пересечение агентов, не версий.                             |
 
 Воспроизведение:
 

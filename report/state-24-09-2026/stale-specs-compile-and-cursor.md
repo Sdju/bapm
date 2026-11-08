@@ -23,26 +23,26 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                         |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| APM          | Compile/MCP эволюционировали отдельно.                                                                                          |
-| OpenAPM      | Compile и MCP — host-agnostic.                                                                                                  |
+| Источник     | Позиция                                                                                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APM          | Compile/MCP эволюционировали отдельно.                                                                                                                         |
+| OpenAPM      | Compile и MCP — host-agnostic.                                                                                                                                 |
 | Спека bapm   | `compile-agents-md` — cursor-only Purpose, «No multi-host compile outputs in M9», «Compile stays AGENTS.md-only». `install-pipeline` — Cursor-only MCP deploy. |
-| Код bapm     | Compile для любого compile-capable зарегистрированного id. MCP — `configureMcp` у каждого target, inventory по его id.          |
-| Документация | `guide/situations/compile-agents.md`, `supported-hosts.md`.                                                                     |
+| Код bapm     | Compile для любого compile-capable зарегистрированного id. MCP — `configureMcp` у каждого target, inventory по его id.                                         |
+| Документация | `guide/situations/compile-agents.md`, `supported-hosts.md`.                                                                                                    |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/Compile/compileAgentsMd.ts:22` — `selectCompileTarget` и `target.compile(sorted, …)`.                       |
-| Код      | `packages/core/src/modules/Install/runInstall.ts:965` — `getConfigureMcp(target)` для любого target, без Cursor-ветки.                 |
-| CLI      | `packages/cli/src/modules/Compile/services/runCompile.ts:131` — help: `AGENTS.md, CLAUDE.md, …`, `--target <id>`.                       |
-| Спека    | `openspec/specs/compile-agents-md/spec.md:5`, `:18`, `:125`, `:172-174` — cursor-only формулировки.                                   |
-| Спека    | `openspec/specs/cli-runtime-surface/spec.md:376` — `--target` назван не поддерживаемым «in this change», хотя он в help и парсере.     |
-| Спека    | `openspec/specs/install-pipeline/spec.md:296` — Cursor-only MCP deploy; `:315-320` — inventory по configuring target.                 |
-| Docs     | `apps/docs/guide/situations/compile-agents.md:35` — «Имя файла зависит от агента… `compile` работает с одним агентом за запуск».        |
-| Change   | `openspec/changes/archive/2026-11-08-sync-specs-with-shipped-behavior/tasks.md:24` — follow-up 4.2 не отмечен.                        |
+| Артефакт | Где смотреть                                                                                                                       |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Compile/compileAgentsMd.ts:22` — `selectCompileTarget` и `target.compile(sorted, …)`.                   |
+| Код      | `packages/core/src/modules/Install/runInstall.ts:965` — `getConfigureMcp(target)` для любого target, без Cursor-ветки.             |
+| CLI      | `packages/cli/src/modules/Compile/services/runCompile.ts:131` — help: `AGENTS.md, CLAUDE.md, …`, `--target <id>`.                  |
+| Спека    | `openspec/specs/compile-agents-md/spec.md:5`, `:18`, `:125`, `:172-174` — cursor-only формулировки.                                |
+| Спека    | `openspec/specs/cli-runtime-surface/spec.md:376` — `--target` назван не поддерживаемым «in this change», хотя он в help и парсере. |
+| Спека    | `openspec/specs/install-pipeline/spec.md:296` — Cursor-only MCP deploy; `:315-320` — inventory по configuring target.              |
+| Docs     | `apps/docs/guide/situations/compile-agents.md:35` — «Имя файла зависит от агента… `compile` работает с одним агентом за запуск».   |
+| Change   | `openspec/changes/archive/2026-11-08-sync-specs-with-shipped-behavior/tasks.md:24` — follow-up 4.2 не отмечен.                     |
 
 Воспроизведение:
 
@@ -78,6 +78,5 @@ rg -n 'Cursor MCP deploy|configuring target' openspec/specs/install-pipeline/spe
 
 ## Связанные
 
-- [spec-legacy-active.md](./spec-legacy-active.md) — соседний follow-up того же change (4.1), уже закрыт.
 - [cli-tests-cursor-resolves.md](./cli-tests-cursor-resolves.md) — тесты, которые ещё верят в отсутствие Cursor/Claude.
 - [plugin-flags-vs-spec.md](./plugin-flags-vs-spec.md) — другой пример отставания спеки от shipped CLI.

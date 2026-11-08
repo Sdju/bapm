@@ -22,24 +22,24 @@ Non-interactive (truthy `CI`, `BAPM_NON_INTERACTIVE`, non-TTY stdin, frozen) н�
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| APM          | Consent на исполняемое ближе к интерактивному prompt / policy.                                                              |
-| OpenAPM      | Bin — executable type; consent слой — реализация.                                                                           |
-| Спека bapm   | `install-trust-bin`: `--trust-bin` / `--no-trust-bin` после deny-wins лестницы; interactive default — отдельный сценарий.   |
-| Код bapm     | `ExecutableTrust/binConsent.ts` + install.                                                                                  |
-| Тесты        | `bin-consent-install.test.ts` покрывает CI/frozen/allow/interactive; TTY + surface без пакета не покрыт.                    |
-| Документация | `reference/install.md:49`: TTY без флага + warning; approve ≠ bin grant.                                                    |
+| Источник     | Позиция                                                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| APM          | Consent на исполняемое ближе к интерактивному prompt / policy.                                                            |
+| OpenAPM      | Bin — executable type; consent слой — реализация.                                                                         |
+| Спека bapm   | `install-trust-bin`: `--trust-bin` / `--no-trust-bin` после deny-wins лестницы; interactive default — отдельный сценарий. |
+| Код bapm     | `ExecutableTrust/binConsent.ts` + install.                                                                                |
+| Тесты        | `bin-consent-install.test.ts` покрывает CI/frozen/allow/interactive; TTY + surface без пакета не покрыт.                  |
+| Документация | `reference/install.md:49`: TTY без флага + warning; approve ≠ bin grant.                                                  |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
-| Код      | `packages/core/src/modules/ExecutableTrust/binConsent.ts:79` — ladder deny/withhold wins; `:119` — interactive default deploy+warn; `:144` — non-interactive withhold. |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Код      | `packages/core/src/modules/ExecutableTrust/binConsent.ts:79` — ladder deny/withhold wins; `:119` — interactive default deploy+warn; `:144` — non-interactive withhold.                                                                                                                                                                                 |
 | Код      | `packages/core/src/modules/ExecutableTrust/binConsent.ts:164` — `resolveIsInteractive` (`CI`, `BAPM_NON_INTERACTIVE`, frozen, stdin TTY); `packages/core/src/modules/Install/runInstall.ts:1197` — вызов consent, `:1224` — materialize, `:1225` — warning; `packages/cli/src/modules/Approve/services/runApprove.ts:60` — approve пишет только `mcp`. |
-| Тесты    | `packages/core/tests/install/bin-consent-install.test.ts:44` — CI skip; `:100` — non-interactive allow; `:257` — interactive warns+deploys. |
-| Спека    | `openspec/specs/install-trust-bin/spec.md:33` — non-interactive skip; `:57` — interactive warns then deploys when ladder allows; `:59` — absent surface не блокирует. |
-| Docs     | `apps/docs/reference/install.md:45,49`. |
+| Тесты    | `packages/core/tests/install/bin-consent-install.test.ts:44` — CI skip; `:100` — non-interactive allow; `:257` — interactive warns+deploys.                                                                                                                                                                                                            |
+| Спека    | `openspec/specs/install-trust-bin/spec.md:33` — non-interactive skip; `:57` — interactive warns then deploys when ladder allows; `:59` — absent surface не блокирует.                                                                                                                                                                                  |
+| Docs     | `apps/docs/reference/install.md:45,49`.                                                                                                                                                                                                                                                                                                                |
 
 Воспроизведение:
 

@@ -23,22 +23,22 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| APM          | Нет `*.local.yml`, нет источника `local`.                                                     |
-| OpenAPM      | Нет этих полей.                                                                                |
+| Источник     | Позиция                                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| APM          | Нет `*.local.yml`, нет источника `local`.                                                                                                        |
+| OpenAPM      | Нет этих полей.                                                                                                                                  |
 | Спека bapm   | `manifest-local-overlay`: allowlist `active`, `target`, `targets`, `env`, `registries`; `lockfile-local-shared-split` — отдельный personal lock. |
-| Код bapm     | `packages/core/src/modules/Manifest/localOverlay.ts:14` — allowlist; `Lockfile/personal.ts:11` — `bapm.local.lock.yaml`. |
-| Тесты        | `packages/core/tests/manifest/local-overlay-allowlist.test.ts`; `local-overlay-discovery.test.ts`. |
-| Документация | `apps/docs/guide/manifest-overlay.md`; ситуации `team-local-active.md`, `personal-local-lock.md`. |
+| Код bapm     | `packages/core/src/modules/Manifest/localOverlay.ts:14` — allowlist; `Lockfile/personal.ts:11` — `bapm.local.lock.yaml`.                         |
+| Тесты        | `packages/core/tests/manifest/local-overlay-allowlist.test.ts`; `local-overlay-discovery.test.ts`.                                               |
+| Документация | `apps/docs/guide/manifest-overlay.md`; ситуации `team-local-active.md`, `personal-local-lock.md`.                                                |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
-| Код      | `Manifest/localOverlay.ts:14` — allowlist; `:33` — отказ `apm.local.yml`; `:46` — корень без parent walk-up; `Lockfile/personal.ts:11` — имя personal lock. |
-| Тесты    | `local-overlay-allowlist.test.ts:25` — разрешённые ключи; `:51` — `dependencies` отвергается; `local-overlay-discovery.test.ts` — поиск только в корне. |
-| Спека    | `openspec/specs/manifest-local-overlay/spec.md:9` — discovery; `:37` — allowlist; `lockfile-local-shared-split/spec.md:11` — personal lock. |
+| Артефакт | Где смотреть                                                                                                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `Manifest/localOverlay.ts:14` — allowlist; `:33` — отказ `apm.local.yml`; `:46` — корень без parent walk-up; `Lockfile/personal.ts:11` — имя personal lock.      |
+| Тесты    | `local-overlay-allowlist.test.ts:25` — разрешённые ключи; `:51` — `dependencies` отвергается; `local-overlay-discovery.test.ts` — поиск только в корне.          |
+| Спека    | `openspec/specs/manifest-local-overlay/spec.md:9` — discovery; `:37` — allowlist; `lockfile-local-shared-split/spec.md:11` — personal lock.                      |
 | Docs     | `apps/docs/guide/manifest-overlay.md:3` — назначение; `:29-36` — что переопределяется; `situations/personal-local-lock.md:9` — `local` → `bapm.local.lock.yaml`. |
 
 Воспроизведение:
@@ -72,10 +72,8 @@ printf 'dependencies:\n  apm:\n    - path: ./x\n' > "$tmp/bapm.local.yml"
 
 ## Поведение сейчас
 
-Оверлей полностью заменяет `active` базы, остальные разрешённые поля сливает по правилам. `local`-пакет попадает только в `bapm.local.lock.yaml`. Если записать `local` в общий `bapm.yml`, в CI frozen install падает на отсутствующем пине (`INSTALL_FROZEN_MISSING_PIN`), а вне CI — на отсутствующем каталоге у коллег. `doctor` предупреждает, если личный файл попал в git, но на код выхода это не влияет. См. [path-absolute-in-lock.md](./path-absolute-in-lock.md) про другой непереносимый путь.
+Оверлей полностью заменяет `active` базы, остальные разрешённые поля сливает по правилам. `local`-пакет попадает только в `bapm.local.lock.yaml`. Если записать `local` в общий `bapm.yml`, в CI frozen install падает на отсутствующем пине (`INSTALL_FROZEN_MISSING_PIN`), а вне CI — на отсутствующем каталоге у коллег. `doctor` предупреждает, если личный файл попал в git, но на код выхода это не влияет. `path:` теперь пишется в lock project-relative, поэтому общий lock переносим.
 
 ## Связанные
 
-- [path-absolute-in-lock.md](./path-absolute-in-lock.md) — `path:` пишется в lock абсолютным путём, что тоже мешает переносимости.
-- [env-precedence.md](./env-precedence.md) — приоритет `env` оверлея против bake и переменных процесса.
 - [targets-narrow-deploy.md](./targets-narrow-deploy.md) — `target` / `targets` в оверлее тоже сужают раскладку.

@@ -23,24 +23,24 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                            |
-| ------------ | -------------------------------------------------------------------------------------------------- |
-| APM          | Свои фикстуры; не относится.                                                                       |
-| OpenAPM      | Не регламентирует test harness.                                                                    |
-| Спека bapm   | Нет требования изоляции HOME.                                                                      |
+| Источник     | Позиция                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| APM          | Свои фикстуры; не относится.                                                                           |
+| OpenAPM      | Не регламентирует test harness.                                                                        |
+| Спека bapm   | Нет требования изоляции HOME.                                                                          |
 | Код bapm     | User store читает `~/.bapm` при отсутствии `configDir`; install пробрасывает только явный `configDir`. |
-| Тесты        | Часть suite задаёт tmp cwd, но не HOME/configDir; глобального setup нет.                           |
-| Документация | Нет.                                                                                               |
+| Тесты        | Часть suite задаёт tmp cwd, но не HOME/configDir; глобального setup нет.                               |
+| Документация | Нет.                                                                                                   |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/ExecutableTrust/userStore.ts:39-43` — `resolveUserConfigRoot` → `homedir()/.bapm`.             |
-| Код      | `packages/core/src/modules/Install/runInstall.ts:824`, `:1175` — `loadUserExecutableGrants({ configDir: args.configDir })`. |
-| Тесты    | `packages/core/tests/install/bin-consent-install.test.ts:44` — тест не передаёт configDir.                                 |
+| Артефакт | Где смотреть                                                                                                                            |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/ExecutableTrust/userStore.ts:39-43` — `resolveUserConfigRoot` → `homedir()/.bapm`.                           |
+| Код      | `packages/core/src/modules/Install/runInstall.ts:824`, `:1175` — `loadUserExecutableGrants({ configDir: args.configDir })`.             |
+| Тесты    | `packages/core/tests/install/bin-consent-install.test.ts:44` — тест не передаёт configDir.                                              |
 | Тесты    | Изоляция есть точечно: `packages/cli/tests/mcp/approve-deny-helpers.ts:53`, `packages/core/tests/marketplace/resolve-graph.test.ts:22`. |
-| Конфиг   | `packages/core/vite.config.ts` — нет `test.setupFiles`/`globalSetup` с подменой HOME.                                      |
+| Конфиг   | `packages/core/vite.config.ts` — нет `test.setupFiles`/`globalSetup` с подменой HOME.                                                   |
 
 Воспроизведение:
 

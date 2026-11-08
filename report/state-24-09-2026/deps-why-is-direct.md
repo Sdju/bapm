@@ -23,23 +23,23 @@ JSON `deps why` помечает пакет прямым, если `resolved_by`
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                                 |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| APM          | `why` отличает direct по манифесту / depth 1.                                                                                           |
-| OpenAPM      | `resolved_by` — цепочка родителей; пусто у корня.                                                                                       |
-| Спека bapm   | `deps-inspect`:36-48 — `is_direct` в `package` и в узлах chain; цепочка транзитива должна включать родителя.                             |
+| Источник     | Позиция                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APM          | `why` отличает direct по манифесту / depth 1.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| OpenAPM      | `resolved_by` — цепочка родителей; пусто у корня.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Спека bapm   | `deps-inspect`:36-48 — `is_direct` в `package` и в узлах chain; цепочка транзитива должна включать родителя.                                                                                                                                                                                                                                                                                                                                               |
 | Код bapm     | `packages/core/src/modules/Deps/whyDeps.ts:154-160` — `by == null` → `true`; пустой массив/строка → `true`; иначе `false`; `depth`/манифест не читаются. `packages/core/src/modules/Resolver/resolveAndLock.ts:368-369` — `resolved_by`/`depth` для git/registry; `packages/core/src/modules/Resolver/resolveGraph.ts:206,575` — chain с именем проекта; `packages/core/src/modules/Resolver/resolveAndLock.ts:306-327` — local без `resolved_by`/`depth`. |
-| Документация | `apps/docs/reference/deps.md:29` — только флаг `--json`; семантика `is_direct` не описана.                                               |
-| Тесты        | `packages/core/tests/deps/why-result.test.ts:43-44,108`, `whyDeps.test.ts:83-90` — рукописные lock; теста на вывод `resolveAndLock` нет. |
+| Документация | `apps/docs/reference/deps.md:29` — только флаг `--json`; семантика `is_direct` не описана.                                                                                                                                                                                                                                                                                                                                                                 |
+| Тесты        | `packages/core/tests/deps/why-result.test.ts:43-44,108`, `whyDeps.test.ts:83-90` — рукописные lock; теста на вывод `resolveAndLock` нет.                                                                                                                                                                                                                                                                                                                   |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                                       |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                                                                                           |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Код      | `packages/core/src/modules/Deps/whyDeps.ts:154-160` — вся логика `isDirect`; `:173-181` — запись в `package`. `packages/core/src/modules/Resolver/resolveGraph.ts:206` — root chain `[rootName]`; `:575` — `resolved_by` из chain. `packages/core/src/modules/Resolver/resolveAndLock.ts:368-369` — `resolved_by`/`depth`; `:306-327` — local без них. |
-| Тесты    | `packages/core/tests/deps/whyDeps.test.ts:83-90` — parent true; транзитив :161-174 — только chain, без ложного direct.                              |
-| Спека    | `openspec/specs/deps-inspect/spec.md:36-48` — форма JSON и chain.                                                                                  |
-| Docs     | `apps/docs/reference/deps.md:29` — `--json` есть, семантики нет.                                                                                   |
+| Тесты    | `packages/core/tests/deps/whyDeps.test.ts:83-90` — parent true; транзитив :161-174 — только chain, без ложного direct.                                                                                                                                                                                                                                 |
+| Спека    | `openspec/specs/deps-inspect/spec.md:36-48` — форма JSON и chain.                                                                                                                                                                                                                                                                                      |
+| Docs     | `apps/docs/reference/deps.md:29` — `--json` есть, семантики нет.                                                                                                                                                                                                                                                                                       |
 
 Воспроизведение:
 
@@ -82,5 +82,4 @@ bapm deps why dep --json          # is_direct: false, chain: root -> dep
 
 ## Связанные
 
-- [path-absolute-in-lock.md](./path-absolute-in-lock.md) — local-записи в lock теряют `resolved_by`/`depth` и получают абсолютный `path`.
 - [hash-formats.md](./hash-formats.md) — ещё одно поле lock, семантика которого не сведена в docs.

@@ -13,7 +13,7 @@ OpenAPM §8.5 описывает единую каноническую раск�
 
 Отдельно стоит `req-tg-001` (§8.4): он `active` и покрывает materialize через `target-materialize.test.ts` / `cursor-e2e.test.ts`. То есть базовый per-target deploy проверяется, а именно каноническая карта путей §8.5 — нет. `req-tg-004` относится к §4.2.1, а не к §8.5, поэтому в диапазон «002…010» не входит.
 
-Формулировка «multi-target adapters beyond cursor» из старых limitations в текущем `CONFORMANCE.md` уже снята: осталась нейтральная строка «§8.5 per-target layout is not claimed». Смежная карточка про эту формулировку — [conformance-beyond-cursor.md](./conformance-beyond-cursor.md).
+Формулировка «multi-target adapters beyond cursor» из старых limitations в текущем `CONFORMANCE.md` уже снята: осталась нейтральная строка «§8.5 per-target layout is not claimed». История формулировки «beyond cursor» закрыта: statement пересобран из чеклиста.
 
 ## Влияние
 
@@ -25,23 +25,23 @@ OpenAPM §8.5 описывает единую каноническую раск�
 
 ## Состояние
 
-| Источник     | Позиция                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------- |
-| APM          | Свой набор путей (исторически cursor-first, плюс другие адаптеры в Python).                    |
-| OpenAPM §8.5 | Каноническая per-target раскладка.                                                             |
-| Спека bapm   | Чеклист `req-tg-002/003/005–010`: «§8.5 per-target layout not verified», `skipped`.            |
+| Источник     | Позиция                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| APM          | Свой набор путей (исторически cursor-first, плюс другие адаптеры в Python).                            |
+| OpenAPM §8.5 | Каноническая per-target раскладка.                                                                     |
+| Спека bapm   | Чеклист `req-tg-002/003/005–010`: «§8.5 per-target layout not verified», `skipped`.                    |
 | Код bapm     | Каждая интеграция задаёт свои `deployRoots` и пути, например cursor — `[".agents/skills", ".cursor"]`. |
-| Тесты        | §8.5-фикстур нет; `req-tg-001` (§8.4) покрывает materialize.                                   |
-| Документация | `apps/docs/guide/conformance.md:8,37`: «требования 8.5 пока не проверяются».                    |
+| Тесты        | §8.5-фикстур нет; `req-tg-001` (§8.4) покрывает materialize.                                           |
+| Документация | `apps/docs/guide/conformance.md:8,37`: «требования 8.5 пока не проверяются».                           |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/integration-cursor/src/createCursorIntegration.ts:31` — `DEFAULT_DEPLOY_ROOTS = [".agents/skills", ".cursor"]`. |
-| Тесты    | `packages/core/tests/install/target-materialize.test.ts` и `cursor-e2e.test.ts` — §8.4 materialize; §8.5-фикстур нет. |
-| Спека    | `tests/spec-conformance/checklist.yml:709-762` — §8.5-требования `skipped`; `req-tg-004` — §4.2.1, `active`. |
-| Docs     | `apps/docs/guide/conformance.md:8`; `apps/docs/guide/supported-hosts.md:31-44` — фактическая таблица путей. |
+| Тесты    | `packages/core/tests/install/target-materialize.test.ts` и `cursor-e2e.test.ts` — §8.4 materialize; §8.5-фикстур нет.     |
+| Спека    | `tests/spec-conformance/checklist.yml:709-762` — §8.5-требования `skipped`; `req-tg-004` — §4.2.1, `active`.              |
+| Docs     | `apps/docs/guide/conformance.md:8`; `apps/docs/guide/supported-hosts.md:31-44` — фактическая таблица путей.               |
 
 Воспроизведение:
 
@@ -57,7 +57,7 @@ grep -n '8\.5' CONFORMANCE.md
 
 1. Заявить §8.5 и подогнать все интеграции — большая ломка путей и публичного контракта пакетов.
 2. Не заявлять (текущий выбор); **рекомендуется** — пользовательская таблица путей остаётся источником правды, ограничение честно описано.
-3. Заявить §8.5 только для одного хоста — появится частичная политика и отдельная матрица фикстур; формулировка «beyond cursor» в `CONFORMANCE.md` уже снята, см. [conformance-beyond-cursor.md](./conformance-beyond-cursor.md).
+3. Заявить §8.5 только для одного хоста — появится частичная политика и отдельная матрица фикстур; формулировка «beyond cursor» в `CONFORMANCE.md` уже снята.
 
 ## Рекомендация
 
@@ -75,5 +75,4 @@ Skills Cursor лежат в `.agents/skills/`, Claude — в `.claude/skills/`, 
 
 ## Связанные
 
-- [conformance-beyond-cursor.md](./conformance-beyond-cursor.md) — история формулировки «beyond cursor» и остаточный долг генератора.
 - [yaml-anchors-strict.md](./yaml-anchors-strict.md) — ещё одно место, где bapm выбирает строгий OpenAPM вместо совместимости с APM.

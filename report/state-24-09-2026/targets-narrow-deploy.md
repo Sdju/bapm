@@ -23,23 +23,23 @@
 
 ## Состояние
 
-| Источник       | Позиция                                                                                                                                                               |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| APM            | Предпочтение хоста ближе к одному полю; intersection в том же виде не выделен.                                                                                          |
-| OpenAPM tg-008 | Нельзя одновременно `target` и `targets`. Intersection active ∩ declared ∩ package targets.                                                                             |
-| Спека bapm     | `install-pipeline:176` — declared ids из `target`/`targets`; `:573` — active материализуется с учётом intersection; `:593` — MCP для каждого активного id.              |
-| Код bapm       | `runInstall.ts:1671-1680`: при отсутствии active в declared ids возвращается `[]`; `:427-445` — materialize с пустым списком; ошибки нет.                               |
-| Документация   | `guide/host-selection.md:45-46` — warning; `:57` — «installed for <id>, но файлов нет».                                                                                 |
+| Источник       | Позиция                                                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APM            | Предпочтение хоста ближе к одному полю; intersection в том же виде не выделен.                                                                             |
+| OpenAPM tg-008 | Нельзя одновременно `target` и `targets`. Intersection active ∩ declared ∩ package targets.                                                                |
+| Спека bapm     | `install-pipeline:176` — declared ids из `target`/`targets`; `:573` — active материализуется с учётом intersection; `:593` — MCP для каждого активного id. |
+| Код bapm       | `runInstall.ts:1671-1680`: при отсутствии active в declared ids возвращается `[]`; `:427-445` — materialize с пустым списком; ошибки нет.                  |
+| Документация   | `guide/host-selection.md:45-46` — warning; `:57` — «installed for <id>, но файлов нет».                                                                    |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                                               |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/Install/runInstall.ts:1678-1680` — `consumerAuth` и пустой результат при несовпадении.                                          |
-| Код      | `packages/core/src/modules/Install/targets.ts:13-32` — `declaredTargetIds` читает `target`, `targets`, object-map keys.                                     |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                              |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Install/runInstall.ts:1678-1680` — `consumerAuth` и пустой результат при несовпадении.                                                                                                                                         |
+| Код      | `packages/core/src/modules/Install/targets.ts:13-32` — `declaredTargetIds` читает `target`, `targets`, object-map keys.                                                                                                                                   |
 | Тесты    | `packages/core/tests/install/target-wire.test.ts:28` — package-level intersection; `packages/cli/tests/install/active-selection.test.ts:51-53` — оба id объявлены, «so intersection does not empty-filter». Теста на warning при пустом intersection нет. |
-| Спека    | `openspec/specs/install-pipeline/spec.md:176,573` — intersection declared ids.                                                                             |
-| Docs     | `apps/docs/guide/host-selection.md:45-46` — блок ограничивает раскладку.                                                                                   |
+| Спека    | `openspec/specs/install-pipeline/spec.md:176,573` — intersection declared ids.                                                                                                                                                                            |
+| Docs     | `apps/docs/guide/host-selection.md:45-46` — блок ограничивает раскладку.                                                                                                                                                                                  |
 
 Воспроизведение:
 
@@ -77,10 +77,10 @@ find .claude -type f
 
 ## Поведение сейчас
 
-`targets: { cursor: "@b-apm/integration-cursor" }` + `--target claude` (claude зарегистрирован каноническим пакетом) не кладёт файлы в Claude и не печатает предупреждения. Карта `targets` ещё и регистрирует пакеты интеграций, поэтому «удалить блок» не всегда безопасно для custom id. `active` не расширяет declared ids; `--target` тоже не расширяет. См. [init-target-writes-targets.md](./init-target-writes-targets.md).
+`targets: { cursor: "@b-apm/integration-cursor" }` + `--target claude` (claude зарегистрирован каноническим пакетом) не кладёт файлы в Claude и не печатает предупреждения. Карта `targets` ещё и регистрирует пакеты интеграций, поэтому «удалить блок» не всегда безопасно для custom id. `active` не расширяет declared ids; `--target` тоже не расширяет. `init --target` больше не пишет сужающий блок (исправлено).
 
 ## Связанные
 
-- [init-target-writes-targets.md](./init-target-writes-targets.md) — откуда берётся сужающий блок.
-- [mcp-first-agent-only.md](./mcp-first-agent-only.md) — MCP может пропасть и без сужения.
+- Сужающий блок больше не создаётся командой `init --target` (исправлено).
+- MCP теперь пишется всем active-хостам (исправлено).
 - [stale-specs-compile-and-cursor.md](./stale-specs-compile-and-cursor.md) — спеки про выбор cursor/active.

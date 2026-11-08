@@ -34,12 +34,12 @@ CLI не молчит полностью: в выводе появляется `
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                         |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/core/src/modules/Policy/escape.ts:5` — `noPolicy`, `BAPM_POLICY_DISABLE=1`, `APM_POLICY_DISABLE=1`; `gate.ts:29` — early return `skipped`; `packages/core/src/modules/Install/runInstall.ts:1265` — при `noPolicy` org executables пустые. |
-| Тесты    | `packages/core/tests/policy/install-gate.test.ts:80` — `noPolicy` обходит block deny; `:96` — env escape; кейса org deny + `--no-policy` нет. |
-| Спека    | `openspec/specs/policy-install-gate/spec.md` — gate и escape; отдельного запрета на отключение org нет. |
-| Docs     | `apps/docs/reference/install.md:50`, `apps/docs/guide/situations/policy-mcp.md:73` — предупреждение про org. |
+| Тесты    | `packages/core/tests/policy/install-gate.test.ts:80` — `noPolicy` обходит block deny; `:96` — env escape; кейса org deny + `--no-policy` нет.                                                                                                        |
+| Спека    | `openspec/specs/policy-install-gate/spec.md` — gate и escape; отдельного запрета на отключение org нет.                                                                                                                                              |
+| Docs     | `apps/docs/reference/install.md:50`, `apps/docs/guide/situations/policy-mcp.md:73` — предупреждение про org.                                                                                                                                         |
 
 Воспроизведение:
 

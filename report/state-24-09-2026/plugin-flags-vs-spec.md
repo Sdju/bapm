@@ -23,25 +23,25 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------------------------- |
-| APM          | Свой plugin scaffold.                                                                                         |
-| OpenAPM      | Agent plugins — отдельный артефакт.                                                                           |
-| Спека bapm   | `cli-plugin-init`: `--target`, `-v`, два файла; пары `--agent-plugins` / `--skills` нет.                      |
-| Код bapm     | `runPlugin.ts`: флаги есть; `--target` пишет `target: <id>`; с `--agent-plugins` несовместим.                 |
-| Документация | `reference/plugin.md`, `guide/agent-plugins.md` — оба режима описаны.                                         |
-| Тесты        | `packages/cli/tests/plugin/plugin-init.test.ts` — portable root и `--skills` закреплены.                       |
+| Источник     | Позиция                                                                                       |
+| ------------ | --------------------------------------------------------------------------------------------- |
+| APM          | Свой plugin scaffold.                                                                         |
+| OpenAPM      | Agent plugins — отдельный артефакт.                                                           |
+| Спека bapm   | `cli-plugin-init`: `--target`, `-v`, два файла; пары `--agent-plugins` / `--skills` нет.      |
+| Код bapm     | `runPlugin.ts`: флаги есть; `--target` пишет `target: <id>`; с `--agent-plugins` несовместим. |
+| Документация | `reference/plugin.md`, `guide/agent-plugins.md` — оба режима описаны.                         |
+| Тесты        | `packages/cli/tests/plugin/plugin-init.test.ts` — portable root и `--skills` закреплены.      |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/cli/src/modules/Plugin/services/runPlugin.ts:40-42` — help: `--target`, `--agent-plugins`, `--skills`.           |
-| Код      | `runPlugin.ts:176` — `--target` + `--agent-plugins` → ошибка, exit 1.                                                     |
-| Код      | `runPlugin.ts:241-243` — `--skills` создаёт `skills/example/SKILL.md`; `:260` — `target` пишется в манифест.              |
-| Спека    | `openspec/specs/cli-plugin-init/spec.md:79-86` — только `--target`; `:28-31` — запрет создавать `SKILL.md`/`skills/`.      |
-| Docs     | `apps/docs/reference/plugin.md:22-24` — таблица флагов; `apps/docs/guide/agent-plugins.md:20` — пример команды.           |
-| Тесты    | `packages/cli/tests/plugin/plugin-init.test.ts:234`, `:255`, `:275` — portable root, skills layout, несовместимость.        |
+| Артефакт | Где смотреть                                                                                                          |
+| -------- | --------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/cli/src/modules/Plugin/services/runPlugin.ts:40-42` — help: `--target`, `--agent-plugins`, `--skills`.      |
+| Код      | `runPlugin.ts:176` — `--target` + `--agent-plugins` → ошибка, exit 1.                                                 |
+| Код      | `runPlugin.ts:241-243` — `--skills` создаёт `skills/example/SKILL.md`; `:260` — `target` пишется в манифест.          |
+| Спека    | `openspec/specs/cli-plugin-init/spec.md:79-86` — только `--target`; `:28-31` — запрет создавать `SKILL.md`/`skills/`. |
+| Docs     | `apps/docs/reference/plugin.md:22-24` — таблица флагов; `apps/docs/guide/agent-plugins.md:20` — пример команды.       |
+| Тесты    | `packages/cli/tests/plugin/plugin-init.test.ts:234`, `:255`, `:275` — portable root, skills layout, несовместимость.  |
 
 Воспроизведение:
 
@@ -78,4 +78,4 @@ bapm plugin init --yes --target cursor --agent-plugins demo2
 ## Связанные
 
 - [stale-specs-compile-and-cursor.md](./stale-specs-compile-and-cursor.md) — общий класс «спека отстала от shipped CLI».
-- [init-target-writes-targets.md](./init-target-writes-targets.md) — похожий побочный эффект `--target` в `init`.
+- `init --target` больше не пишет сужающий `targets` (исправлено).

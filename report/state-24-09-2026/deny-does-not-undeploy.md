@@ -22,23 +22,23 @@
 
 ## Состояние
 
-| Источник       | Позиция                                                                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| APM            | Интерактивный deny ближе к «больше не предлагать»; уже записанный конфиг хоста часто остаётся.                                          |
-| OpenAPM sc-010 | Deny — user-local, не обязан патчить host JSON.                                                                                         |
-| Спека bapm     | Install withhold; нет требования синхронно вычищать конфиг.                                                                             |
-| Код bapm       | `runDeny` пишет user store. `configureMcp` мержит existing JSON; при пустом approved — early return без записи.                          |
-| Тесты          | `approve-deny.test.ts:45` проверяет запись deny, но не удаление из host-конфига.                                                        |
-| Документация   | `policy-mcp.md:50`: «удалите его оттуда вручную».                                                                                       |
+| Источник       | Позиция                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------- |
+| APM            | Интерактивный deny ближе к «больше не предлагать»; уже записанный конфиг хоста часто остаётся.                  |
+| OpenAPM sc-010 | Deny — user-local, не обязан патчить host JSON.                                                                 |
+| Спека bapm     | Install withhold; нет требования синхронно вычищать конфиг.                                                     |
+| Код bapm       | `runDeny` пишет user store. `configureMcp` мержит existing JSON; при пустом approved — early return без записи. |
+| Тесты          | `approve-deny.test.ts:45` проверяет запись deny, но не удаление из host-конфига.                                |
+| Документация   | `policy-mcp.md:50`: «удалите его оттуда вручную».                                                               |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                                                                                                           |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/cli/src/modules/Deny/services/runDeny.ts:59` — persist `grant: "deny"`; `packages/core/src/modules/ExecutableTrust/userStore.ts:156` — запись в `executables.deny`; `packages/integration-cursor/src/createCursorIntegration.ts:190` — merge без удаления; `packages/core/src/modules/Install/runInstall.ts:918` — early return при `approved.length === 0`. |
-| Тесты    | `packages/cli/tests/mcp/approve-deny.test.ts:45` — deny попадает в user store; теста на очистку `.cursor/mcp.json` нет. |
-| Спека    | `openspec/specs/executable-mcp-trust/spec.md:23` — withhold при unapproved; удаление host-записи не требуется. |
-| Docs     | `apps/docs/guide/situations/policy-mcp.md:50` — ручное удаление. |
+| Тесты    | `packages/cli/tests/mcp/approve-deny.test.ts:45` — deny попадает в user store; теста на очистку `.cursor/mcp.json` нет.                                                                                                                                                                                                                                                |
+| Спека    | `openspec/specs/executable-mcp-trust/spec.md:23` — withhold при unapproved; удаление host-записи не требуется.                                                                                                                                                                                                                                                         |
+| Docs     | `apps/docs/guide/situations/policy-mcp.md:50` — ручное удаление.                                                                                                                                                                                                                                                                                                       |
 
 Воспроизведение:
 
@@ -77,10 +77,8 @@ node -e 'console.log(Object.keys(require("./.cursor/mcp.json").mcpServers))'
 
 ## Поведение сейчас
 
-После deny нужен ручной edit конфига агента. Вместе с [mcp-first-agent-only.md](./mcp-first-agent-only.md) второй агент и так не обновлялся. Lock-inventory может обновиться, но host JSON остаётся источником фактического запуска сервера.
+После deny нужен ручной edit конфига агента. Второй агент теперь тоже конфигурируется (multi-target исправлен), но deny по-прежнему не чистит уже записанный сервер. Lock-inventory может обновиться, а host JSON остаётся источником фактического запуска сервера.
 
 ## Связанные
 
 - [grant-surface-all-or-nothing.md](./grant-surface-all-or-nothing.md) — почему deny включает режим явных разрешений.
-- [mcp-first-agent-only.md](./mcp-first-agent-only.md) — конфиг второго агента не обновляется.
-- [uninstall-incomplete.md](./uninstall-incomplete.md) — другая незавершённая очистка.

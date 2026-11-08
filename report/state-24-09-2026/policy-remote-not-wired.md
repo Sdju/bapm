@@ -23,26 +23,26 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                       |
-| ------------ | ------------------------------------------------------------------------------------------------------------- |
-| APM          | Более длинные cascade (в т.ч. Azure DevOps) в полном продукте.                                                |
-| OpenAPM      | Расширяемые providers; не все обязательны для claim.                                                          |
-| Спека bapm   | `policy-remote-discovery`: provider MUST ship; ADO/`.apm`/`_apm` cascades MUST NOT be required.               |
-| Код bapm     | Providers: `local`, `github-owner-dotgithub`; remote требует инжектированный fetch.                           |
-| CLI          | `runPolicyStatus` и install не передают fetch/policyPorts → remote-провайдер всегда absent.                   |
-| Документация | `reference/policy.md`, `CONFORMANCE.md`: ADO / multi-candidate out of scope.                                  |
+| Источник     | Позиция                                                                                         |
+| ------------ | ----------------------------------------------------------------------------------------------- |
+| APM          | Более длинные cascade (в т.ч. Azure DevOps) в полном продукте.                                  |
+| OpenAPM      | Расширяемые providers; не все обязательны для claim.                                            |
+| Спека bapm   | `policy-remote-discovery`: provider MUST ship; ADO/`.apm`/`_apm` cascades MUST NOT be required. |
+| Код bapm     | Providers: `local`, `github-owner-dotgithub`; remote требует инжектированный fetch.             |
+| CLI          | `runPolicyStatus` и install не передают fetch/policyPorts → remote-провайдер всегда absent.     |
+| Документация | `reference/policy.md`, `CONFORMANCE.md`: ADO / multi-candidate out of scope.                    |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/Policy/providers.ts:160` — `if (!fetcher) return null` (production без инжектора).              |
-| Код      | `packages/core/src/modules/Policy/constants.ts:20` — default providers `local`, `github-owner-dotgithub`.                  |
-| CLI      | `packages/cli/src/modules/Policy/services/runPolicy.ts:170` — `runPolicyStatus({ cwd, policyPath, policy, noPolicy })`, без fetch. |
-| CLI      | `packages/cli/src/modules/Install/services/runInstall.ts:540` — install вызывает `registerManifestIntegrationsFromCwd`; policy-порты не передаются. |
-| Тесты    | `packages/core/tests/policy/remote-discovery.test.ts:87-111` — провайдер проверяется с подставным `fetchPolicyUrl`.        |
-| Спека    | `openspec/specs/policy-remote-discovery/spec.md:23-27` — provider MUST ship; `:25` — ADO out of scope.                     |
-| Conformance | `CONFORMANCE.md:131-133`, `tests/spec-conformance/checklist.yml:490-517` — pl-010/011/012 заявлены active.              |
+| Артефакт    | Где смотреть                                                                                                                                        |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код         | `packages/core/src/modules/Policy/providers.ts:160` — `if (!fetcher) return null` (production без инжектора).                                       |
+| Код         | `packages/core/src/modules/Policy/constants.ts:20` — default providers `local`, `github-owner-dotgithub`.                                           |
+| CLI         | `packages/cli/src/modules/Policy/services/runPolicy.ts:170` — `runPolicyStatus({ cwd, policyPath, policy, noPolicy })`, без fetch.                  |
+| CLI         | `packages/cli/src/modules/Install/services/runInstall.ts:540` — install вызывает `registerManifestIntegrationsFromCwd`; policy-порты не передаются. |
+| Тесты       | `packages/core/tests/policy/remote-discovery.test.ts:87-111` — провайдер проверяется с подставным `fetchPolicyUrl`.                                 |
+| Спека       | `openspec/specs/policy-remote-discovery/spec.md:23-27` — provider MUST ship; `:25` — ADO out of scope.                                              |
+| Conformance | `CONFORMANCE.md:131-133`, `tests/spec-conformance/checklist.yml:490-517` — pl-010/011/012 заявлены active.                                          |
 
 Воспроизведение:
 

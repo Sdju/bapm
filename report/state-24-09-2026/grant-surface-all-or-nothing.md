@@ -30,17 +30,17 @@
 | Спека bapm         | Collect включает dependency MCP, когда `trustTransitiveMcp` или `grantSurface.present`.                            |
 | Код bapm           | `Mcp/collect.ts`: `includeDeps = trustTransitiveMcp \|\| grantSurface?.present`. Дальше withhold на неразрешённых. |
 | Тесты              | sc-009 закрепляет withhold при surface; теста «один approve ломает второй пакет» нет.                              |
-| Документация       | `policy-mcp.md:30` warning «Разрешения включаются для всех пакетов сразу».                                          |
+| Документация       | `policy-mcp.md:30` warning «Разрешения включаются для всех пакетов сразу».                                         |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                           |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/core/src/modules/Mcp/collect.ts:39` — `includeDeps`; `packages/core/src/modules/Install/runInstall.ts:883` — резолвер на каждый dependency-сервер; `:913` — `withholdFatal`. |
-| Код      | `packages/core/src/modules/ExecutableTrust/userStore.ts:70` — `present` становится true от одного ключа `executables`, даже пустого. |
-| Тесты    | `packages/cli/tests/mcp/sc-009-trust.test.ts:27` — surface + unapproved → withhold; `packages/core/tests/executable-trust/resolve-deny-wins.test.ts:48` — fail-closed. |
-| Спека    | `openspec/specs/executable-mcp-trust/spec.md:23` — fail closed при grant surface; `:65` — unapproved withholds. |
-| Docs     | `apps/docs/guide/situations/policy-mcp.md:30` — предупреждение о всех пакетах сразу. |
+| Код      | `packages/core/src/modules/ExecutableTrust/userStore.ts:70` — `present` становится true от одного ключа `executables`, даже пустого.                                                   |
+| Тесты    | `packages/cli/tests/mcp/sc-009-trust.test.ts:27` — surface + unapproved → withhold; `packages/core/tests/executable-trust/resolve-deny-wins.test.ts:48` — fail-closed.                 |
+| Спека    | `openspec/specs/executable-mcp-trust/spec.md:23` — fail closed при grant surface; `:65` — unapproved withholds.                                                                        |
+| Docs     | `apps/docs/guide/situations/policy-mcp.md:30` — предупреждение о всех пакетах сразу.                                                                                                   |
 
 Воспроизведение:
 
@@ -81,5 +81,5 @@ printf 'name: root\nversion: 0.0.1\ntarget: cursor\nexecutables:\n  allow: {}\nd
 
 - [policy-file-deny-only.md](./policy-file-deny-only.md) — где живёт allow и почему policy не помогает.
 - [deny-does-not-undeploy.md](./deny-does-not-undeploy.md) — что делает `deny` после install.
-- [mcp-first-agent-only.md](./mcp-first-agent-only.md) — второй агент и так не получает MCP.
+- Второй агент теперь получает MCP (multi-target исправлен); grant-поверхность остаётся общей для всех пакетов.
 - [policy-hooks-ungated.md](./policy-hooks-ungated.md) — hook не входит в эту лестницу.

@@ -23,25 +23,25 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                                                                      |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| APM          | Update в CI обычно отдельный job; install frozen не равен запрету `apm update`.                                                                                              |
-| OpenAPM      | Frozen — свойство install verify, не глобальный lock на мутацию.                                                                                                             |
-| Спека bapm   | `lifecycle-update`:20 — update в frozen-контексте без override MUST отказать; `install-pipeline`:44-45 — frozen + `--update` MUST fail.                                      |
+| Источник     | Позиция                                                                                                                                                                                                                                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| APM          | Update в CI обычно отдельный job; install frozen не равен запрету `apm update`.                                                                                                                                                                                                                                                            |
+| OpenAPM      | Frozen — свойство install verify, не глобальный lock на мутацию.                                                                                                                                                                                                                                                                           |
+| Спека bapm   | `lifecycle-update`:20 — update в frozen-контексте без override MUST отказать; `install-pipeline`:44-45 — frozen + `--update` MUST fail.                                                                                                                                                                                                    |
 | Код bapm     | `packages/core/src/modules/Update/runUpdate.ts:22,26-32` — отказ только при `options.frozen === true` и без override. CLI Update не читает `CI` и не передаёт `frozen` (`packages/cli/src/modules/Update/services/runUpdate.ts:156-173`). Install читает `CI` (`packages/cli/src/modules/Install/services/runInstall.ts:409-411,417-423`). |
-| Документация | `apps/docs/guide/situations/ci-frozen.md:60`: «`update -y` при этом не блокируется — не запускайте его в CI».                                                                |
-| Тесты        | `packages/core/tests/lifecycle/update.test.ts:165-202` — только явный `frozen: true`; кейса `CI=true` нет.                                                                  |
+| Документация | `apps/docs/guide/situations/ci-frozen.md:60`: «`update -y` при этом не блокируется — не запускайте его в CI».                                                                                                                                                                                                                              |
+| Тесты        | `packages/core/tests/lifecycle/update.test.ts:165-202` — только явный `frozen: true`; кейса `CI=true` нет.                                                                                                                                                                                                                                 |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                                                   |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/Update/runUpdate.ts:22` — `frozen` из options; `:26-32` — `UPDATE_FROZEN_REFUSED` только без override.                              |
-| Код      | `packages/cli/src/modules/Update/services/runUpdate.ts:156-173` — вызов core update без `frozen` и без `env`/`CI`.                                             |
-| Код      | `packages/cli/src/modules/Install/services/runInstall.ts:409-411` — `resolveEffectiveFrozen`; `:417-423` — отказ frozen + `--update`.                           |
-| Тесты    | `packages/core/tests/lifecycle/update.test.ts:165-202` — frozen refusal; `update-plan-verbose.test.ts` — план, не CI.                                           |
+| Артефакт | Где смотреть                                                                                                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Update/runUpdate.ts:22` — `frozen` из options; `:26-32` — `UPDATE_FROZEN_REFUSED` только без override.                                            |
+| Код      | `packages/cli/src/modules/Update/services/runUpdate.ts:156-173` — вызов core update без `frozen` и без `env`/`CI`.                                                           |
+| Код      | `packages/cli/src/modules/Install/services/runInstall.ts:409-411` — `resolveEffectiveFrozen`; `:417-423` — отказ frozen + `--update`.                                        |
+| Тесты    | `packages/core/tests/lifecycle/update.test.ts:165-202` — frozen refusal; `update-plan-verbose.test.ts` — план, не CI.                                                        |
 | Спека    | `openspec/specs/lifecycle-update/spec.md:20` — MUST refuse в frozen-контексте; `openspec/specs/install-pipeline/spec.md:47-49,66-68` — CI-default frozen только для install. |
-| Docs     | `apps/docs/guide/situations/ci-frozen.md:60` — явное предупреждение.                                                                                           |
+| Docs     | `apps/docs/guide/situations/ci-frozen.md:60` — явное предупреждение.                                                                                                         |
 
 Воспроизведение:
 
@@ -76,5 +76,4 @@ CI=true bapm install --update; echo "install=$?" # install=1, frozen+update reje
 
 ## Связанные
 
-- [frozen-ignores-ref-change.md](./frozen-ignores-ref-change.md) — frozen-гейт не ловит смену ref.
 - [update-dry-run-branches.md](./update-dry-run-branches.md) — план update скрывает drift веток.

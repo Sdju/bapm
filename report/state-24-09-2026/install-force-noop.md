@@ -23,23 +23,23 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                                                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| APM          | `--force` меняет ход установки (как минимум коллизии / refresh в привычном UX APM).                                                                                                                                         |
-| OpenAPM      | Отдельного обязательного `--force` нет.                                                                                                                                                                                     |
+| Источник     | Позиция                                                                                                                                                                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| APM          | `--force` меняет ход установки (как минимум коллизии / refresh в привычном UX APM).                                                                                                                                            |
+| OpenAPM      | Отдельного обязательного `--force` нет.                                                                                                                                                                                        |
 | Спека bapm   | `install-pipeline:531`: force MUST NOT обновлять refs, обходить frozen и policy; «accepted for CLI parity and any future thin security-gate bypass». `cli-runtime-surface:637` требует документировать флаг и его ограничения. |
-| Код bapm     | `packages/core/src/modules/Install/runInstall.ts:119` — `void options.force;`; значение дальше не используется.                                                                                                             |
-| Документация | `apps/docs/reference/install.md:24,48` и help: «сейчас без эффекта».                                                                                                                                                        |
+| Код bapm     | `packages/core/src/modules/Install/runInstall.ts:119` — `void options.force;`; значение дальше не используется.                                                                                                                |
+| Документация | `apps/docs/reference/install.md:24,48` и help: «сейчас без эффекта».                                                                                                                                                           |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                                       |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/core/src/modules/Install/runInstall.ts:119` — единственное упоминание `force` в ядре, значение отброшено.                  |
-| Код      | `packages/cli/src/modules/Install/services/runInstall.ts:172-173,553` — флаг парсится и передаётся, но не превращается в действие.   |
+| Артефакт | Где смотреть                                                                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/core/src/modules/Install/runInstall.ts:119` — единственное упоминание `force` в ядре, значение отброшено.                                                                   |
+| Код      | `packages/cli/src/modules/Install/services/runInstall.ts:172-173,553` — флаг парсится и передаётся, но не превращается в действие.                                                    |
 | Тесты    | `packages/core/tests/install/force-gates.test.ts`, `packages/cli/tests/install/project-flags-help.test.ts:136` — проверяют, что force не обходит frozen/policy, а не полезный эффект. |
-| Спека    | `openspec/specs/install-pipeline/spec.md:531`; `openspec/specs/cli-runtime-surface/spec.md:637` — no-op закреплён и должен быть в help. |
-| Docs     | `apps/docs/reference/install.md:24,48` — «не обновляет refs и не обходит frozen/policy».                                            |
+| Спека    | `openspec/specs/install-pipeline/spec.md:531`; `openspec/specs/cli-runtime-surface/spec.md:637` — no-op закреплён и должен быть в help.                                               |
+| Docs     | `apps/docs/reference/install.md:24,48` — «не обновляет refs и не обходит frozen/policy».                                                                                              |
 
 Воспроизведение:
 
@@ -76,4 +76,4 @@ bapm install --frozen --force
 
 - [targets-narrow-deploy.md](./targets-narrow-deploy.md) — `--target` и сужение раскладки, с которым путают `--force`.
 - [update-not-blocked-in-ci.md](./update-not-blocked-in-ci.md) — другой флаг, который меняет поведение в CI.
-- [frozen-ignores-ref-change.md](./frozen-ignores-ref-change.md) — почему refresh refs нельзя получить через force.
+- frozen теперь ловит смену ref до записи; `--force` по-прежнему не refresh-ит refs.

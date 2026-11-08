@@ -51,7 +51,7 @@ npx bapm audit --ci
 | `Frozen install requires an existing lockfile`                               | `bapm.lock.yaml` не закоммичен                                                                                                                                            |
 | `Frozen install missing direct dependency pin(s)`                            | В `bapm.yml` добавили пакет, а lock не обновили. Выполните `bapm install` локально и закоммитьте lock                                                                     |
 | `Frozen deployed file hash mismatch`                                         | Развёрнутый файл отличается от записанного в lock. Обычно его правили вручную или закоммитили изменённую копию                                                            |
-| `Frozen install ref drift`                                                   | У закреплённого пакета в `bapm.yml` сменили `#ref`, а lock не обновили. Выполните `bapm install --update` локально и закоммитьте lock                                       |
+| `Frozen install ref drift`                                                   | У закреплённого пакета в `bapm.yml` сменили `#ref`, а lock не обновили. Выполните `bapm install --update` локально и закоммитьте lock                                     |
 | `Frozen install missing direct dependency pin(s): <имя>`, хотя lock обновлён | В общий `bapm.yml` попала личная зависимость `local`: она пишется в `bapm.local.lock.yaml`, которого в CI нет. См. [Личные пакеты](/guide/situations/personal-local-lock) |
 
 ::: warning Смена `#ref` требует обновления lock

@@ -21,26 +21,27 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                           |
-| ------------ | ----------------------------------------------------------------- |
-| APM          | Те же хосты часто используют user-global MCP.                     |
-| OpenAPM      | Deploy roots MAY быть вне проекта, если так зарегистрирован хост. |
-| Спека bapm   | Path может быть `~/…`; install принимает tilde.                   |
-| Код bapm     | `integration-copilot`, `integration-windsurf`.                    |
+| Источник     | Позиция                                                               |
+| ------------ | --------------------------------------------------------------------- |
+| APM          | Те же хосты часто используют user-global MCP.                         |
+| OpenAPM      | Deploy roots MAY быть вне проекта, если так зарегистрирован хост.     |
+| Спека bapm   | Path может быть `~/…`; install принимает tilde.                       |
+| Код bapm     | `integration-copilot`, `integration-windsurf`.                        |
 | Тесты        | Оба adapter-теста проверяют home-путь и merge; коллизии проектов нет. |
-| Документация | `guide/supported-hosts.md:52`: явное предупреждение.              |
+| Документация | `guide/supported-hosts.md:52`: явное предупреждение.                  |
 
 ## Проверка
 
-| Артефакт | Где смотреть |
-| -------- | ------------ |
+| Артефакт | Где смотреть                                                                                                                                                                                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Код      | `packages/integration-copilot/src/createCopilotIntegration.ts:195` — `resolveCopilotHome`; `:205` — `mkdirSync(home)`; `:207` — `mcp-config.json`; `:219` — merge; `packages/integration-windsurf/src/createWindsurfIntegration.ts:159` — home; `:171` — `mcp_config.json`; `:183` — merge. |
-| Код      | `packages/core/src/modules/Install/runInstall.ts:1602` — `normalizeMcpConfigPath` принимает absolute/`~/…` и пишет путь в lock. |
-| Тесты    | `packages/integration-copilot/tests/configure-mcp.test.ts:40`; `packages/integration-windsurf/tests/configure-mcp.test.ts:41` — home-путь; `:105`/`:76` — сохранение чужих серверов. |
-| Спека    | `openspec/specs/integration-copilot-runtime/spec.md:112`; `openspec/specs/integration-windsurf-runtime/spec.md:112`. |
-| Docs     | `apps/docs/guide/supported-hosts.md:52`. |
+| Код      | `packages/core/src/modules/Install/runInstall.ts:1602` — `normalizeMcpConfigPath` принимает absolute/`~/…` и пишет путь в lock.                                                                                                                                                             |
+| Тесты    | `packages/integration-copilot/tests/configure-mcp.test.ts:40`; `packages/integration-windsurf/tests/configure-mcp.test.ts:41` — home-путь; `:105`/`:76` — сохранение чужих серверов.                                                                                                        |
+| Спека    | `openspec/specs/integration-copilot-runtime/spec.md:112`; `openspec/specs/integration-windsurf-runtime/spec.md:112`.                                                                                                                                                                        |
+| Docs     | `apps/docs/guide/supported-hosts.md:52`.                                                                                                                                                                                                                                                    |
 
 Воспроизведение:
+
 ```bash
 repo=$PWD
 base=$(mktemp -d) && home=$(mktemp -d)
@@ -81,6 +82,6 @@ node -e "console.log(JSON.stringify(require('$home/mcp-config.json').mcpServers)
 
 ## Связанные
 
-- [mcp-origin-in-host-config.md](./mcp-origin-in-host-config.md) — `origin` в общем host-файле.
+- `origin` теперь срезается перед записью host-конфига (исправлено).
 - [mcp-dir-must-exist.md](./mcp-dir-must-exist.md) — проектные хосты с opt-in каталогом.
 - [deny-does-not-undeploy.md](./deny-does-not-undeploy.md) — общий файл не чистится при deny.

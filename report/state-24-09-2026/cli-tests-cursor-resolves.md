@@ -23,23 +23,23 @@
 
 ## Состояние
 
-| Источник     | Позиция                                                                                                                                                         |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| APM          | Не применимо.                                                                                                                                                   |
-| OpenAPM      | Хосты не bundled в CLI.                                                                                                                                         |
-| Спека bapm   | Registry стартует пустым; канонический `@b-apm/integration-<id>` резолвится из проекта/global, но не из CLI fallback.                                           |
-| Код bapm     | `canonicalHosts.ts` знает 11 canonical id; `loadManifestIntegrations.ts` резолвит из cwd/global и фильтрует workspace roots только в `globalPaths`.             |
-| Тесты        | Ожидают `not.toBe(0)` для `cursor`/`claude` без `targets:`; в dev-дереве получают `0`.                                                                          |
-| Документация | Help: CLI не содержит built-in Cursor; интеграции подгружаются пакетами.                                                                                        |
+| Источник     | Позиция                                                                                                                                             |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APM          | Не применимо.                                                                                                                                       |
+| OpenAPM      | Хосты не bundled в CLI.                                                                                                                             |
+| Спека bapm   | Registry стартует пустым; канонический `@b-apm/integration-<id>` резолвится из проекта/global, но не из CLI fallback.                               |
+| Код bapm     | `canonicalHosts.ts` знает 11 canonical id; `loadManifestIntegrations.ts` резолвит из cwd/global и фильтрует workspace roots только в `globalPaths`. |
+| Тесты        | Ожидают `not.toBe(0)` для `cursor`/`claude` без `targets:`; в dev-дереве получают `0`.                                                              |
+| Документация | Help: CLI не содержит built-in Cursor; интеграции подгружаются пакетами.                                                                            |
 
 ## Проверка
 
-| Артефакт | Где смотреть                                                                                                              |
-| -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Код      | `packages/cli/src/common/canonicalHosts.ts:10-24` — `CANONICAL_HOST_IDS` включает `cursor`, `claude`.                     |
+| Артефакт | Где смотреть                                                                                                                                                                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Код      | `packages/cli/src/common/canonicalHosts.ts:10-24` — `CANONICAL_HOST_IDS` включает `cursor`, `claude`.                                                                                                                               |
 | Код      | `packages/cli/src/modules/Integrations/loadManifestIntegrations.ts:112-115` — `createRequire(join(cwd, "package.json")).resolve(specifier)`; `:352` — canonical с `allowCliFallback: false`; `:119` фильтрует только `globalPaths`. |
-| Тесты    | `packages/cli/tests/integrations/map-load-compile.test.ts:67` — compile cursor; `map-load-install.test.ts:71`, `:114`; `map-load-fail-closed.test.ts:109`; `pack/marketplace-on-demand.test.ts:23` (Claude). |
-| Пакет    | `packages/cli/package.json:46-47` — `@b-apm/integration-cursor` в devDependencies.                                        |
+| Тесты    | `packages/cli/tests/integrations/map-load-compile.test.ts:67` — compile cursor; `map-load-install.test.ts:71`, `:114`; `map-load-fail-closed.test.ts:109`; `pack/marketplace-on-demand.test.ts:23` (Claude).                        |
+| Пакет    | `packages/cli/package.json:46-47` — `@b-apm/integration-cursor` в devDependencies.                                                                                                                                                  |
 
 Воспроизведение:
 
