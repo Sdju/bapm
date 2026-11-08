@@ -1,5 +1,5 @@
 name: bapm
-version: 0.2.1
+version: 0.3.0
 
 # MCP servers and other agent artifacts are declared here. `bapm install`
 # writes agent-specific files (for example .cursor/mcp.json); generated
