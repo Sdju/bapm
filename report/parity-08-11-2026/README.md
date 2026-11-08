@@ -43,7 +43,21 @@
 | 7   | `replace:` молча игнорируется, lock v3 отвергается generic-ошибкой                        | [p1-fixes.md](p1-fixes.md#7-replace-v3)         |
 | 8   | Нет TLS/CA-политики: корпоративные PEM и `NODE_EXTRA_CA_CERTS` не описаны                 | [p1-fixes.md](p1-fixes.md#8-tls-ca)             |
 
-### P2 — паритетные разрывы
+### Статус после массовой правки (08.11.2026)
+
+| P1                                             | Статус                        | Коммит    |
+| ---------------------------------------------- | ----------------------------- | --------- |
+| target tokens                                  | fixed                         | `b3d3f48` |
+| MCP secret bake / Codex headers / registry MCP | fixed                         | `d0ee7a0` |
+| frozen under-record                            | fixed                         | `6170251` |
+| local lock wire                                | fixed                         | `a769c9b` |
+| replace/v3 diagnostics + TLS/CA                | fixed (full replace deferred) | `8ab5fe9` |
+| P2 targets/config/lifecycle                    | fixed                         | `e686568` |
+| P2 Copilot marketplace + check-clean           | fixed                         | `2b7c517` |
+
+Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope, runtime/auth, ADM/ADO, LSP/canvas, compile applyTo, shared cache и др.).
+
+## P2 — паритетные разрывы
 
 - User-scope/global install и native user MCP.
 - `bapm auth`, `targets`, `config`, `mcp`, `init --discover`, `run/preview`, `runtime`, `lifecycle`.

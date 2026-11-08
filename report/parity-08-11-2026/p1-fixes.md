@@ -4,7 +4,7 @@
 
 ## 1. Target tokens
 
-**Статус:** подтверждено (CLI-репро 08.11.2026)  
+**Статус:** исправлено (`b3d3f48`); репро проходил до фикса  
 **Проблема:** bapm поставляет `@b-apm/integration-kiro` и `@b-apm/integration-grok-build`, но manifest-валидатор не принимает их в `target`/`targets`/`active`.
 
 **Repro:**
@@ -28,7 +28,7 @@ bapm lock   # exit 1: Invalid target token "kiro" (mf-005)
 
 ## 2. MCP secret bake
 
-**Статус:** подтверждено статически; runtime не проверялся  
+**Статус:** исправлено (`d0ee7a0`)  
 **Проблема:** `install` по умолчанию бейкает `${VAR}` в literal для всех хостов, кроме `mcpEnvMode: "translate"` (Copilot, Kiro). Cursor и OpenCode получают реальные секреты в `.cursor/mcp.json` / `opencode.json`.
 
 **Evidence:** `packages/core/src/modules/Install/runInstall.ts:1274` (`translate` только при флаге), `packages/integration-cursor/src/createCursorIntegration.ts` (нет `mcpEnvMode`), `integration-opencode` (нет), APM 0.33 #3116 / 0.35 #3303.
@@ -43,7 +43,7 @@ bapm lock   # exit 1: Invalid target token "kiro" (mf-005)
 
 ## 3. Codex headers
 
-**Статус:** подтверждено статически  
+**Статус:** исправлено (`d0ee7a0`)  
 **Проблема:** `createCodexIntegration` не переносит `headers` в Codex-native поля.
 
 **Evidence:** `packages/integration-codex/src/createCodexIntegration.ts:437-455` (url/env только), APM `adapters/client/codex.py:440-483` (`http_headers`, `env_http_headers`, `bearer_token_env_var`).
@@ -58,7 +58,7 @@ bapm lock   # exit 1: Invalid target token "kiro" (mf-005)
 
 ## 4. Registry MCP
 
-**Статус:** подтверждено статически; runtime не проверялся  
+**Статус:** исправлено (`d0ee7a0`)  
 **Проблема:** manifest `mcp: [{name, registry: ...}]` без command/url проходит collect; Cursor пишет `{type:"stdio"}` без command, потому что `registry` исключён из rest-полей.
 
 **Evidence:** `packages/core/src/modules/Mcp/collect.ts:11-20,125-137`, `packages/integration-cursor/src/createCursorIntegration.ts:255-312`.
@@ -73,7 +73,7 @@ bapm lock   # exit 1: Invalid target token "kiro" (mf-005)
 
 ## 5. Frozen under-record
 
-**Статус:** подтверждено статически  
+**Статус:** исправлено (`6170251`)  
 **Проблема:** frozen проверяет lock, direct pins и хеши **присутствующих** записей, но не падает, если lock не записывает файлы, которые install собирается развернуть. Локальные пакеты не хешируются.
 
 **Evidence:** `packages/core/src/modules/Install/frozen.ts:16-70`, `Install/runInstall.ts:339`, `Install/deployedInventory.ts:62-118`; APM 0.34 #2379/#2384, 0.35 #3236.
@@ -88,7 +88,7 @@ bapm lock   # exit 1: Invalid target token "kiro" (mf-005)
 
 ## 6. Local lock wire
 
-**Статус:** подтверждено статически  
+**Статус:** исправлено (`a769c9b`)  
 **Проблема:** bapm local-строка содержит `repo_url: local:<rel>` + `path`; APM ждёт `_local/<name>`, `local_path`, `declaring_parent`, `content_hash`, `depth`, `resolved_by`, `package_type`, `is_dev`.
 
 **Evidence:** `packages/core/src/modules/Resolver/resolveAndLock.ts:306-327,355-368`, `Lockfile/serialize.ts:17,102-108`; APM `deps/lockfile.py:457-500,1042-1044`, `lockfile-spec.md:286-330`.
@@ -103,7 +103,7 @@ bapm lock   # exit 1: Invalid target token "kiro" (mf-005)
 
 ## 7. Replace и lock v3
 
-**Статус:** подтверждено статически  
+**Статус:** исправлено (`8ab5fe9`)  
 **Проблема:** root `replace:` неизвестен bapm и молча игнорируется; `lockfile_version: "3"` отвергается `LOCKFILE_UNSUPPORTED_VERSION`.
 
 **Evidence:** `packages/core/src/modules/Manifest/parse.ts:87-99` (unknown keys retained), `Lockfile/parse.ts:8,54-65`; APM `models/dependency/replacement.py`, `deps/lockfile.py:45`.
@@ -118,7 +118,7 @@ bapm lock   # exit 1: Invalid target token "kiro" (mf-005)
 
 ## 8. TLS/CA
 
-**Статус:** подтверждено grep  
+**Статус:** исправлено (`8ab5fe9`)  
 **Проблема:** bapm не документирует и не обрабатывает корпоративные CA; APM 0.34 добавил `APM_EXTRA_CA_BUNDLE`.
 
 **Evidence:** `grep -rn "NODE_EXTRA_CA_CERTS\|EXTRA_CA\|CA_BUNDLE" packages apps/docs` — пусто; APM `core/tls_trust.py:43-199`.
