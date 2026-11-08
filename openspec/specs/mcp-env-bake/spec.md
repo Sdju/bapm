@@ -2,32 +2,32 @@
 
 ## Purpose
 
-Install-time bake of OpenAPM/APM MCP env and header placeholders into literal values before Cursor MCP config is written, matching APM Cursor legacy resolution without runtime substitution.
+Install-time resolution of OpenAPM/APM MCP env and header placeholders. Hosts that support runtime interpolation keep placeholder references in their native form; hosts without runtime interpolation (for example Codex stdio `env`) bake literals at install time. Bapm `{bake:NAME}` directives always resolve at install time, fail-closed.
 
 ## Requirements
 
 ### Requirement: Resolve MCP placeholder syntaxes at bake time
 
-Before writing host MCP configuration for Cursor, the system MUST resolve placeholder tokens in string values of MCP `env` maps (and `headers` maps when present) using OpenAPM/APM-compatible syntaxes: `${VAR}`, `${env:VAR}`, and legacy `<VAR>` (uppercase name). Resolution MUST prefer an explicit override map when provided by the caller, then a non-empty value from the process environment, then a non-empty value from the project manifest top-level `env` map when present. Values that contain no placeholders MUST pass through unchanged. Single-brace `{name}` APM-internal template variables and `${input:…}` interactive inputs are OUT OF SCOPE for this capability unless a later change adds them.
+For a host that bakes MCP values, before writing host MCP configuration the system MUST resolve placeholder tokens in string values of MCP `env` maps (and `headers` maps when they are not translated) using OpenAPM/APM-compatible syntaxes: `${VAR}`, `${env:VAR}`, and legacy `<VAR>` (uppercase name). Resolution MUST prefer an explicit override map when provided by the caller, then a non-empty value from the process environment, then a non-empty value from the project manifest top-level `env` map when present. Values that contain no placeholders MUST pass through unchanged. Single-brace `{name}` APM-internal template variables and `${input:…}` interactive inputs are OUT OF SCOPE for this capability unless a later change adds them.
 
 #### Scenario: ${VAR} bakes from process env
 
-- **WHEN** an eligible MCP server declares `env.API_TOKEN: "${API_TOKEN}"` and `API_TOKEN` is set in the process environment
+- **WHEN** an eligible MCP server declares `env.API_TOKEN: "${API_TOKEN}"`, the host bakes env values, and `API_TOKEN` is set in the process environment
 - **THEN** the baked server env MUST contain the literal environment value, not the placeholder string
 
 #### Scenario: ${env:VAR} bakes equivalently
 
-- **WHEN** an eligible MCP server declares `env.TOKEN: "${env:MY_TOKEN}"` and `MY_TOKEN` is set in the process environment
+- **WHEN** an eligible MCP server declares `env.TOKEN: "${env:MY_TOKEN}"`, the host bakes env values, and `MY_TOKEN` is set in the process environment
 - **THEN** the baked server env MUST contain the literal `MY_TOKEN` value
 
 #### Scenario: Legacy angle placeholder bakes
 
-- **WHEN** an eligible MCP server declares `env.TOKEN: "<MY_TOKEN>"` and `MY_TOKEN` is set in the process environment
+- **WHEN** an eligible MCP server declares `env.TOKEN: "<MY_TOKEN>"`, the host bakes env values, and `MY_TOKEN` is set in the process environment
 - **THEN** the baked server env MUST contain the literal `MY_TOKEN` value
 
 #### Scenario: Manifest env fills when process env missing
 
-- **WHEN** an eligible MCP server declares `env.TOKEN: "${PLUGIN_TOKEN}"`, process env has no non-empty `PLUGIN_TOKEN`, and the manifest has `env.PLUGIN_TOKEN: "from-yml"`
+- **WHEN** an eligible MCP server declares `env.TOKEN: "${PLUGIN_TOKEN}"`, the host bakes env values, process env has no non-empty `PLUGIN_TOKEN`, and the manifest has `env.PLUGIN_TOKEN: "from-yml"`
 - **THEN** the baked server env MUST contain `from-yml`
 
 #### Scenario: Process env wins over manifest env
@@ -35,51 +35,44 @@ Before writing host MCP configuration for Cursor, the system MUST resolve placeh
 - **WHEN** both process env and manifest `env` define non-empty `API_TOKEN` and bake resolves `${API_TOKEN}`
 - **THEN** the baked value MUST be the process environment value
 
-### Requirement: Fail closed when a placeholder cannot be resolved
+### Requirement: Fail closed when a bake-required placeholder cannot be resolved
 
-When a bake-required placeholder appears in MCP `env` or `headers` and neither overrides, nor a non-empty process environment value, nor a non-empty manifest top-level `env` value supplies the variable, the system MUST fail the install/configure path with a non-zero outcome and an actionable diagnostic that names the missing variable (never the secret value). The system MUST NOT write unresolved secret placeholders into `.cursor/mcp.json` for those maps. Interactive TTY prompting for missing variables MUST NOT be required for success.
+When a bake-required placeholder appears in MCP `env` or translated-off `headers` and neither overrides, nor a non-empty process environment value, nor a non-empty manifest top-level `env` value supplies the variable, the system MUST fail the install/configure path with a non-zero outcome and an actionable diagnostic that names the missing variable (never the secret value). The system MUST NOT write unresolved bake-required placeholders into host MCP config. Interactive TTY prompting for missing variables MUST NOT be required for success.
 
-#### Scenario: Missing env var aborts before mcp.json write
+#### Scenario: Missing env var aborts before host MCP write
 
-- **WHEN** MCP env contains `${MISSING_SECRET}` and `MISSING_SECRET` is unset in process env, absent/empty in manifest `env`, and no override supplies it
-- **THEN** configure/write of `.cursor/mcp.json` for that install MUST NOT complete successfully with the unresolved placeholder, and the diagnostic MUST name `MISSING_SECRET`
+- **WHEN** a bake-mode host receives MCP env containing `${MISSING_SECRET}` and `MISSING_SECRET` is unset in process env, absent/empty in manifest `env`, and no override supplies it
+- **THEN** configure/write for that install MUST NOT complete successfully with the unresolved placeholder, and the diagnostic MUST name `MISSING_SECRET`
 
-### Requirement: Translate-mode hosts skip install-time bake of APM placeholders
+### Requirement: Translate-mode hosts keep APM placeholders and write native forms
 
-When an active integration declares MCP env policy `translate` (via the integration-api contract), install MUST NOT bake APM-style `${VAR}`, `${env:VAR}`, or legacy `<VAR>` placeholders into literal process-environment values before calling that integration’s `configureMcp`. Those placeholders MUST be passed through for the host to write as runtime `${VAR}` forms. Cursor and other bake-mode hosts MUST retain install-time bake behavior unchanged. Bapm-only `{bake:NAME}` / `{bake:env:NAME}` directives MAY still be resolved at install time even for translate-mode hosts when present; unresolved `{bake:…}` MUST fail closed as for bake-mode hosts.
+When an active integration declares MCP env policy `translate` (via `mcpEnvMode`, or per-map `mcpHeadersEnvMode` for headers), install MUST NOT bake APM-style `${VAR}`, `${env:VAR}`, or legacy `<VAR>` placeholders into literal process-environment values before calling that integration’s `configureMcp`. Those placeholders MUST be passed through to the host, and the host MUST write its native runtime reference:
 
-#### Scenario: Translate host receives unresolved APM placeholders
+- Cursor: `${env:VAR}` in `env`, optional `args`, and `headers`.
+- OpenCode: `{env:VAR}` in local `environment`, command arguments, and remote `headers`.
+- Codex: headers only, translated to `env_http_headers` / `bearer_token_env_var` (Codex stdio `env` still bakes because Codex does not interpolate `env`).
 
-- **WHEN** install configures MCP for an integration with `mcpEnvMode: "translate"` and a server env value is `${API_TOKEN}` with `API_TOKEN` set in the process environment
-- **THEN** the server definition passed to that host’s `configureMcp` MUST retain a placeholder form rather than the secret literal from the environment
+Authored native forms (`${env:VAR}` for Cursor, `{env:VAR}` for OpenCode) MUST be preserved. Bapm-only `{bake:NAME}` / `{bake:env:NAME}` directives MUST still be resolved at install time even for translate-mode hosts; unresolved `{bake:…}` MUST fail closed.
 
-#### Scenario: Cursor bake path remains bake-only
+#### Scenario: Cursor translate host receives placeholders
 
-- **WHEN** install configures MCP for Cursor (bake-mode) with `${API_TOKEN}` and `API_TOKEN` set
-- **THEN** Cursor configure MUST still receive the baked literal value as required by existing Cursor bake requirements
+- **WHEN** install configures MCP for Cursor with `env.API_TOKEN: "${API_TOKEN}"` and `headers.Authorization: "Bearer ${HEADER_TOKEN}"` while both variables are set in the process environment
+- **THEN** `.cursor/mcp.json` MUST contain `${env:API_TOKEN}` and `Bearer ${env:HEADER_TOKEN}`, MUST NOT contain either secret, and the lock MUST keep the authored `${API_TOKEN}` / `Bearer ${HEADER_TOKEN}` forms
 
-### Requirement: No Cursor runtime translate-mode
+#### Scenario: OpenCode translate host receives placeholders
 
-For the Cursor host path, the system MUST use install-time bake only. It MUST NOT rewrite MCP env/header values into host runtime placeholders (for example leaving `${VAR}` for Cursor to expand later) as a substitute for bake. This Cursor-only constraint MUST NOT prohibit other integrations from declaring translate-mode MCP env policy.
+- **WHEN** install configures MCP for OpenCode with `env.API_TOKEN: "${API_TOKEN}"` while `API_TOKEN` is set
+- **THEN** `opencode.json` MUST contain `environment.API_TOKEN: "{env:API_TOKEN}"` and MUST NOT contain the secret literal
 
-#### Scenario: Baked config contains literals not runtime placeholders
+#### Scenario: Codex headers use native indirection
 
-- **WHEN** bake succeeds for `${API_TOKEN}` with a known env value on the Cursor path
-- **THEN** the written Cursor `mcpServers` entry env MUST store the literal value and MUST NOT store `${API_TOKEN}` as a runtime placeholder
+- **WHEN** install configures a remote Codex MCP server with `Authorization: "Bearer ${TOKEN}"`, a static header, and an exactly-`${VAR}` header
+- **THEN** `.codex/config.toml` MUST use `bearer_token_env_var`, `http_headers`, and `env_http_headers` respectively, MUST NOT write the token literal, and the lock MUST keep the authored placeholders
 
-#### Scenario: Non-Cursor translate hosts are out of this Cursor constraint
+#### Scenario: Header value Codex cannot express is skipped with a warning
 
-- **WHEN** an integration other than Cursor declares translate-mode MCP env policy
-- **THEN** that host MUST NOT be forced into Cursor bake-only rewrite rules solely by this requirement
-
-### Requirement: Agent Plugins portable MCP path unchanged by this capability
-
-Portable Agent Plugins `mcp.json` parsing (including `${PLUGIN_ROOT}` / `${PLUGIN_DATA}` substitution and refusal of secret-like env keys) MUST remain a separate boundary. This bake capability MUST apply to consumer `dependencies.mcp` (and equivalent collected MCP server configs for Cursor deploy), not redefine Agent Plugins secret policy.
-
-#### Scenario: Agent Plugins secret refuse still applies
-
-- **WHEN** a portable plugin `mcp.json` declares a secret-like env key name
-- **THEN** existing Agent Plugins refusal/diagnostic behavior MUST still apply independently of consumer MCP bake
+- **WHEN** a Codex remote header contains literal text around an environment reference, or an otherwise unsupported interpolation form
+- **THEN** the header MUST be skipped with a diagnostic naming the server and header rather than written as static text
 
 ### Requirement: Bapm `{bake:NAME}` directive forces install-time bake
 
@@ -103,20 +96,24 @@ In MCP `env` and `headers` string values, the system MUST treat `{bake:NAME}` an
 #### Scenario: Unresolved {bake:NAME} fails closed
 
 - **WHEN** an MCP env value contains `{bake:MISSING}` and neither overrides, process env, nor manifest `env` supply a non-empty `MISSING`
-- **THEN** bake MUST fail and MUST NOT write the unresolved `{bake:MISSING}` token into Cursor MCP config as a successful deploy
+- **THEN** bake MUST fail before a successful host MCP write and MUST NOT retain the unresolved `{bake:MISSING}` token
 
-#### Scenario: APM placeholders still bake on Cursor
+### Requirement: Agent Plugins portable MCP path unchanged by this capability
 
-- **WHEN** an MCP env value uses `${API_TOKEN}` (APM form) with `API_TOKEN` set
-- **THEN** Cursor install bake MUST still resolve it to a literal as before this directive
+Portable Agent Plugins `mcp.json` parsing (including `${PLUGIN_ROOT}` / `${PLUGIN_DATA}` substitution and refusal of secret-like env keys) MUST remain a separate boundary. This bake capability MUST apply to consumer `dependencies.mcp` (and equivalent collected MCP server configs for host deploy), not redefine Agent Plugins secret policy.
+
+#### Scenario: Agent Plugins secret refuse still applies
+
+- **WHEN** a portable plugin `mcp.json` declares a secret-like env key name
+- **THEN** existing Agent Plugins refusal/diagnostic behavior MUST still apply independently of consumer MCP bake
 
 ### Requirement: Baked values are not persisted in the lockfile
 
-When install records MCP servers in the lockfile inventory, it MUST record the server declaration as authored before bake: placeholder strings (`${VAR}`, `${env:VAR}`, `<VAR>`, `{bake:VAR}`) MUST appear verbatim and values resolved from the process environment, overrides, or manifest `env` MUST NOT appear in any lockfile (shared or personal). Host MCP configuration files MAY still contain baked values per the host's bake mode.
+When install records MCP servers in the lockfile inventory, it MUST record the server declaration as authored before bake: placeholder strings (`${VAR}`, `${env:VAR}`, `<VAR>`, `{bake:VAR}`) MUST appear verbatim and values resolved from the process environment, overrides, or manifest `env` MUST NOT appear in any lockfile (shared or personal). Host MCP configuration files MAY contain baked values only for the host's bake mode or explicit `{bake:}` directives.
 
 #### Scenario: Token stays out of the lock
 
-- **WHEN** a direct MCP server declares `env.API_TOKEN: "${API_TOKEN}"`, `API_TOKEN=secret-123` is set in the process environment, and install bakes it into the host MCP config
+- **WHEN** a direct MCP server declares `env.API_TOKEN: "${API_TOKEN}"`, `API_TOKEN=secret-123` is set in the process environment, and install writes the host config with a native placeholder or baked value
 - **THEN** the written `bapm.lock.yaml` MUST contain `${API_TOKEN}` for that server and MUST NOT contain `secret-123`
 
 #### Scenario: bake directive stays out of the lock

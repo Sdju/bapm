@@ -215,21 +215,40 @@ When an eligible portable Agent Plugins v1 dependency contributes root `mcp.json
 - **WHEN** a portable MCP server is adapted into a target config
 - **THEN** portable-only fields such as `format` and package metadata MUST NOT be persisted as host config fields
 
-### Requirement: Bake MCP env and headers before target config write
+### Requirement: Translate MCP env and headers before target config write
 
-Before a target MCP configure writes durably, the system MUST bake-resolve `env` and `headers` string values per the `mcp-env-bake` capability, honoring the target's `mcpEnvMode` (`bake` by default; `translate` leaves APM placeholders intact while still resolving bapm `{bake:…}` directives). Unresolved required placeholders MUST fail closed before a successful MCP config write that would persist those placeholders.
+Before a target MCP configure writes durably, the system MUST resolve bapm `{bake:…}` directives in `env` and `headers` string values per the `mcp-env-bake` capability. APM placeholders (`${VAR}`, `${env:VAR}`, legacy `<VAR>`) MUST be baked for bake-mode hosts and passed through for translate-mode hosts (`mcpEnvMode`, or per-map `mcpHeadersEnvMode` for headers). Unresolved `{bake:…}` MUST fail closed before a successful MCP config write. Cursor and OpenCode MUST receive placeholder forms and write their native runtime references instead of baking secrets into project-local config.
 
-#### Scenario: Placeholder env becomes literal in target config
+#### Scenario: Cursor writes native placeholder instead of literal
 
 - **WHEN** `bapm install --target cursor` deploys a direct MCP stdio server whose `env` uses `${API_TOKEN}` and `API_TOKEN` is set in the environment
-- **THEN** `.cursor/mcp.json` MUST contain the literal token value under that server's `env`, not the placeholder string
+- **THEN** `.cursor/mcp.json` MUST contain `${env:API_TOKEN}` under that server's `env`, not the literal token value, and the lock MUST keep `${API_TOKEN}`
 
-#### Scenario: Unresolved placeholder blocks successful MCP write
+#### Scenario: Unresolved {bake:} blocks successful MCP write
 
-- **WHEN** install would deploy MCP with an unresolved `${MISSING}` in `env` and no override supplies it
-- **THEN** install MUST NOT succeed while leaving `${MISSING}` written in a target MCP config for that entry
+- **WHEN** install would deploy MCP with an unresolved `{bake:MISSING}` in `env` and no override supplies it
+- **THEN** install MUST NOT succeed while leaving `{bake:MISSING}` in a target MCP config
 
-#### Scenario: Translate-mode host preserves APM placeholder form
+#### Scenario: Codex headers use native indirection
 
-- **WHEN** a target declares `mcpEnvMode: "translate"` and an eligible server uses an APM env placeholder
-- **THEN** the target MUST receive the placeholder form rather than a baked literal unless a bapm `{bake:…}` directive requires resolution
+- **WHEN** a Codex remote server declares `Authorization: "Bearer ${TOKEN}"` and `TOKEN` is set
+- **THEN** `.codex/config.toml` MUST use `bearer_token_env_var` rather than a literal header value
+
+### Requirement: Registry-only MCP entries fail closed before deploy
+
+MCP lookup from a registry is not implemented. Before any host MCP config or MCP lock inventory is written, install MUST reject an eligible direct or dependency MCP entry that requests registry lookup (`registry` is `true` or a non-empty string) and provides neither `command` nor `url`. The failure MUST use the `MCP_REGISTRY_UNSUPPORTED` code and name the offending server. Self-defined entries (`registry: false`) with `command`/`url` MUST continue to deploy normally.
+
+#### Scenario: Root registry-only entry blocks host write
+
+- **WHEN** the root manifest declares `mcp: [{ name: public, registry: true }]` and an MCP-capable target is active
+- **THEN** install MUST fail with `MCP_REGISTRY_UNSUPPORTED` naming `public` and MUST NOT write any target MCP config or MCP lock inventory
+
+#### Scenario: Dependency registry-only entry blocks host write
+
+- **WHEN** an approved dependency contributes an MCP entry with `registry` and no `command`/`url`
+- **THEN** install MUST fail with `MCP_REGISTRY_UNSUPPORTED` naming that server before host config is written
+
+#### Scenario: Self-defined entries are not blocked
+
+- **WHEN** an eligible entry declares `registry: false` with `command` or `url`
+- **THEN** install MUST treat it as self-defined and configure it normally

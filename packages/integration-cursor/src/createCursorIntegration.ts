@@ -54,6 +54,9 @@ export function createCursorIntegration(options?: {
   return {
     id,
     deployRoots,
+    // Cursor expands ${env:VAR} at server start. Install must not bake APM
+    // placeholders into the project-local config (APM 0.33+ #3116).
+    mcpEnvMode: "translate",
     detect: ({ cwd }) => {
       const cursorDir = join(cwd, ".cursor");
       if (existsSync(cursorDir) && statSync(cursorDir).isDirectory()) return true;
@@ -264,7 +267,7 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
     if (transport === "stdio") {
       if (typeof server.command !== "string") return undefined;
       entry.command = server.command;
-      if (Array.isArray(server.args)) entry.args = server.args;
+      if (Array.isArray(server.args)) entry.args = translateCursorArgs(server.args);
       if (typeof server.cwd === "string") entry.cwd = server.cwd;
       entry.type = "stdio";
     } else if (transport === "streamable-http" || transport === "sse") {
@@ -274,7 +277,11 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
     } else {
       return undefined;
     }
-    if (server.env && typeof server.env === "object") entry.env = server.env;
+    if (server.env && typeof server.env === "object") {
+      entry.env = translateEnvPlaceholders(server.env);
+    }
+    const portableHeaders = translateHeaders(server.headers);
+    if (portableHeaders) entry.headers = portableHeaders;
     return entry;
   }
 
@@ -284,13 +291,15 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
   } else {
     // stdio default
     if (server.command) entry.command = server.command;
-    if (Array.isArray(server.args)) entry.args = server.args;
+    if (Array.isArray(server.args)) entry.args = translateCursorArgs(server.args);
     entry.type = "stdio";
   }
 
   if (server.env && typeof server.env === "object") {
-    entry.env = server.env;
+    entry.env = translateEnvPlaceholders(server.env);
   }
+  const headers = translateHeaders(server.headers);
+  if (headers) entry.headers = headers;
 
   // Preserve native extra keys, but never portable adapter metadata.
   for (const [key, value] of Object.entries(server)) {
@@ -303,6 +312,7 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
         "args",
         "url",
         "env",
+        "headers",
         "packageName",
         "registry",
         "format",
@@ -315,6 +325,42 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
   }
 
   return entry;
+}
+
+/**
+ * Cursor resolves `${env:VAR}` at server start. Translate authored APM forms
+ * (`${VAR}`, `${env:VAR}`, legacy `<VAR>`, OpenCode-native `{env:VAR}`) so no
+ * resolved secret is written into `.cursor/mcp.json`.
+ */
+function translateEnvPlaceholders(values: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(values)) {
+    out[key] = typeof raw === "string" ? translateCursorPlaceholders(raw) : String(raw);
+  }
+  return out;
+}
+
+function translateCursorPlaceholders(value: string): string {
+  return value.replace(
+    /\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}|\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\{env:([A-Za-z_][A-Za-z0-9_]*)\}|<([A-Z_][A-Z0-9_]*)>/g,
+    (_match, native: string, bare: string, braceNative: string, angle: string) =>
+      `\${env:${native ?? bare ?? braceNative ?? angle}}`,
+  );
+}
+
+function translateCursorArgs(args: unknown[]): unknown[] {
+  return args.map((arg) => (typeof arg === "string" ? translateCursorPlaceholders(arg) : arg));
+}
+
+function translateHeaders(
+  headers: Record<string, string> | undefined,
+): Record<string, string> | undefined {
+  if (!headers || typeof headers !== "object" || Array.isArray(headers)) return undefined;
+  return translateEnvPlaceholders(
+    Object.fromEntries(
+      Object.entries(headers).filter(([, value]) => typeof value === "string"),
+    ) as Record<string, string>,
+  );
 }
 
 type HookEntry = { command?: string; [key: string]: unknown };

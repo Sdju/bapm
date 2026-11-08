@@ -81,7 +81,7 @@ The integration API MUST continue to accept integration identifiers for selectio
 
 ### Requirement: Optional MCP env mode on integrations
 
-`@b-apm/integration-api` MUST allow a `BapmIntegration` to optionally declare an MCP env handling mode distinguishing install-time bake from host runtime translate (for example `mcpEnvMode: "bake" | "translate"`). Absence of the field MUST mean bake-compatible behavior for install orchestration (preserving today’s Cursor default). The field MUST remain host-agnostic (no Copilot-specific types) so core can dispatch bake vs pass-through without importing concrete integration packages or hardcoding host ids.
+`@b-apm/integration-api` MUST allow a `BapmIntegration` to optionally declare an MCP env handling mode distinguishing install-time bake from host runtime translate (`mcpEnvMode: "bake" | "translate"`), plus an optional per-map `mcpHeadersEnvMode: "bake" | "translate"` that overrides the decision for `headers` only. Absence of `mcpEnvMode` MUST mean bake-compatible behavior for install orchestration. Absence of `mcpHeadersEnvMode` MUST inherit `mcpEnvMode`. The fields MUST remain host-agnostic (no host-specific types) so core can dispatch bake vs pass-through without importing concrete integration packages or hardcoding host ids.
 
 #### Scenario: Translate mode is readable through the api contract
 
@@ -91,7 +91,12 @@ The integration API MUST continue to accept integration identifiers for selectio
 #### Scenario: Missing mode defaults to bake-compatible install behavior
 
 - **WHEN** a registered integration omits the MCP env mode field
-- **THEN** install orchestration MUST treat it as bake-compatible (existing Cursor path)
+- **THEN** install orchestration MUST treat it as bake-compatible
+
+#### Scenario: Per-map header mode overrides env mode
+
+- **WHEN** a registered integration declares `mcpHeadersEnvMode: "translate"` without `mcpEnvMode`
+- **THEN** install MUST pass header references through while still baking `env` values
 
 ### Requirement: Optional MCP configure contract for integrations
 

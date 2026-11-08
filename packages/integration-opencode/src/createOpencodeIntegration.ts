@@ -45,6 +45,9 @@ export function createOpencodeIntegration(options?: {
   return {
     id,
     deployRoots,
+    // OpenCode expands `{env:VAR}` at runtime; never bake secrets into
+    // project-root opencode.json (APM 0.33+).
+    mcpEnvMode: "translate",
     detect: ({ cwd }) => {
       const opencodeDir = join(cwd, ".opencode");
       if (existsSync(opencodeDir) && statSync(opencodeDir).isDirectory()) return true;
@@ -270,11 +273,11 @@ function toOpencodeServerEntry(server: McpServerConfig): Record<string, unknown>
 function buildLocalEntry(server: McpServerConfig): Record<string, unknown> {
   const command = [String(server.command)];
   if (Array.isArray(server.args)) {
-    for (const arg of server.args) command.push(String(arg));
+    for (const arg of server.args) command.push(translateOpencodePlaceholders(String(arg)));
   }
   const entry: Record<string, unknown> = { type: "local", command };
   const env = server.env ?? (server as { environment?: Record<string, string> }).environment;
-  if (env && typeof env === "object") entry.environment = env;
+  if (env && typeof env === "object") entry.environment = translateEnvPlaceholders(env);
   return entry;
 }
 
@@ -285,7 +288,32 @@ function buildRemoteEntry(server: McpServerConfig): Record<string, unknown> {
   };
   const headers = server.headers;
   if (headers && typeof headers === "object" && !Array.isArray(headers)) {
-    entry.headers = headers;
+    entry.headers = translateEnvPlaceholders(
+      Object.fromEntries(
+        Object.entries(headers).filter(([, value]) => typeof value === "string"),
+      ) as Record<string, string>,
+    );
   }
   return entry;
+}
+
+/**
+ * OpenCode resolves `{env:VAR}` at runtime. Translate authored APM forms
+ * (`${VAR}`, `${env:VAR}`, legacy `<VAR>`, Cursor-native `${env:VAR}`) so no
+ * resolved secret is written into opencode.json.
+ */
+function translateOpencodePlaceholders(value: string): string {
+  return value.replace(
+    /\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}|\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\{env:([A-Za-z_][A-Za-z0-9_]*)\}|<([A-Z_][A-Z0-9_]*)>/g,
+    (_match, native: string, bare: string, braceNative: string, angle: string) =>
+      `{env:${native ?? bare ?? braceNative ?? angle}}`,
+  );
+}
+
+function translateEnvPlaceholders(values: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(values)) {
+    out[key] = typeof raw === "string" ? translateOpencodePlaceholders(raw) : String(raw);
+  }
+  return out;
 }

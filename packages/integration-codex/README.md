@@ -40,6 +40,8 @@ Lone project-root `AGENTS.md` is **not** a Codex signal (shared compile family w
 
 MCP is **not** written by materialize — only via `configureMcp` → `.codex/config.toml` `mcp_servers` (stdio + https remote; SSE rejected).
 
+Remote `headers` map to Codex-native fields: static values → `http_headers`; an exactly-`${VAR}` value → `env_http_headers`; `Authorization: "Bearer ${VAR}"` → `bearer_token_env_var`. Header references are never baked into a literal secret; a value with surrounding text that Codex cannot express is skipped with `CODEX_MCP_HEADER_UNEXPRESSIBLE`. Stdio `env` remains install-time baked because Codex does not interpolate it.
+
 ## Compile
 
 `compile` defaults to project-root `AGENTS.md`, **includes** instruction primitives, and honors `write` for preview vs durable emit.

@@ -212,6 +212,12 @@ export type BapmIntegration = {
    */
   mcpEnvMode?: McpEnvMode;
   /**
+   * Optional MCP `headers` handling mode. Omitted ⇒ inherit `mcpEnvMode`.
+   * Hosts such as Codex bake `env` at install time but translate header
+   * references into host-native indirection instead of writing secrets.
+   */
+  mcpHeadersEnvMode?: McpEnvMode;
+  /**
    * Where `configureMcp` writes by contract. `home` means a user-global file
    * shared by every project on the machine; install warns about the collision
    * and supports `--exclude` as the opt-out. Omitted ⇒ `project`.

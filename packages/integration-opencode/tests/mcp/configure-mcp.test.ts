@@ -161,6 +161,64 @@ describe("opencode configureMcp → opencode.json", () => {
     expect(doc.mcp!["owned"]).toMatchObject({ type: "local" });
   });
 
+  test("translate mode writes native {env:VAR} placeholders instead of baked secrets", async () => {
+    project = createTempDir();
+    mkdirSync(join(project.cwd, ".opencode"), { recursive: true });
+    const target = createOpencodeIntegration();
+    expect(target.mcpEnvMode).toBe("translate");
+
+    await target.configureMcp!(
+      [
+        {
+          name: "token-stdio",
+          transport: "stdio",
+          command: "node",
+          args: ["server.mjs", "--token", "${ARG_TOKEN}"],
+          env: {
+            API_TOKEN: "${API_TOKEN}",
+            NATIVE: "${env:NATIVE_TOKEN}",
+            PLAIN: "literal",
+          },
+        },
+        {
+          name: "token-remote",
+          transport: "http",
+          url: "https://example.test/mcp",
+          headers: {
+            Authorization: "Bearer ${HEADER_TOKEN}",
+            "X-Tenant": "${env:TENANT_ID}",
+            "X-Static": "static-value",
+          },
+        },
+      ],
+      { cwd: project.cwd, deployRoots: target.deployRoots, targetId: "opencode" },
+    );
+
+    const doc = JSON.parse(
+      readFileSync(join(project.cwd, "opencode.json"), "utf8"),
+    ) as OpencodeMcpDoc;
+    expect(doc.mcp!["token-stdio"]).toMatchObject({
+      type: "local",
+      command: ["node", "server.mjs", "--token", "{env:ARG_TOKEN}"],
+      environment: {
+        API_TOKEN: "{env:API_TOKEN}",
+        NATIVE: "{env:NATIVE_TOKEN}",
+        PLAIN: "literal",
+      },
+    });
+    expect(doc.mcp!["token-remote"]).toMatchObject({
+      type: "remote",
+      headers: {
+        Authorization: "Bearer {env:HEADER_TOKEN}",
+        "X-Tenant": "{env:TENANT_ID}",
+        "X-Static": "static-value",
+      },
+    });
+    expect(readFileSync(join(project.cwd, "opencode.json"), "utf8")).not.toContain(
+      '"${API_TOKEN}"',
+    );
+  });
+
   test("MCP writes only opencode.json at project root (not arbitrary paths)", async () => {
     project = createTempDir();
     mkdirSync(join(project.cwd, ".opencode"), { recursive: true });

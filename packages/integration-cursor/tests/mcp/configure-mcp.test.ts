@@ -130,6 +130,56 @@ describe("target-cursor M9 MCP configure → .cursor/mcp.json", () => {
     });
   });
 
+  test("translate mode writes native ${env:VAR} placeholders instead of baked secrets", async () => {
+    project = createTempDir();
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    const target = createCursorIntegration() as unknown as Record<string, unknown>;
+    const configureMcp = getConfigureMcp(target);
+    expect(target.mcpEnvMode).toBe("translate");
+
+    await configureMcp(
+      [
+        {
+          name: "token-server",
+          transport: "stdio",
+          command: "node",
+          url: undefined,
+          env: {
+            API_TOKEN: "${API_TOKEN}",
+            NATIVE: "${env:NATIVE_TOKEN}",
+            OPENCODE_FORM: "{env:OC_TOKEN}",
+            PLAIN: "literal",
+          },
+          headers: {
+            Authorization: "Bearer ${HEADER_TOKEN}",
+            "X-Tenant": "${env:TENANT_ID}",
+            "X-Static": "static-value",
+          },
+          args: ["--token", "${ARG_TOKEN}"],
+        },
+      ],
+      { cwd: project.cwd, deployRoots: (target.deployRoots as string[]) ?? [".cursor"] },
+    );
+
+    const doc = JSON.parse(readFileSync(join(project.cwd, ".cursor", "mcp.json"), "utf8")) as {
+      mcpServers: Record<string, Record<string, unknown>>;
+    };
+    const server = doc.mcpServers["token-server"]!;
+    expect(server.env).toEqual({
+      API_TOKEN: "${env:API_TOKEN}",
+      NATIVE: "${env:NATIVE_TOKEN}",
+      OPENCODE_FORM: "${env:OC_TOKEN}",
+      PLAIN: "literal",
+    });
+    expect(server.headers).toEqual({
+      Authorization: "Bearer ${env:HEADER_TOKEN}",
+      "X-Tenant": "${env:TENANT_ID}",
+      "X-Static": "static-value",
+    });
+    expect(server.args).toEqual(["--token", "${env:ARG_TOKEN}"]);
+    expect(JSON.stringify(server)).not.toMatch(/"\$\{API_TOKEN\}"/);
+  });
+
   test("materialize still does not require writing mcp.json for skills/rules", async () => {
     project = createTempDir();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
