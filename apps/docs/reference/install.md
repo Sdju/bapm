@@ -34,7 +34,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--policy`               | `<path>`       | Явный policy-файл (побеждает `apm-policy.yml` / `bapm-policy.yml`)                                    | discovery                 |
 | `--no-policy`            | —              | Пропустить policy discovery/checks (также `BAPM_POLICY_DISABLE=1`)                                    | off                       |
 | `--trust-transitive-mcp` | —              | Деплоить MCP из зависимостей; по умолчанию только direct `dependencies.mcp`                           | off                       |
-| `--trust-bin`            | —              | Согласие на deploy dependency/plugin `bin/` для этого запуска (если policy/ExecutableTrust позволяет) | off (см. non-interactive) |
+| `--trust-bin`            | —              | Согласие на deploy dependency/plugin `bin/` для этого запуска (если policy/ExecutableTrust позволяет) | off (нужен явный consent) |
 | `--no-trust-bin`         | —              | Пропустить deploy `bin/` для этого запуска (даже если policy allow)                                   | —                         |
 | `--help`, `-h`           | —              | Показать help                                                                                         | —                         |
 
@@ -43,11 +43,13 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - `--frozen` и `--no-frozen` взаимно исключаются.
 - `--trust-bin` и `--no-trust-bin` взаимно исключаются; флаги не переопределяют org/project deny.
 - Non-interactive (CI, `BAPM_NON_INTERACTIVE`, non-TTY или frozen) по умолчанию **не** деплоит dependency `bin/` без `--trust-bin` или persisted `executables.allow` с `bin: true`.
+- TTY не считается согласием: интерактивный install тоже **не** деплоит dependency `bin/` без `--trust-bin` или persisted grant. Если deploy удержан, install печатает diagnostic с подсказкой передать `--trust-bin` или выполнить `bapm approve <пакет> --bin`.
 - Frozen (явный или CI-default) нельзя сочетать с `--update`.
 - Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen`.
 - `--force` в текущей версии ничего не меняет: флаг принимается, но не влияет на установку. Он не связан с `--target`.
 - В интерактивном терминале `bin/` зависимостей раскладывается и без `--trust-bin`, с предупреждением. `bapm approve` разрешение на `bin/` не выдаёт.
 - Dependency hooks проверяются через ExecutableTrust (type `hook`) только когда есть project/user grant-поверхность или org `executables.deny`/`deny_all`; иначе hooks раскладываются по legacy-поведению. Root/local hooks проекта не гейтятся, `--trust-bin` на hooks не влияет.
+- В интерактивном терминале `bin/` зависимостей **не** раскладывается без явного согласия: нужен `--trust-bin` или persisted grant (`executables.allow` с `bin: true` / `bapm approve <пакет> --bin`).
 - `--no-policy` отключает и политику организации, включая её запреты.
 - Frozen проверяет наличие lock, пины прямых зависимостей и хэши развёрнутых файлов, а также сверяет `#ref` прямых git-зависимостей с `resolved_ref` в lock. Расхождение ref при неизменном lock — ошибка `Frozen install ref drift`. См. [CI по lock-файлу](/guide/situations/ci-frozen).
 - Выбор агента: `--target <id>` → `active` в `bapm.local.yml` → `active` в `bapm.yml` → автоопределение → ошибка. В `active` можно перечислить несколько агентов, тогда файлы и MCP раскладываются для каждого поддерживающего хоста. См. [Выбор агента](/guide/host-selection).

@@ -7,13 +7,21 @@ export type DenyCliDeps = {
   saveGrant?: (opts: SaveUserExecutableGrantsOptions) => unknown;
 };
 
+export const DENY_EXECUTABLE_TYPES = ["mcp", "bin", "hook"] as const;
+export type DenyExecutableType = (typeof DENY_EXECUTABLE_TYPES)[number];
+
 export function formatDenyHelp(deps: DenyCliDeps): string {
   return `${deps.name} deny — Persist user-local executable deny
 
 Usage:
-  bapm deny <package-name> [--user]
+  bapm deny <package-name> [--bin|--hook|--mcp] [--user]
 
-Persists an MCP deny under ~/.bapm/config.json (executables.deny).
+Persists a deny under ~/.bapm/config.json (executables.deny).
+  --mcp    deny MCP servers (default)
+  --bin    deny dependency bin/ executables
+  --hook   deny dependency hooks
+Multiple type flags persist each selected type. With no type flag, deny
+defaults to --mcp (backward compatible).
 Interactive deny NEVER writes project ${deps.manifestFile}.
 `;
 }
@@ -22,9 +30,11 @@ export function parseDenyArgs(argv: string[]): {
   help: boolean;
   packageName?: string;
   user: boolean;
+  executableTypes: DenyExecutableType[];
 } {
   let help = false;
   const positionals: string[] = [];
+  const executableTypes: DenyExecutableType[] = [];
   for (const arg of argv) {
     if (arg === "--help" || arg === "-h") {
       help = true;
@@ -34,10 +44,20 @@ export function parseDenyArgs(argv: string[]): {
       // Interactive path is always user-local (sc-010); flag accepted for APM parity.
       continue;
     }
+    if (arg === "--mcp" || arg === "--bin" || arg === "--hook") {
+      const type = arg.slice(2) as DenyExecutableType;
+      if (!executableTypes.includes(type)) executableTypes.push(type);
+      continue;
+    }
     if (arg.startsWith("-")) continue;
     positionals.push(arg);
   }
-  return { help, packageName: positionals[0], user: true };
+  return {
+    help,
+    packageName: positionals[0],
+    user: true,
+    executableTypes: executableTypes.length > 0 ? executableTypes : ["mcp"],
+  };
 }
 
 export async function runDenyCli(
@@ -57,11 +77,15 @@ export async function runDenyCli(
   }
 
   const save = deps.saveGrant ?? persistUserExecutableGrant;
-  save({
-    packageName,
-    grant: "deny",
-    executableType: "mcp",
-  });
-  console.log(`Denied "${packageName}" (mcp) in user config (~/.bapm/config.json)`);
+  for (const executableType of parsed.executableTypes) {
+    save({
+      packageName,
+      grant: "deny",
+      executableType,
+    });
+  }
+  console.log(
+    `Denied "${packageName}" (${parsed.executableTypes.join(", ")}) in user config (~/.bapm/config.json)`,
+  );
   return { ok: true, exitCode: 0 };
 }

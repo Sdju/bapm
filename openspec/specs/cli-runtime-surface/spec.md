@@ -756,7 +756,7 @@ Invoking `view` MUST be recognized by CLI dispatch and MUST route through the FE
 
 ### Requirement: Top-level approve and deny commands
 
-The CLI MUST register top-level `approve` and `deny` commands that invoke interactive user-local grant persistence. Interactive defaults MUST target the user store only and MUST NOT persist interactive decisions into project `bapm.yml`. Top-level help MUST mention both commands. Unknown flags MUST fail closed with non-zero exit for parse errors.
+The CLI MUST register top-level `approve` and `deny` commands that invoke interactive user-local grant persistence. Interactive defaults MUST target the user store only and MUST NOT persist interactive decisions into project `bapm.yml`. The commands MUST accept `--mcp` (default), `--bin`, and `--hook` executable-type flags. Top-level help MUST mention both commands. Unknown flags MUST fail closed with non-zero exit for parse errors.
 
 #### Scenario: Approve command registered
 
@@ -852,7 +852,7 @@ The install command MUST accept `--trust-bin` and `--no-trust-bin` as known flag
 
 ### Requirement: Install help documents trust-bin flags
 
-Invoking install help MUST document `--trust-bin` and `--no-trust-bin`, including that they are per-invocation consent for marketplace/plugin `bin/` executables, that non-interactive installs default to not deploying bin without consent or persisted allow, and that the flags cannot override org/project deny.
+Invoking install help MUST document `--trust-bin` and `--no-trust-bin`, including that they are per-invocation consent for marketplace/plugin `bin/` executables, that installs default to not deploying bin without consent or persisted allow in every mode (a TTY is not implicit consent), and that the flags cannot override org/project deny.
 
 #### Scenario: Install help lists trust-bin flags
 

@@ -1357,8 +1357,6 @@ function deployBinsAfterConsent(args: {
   const deployRoot = args.binDeployRoot
     ? resolve(args.binDeployRoot)
     : defaultBinDeployRoot(args.cwd);
-  let trustPostureWarned = false;
-
   for (const node of args.nodes) {
     const packageRoot = dependencyPackageRoot(node);
     if (!packageRoot) continue;
@@ -1385,6 +1383,7 @@ function deployBinsAfterConsent(args: {
         packageName: node.name,
         withhold: true,
         skip: true,
+        warn: consent.warn,
         trustBin: args.trustBin,
         ladderOutcome: consent.ladderOutcome,
         outcome: consent.outcome,
@@ -1393,17 +1392,6 @@ function deployBinsAfterConsent(args: {
     }
 
     materializeBinFiles({ files, deployRoot });
-    if (consent.warn && !trustPostureWarned) {
-      trustPostureWarned = true;
-      diagnostics.push({
-        code: "BIN_TRUST_POSTURE_WARN",
-        message:
-          "Trust posture warning: dependency bin/ deployed under interactive default; pass --trust-bin for explicit consent (or approve / project executables.allow with bin: true for persistence)",
-        warn: true,
-        trustPosture: true,
-        packageName: node.name,
-      });
-    }
   }
 
   return diagnostics;

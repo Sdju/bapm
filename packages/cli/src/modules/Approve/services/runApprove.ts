@@ -8,14 +8,21 @@ export type ApproveCliDeps = {
   saveGrant?: (opts: SaveUserExecutableGrantsOptions) => unknown;
 };
 
+export const APPROVE_EXECUTABLE_TYPES = ["mcp", "bin", "hook"] as const;
+export type ApproveExecutableType = (typeof APPROVE_EXECUTABLE_TYPES)[number];
+
 export function formatApproveHelp(deps: ApproveCliDeps): string {
   return `${deps.name} approve — Persist user-local executable allow
 
 Usage:
-  bapm approve <package-name> [--hook] [--user]
+  bapm approve <package-name> [--bin|--hook|--mcp] [--user]
 
-Persists an MCP allow grant under ~/.bapm/config.json (executables.allow).
-Pass --hook to persist a hook grant (executables.allow.<pkg>.hook: true).
+Persists an allow grant under ~/.bapm/config.json (executables.allow).
+  --mcp    approve MCP servers (default)
+  --bin    approve dependency bin/ executables
+  --hook   approve dependency hooks
+Multiple type flags persist each selected type. With no type flag, approve
+defaults to --mcp (backward compatible).
 Interactive approve NEVER writes project ${deps.manifestFile}.
 `;
 }
@@ -24,28 +31,34 @@ export function parseApproveArgs(argv: string[]): {
   help: boolean;
   packageName?: string;
   user: boolean;
-  executableType: "mcp" | "hook";
+  executableTypes: ApproveExecutableType[];
 } {
   let help = false;
-  let executableType: "mcp" | "hook" = "mcp";
   const positionals: string[] = [];
+  const executableTypes: ApproveExecutableType[] = [];
   for (const arg of argv) {
     if (arg === "--help" || arg === "-h") {
       help = true;
-      continue;
-    }
-    if (arg === "--hook") {
-      executableType = "hook";
       continue;
     }
     if (arg === "--user") {
       // Interactive path is always user-local (sc-010); flag accepted for APM parity.
       continue;
     }
+    if (arg === "--mcp" || arg === "--bin" || arg === "--hook") {
+      const type = arg.slice(2) as ApproveExecutableType;
+      if (!executableTypes.includes(type)) executableTypes.push(type);
+      continue;
+    }
     if (arg.startsWith("-")) continue;
     positionals.push(arg);
   }
-  return { help, packageName: positionals[0], user: true, executableType };
+  return {
+    help,
+    packageName: positionals[0],
+    user: true,
+    executableTypes: executableTypes.length > 0 ? executableTypes : ["mcp"],
+  };
 }
 
 export async function runApproveCli(
@@ -65,13 +78,15 @@ export async function runApproveCli(
   }
 
   const save = deps.saveGrant ?? persistUserExecutableGrant;
-  save({
-    packageName,
-    grant: "allow",
-    executableType: parsed.executableType,
-  });
+  for (const executableType of parsed.executableTypes) {
+    save({
+      packageName,
+      grant: "allow",
+      executableType,
+    });
+  }
   console.log(
-    `Approved "${packageName}" (${parsed.executableType}) in user config (~/.bapm/config.json)`,
+    `Approved "${packageName}" (${parsed.executableTypes.join(", ")}) in user config (~/.bapm/config.json)`,
   );
   return { ok: true, exitCode: 0 };
 }

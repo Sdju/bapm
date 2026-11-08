@@ -78,16 +78,21 @@ export function resolveBinDeployConsent(
 
   // Ladder deny/withhold always wins (including over --trust-bin).
   if (!ladder.allowed || ladder.outcome === "deny" || ladder.outcome === "withhold") {
+    const interactiveWarn = interactive && trustBin !== "deny";
+    const ladderReason =
+      ladder.reason ??
+      `bin deploy withheld for "${packageName}" (ExecutableTrust ${ladder.outcome})`;
     return {
       ...base,
       deploy: false,
       withhold: true,
-      warn: false,
+      warn: interactiveWarn,
       allowed: false,
       outcome: "withhold",
       reason:
-        ladder.reason ??
-        `bin deploy withheld for "${packageName}" (ExecutableTrust ${ladder.outcome})`,
+        interactiveWarn && ladder.outcome === "withhold"
+          ? `${ladderReason}; --trust-bin cannot override the grant ladder — approve bin persistently with "bapm approve ${packageName} --bin"`
+          : ladderReason,
     };
   }
 
@@ -115,20 +120,8 @@ export function resolveBinDeployConsent(
     };
   }
 
-  // trustBin === "default"
-  if (interactive) {
-    return {
-      ...base,
-      deploy: true,
-      withhold: false,
-      warn: true,
-      allowed: true,
-      outcome: "deploy",
-      reason: `interactive default deploys bin for "${packageName}"; pass --trust-bin for explicit consent`,
-    };
-  }
-
-  // Non-interactive default: require explicit project/user allow (not skip).
+  // trustBin === "default": only a persisted ladder allow (project/user `bin: true`)
+  // is consent. TTY is not implicit consent; explicit `--trust-bin` is handled above.
   if (ladder.outcome === "allow") {
     return {
       ...base,
@@ -137,7 +130,7 @@ export function resolveBinDeployConsent(
       warn: false,
       allowed: true,
       outcome: "deploy",
-      reason: `bin deploy allowed for "${packageName}" (persisted grant; non-interactive)`,
+      reason: `bin deploy allowed for "${packageName}" (persisted bin grant)`,
     };
   }
 
@@ -145,10 +138,12 @@ export function resolveBinDeployConsent(
     ...base,
     deploy: false,
     withhold: true,
-    warn: false,
+    warn: interactive,
     allowed: false,
     outcome: "withhold",
-    reason: `bin deploy skipped for "${packageName}" (non-interactive default without --trust-bin or persisted bin allow)`,
+    reason: interactive
+      ? `bin deploy withheld for "${packageName}" (interactive default requires explicit consent; pass --trust-bin or approve bin persistently with "bapm approve ${packageName} --bin")`
+      : `bin deploy skipped for "${packageName}" (default without --trust-bin or persisted bin allow)`,
   };
 }
 

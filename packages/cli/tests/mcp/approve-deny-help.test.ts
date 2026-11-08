@@ -13,4 +13,13 @@ describe("CLI approve/deny help surface", () => {
     expect(text).toMatch(/\bapprove\b/i);
     expect(text).toMatch(/\bdeny\b/i);
   });
+
+  test("approve --help documents --bin, --hook, and default --mcp", async () => {
+    const { result, stdout, stderr } = await withCapturedIo(() => runCli(["approve", "--help"]));
+    const text = [...stdout, ...stderr].join("\n");
+    expect(result).toBe(0);
+    expect(text).toMatch(/--bin/);
+    expect(text).toMatch(/--hook/);
+    expect(text).toMatch(/--mcp/);
+  });
 });

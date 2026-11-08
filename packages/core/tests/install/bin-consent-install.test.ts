@@ -26,6 +26,7 @@ import {
   writeManifestYaml,
   writeOrgDenyAllPolicy,
   writeOrgDenyPolicy,
+  writeText,
   type MockRegistry,
   type TempProject,
 } from "./trust-bin-helpers.ts";
@@ -254,14 +255,39 @@ describe("install-trust-bin — interactive default", () => {
     project = undefined;
   });
 
-  test("interactive neither flag warns and deploys when ladder allows", async () => {
+  test("interactive neither flag withholds when no grant and warns", async () => {
     project = createTempProject();
     mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
     writeManifestYaml(
       project.cwd,
       consumerManifest({
-        name: "interactive-warn",
+        name: "interactive-withhold",
         target: "cursor",
+        depYaml: gitDepYaml(),
+      }),
+    );
+
+    const { result, skillNames } = await installBinPlugin(project.cwd, {
+      trustBin: "default",
+      isInteractive: true,
+    });
+
+    expect(result).toMatchObject({ ok: true });
+    expect(deployedBinExists(project.cwd)).toBe(false);
+    expect(hasBinWithholdDiagnostic(result)).toBe(true);
+    expect(hasTrustBinWarning(result)).toBe(true);
+    expect(skillNames).toContain(SKILL_NAME);
+  });
+
+  test("interactive persisted project bin allow deploys without warning", async () => {
+    project = createTempProject();
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    writeManifestYaml(
+      project.cwd,
+      consumerManifest({
+        name: "interactive-allow-persisted",
+        target: "cursor",
+        executablesYaml: projectBinAllowYaml(),
         depYaml: gitDepYaml(),
       }),
     );
@@ -273,7 +299,35 @@ describe("install-trust-bin — interactive default", () => {
 
     expect(result).toMatchObject({ ok: true });
     expect(deployedBinExists(project.cwd)).toBe(true);
-    expect(hasTrustBinWarning(result)).toBe(true);
+    expect(hasTrustBinWarning(result)).toBe(false);
+  });
+
+  test("interactive persisted user bin grant (approve --bin) deploys", async () => {
+    project = createTempProject();
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    const configDir = join(project.cwd, ".bapm");
+    writeText(
+      join(configDir, "config.json"),
+      `${JSON.stringify({ executables: { allow: { [PKG_ID]: { bin: true } }, deny: {} } }, null, 2)}\n`,
+    );
+    writeManifestYaml(
+      project.cwd,
+      consumerManifest({
+        name: "interactive-user-allow",
+        target: "cursor",
+        depYaml: gitDepYaml(),
+      }),
+    );
+
+    const { result } = await installBinPlugin(project.cwd, {
+      trustBin: "default",
+      isInteractive: true,
+      configDir,
+    });
+
+    expect(result).toMatchObject({ ok: true });
+    expect(deployedBinExists(project.cwd)).toBe(true);
+    expect(hasTrustBinWarning(result)).toBe(false);
   });
 
   test("interactive trustBin=allow deploys without trust-posture warning", async () => {
