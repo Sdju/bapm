@@ -30,6 +30,7 @@ import {
   type MockRegistry,
   type TempProject,
 } from "./trust-bin-helpers.ts";
+import { addDeployedFilesToLock } from "./helpers.ts";
 
 describe("install-trust-bin — non-interactive default skips bin", () => {
   let project: TempProject | undefined;
@@ -86,6 +87,9 @@ describe("install-trust-bin — non-interactive default skips bin", () => {
     });
     expect(warm).toMatchObject({ ok: true });
     expect(deployedBinExists(project.cwd)).toBe(false);
+    // Warm target reports primitive names but no harness files; record the
+    // would-be deploy set so this test stays focused on bin consent.
+    addDeployedFilesToLock(project.cwd, PKG_ID, [".agents/skills/bin-skill/SKILL.md"]);
 
     const { result } = await installBinPlugin(project.cwd, {
       trustBin: "default",

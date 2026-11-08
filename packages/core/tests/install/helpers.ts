@@ -3,9 +3,10 @@
  * Reuses resolve ports/temp projects; adds install/primitives accessors.
  */
 import { asText } from "../asText.ts";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import * as core from "@b-apm/core";
 
 export {
@@ -149,6 +150,32 @@ export function readLockBytes(cwd: string): Buffer {
   const path = existingLockPath(cwd);
   if (!path) throw new Error("expected lockfile on disk");
   return readFileSync(path);
+}
+
+/**
+ * Seed `deployed_files` inventory on a lock row. Frozen under-record fixtures
+ * whose target materialize reports no files still need to prove the package's
+ * would-be deploy set.
+ */
+export function addDeployedFilesToLock(
+  cwd: string,
+  packageName: string,
+  deployedFiles: string[],
+): void {
+  const path = existingLockPath(cwd);
+  if (!path) throw new Error("expected lockfile on disk");
+  const doc = parseYaml(readFileSync(path, "utf8")) as {
+    dependencies?: Array<Record<string, unknown>>;
+  };
+  const deps = doc.dependencies ?? [];
+  const row = deps.find((dep) => {
+    const name = typeof dep.name === "string" ? dep.name : "";
+    const repo = typeof dep.repo_url === "string" ? dep.repo_url : "";
+    return name === packageName || repo.includes(packageName);
+  });
+  if (!row) throw new Error(`expected lock row for ${packageName}`);
+  row.deployed_files = deployedFiles;
+  writeFileSync(path, stringifyYaml(doc), "utf8");
 }
 
 export function hasHarnessWrites(cwd: string, roots: string[]): boolean {
