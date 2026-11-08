@@ -35,7 +35,7 @@ If `deps why` is exposed, it MUST walk reverse dependency chains offline from th
 
 ### Requirement: deps why JSON success document
 
-When `deps why <query> --json` succeeds, the command MUST print a single JSON object on **stdout** with stable top-level keys `package` and `paths`. The `package` object MUST include identity fields available on the lock entry (`name` and/or `repo_url` — both when present), a `version` string (tag/ref/commit fallback), `source`, and boolean `is_direct`. The `paths` value MUST be an array of objects each with a `chain` array of nodes `{ identity fields, constraint | null, is_direct }`, ordered deterministically. Why MUST remain offline (lockfile sole graph source; no network).
+When `deps why <query> --json` succeeds, the command MUST print a single JSON object on **stdout** with stable top-level keys `package` and `paths`. The `package` object MUST include identity fields available on the lock entry (`name` and/or `repo_url` — both when present), a `version` string (tag/ref/commit fallback), `source`, and boolean `is_direct`. The `paths` value MUST be an array of objects each with a `chain` array of nodes `{ identity fields, constraint | null, is_direct }`, ordered deterministically. `is_direct` MUST be true when the lock entry has `depth: 1` or its exact identity is declared in the manifest's direct APM dependencies (`dependencies.apm` / `devDependencies.apm`); an empty or missing `resolved_by` alone MUST NOT imply direct. Root→package chains MUST NOT include the project root as a synthetic package node. Why MUST remain offline (lockfile sole graph source; no network).
 
 #### Scenario: Successful why --json shape
 
