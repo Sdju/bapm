@@ -83,4 +83,3 @@ cat "$d/.cursor/hooks.json"
 ## Связанные
 
 - [trust-bin-interactive.md](./trust-bin-interactive.md) — второй исполняемый тип и его consent-лестница.
-- [skipped-primitives-silent.md](./skipped-primitives-silent.md) — что происходит с hook у хостов без поддержки.

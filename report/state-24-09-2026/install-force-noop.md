@@ -74,6 +74,4 @@ bapm install --frozen --force
 
 ## Связанные
 
-- [targets-narrow-deploy.md](./targets-narrow-deploy.md) — `--target` и сужение раскладки, с которым путают `--force`.
-- [update-not-blocked-in-ci.md](./update-not-blocked-in-ci.md) — другой флаг, который меняет поведение в CI.
 - frozen теперь ловит смену ref до записи; `--force` по-прежнему не refresh-ит refs.

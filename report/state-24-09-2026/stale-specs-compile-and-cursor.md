@@ -79,4 +79,3 @@ rg -n 'Cursor MCP deploy|configuring target' openspec/specs/install-pipeline/spe
 ## Связанные
 
 - [cli-tests-cursor-resolves.md](./cli-tests-cursor-resolves.md) — тесты, которые ещё верят в отсутствие Cursor/Claude.
-- [plugin-flags-vs-spec.md](./plugin-flags-vs-spec.md) — другой пример отставания спеки от shipped CLI.

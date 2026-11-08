@@ -82,5 +82,4 @@ node -e 'console.log(Object.keys(require("./.cursor/mcp.json").mcpServers))'
 
 ## Связанные
 
-- [policy-file-deny-only.md](./policy-file-deny-only.md) — что вообще умеет policy-файл.
 - [policy-remote-not-wired.md](./policy-remote-not-wired.md) — ограничения remote/ADO policy.

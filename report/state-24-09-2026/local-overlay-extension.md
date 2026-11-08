@@ -75,5 +75,3 @@ printf 'dependencies:\n  apm:\n    - path: ./x\n' > "$tmp/bapm.local.yml"
 Оверлей полностью заменяет `active` базы, остальные разрешённые поля сливает по правилам. `local`-пакет попадает только в `bapm.local.lock.yaml`. Если записать `local` в общий `bapm.yml`, в CI frozen install падает на отсутствующем пине (`INSTALL_FROZEN_MISSING_PIN`), а вне CI — на отсутствующем каталоге у коллег. `doctor` предупреждает, если личный файл попал в git, но на код выхода это не влияет. `path:` теперь пишется в lock project-relative, поэтому общий lock переносим.
 
 ## Связанные
-
-- [targets-narrow-deploy.md](./targets-narrow-deploy.md) — `target` / `targets` в оверлее тоже сужают раскладку.

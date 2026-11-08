@@ -4,18 +4,18 @@
 
 Поведение сверено с кодом в working tree. Поведение APM — по `CONFORMANCE.md`, чеклисту и пользовательской документации, не по исходному коду APM.
 
-Повторный аудит **08-11-2026**: карточки проверены по текущему дереву, у каждой есть уровень важности, разделы «Влияние», «Проверка» и «Рекомендация». Закрытые и исправленные карточки удалены — их история остаётся в git (коммит `4149149` и fix-коммиты ниже).
+Повторный аудит **08-11-2026**: карточки проверены по текущему дереву, у каждой есть уровень важности, разделы «Влияние», «Проверка» и «Рекомендация». Закрытые и исправленные карточки удалены — их история остаётся в git (базовый снимок `4149149` и fix-коммиты ниже).
 
 ## Сводка
 
 | Важность | Карточек | Что означает                                                                                                                                               |
 | -------- | -------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | критично |        0 | молчаливая потеря/порча файлов, утечка секрета, принципиально небезопасная команда, дыра в обязательном security-гейте                                     |
-| высокая  |        7 | в частом сценарии команда молча делает не то; дыра в CI-гейте; обходится security-контроль; заявленная возможность не работает; ломается совместная работа |
-| средняя  |       12 | неверное поведение в узком сценарии; вводящий в заблуждение UX/JSON/диагностика; дрейф спеки; неполная фича с обходом                                      |
-| низкая   |       10 | осознанное отличие без вреда, формулировки docs, редкий edge case с простым обходом                                                                        |
+| высокая  |        4 | в частом сценарии команда молча делает не то; дыра в CI-гейте; обходится security-контроль; заявленная возможность не работает; ломается совместная работа |
+| средняя  |        6 | неверное поведение в узком сценарии; вводящий в заблуждение UX/JSON/диагностика; дрейф спеки; неполная фича с обходом                                      |
+| низкая   |        7 | осознанное отличие без вреда, формулировки docs, редкий edge case с простым обходом                                                                        |
 
-Высокий приоритет: сужение `targets`, MCP без каталога/trust, policy-hooks, grant-surface, `--no-policy`, TTY `bin/`, `update -y` в CI и изоляция тестов.
+Высокий приоритет: hooks без grant, общая grant-поверхность, `--no-policy` против org deny, TTY `bin/`.
 
 ## Как читать карточку
 
@@ -44,42 +44,45 @@
 
 ### Незавершённое или спорное поведение CLI
 
-| Файл                                                         | Тема                                            | Важность |
-| ------------------------------------------------------------ | ----------------------------------------------- | -------- |
-| [install-force-noop.md](./install-force-noop.md)             | `--force` принимается и ничего не делает        | средняя  |
-| [orphan-files-cleanup.md](./orphan-files-cleanup.md)         | Сироты после удаления пакета из манифеста       | средняя  |
-| [targets-narrow-deploy.md](./targets-narrow-deploy.md)       | Корневые `targets` молча сужают раскладку       | высокая  |
-| [update-not-blocked-in-ci.md](./update-not-blocked-in-ci.md) | `update -y` в CI не запрещён                    | высокая  |
-| [update-dry-run-branches.md](./update-dry-run-branches.md)   | `--dry-run` показывает ветки как `keep`         | средняя  |
-| [deps-why-is-direct.md](./deps-why-is-direct.md)             | `deps why --json`: `is_direct` по `resolved_by` | средняя  |
-| [hash-formats.md](./hash-formats.md)                         | Разные форматы хешей в lock                     | низкая   |
+| Файл                                                           | Тема                                     | Важность |
+| -------------------------------------------------------------- | ---------------------------------------- | -------- |
+| [install-force-noop.md](./install-force-noop.md)               | `--force` принимается и ничего не делает | средняя  |
+| [deny-does-not-undeploy.md](./deny-does-not-undeploy.md)       | `deny` не убирает уже записанный сервер  | средняя  |
+| [copilot-windsurf-home-mcp.md](./copilot-windsurf-home-mcp.md) | Copilot и Windsurf пишут MCP в `$HOME`   | средняя  |
 
 ### Policy / MCP / trust
 
-| Файл                                                                 | Тема                                                    | Важность |
-| -------------------------------------------------------------------- | ------------------------------------------------------- | -------- |
-| [policy-hooks-ungated.md](./policy-hooks-ungated.md)                 | Hooks и canvas не под ExecutableTrust                   | высокая  |
-| [policy-file-deny-only.md](./policy-file-deny-only.md)               | Файл политики только запрещает                          | средняя  |
-| [grant-surface-all-or-nothing.md](./grant-surface-all-or-nothing.md) | Любое разрешение включает проверку всех MCP-пакетов     | высокая  |
-| [deny-does-not-undeploy.md](./deny-does-not-undeploy.md)             | `deny` не убирает уже записанный сервер                 | средняя  |
-| [no-policy-disables-org.md](./no-policy-disables-org.md)             | `--no-policy` отключает и org deny                      | высокая  |
-| [trust-bin-interactive.md](./trust-bin-interactive.md)               | В TTY `bin/` ставится без `--trust-bin`                 | высокая  |
-| [mcp-dir-must-exist.md](./mcp-dir-must-exist.md)                     | Часть агентов пишет MCP только если каталог уже есть    | средняя  |
-| [skipped-primitives-silent.md](./skipped-primitives-silent.md)       | Неподдерживаемые типы файлов пропускаются без сообщения | средняя  |
-| [copilot-windsurf-home-mcp.md](./copilot-windsurf-home-mcp.md)       | Copilot и Windsurf пишут MCP в `$HOME`                  | средняя  |
+| Файл                                                                 | Тема                                                | Важность |
+| -------------------------------------------------------------------- | --------------------------------------------------- | -------- |
+| [policy-hooks-ungated.md](./policy-hooks-ungated.md)                 | Hooks и canvas не под ExecutableTrust               | высокая  |
+| [grant-surface-all-or-nothing.md](./grant-surface-all-or-nothing.md) | Любое разрешение включает проверку всех MCP-пакетов | высокая  |
+| [no-policy-disables-org.md](./no-policy-disables-org.md)             | `--no-policy` отключает и org deny                  | высокая  |
+| [trust-bin-interactive.md](./trust-bin-interactive.md)               | В TTY `bin/` ставится без `--trust-bin`             | высокая  |
 
 ### Спека vs код / тесты
 
 | Файл                                                                     | Тема                                                                  | Важность |
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------- | -------- |
 | [stale-specs-compile-and-cursor.md](./stale-specs-compile-and-cursor.md) | `compile-agents-md` и `cursor-mcp-deploy` про старый cursor-only срез | средняя  |
-| [plugin-flags-vs-spec.md](./plugin-flags-vs-spec.md)                     | `--agent-plugins` / `--skills` есть в CLI, нет в спеке                | низкая   |
 | [policy-remote-not-wired.md](./policy-remote-not-wired.md)               | Remote/ADO policy cascade не подключён к CLI                          | средняя  |
-| [no-mcp-subcommand.md](./no-mcp-subcommand.md)                           | В спеке ещё мелькает `bapm mcp`, в CLI его нет                        | низкая   |
-| [tests-home-isolation.md](./tests-home-isolation.md)                     | Тесты читают `~/.bapm` пользователя                                   | высокая  |
 | [cli-tests-cursor-resolves.md](./cli-tests-cursor-resolves.md)           | Пять CLI-тестов ждут, что канонические интеграции не резолвятся       | средняя  |
 
-## Исправлено и удалено (08.11.2026)
+## Исправлено и удалено
+
+### Пачка 2 (08.11.2026)
+
+| Что                                                         | Коммит                                 |
+| ----------------------------------------------------------- | -------------------------------------- |
+| `update -y` в CI требует `--force`                          | `8a7ede0` (`fix/ci-update-gate`)       |
+| Предупреждения install и fail-closed на пустом `targets`    | `ecfd3a5` (`fix/install-diagnostics`)  |
+| `deps why --json`: корректный `is_direct`                   | `d57b85a` (`fix/deps-why-direct`)      |
+| `update --dry-run` резолвит ветки/literal refs              | `d70c954` (`fix/update-dry-run-refs`)  |
+| Docs/spec: orphan cleanup, хеши, policy allow, plugin flags | `0d99181` (`fix/docs-spec-debt`)       |
+| Тесты изолированы от реального `~/.bapm`                    | `235a945` (`fix/tests-home-isolation`) |
+
+Удалены как исправленные/задокументированные: `update-not-blocked-in-ci`, `skipped-primitives-silent`, `mcp-dir-must-exist`, `targets-narrow-deploy`, `deps-why-is-direct`, `update-dry-run-branches`, `orphan-files-cleanup`, `hash-formats`, `policy-file-deny-only`, `plugin-flags-vs-spec`, `no-mcp-subcommand`, `tests-home-isolation`.
+
+### Пачка 1 (08.11.2026)
 
 | Что                                                | Коммит                               |
 | -------------------------------------------------- | ------------------------------------ |
@@ -91,13 +94,6 @@
 | Frozen ловит смену `#ref`                          | `b9210cc` (`fix/frozen-ref-drift`)   |
 
 Ранее закрыты и удалены: zip-merge, идемпотентный git clone, секреты в lock, приоритет `env`, legacy `active: [id]`, «beyond cursor» в `CONFORMANCE.md`.
-
-## Что изменилось после повторного аудита (08.11.2026)
-
-- **Уточнено:** `skipped-primitives-silent` — интеграции формируют skip-diagnostics, но install их не печатает; таблица `supported-hosts.md` устарела по Grok Build.
-- **Новое:** `policy-remote-not-wired` — провайдер `github-owner-dotgithub` есть в core, но CLI не передаёт fetcher, поэтому org-policy в реальном запуске не ищется.
-- **Уточнено:** `trust-bin-interactive` — TTY-implicit consent работает не всегда: при наличии grant-поверхности без разрешения пакета bin тоже withhold.
-- **Уточнено:** `update-not-blocked-in-ci` — спека `lifecycle-update` говорит MUST отказать в frozen-контексте, а CLI не вычисляет effective frozen из `CI`.
 
 ## Как поддерживать
 

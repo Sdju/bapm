@@ -83,5 +83,4 @@ node -e "console.log(JSON.stringify(require('$home/mcp-config.json').mcpServers)
 ## Связанные
 
 - `origin` теперь срезается перед записью host-конфига (исправлено).
-- [mcp-dir-must-exist.md](./mcp-dir-must-exist.md) — проектные хосты с opt-in каталогом.
 - [deny-does-not-undeploy.md](./deny-does-not-undeploy.md) — общий файл не чистится при deny.

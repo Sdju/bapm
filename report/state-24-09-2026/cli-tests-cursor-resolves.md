@@ -80,5 +80,4 @@ cd packages/cli
 
 ## Связанные
 
-- [tests-home-isolation.md](./tests-home-isolation.md) — другой источник машинозависимых тестов.
 - [stale-specs-compile-and-cursor.md](./stale-specs-compile-and-cursor.md) — спека, которая ещё описывает cursor-only срез.

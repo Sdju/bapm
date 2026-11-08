@@ -79,4 +79,3 @@ bapm policy status --json
 ## Связанные
 
 - [no-policy-disables-org.md](./no-policy-disables-org.md) — `--no-policy` и org-deny.
-- [policy-file-deny-only.md](./policy-file-deny-only.md) — что вообще умеет файл политики.

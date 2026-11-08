@@ -79,5 +79,4 @@ YAML
 
 ## Связанные
 
-- [hash-formats.md](./hash-formats.md) — `resolved_hash` registry-записи в lock.
 - [openapm-8-5-layout.md](./openapm-8-5-layout.md) — ещё одна роль/требование OpenAPM, которое bapm честно не заявляет.

@@ -73,4 +73,3 @@ node_modules/.bin/vp test run --root packages/core tests/lockfile/parse-serializ
 ## Связанные
 
 - [diamond-intersection-vs-first-wins.md](./diamond-intersection-vs-first-wins.md) — второй источник отличий lock между `apm` и `bapm`.
-- [hash-formats.md](./hash-formats.md) — ещё одно представление тех же данных в lock, которое может давать diff.

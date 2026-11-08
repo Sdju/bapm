@@ -79,7 +79,6 @@ printf 'name: root\nversion: 0.0.1\ntarget: cursor\nexecutables:\n  allow: {}\nd
 
 ## Связанные
 
-- [policy-file-deny-only.md](./policy-file-deny-only.md) — где живёт allow и почему policy не помогает.
 - [deny-does-not-undeploy.md](./deny-does-not-undeploy.md) — что делает `deny` после install.
 - Второй агент теперь получает MCP (multi-target исправлен); grant-поверхность остаётся общей для всех пакетов.
 - [policy-hooks-ungated.md](./policy-hooks-ungated.md) — hook не входит в эту лестницу.
