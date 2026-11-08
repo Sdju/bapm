@@ -55,7 +55,20 @@
 | P2 targets/config/lifecycle                    | fixed                         | `e686568` |
 | P2 Copilot marketplace + check-clean           | fixed                         | `2b7c517` |
 
-Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope, runtime/auth, ADM/ADO, LSP/canvas, compile applyTo, shared cache и др.).
+Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope, runtime/auth, compile applyTo, approve UX, pack strict/bundles, shared cache, hermes/intellij, registry MCP lookup).
+
+### Пачка 2 (08.11.2026)
+
+| Что                                                                             | Статус | Коммит    |
+| ------------------------------------------------------------------------------- | ------ | --------- |
+| Codex/Claude native hook shapes                                                 | fixed  | `509b594` |
+| `$schema`, targets scalar/CSV, unknown-key warnings, extensions, immutable refs | fixed  | `a6458c0` |
+| GitHub multi-candidate + Azure DevOps policy discovery                          | fixed  | `c4698a9` |
+| LSP/canvas explicit diagnostics                                                 | fixed  | `9ac3506` |
+| Read-only `bapm mcp list/show/search`                                           | fixed  | `1d9e3b1` |
+| `grok-bot` host integration                                                     | fixed  | `efd5bc9` |
+
+Обновлённые проверки: core 268 файлов / 1447 тестов, CLI 127 / 660, `vp check` 0 ошибок, conformance/specs OK.
 
 ## P2 — паритетные разрывы
 
