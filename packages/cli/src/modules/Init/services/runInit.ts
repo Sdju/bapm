@@ -9,13 +9,12 @@ Usage:
 
 Options:
   -y, --yes           Non-interactive defaults (version 0.1.0)
-  --target <id>       Activate an agent (e.g. cursor); also writes a targets: entry that
-                      limits deployment to that agent
+  --target <id>       Activate an agent (e.g. cursor) through the manifest active field.
+                      Activation does not narrow deployment; targets: is not written.
   --help, -h          Show this help
 
 Notes:
   Writes ${deps.manifestFile} only. Refuses if apm.yml or bapm.yml already exists.
-  Remove the generated targets: block if the project is shared with other agents.
   Unknown flags are rejected. For plugin or marketplace scaffolds use bapm plugin init / bapm marketplace init.
 `;
 }
@@ -70,18 +69,15 @@ export function parseInitArgs(argv: string[]): {
 }
 
 /**
- * Prefer object-map `targets: { <id>: "@b-apm/integration-<id>" }` + `active`
- * for conventional published host packages (e.g. cursor).
+ * Record activation only. Do not emit `target` / `targets`: those fields are a
+ * deployment allowlist (intersection), not host selection, so writing them would
+ * silently cut off other agents later. Canonical hosts resolve through
+ * `@b-apm/integration-<id>` fallback.
  */
 function scaffoldTargetFields(targetId: string): {
-  targets: Record<string, string>;
   active: { target: string };
 } {
-  const id = targetId.trim();
-  return {
-    targets: { [id]: `@b-apm/integration-${id}` },
-    active: { target: id },
-  };
+  return { active: { target: targetId.trim() } };
 }
 
 export async function runInit(deps: InitDeps, options: InitOptions): Promise<InitResult> {

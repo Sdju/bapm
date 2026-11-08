@@ -32,13 +32,11 @@ version: 0.1.0
 dependencies:
   apm: []
   mcp: []
-targets: # удалите этот блок, см. ниже
-  cursor: "@b-apm/integration-cursor"
 active:
   - target: cursor
 ```
 
-`active` закрепляет Cursor как агента проекта. Блок `targets` удалите: для известных агентов bapm сам находит стандартный пакет `@b-apm/integration-<id>`, а пока блок есть, файлы раскладываются только для перечисленных в нём агентов. Коллега, выбравший Claude Code, получит сообщение `installed for claude`, но ни одного файла.
+`active` закрепляет Cursor как агента проекта. Блок `targets` команда не пишет: для известных агентов bapm сам находит стандартный пакет `@b-apm/integration-<id>`, а `targets` ограничил бы раскладку одним агентом — коллега, выбравший Claude Code, получил бы сообщение `installed for claude`, но ни одного файла.
 
 ## 3. Добавьте пакет
 
