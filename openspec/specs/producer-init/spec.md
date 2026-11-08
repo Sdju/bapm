@@ -45,12 +45,17 @@ Init MUST NOT write a top-level `workspaces` key. Written manifests MUST pass Op
 
 ### Requirement: Init target surface is cursor-thin
 
-When init records a host target, it MUST use cursor (or detect `.cursor/`) rather than inventing new `bapm-target-*` packages. Multi-host interactive catalogs beyond a documented thin subset MUST NOT be required for M7.
+When init records a host target, it MUST use cursor (or detect `.cursor/`) rather than inventing new `bapm-target-*` packages. It MUST record activation through `active` and MUST NOT write the top-level `target` / `targets` allowlist, because those fields narrow deployment rather than select a host. Multi-host interactive catalogs beyond a documented thin subset MUST NOT be required for M7.
 
 #### Scenario: Init -y with cursor target
 
 - **WHEN** init runs with `-y` and `--target cursor` (or equivalent)
-- **THEN** the written manifest MAY include `target: cursor` or `targets` containing `cursor`, and MUST NOT require a new host target package
+- **THEN** the written manifest MUST record the activation in `active`, MUST NOT include top-level `target` or `targets`, and MUST NOT require a new host target package
+
+#### Scenario: Init -y auto-detects cursor
+
+- **WHEN** init runs with `-y` in a directory containing `.cursor/`
+- **THEN** the written manifest MUST record cursor in `active` and MUST NOT include top-level `target` or `targets`
 
 ### Requirement: CLI init command is registered
 
