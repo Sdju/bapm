@@ -7,6 +7,7 @@
 | Команда                | Что делает                                                        |
 | ---------------------- | ----------------------------------------------------------------- |
 | `bapm init`            | Создаёт `bapm.yml`                                                |
+| `bapm init --discover` | Показывает существующий harness и предлагает `active` (read-only) |
 | `bapm install`         | Скачивает пакеты, пишет lock, раскладывает файлы агенту           |
 | `bapm install <ref>`   | Добавляет пакет в манифест и устанавливает                        |
 | `bapm outdated`        | Показывает пакеты, для которых есть более новые версии            |
@@ -15,6 +16,8 @@
 | `bapm lock`            | Только lock, без раскладки файлов                                 |
 
 ```bash
+bapm init --discover             # что уже настроено в проекте
+bapm init --discover --apply     # создать bapm.yml по найденному
 bapm install acme/agent-skills   # добавить пакет
 bapm outdated                    # что устарело
 bapm update -y                   # обновить

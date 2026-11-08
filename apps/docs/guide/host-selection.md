@@ -18,6 +18,8 @@
 
 `active` в `bapm.local.yml` полностью заменяет `active` из `bapm.yml`, а не дополняет его.
 
+Если проект уже содержит файлы агентов, начните с инвентаризации: `bapm init --discover` покажет маркеры хостов, skills, rules, commands, hooks и MCP, а также предложит `active`. Запись манифеста — только по явному `bapm init --discover --apply`. Подробнее: [init](/reference/init#discover).
+
 Автоопределение (auto-detect) проверяет маркеры только у установленных интеграций. Если в проекте есть `.cursor/` и `.claude/`, а установлена только `@b-apm/integration-cursor`, выбран будет Cursor. Если маркер узнали несколько установленных интеграций или ни одна, команда завершается с ошибкой:
 
 ```text
@@ -31,14 +33,15 @@ Multiple host markers found (cursor (@b-apm/integration-cursor), claude (@b-apm/
 
 ## Какой способ выбрать
 
-| Ситуация                               | Решение                                                                                 |
-| -------------------------------------- | --------------------------------------------------------------------------------------- |
-| Один агент, в проекте есть его каталог | Ничего не настраивать, сработает автоопределение                                        |
-| Вся команда работает в одном агенте    | `active: { target: cursor }` в `bapm.yml`                                               |
-| Проект поддерживает несколько агентов  | `active: { target: [cursor, claude] }` в `bapm.yml`                                     |
-| У каждого свой агент                   | `active` в личном `bapm.local.yml` — [сценарий](/guide/situations/team-local-active)    |
-| Разовая установка для другого агента   | `bapm install --target <id>`                                                            |
-| Личный default без правок манифеста    | `bapm config set target cursor` — [config](/reference/config)                           |
+| Ситуация                               | Решение                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------ |
+| Один агент, в проекте есть его каталог | Ничего не настраивать, сработает автоопределение                                     |
+| В проекте уже есть harness агентов     | `bapm init --discover`, затем `--apply` либо вписать `active` вручную                |
+| Вся команда работает в одном агенте    | `active: { target: cursor }` в `bapm.yml`                                            |
+| Проект поддерживает несколько агентов  | `active: { target: [cursor, claude] }` в `bapm.yml`                                  |
+| У каждого свой агент                   | `active` в личном `bapm.local.yml` — [сценарий](/guide/situations/team-local-active) |
+| Разовая установка для другого агента   | `bapm install --target <id>`                                                         |
+| Личный default без правок манифеста    | `bapm config set target cursor` — [config](/reference/config)                        |
 | Hermes / IntelliJ / Grok Bot           | `--target hermes` / `--target intellij` / `--target grok-bot` (auto-detect отсутствует) |
 
 ## Откуда берётся интеграция
