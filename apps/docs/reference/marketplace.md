@@ -12,6 +12,8 @@ bapm marketplace <subcommand> [options]
 
 `bapm pack` понимает три host-профиля: `claude` → `.claude-plugin/marketplace.json`, `codex` → `.agents/plugins/marketplace.json`, `copilot` → `.github/plugin/marketplace.json`. Профиль включается через `marketplace.outputs.<format>` (boolean или map с `path`); legacy-ключи `marketplace.claude`/`codex`/`copilot` тоже принимаются. Опция `pack --check-clean` сверяет сгенерированные JSON с файлами на диске и завершается exit `4` при drift или missing.
 
+При resolve remote-пакетов annotated/signed tag пинится на commit (peeled `refs/tags/X^{}`), а не на SHA tag-объекта; lightweight tags сохраняют прямой commit. Поэтому `source.sha` в marketplace JSON — всегда полный 40-символьный commit, а сокращённые SHA отвергаются.
+
 ## Consumer
 
 | Подкоманда      | Назначение                                                       |
