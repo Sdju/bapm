@@ -17,7 +17,10 @@ export type ParsedUpdateArgs = {
   packages: string[];
   parallelDownloads?: number;
   policyPath?: string;
+  /** Full escape (`--no-policy-all`). */
   noPolicy: boolean;
+  /** Repo-local escape (`--no-policy`); org policy still applies. */
+  noRepoPolicy: boolean;
   help?: boolean;
   error?: string;
 };
@@ -30,6 +33,7 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
   let help = false;
   let policyPath: string | undefined;
   let noPolicy = false;
+  let noRepoPolicy = false;
   let parallelDownloads: number | undefined;
   const packages: string[] = [];
 
@@ -42,6 +46,7 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
     parallelDownloads,
     policyPath,
     noPolicy,
+    noRepoPolicy,
   });
 
   for (let i = 0; i < argv.length; i++) {
@@ -67,6 +72,10 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
       continue;
     }
     if (arg === "--no-policy") {
+      noRepoPolicy = true;
+      continue;
+    }
+    if (arg === "--no-policy-all") {
       noPolicy = true;
       continue;
     }
@@ -113,7 +122,18 @@ export function parseUpdateArgs(argv: string[]): ParsedUpdateArgs {
     }
     packages.push(arg);
   }
-  return { yes, dryRun, verbose, force, packages, parallelDownloads, policyPath, noPolicy, help };
+  return {
+    yes,
+    dryRun,
+    verbose,
+    force,
+    packages,
+    parallelDownloads,
+    policyPath,
+    noPolicy,
+    noRepoPolicy,
+    help,
+  };
 }
 
 export function formatUpdateHelp(deps: LifecycleCliDeps): string {
@@ -129,7 +149,8 @@ Options:
   --force                  Explicit override: allow update in CI/frozen context
   --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
   --policy <path>          Use explicit policy file
-  --no-policy              Skip policy discovery and checks
+  --no-policy              Skip repository-local policy only; org deny still applies
+  --no-policy-all          Full escape: skip local and org policy
   --help, -h               Show this help
 `;
 }
@@ -174,6 +195,7 @@ export async function runUpdateCli(
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
+      noRepoPolicy: parsed.noRepoPolicy,
       gitRemote: createDefaultGitRemote(),
       tagLister: createDefaultTagLister(),
       downloader: createDefaultDownloader(),

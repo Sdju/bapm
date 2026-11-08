@@ -14,7 +14,8 @@ Options:
   --verbose, -v               Verbose output
   --parallel-downloads <n>    Concurrent downloads (default 4; 0 = serial)
   --policy <path>             Use explicit policy file
-  --no-policy                 Skip policy discovery and checks
+  --no-policy                 Skip repository-local policy only; org deny still applies
+  --no-policy-all             Full escape: skip local and org policy
   --help, -h                  Show this help
 
 Export (read-only SBOM from existing lockfile; no resolve/deploy):
@@ -28,6 +29,7 @@ export function parseLockArgs(argv: string[]): {
   parallelDownloads?: number;
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy: boolean;
   help?: boolean;
   error?: string;
 } {
@@ -36,6 +38,7 @@ export function parseLockArgs(argv: string[]): {
   let parallelDownloads: number | undefined;
   let policyPath: string | undefined;
   let noPolicy = false;
+  let noRepoPolicy = false;
   let help = false;
 
   for (let i = 0; i < argv.length; i++) {
@@ -53,6 +56,10 @@ export function parseLockArgs(argv: string[]): {
       continue;
     }
     if (arg === "--no-policy") {
+      noRepoPolicy = true;
+      continue;
+    }
+    if (arg === "--no-policy-all") {
       noPolicy = true;
       continue;
     }
@@ -63,6 +70,7 @@ export function parseLockArgs(argv: string[]): {
           updateRefs,
           verbose,
           noPolicy,
+          noRepoPolicy,
           error: "Missing value for --policy <path>",
         };
       }
@@ -73,7 +81,13 @@ export function parseLockArgs(argv: string[]): {
     if (arg.startsWith("--policy=")) {
       policyPath = arg.slice("--policy=".length);
       if (!policyPath) {
-        return { updateRefs, verbose, noPolicy, error: "Missing value for --policy=<path>" };
+        return {
+          updateRefs,
+          verbose,
+          noPolicy,
+          noRepoPolicy,
+          error: "Missing value for --policy=<path>",
+        };
       }
       continue;
     }
@@ -84,6 +98,7 @@ export function parseLockArgs(argv: string[]): {
           updateRefs,
           verbose,
           noPolicy,
+          noRepoPolicy,
           error: "missing value for --parallel-downloads",
         };
       }
@@ -93,6 +108,7 @@ export function parseLockArgs(argv: string[]): {
           updateRefs,
           verbose,
           noPolicy,
+          noRepoPolicy,
           error: `invalid --parallel-downloads value: ${next}`,
         };
       }
@@ -108,6 +124,7 @@ export function parseLockArgs(argv: string[]): {
           updateRefs,
           verbose,
           noPolicy,
+          noRepoPolicy,
           error: `invalid --parallel-downloads value: ${raw}`,
         };
       }
@@ -121,6 +138,7 @@ export function parseLockArgs(argv: string[]): {
         parallelDownloads,
         policyPath,
         noPolicy,
+        noRepoPolicy,
         error: `Unknown lock flag: ${arg}`,
       };
     }
@@ -130,11 +148,12 @@ export function parseLockArgs(argv: string[]): {
       parallelDownloads,
       policyPath,
       noPolicy,
+      noRepoPolicy,
       error: `Unexpected lock argument: ${arg}`,
     };
   }
 
-  return { updateRefs, verbose, parallelDownloads, policyPath, noPolicy, help };
+  return { updateRefs, verbose, parallelDownloads, policyPath, noPolicy, noRepoPolicy, help };
 }
 
 type ExportParsed = {
@@ -274,6 +293,7 @@ export async function runLock(deps: LockDeps, options: LockOptions): Promise<Loc
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
+      noRepoPolicy: parsed.noRepoPolicy,
     });
     const lockPath = result.lockPath;
     return {

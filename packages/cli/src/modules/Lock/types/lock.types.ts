@@ -26,6 +26,7 @@ export type LockDeps = {
     policyPath?: string;
     policy?: string;
     noPolicy?: boolean;
+    noRepoPolicy?: boolean;
   }) => Promise<{ lockPath: string }>;
   exportSbom?: (options: {
     cwd?: string;

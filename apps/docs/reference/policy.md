@@ -14,7 +14,8 @@ bapm policy status [options]
 | -------------- | -------- | ----------------------------------------------------- | ------------------------------------------------------------- |
 | `--json`       | —        | Stable JSON keys (`outcome`, `source`, `provider`, …) | off                                                           |
 | `--policy`     | `<path>` | Явный policy-файл (побеждает dual-read discovery)     | discovery                                                     |
-| `--no-policy`  | —        | Escape hatch: skip discovery, report disabled         | off                                                           |
+| `--no-policy`  | —        | Пропустить только repo-local discovery; org policy остаётся | off                                                           |
+| `--no-policy-all` | —     | Полный escape: skip discovery, report disabled | off                                                           |
 | `--check`      | —        | Non-zero exit, если нет usable policy                 | off (exit 0 для found / absent / disabled / soft diagnostics) |
 | `--help`, `-h` | —        | Help для `policy` или `policy status`                 | —                                                             |
 
@@ -48,7 +49,7 @@ executables:
 
 Файл политики (`apm-policy.yml` / `bapm-policy.yml`) в секции `executables` понимает только запреты: `deny` (список пакетов) и `deny_all`. `executables.allow` и top-level `mcp:` он не отвергает, а молча игнорирует: ошибки не будет, но и правило не применится. На MCP-серверы из собственного `dependencies.mcp` проекта он не действует.
 
-Связанные install-флаги: `--policy` / `--no-policy` / `--trust-transitive-mcp` на [install](/reference/install). Сценарий: [MCP-сервер не появился](/guide/situations/policy-mcp).
+Связанные install-флаги: `--policy` / `--no-policy` / `--no-policy-all` / `--trust-transitive-mcp` на [install](/reference/install). `--no-policy` снимает только repo-local файл, org deny остаётся; полный escape — `--no-policy-all` или `BAPM_POLICY_DISABLE=1`. Сценарий: [MCP-сервер не появился](/guide/situations/policy-mcp).
 
 ## Регистр в `allow` / `deny` / `require`
 

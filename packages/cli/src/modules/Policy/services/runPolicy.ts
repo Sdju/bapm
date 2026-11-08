@@ -7,7 +7,10 @@ export type ParsedPolicyArgs = {
   subcommand?: "status";
   json: boolean;
   check: boolean;
+  /** Full escape (`--no-policy-all`): report disabled. */
   noPolicy: boolean;
+  /** Repo-local escape (`--no-policy`): org/remote policy still applies. */
+  noRepoPolicy: boolean;
   policyPath?: string;
   help?: boolean;
   error?: string;
@@ -18,12 +21,13 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
   let json = false;
   let check = false;
   let noPolicy = false;
+  let noRepoPolicy = false;
   let policyPath: string | undefined;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]!;
     if (arg === "--help" || arg === "-h") {
-      return { subcommand, json, check, noPolicy, policyPath, help: true };
+      return { subcommand, json, check, noPolicy, noRepoPolicy, policyPath, help: true };
     }
     if (arg === "--json") {
       json = true;
@@ -34,6 +38,10 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
       continue;
     }
     if (arg === "--no-policy") {
+      noRepoPolicy = true;
+      continue;
+    }
+    if (arg === "--no-policy-all") {
       noPolicy = true;
       continue;
     }
@@ -45,6 +53,7 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
           json,
           check,
           noPolicy,
+          noRepoPolicy,
           error: "Missing value for --policy <path>",
         };
       }
@@ -59,6 +68,7 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
           json,
           check,
           noPolicy,
+          noRepoPolicy,
           error: "Missing value for --policy=<path>",
         };
       }
@@ -70,6 +80,7 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
         json,
         check,
         noPolicy,
+        noRepoPolicy,
         policyPath,
         error: `Unknown policy flag: ${arg}`,
       };
@@ -81,6 +92,7 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
           json,
           check,
           noPolicy,
+          noRepoPolicy,
           policyPath,
           error: `Unexpected policy argument: ${arg}`,
         };
@@ -93,6 +105,7 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
       json,
       check,
       noPolicy,
+      noRepoPolicy,
       policyPath,
       error: `Unknown policy subcommand: ${arg}`,
     };
@@ -103,11 +116,12 @@ export function parsePolicyArgs(argv: string[]): ParsedPolicyArgs {
       json,
       check,
       noPolicy,
+      noRepoPolicy,
       policyPath,
       error: "Usage: bapm policy status [--json] [--policy <path>] [--no-policy] [--check]",
     };
   }
-  return { subcommand, json, check, noPolicy, policyPath };
+  return { subcommand, json, check, noPolicy, noRepoPolicy, policyPath };
 }
 
 export function formatPolicyHelp(deps: LifecycleCliDeps): string {
@@ -122,7 +136,8 @@ Subcommands:
 Options (status):
   --json              Machine-readable JSON report
   --policy <path>     Use explicit policy file
-  --no-policy         Escape hatch (report disabled)
+  --no-policy         Skip repository-local policy only; org policy still applies
+  --no-policy-all     Full escape (report disabled)
   --check             Non-zero exit when no usable policy is found
   --help, -h          Show this help
 `;
@@ -137,7 +152,8 @@ Usage:
 Options:
   --json              Emit stable JSON keys (outcome, source, provider, ...)
   --policy <path>     Use explicit policy file (wins over dual-read)
-  --no-policy         Skip discovery; report disabled/escaped
+  --no-policy         Skip repository-local discovery; org policy is still reported
+  --no-policy-all     Skip all discovery; report disabled/escaped
   --check             Exit non-zero when outcome is not usable found
   --help, -h          Show this help
 
@@ -172,6 +188,7 @@ export async function runPolicyCli(
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
+      noRepoPolicy: parsed.noRepoPolicy,
     });
 
     if (parsed.json) {

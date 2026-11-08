@@ -17,7 +17,7 @@ describe("p6d CLI policy help surface", () => {
     expect(text).toMatch(/\bpolicy\b/i);
   });
 
-  test("policy status --help documents --json --policy --no-policy --check", async () => {
+  test("policy status --help documents --json --policy --no-policy --no-policy-all --check", async () => {
     const { result, stdout, stderr } = await withCapturedIo(() =>
       runCli(["policy", "status", "--help"]),
     );
@@ -26,7 +26,8 @@ describe("p6d CLI policy help surface", () => {
     expect(result).toBe(0);
     expect(combined).toMatch(/--json/);
     expect(combined).toMatch(/--policy/);
-    expect(combined).toMatch(/--no-policy/);
+    expect(combined).toMatch(/--no-policy\b/);
+    expect(combined).toMatch(/--no-policy-all\b/);
     expect(combined).toMatch(/--check/);
     expect(combined).not.toMatch(/--no-cache/);
   });

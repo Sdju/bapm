@@ -2,7 +2,7 @@ import { PolicyError } from "./errors.ts";
 import { isPolicyDisabled } from "./escape.ts";
 import { evaluateInstallPolicy } from "./evaluate.ts";
 import { loadPolicy, type LoadPolicyExtendedOptions } from "./load.ts";
-import { discoverPolicyWithProviders } from "./providers.ts";
+import { discoverPolicyWithProviders, filterNonLocalPolicyProviders } from "./providers.ts";
 import { resolvePolicyChain, type FetchAncestor } from "./resolve.ts";
 import type { GitRemoteEntry } from "./remotes.ts";
 import type { PolicyDocument, PolicyGateOptions, PolicyGateResult } from "./types.ts";
@@ -23,7 +23,8 @@ export type PolicyGateExtendedOptions = PolicyGateOptions & {
 /**
  * Discover (+ remote providers) → resolve/merge extends → evaluate install policy gate.
  * Dual-conflict / missing explicit file / fetch_failure:block fail closed.
- * Absent policy → ungated (skipped). Escape via noPolicy / env.
+ * Absent policy → ungated (skipped). Full escape via noPolicy / env; `noRepoPolicy`
+ * skips only repository-local discovery so org/remote deny still applies.
  */
 export function runPolicyGate(options: PolicyGateExtendedOptions = {}): PolicyGateResult {
   if (isPolicyDisabled({ noPolicy: options.noPolicy })) {
@@ -36,10 +37,14 @@ export function runPolicyGate(options: PolicyGateExtendedOptions = {}): PolicyGa
   }
 
   const explicit = options.policyPath ?? options.policy;
+  const requestedProviders = options.providers ?? options.policyProviders;
+  const providers = options.noRepoPolicy
+    ? filterNonLocalPolicyProviders(requestedProviders)
+    : requestedProviders;
   const loadOpts: LoadPolicyExtendedOptions = {
     cwd: options.cwd,
-    providers: options.providers ?? options.policyProviders,
-    policyProviders: options.policyProviders ?? options.providers,
+    providers,
+    policyProviders: providers,
     listGitRemotes: options.listGitRemotes,
     remotes: options.remotes,
     fetchAncestor: options.fetchAncestor,
@@ -59,7 +64,7 @@ export function runPolicyGate(options: PolicyGateExtendedOptions = {}): PolicyGa
   // pl-010 / pl-012 fail closed on discovery errors
   const discovered = discoverPolicyWithProviders({
     cwd: options.cwd,
-    providers: options.providers ?? options.policyProviders,
+    providers,
     listGitRemotes: options.listGitRemotes,
     remotes: options.remotes,
     fetchPolicyUrl: options.fetchPolicyUrl,

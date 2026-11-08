@@ -41,7 +41,8 @@ Options:
   --parallel-downloads <n> Concurrent downloads (default 4; 0 = serial)
   -v, --verbose            Richer progress / diagnostics (does not weaken frozen/policy)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
-  --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
+  --no-policy              Skip repository-local policy only; org/remote deny still applies
+  --no-policy-all          Full escape: skip local and org policy (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
   --trust-bin              Consent to deploy dependency/plugin bin/ for this run (when policy allows)
   --no-trust-bin           Skip bin/ deploy for this run (even when policy would allow)
@@ -91,7 +92,10 @@ export type ParsedInstallArgs = {
   exclude?: string[];
   parallelDownloads?: number;
   policyPath?: string;
+  /** Full escape (`--no-policy-all`): skip every policy source. */
   noPolicy: boolean;
+  /** Repo-local escape (`--no-policy`): org/remote policy still applies. */
+  noRepoPolicy: boolean;
   trustTransitiveMcp: boolean;
   /** Invocation bin consent: allow | deny | default. */
   trustBin: "allow" | "deny" | "default";
@@ -120,6 +124,7 @@ export function parseInstallArgs(
   let parallelDownloads: number | undefined;
   let policyPath: string | undefined;
   let noPolicy = false;
+  let noRepoPolicy = false;
   let trustTransitiveMcp = false;
   let trustBinAllow = false;
   let trustBinDeny = false;
@@ -143,6 +148,7 @@ export function parseInstallArgs(
     parallelDownloads,
     policyPath,
     noPolicy,
+    noRepoPolicy,
     trustTransitiveMcp,
     trustBin: trustBinAllow ? "allow" : trustBinDeny ? "deny" : "default",
   });
@@ -186,6 +192,10 @@ export function parseInstallArgs(
       continue;
     }
     if (arg === "--no-policy") {
+      noRepoPolicy = true;
+      continue;
+    }
+    if (arg === "--no-policy-all") {
       noPolicy = true;
       continue;
     }
@@ -441,6 +451,7 @@ export function parseInstallArgs(
     parallelDownloads,
     policyPath,
     noPolicy,
+    noRepoPolicy,
     trustTransitiveMcp,
     trustBin,
     help,
@@ -561,6 +572,7 @@ async function runCoreInstall(
       policyPath: parsed.policyPath,
       policy: parsed.policyPath,
       noPolicy: parsed.noPolicy,
+      noRepoPolicy: parsed.noRepoPolicy,
       trustTransitiveMcp: parsed.trustTransitiveMcp,
       trustBin: parsed.trustBin,
       env: options.env ?? (process.env as Record<string, string | undefined>),

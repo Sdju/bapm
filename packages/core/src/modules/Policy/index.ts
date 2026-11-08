@@ -20,7 +20,11 @@
  *
  * ## Escape
  *
- * `--no-policy` / `noPolicy: true`, `BAPM_POLICY_DISABLE=1`, `APM_POLICY_DISABLE=1`.
+ * `--no-policy` / `noRepoPolicy: true` skips repository-local policy only;
+ * remote/org providers still run so org `deny` / `deny_all` applies.
+ * Full escape: `--no-policy-all` / `noPolicy: true`, `BAPM_POLICY_DISABLE=1`,
+ * `APM_POLICY_DISABLE=1`.
+ * An explicit `--policy <path>` still wins over `noRepoPolicy`.
  *
  * ## Example
  *
@@ -73,6 +77,7 @@ export {
   discoverPolicyWithProviders,
   runPolicyDiscovery,
   discoverPolicyProviders,
+  filterNonLocalPolicyProviders,
 } from "./providers.ts";
 export {
   selectProjectRemote,

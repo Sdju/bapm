@@ -3,7 +3,7 @@
  */
 
 import { basename } from "node:path";
-import { APM_POLICY_FILE, DEFAULT_POLICY_PROVIDERS } from "./constants.ts";
+import { APM_POLICY_FILE, DEFAULT_POLICY_PROVIDERS, POLICY_PROVIDER_LOCAL } from "./constants.ts";
 import { discoverPolicyPath } from "./discover.ts";
 import { PolicyError } from "./errors.ts";
 import { IMPLEMENTATION_DEFAULT_HOST, hostClassOf } from "./hostClass.ts";
@@ -106,6 +106,15 @@ export function discoverPolicyWithProviders(
 /** Alias names accepted by acceptance helpers. */
 export const runPolicyDiscovery = discoverPolicyWithProviders;
 export const discoverPolicyProviders = discoverPolicyWithProviders;
+
+/**
+ * Provider list for `--no-policy` (repo-local skip): keep remote/org providers
+ * so organization deny still applies. Explicit `--policy <path>` still wins.
+ */
+export function filterNonLocalPolicyProviders(providers?: string[]): string[] {
+  const list = providers ?? [...DEFAULT_POLICY_PROVIDERS];
+  return list.filter((provider) => provider !== POLICY_PROVIDER_LOCAL);
+}
 
 function discoverLocal(cwd: string, path?: string): DiscoverPolicyWithProvidersResult | null {
   const discovered: DiscoveredPolicy = discoverPolicyPath({ cwd, path });

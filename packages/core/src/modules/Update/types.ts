@@ -47,8 +47,10 @@ export type RunUpdateOptions = {
   /** Explicit policy file path. */
   policyPath?: string;
   policy?: string;
-  /** Skip policy gate. */
+  /** Full escape: skip policy gate (`--no-policy-all`). */
   noPolicy?: boolean;
+  /** Skip only repository-local policy; org/remote policy still applies. */
+  noRepoPolicy?: boolean;
 };
 
 export type UpdateResult = {

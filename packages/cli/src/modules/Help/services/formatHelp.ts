@@ -68,7 +68,8 @@ Options:
   --target <id>            Force activation of a registered host target (overrides manifest active)
   --update                 Re-resolve mutable refs (rejected with frozen / CI-default frozen)
   --policy <path>          Use explicit policy file (wins over apm-policy.yml / bapm-policy.yml)
-  --no-policy              Skip policy discovery and checks (also: BAPM_POLICY_DISABLE=1)
+  --no-policy              Skip repository-local policy only; org/remote deny still applies
+  --no-policy-all          Full escape: skip local and org policy (also: BAPM_POLICY_DISABLE=1)
   --trust-transitive-mcp   Deploy MCP from dependencies (default: direct dependencies.mcp only)
   --trust-bin              Consent to deploy dependency/plugin bin/ for this run (when policy allows)
   --no-trust-bin           Skip bin/ deploy for this run (even when policy would allow)

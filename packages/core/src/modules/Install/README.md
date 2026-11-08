@@ -22,7 +22,8 @@ orphan cleanup → primitives discover/conflict → invoke registered targets vi
 - `frozen` — lk-006 pin gate + lk-017 lite re-verify of `deployed_file_hashes` when present + lk-015 `tree_sha256` re-verify for git entries (no lock rewrite)
 - `archivePath` — local pack `.zip` path; extract into project root via Pack helper, then dual-read parse landed manifest and continue install orchestration (M7 install-from-archive)
 - `policyPath` / `policy` — explicit policy file (wins over dual-read `apm-policy.yml` | `bapm-policy.yml`)
-- `noPolicy` — skip policy gate (`--no-policy` / `BAPM_POLICY_DISABLE=1`)
+- `noPolicy` — full escape: skip policy gate (`--no-policy-all` / `BAPM_POLICY_DISABLE=1`)
+- `noRepoPolicy` — skip only repository-local policy (`--no-policy`); org/remote policy and its `executables.deny`/`deny_all` still apply
 
 ## CI-default frozen (lk-018)
 

@@ -108,6 +108,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const forcedTargetId = options.forcedTarget ?? options.forceTarget;
   const policyPath = options.policyPath ?? options.policy;
   const noPolicy = options.noPolicy === true;
+  const noRepoPolicy = options.noRepoPolicy === true;
   const trustTransitiveMcp = options.trustTransitiveMcp === true;
   const trustBin = normalizeTrustBin(options.trustBin);
   const packageRefs = normalizePackageRefs(options.packageRefs);
@@ -197,6 +198,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       allowInsecureHosts,
       policyPath,
       noPolicy,
+      noRepoPolicy,
       policyPorts,
       activeTargets: [],
     });
@@ -251,6 +253,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         cwd,
         policyPath,
         noPolicy,
+        noRepoPolicy,
         nodes,
         ...policyPorts,
       });
@@ -293,6 +296,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         policyPath,
         policy: policyPath,
         noPolicy,
+        noRepoPolicy,
         marketplaceConfigDir: options.marketplaceConfigDir ?? options.configDir,
         configDir: options.configDir ?? options.marketplaceConfigDir,
         ...ports,
@@ -313,6 +317,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       cwd,
       policyPath,
       noPolicy,
+      noRepoPolicy,
       nodes: [],
       candidatesOverride: extractDeclarationOrder(rootManifest).map((name) => ({
         id: name,
@@ -537,6 +542,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
         configDir: options.configDir ?? options.marketplaceConfigDir,
         policyPath,
         noPolicy,
+        noRepoPolicy,
         policyPorts,
       }),
     );
@@ -560,6 +566,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       configDir: options.configDir ?? options.marketplaceConfigDir,
       policyPath,
       noPolicy,
+      noRepoPolicy,
       policyPorts,
     });
     if (mcpResult.lockPath) lockPath = mcpResult.lockPath;
@@ -712,6 +719,7 @@ async function runDryRunPreview(args: {
   allowInsecureHosts?: string[];
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   policyPorts: {
     policyProviders?: string[];
     providers?: string[];
@@ -819,6 +827,7 @@ async function runDryRunPreview(args: {
         cwd: args.cwd,
         policyPath: args.policyPath,
         noPolicy: args.noPolicy,
+        noRepoPolicy: args.noRepoPolicy,
         nodes: [],
         candidatesOverride: candidates,
         ...args.policyPorts,
@@ -864,6 +873,7 @@ async function deployMcpAfterPolicy(args: {
   configDir?: string;
   policyPath?: string;
   noPolicy?: boolean;
+  noRepoPolicy?: boolean;
   policyPorts?: {
     policyProviders?: string[];
     providers?: string[];
@@ -899,6 +909,7 @@ async function deployMcpAfterPolicy(args: {
     cwd: args.cwd,
     policyPath: args.policyPath,
     noPolicy: args.noPolicy === true,
+    noRepoPolicy: args.noRepoPolicy === true,
     policyPorts: args.policyPorts,
   });
 
@@ -1227,6 +1238,7 @@ function deployBinsAfterConsent(args: {
   configDir?: string;
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   policyPorts?: {
     policyProviders?: string[];
     providers?: string[];
@@ -1252,6 +1264,7 @@ function deployBinsAfterConsent(args: {
     cwd: args.cwd,
     policyPath: args.policyPath,
     noPolicy: args.noPolicy,
+    noRepoPolicy: args.noRepoPolicy === true,
     policyPorts: args.policyPorts,
   });
   const deployRoot = args.binDeployRoot
@@ -1321,6 +1334,7 @@ function loadOrgExecutablesForTrust(args: {
   cwd: string;
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   policyPorts?: {
     policyProviders?: string[];
     providers?: string[];
@@ -1340,6 +1354,7 @@ function loadOrgExecutablesForTrust(args: {
       policyPath: args.policyPath,
       policy: args.policyPath,
       noPolicy: args.noPolicy,
+      noRepoPolicy: args.noRepoPolicy === true,
       providers: args.policyPorts?.providers ?? args.policyPorts?.policyProviders,
       policyProviders: args.policyPorts?.policyProviders ?? args.policyPorts?.providers,
       listGitRemotes: args.policyPorts?.listGitRemotes,
@@ -1387,6 +1402,7 @@ function applyPolicyGate(args: {
   cwd: string;
   policyPath?: string;
   noPolicy: boolean;
+  noRepoPolicy?: boolean;
   nodes: ResolvedNode[];
   /** When set (dry-run), use these candidates instead of deriving from nodes. */
   candidatesOverride?: PolicyCandidate[];
@@ -1406,6 +1422,7 @@ function applyPolicyGate(args: {
     policyPath: args.policyPath,
     policy: args.policyPath,
     noPolicy: args.noPolicy,
+    noRepoPolicy: args.noRepoPolicy === true,
     providers: args.providers ?? args.policyProviders,
     policyProviders: args.policyProviders ?? args.providers,
     listGitRemotes: args.listGitRemotes,

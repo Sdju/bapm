@@ -32,7 +32,8 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--parallel-downloads`   | `<n>`          | Параллельные загрузки; `0` = serial                                                                   | `4`                       |
 | `-v`, `--verbose`        | —              | Богаче progress / diagnostics (не ослабляет frozen/policy)                                            | off                       |
 | `--policy`               | `<path>`       | Явный policy-файл (побеждает `apm-policy.yml` / `bapm-policy.yml`)                                    | discovery                 |
-| `--no-policy`            | —              | Пропустить policy discovery/checks (также `BAPM_POLICY_DISABLE=1`)                                    | off                       |
+| `--no-policy`            | —              | Пропустить только repo-local `apm-policy.yml`/`bapm-policy.yml`; org deny остаётся | off                       |
+| `--no-policy-all`        | —              | Полный escape: пропустить local и org policy (также `BAPM_POLICY_DISABLE=1`)       | off                       |
 | `--trust-transitive-mcp` | —              | Деплоить MCP из зависимостей; по умолчанию только direct `dependencies.mcp`                           | off                       |
 | `--trust-bin`            | —              | Согласие на deploy dependency/plugin `bin/` для этого запуска (если policy/ExecutableTrust позволяет) | off (см. non-interactive) |
 | `--no-trust-bin`         | —              | Пропустить deploy `bin/` для этого запуска (даже если policy allow)                                   | —                         |
@@ -47,7 +48,8 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Если env `CI` truthy (не `""`, `"0"`, `"false"`), install по умолчанию frozen, пока не передан `--no-frozen`.
 - `--force` в текущей версии ничего не меняет: флаг принимается, но не влияет на установку. Он не связан с `--target`.
 - В интерактивном терминале `bin/` зависимостей раскладывается и без `--trust-bin`, с предупреждением. `bapm approve` разрешение на `bin/` не выдаёт.
-- `--no-policy` отключает и политику организации, включая её запреты.
+- `--no-policy` отключает только файл политики в репозитории (`apm-policy.yml` / `bapm-policy.yml`). Org policy и её `executables.deny`/`deny_all` продолжают действовать. Явный `--policy <path>` всё равно проверяется.
+- `--no-policy-all` и `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1` — полный escape: отключают и локальную, и org policy. Используйте только для диагностики.
 - Frozen проверяет наличие lock, пины прямых зависимостей и хэши развёрнутых файлов, а также сверяет `#ref` прямых git-зависимостей с `resolved_ref` в lock. Расхождение ref при неизменном lock — ошибка `Frozen install ref drift`. См. [CI по lock-файлу](/guide/situations/ci-frozen).
 - Выбор агента: `--target <id>` → `active` в `bapm.local.yml` → `active` в `bapm.yml` → автоопределение → ошибка. В `active` можно перечислить несколько агентов, тогда файлы и MCP раскладываются для каждого поддерживающего хоста. См. [Выбор агента](/guide/host-selection).
 - Файлы в каталогах агента с тем же путём, что у устанавливаемого пакета, перезаписываются без предупреждения.
