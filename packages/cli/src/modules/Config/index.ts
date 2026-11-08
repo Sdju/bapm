@@ -4,13 +4,24 @@ import type { UserConfigStoreOptions } from "./store.ts";
 
 export type { LifecycleCliDeps, LifecycleResult };
 export type { ConfigCliDeps, ConfigOptions, ParsedConfigArgs } from "./services/runConfig.ts";
+export type { ConfigKeyDefinition, ConfigKeyId } from "./keys.ts";
 export type { UserConfigDocument, UserConfigStoreOptions } from "./store.ts";
 
 export { formatConfigHelp, parseConfigArgs, runConfigCli } from "./services/runConfig.ts";
 export {
+  CONFIG_KEY_DEFINITIONS,
+  configKeyIds,
+  findConfigKey,
+  unknownConfigKeyMessage,
+  validateConfigValue,
+} from "./keys.ts";
+export {
   getConfigValue,
   loadUserConfig,
+  readConfiguredMcpRegistryUrl,
+  readConfiguredSelfUpdateChannel,
   readConfiguredTarget,
+  readConfiguredTempDir,
   resolveConfigRoot,
   setConfigValue,
   unsetConfigValue,

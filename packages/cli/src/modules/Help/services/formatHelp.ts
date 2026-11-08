@@ -37,7 +37,7 @@ Commands:
   view         Inspect a locally installed package (offline; lock + modules)
   targets      Inspect registered host targets (--json / --all; read-only)
   mcp          Inspect MCP servers from manifest/lock (list | show | search)
-  config       Inspect / update user defaults in ~/.bapm/config.json
+  config       Inspect / update user defaults in ~/.bapm/config.json (get/list/set/unset)
   auth         Report credentials for a git host (--check / --export; read-only)
   run          Run a script from ${deps.manifestFile} scripts: (default: start)
   preview      Resolve and print a script command without executing it

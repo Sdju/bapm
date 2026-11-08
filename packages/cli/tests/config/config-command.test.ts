@@ -1,7 +1,7 @@
 /**
  * `bapm config` — user defaults in ~/.bapm/config.json with grant preservation.
  */
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, test } from "vite-plus/test";
@@ -104,6 +104,191 @@ describe("bapm config storage", () => {
       target: "claude",
       executables: { allow: {}, deny: {} },
     });
+  });
+
+  test("mcp-registry-url set/get/unset normalizes the URL and preserves user keys", async () => {
+    store = createStore({
+      custom: { keep: true },
+      executables: { allow: { "mcp-dep": { mcp: true } }, deny: {} },
+    });
+
+    const set = await withCapturedIo(() =>
+      runConfigCli(store!.deps, {
+        args: ["set", "mcp-registry-url", "https://mcp.internal.example.com/"],
+      }),
+    );
+    expect(set.result.exitCode).toBe(0);
+    expect(readDoc(store.root)).toMatchObject({
+      "mcp-registry-url": "https://mcp.internal.example.com",
+      custom: { keep: true },
+      executables: { allow: { "mcp-dep": { mcp: true } }, deny: {} },
+    });
+
+    const got = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["get", "mcp-registry-url"] }),
+    );
+    expect(got.result.exitCode).toBe(0);
+    expect(got.stdout.join("\n")).toBe("https://mcp.internal.example.com");
+
+    const unset = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["unset", "mcp-registry-url"] }),
+    );
+    expect(unset.result.exitCode).toBe(0);
+    const document = readDoc(store.root);
+    expect(document["mcp-registry-url"]).toBeUndefined();
+    expect(document.custom).toEqual({ keep: true });
+    expect(document.executables).toEqual({ allow: { "mcp-dep": { mcp: true } }, deny: {} });
+  });
+
+  test("mcp-registry-url rejects non-http(s), credentials, queries, and missing hosts", async () => {
+    store = createStore({ other: { keep: true } });
+    const before = readDoc(store.root);
+
+    for (const value of [
+      "ftp://example.com",
+      "example.com",
+      "https://user:pass@example.com",
+      "https://example.com/path?query=1",
+      "https://example.com/path#fragment",
+    ]) {
+      const result = await withCapturedIo(() =>
+        runConfigCli(store!.deps, { args: ["set", "mcp-registry-url", value] }),
+      );
+      expect(result.result.exitCode).toBe(1);
+      expect(result.stderr.join("\n")).toMatch(/mcp-registry-url/i);
+      expect(readDoc(store.root)).toEqual(before);
+    }
+  });
+
+  test("temp-dir stores an absolute existing writable directory", async () => {
+    store = createStore({ other: { keep: true } });
+    const work = join(store.root, "work");
+    mkdirSync(work);
+
+    const set = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["set", "temp-dir", work] }),
+    );
+    expect(set.result.exitCode).toBe(0);
+    expect(readDoc(store.root)).toMatchObject({ "temp-dir": work, other: { keep: true } });
+
+    const got = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["get", "temp-dir"] }),
+    );
+    expect(got.stdout.join("\n")).toBe(work);
+
+    const missing = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["set", "temp-dir", join(store!.root, "missing")] }),
+    );
+    expect(missing.result.exitCode).toBe(1);
+    expect(missing.stderr.join("\n")).toMatch(/does not exist/i);
+
+    const unset = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["unset", "temp-dir"] }),
+    );
+    expect(unset.result.exitCode).toBe(0);
+    expect(readDoc(store.root)["temp-dir"]).toBeUndefined();
+  });
+
+  test("self-update.channel set/get/unset validates stable vs prerelease", async () => {
+    store = createStore({ other: { keep: true } });
+
+    const set = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["set", "self-update.channel", "Prerelease"] }),
+    );
+    expect(set.result.exitCode).toBe(0);
+    expect(readDoc(store.root)).toMatchObject({
+      "self-update": { channel: "prerelease" },
+      other: { keep: true },
+    });
+
+    const got = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["get", "self-update.channel"] }),
+    );
+    expect(got.stdout.join("\n")).toBe("prerelease");
+
+    const invalid = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["set", "self-update.channel", "nightly"] }),
+    );
+    expect(invalid.result.exitCode).toBe(1);
+    expect(invalid.stderr.join("\n")).toMatch(/stable|prerelease/i);
+
+    const unset = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["unset", "self-update.channel"] }),
+    );
+    expect(unset.result.exitCode).toBe(0);
+    const document = readDoc(store.root);
+    expect(document["self-update"]).toBeUndefined();
+    expect(document.other).toEqual({ keep: true });
+  });
+
+  test("unknown keys are rejected by get/set/unset with the valid key list", async () => {
+    store = createStore({ other: { keep: true } });
+    const before = readDoc(store.root);
+
+    for (const args of [
+      ["get", "bogus"],
+      ["set", "bogus", "value"],
+      ["unset", "bogus"],
+    ]) {
+      const result = await withCapturedIo(() => runConfigCli(store!.deps, { args }));
+      expect(result.result.exitCode).toBe(1);
+      expect(result.stderr.join("\n")).toMatch(/Unknown config key/i);
+      expect(result.stderr.join("\n")).toMatch(/target/);
+      expect(result.stderr.join("\n")).toMatch(/mcp-registry-url/);
+      expect(result.stderr.join("\n")).toMatch(/temp-dir/);
+      expect(result.stderr.join("\n")).toMatch(/self-update\.channel/);
+    }
+    expect(readDoc(store.root)).toEqual(before);
+  });
+
+  test("list --json includes every known key and preserves unknown document keys", async () => {
+    store = createStore({
+      other: { keep: true },
+      "custom-key": "custom-value",
+      executables: { allow: { pkg: { bin: true } }, deny: {} },
+    });
+
+    const empty = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["list", "--json"] }),
+    );
+    expect(JSON.parse(empty.stdout.join("\n"))).toMatchObject({
+      target: null,
+      "mcp-registry-url": null,
+      "temp-dir": null,
+      "self-update.channel": null,
+      other: { keep: true },
+      "custom-key": "custom-value",
+      executables: { allow: { pkg: { bin: true } }, deny: {} },
+    });
+
+    await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["set", "mcp-registry-url", "https://example.com"] }),
+    );
+    await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["set", "self-update.channel", "prerelease"] }),
+    );
+    const listed = await withCapturedIo(() =>
+      runConfigCli(store!.deps, { args: ["list", "--json"] }),
+    );
+    const json = JSON.parse(listed.stdout.join("\n")) as Record<string, unknown>;
+    expect(json).toMatchObject({
+      "mcp-registry-url": "https://example.com",
+      "self-update.channel": "prerelease",
+      other: { keep: true },
+      "custom-key": "custom-value",
+    });
+    expect(json["self-update"]).toBeUndefined();
+  });
+
+  test("help documents the validated key registry", async () => {
+    store = createStore();
+    const result = await withCapturedIo(() => runConfigCli(store!.deps, { args: ["--help"] }));
+    expect(result.result.exitCode).toBe(0);
+    const text = result.stdout.join("\n");
+    for (const key of ["target", "mcp-registry-url", "temp-dir", "self-update.channel"]) {
+      expect(text).toContain(key);
+    }
+    expect(text).toMatch(/stored-only/i);
   });
 });
 
