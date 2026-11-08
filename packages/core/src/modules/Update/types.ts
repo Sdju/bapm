@@ -5,6 +5,8 @@ export type UpdatePlanEntry = {
   action: "update" | "add" | "remove" | "keep";
   from?: string;
   to?: string;
+  /** Human-readable explanation (e.g. a mutable ref could not be resolved). */
+  note?: string;
 };
 
 export type RunUpdateOptions = {

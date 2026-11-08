@@ -16,7 +16,7 @@ bapm update [packages...] [options]
 | ---------------------- | -------- | ------------------------------------------------------ | --------- |
 | `-y`, `--yes`          | —        | Применить без интерактивного confirm                   | off       |
 | `--dry-run`            | —        | Только план; не менять lock/modules                    | off       |
-| `-v`, `--verbose`      | —        | Включить keep/`[=]` строки в тексте плана              | off       |
+| `-v`, `--verbose`      | —        | Показать keep/`[=]` строки и note в плане              | off       |
 | `--force`              | —        | Явный override: разрешить update в CI/frozen-контексте | off       |
 | `--parallel-downloads` | `<n>`    | Параллельные загрузки; `0` = serial                    | `4`       |
 | `--policy`             | `<path>` | Явный policy-файл                                      | discovery |
@@ -26,5 +26,7 @@ bapm update [packages...] [options]
 Positionals — опциональный список пакетов для ограниченного update. Неизвестные флаги отвергаются.
 
 В CI (переменная `CI` задана и не равна `""`, `0`, `false`) update считается frozen-контекстом: invocation отказывается с `UPDATE_FROZEN_REFUSED` до любых изменений (включая `--dry-run`) и не меняет lock. Явный override — `--force` (например, `bapm update -y --force`). Для read-only проверки версий в CI используйте [outdated](/reference/outdated).
+
+`--dry-run` не меняет lock и `apm_modules`. Для semver-диапазонов план подбирает теги, а для веток и literal-тегов резолвит `resolved_ref` через `git ls-remote` и сравнивает tip с закреплённым коммитом — так же, как это сделает `update -y`. Если ref не удаётся резолвить (например, нет сети), запись остаётся `keep` с пояснением; note печатается с `-v`.
 
 См. также: [outdated](/reference/outdated), [lock](/reference/lock), [Обновить зависимости](/guide/situations/update-deps).
