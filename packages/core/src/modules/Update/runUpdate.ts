@@ -7,7 +7,7 @@ import {
   resolveAndLock,
   type ResolvePorts,
 } from "@/modules/Resolver";
-import { runInstall } from "@/modules/Install";
+import { isCiEnvTruthy, runInstall } from "@/modules/Install";
 import { asText } from "@/common/asText.ts";
 import { UpdateError } from "./errors.ts";
 import type { RunUpdateOptions, UpdatePlanEntry, UpdateResult } from "./types.ts";
@@ -19,7 +19,7 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
   const cwd = resolve(options.cwd ?? process.cwd());
   const dryRun = options.dryRun === true || options["dry-run"] === true;
   const yes = options.yes === true;
-  const frozen = options.frozen === true;
+  const frozen = effectiveFrozen(options);
   const override = options.force === true || options.override === true;
   const scope = options.scope ?? options.packages ?? options.updatePackageNames ?? undefined;
 
@@ -111,6 +111,17 @@ export async function runUpdate(options: RunUpdateOptions = {}): Promise<UpdateR
 }
 
 export const updateProject = runUpdate;
+
+/**
+ * Effective frozen context:
+ * - explicit `frozen: true` / `frozen: false` wins (false is the opt-out);
+ * - otherwise a truthy `CI` env (default: process.env) implies frozen.
+ */
+function effectiveFrozen(options: RunUpdateOptions): boolean {
+  if (options.frozen !== undefined) return options.frozen === true;
+  const env = options.env ?? (process.env as Record<string, string | undefined>);
+  return isCiEnvTruthy(env);
+}
 
 async function planWithoutMutation(
   cwd: string,

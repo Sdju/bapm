@@ -14,11 +14,16 @@ export type RunUpdateOptions = {
   /** Plan only; no lock/modules mutation. */
   dryRun?: boolean;
   "dry-run"?: boolean;
-  /** Frozen context — refuse without override. */
+  /** Frozen context — refuse without override. Defaults to CI-default frozen when omitted. */
   frozen?: boolean;
-  /** Explicit override to allow update under frozen (not used in M6 accept). */
+  /** Explicit override to allow update under frozen context (CLI `--force`). */
   force?: boolean;
   override?: boolean;
+  /**
+   * Env map used to resolve CI-default frozen when `frozen` is omitted.
+   * Defaults to `process.env`; tests pass a stub (e.g. `{ CI: "true" }`).
+   */
+  env?: Record<string, string | undefined>;
   /** Package scope (rs-012). */
   packages?: string[];
   scope?: string[];

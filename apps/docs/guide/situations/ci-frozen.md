@@ -58,7 +58,7 @@ npx bapm audit --ci
 Frozen сверяет `ref` прямых git-зависимостей с `resolved_ref` в lock. Если поменять `#ref` (например, `#v1` на `#v2`) и не обновить lock, frozen install упадёт с `Frozen install ref drift` до записи модулей и lock. Обновите lock вне CI: `bapm install --update`, затем закоммитьте его.
 :::
 
-`bapm install --update` в CI запрещён: frozen несовместим с `--update`. `bapm update -y` при этом не блокируется и перепишет lock — не запускайте его в CI. Обновляйте локально ([сценарий](/guide/situations/update-deps)) и коммитьте lock. Если в каком-то job дрейф версий допустим, отключите frozen явно: `bapm install --no-frozen`.
+`bapm install --update` в CI запрещён: frozen несовместим с `--update`. `bapm update -y` в CI тоже завершается с ненулевым кодом (`UPDATE_FROZEN_REFUSED`) и **не меняет lock**: update в frozen/CI-контексте требует явного override. Обновляйте локально ([сценарий](/guide/situations/update-deps)) и коммитьте lock. Если в каком-то job дрейф версий действительно допустим, отключите frozen для install явно (`bapm install --no-frozen`), а для update передайте явный override: `bapm update -y --force`.
 
 ## Секреты для MCP в CI
 
