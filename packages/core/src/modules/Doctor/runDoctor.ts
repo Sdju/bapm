@@ -43,6 +43,14 @@ export async function runDoctor(options: RunDoctorOptions = {}): Promise<DoctorR
           ? `manifest readable (${loaded.sourceFilename}: ${identity})`
           : "manifest readable",
       });
+      if (loaded.warnings && loaded.warnings.length > 0) {
+        checks.push({
+          name: "manifest-warnings",
+          ok: true,
+          critical: false,
+          message: loaded.warnings.map((warning) => warning.message).join("; "),
+        });
+      }
     } else {
       checks.push({
         name: "manifest",

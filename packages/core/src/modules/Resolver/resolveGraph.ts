@@ -1,6 +1,10 @@
 import { existsSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadManifest, withEffectiveDirectDeps } from "@/modules/Manifest";
+import {
+  collectManifestExtensions,
+  loadManifest,
+  withEffectiveDirectDeps,
+} from "@/modules/Manifest";
 import { loadAgentPluginManifest } from "@/modules/AgentPlugins";
 import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import type { DependencyEntry, ObjectDependency } from "@/modules/Manifest";
@@ -89,6 +93,8 @@ type EdgeRecord = {
   registry_owner?: string;
   registry_repo?: string;
   marketplaceProvenance?: MarketplaceLockProvenance;
+  /** Vendor extension keys from the resolved dependency manifest. */
+  extensions?: Record<string, unknown>;
 };
 
 type WarmPin = {
@@ -364,6 +370,9 @@ function nodeToLockRow(n: ResolvedNode): Record<string, unknown> {
   if (n.marketplace_plugin_name) row.marketplace_plugin_name = n.marketplace_plugin_name;
   if (n.source_url) row.source_url = n.source_url;
   if (n.source_digest) row.source_digest = n.source_digest;
+  if (n.extensions && Object.keys(n.extensions).length > 0) {
+    row.extensions = n.extensions;
+  }
   if (n.personalLockScope) row["x-bapm-lock-scope"] = "local";
   return row;
 }
@@ -597,6 +606,7 @@ function edgeToNode(e: EdgeRecord): ResolvedNode {
     personalLockScope: e.classified.personalLockScope === true,
     skillSubset: e.classified.skillSubset,
     targetSubset: e.classified.targetSubset,
+    extensions: e.extensions,
     ...e.marketplaceProvenance,
   };
 }
@@ -628,8 +638,10 @@ async function resolveLocal(
 
   let childManifest;
   let portablePlugin;
+  let extensions: Record<string, unknown> | undefined;
   try {
     childManifest = loadManifest({ cwd: abs, allowReplace: true });
+    extensions = collectManifestExtensions(childManifest.document);
   } catch (cause) {
     try {
       portablePlugin = loadAgentPluginManifest({ root: abs });
@@ -672,6 +684,7 @@ async function resolveLocal(
     artifactFormat: portablePlugin ? "agent-plugin" : "openapm",
     repo_url: identity,
     marketplaceProvenance: item.marketplaceProvenance,
+    extensions,
   };
   pushEdge(ctx.edgesByIdentity, record);
 
@@ -850,10 +863,12 @@ async function resolveGit(
   let childName = warm?.name ?? nameHint;
   let childDeps: DependencyEntry[] = [];
   let artifactFormat: EdgeRecord["artifactFormat"] = "openapm";
+  let extensions: Record<string, unknown> | undefined;
   try {
     const child = loadManifest({ cwd: packageRoot, allowReplace: true });
     childName = child.document.name || childName;
     childDeps = listApmDeps(child.document.dependencies);
+    extensions = collectManifestExtensions(child.document);
   } catch {
     try {
       const portable = loadAgentPluginManifest({ root: packageRoot });
@@ -884,7 +899,9 @@ async function resolveGit(
     artifactFormat,
     repo_url: lockUrl,
     marketplaceProvenance: item.marketplaceProvenance,
+    extensions,
   };
+  assertImmutableLiteralRequirement(record, ctx.edgesByIdentity);
   pushEdge(ctx.edgesByIdentity, record);
 
   if (item.depth === 1) {
@@ -909,6 +926,67 @@ async function resolveGit(
       shouldUpdate: ctx.shouldUpdate,
     });
   }
+}
+
+/**
+ * APM 0.32 immutable-requirement admission: two literal `git`+`ref` edges to
+ * the same package identity must prove the same commit. Different ref names
+ * are not conflict evidence by themselves; only different commits fail.
+ * Semver ranges keep existing intersection-pick policy and are not checked
+ * here. Virtual packages are distinct identities (unique key includes path).
+ */
+function assertImmutableLiteralRequirement(
+  candidate: EdgeRecord,
+  edgesByIdentity: Map<string, EdgeRecord[]>,
+): void {
+  if (candidate.kind !== "git-literal") return;
+
+  const candidateRef = candidate.classified.ref ?? "HEAD";
+  const candidatePath = candidate.virtualPath ?? "";
+  const priorLiterals = (edgesByIdentity.get(candidate.identity) ?? []).filter(
+    (edge) => edge.kind === "git-literal" && (edge.virtualPath ?? "") === candidatePath,
+  );
+
+  // Identical literal requirement needs no equivalence check.
+  if (priorLiterals.some((edge) => (edge.classified.ref ?? "HEAD") === candidateRef)) {
+    return;
+  }
+
+  const conflict = priorLiterals.find(
+    (edge) => !sameCommit(edge.resolved_commit, candidate.resolved_commit),
+  );
+  if (!conflict) return;
+
+  const firstRef = conflict.classified.ref ?? "HEAD";
+  const firstChain = literalChainLabel(conflict, firstRef);
+  const nextChain = literalChainLabel(candidate, candidateRef);
+  throw new ResolverError(
+    "RESOLVE_IMMUTABLE_CONFLICT",
+    `Cannot resolve ${candidate.repo_url ?? candidate.identity}: incompatible immutable requirements.\n` +
+      `  ${firstChain} (ref ${firstRef}, commit ${conflict.resolved_commit ?? "?"})\n` +
+      `  ${nextChain} (ref ${candidateRef}, commit ${candidate.resolved_commit ?? "?"})\n` +
+      `Align the requested refs in the root or parent manifests to the same commit, ` +
+      `then run "bapm install" to regenerate the lockfile. Different ref names are not ` +
+      `a conflict when they resolve to the same commit.`,
+    {
+      details: {
+        identity: candidate.identity,
+        virtualPath: candidate.virtualPath,
+        refs: [firstRef, candidateRef],
+        commits: [conflict.resolved_commit, candidate.resolved_commit],
+        chains: [conflict.chain.join("->"), candidate.chain.join("->")],
+      },
+    },
+  );
+}
+
+function literalChainLabel(edge: EdgeRecord, ref: string): string {
+  return [...edge.chain.slice(0, -1), `${edge.name}@${ref}`].join("->");
+}
+
+function sameCommit(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b) return false;
+  return a.toLowerCase() === b.toLowerCase();
 }
 
 function warmConstraintMatchesLiteral(warm: WarmPin | undefined, ref: string): boolean {

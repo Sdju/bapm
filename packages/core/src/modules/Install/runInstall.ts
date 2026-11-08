@@ -210,7 +210,13 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     });
   }
 
-  const { document: loadedRoot } = loadManifest({ cwd });
+  const { document: loadedRoot, warnings: rootManifestWarnings } = loadManifest({ cwd });
+  const manifestWarningDiagnostics = (rootManifestWarnings ?? []).map((warning) => ({
+    code: warning.code,
+    message: warning.message,
+    ...(warning.path !== undefined ? { path: warning.path } : {}),
+    warn: true,
+  }));
   // Preset expansion for deps; host selection uses resolved target ids only.
   const rootManifest = withEffectiveDirectDeps(loadedRoot);
   const { targetIds: resolvedTargetIds } = resolveActive(loadedRoot);
@@ -643,6 +649,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     activeTargets,
     primitivesCount: resolved.primitives.length,
     diagnostics: [
+      ...manifestWarningDiagnostics,
       ...lifecycleDiagnostics,
       ...insecureDiagnostics,
       ...policyDiagnostics,
@@ -825,7 +832,16 @@ async function runDryRunPreview(args: {
 
   let rootManifest: BapmManifest | undefined;
   if (manifestExistsAt(args.cwd)) {
-    rootManifest = loadManifest({ cwd: args.cwd }).document;
+    const loaded = loadManifest({ cwd: args.cwd });
+    rootManifest = loaded.document;
+    for (const warning of loaded.warnings ?? []) {
+      diagnostics.push({
+        code: warning.code,
+        message: warning.message,
+        ...(warning.path !== undefined ? { path: warning.path } : {}),
+        warn: true,
+      });
+    }
   } else if (args.packageRefs.length === 0) {
     // Preserve bare-install fail-closed (no auto-create without positional).
     loadManifest({ cwd: args.cwd });

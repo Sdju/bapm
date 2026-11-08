@@ -34,6 +34,16 @@ export type {
 
 export type { ManifestErrorCode, ManifestWarning } from "./errors.ts";
 export { ManifestError } from "./errors.ts";
+export {
+  OPENAPM_V01_SCHEMA_URI,
+  OPENAPM_V0141_SCHEMA_URI,
+  OPENAPM_V0148_SCHEMA_URI,
+  SOURCE_REPLACEMENTS_V1_SCHEMA_URI,
+  SUPPORTED_MANIFEST_SCHEMA_URIS,
+  negotiateManifestContract,
+} from "./contract.ts";
+export type { ManifestContract } from "./contract.ts";
+export { collectManifestExtensions, isManifestExtensionKey } from "./extensions.ts";
 
 export { APM_MANIFEST_FILE, BAPM_MANIFEST_FILE, discoverManifestPath } from "./discover.ts";
 export { loadBaseManifest, loadManifest, loadEffectiveManifest } from "./load.ts";
@@ -48,7 +58,7 @@ export {
 } from "./localOverlay.ts";
 export type { LocalOverlayFields } from "./localOverlay.ts";
 export { parseManifest, parseManifestDocument, validateManifestEnv } from "./parse.ts";
-export type { ParseManifestOptions } from "./parse.ts";
+export type { ParseManifestOptions, ParseManifestResult } from "./parse.ts";
 export { parseDepSkillSubset, parseDepTargetSubset, applyDepSubsetFields } from "./depSubset.ts";
 export {
   mergeApmDependencyUpdate,

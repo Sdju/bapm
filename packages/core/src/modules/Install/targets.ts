@@ -18,6 +18,9 @@ export function declaredTargetIds(manifest: BapmManifest): string[] {
   if (typeof raw.target === "string" && raw.target.trim()) {
     return [raw.target.trim()];
   }
+  if (Array.isArray(raw.target)) {
+    return raw.target.map((t) => String(t).trim()).filter(Boolean);
+  }
   if (isTargetIntegrationMap(raw.target)) {
     return Object.keys(raw.target);
   }

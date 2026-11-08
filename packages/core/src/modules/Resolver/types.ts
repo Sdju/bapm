@@ -114,6 +114,8 @@ export type ResolvedNode = {
   skillSubset?: string[];
   /** Consumer per-dep target subset carried from classifying object-form entry. */
   targetSubset?: string[];
+  /** Vendor extension keys from the dependency manifest (APM lock wire). */
+  extensions?: Record<string, unknown>;
 };
 
 export type ResolveGraphResult = {

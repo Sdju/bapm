@@ -14,6 +14,7 @@ import {
   runInProject,
   stdoutText,
   writeDoctorProject,
+  writeText,
   type TempProject,
 } from "./helpers.ts";
 
@@ -40,6 +41,23 @@ describe("CLI doctor default path", () => {
       expect(line!).toMatch(/^PASS\t/);
     }
     expect(text).not.toMatch(MARKETPLACE_ROW_PATTERN);
+  });
+
+  test("unknown top-level manifest key appears as a non-critical doctor warning row", async () => {
+    project = createTempProject();
+    writeText(
+      join(project.cwd, "bapm.yml"),
+      "name: doctor-warning\nversion: 1.2.3\nfuture_feature_flag: true\ndependencies:\n  apm: []\n",
+    );
+
+    const { result, stdout } = await runInProject(project.cwd, ["doctor"]);
+
+    expect(result).toBe(0);
+    const text = stdoutText(stdout);
+    const warningLine = lineForCheck(text, "manifest-warnings");
+    expect(warningLine, `expected manifest-warnings row:\n${text}`).toBeTruthy();
+    expect(warningLine!).toMatch(/^PASS\t/);
+    expect(warningLine!).toMatch(/future_feature_flag/);
   });
 
   test("default doctor does not deploy harness / mutate project files", async () => {

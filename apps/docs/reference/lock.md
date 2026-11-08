@@ -39,4 +39,9 @@ bapm lock export [-f|--format cyclonedx|spdx] [-o|--output <file>] [--timestamp 
 
 При записи с `local`-источниками dual-write shared + `bapm.local.lock.yaml` (механика: [lock-файл](/guide/lockfile)).
 
+## Проверки при resolve
+
+- Два literal `git` + `ref` к одному пакету должны указывать на один коммит. Иначе resolve падает с `RESOLVE_IMMUTABLE_CONFLICT` и перечисляет обе цепочки/ref/commit. Semver-диапазоны не входят в эту проверку.
+- `x-*` поля манифеста зависимости записываются в `extensions` строки lock; пустое поле не эмитится. См. [lock-файл](/guide/lockfile#расширения-зависимости-в-lock).
+
 Связанные команды: [install](/reference/install), [update](/reference/update).

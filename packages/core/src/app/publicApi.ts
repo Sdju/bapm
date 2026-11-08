@@ -21,6 +21,8 @@ export type {
   ResolvedActive,
   TargetIntegrationMap,
   ParseManifestOptions,
+  ParseManifestResult,
+  ManifestContract,
   ManifestErrorCode,
   ManifestWarning,
   WriteManifestOptions,
@@ -35,6 +37,14 @@ export type {
 
 export {
   ManifestError,
+  OPENAPM_V01_SCHEMA_URI,
+  OPENAPM_V0141_SCHEMA_URI,
+  OPENAPM_V0148_SCHEMA_URI,
+  SOURCE_REPLACEMENTS_V1_SCHEMA_URI,
+  SUPPORTED_MANIFEST_SCHEMA_URIS,
+  negotiateManifestContract,
+  collectManifestExtensions,
+  isManifestExtensionKey,
   APM_MANIFEST_FILE,
   BAPM_MANIFEST_FILE,
   BAPM_LOCAL_MANIFEST_FILE,

@@ -27,6 +27,11 @@ export type LockedDependency = {
   path?: string;
   deployed_files?: string[];
   deployed_file_hashes?: Record<string, string>;
+  /**
+   * Vendor extension keys copied from the dependency manifest (APM req-ext-003
+   * wire). Omitted when empty; values are not interpreted.
+   */
+  extensions?: Record<string, unknown>;
   [key: string]: unknown;
 };
 

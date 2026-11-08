@@ -34,6 +34,7 @@ active:
 | Поле              | Обязательно | Зачем                                                                                                                                |
 | ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `name`, `version` | да          | Имя и версия проекта                                                                                                                 |
+| `$schema`         | нет         | Контракт манифеста; без него — рабочий черновик, см. ниже                                                                             |
 | `dependencies`    | нет         | `apm` — пакеты агента, `mcp` — MCP-серверы. [Формы записи](/guide/manifest-dependencies)                                             |
 | `devDependencies` | нет         | То же, что `dependencies`; сюда пишет `bapm install --dev <ref>`                                                                     |
 | `active`          | нет         | Какого агента и какие пресеты использовать. [Подробнее](/guide/manifest-hosts#active)                                                |
@@ -46,6 +47,32 @@ active:
 | `marketplace`     | нет         | Описание маркетплейса для `bapm pack`. [Подробнее](/guide/manifest-registries#marketplace)                                           |
 
 Личные настройки, которые не должны попадать в git (ваш агент, ваши значения переменных), кладите в [`bapm.local.yml`](/guide/manifest-overlay).
+
+## `$schema`, неизвестные ключи и `x-*`
+
+Поле `$schema` выбирает контракт манифеста. Без него используется текущий рабочий черновик bapm/APM. Явно поддержаны идентификаторы OpenAPM v0.1:
+
+```yaml
+$schema: https://microsoft.github.io/apm/specs/schemas/manifest-v0.1.schema.json
+# также принимаются manifest-v0.1.41.schema.json и manifest-v0.1.48.schema.json
+```
+
+Неизвестный `$schema` завершает загрузку ошибкой `MANIFEST_SCHEMA_UNSUPPORTED`, а не откатывается молча к черновику. Кандидатный `manifest-source-replacements-v1.schema.json` тоже отвергается отдельной ошибкой: bapm не реализует `replace:` и не должен устанавливать upstream вместо fork/local checkout.
+
+Незнакомые верхнеуровневые ключи сохраняются в документе, но теперь дают предупреждение `MF_006_UNKNOWN_TOP_LEVEL`: вероятная опечатка не должна молча становиться мёртвой настройкой. Ключи вида `x-[a-z][a-z0-9-]*` считаются расширениями вендора, не предупреждаются, сохраняются при записи и попадают в `extensions` строки lock-файла зависимости.
+
+## Формы `target` и `targets`
+
+Кроме массива и object-map, принимаются APM-формы со скаляром и CSV:
+
+```yaml
+targets: cursor              # → [cursor]
+targets: "cursor,claude"     # → [cursor, claude]
+target: "claude,copilot"     # → [claude, copilot]
+target: [cursor, claude]     # list sugar
+```
+
+Одновременно `target` и `targets` указывать по-прежнему нельзя. Алиасы (`vscode`, `agents`) нормализуются в `copilot`.
 
 ## Пресеты
 

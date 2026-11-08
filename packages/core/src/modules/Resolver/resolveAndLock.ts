@@ -545,6 +545,7 @@ function buildLockDocument(
       entry.content_hash = computeLocalContentHash(n);
 
       applyMarketplaceProvenance(entry, n);
+      applyManifestExtensions(entry, n, prev);
       if (n.personalLockScope) {
         deps.push(stampPersonalScope(entry as Record<string, unknown>) as LockedDependency);
       } else {
@@ -566,6 +567,7 @@ function buildLockDocument(
       (entry as Record<string, unknown>).resolved_by = n.resolved_by;
       (entry as Record<string, unknown>).depth = n.depth;
       applyMarketplaceProvenance(entry, n);
+      applyManifestExtensions(entry, n, existingByIdentity.get(n.repo_url ?? n.identity));
       deps.push(entry);
       continue;
     }
@@ -594,6 +596,7 @@ function buildLockDocument(
     (entry as Record<string, unknown>).resolved_by = n.resolved_by;
     (entry as Record<string, unknown>).depth = n.depth;
     applyMarketplaceProvenance(entry, n);
+    applyManifestExtensions(entry, n, prev);
 
     // lk-015: record canonical tree_sha256 for git-literal / git-semver
     const treeRoot = n.packageRoot;
@@ -665,4 +668,24 @@ function applyMarketplaceProvenance(entry: LockedDependency, n: ResolvedNode): v
   if (n.marketplace_plugin_name) entry.marketplace_plugin_name = n.marketplace_plugin_name;
   if (n.source_url) entry.source_url = n.source_url;
   if (n.source_digest) entry.source_digest = n.source_digest;
+}
+
+/**
+ * APM req-ext-003: copy dependency-manifest `x-*` fields into the lock row.
+ * Omit the field when empty so extension-free locks stay byte-identical.
+ * When the current resolve could not read a manifest (registry rows), retain
+ * prior evidence on rewrite instead of dropping it.
+ */
+function applyManifestExtensions(
+  entry: LockedDependency,
+  n: ResolvedNode,
+  prev: LockedDependency | undefined,
+): void {
+  if (n.extensions !== undefined) {
+    if (Object.keys(n.extensions).length > 0) entry.extensions = n.extensions;
+    return;
+  }
+  if (prev?.extensions && Object.keys(prev.extensions).length > 0) {
+    entry.extensions = prev.extensions;
+  }
 }
