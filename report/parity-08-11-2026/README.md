@@ -55,7 +55,20 @@
 | P2 targets/config/lifecycle                    | fixed                         | `e686568` |
 | P2 Copilot marketplace + check-clean           | fixed                         | `2b7c517` |
 
-Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope, runtime/auth, compile applyTo, approve UX, pack strict/bundles, shared cache, hermes/intellij, registry MCP lookup).
+Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope, runtime, compile applyTo, pack Claude bundle/plugin hooks-assets, shared cache, registry MCP lookup, canvas/LSP deploy).
+
+### Пачка 3 (08.11.2026)
+
+| Что                                  | Статус | Коммит    |
+| ------------------------------------ | ------ | --------- |
+| `bapm auth HOST [--check/--export]`  | fixed  | `000281b` |
+| `approve --list/--pending` read-only | fixed  | `09432d2` |
+| `init --discover` + safe `--apply`   | fixed  | `ef33b93` |
+| Local single-file primitive deps     | fixed  | `55ea6a6` |
+| Hosts `hermes` + `intellij`          | fixed  | `0b7df54` |
+| `pack --strict-metadata` (exit 5)    | fixed  | `cdcc374` |
+
+Проверки: core 270 файлов / 1463 теста, CLI 132 / 708, `vp check` 0 ошибок, conformance/specs OK.
 
 ### Пачка 2 (08.11.2026)
 
