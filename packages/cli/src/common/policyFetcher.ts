@@ -44,8 +44,9 @@ export const POLICY_CURL_TIMEOUT_SECONDS = 10;
 /**
  * Build a synchronous policy fetcher.
  *
- * Rejects non-https URLs before invoking curl. Missing curl, spawn errors,
- * timeouts and non-zero exits all map to `{ ok: false, status: 0 }`.
+ * Rejects non-https URLs before invoking curl. Uses curl `--write-out` to
+ * preserve the HTTP status (404 = provider candidate absent, 5xx = fetch
+ * failure). Missing curl, spawn errors and timeouts map to status 0.
  */
 export function createPolicyFetcher(options: CreatePolicyFetcherOptions = {}): PolicyFetcher {
   const binary = options.binary ?? "curl";
@@ -68,11 +69,13 @@ export function createPolicyFetcher(options: CreatePolicyFetcherOptions = {}): P
     let result: PolicyCurlRunResult;
     try {
       result = run(binary, [
-        "-fsSL",
+        "-sSL",
         "--max-time",
         String(timeoutSeconds),
         "--proto",
         "=https",
+        "-w",
+        "\n%{http_code}",
         url,
       ]);
     } catch {
@@ -82,12 +85,22 @@ export function createPolicyFetcher(options: CreatePolicyFetcherOptions = {}): P
     if (!result || result.error) {
       return { ok: false, status: 0, url };
     }
+    const rawStdout =
+      typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString("utf8") ?? "");
+    const lastNewline = rawStdout.lastIndexOf("\n");
+    const statusLine = lastNewline >= 0 ? rawStdout.slice(lastNewline + 1).trim() : "";
+    const httpStatus = /^\d{3}$/.test(statusLine) ? Number(statusLine) : undefined;
+    const text = httpStatus === undefined ? rawStdout : rawStdout.slice(0, lastNewline);
+
+    if (httpStatus !== undefined) {
+      if (httpStatus >= 200 && httpStatus < 300) {
+        return { ok: true, status: httpStatus, text, body: text, url };
+      }
+      return { ok: false, status: httpStatus, url };
+    }
     if (result.status !== 0) {
       return { ok: false, status: typeof result.status === "number" ? result.status : 0, url };
     }
-
-    const text =
-      typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString("utf8") ?? "");
     return { ok: true, status: 200, text, body: text, url };
   };
 }

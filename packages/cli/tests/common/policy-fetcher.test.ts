@@ -14,7 +14,7 @@ describe("createPolicyFetcher", () => {
     const fetcher = createPolicyFetcher({
       run: (command, args) => {
         calls.push({ command, args });
-        return { status: 0, stdout: "name: org\nenforcement: block\n" };
+        return { status: 0, stdout: "name: org\nenforcement: block\n\n200" };
       },
     });
 
@@ -26,7 +26,8 @@ describe("createPolicyFetcher", () => {
     expect(result.body).toBe(result.text);
     expect(calls).toHaveLength(1);
     expect(calls[0]!.command).toBe("curl");
-    expect(calls[0]!.args).toContain("-fsSL");
+    expect(calls[0]!.args).toContain("-sSL");
+    expect(calls[0]!.args).toContain("-w");
     expect(calls[0]!.args).toContain("--max-time");
     expect(calls[0]!.args).toEqual(
       expect.arrayContaining([
@@ -42,7 +43,7 @@ describe("createPolicyFetcher", () => {
     const fetcher = createPolicyFetcher({
       run: () => {
         called = true;
-        return { status: 0, stdout: "name: org\nenforcement: block\n" };
+        return { status: 0, stdout: "name: org\nenforcement: block\n\n200" };
       },
     });
 
@@ -65,6 +66,16 @@ describe("createPolicyFetcher", () => {
       status: 22,
       url: "https://github.com/a/b",
     });
+    expect(
+      createPolicyFetcher({ run: () => ({ status: 0, stdout: "\n404" }) })(
+        "https://github.com/a/b",
+      ),
+    ).toEqual({ ok: false, status: 404, url: "https://github.com/a/b" });
+    expect(
+      createPolicyFetcher({ run: () => ({ status: 0, stdout: "\n503" }) })(
+        "https://github.com/a/b",
+      ),
+    ).toEqual({ ok: false, status: 503, url: "https://github.com/a/b" });
     expect(
       createPolicyFetcher({
         run: () => ({ status: null, error: new Error("spawn curl ENOENT") }),
