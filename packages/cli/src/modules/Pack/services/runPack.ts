@@ -9,6 +9,10 @@ Usage:
 Options:
   --archive                    Write a plain zip artifact (also the default without flags)
   --agent-plugins              Pack a validated Agent Plugins v1 portable root
+  --format <zip|claude-plugin> Bundle family; default zip. claude-plugin emits a
+                               Claude Code plugin zip with plugin.json,
+                               .claude-plugin/plugin.json, and the complete
+                               commands/agents/skills/hooks/assets tree
   --dry-run                    Validate / collect without durable zip or marketplace.json
   --check-release              Check that the manifest version matches the git tag
   --check-versions             Marketplace local-package version alignment (lockstep /
@@ -41,12 +45,16 @@ Notes:
   (manifest name/version, plugin.json metadata, remote marketplace package metadata).
   --check-versions misalignment exits 3 even when --strict-metadata would also fail.
   --agent-plugins never emits marketplace output and requires root plugin.json.
+  --format claude-plugin writes a single Claude Code plugin zip; declared
+  commands/hooks/agents/skills paths fail closed when missing, traversing,
+  symlinked, or excluded by .bapmignore.
 `;
 }
 
 export type ParsedPackArgs = {
   archive: boolean;
   agentPlugins: boolean;
+  format?: string;
   dryRun: boolean;
   checkRelease: boolean;
   checkVersions: boolean;
@@ -64,6 +72,7 @@ export type ParsedPackArgs = {
 export function parsePackArgs(argv: string[]): ParsedPackArgs {
   let archive = false;
   let agentPlugins = false;
+  let format: string | undefined;
   let dryRun = false;
   let checkRelease = false;
   let checkVersions = false;
@@ -79,6 +88,7 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
   const base = (): Omit<ParsedPackArgs, "error" | "help"> => ({
     archive,
     agentPlugins,
+    format,
     dryRun,
     checkRelease,
     checkVersions,
@@ -103,6 +113,20 @@ export function parsePackArgs(argv: string[]): ParsedPackArgs {
     }
     if (arg === "--agent-plugins") {
       agentPlugins = true;
+      continue;
+    }
+    if (arg === "--format") {
+      const next = argv[i + 1];
+      if (!next || next.startsWith("-")) {
+        return { ...base(), error: "Missing value for --format <zip|claude-plugin>" };
+      }
+      format = next;
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--format=")) {
+      format = arg.slice("--format=".length);
+      if (!format) return { ...base(), error: "Missing value for --format=<zip|claude-plugin>" };
       continue;
     }
     if (arg === "--dry-run") {
@@ -344,6 +368,7 @@ export async function runPackCli(deps: PackDeps, options: PackOptions): Promise<
     const result = await deps.runPack({
       cwd,
       agentPlugins: parsed.agentPlugins,
+      format: parsed.format,
       archive: parsed.archive,
       dryRun: parsed.dryRun,
       checkRelease: parsed.checkRelease,

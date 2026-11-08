@@ -248,6 +248,34 @@ Before writing a portable Agent Plugin zip, the producer MUST resolve every `plu
 - **WHEN** a declared `commands` / `hooks` path escapes the plugin root via `..` or a symbolic link
 - **THEN** `pack --agent-plugins` MUST fail before writing the archive
 
+### Requirement: Pack emits Claude Code plugin bundles on --format claude-plugin
+
+`bapm pack --format claude-plugin` MUST produce a Claude Code plugin bundle while the default pack format remains the plain M7 zip. The bundle MUST contain the source manifest written at both `plugin.json` and `.claude-plugin/plugin.json`, and MUST preserve the package's plugin-native tree at its original relative paths, including `commands/`, `agents/`, `skills/<name>/` with auxiliary files, `hooks/` with sibling scripts/assets, and any declared component paths outside convention directories. The manifest source MUST be the root `plugin.json`, then `.claude-plugin/plugin.json`, otherwise a manifest synthesized from `bapm.yml` / `apm.yml`. If a root `hooks.json` exists and the manifest does not declare `hooks`, the emitted manifest MUST declare `./hooks.json`.
+
+#### Scenario: Claude plugin bundle round-trips declared tree
+
+- **WHEN** `pack --format claude-plugin` runs against a package with `plugin.json`, a command, a skill, a hook JSON with a sibling script and asset, and `agents/` content
+- **THEN** the zip MUST contain `plugin.json`, `.claude-plugin/plugin.json`, and every component at its original relative path, and extraction MUST leave a loadable plugin tree
+
+#### Scenario: Default pack remains the plain archive
+
+- **WHEN** `pack` runs without `--format claude-plugin`
+- **THEN** the artifact MUST remain the default plain M7 producer zip and MUST NOT gain a generated `.claude-plugin/plugin.json`
+
+### Requirement: Claude plugin pack fails closed on invalid declared paths
+
+Before writing a `--format claude-plugin` zip, the producer MUST resolve declared `commands`, `hooks`, `agents`, and `skills` entries (plus string path forms of `mcpServers`, `lspServers`, and `monitors`) under the plugin root. A missing path, `..` or absolute traversal, symbolic link, or a declared path/file omitted from the collected pack set by `.bapmignore` or hard pack rules MUST fail with a non-zero outcome and MUST NOT leave a successful archive. A bare skill name MUST resolve at the conventional `skills/<name>` location. Output bundle member paths MUST stay within the bundle root.
+
+#### Scenario: Missing Claude plugin declared path fails before write
+
+- **WHEN** `plugin.json` declares a command or hook path that does not exist
+- **THEN** `pack --format claude-plugin` MUST fail with a diagnostic naming the declared path and MUST NOT write a zip
+
+#### Scenario: Traversal or symlink Claude plugin declared path fails closed
+
+- **WHEN** a declared Claude plugin component path escapes the plugin root via `..`, an absolute path, or a symbolic link
+- **THEN** `pack --format claude-plugin` MUST fail before writing the archive
+
 ### Requirement: Pack collection honors .bapmignore
 
 When collecting the default pack file set for M7 plain-zip archive mode (including dry-run validation of the collect set), the system MUST apply project-root `.bapmignore` rules defined by `pack-bapmignore`. Matched paths MUST be silently omitted from the zip. Existing hard excludes, personal-omit basenames, symlink refuse, and secret-pattern refuse for non-ignored paths MUST remain unchanged. Pack MUST still require a dual-read root manifest in the collected set after ignore application.

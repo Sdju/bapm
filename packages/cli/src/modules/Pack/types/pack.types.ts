@@ -3,6 +3,7 @@ export interface PackDeps {
   runPack: (options: {
     cwd?: string;
     agentPlugins?: boolean;
+    format?: string;
     archive?: boolean;
     dryRun?: boolean;
     checkRelease?: boolean;
