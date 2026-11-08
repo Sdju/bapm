@@ -119,6 +119,12 @@ import type { InstallOnlyMode, InstallResult, RunInstallOptions } from "./types.
  */
 export async function runInstall(options: RunInstallOptions = {}): Promise<InstallResult> {
   const cwd = resolve(options.cwd ?? process.cwd());
+  /**
+   * Project installs deploy under `cwd`. Global installs keep the manifest and
+   * lock under the `~/.bapm` root but materialize harness files under the user
+   * home, so every deploy path (and its lock hash key) is rooted here.
+   */
+  const deployCwd = resolve(options.deployCwd ?? cwd);
   const frozen = options.frozen === true;
   const dryRun = options.dryRun === true;
   const updateRefs = options.updateRefs === true || options.update === true;
@@ -134,13 +140,6 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const excludeSet = new Set(excludeIds);
   const only = normalizeOnlyMode(options.only);
   const scope = options.scope === "global" ? "global" : "project";
-  if (scope === "global" && only !== "mcp") {
-    throw new InstallError(
-      "INSTALL_GLOBAL_UNSUPPORTED",
-      "Global install currently supports MCP only (--only mcp); global skills, rules, and compile are the next slice.",
-      { details: { scope, only: only ?? "both" } },
-    );
-  }
   const skipApmMaterialize = only === "mcp";
   const skipMcpConfigure = only === "apm";
   // Accepted for CLI parity; must not refresh refs / bypass frozen / disable policy.
@@ -315,7 +314,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
       // lk-017 lite: re-verify deployed_file_hashes when present (before harness mutation)
       if (lockDocument) {
-        verifyDeployedFileHashes({ cwd, document: lockDocument });
+        verifyDeployedFileHashes({ cwd: deployCwd, document: lockDocument });
         // lk-015: re-verify git tree_sha256 fail-closed
         verifyTreeSha256OrThrow({ cwd, document: lockDocument });
       }
@@ -376,7 +375,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
   if (!frozen && !skipApmMaterialize) {
     cleanupOrphanDeployedFiles({
-      cwd,
+      cwd: deployCwd,
       previous: previousLock?.document,
       currentDepNames,
     });
@@ -471,7 +470,10 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     scope,
   });
   assertActiveTargetsRegistered(activeTargets, registry);
-  const lspTargets = resolveLspTargets(registry, activeTargets, excludeSet);
+  // LSP configuration is project-scoped in this release; a global install must
+  // not write host LSP files into the `~/.bapm` manifest root.
+  const lspTargets =
+    scope === "global" ? [] : resolveLspTargets(registry, activeTargets, excludeSet);
 
   // `dependencies.lsp` and canvas declarations are retained by the manifest
   // parser. LSP is deployable on Claude/Copilot; other hosts keep the explicit
@@ -482,8 +484,31 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     primitives: resolved.primitives,
     lspDeployable: lspTargets.length > 0,
   });
+  const globalScopeDiagnostics: unknown[] = [];
+  let mcpTargets = activeTargets;
   if (scope === "global") {
-    assertGlobalMcpSupported(activeTargets, registry, excludeSet);
+    if (!skipApmMaterialize) {
+      assertGlobalFilesSupported(activeTargets, registry);
+    }
+    if (only === "mcp") {
+      // An MCP-only global pass remains fail-closed for hosts that have no
+      // user-scope MCP layout.
+      assertGlobalMcpSupported(activeTargets, registry, excludeSet);
+    } else if (!skipMcpConfigure) {
+      // A full global install still deploys file primitives for hosts without
+      // a user-scope MCP config; skip their MCP half with a visible warning.
+      mcpTargets = filterGlobalMcpTargets(activeTargets, registry, excludeSet);
+      for (const targetId of activeTargets) {
+        if (mcpTargets.includes(targetId) || excludeSet.has(targetId)) continue;
+        globalScopeDiagnostics.push({
+          code: "MCP_GLOBAL_CONFIG_SKIPPED",
+          message: `Skipping global MCP for target "${targetId}": this host has no supported user-scope MCP config in this release. File primitives were installed; use --target for a host with global MCP (cursor, opencode).`,
+          target: targetId,
+          skip: true,
+          warn: true,
+        });
+      }
+    }
   }
 
   // Root `target` / `targets` is a deployment allow-list (tg-008), not active
@@ -577,7 +602,9 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       }
       materializedPrimitives.push(...filtered);
       const report = (await target.materialize(filtered, {
-        cwd,
+        // Global targets receive the user home so their normal home-relative
+        // roots (`.cursor`, `.claude`, `.codex`, `.agents/skills`) are reused.
+        cwd: deployCwd,
         targetId,
         deployRoots: [...target.deployRoots],
         scope,
@@ -589,7 +616,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       for (const diagnostic of report?.diagnostics ?? []) {
         materializeDiagnostics.push(markSkipDiagnosticWarn(diagnostic));
       }
-      allDeployed.push(...collectTargetDeployedHashes(cwd, target, report));
+      allDeployed.push(...collectTargetDeployedHashes(deployCwd, target, report));
     }
   }
 
@@ -626,6 +653,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     binDiagnostics.push(
       ...deployBinsAfterConsent({
         cwd,
+        deployCwd,
         rootManifest,
         nodes,
         trustBin,
@@ -651,7 +679,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       rootManifest,
       nodes,
       registry,
-      activeTargets,
+      activeTargets: mcpTargets,
       only,
       trustTransitiveMcp,
       frozen,
@@ -723,6 +751,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
       ...resolved.diagnostics,
       ...portablePluginDiagnostics,
       ...subsetDiagnostics,
+      ...globalScopeDiagnostics,
       ...targetSelectionDiagnostics,
       ...hookTrustDiagnostics,
       ...materializeDiagnostics,
@@ -2146,6 +2175,8 @@ function hasMcpEntries(value: unknown): boolean {
 /** Discover + gate + materialize dependency package-root `bin/` (install-trust-bin). */
 function deployBinsAfterConsent(args: {
   cwd: string;
+  /** Deploy root default; user home for global installs. */
+  deployCwd?: string;
   rootManifest: BapmManifest;
   nodes: ResolvedNode[];
   trustBin: "allow" | "deny" | "default";
@@ -2185,7 +2216,7 @@ function deployBinsAfterConsent(args: {
     });
   const deployRoot = args.binDeployRoot
     ? resolve(args.binDeployRoot)
-    : defaultBinDeployRoot(args.cwd);
+    : defaultBinDeployRoot(args.deployCwd ?? args.cwd);
   for (const node of args.nodes) {
     const packageRoot = dependencyPackageRoot(node);
     if (!packageRoot) continue;
@@ -2446,6 +2477,41 @@ function dedupePreserveOrder(ids: string[]): string[] {
   return out;
 }
 
+/**
+ * Global file deployment is opt-in per integration. A target without the flag
+ * would write project-relative harness files under `~/.bapm`, so fail before
+ * any target materialize instead of leaving stray global-root files.
+ */
+function assertGlobalFilesSupported(
+  activeTargets: string[],
+  registry: IntegrationRegistry | undefined,
+): void {
+  const unsupported: string[] = [];
+  for (const id of activeTargets) {
+    const target = registry ? findTarget(registry, id) : undefined;
+    if (target && target.supportsGlobalFiles !== true) unsupported.push(id);
+  }
+  if (unsupported.length === 0) return;
+  throw new InstallError(
+    "INSTALL_GLOBAL_UNSUPPORTED",
+    `Global file install is not supported for target(s): ${unsupported.join(", ")}. Supported global file hosts in this release: cursor, claude, codex, agent-skills.`,
+    { details: { unsupported, activeTargets: [...activeTargets] } },
+  );
+}
+
+/** Active hosts that know how to write a user-scope MCP config. */
+function filterGlobalMcpTargets(
+  activeTargets: string[],
+  registry: IntegrationRegistry | undefined,
+  excludeSet: Set<string>,
+): string[] {
+  return activeTargets.filter((id) => {
+    if (excludeSet.has(id)) return false;
+    const target = registry ? findTarget(registry, id) : undefined;
+    return target?.supportsGlobalMcp === true;
+  });
+}
+
 /** Global MCP is opt-in per integration; refuse unsupported hosts clearly. */
 function assertGlobalMcpSupported(
   activeTargets: string[],
@@ -2509,7 +2575,7 @@ async function resolveActiveTargets(args: {
   throw new InstallError(
     "INSTALL_UNKNOWN_TARGET",
     args.scope === "global"
-      ? `Global target detection is missing or ambiguous; pass --target <id> (supported: cursor, opencode) or set active in ~/.bapm/bapm.yml`
+      ? `Global target detection is missing or ambiguous; pass --target <id> (supported file hosts: cursor, claude, codex, agent-skills; MCP-only: opencode) or set active in ~/.bapm/bapm.yml`
       : "Target detection is missing or ambiguous; pass --target <id> or set active in the manifest",
     { details: { detectedTargets: detection.detectedIds, diagnostics: detection.diagnostics } },
   );

@@ -2,7 +2,8 @@
  * User-scope (global) project root: `~/.bapm` (or `BAPM_HOME`).
  *
  * The global root owns `bapm.yml` + `bapm.lock.yaml`; project manifests and
- * locks are never read or written for `bapm install --global`.
+ * locks are never read or written for `bapm install --global`. Harness files
+ * are separate: they deploy into the user home (`deployCwd`), not here.
  */
 
 import { existsSync, mkdirSync } from "node:fs";
@@ -42,8 +43,8 @@ function findLockPath(root: string): string | undefined {
 }
 
 /**
- * Ensure the global root has a manifest and lock so an MCP-only configure pass
- * can record inventory. Existing files are never overwritten.
+ * Ensure the global root has a manifest and lock so a global install can
+ * resolve packages and record inventory. Existing files are never overwritten.
  */
 export function ensureGlobalProject(root: string): GlobalProjectPaths {
   mkdirSync(root, { recursive: true, mode: 0o700 });

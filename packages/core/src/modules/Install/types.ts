@@ -7,11 +7,18 @@ export type InstallOnlyMode = "apm" | "mcp";
 export type RunInstallOptions = {
   cwd?: string;
   /**
-   * Deployment scope. `project` (default) writes under `cwd`; `global` uses
-   * user-scoped host paths via `ConfigureMcpContext.scope` and only supports
-   * `only: "mcp"` in this release.
+   * Deployment scope. `project` (default) writes under `cwd`; `global` deploys
+   * file primitives and hooks into the user's home harness layout while the
+   * manifest and lock stay under `cwd` (the `~/.bapm` global root).
    */
   scope?: DeploymentScope;
+  /**
+   * Root for deployed file primitives, hooks, bin files, and deployed-hash
+   * inventory. Defaults to `cwd` (project behavior). A global install passes
+   * the user home so `~/.cursor`, `~/.claude`, `~/.codex`, and `~/.agents`
+   * are used while `cwd` remains the global manifest/lock root.
+   */
+  deployCwd?: string;
   frozen?: boolean;
   /** Rejected when combined with frozen. */
   update?: boolean;

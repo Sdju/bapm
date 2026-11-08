@@ -186,10 +186,12 @@ Global root и пути хостов:
 | Cursor   | `~/.cursor/mcp.json`               |
 | OpenCode | `~/.config/opencode/opencode.json` |
 
-Только MCP: global skills/rules/agents/commands/hooks и `compile` пока не
-поддерживаются, поэтому `bapm install -g` без `--only mcp`/`--mcp` завершается
-ошибкой. Неподдерживаемый хост возвращает `Global MCP is not supported for
-target(s)`.
+`--only mcp` остаётся MCP-only. Полный `bapm install -g` дополнительно ставит
+файловые примитивы в home-каталоги Cursor, Claude, Codex и agent-skills; для
+хостов без user-scope MCP (Claude/Codex) MCP пропускается с warning. В режиме
+`--only mcp` неподдерживаемый хост по-прежнему возвращает `Global MCP is not
+supported for target(s)`. Global `compile` пока не поддержан; см.
+[install](/reference/install).
 
 ## `install` из манифеста
 

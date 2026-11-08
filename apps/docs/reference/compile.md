@@ -10,6 +10,15 @@ bapm compile [-o PATH] [--target <id>[,<id>…]] [--all] [--distributed] [--stra
 
 Выбранный агент задаёт путь по умолчанию и состав файла: `AGENTS.md` (Cursor, Codex, OpenCode, Kiro, Grok Build, Hermes, Antigravity), `CLAUDE.md`, `.github/copilot-instructions.md`, `GEMINI.md`. Windsurf, Grok Bot и IntelliJ compile не поддерживают. Что попадает в файл у каждого агента: [Собрать AGENTS.md](/guide/situations/compile-agents#contents). Нужен `bapm.yml` в текущем каталоге. Неизвестные флаги отвергаются.
 
+## Global {#global}
+
+`bapm compile --global` в этом релизе **не поддержан**: у команды нет флага
+`--global`, а compile всегда читает project `bapm.yml` и пишет
+project-relative outputs. Для global-установки используйте
+`bapm install --global` (файловые примитивы уже разложены в `~/.cursor`,
+`~/.claude`, `~/.codex`, `~/.agents`); compile из `~/.bapm` с выходом в `$HOME`
+остаётся следующим slice. Global lock при этом не затрагивается.
+
 `--target cursor,claude` и `--all` собирают несколько файлов за один запуск. `--all` берёт все зарегистрированные хосты с поддержкой compile.
 
 ::: warning Общий `AGENTS.md`

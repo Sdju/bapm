@@ -41,8 +41,15 @@ function createGlobalFixture(): GlobalFixture {
   const home = mkdtempSync(join(tmpdir(), "bapm-global-home-"));
   const globalRoot = join(home, ".bapm");
   mkdirSync(join(globalRoot, "node_modules", "@b-apm"), { recursive: true });
-  linkPackageDir(globalRoot, join(PACKAGES_ROOT, "integration-cursor"));
-  linkPackageDir(globalRoot, join(PACKAGES_ROOT, "integration-opencode"));
+  for (const pkg of [
+    "integration-cursor",
+    "integration-opencode",
+    "integration-claude",
+    "integration-codex",
+    "integration-agent-skills",
+  ]) {
+    linkPackageDir(globalRoot, join(PACKAGES_ROOT, pkg));
+  }
   return {
     project,
     home,
@@ -71,6 +78,46 @@ function writeGlobalManifest(
       options.mcp === false ? "  apm: []" : `  apm: []\n${MCP_YAML.trimEnd()}`,
       "",
     ].join("\n"),
+    "utf8",
+  );
+}
+
+/** Local APM package exercising every deployable file primitive kind. */
+function writeGlobalFileLeaf(fx: GlobalFixture): void {
+  const leaf = join(fx.globalRoot, "leaf");
+  mkdirSync(join(leaf, ".apm", "skills", "hello"), { recursive: true });
+  mkdirSync(join(leaf, ".apm", "instructions"), { recursive: true });
+  mkdirSync(join(leaf, ".apm", "agents"), { recursive: true });
+  mkdirSync(join(leaf, ".apm", "prompts"), { recursive: true });
+  mkdirSync(join(leaf, ".apm", "hooks"), { recursive: true });
+  writeFileSync(
+    join(leaf, "bapm.yml"),
+    "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n",
+    "utf8",
+  );
+  writeFileSync(
+    join(leaf, ".apm", "skills", "hello", "SKILL.md"),
+    "---\nname: hello\ndescription: global skill\n---\n# hello\n",
+    "utf8",
+  );
+  writeFileSync(
+    join(leaf, ".apm", "instructions", "rule.md"),
+    "---\napplyTo: src/**\n---\n# rule\n",
+    "utf8",
+  );
+  writeFileSync(
+    join(leaf, ".apm", "agents", "helper.md"),
+    "---\nname: helper\ndescription: global agent\n---\n# helper\n",
+    "utf8",
+  );
+  writeFileSync(
+    join(leaf, ".apm", "prompts", "ship.prompt.md"),
+    "---\ndescription: ship\n---\n# ship\n",
+    "utf8",
+  );
+  writeFileSync(
+    join(leaf, ".apm", "hooks", "audit.json"),
+    `${JSON.stringify({ hooks: { SessionStart: [{ type: "command", command: "echo ok" }] } }, null, 2)}\n`,
     "utf8",
   );
 }
@@ -198,14 +245,9 @@ describe("CLI global MCP install", () => {
     expect(existsSync(join(fixture.home, ".cursor", "mcp.json"))).toBe(true);
   });
 
-  test("--global without --only mcp fails with the next-slice message and writes nothing", async () => {
+  test("--global without --only mcp installs packages and Cursor file primitives", async () => {
     fixture = createGlobalFixture();
-    mkdirSync(join(fixture.globalRoot, "leaf"), { recursive: true });
-    writeFileSync(
-      join(fixture.globalRoot, "leaf", "bapm.yml"),
-      "name: leaf\nversion: 0.0.1\ndependencies:\n  apm: []\n",
-      "utf8",
-    );
+    writeGlobalFileLeaf(fixture);
     writeFileSync(
       join(fixture.globalRoot, "bapm.yml"),
       [
@@ -215,20 +257,26 @@ describe("CLI global MCP install", () => {
         '  cursor: "@b-apm/integration-cursor"',
         "dependencies:",
         "  apm:",
-        "    - ./leaf",
-        MCP_YAML.trimEnd(),
+        "    - path: ./leaf",
         "",
       ].join("\n"),
       "utf8",
     );
-    const before = readFileSync(join(fixture.globalRoot, "bapm.yml"), "utf8");
 
     const { result, combined } = await runGlobal(fixture, ["install", "-g", "--target", "cursor"]);
 
-    expect(result).not.toBe(0);
-    expect(combined).toMatch(/MCP only|next slice/i);
-    expect(readFileSync(join(fixture.globalRoot, "bapm.yml"), "utf8")).toBe(before);
-    expect(existsSync(join(fixture.home, ".cursor", "mcp.json"))).toBe(false);
+    expect(result).toBe(0);
+    expect(combined).toMatch(/global scope/i);
+    expect(existsSync(join(fixture.home, ".agents", "skills", "hello", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(fixture.home, ".cursor", "rules", "rule.mdc"))).toBe(true);
+    expect(existsSync(join(fixture.home, ".cursor", "agents", "helper.md"))).toBe(true);
+    expect(existsSync(join(fixture.home, ".cursor", "commands", "ship.md"))).toBe(true);
+    expect(existsSync(join(fixture.home, ".cursor", "hooks.json"))).toBe(true);
+    expect(existsSync(join(fixture.globalRoot, "bapm.lock.yaml"))).toBe(true);
+    // Nothing project-shaped is written under the global manifest root.
+    expect(existsSync(join(fixture.globalRoot, ".cursor"))).toBe(false);
+    expect(existsSync(join(fixture.project.cwd, ".cursor"))).toBe(false);
+    expect(existsSync(join(fixture.project.cwd, "bapm.yml"))).toBe(false);
   });
 
   test("unsupported host fails with a clear global-MCP error", async () => {
@@ -238,8 +286,8 @@ describe("CLI global MCP install", () => {
       modulePath,
       [
         "export function createIntegration() {",
-        '  return { id: "x-other", deployRoots: [".other"], detect: () => false,',
-        '    materialize: async () => ({ targetId: "x-other", deployedFiles: [] }) };',
+        '  return { id: "x-acme-other", deployRoots: [".other"], detect: () => false,',
+        '    materialize: async () => ({ targetId: "x-acme-other", deployedFiles: [] }) };',
         "}",
         "",
       ].join("\n"),
@@ -251,7 +299,7 @@ describe("CLI global MCP install", () => {
         "name: global",
         "version: 0.1.0",
         "targets:",
-        '  x-other: "./other-integration.mjs"',
+        '  x-acme-other: "./other-integration.mjs"',
         "dependencies:",
         "  apm: []",
         MCP_YAML.trimEnd(),
@@ -266,11 +314,11 @@ describe("CLI global MCP install", () => {
       "--only",
       "mcp",
       "--target",
-      "x-other",
+      "x-acme-other",
     ]);
 
     expect(result).not.toBe(0);
-    expect(combined).toMatch(/Global MCP is not supported|x-other/i);
+    expect(combined).toMatch(/Global MCP is not supported.*x-acme-other/i);
     expect(existsSync(join(fixture.globalRoot, "bapm.lock.yaml"))).toBe(true);
   });
 

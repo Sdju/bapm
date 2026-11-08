@@ -1,4 +1,5 @@
 import { existsSync, statSync } from "node:fs";
+import { homedir } from "node:os";
 import { resolve } from "node:path";
 import {
   createDefaultDownloader,
@@ -28,12 +29,16 @@ Usage:
   bapm install [options]
   bapm install <package-ref...>   Add package ref(s) to dependencies.apm (or --dev → devDependencies.apm), then install
   bapm install <archive.zip>      Install from a pack-produced plain zip archive
+  bapm install -g                 Install user-global packages + file primitives from ~/.bapm
   bapm install -g --only mcp      Configure user-global MCP from ~/.bapm (BAPM_HOME override)
 
 Options:
-  --global, -g             Use the user-global project root (~/.bapm, or BAPM_HOME).
-                           This slice is MCP-only: combine with --only mcp (or
-                           --mcp). Global skills/rules/compile are not supported yet.
+  --global, -g             Use the user-global project root (~/.bapm, or BAPM_HOME)
+                           for bapm.yml/bapm.lock.yaml and deploy file primitives
+                           into the user's home harness dirs (~/.cursor, ~/.claude,
+                           ~/.codex, ~/.agents). Supported file hosts: cursor,
+                           claude, codex, agent-skills. Global MCP: cursor,
+                           opencode.
   --mcp                    Alias for --only mcp.
   --frozen                 Fail if lock is missing or pins drift; re-verify deployed_file_hashes when present
   --no-frozen              Opt out of frozen mode (including CI-default frozen)
@@ -79,6 +84,9 @@ Notes:
   Set active in bapm.yml / apm.yml when detect is missing or ambiguous.
   Eligible MCP servers are written to the active agent's MCP config (direct mcp by default).
   Global MCP: Cursor → ~/.cursor/mcp.json, OpenCode → ~/.config/opencode/opencode.json.
+  Global files: Cursor → ~/.agents/skills + ~/.cursor, Claude → ~/.claude,
+  Codex → ~/.agents/skills + ~/.codex, agent-skills → ~/.agents/skills.
+  Global compile is not supported yet.
   Project manifests and locks are never read or written with --global.
 `;
 }
@@ -571,28 +579,9 @@ export async function runInstall(
   let effectiveOptions = options;
   const effectiveParsed = parsed;
   if (parsed.global) {
-    if (parsed.only === "apm") {
-      const message =
-        "--global currently supports MCP only (--only mcp); global skills, rules, and compile are the next slice.";
-      console.error(`${deps.name}: ${message}`);
-      return { ok: false, message };
-    }
-    if (parsed.packageRefs && parsed.packageRefs.length > 0) {
-      const message =
-        "--global does not install APM packages yet; package refs are project-scoped. Use --only mcp for global MCP.";
-      console.error(`${deps.name}: ${message}`);
-      return { ok: false, message };
-    }
     if (parsed.archivePath) {
       const message =
         "--global does not install archive .zip files; archive install is project-scoped.";
-      console.error(`${deps.name}: ${message}`);
-      return { ok: false, message };
-    }
-
-    if (parsed.only !== "mcp") {
-      const message =
-        "Global install currently supports MCP only. Re-run with `bapm install --global --only mcp` (or -g --mcp); global skills, rules, and compile are the next slice.";
       console.error(`${deps.name}: ${message}`);
       return { ok: false, message };
     }
@@ -610,6 +599,9 @@ export async function runInstall(
     effectiveOptions = {
       ...options,
       cwd: globalRoot,
+      // Manifest/lock resolve under the global root; file primitives and hooks
+      // deploy into the user home harness layout.
+      deployCwd: homedir(),
       configDir: globalRoot,
       marketplaceConfigDir: globalRoot,
     };
@@ -658,6 +650,7 @@ async function runCoreInstall(
     await registerManifestIntegrationsFromCwd(registry, cwd);
     const result = await coreRunInstall({
       cwd,
+      deployCwd: options.deployCwd,
       scope: parsed.global ? "global" : "project",
       archivePath: archiveLanded ? undefined : archivePath,
       dryRun: parsed.dryRun,
@@ -718,11 +711,11 @@ async function runCoreInstall(
     if (parsed.dryRun || result.dryRun) {
       emitDryRunPreview(deps.name, result.diagnostics);
       console.log(
-        `${deps.name}: dry-run preview complete; no changes made${parsed.global ? " (global scope, MCP only)" : ""}`,
+        `${deps.name}: dry-run preview complete; no changes made${parsed.global ? " (global scope)" : ""}`,
       );
     } else if (result.activeTargets && result.activeTargets.length > 0) {
       console.log(
-        `${deps.name}: installed for ${result.activeTargets.join(", ")}${parsed.global ? " (global scope, MCP only)" : ""}`,
+        `${deps.name}: installed for ${result.activeTargets.join(", ")}${parsed.global ? " (global scope)" : ""}`,
       );
     }
     return { ok: true };
