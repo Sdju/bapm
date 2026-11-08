@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, statSyn
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
+import { parseLsRemoteTagsWithPeel } from "@/common/gitLsRemoteTags.ts";
 import {
   isCacheableGitRepoUrl,
   materializeSharedGitCheckout,
@@ -55,40 +56,8 @@ export function createPeelAwareTagLister(): TagLister {
   };
 }
 
-/**
- * Parse `git ls-remote --tags` output; annotated = presence of peeled `^{}` line.
- * Commit for annotated tags is the peeled SHA (APM fence).
- */
-export function parseLsRemoteTagsWithPeel(output: string): Array<{
-  tag: string;
-  commit: string;
-  annotated: boolean;
-}> {
-  const tags = new Map<string, string>();
-  const annotated = new Set<string>();
-
-  for (const line of output.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    const m = trimmed.match(/^([0-9a-f]{40})\s+refs\/tags\/(.+)$/i);
-    if (!m) continue;
-    const sha = m[1]!.toLowerCase();
-    let name = m[2]!;
-    if (name.endsWith("^{}")) {
-      name = name.slice(0, -3);
-      tags.set(name, sha);
-      annotated.add(name);
-    } else if (!tags.has(name)) {
-      tags.set(name, sha);
-    }
-  }
-
-  return [...tags.entries()].map(([tag, commit]) => ({
-    tag,
-    commit,
-    annotated: annotated.has(tag),
-  }));
-}
+/** Shared peel-aware tag parser; re-exported for the Resolver public API. */
+export { parseLsRemoteTagsWithPeel };
 
 /** Default GitRemote via `git ls-remote`. */
 export function createDefaultGitRemote(): GitRemote {

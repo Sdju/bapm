@@ -42,6 +42,7 @@ bapm pack [options]
 ## Замечания
 
 - При `marketplace:` в манифесте и выбранных outputs pack эмитит Claude (`claude`), Codex (`codex`) и/или Copilot (`copilot`) `marketplace.json`.
+- Annotated/signed tags резолвятся в commit, на который указывает tag (peeled `refs/tags/X^{}`), а не в SHA tag-объекта: `source.sha` всегда содержит полный 40-символьный commit. Lightweight tags остаются без изменений; сокращённые SHA в `source.sha` отвергаются.
 - Marketplace-only проекты (без `dependencies:`) эмитят JSON и пропускают пустой zip.
 - Gate-only: `--check-release` / `--check-versions` / `--check-clean` без `--archive` и без marketplace emit intent.
 - `--check-versions` без marketplace block — skip с informational сообщением, exit 0.
