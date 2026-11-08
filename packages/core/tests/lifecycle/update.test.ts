@@ -60,6 +60,7 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
     await runUpdate({
       cwd: project.cwd,
       yes: true,
+      env: {},
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,
@@ -103,6 +104,7 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
     await runUpdate({
       cwd: project.cwd,
       yes: true,
+      env: {},
       packages: ["pkg-a"],
       scope: ["pkg-a"],
       gitRemote: ports.gitRemote,
@@ -151,6 +153,7 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
     await runUpdate({
       cwd: project.cwd,
       yes: true,
+      env: {},
       packages: ["stale"],
       scope: ["stale"],
       gitRemote: ports.gitRemote,
@@ -201,6 +204,139 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
     expect(Buffer.compare(readLockBytes(project.cwd), before)).toBe(0);
   });
 
+  test("§4b CI-default frozen: CI=true update -y refuses; lock unchanged", async () => {
+    project = createTempProject();
+    const commit = fakeCommit("ci-frozen-a");
+    const ports = createFakePorts({
+      tagsByRepo: {
+        "example/one": [
+          { tag: "v1.0.0", commit },
+          { tag: "v1.1.0", commit: fakeCommit("ci-frozen-newer") },
+        ],
+      },
+    });
+    writeManifest(
+      project.cwd,
+      "bapm.yml",
+      `name: update-ci-frozen\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/one.git\n      ref: "^1.0.0"\n`,
+    );
+    writeLock(
+      project.cwd,
+      "bapm.lock.yaml",
+      `lockfile_version: "1"\ndependencies:\n  - repo_url: github.com/example/one\n    name: one\n    resolved_commit: "${commit}"\n    resolved_tag: v1.0.0\n`,
+    );
+    const before = readLockBytes(project.cwd);
+
+    const runUpdate = getRunUpdate();
+    await expectRejectsMatching(
+      () =>
+        runUpdate({
+          cwd: project.cwd,
+          yes: true,
+          env: { CI: "true" },
+          gitRemote: ports.gitRemote,
+          tagLister: ports.tagLister,
+          downloader: ports.downloader,
+        }),
+      /frozen|override|refuse|update/i,
+    );
+    expect(Buffer.compare(readLockBytes(project.cwd), before)).toBe(0);
+
+    await expectRejectsMatching(
+      () => runUpdate({ cwd: project.cwd, dryRun: true, env: { CI: "true" } }),
+      /frozen|override|refuse|update/i,
+    );
+    expect(Buffer.compare(readLockBytes(project.cwd), before)).toBe(0);
+  });
+
+  test("§4c CI-default frozen: --force override applies update", async () => {
+    project = createTempProject();
+    const oldCommit = fakeCommit("ci-force-old");
+    const newCommit = fakeCommit("ci-force-new");
+    const ports = createFakePorts({
+      tagsByRepo: {
+        "example/one": [
+          { tag: "v1.0.0", commit: oldCommit },
+          { tag: "v1.1.0", commit: newCommit },
+        ],
+      },
+    });
+    writeManifest(
+      project.cwd,
+      "bapm.yml",
+      `name: update-ci-force\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/one.git\n      ref: "^1.0.0"\n`,
+    );
+    writeLock(
+      project.cwd,
+      "bapm.lock.yaml",
+      `lockfile_version: "1"\ndependencies:\n  - repo_url: github.com/example/one\n    name: one\n    resolved_commit: "${oldCommit}"\n    resolved_tag: v1.0.0\n`,
+    );
+
+    const runUpdate = getRunUpdate();
+    await runUpdate({
+      cwd: project.cwd,
+      yes: true,
+      force: true,
+      env: { CI: "true" },
+      gitRemote: ports.gitRemote,
+      tagLister: ports.tagLister,
+      downloader: ports.downloader,
+    });
+
+    const deps = loadLockDeps(project.cwd);
+    const pkg = deps.find((d) => nameOfDep(d).includes("one"));
+    expect(pkg).toBeTruthy();
+    expect(pinOf(pkg!)).toBe(newCommit);
+  });
+
+  test("§4d non-truthy or absent CI stays non-frozen", async () => {
+    for (const env of [{ CI: "false" }, { CI: "0" }, { CI: "" }, {}] as Record<
+      string,
+      string | undefined
+    >[]) {
+      const p = createTempProject();
+      try {
+        const oldCommit = fakeCommit(`ci-off-old-${JSON.stringify(env)}`);
+        const newCommit = fakeCommit(`ci-off-new-${JSON.stringify(env)}`);
+        const ports = createFakePorts({
+          tagsByRepo: {
+            "example/one": [
+              { tag: "v1.0.0", commit: oldCommit },
+              { tag: "v1.1.0", commit: newCommit },
+            ],
+          },
+        });
+        writeManifest(
+          p.cwd,
+          "bapm.yml",
+          `name: update-ci-off\nversion: 0.0.1\ndependencies:\n  apm:\n    - git: https://github.com/example/one.git\n      ref: "^1.0.0"\n`,
+        );
+        writeLock(
+          p.cwd,
+          "bapm.lock.yaml",
+          `lockfile_version: "1"\ndependencies:\n  - repo_url: github.com/example/one\n    name: one\n    resolved_commit: "${oldCommit}"\n    resolved_tag: v1.0.0\n`,
+        );
+
+        const runUpdate = getRunUpdate();
+        await runUpdate({
+          cwd: p.cwd,
+          yes: true,
+          env,
+          gitRemote: ports.gitRemote,
+          tagLister: ports.tagLister,
+          downloader: ports.downloader,
+        });
+
+        const deps = loadLockDeps(p.cwd);
+        const pkg = deps.find((d) => nameOfDep(d).includes("one"));
+        expect(pkg).toBeTruthy();
+        expect(pinOf(pkg!)).toBe(newCommit);
+      } finally {
+        p.cleanup();
+      }
+    }
+  });
+
   test("§5 dry-run prints plan; lock and modules unchanged", async () => {
     project = createTempProject();
     const oldCommit = fakeCommit("dry-old");
@@ -233,6 +369,7 @@ describe("core update (rs-011 / rs-012 / lk-010)", () => {
       cwd: project.cwd,
       dryRun: true,
       "dry-run": true,
+      env: {},
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,

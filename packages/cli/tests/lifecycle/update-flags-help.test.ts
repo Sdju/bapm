@@ -4,10 +4,12 @@
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import {
   createTempProject,
+  existingLockPath,
   expectKnownCommand,
   expectKnownUpdateFlag,
   formatUpdateHelp,
   parseUpdateArgs,
+  readBytes,
   runCli,
   runInProject,
   withCapturedIo,
@@ -34,8 +36,49 @@ describe("CLI update flags + help", () => {
 
     expect(viaFlag.result === 0 || viaHelp.result === 0).toBe(true);
     expect(text).toMatch(/-v,\s*--verbose|--verbose\b/);
+    expect(text).toMatch(/--force/);
     expect(text).toMatch(/--parallel-downloads/);
     expect(text).toMatch(/0\s*=\s*serial|serial.*\b0\b|default\s+4/i);
+  });
+
+  test("parseUpdateArgs accepts --force (explicit frozen override)", () => {
+    const parsed = parseUpdateArgs(["-y", "--force"]);
+    expect(parsed.error).toBeUndefined();
+    expect(parsed.yes).toBe(true);
+    expect(parsed.force).toBe(true);
+    expect(parseUpdateArgs(["-y"]).force).toBe(false);
+  });
+
+  test("CI=true update -y fails closed without --force; lock unchanged", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "cli-update-ci-frozen");
+    writeLeafLock(project.cwd);
+    const lockPath = existingLockPath(project.cwd)!;
+    const before = readBytes(lockPath);
+
+    const { result, combined } = await runInProject(project.cwd, ["update", "-y"], {
+      CI: "true",
+    });
+
+    expectKnownCommand(combined, "update");
+    expect(result).not.toBe(0);
+    expect(combined).toMatch(/frozen|override|refuse/i);
+    expect(Buffer.compare(readBytes(lockPath), before)).toBe(0);
+  });
+
+  test("CI=true update -y --force is accepted (explicit override)", async () => {
+    project = createTempProject();
+    writeLeafProject(project.cwd, "cli-update-ci-force");
+    writeLeafLock(project.cwd);
+
+    const { result, combined } = await runInProject(project.cwd, ["update", "-y", "--force"], {
+      CI: "true",
+    });
+
+    expectKnownCommand(combined, "update");
+    expectKnownUpdateFlag(combined, "--force");
+    expect(combined).not.toMatch(/Unknown update flag:\s*--force/i);
+    expect(result).toBe(0);
   });
 
   test("parseUpdateArgs accepts -v and --parallel-downloads 0 / = form", () => {

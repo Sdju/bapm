@@ -34,6 +34,7 @@ describe("core update plan verbosity", () => {
     const result = await runUpdate({
       cwd: project.cwd,
       dryRun: true,
+      env: {},
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
       downloader: ports.downloader,
@@ -55,6 +56,7 @@ describe("core update plan verbosity", () => {
     const result = await runUpdate({
       cwd: project.cwd,
       dryRun: true,
+      env: {},
       verbose: true,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
@@ -72,6 +74,7 @@ describe("core update plan verbosity", () => {
     const result = await runUpdate({
       cwd: project.cwd,
       dryRun: true,
+      env: {},
     });
 
     const text = textOf(result);

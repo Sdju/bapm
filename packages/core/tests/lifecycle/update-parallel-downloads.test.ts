@@ -52,6 +52,7 @@ describe("core update parallelDownloads", () => {
     const result = await runUpdate({
       cwd: project.cwd,
       yes: true,
+      env: {},
       parallelDownloads: 0,
       gitRemote: ports.gitRemote,
       tagLister: ports.tagLister,
