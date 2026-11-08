@@ -17,6 +17,7 @@ export type LoadPolicyExtendedOptions = LoadPolicyOptions & {
   policyProviders?: string[];
   listGitRemotes?: (cwd?: string) => GitRemoteEntry[];
   remotes?: GitRemoteEntry[];
+  adoHosts?: string[];
   fetchAncestor?: FetchAncestor;
   fetchPolicyUrl?: (url: string) => {
     ok?: boolean;
@@ -59,6 +60,7 @@ export function loadPolicy(options: LoadPolicyExtendedOptions = {}): LoadPolicyR
     path: options.path,
     listGitRemotes: options.listGitRemotes,
     remotes: options.remotes,
+    adoHosts: options.adoHosts,
     fetchPolicyUrl: options.fetchPolicyUrl,
     httpGet: options.httpGet,
     defaultFetchFailure: options.defaultFetchFailure,

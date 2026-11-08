@@ -23,6 +23,7 @@ import {
 
 const ORIGIN = "https://github.com/acme/app.git";
 const ORG_POLICY_URL = "https://github.com/acme/.github/apm-policy.yml";
+const ORG_PRIVATE_URL = "https://github.com/acme/.github-private/apm-policy.yml";
 const REMOTE_DENY = `name: org-remote
 enforcement: block
 dependencies:
@@ -132,7 +133,7 @@ describe("CLI remote org policy discovery", () => {
     const report = parseJsonStdout(stdout);
 
     expect(combined).not.toMatch(/unknown command/i);
-    expect(fetched).toEqual([ORG_POLICY_URL]);
+    expect(fetched).toEqual([ORG_PRIVATE_URL, ORG_POLICY_URL]);
     expect(report.outcome).toBe("found");
     expect(report.provider).toBe("github-owner-dotgithub");
     expect(report.enforcement).toBe("block");
@@ -150,7 +151,7 @@ describe("CLI remote org policy discovery", () => {
       injectedPorts(fetched),
     );
 
-    expect(fetched).toEqual([ORG_POLICY_URL]);
+    expect(fetched).toEqual([ORG_PRIVATE_URL, ORG_POLICY_URL]);
     expect(result.ok).toBe(false);
     expect(result.combined).toMatch(/policy|deny|block|leaf|violat/i);
     expect(hasModules(project.cwd)).toBe(false);
@@ -167,7 +168,7 @@ describe("CLI remote org policy discovery", () => {
       injectedPorts(fetched),
     );
 
-    expect(fetched).toEqual([ORG_POLICY_URL]);
+    expect(fetched).toEqual([ORG_PRIVATE_URL, ORG_POLICY_URL]);
     expect(result.ok).toBe(false);
     expect(result.combined).toMatch(/policy|deny|block|leaf|violat/i);
     expect(hasModules(project.cwd)).toBe(false);

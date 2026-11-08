@@ -12,6 +12,7 @@ export type PolicyGateExtendedOptions = PolicyGateOptions & {
   policyProviders?: string[];
   listGitRemotes?: (cwd?: string) => GitRemoteEntry[];
   remotes?: GitRemoteEntry[];
+  adoHosts?: string[];
   fetchAncestor?: FetchAncestor;
   fetchPolicyUrl?: LoadPolicyExtendedOptions["fetchPolicyUrl"];
   httpGet?: LoadPolicyExtendedOptions["httpGet"];
@@ -47,6 +48,7 @@ export function runPolicyGate(options: PolicyGateExtendedOptions = {}): PolicyGa
     policyProviders: providers,
     listGitRemotes: options.listGitRemotes,
     remotes: options.remotes,
+    adoHosts: options.adoHosts,
     fetchAncestor: options.fetchAncestor,
     fetchPolicyUrl: options.fetchPolicyUrl,
     httpGet: options.httpGet,
@@ -67,6 +69,7 @@ export function runPolicyGate(options: PolicyGateExtendedOptions = {}): PolicyGa
     providers,
     listGitRemotes: options.listGitRemotes,
     remotes: options.remotes,
+    adoHosts: options.adoHosts,
     fetchPolicyUrl: options.fetchPolicyUrl,
     httpGet: options.httpGet,
     defaultFetchFailure: options.defaultFetchFailure ?? "block",
