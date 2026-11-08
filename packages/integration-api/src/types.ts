@@ -336,6 +336,14 @@ export type BapmIntegration = {
    * user-scoped config. Core refuses global MCP for targets without this.
    */
   supportsGlobalMcp?: true;
+  /**
+   * True when `materialize` understands `scope: "global"` and can write file
+   * primitives into the user's home harness layout. Core passes the user home
+   * as `MaterializeContext.cwd` for these targets. A full global install
+   * (anything except `--only mcp`) refuses targets without this flag so a
+   * project-shaped adapter never writes harness files into `~/.bapm`.
+   */
+  supportsGlobalFiles?: true;
   [key: string]: unknown;
 };
 

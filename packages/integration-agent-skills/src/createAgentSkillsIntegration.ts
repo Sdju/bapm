@@ -25,6 +25,9 @@ export function createAgentSkillsIntegration(options?: {
     id,
     deployRoots,
     detect: () => false,
+    // Global materialize receives the user home as `ctx.cwd`; `.agents/skills`
+    // then resolves to the shared user-level skills directory.
+    supportsGlobalFiles: true,
     getDeployRoots: () => [...deployRoots],
     async materialize(primitives, ctx): Promise<MaterializeReport> {
       const cwd = resolve(ctx?.cwd ?? process.cwd());

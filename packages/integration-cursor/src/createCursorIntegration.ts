@@ -59,6 +59,7 @@ export function createCursorIntegration(options?: {
     // placeholders into the project-local config (APM 0.33+ #3116).
     mcpEnvMode: "translate",
     supportsGlobalMcp: true,
+    supportsGlobalFiles: true,
     detect: ({ cwd }) => {
       const cursorDir = join(cwd, ".cursor");
       if (existsSync(cursorDir) && statSync(cursorDir).isDirectory()) return true;
@@ -84,11 +85,8 @@ export function createCursorIntegration(options?: {
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      if (ctx?.scope === "global") {
-        throw new Error(
-          "Cursor global install does not deploy file primitives yet; global skills/rules are the next slice",
-        );
-      }
+      // Global file materialize receives the user home as `ctx.cwd`, so the
+      // same home-relative roots (`.cursor`, `.agents/skills`) are reused.
       const cwd = resolve(ctx?.cwd ?? process.cwd());
       const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
       if (!roots.some((r) => r === ".agents/skills" || r.startsWith(".agents/skills"))) {

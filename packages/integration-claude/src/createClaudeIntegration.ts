@@ -7,6 +7,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
@@ -75,6 +76,11 @@ export function createClaudeIntegration(options?: {
       const claudeMd = join(cwd, "CLAUDE.md");
       return existsSync(claudeMd) && statSync(claudeMd).isFile();
     },
+    detectGlobal: () => {
+      const claudeDir = join(homedir(), ".claude");
+      return existsSync(claudeDir) && statSync(claudeDir).isDirectory();
+    },
+    supportsGlobalFiles: true,
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
       const content = renderPrimitivesMarkdown({
@@ -180,6 +186,11 @@ export function createClaudeIntegration(options?: {
       };
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
+      if (ctx?.scope === "global") {
+        throw new Error(
+          "Claude global MCP is not supported in this release; use --only apm for global file primitives",
+        );
+      }
       return writeClaudeMcpConfig(servers, {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,

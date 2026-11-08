@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { parse as parseToml, stringify as stringifyToml } from "smol-toml";
 import type {
@@ -62,6 +63,11 @@ export function createCodexIntegration(options?: {
       const codexDir = join(cwd, ".codex");
       return existsSync(codexDir) && statSync(codexDir).isDirectory();
     },
+    detectGlobal: () => {
+      const codexDir = join(homedir(), ".codex");
+      return existsSync(codexDir) && statSync(codexDir).isDirectory();
+    },
+    supportsGlobalFiles: true,
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
       const content = renderPrimitivesMarkdown({
@@ -155,6 +161,11 @@ export function createCodexIntegration(options?: {
       };
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
+      if (ctx?.scope === "global") {
+        throw new Error(
+          "Codex global MCP is not supported in this release; use --only apm for global file primitives",
+        );
+      }
       return writeCodexMcpConfig(servers, {
         cwd: resolve(ctx?.cwd ?? process.cwd()),
         deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
