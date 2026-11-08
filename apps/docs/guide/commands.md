@@ -49,6 +49,23 @@ bapm find .agents/skills/code-review/SKILL.md
 | `bapm prune`       | Удаляет из `apm_modules/` пакеты, которых больше нет в lock                               |
 | `bapm cache clean` | Очищает `apm_modules/` целиком                                                            |
 
+## Скрипты проекта
+
+| Команда              | Что делает                                                  |
+| -------------------- | ----------------------------------------------------------- |
+| `bapm run [SCRIPT]`  | Запускает скрипт из `scripts:` (по умолчанию `start`)       |
+| `bapm run -p k=v`    | Подставляет `{{k}}` / `${input:k}` и экспортирует `PARAM_K` |
+| `bapm preview`       | Печатает resolved-команду скрипта, ничего не выполняя       |
+| `bapm run --dry-run` | То же, что preview, для команды `run`                       |
+
+```bash
+bapm run
+bapm run test
+bapm preview greet -p name=World
+```
+
+Скрипты выполняются с правами пользователя через системный shell. Подробности и правила экранирования — в [reference/run](/reference/run).
+
 ## Агент и безопасность
 
 | Команда                  | Что делает                                                                                                 |

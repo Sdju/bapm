@@ -137,6 +137,40 @@ export function validateManifestEnv(value: unknown, pathPrefix = "env"): Record<
 }
 
 /**
+ * Validate top-level `scripts` as a string→string map. Command values are
+ * intentionally opaque shell lines; execution safety is enforced by the
+ * `bapm run` module (no eval, parameter values shell-escaped).
+ */
+export function validateManifestScripts(value: unknown): Record<string, string> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new ManifestError(
+      "MANIFEST_VALIDATION",
+      'Manifest "scripts" must be a mapping of script names to command strings',
+      { path: "scripts" },
+    );
+  }
+
+  const out: Record<string, string> = {};
+  for (const [name, command] of Object.entries(value as Record<string, unknown>)) {
+    const entryPath = `scripts.${name}`;
+    if (!name.trim()) {
+      throw new ManifestError("MANIFEST_VALIDATION", "Manifest script name must be non-empty", {
+        path: entryPath,
+      });
+    }
+    if (typeof command !== "string") {
+      throw new ManifestError(
+        "MANIFEST_VALIDATION",
+        `Manifest "${entryPath}" must be a string command`,
+        { path: entryPath },
+      );
+    }
+    out[name] = command;
+  }
+  return out;
+}
+
+/**
  * Validate a pre-parsed JS value as an OpenAPM/APM project manifest.
  * Retains unknown top-level and `x-*` keys on the returned document.
  */
@@ -257,6 +291,10 @@ export function parseManifestDocument(
 
   if ("env" in raw && raw.env !== undefined) {
     document.env = validateManifestEnv(raw.env);
+  }
+
+  if ("scripts" in raw && raw.scripts !== undefined) {
+    document.scripts = validateManifestScripts(raw.scripts);
   }
 
   if ("dependencies" in raw) {

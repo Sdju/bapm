@@ -13,6 +13,8 @@
 | `outdated`  | [outdated](/reference/outdated)   |
 | `uninstall` | [uninstall](/reference/uninstall) |
 | `prune`     | [prune](/reference/prune)         |
+| `run`       | [run](/reference/run)             |
+| `preview`   | [run](/reference/run)             |
 
 ## Инспекция и проверка
 

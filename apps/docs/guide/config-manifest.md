@@ -137,6 +137,25 @@ env:
 
 Не кладите секреты в `env` файла `bapm.yml`: он в git. Как значения попадают в конфиги агента и чем это грозит: [MCP и переменные окружения](/guide/manifest-dependencies#mcp-и-переменные-окружения).
 
+## Скрипты: `scripts`
+
+Секция `scripts:` хранит именованные shell-команды для `bapm run` / `bapm preview` (аналог npm scripts). Ключ — имя скрипта, значение — строка команды. `start` используется по умолчанию, если имя не передано.
+
+```yaml
+scripts:
+  start: "echo hello"
+  test: "node --test"
+  greet: "echo hello {{name}}"
+```
+
+```bash
+bapm run                 # start
+bapm run test
+bapm preview greet -p name=World
+```
+
+Параметры `-p name=value` подставляются как `{{name}}` или `${input:name}` и дополнительно экспортируются как `PARAM_NAME`. Команды выполняются с правами пользователя через системный shell; значения параметров shell-экранируются. Подробности: [run / preview](/reference/run).
+
 ## Shared git cache (opt-in)
 
 По умолчанию bapm клонирует git-зависимости прямо в `apm_modules`, без общего кеша. Чтобы несколько проектов на машине переиспользовали bare mirror, задайте корень кеша:

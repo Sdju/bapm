@@ -57,7 +57,12 @@ export {
   overlayRootForBase,
 } from "./localOverlay.ts";
 export type { LocalOverlayFields } from "./localOverlay.ts";
-export { parseManifest, parseManifestDocument, validateManifestEnv } from "./parse.ts";
+export {
+  parseManifest,
+  parseManifestDocument,
+  validateManifestEnv,
+  validateManifestScripts,
+} from "./parse.ts";
 export type { ParseManifestOptions, ParseManifestResult } from "./parse.ts";
 export { parseDepSkillSubset, parseDepTargetSubset, applyDepSubsetFields } from "./depSubset.ts";
 export {
