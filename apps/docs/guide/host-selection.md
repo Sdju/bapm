@@ -11,7 +11,8 @@
 | 1   | Флаг командной строки       | `bapm install --target claude`         |
 | 2   | `active` в `bapm.local.yml` | `active: { target: cursor }`           |
 | 3   | `active` в `bapm.yml`       | `active: { target: [cursor, claude] }` |
-| 4   | Автоопределение по маркеру  | в каталоге есть `.cursor/`             |
+| 4   | `target` в `~/.bapm/config.json` | `bapm config set target cursor`    |
+| 5   | Автоопределение по маркеру  | в каталоге есть `.cursor/`             |
 
 `--target` выбирает ровно одного агента. В `active` можно перечислить несколько: install разложит файлы и настроит MCP для каждого агента, который его поддерживает, а `compile` потребует выбрать одного через `--target`.
 
@@ -35,6 +36,7 @@ Multiple host markers found (cursor (@b-apm/integration-cursor), claude (@b-apm/
 | Проект поддерживает несколько агентов  | `active: { target: [cursor, claude] }` в `bapm.yml`                                  |
 | У каждого свой агент                   | `active` в личном `bapm.local.yml` — [сценарий](/guide/situations/team-local-active) |
 | Разовая установка для другого агента   | `bapm install --target <id>`                                                         |
+| Личный default без правок манифеста    | `bapm config set target cursor` — [config](/reference/config)                         |
 
 ## Откуда берётся интеграция
 

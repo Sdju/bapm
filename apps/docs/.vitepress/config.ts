@@ -106,6 +106,8 @@ export default defineConfig({
           { text: "audit", link: "/reference/audit" },
           { text: "doctor", link: "/reference/doctor" },
           { text: "cache", link: "/reference/cache" },
+          { text: "targets", link: "/reference/targets" },
+          { text: "config", link: "/reference/config" },
         ],
       },
       {

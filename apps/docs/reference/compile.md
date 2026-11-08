@@ -19,7 +19,7 @@ Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют о
 | Флаг              | Значение | Эффект                                                                                             | Default                       |
 | ----------------- | -------- | -------------------------------------------------------------------------------------------------- | ----------------------------- |
 | `-o`, `--output`  | `PATH`   | Другой путь. Для Codex, OpenCode, Grok Build имя должно быть `AGENTS.md`, для Gemini — `GEMINI.md` | путь агента                   |
-| `--target`        | `<id>`   | Force host (перекрывает `active`; обязателен при multi-`active` или неоднозначном detect)          | `active` (sole) → auto-detect |
+| `--target`        | `<id>`   | Force host (перекрывает `active`; обязателен при multi-`active` или неоднозначном detect)          | `active` (sole) → config → auto-detect |
 | `--dry-run`       | —        | Превью would-write path; не писать файл                                                            | off                           |
 | `-v`, `--verbose` | —        | Thin source attribution (name, type, path)                                                         | off                           |
 | `--validate`      | —        | Только discover/validate; не писать                                                                | off                           |
@@ -27,6 +27,6 @@ Cursor, Codex, OpenCode, Kiro, Grok Build и Antigravity используют о
 
 `--dry-run` и `--validate` не пишут выходной файл.
 
-Выбор host: `--target` → sole манифест `active` → sole auto-detect → fail. Multi-`active` без `--target` — ошибка (compile остаётся single-host).
+Выбор host: `--target` → sole манифест `active` → `target` из `~/.bapm/config.json` → sole auto-detect → fail. Multi-`active` без `--target` — ошибка (compile остаётся single-host).
 
 Сценарий: [Собрать AGENTS.md](/guide/situations/compile-agents).

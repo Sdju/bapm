@@ -52,6 +52,13 @@ export type RunInstallOptions = {
   forcedTarget?: string;
   /** Alias for `forcedTarget`. */
   forceTarget?: string;
+  /**
+   * User-config target default (`~/.bapm/config.json` `target`). Applied after
+   * manifest/local-overlay `active` and before auto-detect.
+   * CLI selection remains: --target → local overlay active → manifest active →
+   * config target → sole detect → fail.
+   */
+  configTarget?: string;
   /** Injected target registry (from @b-apm/integration-api). */
   integrationRegistry?: IntegrationRegistry;
   /** Alias accepted by acceptance helpers. */

@@ -24,6 +24,8 @@
 | `audit`                       | [audit](/reference/audit)     |
 | `doctor`                      | [doctor](/reference/doctor)   |
 | `compile`                     | [compile](/reference/compile) |
+| `targets`                     | [targets](/reference/targets) |
+| `config`                      | [config](/reference/config)   |
 | `policy` / `approve` / `deny` | [policy](/reference/policy)   |
 
 ## Реже

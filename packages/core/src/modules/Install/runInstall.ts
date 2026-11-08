@@ -53,6 +53,7 @@ import {
   filterPrimitivesForCopilotNative,
   rebuildCopilotNativeRegistration,
 } from "@/modules/CopilotNativeRegistration";
+import { detectLifecycleUnsupported } from "@/modules/Lifecycle";
 import { extractPackArchive } from "@/modules/Pack";
 import {
   isPackageMentionedInGrants,
@@ -108,6 +109,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
   const dryRun = options.dryRun === true;
   const updateRefs = options.updateRefs === true || options.update === true;
   const forcedTargetId = options.forcedTarget ?? options.forceTarget;
+  const configTargetId = options.configTarget?.trim() || undefined;
   const policyPath = options.policyPath ?? options.policy;
   const noPolicy = options.noPolicy === true;
   const noRepoPolicy = options.noRepoPolicy === true;
@@ -336,6 +338,13 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
 
   const currentDepNames = new Set(nodes.map((n) => n.name).filter(Boolean));
 
+  // `lifecycle:` is retained by the manifest parser but never executed. Surface
+  // one warning per declaring package (root and dependency packages).
+  const lifecycleDiagnostics = detectLifecycleUnsupported({
+    rootManifest,
+    nodes: skipApmMaterialize ? [] : nodes,
+  });
+
   if (!frozen && !skipApmMaterialize) {
     cleanupOrphanDeployedFiles({
       cwd,
@@ -404,6 +413,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     override: options.activeTargets,
     forcedTargetId,
     manifestActive: resolvedTargetIds,
+    configTargetId,
   });
   assertActiveTargetsRegistered(activeTargets, registry);
 
@@ -608,6 +618,7 @@ export async function runInstall(options: RunInstallOptions = {}): Promise<Insta
     activeTargets,
     primitivesCount: resolved.primitives.length,
     diagnostics: [
+      ...lifecycleDiagnostics,
       ...insecureDiagnostics,
       ...policyDiagnostics,
       ...resolved.diagnostics,
@@ -880,7 +891,11 @@ async function runDryRunPreview(args: {
     modulesDir: join(args.cwd, APM_MODULES_DIR),
     activeTargets: args.activeTargets,
     primitivesCount: 0,
-    diagnostics: [...policyDiagnostics, ...diagnostics],
+    diagnostics: [
+      ...(rootManifest ? detectLifecycleUnsupported({ rootManifest }) : []),
+      ...policyDiagnostics,
+      ...diagnostics,
+    ],
     policyDiagnostics,
     dryRun: true,
   };
@@ -1958,6 +1973,7 @@ async function resolveActiveTargets(args: {
   override?: string[];
   forcedTargetId?: string;
   manifestActive?: string[];
+  configTargetId?: string;
 }): Promise<string[]> {
   // 1. CLI / forced --target wins over everything.
   if (args.forcedTargetId) {
@@ -1969,12 +1985,17 @@ async function resolveActiveTargets(args: {
     return dedupePreserveOrder(args.override);
   }
 
-  // 3. Manifest `active` (already non-empty when present after parse).
+  // 3. Manifest `active` (local overlay already merged; non-empty when present).
   if (args.manifestActive && args.manifestActive.length > 0) {
     return dedupePreserveOrder(args.manifestActive);
   }
 
-  // 4. Sole auto-detect, else fail-closed.
+  // 4. User config default target (before detect, after explicit project selection).
+  if (args.configTargetId) {
+    return [args.configTargetId];
+  }
+
+  // 5. Sole auto-detect, else fail-closed.
   if (!args.registry) {
     throw new InstallError(
       "INSTALL_UNKNOWN_TARGET",

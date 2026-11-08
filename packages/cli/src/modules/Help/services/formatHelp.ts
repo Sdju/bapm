@@ -35,6 +35,8 @@ Commands:
   search       Search plugins in a registered marketplace (QUERY@MARKETPLACE)
   find         Trace a deployed path to locked package(s) (--source / --path)
   view         Inspect a locally installed package (offline; lock + modules)
+  targets      Inspect registered host targets (--json / --all; read-only)
+  config       Inspect / update user defaults in ~/.bapm/config.json
 
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present
@@ -76,7 +78,7 @@ Options:
   --help, -h               Show this help
 
 Host selection:
-  Priority: --target <id> → manifest active: { target: <id> } → sole auto-detect → fail.
+  Priority: --target <id> → local-overlay active → manifest active → config target → sole auto-detect → fail.
   Use active in bapm.yml / apm.yml when detect is missing or ambiguous.
 
 MCP:

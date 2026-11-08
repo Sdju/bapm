@@ -3,6 +3,7 @@ import {
   createCliIntegrationRegistry,
   registerManifestIntegrationsFromCwd,
 } from "@/modules/Integrations";
+import { readConfiguredTarget } from "@/modules/Config";
 import { enrichUnregisteredTargetMessage } from "@/common/enrichUnregisteredTargetMessage.ts";
 import type { LifecycleCliDeps, LifecycleResult } from "@/common/types/lifecycle.types.ts";
 
@@ -138,7 +139,7 @@ Options:
   --validate          Discover/validate only; do not write
   --help, -h          Show this help
 
-Host selection: --target <id> → sole manifest active → sole auto-detect → fail.
+Host selection: --target <id> → local-overlay active → manifest active → config target → sole auto-detect → fail.
 When active lists multiple hosts, pass --target <id>. Compile stays single-host.
 The selected target determines the default output path and rendering.
 
@@ -171,6 +172,7 @@ export async function runCompileCli(
       cwd: options.cwd,
       outputFile: parsed.outputFile,
       forcedTarget: parsed.target,
+      configTarget: readConfiguredTarget(),
       integrationRegistry: registry,
       validate: parsed.validate,
       dryRun: parsed.dryRun,

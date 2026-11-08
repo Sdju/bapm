@@ -26,7 +26,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 | `--allow-insecure-host`  | `<hostname>`   | Разрешить transitive `http://` с этого FQDN (повторяемый)                                                                    | —                         |
 | `--dev`                  | —              | При package-ref add писать в `devDependencies.apm` (без positional — no-op)                                                  | off                       |
 | `--only`                 | `apm` \| `mcp` | Только APM packages (без MCP) или только MCP configure (без APM materialize)                                                 | оба                       |
-| `--target`               | `<id>`         | Принудительно активировать registered host target (игнорирует `active` и detect)                                             | `active` → auto-detect    |
+| `--target`               | `<id>`         | Принудительно активировать registered host target (игнорирует `active`, config target и detect)                                | `active` → config → auto-detect |
 | `--exclude`              | `<id>[,<id>]`  | Пропустить MCP configure для runtime id; список через запятую или несколько флагов; **не** полный skip install (повторяемый) | —                         |
 | `--update`               | —              | Переразрешить mutable refs; нельзя с frozen / CI-default frozen                                                              | off                       |
 | `--parallel-downloads`   | `<n>`          | Параллельные загрузки; `0` = serial                                                                                          | `4`                       |
@@ -51,7 +51,7 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - `--no-policy` отключает только файл политики в репозитории (`apm-policy.yml` / `bapm-policy.yml`). Org policy и её `executables.deny`/`deny_all` продолжают действовать. Явный `--policy <path>` всё равно проверяется.
 - `--no-policy-all` и `BAPM_POLICY_DISABLE=1` / `APM_POLICY_DISABLE=1` — полный escape: отключают и локальную, и org policy. Используйте только для диагностики.
 - Frozen проверяет наличие lock, пины прямых зависимостей и хэши развёрнутых файлов, а также сверяет `#ref` прямых git-зависимостей с `resolved_ref` в lock. Расхождение ref при неизменном lock — ошибка `Frozen install ref drift`. См. [CI по lock-файлу](/guide/situations/ci-frozen).
-- Выбор агента: `--target <id>` → `active` в `bapm.local.yml` → `active` в `bapm.yml` → автоопределение → ошибка. В `active` можно перечислить несколько агентов, тогда файлы и MCP раскладываются для каждого поддерживающего хоста. См. [Выбор агента](/guide/host-selection).
+- Выбор агента: `--target <id>` → `active` в `bapm.local.yml` → `active` в `bapm.yml` → `target` из `~/.bapm/config.json` → автоопределение → ошибка. В `active` можно перечислить несколько агентов, тогда файлы и MCP раскладываются для каждого поддерживающего хоста. См. [Выбор агента](/guide/host-selection), [config](/reference/config).
 - Файлы в каталогах агента с тем же путём, что у устанавливаемого пакета, перезаписываются без предупреждения.
 - Если пакет убран из манифеста вручную, обычный (не-frozen) `install` удаляет файлы, которые предыдущий lock записал за этим пакетом в `deployed_file_hashes`. Если inventory нет (старый lock или путь не записан), файлы остаются. `install --frozen` (включая CI-default) cleanup не выполняет. Пустые каталоги после удаления не убираются. Надёжнее сначала выполнить `bapm uninstall <name>`: он чистит deployed-файлы по старому inventory до перезаписи lock.
 - Grant-поверхность (`executables.allow` в `bapm.yml` или `bapm approve`/`deny`) не делает все dependency MCP обязательными: пакет, которого нет в allow/deny, пропускается с предупреждением `MCP_NOT_APPROVED`, а install продолжается. Фатально завершают install только явный deny (project/user/org, включая org `deny_all`) и пакет, упомянутый в grant-поверхности без `mcp: true`. `--trust-transitive-mcp` без grant-поверхности по-прежнему деплоит dependency MCP.
@@ -59,5 +59,13 @@ bapm install <archive.zip>      # install из pack-produced plain zip
 - Copilot и Windsurf пишут MCP в user-global файлы `~/.copilot/mcp-config.json` и `~/.codeium/windsurf/mcp_config.json` (`COPILOT_HOME` / `CODEIUM_HOME`), общие для всех проектов на машине. Install печатает `bapm: warning: MCP config for "<id>" was written to <path> …`: одноимённые серверы перезаписывает последний install. Чтобы не трогать общий файл, используйте `--exclude copilot,windsurf` (или `BAPM_NO_GLOBAL_MCP=1` для обоих хостов в CI); MCP при этом не конфигурируется, остальная установка продолжается. Для изоляции задайте отдельный `COPILOT_HOME`/`CODEIUM_HOME` на проект или контейнер.
 
 - `install <archive.zip>` добавляет файлы архива в текущий каталог и ничего не удаляет. Если файл из архива уже есть с другим содержимым (обычно `bapm.yml`), install завершается ошибкой `Refusing to overwrite existing files` до записи чего-либо. Поэтому ставьте архив в пустой каталог.
+
+## `lifecycle:` не исполняется
+
+Если корневой манифест или манифест зависимости содержит ключ `lifecycle:`, bapm его сохраняет, но **не запускает** ни одной команды. Install печатает предупреждение `LIFECYCLE_UNSUPPORTED` с именем пакета — по одному на корень и на каждую зависимость. Уберите блок или выполните шаги вручную; policy-обхода и shell-исполнения здесь нет.
+
+```text
+bapm: warning: LIFECYCLE_UNSUPPORTED: Package "lifecycle-leaf" declares a "lifecycle" block; bapm retains the key but does not execute lifecycle commands.
+```
 
 Сценарии: [Быстрый старт](/guide/quick-start), [Подключить bapm к проекту](/guide/situations/install-fresh), [CI по lock-файлу](/guide/situations/ci-frozen).
