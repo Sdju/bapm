@@ -1,10 +1,10 @@
 /** Shared types for the read-only executable inventory views. */
 
 /** Executable types the trust ladder understands. */
-export const EXECUTABLE_TYPES = ["mcp", "bin", "hook"] as const;
+export const EXECUTABLE_TYPES = ["mcp", "lsp", "bin", "hook"] as const;
 export type ExecutableType = (typeof EXECUTABLE_TYPES)[number];
 
-/** Canonical display order: MCP first, then bin, then hook. */
+/** Canonical display order: MCP, LSP, then bin, then hook. */
 export const EXECUTABLE_TYPE_ORDER: readonly ExecutableType[] = EXECUTABLE_TYPES;
 
 export type UserExecutableGrantEntry = {

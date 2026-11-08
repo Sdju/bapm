@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmdirSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
@@ -6,7 +14,10 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  ConfigureLspContext,
+  ConfigureLspReport,
   HookOwnershipSidecar,
+  LspServerConfig,
   MaterializeReport,
   McpServerConfig,
 } from "@b-apm/integration-api";
@@ -34,6 +45,8 @@ const DEFAULT_DEPLOY_ROOTS = [".claude", "."] as const;
 const MCP_JSON_REL = ".mcp.json";
 const SETTINGS_JSON_REL = ".claude/settings.json";
 const HOOKS_OWNERSHIP_REL = ".claude/bapm-hooks.json";
+const LSP_PLUGIN_NAME = "apm-lsp";
+const LSP_PLUGIN_REL = ".claude/skills/apm-lsp/.claude-plugin/plugin.json";
 
 /**
  * Create the Claude Code target.
@@ -174,6 +187,14 @@ export function createClaudeIntegration(options?: {
         managedServers: ctx?.managedServers,
       });
     },
+    async configureLsp(servers, ctx): Promise<ConfigureLspReport> {
+      return writeClaudeLspConfig(servers, {
+        cwd: resolve(ctx?.cwd ?? process.cwd()),
+        deployRoots: ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots,
+        targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
+      });
+    },
   };
 }
 
@@ -256,6 +277,156 @@ function readExistingMcpDoc(path: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+/** Merge/write the APM-owned Claude LSP plugin manifest. */
+function writeClaudeLspConfig(
+  servers: LspServerConfig[] | Record<string, LspServerConfig>,
+  ctx: ConfigureLspContext & { cwd: string; deployRoots: string[] },
+): ConfigureLspReport {
+  const destFile = join(ctx.cwd, LSP_PLUGIN_REL);
+  const pluginDir = join(ctx.cwd, ".claude", "skills", "apm-lsp", ".claude-plugin");
+  const skillDir = join(ctx.cwd, ".claude", "skills", "apm-lsp");
+
+  const rawExisting = existsSync(destFile) ? readFileSync(destFile, "utf8") : undefined;
+  const existing = parseLspJson(rawExisting, LSP_PLUGIN_REL);
+  if (existing !== undefined) {
+    const ownerName = typeof existing.name === "string" ? existing.name : "";
+    if (ownerName !== LSP_PLUGIN_NAME) {
+      throw new Error(
+        `CLAUDE_LSP_OWNERSHIP: ${LSP_PLUGIN_REL} is owned by plugin ` +
+          `'${ownerName || "(unnamed)"}', not bapm; remove it or repair the file`,
+      );
+    }
+  }
+
+  const incoming = normalizeLspEntries(servers);
+  const existingServers =
+    existing?.lspServers && typeof existing.lspServers === "object"
+      ? { ...(existing.lspServers as Record<string, Record<string, unknown>>) }
+      : {};
+  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
+  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
+
+  for (const [name, entry] of Object.entries(incoming)) {
+    const prior = existingServers[name];
+    const managed = ctx.managedServers?.includes(name) === true;
+    if (prior && !managed && JSON.stringify(prior) !== JSON.stringify(entry)) {
+      throw new Error(
+        `CLAUDE_LSP_OWNERSHIP: LSP server '${name}' already exists in ` +
+          `${LSP_PLUGIN_REL} and is not managed by bapm; rename it or remove it`,
+      );
+    }
+    nextServers[name] = entry;
+  }
+
+  const doc: Record<string, unknown> = {
+    ...existing,
+    name: LSP_PLUGIN_NAME,
+    lspServers: nextServers,
+  };
+  const content = `${JSON.stringify(doc, null, 2)}\n`;
+  const writtenNames = Object.keys(incoming);
+
+  if (Object.keys(nextServers).length === 0 && onlyOwnedLspKeys(doc)) {
+    if (existsSync(destFile)) {
+      unlinkSync(destFile);
+      for (const dir of [pluginDir, skillDir]) {
+        try {
+          rmdirSync(dir);
+        } catch {
+          break;
+        }
+      }
+    }
+    return {
+      targetId: ctx.targetId,
+      configPath: LSP_PLUGIN_REL,
+      servers: writtenNames,
+      deployedFiles: [],
+    };
+  }
+
+  mkdirSync(pluginDir, { recursive: true });
+  if (rawExisting !== content) writeFileSync(destFile, content, "utf8");
+
+  return {
+    targetId: ctx.targetId,
+    configPath: LSP_PLUGIN_REL,
+    servers: writtenNames,
+    deployedFiles: [{ path: LSP_PLUGIN_REL }],
+  };
+}
+
+function parseLspJson(raw: string | undefined, label: string): Record<string, unknown> | undefined {
+  if (raw === undefined) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`CLAUDE_LSP_INVALID: ${label} must contain a JSON object`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`CLAUDE_LSP_INVALID: ${label} must contain a JSON object`);
+  }
+  return { ...(parsed as Record<string, unknown>) };
+}
+
+function onlyOwnedLspKeys(doc: Record<string, unknown>): boolean {
+  return Object.keys(doc).every((key) => key === "name" || key === "lspServers");
+}
+
+function normalizeLspEntries(
+  servers: LspServerConfig[] | Record<string, LspServerConfig>,
+): Record<string, Record<string, unknown>> {
+  const list: LspServerConfig[] = Array.isArray(servers)
+    ? servers
+    : Object.entries(servers).map(([name, value]) => ({ ...value, name: value.name ?? name }));
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const server of list) {
+    const name = String(server.name ?? "").trim();
+    if (!name) throw new Error(`CLAUDE_LSP_INVALID: LSP server name must be non-empty`);
+    const command = typeof server.command === "string" ? server.command.trim() : "";
+    if (!command) {
+      throw new Error(`CLAUDE_LSP_INVALID: LSP server "${name}" requires a stdio command`);
+    }
+    if (typeof server.url === "string" && server.url.trim()) {
+      throw new Error(
+        `CLAUDE_LSP_UNSUPPORTED: LSP server "${name}" uses url; only stdio command servers are supported`,
+      );
+    }
+    const language =
+      server.extensionToLanguage ?? server.fileExtensions ?? server.extension_to_language;
+    if (!language || typeof language !== "object" || Array.isArray(language)) {
+      throw new Error(`CLAUDE_LSP_INVALID: LSP server "${name}" requires extensionToLanguage`);
+    }
+    const entry: Record<string, unknown> = {
+      command,
+      extensionToLanguage: { ...language },
+    };
+    if (Array.isArray(server.args)) entry.args = [...server.args];
+    if (server.env && typeof server.env === "object" && !Array.isArray(server.env)) {
+      entry.env = { ...(server.env as Record<string, string>) };
+    }
+    for (const key of [
+      "transport",
+      "initializationOptions",
+      "settings",
+      "workspaceFolder",
+      "startupTimeout",
+      "shutdownTimeout",
+      "restartOnCrash",
+      "maxRestarts",
+    ] as const) {
+      const value = server[key];
+      if (value !== undefined) entry[key] = value;
+    }
+    if (entry.startupTimeout === undefined && server.warmupTimeoutMs !== undefined) {
+      entry.startupTimeout = server.warmupTimeoutMs;
+    }
+    out[name] = entry;
+  }
+  return out;
 }
 
 function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpServerConfig>): {

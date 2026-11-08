@@ -1,13 +1,16 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
   BapmIntegration,
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
+  ConfigureLspContext,
+  ConfigureLspReport,
   HookOwnershipSidecar,
+  LspServerConfig,
   MaterializeReport,
   McpServerConfig,
 } from "@b-apm/integration-api";
@@ -31,6 +34,7 @@ import {
 const DEFAULT_DEPLOY_ROOTS = [".github", ".agents"] as const;
 const HOOKS_OWNERSHIP_REL = ".github/bapm-hooks.json";
 const COMPILE_DEFAULT = ".github/copilot-instructions.md";
+const LSP_JSON_REL = ".github/lsp.json";
 
 const DETECT_DIRS = [
   ".github/instructions",
@@ -165,6 +169,13 @@ export function createCopilotIntegration(options?: {
         managedServers: ctx?.managedServers,
       });
     },
+    async configureLsp(servers, ctx): Promise<ConfigureLspReport> {
+      return writeCopilotLspConfig(servers, {
+        cwd: resolve(ctx?.cwd ?? process.cwd()),
+        targetId: ctx?.targetId ?? id,
+        managedServers: ctx?.managedServers,
+      });
+    },
   };
 }
 
@@ -253,6 +264,118 @@ function readExistingMcpDoc(path: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+/** Merge/write Copilot CLI's project `.github/lsp.json` config. */
+function writeCopilotLspConfig(
+  servers: LspServerConfig[] | Record<string, LspServerConfig>,
+  ctx: ConfigureLspContext & { cwd: string },
+): ConfigureLspReport {
+  const destFile = join(ctx.cwd, LSP_JSON_REL);
+  const rawExisting = existsSync(destFile) ? readFileSync(destFile, "utf8") : undefined;
+  const existing = parseCopilotLspJson(rawExisting, LSP_JSON_REL);
+  const existingServers =
+    existing?.lspServers && typeof existing.lspServers === "object"
+      ? { ...(existing.lspServers as Record<string, Record<string, unknown>>) }
+      : {};
+  const incoming = normalizeCopilotLspEntries(servers);
+  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
+  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
+
+  for (const [name, entry] of Object.entries(incoming)) {
+    const prior = existingServers[name];
+    const managed = ctx.managedServers?.includes(name) === true;
+    if (prior && !managed && JSON.stringify(prior) !== JSON.stringify(entry)) {
+      throw new Error(
+        `COPILOT_LSP_OWNERSHIP: LSP server '${name}' already exists in ${LSP_JSON_REL} ` +
+          "and is not managed by bapm; rename it or remove it",
+      );
+    }
+    nextServers[name] = entry;
+  }
+
+  const doc: Record<string, unknown> = { ...existing, lspServers: nextServers };
+  const content = `${JSON.stringify(doc, null, 2)}\n`;
+  const writtenNames = Object.keys(incoming);
+
+  if (rawExisting === undefined && writtenNames.length === 0) {
+    return {
+      targetId: ctx.targetId,
+      configPath: LSP_JSON_REL,
+      servers: [],
+      deployedFiles: [],
+    };
+  }
+
+  mkdirSync(dirname(destFile), { recursive: true });
+  if (rawExisting !== content) writeFileSync(destFile, content, "utf8");
+
+  return {
+    targetId: ctx.targetId,
+    configPath: LSP_JSON_REL,
+    servers: writtenNames,
+    deployedFiles: [{ path: LSP_JSON_REL }],
+  };
+}
+
+function parseCopilotLspJson(
+  raw: string | undefined,
+  label: string,
+): Record<string, unknown> | undefined {
+  if (raw === undefined) return undefined;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`COPILOT_LSP_INVALID: ${label} must contain a JSON object`);
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`COPILOT_LSP_INVALID: ${label} must contain a JSON object`);
+  }
+  return { ...(parsed as Record<string, unknown>) };
+}
+
+function normalizeCopilotLspEntries(
+  servers: LspServerConfig[] | Record<string, LspServerConfig>,
+): Record<string, Record<string, unknown>> {
+  const list: LspServerConfig[] = Array.isArray(servers)
+    ? servers
+    : Object.entries(servers).map(([name, value]) => ({ ...value, name: value.name ?? name }));
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const server of list) {
+    const name = String(server.name ?? "").trim();
+    if (!name) throw new Error("COPILOT_LSP_INVALID: LSP server name must be non-empty");
+    const command = typeof server.command === "string" ? server.command.trim() : "";
+    if (!command) {
+      throw new Error(`COPILOT_LSP_INVALID: LSP server "${name}" requires a stdio command`);
+    }
+    if (typeof server.url === "string" && server.url.trim()) {
+      throw new Error(
+        `COPILOT_LSP_UNSUPPORTED: LSP server "${name}" uses url; only stdio command servers are supported`,
+      );
+    }
+    const language =
+      server.extensionToLanguage ?? server.fileExtensions ?? server.extension_to_language;
+    if (!language || typeof language !== "object" || Array.isArray(language)) {
+      throw new Error(`COPILOT_LSP_INVALID: LSP server "${name}" requires fileExtensions`);
+    }
+    const entry: Record<string, unknown> = {
+      command,
+      args: Array.isArray(server.args) ? [...server.args] : [],
+      fileExtensions: { ...language },
+    };
+    if (server.env && typeof server.env === "object" && !Array.isArray(server.env)) {
+      entry.env = { ...(server.env as Record<string, string>) };
+    }
+    if (server.initializationOptions !== undefined) {
+      entry.initializationOptions = server.initializationOptions;
+    }
+    if (server.workspaceFolder !== undefined) entry.rootUri = server.workspaceFolder;
+    const timeout = server.startupTimeout ?? server.warmupTimeoutMs;
+    if (timeout !== undefined) entry.warmupTimeoutMs = timeout;
+    out[name] = entry;
+  }
+  return out;
 }
 
 function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpServerConfig>): {

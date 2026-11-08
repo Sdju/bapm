@@ -71,6 +71,20 @@ describe("CLI approve/deny user-local (sc-010)", () => {
     expect(readText(ymlPath)).toBe(before);
   });
 
+  test("approve --lsp persists an lsp grant", async () => {
+    env = createIsolatedHome();
+    const ymlPath = writeMinimalProject(env.cwd);
+    const before = readText(ymlPath);
+
+    const { result, combined } = await runInEnv(env, ["approve", "lsp-dep", "--lsp"]);
+    expect(result, `approve --lsp should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    expect(cfg.executables?.allow?.["lsp-dep"]).toMatchObject({ lsp: true });
+    expect(cfg.executables?.allow?.["lsp-dep"]).not.toMatchObject({ mcp: true });
+    expect(readText(ymlPath)).toBe(before);
+  });
+
   test("approve without a type flag still persists mcp (compatibility)", async () => {
     env = createIsolatedHome();
     writeMinimalProject(env.cwd);
@@ -108,5 +122,16 @@ describe("CLI approve/deny user-local (sc-010)", () => {
 
     const cfg = readUserConfig(env.home);
     expect(cfg.executables?.deny?.["bin-dep"]).toMatchObject({ bin: true });
+  });
+
+  test("deny --lsp persists an lsp deny grant", async () => {
+    env = createIsolatedHome();
+    writeMinimalProject(env.cwd);
+
+    const { result, combined } = await runInEnv(env, ["deny", "lsp-dep", "--lsp"]);
+    expect(result, `deny --lsp should succeed:\n${combined}`).toBe(0);
+
+    const cfg = readUserConfig(env.home);
+    expect(cfg.executables?.deny?.["lsp-dep"]).toMatchObject({ lsp: true });
   });
 });

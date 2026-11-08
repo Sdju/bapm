@@ -766,14 +766,26 @@ When Copilot is an effective target, install MUST NOT materialize loose Copilot 
 - **WHEN** install runs with effective targets including both `copilot` and `cursor` against one admitted portable plugin
 - **THEN** Copilot MUST use native registration without loose `.agents/skills/` projection from that plugin for Copilot, and Cursor MAY still materialize portable skills/MCP per existing Cursor rules
 
-### Requirement: Install surfaces unsupported LSP and canvas declarations
+### Requirement: Install deploys LSP to supported hosts and surfaces unsupported declarations
 
-Install MUST NOT silently ignore `dependencies.lsp` / `devDependencies.lsp` entries or canvas declarations. When the effective root manifest or a resolved dependency manifest declares non-empty LSP entries, install MUST add an `LSP_UNSUPPORTED` warning to the install result naming the declaring package and declared server labels; the LSP entries MUST NOT be deployed. When the root/dependency manifest declares a non-null `canvas:` key, or primitive resolution yields a primitive of type `canvas`, install MUST add a `CANVAS_UNSUPPORTED` warning naming the package/primitive. Both diagnostics MUST reach the CLI warning output, MUST be inspectable in the install result, and MUST NOT change the deploy/trust behavior of projects without LSP or canvas declarations. Canvas MUST remain outside the executable trust gates until it has a materialize path.
+Install MUST NOT silently ignore `dependencies.lsp` / `devDependencies.lsp` entries or canvas declarations. When at least one active host exposes `configureLsp` (Claude Code or Copilot CLI in this release), install MUST collect root and dependency LSP declarations, validate them fail-closed, gate dependency entries through ExecutableTrust type `lsp`, write native host config, record `lsp_servers` / `lsp_configs` / `lsp_target_servers` / `lsp_config_provenance`, and remove previously owned entries that are no longer declared. Invalid entries MUST fail the install with `INSTALL_LSP_INVALID` before any host write; explicit deny or mentioned-but-unapproved dependency LSP MUST fail with `INSTALL_LSP_TRUST`; unmentioned dependency LSP under a grant surface MUST be skipped with an `LSP_NOT_APPROVED` warning. When no active host exposes LSP support, install MUST add an `LSP_UNSUPPORTED` warning to the install result naming the declaring package and declared server labels and MUST NOT write host LSP config; the warning MUST NOT also be emitted when a supported host configured the same declarations. Frozen install MUST NOT rewrite LSP lock inventory, and a frozen unsupported host MUST NOT write LSP config.
 
-#### Scenario: Root and dependency LSP declarations warn
+When the root/dependency manifest declares a non-null `canvas:` key, or primitive resolution yields a primitive of type `canvas`, install MUST add a `CANVAS_UNSUPPORTED` warning naming the package/primitive. All diagnostics MUST reach the CLI warning output, MUST be inspectable in the install result, and MUST NOT change the deploy/trust behavior of projects without LSP or canvas declarations. Canvas MUST remain outside the executable trust gates until it has a materialize path.
 
-- **WHEN** a project and one of its path dependencies both declare non-empty `dependencies.lsp`
-- **THEN** install MUST emit one `LSP_UNSUPPORTED` warning per declaring package, name the package and servers, deploy no LSP entry, and still complete successfully
+#### Scenario: Root and dependency LSP declarations deploy
+
+- **WHEN** a project and one of its path dependencies both declare valid non-empty `dependencies.lsp`, and Claude is active
+- **THEN** install MUST write both servers to the Claude LSP plugin config, record them in `lsp_servers` / `lsp_target_servers` / `lsp_config_provenance`, and MUST NOT emit `LSP_UNSUPPORTED`
+
+#### Scenario: Unsupported host keeps LSP warning
+
+- **WHEN** an active host set has no `configureLsp` support and a project declares non-empty `dependencies.lsp`
+- **THEN** install MUST emit one `LSP_UNSUPPORTED` warning per declaring package, name the package and servers, write no LSP entry, and still complete successfully
+
+#### Scenario: Frozen unsupported host writes no LSP config
+
+- **WHEN** a frozen install runs with an active host that has no LSP support
+- **THEN** install MUST not create or rewrite host LSP config and MUST leave LSP lock inventory unchanged
 
 #### Scenario: Canvas manifest key and primitive warn
 

@@ -27,6 +27,7 @@ const DEPENDENCY_BLOCKS = ["dependencies", "devDependencies"] as const;
 export function detectLspUnsupported(
   options: DetectLspUnsupportedOptions = {},
 ): LspUnsupportedDiagnostic[] {
+  if (options.lspDeployable === true) return [];
   return lspDiagnosticsFromOwners(collectManifestOwners(options));
 }
 
@@ -50,7 +51,7 @@ export function detectUnsupportedDeclarations(
 ): UnsupportedDeclarationDiagnostic[] {
   const owners = collectManifestOwners(options);
   return [
-    ...lspDiagnosticsFromOwners(owners),
+    ...(options.lspDeployable === true ? [] : lspDiagnosticsFromOwners(owners)),
     ...canvasManifestDiagnostics(owners),
     ...canvasPrimitiveDiagnostics(options.primitives ?? []),
   ];

@@ -797,6 +797,24 @@ export {
 } from "@/modules/LspCanvas";
 
 export type {
+  ApplyLspInventoryOptions,
+  CollectedLspServer,
+  CollectLspServersOptions,
+  CollectLspServersResult,
+  LspDeclarationContext,
+  ParsedLspServer,
+} from "@/modules/Lsp";
+
+export {
+  applyLspInventoryToLock,
+  collectLspServers,
+  parseLspDeclaration,
+  parseLspDeclarations,
+  LspDeclarationError,
+  readLspTargetInventory,
+} from "@/modules/Lsp";
+
+export type {
   CacheCleanOptions,
   CacheCleanResult,
   CacheInfoOptions,

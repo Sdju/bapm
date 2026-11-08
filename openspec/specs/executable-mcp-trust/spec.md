@@ -130,16 +130,33 @@ When org policy `executables.deny` / `deny_all` is modeled, a shared deny-wins r
 - **WHEN** org policy denies an executable package and project grants allow it
 - **THEN** MCP deploy for that package MUST be denied at install and the shared classifier MUST agree
 
-### Requirement: Dependency hooks are gated with a trust surface while LSP and canvas stay undeployable
+### Requirement: Dependency hooks and LSP are gated with a trust surface while canvas stays undeployable
 
 Dependency hook primitives MUST pass through the shared executable trust resolver (type `hook`) before materialize when the consuming project or user store presents a grant surface, or when org policy `executables.deny` / `deny_all` is active. A withheld hook MUST be dropped and reported with a warning diagnostic naming the package and reason. With no grant surface and no org deny, dependency hooks MAY keep the legacy soft default and deploy. Root/local hooks MUST NOT be gated. Canvas has no primitive/materialize path and MUST remain listed as unimplemented/soft.
 
-`dependencies.lsp` / `devDependencies.lsp` declarations on the root manifest or a dependency package MUST NOT deploy: install MUST emit an `LSP_UNSUPPORTED` warning diagnostic naming the declaring package and declared server labels, and MUST NOT add LSP as a deployable executable type in the trust ladder in this release. A `canvas:` manifest key or a primitive of type `canvas` MUST emit a `CANVAS_UNSUPPORTED` warning diagnostic instead of being silently dropped; canvas MUST remain outside the executable trust gates until a materialize path exists. Dependency `bin/` MUST be gated via the shared executable trust resolver (type `bin`) plus install `--trust-bin` / `--no-trust-bin` consent. The conformance statement MUST list the hook gating boundary, LSP non-deployment, and canvas non-implementation in its limitations and MUST NOT list `bin` as ungated.
+`dependencies.lsp` / `devDependencies.lsp` declarations on the root manifest or a dependency package MUST be deployable through the optional host `configureLsp` hook and MUST pass through the shared executable trust resolver (type `lsp`) before any host config write. Root-owned declarations are trusted by definition. Dependency declarations MUST deploy only when allowed by the deny-wins ladder: an explicit deny or a mentioned-but-unapproved package MUST fail install with `INSTALL_LSP_TRUST`, while an unmentioned package under a grant surface MUST be skipped with an `LSP_NOT_APPROVED` warning. Invalid entries MUST fail closed with `INSTALL_LSP_INVALID` before any host write. Only hosts that expose `configureLsp` (Claude Code and Copilot CLI in this release) are LSP targets; for a project whose active hosts expose no LSP support, install MUST emit `LSP_UNSUPPORTED` naming the declaring package and server labels and MUST NOT write host config. Install MUST record reconciled `lsp_servers`, `lsp_configs`, `lsp_target_servers`, and `lsp_config_provenance` in the lock, MUST remove stale owned host entries, and MUST NOT rewrite lock inventory in frozen mode.
 
-#### Scenario: LSP declaration warns without deploy
+A `canvas:` manifest key or a primitive of type `canvas` MUST emit a `CANVAS_UNSUPPORTED` warning diagnostic instead of being silently dropped; canvas MUST remain outside the executable trust gates until a materialize path exists. Dependency `bin/` MUST be gated via the shared executable trust resolver (type `bin`) plus install `--trust-bin` / `--no-trust-bin` consent. The conformance statement MUST list the hook gating boundary, the LSP supported-host boundary, and canvas non-implementation in its limitations and MUST NOT list `bin` as ungated.
 
-- **WHEN** the root manifest or a dependency manifest declares non-empty `dependencies.lsp`
+#### Scenario: LSP deploys to a supported host under trust
+
+- **WHEN** an active Claude or Copilot host exposes `configureLsp` and the root manifest declares a valid `dependencies.lsp` entry
+- **THEN** install MUST write the host-native LSP config, MUST record the server in `lsp_servers` / `lsp_target_servers` / `lsp_config_provenance`, and MUST NOT emit `LSP_UNSUPPORTED`
+
+#### Scenario: Dependency LSP deny fails closed
+
+- **WHEN** a dependency declares LSP and the project or user surface explicitly denies that package for type `lsp`
+- **THEN** install MUST fail with `INSTALL_LSP_TRUST` and MUST NOT write the denied server to a host config
+
+#### Scenario: LSP declaration warns only on unsupported hosts
+
+- **WHEN** the root manifest or a dependency manifest declares non-empty `dependencies.lsp` and no active host exposes `configureLsp`
 - **THEN** install MUST emit `LSP_UNSUPPORTED` naming the package and server labels, MUST NOT deploy the LSP servers, and MUST continue installing other primitives
+
+#### Scenario: Invalid LSP entry fails closed
+
+- **WHEN** an LSP declaration is a bare string, uses `url`, uses a non-stdio transport, duplicates a name, or has malformed args/env/language map
+- **THEN** install MUST fail with `INSTALL_LSP_INVALID` before writing any host config
 
 #### Scenario: Canvas declaration warns without entering trust gates
 
