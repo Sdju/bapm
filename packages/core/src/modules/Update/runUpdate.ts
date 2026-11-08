@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { loadEffectiveLockfileOrNull } from "@/modules/Lockfile";
 import { loadManifest } from "@/modules/Manifest";
 import {
+  createDefaultGitRemote,
   createDefaultTagLister,
   pickHighestSatisfyingTag,
   resolveAndLock,
@@ -124,6 +125,7 @@ async function planWithoutMutation(
     /* still plan from lock */
   }
   const tagLister = ports.tagLister ?? createDefaultTagLister();
+  const gitRemote = ports.gitRemote ?? createDefaultGitRemote();
   const scopeSet = new Set((scope ?? []).map((s) => s.trim()).filter(Boolean));
   const plan: UpdatePlanEntry[] = [];
 
@@ -146,14 +148,10 @@ async function planWithoutMutation(
     }
     const from = asText(d.resolved_commit ?? d.resolved_tag ?? "");
     const gitUrl = repo.includes("://") ? repo : `https://${repo}`;
-    const constraint =
-      typeof d.constraint === "string"
-        ? d.constraint
-        : typeof d.resolved_tag === "string"
-          ? `^${asText(d.resolved_tag).replace(/^v/, "").split(".")[0]}.0.0`
-          : undefined;
-    try {
-      if (constraint) {
+    const constraint = semverConstraintFor(d);
+
+    if (constraint) {
+      try {
         const tags = await tagLister.listTags(gitUrl);
         const picked = pickHighestSatisfyingTag(
           tags.map((t) => t.tag),
@@ -167,11 +165,46 @@ async function planWithoutMutation(
           from,
           to,
         });
-      } else {
+      } catch {
         plan.push({ name, action: "keep", from, to: from });
       }
-    } catch {
+      continue;
+    }
+
+    // No semver range: mutable branch/tag pin. Resolve its current tip so the
+    // plan matches what apply (`updateRefs: true`) would write.
+    const ref = mutableRefFor(d);
+    if (!ref || FULL_COMMIT_RE.test(ref)) {
       plan.push({ name, action: "keep", from, to: from });
+      continue;
+    }
+    if (!from) {
+      plan.push({
+        name,
+        action: "keep",
+        from,
+        to: from,
+        note: `lock pin missing; cannot compare ref ${ref}`,
+      });
+      continue;
+    }
+    try {
+      const tip = (await gitRemote.resolveRef(gitUrl, ref)).trim();
+      const changed = Boolean(tip) && tip.toLowerCase() !== from.toLowerCase();
+      plan.push({
+        name,
+        action: changed ? "update" : "keep",
+        from,
+        to: changed ? tip : from,
+      });
+    } catch (error) {
+      plan.push({
+        name,
+        action: "keep",
+        from,
+        to: from,
+        note: `unable to resolve ref ${ref}: ${errorMessage(error)}`,
+      });
     }
   }
 
@@ -179,6 +212,33 @@ async function planWithoutMutation(
     plan.push({ name: "(plan)", action: "keep" });
   }
   return plan;
+}
+
+const FULL_COMMIT_RE = /^[0-9a-f]{40}$/i;
+
+/**
+ * Semver constraint from the lock (`constraint`) or, for older locks, a
+ * major range derived from a semver-looking `resolved_tag`.
+ */
+function semverConstraintFor(d: Record<string, unknown>): string | undefined {
+  const declared = typeof d.constraint === "string" ? d.constraint.trim() : "";
+  if (declared) return declared;
+  const tag = asText(d.resolved_tag ?? "").trim();
+  if (!tag) return undefined;
+  const version = tag.replace(/^v/i, "");
+  if (!/^\d+\.\d+\.\d+/.test(version)) return undefined;
+  return `^${version.split(".")[0]}.0.0`;
+}
+
+/** Literal ref recorded by the resolver (`resolved_ref`, legacy `resolved_tag`). */
+function mutableRefFor(d: Record<string, unknown>): string {
+  const resolvedRef = asText(d.resolved_ref ?? "").trim();
+  if (resolvedRef) return resolvedRef;
+  return asText(d.resolved_tag ?? "").trim();
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function pinMap(deps: Array<Record<string, unknown>> | undefined): Map<string, string> {
@@ -233,10 +293,11 @@ function formatPlan(plan: UpdatePlanEntry[], options: { verbose?: boolean } = {}
   if (printable.length === 0) return "No dependency changes planned";
   return printable
     .map((p) => {
-      if (p.action === "update") return `[~] ${p.name}: ${p.from} → ${p.to}`;
-      if (p.action === "add") return `[+] ${p.name}: ${p.to}`;
-      if (p.action === "remove") return `[-] ${p.name}`;
-      return `[=] ${p.name} keep`;
+      const note = verbose && p.note ? ` — ${p.note}` : "";
+      if (p.action === "update") return `[~] ${p.name}: ${p.from} → ${p.to}${note}`;
+      if (p.action === "add") return `[+] ${p.name}: ${p.to}${note}`;
+      if (p.action === "remove") return `[-] ${p.name}${note}`;
+      return `[=] ${p.name} keep${note}`;
     })
     .join("\n");
 }
