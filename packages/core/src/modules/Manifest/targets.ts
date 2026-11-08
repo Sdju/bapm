@@ -16,6 +16,8 @@ export const CANONICAL_TARGET_TOKENS = new Set([
   "kiro",
   "grok-bot",
   "grok-build",
+  "hermes",
+  "intellij",
   "agent-skills",
   "all",
 ]);

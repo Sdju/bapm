@@ -14,6 +14,8 @@ export const CANONICAL_HOST_IDS = [
   "kiro",
   "grok-bot",
   "grok-build",
+  "hermes",
+  "intellij",
   "antigravity",
   "agent-skills",
   "claude",
