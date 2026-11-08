@@ -27,6 +27,7 @@
 | `targets`                     | [targets](/reference/targets) |
 | `mcp`                         | [mcp](/reference/mcp)         |
 | `config`                      | [config](/reference/config)   |
+| `auth`                        | [auth](/reference/auth)       |
 | `policy` / `approve` / `deny` | [policy](/reference/policy)   |
 
 ## Реже

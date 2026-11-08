@@ -27,6 +27,7 @@ import {
   COMMAND_TARGETS,
   COMMAND_CONFIG,
   COMMAND_MCP,
+  COMMAND_AUTH,
 } from "@/common/constants/commands.ts";
 import { approveCommand } from "@/commands/approve.ts";
 import { auditCommand } from "@/commands/audit.ts";
@@ -56,6 +57,7 @@ import { viewCommand } from "@/commands/view.ts";
 import { targetsCommand } from "@/commands/targets.ts";
 import { configCommand } from "@/commands/config.ts";
 import { mcpCommand } from "@/commands/mcp.ts";
+import { authCommand } from "@/commands/auth.ts";
 import { approve } from "./init/approve.ts";
 import { audit } from "./init/audit.ts";
 import { cache } from "./init/cache.ts";
@@ -80,6 +82,7 @@ import { selfUpdate } from "./init/selfUpdate.ts";
 import { targets } from "./init/targets.ts";
 import { config } from "./init/config.ts";
 import { mcp } from "./init/mcp.ts";
+import { auth } from "./init/auth.ts";
 import { uninstall } from "./init/uninstall.ts";
 import { update } from "./init/update.ts";
 import { version } from "./init/version.ts";
@@ -116,6 +119,7 @@ const handlers: Record<string, CommandHandler> = {
   [COMMAND_TARGETS]: (argv) => targetsCommand(argv, targets),
   [COMMAND_CONFIG]: (argv) => configCommand(argv, config),
   [COMMAND_MCP]: (argv) => mcpCommand(argv, mcp),
+  [COMMAND_AUTH]: (argv) => authCommand(argv, auth),
   "-h": (argv) => helpCommand(argv, help),
   "--help": (argv) => helpCommand(argv, help),
   "-V": (argv) => versionCommand(argv, version),

@@ -42,6 +42,7 @@ bapm find .agents/skills/code-review/SKILL.md
 | ------------------ | ---------------------------------------------------------------- |
 | `bapm doctor`      | Проверяет окружение и проект: git, манифест, lock, `apm_modules` |
 | `bapm audit --ci`  | Сверяет развёрнутые файлы с хешами в lock; для CI                |
+| `bapm auth <host>` | Показывает источник токена; `--check` проверяет через API, `--export` — строка для `eval` |
 | `bapm prune`       | Удаляет из `apm_modules/` пакеты, которых больше нет в lock      |
 | `bapm cache clean` | Очищает `apm_modules/` целиком                                   |
 

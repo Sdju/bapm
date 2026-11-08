@@ -110,6 +110,7 @@ export default defineConfig({
           { text: "targets", link: "/reference/targets" },
           { text: "mcp", link: "/reference/mcp" },
           { text: "config", link: "/reference/config" },
+          { text: "auth", link: "/reference/auth" },
         ],
       },
       {
