@@ -57,6 +57,15 @@
 
 Проверки: core 260 файлов / 1382 теста, CLI 125 / 643, `vp check` 0 ошибок, conformance/specs OK. Остались P2-кластеры ниже (user-scope/global, runtime setup/remove, registry MCP lookup, canvas/LSP deploy, view -g).
 
+### Пачка 10 (09.11.2026)
+
+| Что                                                       | Статус | Коммит    |
+| --------------------------------------------------------- | ------ | --------- |
+| Global file primitives (Cursor/Claude/Codex/agent-skills) | fixed  | `eef254d` |
+| `compile --global` (Cursor/Claude/Codex)                  | fixed  | `c339ef4` |
+
+Проверки: core 286 файлов / 1600 тестов, CLI 148 / 829, `vp check` 0 ошибок, conformance/specs OK.
+
 ### Пачка 9 (09.11.2026)
 
 | Что                                                         | Статус              | Коммит    |
@@ -146,7 +155,7 @@
 
 Актуальный замороженный список: [`remaining.md`](remaining.md).
 
-- **Actionable:** user-scope для skills/rules/agents/commands/hooks + global compile.
+- **Actionable:** 0; backlog заморожен. Остались только follow-up/product decisions.
 - **Follow-up уже принятых решений:** stored-only config keys, `runtime setup/remove`, `view -g`, lifecycle executor, experimental CLI, `mcp install`, canvas.
 - **Намеренно не делаем / N/A:** resolve ∩-pick, lock sort, full `replace`, manifest-v0.1.48, registry host, APM installer/gh-aw/contributor dashboard, project-default approve.
 

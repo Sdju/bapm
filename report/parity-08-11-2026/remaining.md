@@ -2,14 +2,14 @@
 
 Это **замороженный** список после серии правок. Обновлено 09.11.2026. Новые пункты сюда не добавляются без отдельного product-решения: найденный «риск» сначала классифицируется как actionable, follow-up или N/A.
 
-## Actionable — 1 пункт
+## Actionable — 0 пунктов
 
-| #   | Пункт                                                                  | Почему остаётся                                                                                          | Оценка |
-| --- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
-| 1   | **User-scope для skills/rules/agents/commands/hooks + global compile** | MCP-срез `-g` уже сделан (Cursor/OpenCode); остальные примитивы и global lock/compile — следующий change | L      |
+Замороженный backlog пуст. Дальнейшие пункты — только явные product-решения, а не паритетные дыры.
 
 ## Исправлено в последней пачке
 
+- Global file primitives для Cursor/Claude/Codex/agent-skills (`eef254d`)
+- `compile --global` для Cursor/Claude/Codex (`c339ef4`)
 - LSP deploy для Claude/Copilot (`a0d1a3a`)
 - Global MCP scope `install -g --only mcp` (`342bda9`)
 - `compile --watch` (`5d160cc`)
@@ -20,7 +20,9 @@
 
 ## Follow-up после уже сделанных фиксов
 
-Это не «новые дыры», а явно отложенные части уже принятых решений:
+- Global file primitives для остальных хостов (OpenCode, Copilot, Windsurf, Gemini, Kiro, Antigravity, Grok): пока MCP-only или project-only; расширять по мере необходимости.
+- Global LSP deploy: LSP остаётся project-scope.
+  Это не «новые дыры», а явно отложенные части уже принятых решений:
 
 - `config temp-dir` / `self-update.channel` / `mcp-registry-url` — stored-only, потребителей пока нет.
 - `runtime setup/remove` — status/list сделаны, управление средами отложено.
