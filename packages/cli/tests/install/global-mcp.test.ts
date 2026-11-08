@@ -229,6 +229,7 @@ describe("CLI global MCP install", () => {
     const customRoot = join(fixture.home, "custom-bapm-home");
     mkdirSync(join(customRoot, "node_modules", "@b-apm"), { recursive: true });
     linkPackageDir(customRoot, join(PACKAGES_ROOT, "integration-cursor"));
+    linkPackageDir(customRoot, join(PACKAGES_ROOT, "integration-opencode"));
     const originalRoot = fixture.globalRoot;
     fixture.globalRoot = customRoot;
     writeGlobalManifest(fixture);
