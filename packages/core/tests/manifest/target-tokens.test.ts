@@ -27,6 +27,8 @@ const PUBLISHED_HOST_IDS = [
   "kiro",
   "grok-bot",
   "grok-build",
+  "hermes",
+  "intellij",
   "agent-skills",
 ] as const;
 
@@ -63,12 +65,15 @@ describe("published host ids are valid manifest tokens", () => {
     ]);
   });
 
-  test.each(["kiro", "grok-bot", "grok-build"] as const)("%s object-map key is retained", (id) => {
-    const spec = `@b-apm/integration-${id}`;
-    const doc = parse({ targets: { [id]: spec } });
-    expect(doc.targets).toEqual({ [id]: spec });
-    expect(declaredTargetIds(doc)).toEqual([id]);
-  });
+  test.each(["kiro", "grok-bot", "grok-build", "hermes", "intellij"] as const)(
+    "%s object-map key is retained",
+    (id) => {
+      const spec = `@b-apm/integration-${id}`;
+      const doc = parse({ targets: { [id]: spec } });
+      expect(doc.targets).toEqual({ [id]: spec });
+      expect(declaredTargetIds(doc)).toEqual([id]);
+    },
+  );
 });
 
 describe("legacy aliases normalise to copilot at parse", () => {

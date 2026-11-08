@@ -41,7 +41,7 @@ bapm targets --json             # STATUS=active, SOURCE=config (если active 
 bapm config unset target
 ```
 
-Изменить target можно только валидным id: строчные буквы, цифры, `.`, `_`, `-`; например `cursor`, `claude`, `grok-build`, `x-acme-editor`.
+Изменить target можно только валидным id: строчные буквы, цифры, `.`, `_`, `-`; например `cursor`, `claude`, `grok-build`, `hermes`, `intellij`, `x-acme-editor`.
 
 ## Хранение и grant-ы
 

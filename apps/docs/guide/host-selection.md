@@ -27,16 +27,19 @@ Multiple host markers found (cursor (@b-apm/integration-cursor), claude (@b-apm/
 
 Маркеры перечислены в [таблице агентов](/guide/supported-hosts#таблица).
 
+`grok-bot`, `hermes` и `intellij` — explicit-only: у них нет проектного маркера, поэтому auto-detect их никогда не выберет. Указывайте `--target <id>` или `active`. `intellij` к тому же MCP-only и не поддерживает `compile`.
+
 ## Какой способ выбрать
 
-| Ситуация                               | Решение                                                                              |
-| -------------------------------------- | ------------------------------------------------------------------------------------ |
-| Один агент, в проекте есть его каталог | Ничего не настраивать, сработает автоопределение                                     |
-| Вся команда работает в одном агенте    | `active: { target: cursor }` в `bapm.yml`                                            |
-| Проект поддерживает несколько агентов  | `active: { target: [cursor, claude] }` в `bapm.yml`                                  |
-| У каждого свой агент                   | `active` в личном `bapm.local.yml` — [сценарий](/guide/situations/team-local-active) |
-| Разовая установка для другого агента   | `bapm install --target <id>`                                                         |
-| Личный default без правок манифеста    | `bapm config set target cursor` — [config](/reference/config)                        |
+| Ситуация                               | Решение                                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------- |
+| Один агент, в проекте есть его каталог | Ничего не настраивать, сработает автоопределение                                        |
+| Вся команда работает в одном агенте    | `active: { target: cursor }` в `bapm.yml`                                               |
+| Проект поддерживает несколько агентов  | `active: { target: [cursor, claude] }` в `bapm.yml`                                     |
+| У каждого свой агент                   | `active` в личном `bapm.local.yml` — [сценарий](/guide/situations/team-local-active)    |
+| Разовая установка для другого агента   | `bapm install --target <id>`                                                            |
+| Личный default без правок манифеста    | `bapm config set target cursor` — [config](/reference/config)                           |
+| Hermes / IntelliJ / Grok Bot           | `--target hermes` / `--target intellij` / `--target grok-bot` (auto-detect отсутствует) |
 
 ## Откуда берётся интеграция
 
