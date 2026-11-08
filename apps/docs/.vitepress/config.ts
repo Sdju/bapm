@@ -118,6 +118,10 @@ export default defineConfig({
         items: [{ text: "run / preview", link: "/reference/run" }],
       },
       {
+        text: "AI runtime",
+        items: [{ text: "runtime", link: "/reference/runtime" }],
+      },
+      {
         text: "Агент и политика",
         items: [
           { text: "compile", link: "/reference/compile" },

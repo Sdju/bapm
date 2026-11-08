@@ -41,6 +41,7 @@ Commands:
   auth         Report credentials for a git host (--check / --export; read-only)
   run          Run a script from ${deps.manifestFile} scripts: (default: start)
   preview      Resolve and print a script command without executing it
+  runtime      Inspect AI runtime CLIs (list | status; read-only; setup/remove deferred)
 
 Install flags (see also: bapm help install):
   --frozen                 Fail closed on lock drift; re-verify deployed hashes when present
