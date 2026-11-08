@@ -15,9 +15,9 @@ import {
   createIntegrationRegistry,
   type BapmIntegration,
 } from "@b-apm/integration-api";
-import { createClaudeIntegration } from "@b-apm/integration-claude";
-import { createCodexIntegration } from "@b-apm/integration-codex";
-import { createCursorIntegration } from "@b-apm/integration-cursor";
+import { createClaudeIntegration } from "../../../integration-claude/src/index.ts";
+import { createCodexIntegration } from "../../../integration-codex/src/index.ts";
+import { createCursorIntegration } from "../../../integration-cursor/src/index.ts";
 
 type TempDir = { cwd: string; cleanup: () => void };
 
