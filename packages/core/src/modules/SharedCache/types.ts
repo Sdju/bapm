@@ -73,3 +73,49 @@ export type SharedGitCacheCleanResult = {
   message: string;
   refused?: boolean;
 };
+
+export type SharedGitCachePruneOptions = SharedGitCacheOverride & {
+  /** Remove mirrors last modified/accessed more than this many days ago. */
+  days?: number;
+  /** Preview candidates without deleting anything. */
+  dryRun?: boolean;
+  /** Accepted for symmetry with destructive commands; prune is non-interactive. */
+  yes?: boolean;
+  y?: boolean;
+  /** When true, refuse to delete without `yes`/`y`. Default false (APM parity). */
+  requireYes?: boolean;
+};
+
+export type SharedGitCachePruneCandidate = {
+  /** Mirror directory name relative to `<cacheDir>/git`. */
+  name: string;
+  path: string;
+  ageDays: number;
+  lastUsedMs: number;
+};
+
+export type SharedGitCachePruneFailure = {
+  name: string;
+  path: string;
+  message: string;
+};
+
+export type SharedGitCachePruneResult = {
+  ok: boolean;
+  enabled: boolean;
+  reason: SharedGitCacheReason;
+  cacheDir?: string;
+  gitDir?: string;
+  /** Alias for `gitDir`; `null` is emitted by the CLI when cache is unset. */
+  root?: string;
+  days: number;
+  dryRun: boolean;
+  /** Candidate mirror names (relative to `root`). */
+  candidates: string[];
+  candidateDetails: SharedGitCachePruneCandidate[];
+  pruned: number;
+  failed: number;
+  failures: SharedGitCachePruneFailure[];
+  message: string;
+  refused?: boolean;
+};

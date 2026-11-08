@@ -27,7 +27,13 @@ The key uses `normalizeRepoIdentity` (host case / `.git` / disclosed path foldin
 4. On any cache error, warn and fall back to a direct clone. A stale mirror is
    reused when the update failed but already contains the requested commit.
 
-## Clean semantics
+## Clean / prune semantics
 
 `sharedGitCacheClean` removes only mirrors under `<BAPM_CACHE_DIR>/git`. It never
 deletes project `apm_modules`; that remains `cacheClean`.
+
+`pruneSharedCache` removes only mirrors whose directory `mtime`/`atime` is older
+than `days` (default 30; `0` makes all existing mirrors eligible). It skips
+symlinks, deletes per mirror, counts only successful removals, and reports
+failures per entry. Invalid `days` is rejected before mutation. Missing
+`BAPM_CACHE_DIR` is an informational no-op.

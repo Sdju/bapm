@@ -27,7 +27,7 @@ Commands:
   audit        Integrity checks (--ci gate)
   doctor       Environment and project sanity checks
   compile      Emit the agent's instructions file (AGENTS.md, CLAUDE.md, …)
-  cache        Modules-cache info | clean (apm_modules)
+  cache        Modules-cache info | clean; shared-cache prune
   policy       Policy status (read-only governance posture)
   approve      Persist user-local allow (-y/--all, --pending; not project yml)
   deny         Persist user-local MCP deny (~/.bapm/config.json; not project yml)

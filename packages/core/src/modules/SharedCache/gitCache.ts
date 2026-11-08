@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -9,7 +10,7 @@ import {
   rmSync,
   statSync,
 } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { buildGitChildEnv, hostnameFromUrlOrHost } from "@/modules/Auth";
 import type {
   SharedCacheEnv,
@@ -18,12 +19,18 @@ import type {
   SharedGitCacheConfig,
   SharedGitCacheInfoOptions,
   SharedGitCacheInfoResult,
+  SharedGitCachePruneCandidate,
+  SharedGitCachePruneFailure,
+  SharedGitCachePruneOptions,
+  SharedGitCachePruneResult,
   SharedGitMirrorEntry,
 } from "./types.ts";
 
 export const BAPM_CACHE_DIR_ENV = "BAPM_CACHE_DIR";
 export const BAPM_NO_CACHE_ENV = "BAPM_NO_CACHE";
 export const SHARED_GIT_CACHE_SUBDIR = "git";
+export const DEFAULT_SHARED_GIT_PRUNE_DAYS = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Resolve env-only shared cache configuration. Default off: no cache dir means
@@ -355,6 +362,180 @@ export function sharedGitCacheClean(
       `shared git cache clean: removed ${names.length} mirrors from ${gitDir}; ` +
       "apm_modules untouched",
   };
+}
+
+/**
+ * Remove shared git mirrors whose last modification/access time is older than
+ * `days` (default 30). Shared-cache-only: project `apm_modules` is owned by
+ * `runPrune` / `cacheClean` and is never touched here.
+ *
+ * Safety and failure semantics:
+ * - symlinked entries are skipped (never followed or deleted);
+ * - deletion is per mirror, so one failure does not stop the sweep;
+ * - `pruned` counts only successful deletions, `failed` counts errors;
+ * - `ok` is false when any deletion failed (or input is invalid);
+ * - missing `BAPM_CACHE_DIR` is an informational, successful no-op.
+ */
+export function pruneSharedCache(
+  options: SharedGitCachePruneOptions = {},
+): SharedGitCachePruneResult {
+  const config = resolveSharedGitCacheConfig(options);
+  const days = options.days ?? DEFAULT_SHARED_GIT_PRUNE_DAYS;
+  const dryRun = options.dryRun === true;
+  const yes = options.yes === true || options.y === true;
+  const requireYes = options.requireYes === true;
+  const base = {
+    enabled: config.enabled,
+    reason: config.reason,
+    cacheDir: config.cacheDir,
+    gitDir: config.gitDir,
+    root: config.gitDir,
+    days,
+    dryRun,
+    candidates: [] as string[],
+    candidateDetails: [] as SharedGitCachePruneCandidate[],
+    pruned: 0,
+    failed: 0,
+    failures: [] as SharedGitCachePruneFailure[],
+  };
+
+  if (!Number.isInteger(days) || days < 0) {
+    return {
+      ...base,
+      ok: false,
+      refused: true,
+      message:
+        `shared git cache prune refused: --days must be a nonnegative integer ` +
+        `(got ${String(options.days)}); nothing was deleted`,
+    };
+  }
+
+  if (!config.gitDir) {
+    return {
+      ...base,
+      ok: true,
+      message:
+        "shared cache not configured: set BAPM_CACHE_DIR to enable the shared git cache; " +
+        "project apm_modules is handled by bapm prune",
+    };
+  }
+
+  const root = config.gitDir;
+  if (!existsSync(root) || !statSync(root).isDirectory()) {
+    return {
+      ...base,
+      ok: true,
+      message:
+        `shared git cache prune: ${root} absent/empty; nothing to prune ` +
+        "(apm_modules untouched)",
+    };
+  }
+
+  const now = Date.now();
+  const cutoff = now - days * DAY_MS;
+  const details: SharedGitCachePruneCandidate[] = [];
+  for (const name of readdirSync(root)) {
+    if (name === "." || name === "..") continue;
+    const path = join(root, name);
+    let st: ReturnType<typeof lstatSync>;
+    try {
+      st = lstatSync(path);
+    } catch {
+      // Concurrent delete or unreadable entry: not a candidate.
+      continue;
+    }
+    // A mirror is always a real directory. Never follow a symlink (it could
+    // point outside the cache root) and never treat plain files as mirrors.
+    if (st.isSymbolicLink() || !st.isDirectory()) continue;
+    const lastUsedMs = Math.max(st.mtimeMs, st.atimeMs);
+    // `--days 0` means every existing mirror is eligible, including one whose
+    // timestamp lands in the same millisecond as this invocation.
+    if (days !== 0 && lastUsedMs >= cutoff) continue;
+    details.push({
+      name,
+      path,
+      ageDays: Math.max(0, Math.floor((now - lastUsedMs) / DAY_MS)),
+      lastUsedMs,
+    });
+  }
+  details.sort((a, b) => a.name.localeCompare(b.name));
+
+  const candidates = details.map((entry) => entry.name);
+  const withCandidates = { ...base, candidates, candidateDetails: details };
+
+  if (details.length === 0) {
+    return {
+      ...withCandidates,
+      ok: true,
+      message:
+        `shared git cache prune: no mirrors older than ${days} day(s) in ${root} ` +
+        "(apm_modules untouched)",
+    };
+  }
+
+  if (dryRun) {
+    return {
+      ...withCandidates,
+      ok: true,
+      message:
+        `shared git cache prune dry-run: would prune ${details.length} mirror(s) ` +
+        `older than ${days} day(s) from ${root} (${candidates.join(", ")}); ` +
+        "apm_modules untouched",
+    };
+  }
+
+  if (!yes && requireYes) {
+    return {
+      ...withCandidates,
+      ok: false,
+      refused: true,
+      message:
+        `shared git cache prune refused: require -y / --yes to delete mirrors at ${root}; ` +
+        "apm_modules is never removed by this command",
+    };
+  }
+
+  let pruned = 0;
+  const failures: SharedGitCachePruneFailure[] = [];
+  for (const entry of details) {
+    try {
+      // Re-check right before mutation to avoid following a swapped symlink.
+      const st = lstatSync(entry.path);
+      if (st.isSymbolicLink() || !st.isDirectory()) continue;
+      if (!isDescendantPath(root, entry.path)) continue;
+      rmSync(entry.path, { recursive: true, force: true });
+      pruned += 1;
+    } catch (error) {
+      failures.push({
+        name: entry.name,
+        path: entry.path,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  const failedNames = failures.map((failure) => failure.name);
+  const summary =
+    failures.length === 0
+      ? `shared git cache prune: pruned ${pruned} of ${details.length} mirror(s) ` +
+        `older than ${days} day(s) from ${root}; apm_modules untouched`
+      : `shared git cache prune: pruned ${pruned} of ${details.length} mirror(s), ` +
+        `${failures.length} failed older than ${days} day(s) in ${root} ` +
+        `(failed: ${failedNames.join(", ")}); apm_modules untouched`;
+
+  return {
+    ...withCandidates,
+    ok: failures.length === 0,
+    pruned,
+    failed: failures.length,
+    failures,
+    message: summary,
+  };
+}
+
+function isDescendantPath(root: string, target: string): boolean {
+  const rel = relative(resolve(root), resolve(target));
+  return Boolean(rel) && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
 }
 
 async function isValidBareMirror(
