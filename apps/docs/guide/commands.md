@@ -56,6 +56,7 @@ bapm find .agents/skills/code-review/SKILL.md
 | `bapm compile`           | Собирает `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` из установленного                                         |
 | `bapm policy status`     | Показывает, какая политика действует в проекте                                                             |
 | `bapm approve <пакет>`   | Разрешает пакету ставить MCP-серверы (`--bin` / `--hook` — другие типы; только у вас)                      |
+| `bapm approve --all`     | Разрешает все pending dependency MCP/bin/hook у вас (`-y` в non-TTY; `--json` — только план)               |
 | `bapm approve --list`    | Показывает user-local grants из `~/.bapm/config.json` (`--json`)                                           |
 | `bapm approve --pending` | Показывает dependency MCP/bin/hook без allow/deny в project/user/org (только чтение, `--json`)             |
 | `bapm deny <пакет>`      | Запрещает и убирает MCP-серверы пакета из конфигов хостов (`--bin` / `--hook` — другие типы; только у вас) |
