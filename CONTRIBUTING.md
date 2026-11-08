@@ -53,6 +53,19 @@ node packages/cli/dist/cli.mjs --help
 
 OpenSpec: `/opsx-propose`, `/opsx-apply`, `/opsx-archive`.
 
+### Тесты и `HOME`
+
+`vp test` в `packages/core` и `packages/cli` подключает общий setup
+`tests/setup-home.ts`: перед каждым test-файлом создаётся временный `HOME`
+(`$TMPDIR/bapm-test-home-*`), а `HOME`, `USERPROFILE` и `XDG_CONFIG_HOME`
+переключаются на него. Поэтому suite не читает и не пишет реальный
+`~/.bapm/config.json` — например, `bapm approve` в вашей сессии не влияет на
+результат тестов.
+
+Пишите тесты, которым нужен user store, через `process.env.HOME` (или явный
+`configDir`); не полагайтесь на домашний каталог разработчика. Регрессия:
+`packages/core/tests/home-isolation.test.ts`.
+
 ## Конфигурация агентов
 
 Репозиторий использует bapm для собственных skills, субагентов и команд. Источник истины — `.apm/`:

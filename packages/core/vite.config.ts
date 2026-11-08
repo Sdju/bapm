@@ -11,6 +11,10 @@ export default defineConfig({
       "@": srcRoot,
     },
   },
+  test: {
+    // Every test file gets a throwaway HOME; see tests/setup-home.ts.
+    setupFiles: [resolve(pkgRoot, "../../tests/setup-home.ts")],
+  },
   pack: {
     dts: {
       tsgo: true,
