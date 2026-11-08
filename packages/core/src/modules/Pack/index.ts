@@ -44,6 +44,12 @@ export {
 export type { StrictMetadataIssue, ValidatePackStrictMetadataOptions } from "./strictMetadata.ts";
 
 export { runPack, packProject, packArchive } from "./runPack.ts";
+export {
+  buildClaudePluginBundle,
+  CLAUDE_NATIVE_MANIFEST_PATH,
+  CLAUDE_ROOT_MANIFEST_PATH,
+} from "./claudeBundle.ts";
+export type { BuildClaudePluginBundleOptions, ClaudePluginBundle } from "./claudeBundle.ts";
 export { extractPackArchive, unpackArchive, extractPack } from "./extract.ts";
 export {
   MAX_SAFE_ENTRIES,

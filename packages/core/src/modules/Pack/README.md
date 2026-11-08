@@ -13,12 +13,15 @@ Plain-zip producer archive for OpenAPM Producer (M7): pack, extract, sc-007 secr
 | `checkReleaseTag`, `checkRelease`, `runCheckRelease`              | pr-004 gate                   |
 | `validatePackStrictMetadata`, `validateMarketplaceStrictMetadata` | `--strict-metadata` preflight |
 | `assertPortableAgentPluginPackSet`                                | portable declared-path guard  |
+| `buildClaudePluginBundle`                                         | Claude plugin bundle builder  |
 | `isSecretPackPath`                                                | sc-007                        |
 | `PackError`, types                                                | errors / options              |
 
 ## Notes
 
-- Archive format is **plain zip** (not APM `--format plugin`).
+- Default archive format is **plain zip**. `--format claude-plugin` emits a Claude Code
+  plugin zip with `plugin.json` and `.claude-plugin/plugin.json` plus the preserved
+  plugin-native tree. APM authoring manifests/locks are omitted from that bundle.
 - `--agent-plugins`: portable `plugin.json` root; the pack set preserves `commands/`,
   `hooks/`, `agents/`, `skills/`, root `mcp.json`, native manifests, and sibling assets
   at their original relative paths. Declared paths are validated against the collected

@@ -7,7 +7,11 @@ export type RunPackOptions = {
   agentPlugins?: boolean;
   /** Produce a durable archive (MUST path for M7). */
   archive?: boolean;
-  /** Archive format; only `zip` is supported in M7. */
+  /**
+   * Bundle family. `zip` (default) is the M7 plain producer archive;
+   * `claude-plugin` emits a Claude Code plugin zip (`plugin.json` +
+   * `.claude-plugin/plugin.json` + preserved plugin-native tree).
+   */
   format?: string;
   /** Validate and collect without writing a durable artifact. */
   dryRun?: boolean;

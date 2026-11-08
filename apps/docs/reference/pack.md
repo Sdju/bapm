@@ -22,21 +22,22 @@ bapm pack [options]
 
 ## Параметры
 
-| Флаг                   | Значение                | Эффект                                                                                         | Default        |
-| ---------------------- | ----------------------- | ---------------------------------------------------------------------------------------------- | -------------- |
-| `--archive`            | —                       | Записать plain zip artifact. Без флагов и без `marketplace:` zip пишется и так                 | off            |
-| `--agent-plugins`      | —                       | Pack validated Agent Plugins v1 portable root; не эмитит marketplace; нужен root `plugin.json` | off            |
-| `--dry-run`            | —                       | Validate / collect без durable zip или marketplace.json                                        | off            |
-| `--check-release`      | —                       | Проверить, что версия в манифесте совпадает с git-тегом                                        | off            |
-| `--check-versions`     | —                       | Marketplace version alignment для local packages (`lockstep` / `tag_pattern` / `per_package`)  | off            |
-| `--check-clean`        | —                       | Read-only drift gate: regenerate selected `marketplace.json` и diff с on-disk; exit `4`        | off            |
-| `--strict-metadata`    | —                       | Проверить метаданные manifest / `plugin.json` / marketplace packages; exit `5`, без записи     | off            |
-| `--tag`                | `<name>`                | Tag под check (опционально с `--check-release`; иначе HEAD)                                    | HEAD           |
-| `--marketplace`, `-m`  | `all` \| `none` \| list | Фильтр host marketplace emit (`claude`, `codex`, `copilot`)                                    | all configured |
-| `--marketplace-path`   | `FORMAT=PATH`           | Override output path (повторяемый; путь под project root)                                      | —              |
-| `--offline`            | —                       | Fail closed, если remote package resolve нужен network                                         | off            |
-| `--include-prerelease` | —                       | Включать prerelease tags при resolve version ranges                                            | off            |
-| `--help`, `-h`         | —                       | Показать help                                                                                  | —              |
+| Флаг                   | Значение                 | Эффект                                                                                         | Default        |
+| ---------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- | -------------- |
+| `--archive`            | —                        | Записать plain zip artifact. Без флагов и без `marketplace:` zip пишется и так                 | off            |
+| `--agent-plugins`      | —                        | Pack validated Agent Plugins v1 portable root; не эмитит marketplace; нужен root `plugin.json` | off            |
+| `--format`             | `zip` \| `claude-plugin` | `zip` — обычный APM producer-архив (default); `claude-plugin` — Claude Code plugin bundle      | `zip`          |
+| `--dry-run`            | —                        | Validate / collect без durable zip или marketplace.json                                        | off            |
+| `--check-release`      | —                        | Проверить, что версия в манифесте совпадает с git-тегом                                        | off            |
+| `--check-versions`     | —                        | Marketplace version alignment для local packages (`lockstep` / `tag_pattern` / `per_package`)  | off            |
+| `--check-clean`        | —                        | Read-only drift gate: regenerate selected `marketplace.json` и diff с on-disk; exit `4`        | off            |
+| `--strict-metadata`    | —                        | Проверить метаданные manifest / `plugin.json` / marketplace packages; exit `5`, без записи     | off            |
+| `--tag`                | `<name>`                 | Tag под check (опционально с `--check-release`; иначе HEAD)                                    | HEAD           |
+| `--marketplace`, `-m`  | `all` \| `none` \| list  | Фильтр host marketplace emit (`claude`, `codex`, `copilot`)                                    | all configured |
+| `--marketplace-path`   | `FORMAT=PATH`            | Override output path (повторяемый; путь под project root)                                      | —              |
+| `--offline`            | —                        | Fail closed, если remote package resolve нужен network                                         | off            |
+| `--include-prerelease` | —                        | Включать prerelease tags при resolve version ranges                                            | off            |
+| `--help`, `-h`         | —                        | Показать help                                                                                  | —              |
 
 ## Замечания
 
@@ -74,6 +75,28 @@ APM использует exit `5`, когда не может подтверди
 Пути в `plugin.json` не переписываются: архив сохраняет исходную раскладку, поэтому consumer находит declared paths после распаковки.
 
 Producer проверяет declared `commands` / `hooks` / `skills` до записи zip. Отсутствующий путь, path traversal, symlink или путь, вырезанный `.bapmignore` / hard-exclude-правилами, дают non-zero exit и не оставляют архив. `.bapmignore` можно использовать для authoring-файлов (`README.md`, `docs/**`), но не для компонентов, которые объявлены в `plugin.json`.
+
+### `--format claude-plugin`: Claude Code plugin bundle
+
+`bapm pack --format claude-plugin` собирает zip в раскладке, которую понимает Claude Code:
+
+```text
+plugin.json                 # manifest для APM/bapm-совместимых consumer'ов
+.claude-plugin/plugin.json  # нативный Claude Code manifest (тот же JSON)
+commands/
+agents/
+skills/
+hooks/                      # hooks/*.json и скрипты рядом с ними
+assets/                     # sibling assets, если они есть в пакете
+```
+
+Источник manifest'а выбирается так: корневой `plugin.json`, затем `.claude-plugin/plugin.json`, иначе manifest синтезируется из `bapm.yml` / `apm.yml` (`name`, `version`, `description`, `author`, `license`, `homepage`, `repository`, `keywords`). Полученный manifest записывается в оба пути, поэтому bundle работает и как Claude plugin, и как plugin-пакет для остальных consumer'ов.
+
+Дерево пакета сохраняется по относительным путям: `commands/`, `agents/`, `skills/<name>/` вместе с вспомогательными файлами, `hooks/` вместе со скриптами и sibling assets. Пути в manifest'е не переписываются. Если в корне есть `hooks.json` и manifest не объявляет `hooks`, в manifest добавляется `"hooks": "./hooks.json"`.
+
+Перед записью zip проверяются declared `commands` / `hooks` / `agents` / `skills` (а также строковые path-формы `mcpServers`, `lspServers`, `monitors`). Отсутствующий путь, `..` / absolute traversal, symlink или путь, вырезанный `.bapmignore` / hard-exclude-правилами, дают non-zero exit и не оставляют архив. Голое имя skill (`"hello"`) резолвится в `skills/hello`. Корневые `bapm.yml` / `apm.yml` и lock-файлы в Claude bundle не попадают.
+
+APM при `--format claude-plugin` по умолчанию пишет каталог `{name}-{version}/`, а с `--archive` — zip. bapm pack всегда пишет один zip-артефакт (как и его default pack); каталог можно получить обычной распаковкой.
 
 ### Пример `.bapmignore`
 

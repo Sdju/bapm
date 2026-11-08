@@ -58,6 +58,18 @@ bapm pack --agent-plugins
 
 Архив сохраняет portable-раскладку целиком: `plugin.json`, `mcp.json`, объявленные `commands` и `hooks`, `skills/` с вспомогательными файлами, `agents/`, нативные manifest-файлы и скрипты рядом с хуками. Пути в `plugin.json` не переписываются. Перед записью zip bapm проверяет declared `commands` / `hooks` / `skills`: отсутствующий путь, traversal, symlink или путь, исключённый `.bapmignore`, дают ошибку и не создают архив. `.bapmignore` подходит для authoring-файлов, но не для объявленных компонентов плагина.
 
+## Claude Code plugin bundle
+
+```bash
+bapm pack --format claude-plugin
+```
+
+Собирает zip в нативной раскладке Claude Code: `plugin.json` в корне и `.claude-plugin/plugin.json` с тем же manifest'ом, плюс `commands/`, `agents/`, `skills/`, `hooks/` и sibling assets по исходным относительным путям. `plugin.json` берётся из корня, затем из `.claude-plugin/plugin.json`; если его нет, manifest синтезируется из `bapm.yml` / `apm.yml`.
+
+Перед записью zip проверяются declared `commands` / `hooks` / `agents` / `skills`: отсутствующий путь, traversal, symlink или путь, исключённый `.bapmignore`, дают ошибку и не создают архив. Голое имя skill (`"hello"`) резолвится в `skills/hello`. Корневые `bapm.yml` / `apm.yml` и lock-файлы в Claude bundle не попадают.
+
+APM умеет писать для `claude-plugin` каталог и zip (`--archive`); bapm pack всегда пишет один zip, как и в default-режиме. Это осознанное упрощение: распакуйте zip, если нужен каталог.
+
 ## Ограничения
 
 - Нет изоляции: хуки и MCP плагина исполняются с вашими правами.

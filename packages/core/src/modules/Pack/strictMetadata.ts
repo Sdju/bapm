@@ -31,6 +31,8 @@ export type ValidatePackStrictMetadataOptions = {
   cwd?: string;
   /** Agent Plugins v1 portable root: validate only root `plugin.json`. */
   agentPlugins?: boolean;
+  /** Claude plugin bundle: validate plugin.json (root/native) or the source manifest. */
+  pluginOnly?: boolean;
 };
 
 /**
@@ -55,6 +57,16 @@ export function validatePackStrictMetadata(options: ValidatePackStrictMetadataOp
       issues.push({ path: "plugin.json", message: "is required for Agent Plugins pack" });
     } else {
       inspectPluginJson(pluginJsonPath, "plugin.json", { agentPlugins: true }, issues);
+    }
+  } else if (options.pluginOnly === true) {
+    const pluginJson = PLUGIN_JSON_LOCATIONS.map((relativePath) => ({
+      relativePath,
+      path: join(cwd, relativePath),
+    })).find((candidate) => isRegularFile(candidate.path));
+    if (!pluginJson) {
+      inspectManifest(cwd, issues);
+    } else {
+      inspectPluginJson(pluginJson.path, pluginJson.relativePath, { agentPlugins: false }, issues);
     }
   } else {
     inspectManifest(cwd, issues);
