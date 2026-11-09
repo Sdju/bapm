@@ -36,6 +36,70 @@ export type {
 
 export { createIntegrationRegistry, createMarketplaceOutputRegistry } from "./registry.ts";
 
+export type { CompilePrimitivesMarkdownOptions, InstructionCompileMode } from "./compile.ts";
+export { compilePrimitivesMarkdown } from "./compile.ts";
+
+export type { ReadJsonDocumentOptions } from "./config.ts";
+export { readJsonDocument, stripJsonc, writeJsonDocument } from "./config.ts";
+
+export type { FrontmatterField, ParsedFrontmatter } from "./frontmatter.ts";
+export { frontmatterList, parseFrontmatter, renderFrontmatter } from "./frontmatter.ts";
+
+export type {
+  HookDeploymentMode,
+  HookScriptDestinationArgs,
+  HookSourceReadResult,
+  MaterializeDiagnostic,
+  MergeHookDeploymentArgs,
+  MergeHookDeploymentResult,
+  ReadHookSourceOptions,
+} from "./hooks.ts";
+export { mergeHookDeployment, normalizeHookEventName, readHookSource } from "./hooks.ts";
+
+export type {
+  EnvReferenceStyle,
+  MergeMcpServersArgs,
+  MergeMcpServersResult,
+  SkipMcpWhenDirMissingArgs,
+} from "./mcp.ts";
+export {
+  extractEnvReference,
+  hasEnvReference,
+  mergeMcpServers,
+  normalizeNamedEntries,
+  skipMcpWhenDirMissing,
+  translateEnvMap,
+  translateEnvReferences,
+} from "./mcp.ts";
+
+export type {
+  CreateMaterializeRunArgs,
+  MaterializeRun,
+  SkillsOnlyHandlersArgs,
+  UnsupportedPrimitiveArgs,
+} from "./materialize.ts";
+export {
+  createMaterializeRun,
+  skillsOnlyHandlers,
+  unsupportedPrimitiveDiagnostic,
+} from "./materialize.ts";
+
+export type { IntegrationCapabilities } from "./capabilities.ts";
+export { resolveIntegrationCapabilities } from "./capabilities.ts";
+
+export type { MergeLspServersArgs, MergeLspServersResult } from "./mcp.ts";
+export { mergeLspServers } from "./mcp.ts";
+
+export { primitivePackageKey, safeHookSlug } from "./naming.ts";
+
+export {
+  detectAnyPath,
+  hasDeployRoot,
+  requireDeployRoots,
+  resolveEnvHome,
+  resolveXdgConfigHome,
+} from "./paths.ts";
+
 export {
   BUILD_ID_LINE_PATTERN,
   BUILD_ID_PLACEHOLDER,

@@ -8,11 +8,9 @@
  * Compile: agents family → project-root `AGENTS.md`.
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import type {
-  AttributedPrimitive,
   BapmIntegration,
   CompileReport,
   ConfigureMcpContext,
@@ -21,11 +19,13 @@ import type {
   McpServerConfig,
 } from "@b-apm/integration-api";
 import {
-  compileMarkdownReport,
-  materializeSkill,
-  primitivesList,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
+  mergeMcpServers,
+  normalizeNamedEntries,
   primitivesMaterialize,
-  renderPrimitivesMarkdown,
+  resolveEnvHome,
+  skillsOnlyHandlers,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".agents"] as const;
@@ -41,10 +41,7 @@ export type HermesPathOptions = {
 
 /** Resolve the Hermes home directory, honoring `$HERMES_HOME` like APM. */
 export function resolveHermesHome(options: HermesPathOptions = {}): string {
-  const env = options.env ?? process.env;
-  const home = options.home ?? homedir();
-  const configured = env.HERMES_HOME?.trim();
-  return resolve(configured || join(home, ".hermes"));
+  return resolveEnvHome("HERMES_HOME", [".hermes"], options);
 }
 
 export function createHermesIntegration(options?: {
@@ -65,71 +62,39 @@ export function createHermesIntegration(options?: {
     detect: () => false,
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# AGENTS.md",
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? "AGENTS.md",
-        write: context.write,
-        content,
+        defaultOutput: "AGENTS.md",
         requireBasename: "AGENTS.md",
         outsideCwdMessage: "Hermes compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".agents" || r.startsWith(".agents/"))) {
-        throw new Error("hermes target missing .agents deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
-
-      const skipNonSkill = (p: AttributedPrimitive, kind: string) => {
-        diagnostics.push({
-          code: "HERMES_PRIMITIVE_UNSUPPORTED",
-          message: `hermes deploys skills directly; skipped ${kind} primitive: "${p.name}" (use compile for instructions)`,
-          primitive: String(p.name),
-          kind,
-        });
-      };
-
-      await primitivesMaterialize(primitives, {
-        skill(p, { name }) {
-          deployedFiles.push(
-            ...materializeSkill({
-              primitive: p,
-              cwd,
-              deployRoots: roots,
-              destDir: join(".agents", "skills", name),
-            }),
-          );
-        },
-        instruction(p) {
-          skipNonSkill(p, "instruction");
-        },
-        agent(p) {
-          skipNonSkill(p, "agent");
-        },
-        command(p) {
-          skipNonSkill(p, "command");
-        },
-        hook(p) {
-          skipNonSkill(p, "hook");
-        },
-        unknown(p, { type }) {
-          skipNonSkill(p, type || "unknown");
-        },
-      });
-
-      return {
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
         targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+        requiredRoots: [".agents"],
+        label: "hermes",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
+
+      await primitivesMaterialize(
+        primitives,
+        skillsOnlyHandlers({
+          cwd,
+          deployRoots: roots,
+          destDir: ".agents/skills",
+          code: "HERMES_PRIMITIVE_UNSUPPORTED",
+          label: "hermes",
+          deployedFiles,
+          diagnostics,
+          instructionsHint: "use compile for instructions",
+        }),
+      );
+
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeHermesMcpConfig(servers, {
@@ -148,21 +113,23 @@ function writeHermesMcpConfig(
 ): ConfigureMcpReport {
   const configPath = ctx.configPath ?? join(resolveHermesHome(), "config.yaml");
   const document = readHermesDocument(configPath);
-  const currentServers =
-    document[MCP_SERVERS_KEY] && typeof document[MCP_SERVERS_KEY] === "object"
-      ? { ...(document[MCP_SERVERS_KEY] as Record<string, JsonObject>) }
-      : {};
 
   const incoming = normalizeServerEntries(servers);
-  const nextServers: Record<string, JsonObject> = { ...currentServers };
-  pruneManagedServers(nextServers, Object.keys(incoming), ctx.managedServers);
-
+  const mapped: Record<string, Record<string, unknown>> = {};
   for (const [name, entry] of Object.entries(incoming)) {
-    nextServers[name] = toHermesServerEntry(entry);
+    mapped[name] = toHermesServerEntry(entry);
   }
 
+  const merged = mergeMcpServers({
+    document,
+    key: MCP_SERVERS_KEY,
+    incoming: mapped,
+    managedServers: ctx.managedServers,
+    merge: "replace",
+  });
+  const nextDocument = merged.document as JsonObject;
+
   mkdirSync(dirname(configPath), { recursive: true });
-  const nextDocument: JsonObject = { ...document, [MCP_SERVERS_KEY]: nextServers };
   writeFileSync(configPath, stringifyYaml(nextDocument, { lineWidth: 0 }), {
     encoding: "utf8",
     mode: CONFIG_FILE_MODE,
@@ -177,7 +144,7 @@ function writeHermesMcpConfig(
   return {
     targetId: ctx.targetId,
     configPath,
-    servers: Object.keys(incoming),
+    servers: merged.servers,
     deployedFiles: [],
   };
 }
@@ -226,16 +193,8 @@ function readHermesDocument(path: string): JsonObject {
 function normalizeServerEntries(
   servers: McpServerConfig[] | Record<string, McpServerConfig>,
 ): Record<string, McpServerConfig> {
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({ ...value, name: value.name ?? name }));
-
   const out: Record<string, McpServerConfig> = {};
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
-    out[name] = server;
-  }
+  for (const server of normalizeNamedEntries(servers)) out[server.name] = server;
   return out;
 }
 
@@ -270,19 +229,4 @@ function toHermesServerEntry(server: McpServerConfig): JsonObject {
   }
   entry.enabled = true;
   return entry;
-}
-
-function pruneManagedServers(
-  servers: Record<string, JsonObject>,
-  incomingNames: Iterable<string>,
-  managedServers: readonly string[] | undefined,
-): string[] {
-  const keep = new Set(incomingNames);
-  const removed: string[] = [];
-  for (const name of managedServers ?? []) {
-    if (keep.has(name) || !(name in servers)) continue;
-    delete servers[name];
-    removed.push(name);
-  }
-  return removed;
 }

@@ -10,17 +10,16 @@
  * Compile: project-root `AGENTS.md` (agents compile family).
  */
 import { existsSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import type { BapmIntegration, CompileReport, MaterializeReport } from "@b-apm/integration-api";
 import {
   SHARED_COMMAND_FRONTMATTER_KEYS,
-  compileMarkdownReport,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
   filterFrontmatterKeys,
   materializeSkill,
-  primitivesList,
   primitivesMaterialize,
   readPrimitiveContent,
-  renderPrimitivesMarkdown,
   writeDeployedFile,
 } from "@b-apm/integration-api";
 
@@ -42,28 +41,23 @@ export function createGrokBuildIntegration(options?: {
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# AGENTS.md",
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? "AGENTS.md",
-        write: context.write,
-        content,
+        defaultOutput: "AGENTS.md",
         requireBasename: "AGENTS.md",
         outsideCwdMessage: "Grok Build compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".grok" || r.startsWith(".grok"))) {
-        throw new Error("grok-build target missing .grok deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".grok"],
+        label: "grok-build",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
 
       await primitivesMaterialize(primitives, {
         skill(p, { name }) {
@@ -141,11 +135,7 @@ export function createGrokBuildIntegration(options?: {
         },
       });
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
   };
 }

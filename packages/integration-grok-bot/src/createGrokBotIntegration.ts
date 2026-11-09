@@ -8,13 +8,12 @@
  * No MCP and no compile (APM grok-bot capability has neither).
  * bapm is project-scope only, so only the project `agent-data/` root applies.
  */
-import { join, resolve } from "node:path";
-import type {
-  AttributedPrimitive,
-  BapmIntegration,
-  MaterializeReport,
+import type { BapmIntegration, MaterializeReport } from "@b-apm/integration-api";
+import {
+  createMaterializeRun,
+  primitivesMaterialize,
+  skillsOnlyHandlers,
 } from "@b-apm/integration-api";
-import { materializeSkill, primitivesMaterialize } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = ["agent-data"] as const;
 
@@ -31,57 +30,30 @@ export function createGrokBotIntegration(options?: {
     detect: () => false,
     getDeployRoots: () => [...deployRoots],
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === "agent-data" || r.startsWith("agent-data/"))) {
-        throw new Error("grok-bot target missing agent-data deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
-
-      const skipNonSkill = (p: AttributedPrimitive, kind: string) => {
-        diagnostics.push({
-          code: "GROK_BOT_PRIMITIVE_UNSUPPORTED",
-          message: `grok-bot supports skills only; skipped ${kind} primitive: "${p.name}"`,
-          primitive: String(p.name),
-          kind,
-        });
-      };
-
-      await primitivesMaterialize(primitives, {
-        skill(p, { name }) {
-          deployedFiles.push(
-            ...materializeSkill({
-              primitive: p,
-              cwd,
-              deployRoots: roots,
-              destDir: join("agent-data", "workflows", name),
-            }),
-          );
-        },
-        instruction(p) {
-          skipNonSkill(p, "instruction");
-        },
-        agent(p) {
-          skipNonSkill(p, "agent");
-        },
-        command(p) {
-          skipNonSkill(p, "command");
-        },
-        hook(p) {
-          skipNonSkill(p, "hook");
-        },
-        unknown(p, { type }) {
-          skipNonSkill(p, type || "unknown");
-        },
-      });
-
-      return {
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
         targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+        requiredRoots: ["agent-data"],
+        label: "grok-bot",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
+
+      await primitivesMaterialize(
+        primitives,
+        skillsOnlyHandlers({
+          cwd,
+          deployRoots: roots,
+          destDir: "agent-data/workflows",
+          code: "GROK_BOT_PRIMITIVE_UNSUPPORTED",
+          label: "grok-bot",
+          deployedFiles,
+          diagnostics,
+        }),
+      );
+
+      return run.report();
     },
   };
 }
