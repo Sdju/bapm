@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-grok-bot",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Grok Bot skills (agent-data/workflows) integration for bapm",
   "keywords": [
     "b-apm",

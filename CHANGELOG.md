@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-11-09
+
+### Fixed
+
+- Install warns when a dependency `skills:` subset names skills the package does not have. Unknown names no longer disappear silently: a total miss emits `EMPTY_SKILL_SUBSET`, leftover names next to matches emit `SKILL_SUBSET_UNMATCHED`, both as `bapm: warning:` on stderr. Install still exits 0 (req-mf-022).
+
 ## 0.3.0 — 2026-11-09
 
 Первый minor после 0.2.1: паритет с microsoft/apm 0.35, новые хосты, global scope и усиление trust.

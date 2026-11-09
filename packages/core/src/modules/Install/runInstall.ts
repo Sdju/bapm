@@ -2797,6 +2797,7 @@ function filterByIntersection(
 /**
  * Filter skill primitives by per-dep `skillSubset` (req-mf-022 empty-match warn).
  * Non-skill primitives are never dropped solely because a skill subset is set.
+ * Unknown requested names warn even when some other names still match.
  */
 function applySkillSubsets(
   primitives: AttributedPrimitive[],
@@ -2813,7 +2814,7 @@ function applySkillSubsets(
 
   const out: AttributedPrimitive[] = [];
   const keptSkillsByPkg = new Map<string, string[]>();
-  const availableSkillsByPkg = new Map<string, string[]>();
+  const availableSkillsByPkg = new Map<string, AttributedPrimitive[]>();
 
   for (const p of primitives) {
     const pkgName = p.packageName ?? (p.source.startsWith("dependency:") ? p.source.slice(11) : "");
@@ -2827,7 +2828,7 @@ function applySkillSubsets(
       continue;
     }
     const avail = availableSkillsByPkg.get(pkgName) ?? [];
-    avail.push(p.name);
+    avail.push(p);
     availableSkillsByPkg.set(pkgName, avail);
     if (skillMatchesSubset(p, subset)) {
       out.push(p);
@@ -2839,19 +2840,28 @@ function applySkillSubsets(
 
   for (const [pkgName, subset] of subsetByPkg) {
     const kept = keptSkillsByPkg.get(pkgName) ?? [];
-    if (kept.length > 0) continue;
-    const available = availableSkillsByPkg.get(pkgName) ?? [];
+    const availablePrimitives = availableSkillsByPkg.get(pkgName) ?? [];
+    const available = availablePrimitives.map((p) => p.name);
+    const unmatched = subset.filter(
+      (name) => !availablePrimitives.some((p) => skillMatchesSubset(p, [name])),
+    );
+    if (unmatched.length === 0) continue;
     const node = nodes.find((n) => n.name === pkgName);
     const depLabel =
       node?.repo_url ??
       (typeof node?.identity === "string" ? node.identity : undefined) ??
       (node?.kind.startsWith("git") ? `git:${pkgName}` : pkgName);
+    const empty = kept.length === 0;
     diagnostics.push({
-      code: "EMPTY_SKILL_SUBSET",
-      message: `Skill subset matched zero skills for ${depLabel}: requested [${subset.join(", ")}]; available [${available.join(", ") || "(none)"}]`,
+      code: empty ? "EMPTY_SKILL_SUBSET" : "SKILL_SUBSET_UNMATCHED",
+      warn: true,
+      message: empty
+        ? `Skill subset matched zero skills for ${depLabel}: requested [${subset.join(", ")}]; available [${available.join(", ") || "(none)"}]`
+        : `Skill subset dropped unknown names for ${depLabel}: unmatched [${unmatched.join(", ")}]; requested [${subset.join(", ")}]; available [${available.join(", ") || "(none)"}]`,
       dependency: depLabel,
       packageName: pkgName,
       requested: subset,
+      unmatched,
       available,
     });
   }

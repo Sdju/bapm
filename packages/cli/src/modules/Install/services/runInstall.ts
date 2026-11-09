@@ -805,6 +805,7 @@ function isWarningDiagnostic(rec: Record<string, unknown>, code: string): boolea
     /_UNSUPPORTED(?:$|_)/.test(normalized) ||
     /MCP_DIR_/.test(normalized) ||
     /_MCP_SKIP_NO_.*_DIR$/.test(normalized) ||
-    /_SKIP_/.test(normalized)
+    /_SKIP_/.test(normalized) ||
+    /SKILL_SUBSET/.test(normalized)
   );
 }
