@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-gemini",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Gemini CLI runtime integration for bapm",
   "keywords": [
     "b-apm",

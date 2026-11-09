@@ -1,6 +1,6 @@
 {
   "name": "@b-apm/integration-antigravity",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Antigravity CLI (agy) runtime integration for bapm",
   "keywords": [
     "b-apm",
