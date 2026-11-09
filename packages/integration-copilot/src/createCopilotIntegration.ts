@@ -1,5 +1,4 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
@@ -16,19 +15,27 @@ import type {
 } from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
-  compileMarkdownReport,
+  compilePrimitivesMarkdown,
   copyHookScript,
+  createMaterializeRun,
   materializeSkill,
-  primitivesList,
+  mergeLspServers,
+  mergeMcpServers,
+  normalizeHookEventName,
+  normalizeNamedEntries,
+  primitivePackageKey,
   primitivesMaterialize,
-  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
+  readHookSource,
+  readJsonDocument,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
-  renderPrimitivesMarkdown,
+  resolveEnvHome,
   sanitizeName,
+  translateEnvMap,
   writeDeployedFile,
   writeHookOwnershipSidecar,
+  writeJsonDocument,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".github", ".agents"] as const;
@@ -71,31 +78,27 @@ export function createCopilotIntegration(options?: {
     detect: ({ cwd }) => detectCopilot(cwd),
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# GitHub Copilot instructions",
-        filter: (p) =>
-          context.includeInstructions === true || !/instruction/i.test(String(p.type ?? "")),
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? COMPILE_DEFAULT,
-        write: context.write,
-        content,
+        defaultOutput: COMPILE_DEFAULT,
+        instructions: "omit",
         outsideCwdMessage: "Copilot compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
       const skipPackages = new Set(
         Array.isArray(ctx?.skipNativeRegisteredPackages)
           ? (ctx.skipNativeRegisteredPackages as unknown[]).map(String)
           : [],
       );
 
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
       const hookPrimitives: AttributedPrimitive[] = [];
 
       await primitivesMaterialize(primitives, {
@@ -155,11 +158,7 @@ export function createCopilotIntegration(options?: {
         diagnostics.push(...hookDeployed.diagnostics);
       }
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeCopilotMcpConfig(servers, {
@@ -208,9 +207,7 @@ function materializePromptLike(
 }
 
 function resolveCopilotHome(): string {
-  const override = process.env.COPILOT_HOME?.trim();
-  if (override) return resolve(override);
-  return join(homedir(), ".copilot");
+  return resolveEnvHome("COPILOT_HOME", [".copilot"]);
 }
 
 function writeCopilotMcpConfig(
@@ -221,49 +218,26 @@ function writeCopilotMcpConfig(
   mkdirSync(home, { recursive: true });
   const destFile = join(home, "mcp-config.json");
 
-  const existingDoc = readExistingMcpDoc(destFile);
-  const existingServers =
-    existingDoc.mcpServers && typeof existingDoc.mcpServers === "object"
-      ? { ...(existingDoc.mcpServers as Record<string, Record<string, unknown>>) }
-      : {};
+  const existingDoc = readJsonDocument({ path: destFile });
 
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
-  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
-  const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
-
-  for (const [name, entry] of Object.entries(incoming)) {
-    const prior = existingServers[name];
-    const merged = prior && typeof prior === "object" ? { ...prior, ...entry } : { ...entry };
-    delete merged.format;
-    delete merged.packageName;
-    delete merged.registry;
-    nextServers[name] = merged;
-    writtenNames.push(name);
-  }
-
-  const doc: Record<string, unknown> = { ...existingDoc, mcpServers: nextServers };
-  writeFileSync(destFile, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const merged = mergeMcpServers({
+    document: existingDoc,
+    key: "mcpServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    merge: "shallow",
+    stripKeys: ["format", "packageName", "registry"],
+  });
+  writeJsonDocument(destFile, merged.document);
 
   return {
     targetId: ctx.targetId,
     configPath: destFile,
-    servers: writtenNames,
+    servers: merged.servers,
     deployedFiles: [],
     diagnostics,
   };
-}
-
-function readExistingMcpDoc(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
-    return raw && typeof raw === "object" && !Array.isArray(raw)
-      ? { ...(raw as Record<string, unknown>) }
-      : {};
-  } catch {
-    return {};
-  }
 }
 
 /** Merge/write Copilot CLI's project `.github/lsp.json` config. */
@@ -274,29 +248,18 @@ function writeCopilotLspConfig(
   const destFile = join(ctx.cwd, LSP_JSON_REL);
   const rawExisting = existsSync(destFile) ? readFileSync(destFile, "utf8") : undefined;
   const existing = parseCopilotLspJson(rawExisting, LSP_JSON_REL);
-  const existingServers =
-    existing?.lspServers && typeof existing.lspServers === "object"
-      ? { ...(existing.lspServers as Record<string, Record<string, unknown>>) }
-      : {};
   const incoming = normalizeCopilotLspEntries(servers);
-  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
-  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
-
-  for (const [name, entry] of Object.entries(incoming)) {
-    const prior = existingServers[name];
-    const managed = ctx.managedServers?.includes(name) === true;
-    if (prior && !managed && JSON.stringify(prior) !== JSON.stringify(entry)) {
-      throw new Error(
-        `COPILOT_LSP_OWNERSHIP: LSP server '${name}' already exists in ${LSP_JSON_REL} ` +
-          "and is not managed by bapm; rename it or remove it",
-      );
-    }
-    nextServers[name] = entry;
-  }
-
-  const doc: Record<string, unknown> = { ...existing, lspServers: nextServers };
+  const merged = mergeLspServers({
+    document: existing ?? {},
+    key: "lspServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    ownershipLabel: "COPILOT_LSP_OWNERSHIP",
+    pathLabel: LSP_JSON_REL,
+  });
+  const doc = merged.document;
   const content = `${JSON.stringify(doc, null, 2)}\n`;
-  const writtenNames = Object.keys(incoming);
+  const writtenNames = merged.servers;
 
   if (rawExisting === undefined && writtenNames.length === 0) {
     return {
@@ -384,33 +347,11 @@ function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpS
 } {
   const out: Record<string, Record<string, unknown>> = {};
   const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({
-        ...value,
-        name: value.name ?? name,
-      }));
 
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
-    out[name] = toCopilotServerEntry(server);
+  for (const server of normalizeNamedEntries(servers)) {
+    out[server.name] = toCopilotServerEntry(server);
   }
   return { entries: out, diagnostics };
-}
-
-function translateEnvPlaceholders(env: Record<string, string>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [key, raw] of Object.entries(env)) {
-    if (typeof raw !== "string") {
-      out[key] = String(raw);
-      continue;
-    }
-    out[key] = raw
-      .replace(/\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}/g, "${$1}")
-      .replace(/<([A-Z_][A-Z0-9_]*)>/g, "${$1}");
-  }
-  return out;
 }
 
 function toCopilotServerEntry(server: McpServerConfig): Record<string, unknown> {
@@ -427,7 +368,7 @@ function toCopilotServerEntry(server: McpServerConfig): Record<string, unknown> 
   }
 
   if (server.env && typeof server.env === "object") {
-    entry.env = translateEnvPlaceholders(server.env);
+    entry.env = translateEnvMap(server.env, "dollar-bare");
   }
 
   for (const [key, value] of Object.entries(server)) {
@@ -456,30 +397,11 @@ function toCopilotServerEntry(server: McpServerConfig): Record<string, unknown> 
 
 /** Normalize hook event names to camelCase (`session_start` / `SessionStart` → `sessionStart`). */
 export function toCamelCaseEvent(event: string): string {
-  const trimmed = String(event ?? "").trim();
-  if (!trimmed) return trimmed;
-  if (trimmed.includes("_") || trimmed.includes("-")) {
-    const parts = trimmed.split(/[_-]+/).filter(Boolean);
-    return parts
-      .map((part, index) => {
-        const lower = part.toLowerCase();
-        if (index === 0) return lower;
-        return lower.charAt(0).toUpperCase() + lower.slice(1);
-      })
-      .join("");
-  }
-  return trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+  return normalizeHookEventName(event, "camel");
 }
 
 function packageKey(p: AttributedPrimitive): string {
-  if (typeof p.packageName === "string" && p.packageName.trim()) {
-    return sanitizeName(p.packageName);
-  }
-  const source = String(p.source ?? "");
-  if (source.startsWith("dependency:")) {
-    return sanitizeName(source.slice("dependency:".length));
-  }
-  return "local";
+  return primitivePackageKey(p);
 }
 
 function materializeCopilotHooks(args: {
@@ -510,37 +432,24 @@ function materializeCopilotHooks(args: {
     const hookAbs = join(cwd, hookRel);
     assertUnderDeployRoots(cwd, hookAbs, roots);
 
-    const srcPath = p.path ? resolve(p.path) : undefined;
-    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
-      diagnostics.push({
-        code: "COPILOT_HOOK_SOURCE_MISSING",
-        message: `Hook primitive "${p.name}" has no readable source JSON`,
-        primitive: String(p.name),
-      });
+    const source = readHookSource(p, {
+      missingCode: "COPILOT_HOOK_SOURCE_MISSING",
+      invalidCode: "COPILOT_HOOK_JSON_INVALID",
+    });
+    if (source.diagnostics.length > 0) {
+      diagnostics.push(...source.diagnostics);
       continue;
     }
-
-    let parsed: HookDoc;
-    try {
-      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as HookDoc;
-    } catch (cause) {
-      diagnostics.push({
-        code: "COPILOT_HOOK_JSON_INVALID",
-        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
+    const srcPath = resolve(p.path!);
+    const sourceHooks = source.hooks;
     const outHooks: Record<string, HookEntry[]> = {};
     const scripts: string[] = [];
 
     for (const [event, entries] of Object.entries(sourceHooks)) {
       if (!Array.isArray(entries)) continue;
-      const camel = toCamelCaseEvent(event);
+      const camel = normalizeHookEventName(event, "camel");
       const destList: HookEntry[] = [];
-      for (const entry of entries) {
+      for (const entry of entries as HookEntry[]) {
         if (!entry || typeof entry !== "object") continue;
         const command = typeof entry.command === "string" ? entry.command.trim() : "";
         const { _apm_source: _drop, ...clean } = entry as HookEntry & { _apm_source?: unknown };
@@ -571,7 +480,7 @@ function materializeCopilotHooks(args: {
     }
 
     const doc: HookDoc = { hooks: outHooks };
-    writeFileSync(hookAbs, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+    writeJsonDocument(hookAbs, doc);
     deployedFiles.push({
       path: hookRel,
       primitive: { name: String(p.name), packageName: p.packageName },

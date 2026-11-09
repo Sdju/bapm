@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import type {
   AttributedPrimitive,
@@ -12,19 +12,27 @@ import type {
 } from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
-  compileMarkdownReport,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
   findPackageRoot,
+  frontmatterList,
   materializeSkill,
-  primitivesList,
+  mergeMcpServers,
+  normalizeHookEventName,
+  normalizeNamedEntries,
+  parseFrontmatter,
   primitivesMaterialize,
-  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
+  readHookSource,
+  readJsonDocument,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
-  renderPrimitivesMarkdown,
+  renderFrontmatter,
   sanitizeName,
+  skipMcpWhenDirMissing,
   writeDeployedFile,
   writeHookOwnershipSidecar,
+  writeJsonDocument,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".agents", "."] as const;
@@ -57,29 +65,23 @@ export function createAntigravityIntegration(options?: {
     detect: () => false,
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# AGENTS.md",
-        filter: (p) =>
-          context.includeInstructions === true || !/instruction/i.test(String(p.type ?? "")),
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? "AGENTS.md",
-        write: context.write,
-        content,
+        defaultOutput: "AGENTS.md",
+        instructions: "omit",
         outsideCwdMessage: "Antigravity compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".agents" || r.startsWith(".agents"))) {
-        throw new Error("antigravity target missing .agents deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".agents"],
+        label: "antigravity",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
       const hookPrimitives: AttributedPrimitive[] = [];
 
       await primitivesMaterialize(primitives, {
@@ -135,11 +137,7 @@ export function createAntigravityIntegration(options?: {
         diagnostics.push(...hookDeployed.diagnostics);
       }
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeAntigravityMcpConfig(servers, {
@@ -156,59 +154,18 @@ export function createAntigravityIntegration(options?: {
  * Map portable `applyTo` frontmatter to Antigravity `trigger: glob` + `globs`.
  */
 export function transformAntigravityRulesMarkdown(source: string): string {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) return source;
+  const parsed = parseFrontmatter(source);
+  if (!parsed.hasFrontmatter) return source;
 
-  const rawFm = match[1] ?? "";
-  const body = match[2] ?? "";
-  const lines = rawFm.split(/\r?\n/);
-  const kept: string[] = [];
+  const kept: string[] = [...parsed.prelude];
   const globs: string[] = [];
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i]!;
-    const keyMatch = line.match(/^([A-Za-z0-9_-]+)\s*:(.*)$/);
-    if (!keyMatch) {
-      if (line.trim()) kept.push(line);
-      i += 1;
+  for (const field of parsed.fields) {
+    if (field.key === "trigger") continue;
+    if (field.key === "applyTo" || field.key === "globs") {
+      globs.push(...frontmatterList(field, { splitScalarCommas: true }));
       continue;
     }
-    const key = keyMatch[1]!;
-    const rest = keyMatch[2] ?? "";
-    if (key === "applyTo" || key === "globs" || key === "trigger") {
-      if (key === "trigger") {
-        i += 1;
-        continue;
-      }
-      const inline = rest.trim();
-      if (inline.startsWith("[") && inline.endsWith("]")) {
-        for (const part of inline.slice(1, -1).split(",")) {
-          const v = part.trim().replace(/^["']|["']$/g, "");
-          if (v) globs.push(v);
-        }
-        i += 1;
-        continue;
-      }
-      if (inline && inline !== "|" && inline !== ">") {
-        for (const part of inline.replace(/^["']|["']$/g, "").split(",")) {
-          const v = part.trim().replace(/^["']|["']$/g, "");
-          if (v) globs.push(v);
-        }
-        i += 1;
-        continue;
-      }
-      i += 1;
-      while (i < lines.length) {
-        const item = lines[i]!;
-        const listMatch = item.match(/^[ \t]*-[ \t]*(.+)$/);
-        if (!listMatch) break;
-        globs.push(listMatch[1]!.trim().replace(/^["']|["']$/g, ""));
-        i += 1;
-      }
-      continue;
-    }
-    kept.push(line);
-    i += 1;
+    kept.push(...field.lines);
   }
 
   const fmLines = [...kept];
@@ -224,8 +181,7 @@ export function transformAntigravityRulesMarkdown(source: string): string {
     }
   }
 
-  if (fmLines.length === 0) return body.replace(/\s+$/, "\n") || body;
-  return `---\n${fmLines.join("\n")}\n---\n${body}`.replace(/\s+$/, "\n");
+  return renderFrontmatter(fmLines, parsed.body);
 }
 
 function writeAntigravityMcpConfig(
@@ -233,25 +189,15 @@ function writeAntigravityMcpConfig(
   ctx: ConfigureMcpContext & { cwd: string; deployRoots: string[] },
 ): ConfigureMcpReport {
   const { cwd, deployRoots } = ctx;
-  const agentsDir = join(cwd, ".agents");
-  if (!existsSync(agentsDir) || !statSync(agentsDir).isDirectory()) {
-    return {
-      targetId: ctx.targetId,
-      configPath: MCP_JSON_REL,
-      servers: [],
-      deployedFiles: [],
-      diagnostics: [
-        {
-          code: "ANTIGRAVITY_MCP_SKIP_NO_AGENTS_DIR",
-          message:
-            "Skipping project MCP write for antigravity: .agents/ directory is absent (Antigravity project-scope MCP is opt-in; create .agents/ and re-run install)",
-          target: ctx.targetId,
-          dir: ".agents/",
-          warn: true,
-        },
-      ],
-    };
-  }
+  const skipped = skipMcpWhenDirMissing({
+    cwd,
+    dir: ".agents",
+    targetId: ctx.targetId,
+    code: "ANTIGRAVITY_MCP_SKIP_NO_AGENTS_DIR",
+    label: "antigravity",
+    configPath: MCP_JSON_REL,
+  });
+  if (skipped) return skipped;
 
   if (!deployRoots.some((r) => r === ".agents" || r.startsWith(".agents"))) {
     throw new Error("antigravity configureMcp requires a registered .agents deploy root");
@@ -259,45 +205,26 @@ function writeAntigravityMcpConfig(
 
   const destFile = join(cwd, MCP_JSON_REL);
   assertUnderDeployRoots(cwd, destFile, deployRoots);
-  mkdirSync(agentsDir, { recursive: true });
 
-  const existingDoc = readExistingJsonDoc(destFile);
-  const existingServers =
-    existingDoc.mcpServers && typeof existingDoc.mcpServers === "object"
-      ? { ...(existingDoc.mcpServers as Record<string, Record<string, unknown>>) }
-      : {};
+  const existingDoc = readJsonDocument({ path: destFile });
 
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
-  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
-  const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
-  for (const [name, entry] of Object.entries(incoming)) {
-    nextServers[name] = { ...entry };
-    writtenNames.push(name);
-  }
-
-  const doc: Record<string, unknown> = { ...existingDoc, mcpServers: nextServers };
-  writeFileSync(destFile, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const merged = mergeMcpServers({
+    document: existingDoc,
+    key: "mcpServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    merge: "replace",
+  });
+  writeJsonDocument(destFile, merged.document);
 
   return {
     targetId: ctx.targetId,
     configPath: MCP_JSON_REL,
-    servers: writtenNames,
+    servers: merged.servers,
     deployedFiles: [{ path: MCP_JSON_REL }],
     diagnostics,
   };
-}
-
-function readExistingJsonDoc(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
-    return raw && typeof raw === "object" && !Array.isArray(raw)
-      ? { ...(raw as Record<string, unknown>) }
-      : {};
-  } catch {
-    return {};
-  }
 }
 
 function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpServerConfig>): {
@@ -306,26 +233,18 @@ function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpS
 } {
   const out: Record<string, Record<string, unknown>> = {};
   const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({
-        ...value,
-        name: value.name ?? name,
-      }));
 
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
+  for (const server of normalizeNamedEntries(servers)) {
     const entry = toAntigravityServerEntry(server);
     if (!entry) {
       diagnostics.push({
         code: "ANTIGRAVITY_MCP_UNSUPPORTED",
-        message: `Antigravity cannot faithfully represent MCP server "${name}"`,
-        server: name,
+        message: `Antigravity cannot faithfully represent MCP server "${server.name}"`,
+        server: server.name,
       });
       continue;
     }
-    out[name] = entry;
+    out[server.name] = entry;
   }
   return { entries: out, diagnostics };
 }
@@ -419,35 +338,22 @@ function materializeAntigravityHooks(args: {
   for (const p of hooks) {
     const name = sanitizeName(String(p.name));
     const pkg = sanitizeName(String(p.packageName ?? p.name));
-    const srcPath = p.path ? resolve(p.path) : undefined;
-    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
-      diagnostics.push({
-        code: "ANTIGRAVITY_HOOK_SOURCE_MISSING",
-        message: `Hook primitive "${p.name}" has no readable source JSON`,
-        primitive: String(p.name),
-      });
+    const source = readHookSource(p, {
+      missingCode: "ANTIGRAVITY_HOOK_SOURCE_MISSING",
+      invalidCode: "ANTIGRAVITY_HOOK_JSON_INVALID",
+    });
+    if (source.diagnostics.length > 0) {
+      diagnostics.push(...source.diagnostics);
       continue;
     }
-
-    let parsed: { hooks?: Record<string, unknown[]> };
-    try {
-      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as { hooks?: Record<string, unknown[]> };
-    } catch (cause) {
-      diagnostics.push({
-        code: "ANTIGRAVITY_HOOK_JSON_INVALID",
-        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
+    const srcPath = resolve(p.path!);
+    const sourceHooks = source.hooks;
     const ownedEntries: Array<{ event: string; command: string }> = [];
     const scripts: string[] = [];
 
     for (const [rawEvent, entries] of Object.entries(sourceHooks)) {
       if (!Array.isArray(entries)) continue;
-      const event = normalizeAgyHookEvent(rawEvent);
+      const event = normalizeHookEventName(rawEvent, "pascal");
       const converted = toAgyEventEntries(event, entries, {
         cwd,
         roots,
@@ -474,7 +380,7 @@ function materializeAntigravityHooks(args: {
   }
 
   doc[BAPM_HOOK_CONTAINER] = container;
-  writeFileSync(hooksPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  writeJsonDocument(hooksPath, doc);
   writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
 
   deployedFiles.push({
@@ -597,17 +503,6 @@ function rewriteHandler(
   return next;
 }
 
-function normalizeAgyHookEvent(event: string): string {
-  const trimmed = event.trim();
-  if (!trimmed) return trimmed;
-  if (/^[A-Z][A-Za-z0-9]*$/.test(trimmed)) return trimmed;
-  return trimmed
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("");
-}
-
 function copyHookScript(args: {
   cwd: string;
   roots: string[];
@@ -656,11 +551,5 @@ function copyHookScript(args: {
 }
 
 function readAgyHooksDoc(path: string): AgyHooksDoc {
-  if (!existsSync(path)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
-    return raw && typeof raw === "object" && !Array.isArray(raw) ? { ...(raw as AgyHooksDoc) } : {};
-  } catch {
-    return {};
-  }
+  return readJsonDocument({ path }) as AgyHooksDoc;
 }

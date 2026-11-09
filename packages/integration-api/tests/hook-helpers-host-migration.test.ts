@@ -1,6 +1,9 @@
 /**
- * Hosts migrate to shared helpers without expanding strip-only cleanup
- * (promoted from integration-api-hook-helpers acceptance).
+ * Host migration to shared hook helpers.
+ *
+ * Event-map hosts (Cursor/Claude/Gemini/Codex/Windsurf) share the full
+ * `mergeHookDeployment` pipeline. Per-file and container hosts keep their
+ * local orchestration but use the shared sidecar/artifact helpers.
  */
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -8,6 +11,14 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vite-plus/test";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+
+const MERGE_DEPLOYMENT_HOSTS = [
+  ["integration-cursor", "createCursorIntegration.ts"],
+  ["integration-claude", "createClaudeIntegration.ts"],
+  ["integration-gemini", "createGeminiIntegration.ts"],
+  ["integration-codex", "createCodexIntegration.ts"],
+  ["integration-windsurf", "createWindsurfIntegration.ts"],
+] as const;
 
 const STRIP_ONLY = [
   ["integration-cursor", "createCursorIntegration.ts"],
@@ -17,16 +28,9 @@ const STRIP_ONLY = [
 ] as const;
 
 const REMOVE_HOSTS = [
-  ["integration-windsurf", "createWindsurfIntegration.ts"],
   ["integration-copilot", "createCopilotIntegration.ts"],
   ["integration-kiro", "createKiroIntegration.ts"],
   ["integration-antigravity", "createAntigravityIntegration.ts"],
-] as const;
-
-const SIMPLE_COPY_HOSTS = [
-  ...STRIP_ONLY,
-  ["integration-windsurf", "createWindsurfIntegration.ts"],
-  ["integration-copilot", "createCopilotIntegration.ts"],
 ] as const;
 
 function hostSrc(pkg: string, file: string): string {
@@ -38,12 +42,10 @@ function src(pkg: string, file: string): string {
 }
 
 describe("host migration to shared hook helpers", () => {
-  test("merge/copy hosts import shared sidecar + strip + simple copyHookScript", () => {
-    for (const [pkg, file] of SIMPLE_COPY_HOSTS) {
+  test("event-map hosts use the shared mergeHookDeployment pipeline", () => {
+    for (const [pkg, file] of MERGE_DEPLOYMENT_HOSTS) {
       const body = src(pkg, file);
-      expect(body, pkg).toMatch(/readHookOwnershipSidecar/);
-      expect(body, pkg).toMatch(/writeHookOwnershipSidecar/);
-      expect(body, pkg).toMatch(/\bcopyHookScript\b/);
+      expect(body, pkg).toMatch(/\bmergeHookDeployment\b/);
       expect(body, `${pkg} still defines local copyHookScript`).not.toMatch(
         /function copyHookScript\s*\(/,
       );
@@ -51,16 +53,6 @@ describe("host migration to shared hook helpers", () => {
         /function readOwnershipSidecar\s*\(/,
       );
     }
-    for (const [pkg, file] of STRIP_ONLY) {
-      const body = src(pkg, file);
-      expect(body, pkg).toMatch(/stripOwnedHookCommands/);
-      expect(body, `${pkg} still defines local stripOwnedEntries`).not.toMatch(
-        /function stripOwnedEntries\s*\(/,
-      );
-    }
-    const windsurf = src("integration-windsurf", "createWindsurfIntegration.ts");
-    expect(windsurf).toMatch(/stripOwnedHookCommands/);
-    expect(windsurf).toMatch(/removeOwnedHookArtifacts/);
   });
 
   test("strip-only hosts do not call removeOwnedHookArtifacts / script rm on reinstall path", () => {
@@ -78,7 +70,6 @@ describe("host migration to shared hook helpers", () => {
 
   test("copilot/kiro/antigravity use shared removeOwnedHookArtifacts + sidecar read/write", () => {
     for (const [pkg, file] of REMOVE_HOSTS) {
-      if (pkg === "integration-windsurf") continue;
       const body = src(pkg, file);
       expect(body, pkg).toMatch(/readHookOwnershipSidecar/);
       expect(body, pkg).toMatch(/writeHookOwnershipSidecar/);

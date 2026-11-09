@@ -69,4 +69,12 @@ describe("transformClaudeRulesMarkdown", () => {
     expect(out).toBe("# Only body\n");
     expect(out).not.toMatch(/^paths:/m);
   });
+
+  test("preserves leading frontmatter comments", () => {
+    const out = transformClaudeRulesMarkdown(
+      '---\n# leading comment\napplyTo: "**/*.ts"\n---\n# Body\n',
+    );
+    expect(out).toMatch(/^# leading comment$/m);
+    expect(out).toMatch(/^paths:/m);
+  });
 });

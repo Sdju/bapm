@@ -1,5 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import type {
   BapmIntegration,
@@ -11,14 +10,19 @@ import type {
 } from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
-  compileMarkdownReport,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
   materializeSkill,
-  primitivesList,
+  mergeMcpServers,
+  normalizeNamedEntries,
   primitivesMaterialize,
-  pruneManagedMcpServerNames,
+  readJsonDocument,
   readPrimitiveContent,
-  renderPrimitivesMarkdown,
+  resolveXdgConfigHome,
+  translateEnvMap,
+  translateEnvReferences,
   writeDeployedFile,
+  writeJsonDocument,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".opencode", "."] as const;
@@ -65,15 +69,9 @@ export function createOpencodeIntegration(options?: {
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# AGENTS.md",
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? "AGENTS.md",
-        write: context.write,
-        content,
+        defaultOutput: "AGENTS.md",
         requireBasename: "AGENTS.md",
         outsideCwdMessage: "OpenCode compile output must be a cwd-relative file path",
       });
@@ -84,14 +82,15 @@ export function createOpencodeIntegration(options?: {
           "OpenCode global install does not deploy file primitives yet; global skills/rules are the next slice",
         );
       }
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".opencode" || r.startsWith(".opencode"))) {
-        throw new Error("opencode target missing .opencode deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".opencode"],
+        label: "opencode",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
 
       await primitivesMaterialize(primitives, {
         skill(p, { name }) {
@@ -143,11 +142,7 @@ export function createOpencodeIntegration(options?: {
         },
       });
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeOpencodeMcpConfig(servers, {
@@ -166,8 +161,7 @@ export function createOpencodeIntegration(options?: {
  * `~/.config/opencode` (the documented global `opencode.json` location).
  */
 function resolveOpencodeGlobalConfigDir(): string {
-  const xdg = process.env.XDG_CONFIG_HOME?.trim();
-  return join(xdg ? resolve(xdg) : join(homedir(), ".config"), "opencode");
+  return join(resolveXdgConfigHome({ allowRelative: true }), "opencode");
 }
 
 function writeOpencodeMcpConfig(
@@ -188,44 +182,25 @@ function writeOpencodeMcpConfig(
   if (!globalScope) assertUnderDeployRoots(cwd, destFile, deployRoots);
   mkdirSync(dirname(destFile), { recursive: true });
 
-  const existingDoc = readExistingOpencodeDoc(destFile);
-  const existingMcp =
-    existingDoc.mcp && typeof existingDoc.mcp === "object" && !Array.isArray(existingDoc.mcp)
-      ? { ...(existingDoc.mcp as Record<string, Record<string, unknown>>) }
-      : {};
+  const existingDoc = readJsonDocument({ path: destFile });
 
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
-  const nextMcp: Record<string, Record<string, unknown>> = { ...existingMcp };
-
-  const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(nextMcp, Object.keys(incoming), ctx.managedServers);
-  for (const [name, entry] of Object.entries(incoming)) {
-    nextMcp[name] = entry;
-    writtenNames.push(name);
-  }
-
-  const doc: Record<string, unknown> = { ...existingDoc, mcp: nextMcp };
-  writeFileSync(destFile, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const merged = mergeMcpServers({
+    document: existingDoc,
+    key: "mcp",
+    incoming,
+    managedServers: ctx.managedServers,
+    merge: "replace",
+  });
+  writeJsonDocument(destFile, merged.document);
 
   return {
     targetId: ctx.targetId,
     configPath: globalScope ? destFile : MCP_JSON_REL,
-    servers: writtenNames,
+    servers: merged.servers,
     ...(globalScope ? {} : { deployedFiles: [{ path: MCP_JSON_REL }] }),
     diagnostics,
   };
-}
-
-function readExistingOpencodeDoc(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
-    return raw && typeof raw === "object" && !Array.isArray(raw)
-      ? { ...(raw as Record<string, unknown>) }
-      : {};
-  } catch {
-    return {};
-  }
 }
 
 function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpServerConfig>): {
@@ -234,26 +209,18 @@ function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpS
 } {
   const out: Record<string, Record<string, unknown>> = {};
   const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({
-        ...value,
-        name: value.name ?? name,
-      }));
 
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
+  for (const server of normalizeNamedEntries(servers)) {
     const entry = toOpencodeServerEntry(server);
     if (!entry) {
       diagnostics.push({
         code: "OPENCODE_PORTABLE_MCP_UNSUPPORTED",
-        message: `OpenCode cannot faithfully represent MCP server "${name}" (unsupported transport)`,
-        server: name,
+        message: `OpenCode cannot faithfully represent MCP server "${server.name}" (unsupported transport)`,
+        server: server.name,
       });
       continue;
     }
-    out[name] = entry;
+    out[server.name] = entry;
   }
   return { entries: out, diagnostics };
 }
@@ -299,11 +266,11 @@ function toOpencodeServerEntry(server: McpServerConfig): Record<string, unknown>
 function buildLocalEntry(server: McpServerConfig): Record<string, unknown> {
   const command = [String(server.command)];
   if (Array.isArray(server.args)) {
-    for (const arg of server.args) command.push(translateOpencodePlaceholders(String(arg)));
+    for (const arg of server.args) command.push(translateEnvReferences(String(arg), "brace-env"));
   }
   const entry: Record<string, unknown> = { type: "local", command };
   const env = server.env ?? (server as { environment?: Record<string, string> }).environment;
-  if (env && typeof env === "object") entry.environment = translateEnvPlaceholders(env);
+  if (env && typeof env === "object") entry.environment = translateEnvMap(env, "brace-env");
   return entry;
 }
 
@@ -314,32 +281,12 @@ function buildRemoteEntry(server: McpServerConfig): Record<string, unknown> {
   };
   const headers = server.headers;
   if (headers && typeof headers === "object" && !Array.isArray(headers)) {
-    entry.headers = translateEnvPlaceholders(
+    entry.headers = translateEnvMap(
       Object.fromEntries(
         Object.entries(headers).filter(([, value]) => typeof value === "string"),
       ) as Record<string, string>,
+      "brace-env",
     );
   }
   return entry;
-}
-
-/**
- * OpenCode resolves `{env:VAR}` at runtime. Translate authored APM forms
- * (`${VAR}`, `${env:VAR}`, legacy `<VAR>`, Cursor-native `${env:VAR}`) so no
- * resolved secret is written into opencode.json.
- */
-function translateOpencodePlaceholders(value: string): string {
-  return value.replace(
-    /\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}|\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\{env:([A-Za-z_][A-Za-z0-9_]*)\}|<([A-Z_][A-Z0-9_]*)>/g,
-    (_match, native: string, bare: string, braceNative: string, angle: string) =>
-      `{env:${native ?? bare ?? braceNative ?? angle}}`,
-  );
-}
-
-function translateEnvPlaceholders(values: Record<string, string>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [key, raw] of Object.entries(values)) {
-    out[key] = typeof raw === "string" ? translateOpencodePlaceholders(raw) : String(raw);
-  }
-  return out;
 }

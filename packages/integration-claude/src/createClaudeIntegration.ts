@@ -17,7 +17,6 @@ import type {
   ConfigureMcpReport,
   ConfigureLspContext,
   ConfigureLspReport,
-  HookOwnershipSidecar,
   LspServerConfig,
   MaterializeReport,
   McpServerConfig,
@@ -25,21 +24,22 @@ import type {
 import {
   SHARED_COMMAND_FRONTMATTER_KEYS,
   assertUnderDeployRoots,
-  compileMarkdownReport,
-  copyHookScript,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
   filterFrontmatterKeys,
+  frontmatterList,
   materializeSkill,
-  primitivesList,
+  mergeHookDeployment,
+  mergeLspServers,
+  mergeMcpServers,
+  normalizeNamedEntries,
+  parseFrontmatter,
   primitivesMaterialize,
-  pruneManagedMcpServerNames,
-  readHookOwnershipSidecar,
+  readJsonDocument,
   readPrimitiveContent,
-  renderNativeHookEntries,
-  renderPrimitivesMarkdown,
-  sanitizeName,
-  stripOwnedHookCommands,
+  renderFrontmatter,
   writeDeployedFile,
-  writeHookOwnershipSidecar,
+  writeJsonDocument,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".claude", "."] as const;
@@ -84,29 +84,23 @@ export function createClaudeIntegration(options?: {
     globalCompileOutput: ".claude/CLAUDE.md",
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# CLAUDE.md",
-        filter: (p) =>
-          context.includeInstructions === true || !/instruction/i.test(String(p.type ?? "")),
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? "CLAUDE.md",
-        write: context.write,
-        content,
+        defaultOutput: "CLAUDE.md",
+        instructions: "omit",
         outsideCwdMessage: "Claude compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".claude" || r.startsWith(".claude"))) {
-        throw new Error("claude target missing .claude deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".claude"],
+        label: "claude",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
       const hookPrimitives: AttributedPrimitive[] = [];
 
       await primitivesMaterialize(primitives, {
@@ -180,11 +174,7 @@ export function createClaudeIntegration(options?: {
         diagnostics.push(...hookDeployed.diagnostics);
       }
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       if (ctx?.scope === "global") {
@@ -246,49 +236,26 @@ function writeClaudeMcpConfig(
     throw new Error("claude configureMcp refuses non-.mcp.json root writes");
   }
 
-  const existingDoc = readExistingMcpDoc(destFile);
-  const existingServers =
-    existingDoc.mcpServers && typeof existingDoc.mcpServers === "object"
-      ? { ...(existingDoc.mcpServers as Record<string, Record<string, unknown>>) }
-      : {};
+  const existingDoc = readJsonDocument({ path: destFile });
 
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
-  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
-
-  const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
-  for (const [name, entry] of Object.entries(incoming)) {
-    const prior = existingServers[name];
-    nextServers[name] = prior && typeof prior === "object" ? { ...prior, ...entry } : { ...entry };
-    // Drop portable / Copilot-only noise after shallow merge.
-    delete nextServers[name]!.format;
-    delete nextServers[name]!.packageName;
-    delete nextServers[name]!.registry;
-    writtenNames.push(name);
-  }
-
-  const doc: Record<string, unknown> = { ...existingDoc, mcpServers: nextServers };
-  writeFileSync(destFile, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const merged = mergeMcpServers({
+    document: existingDoc,
+    key: "mcpServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    merge: "shallow",
+    stripKeys: ["format", "packageName", "registry"],
+  });
+  writeJsonDocument(destFile, merged.document);
 
   return {
     targetId: ctx.targetId,
     configPath: MCP_JSON_REL,
-    servers: writtenNames,
+    servers: merged.servers,
     deployedFiles: [{ path: MCP_JSON_REL }],
     diagnostics,
   };
-}
-
-function readExistingMcpDoc(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
-    return raw && typeof raw === "object" && !Array.isArray(raw)
-      ? { ...(raw as Record<string, unknown>) }
-      : {};
-  } catch {
-    return {};
-  }
 }
 
 /** Merge/write the APM-owned Claude LSP plugin manifest. */
@@ -313,32 +280,21 @@ function writeClaudeLspConfig(
   }
 
   const incoming = normalizeLspEntries(servers);
-  const existingServers =
-    existing?.lspServers && typeof existing.lspServers === "object"
-      ? { ...(existing.lspServers as Record<string, Record<string, unknown>>) }
-      : {};
-  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
-  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
-
-  for (const [name, entry] of Object.entries(incoming)) {
-    const prior = existingServers[name];
-    const managed = ctx.managedServers?.includes(name) === true;
-    if (prior && !managed && JSON.stringify(prior) !== JSON.stringify(entry)) {
-      throw new Error(
-        `CLAUDE_LSP_OWNERSHIP: LSP server '${name}' already exists in ` +
-          `${LSP_PLUGIN_REL} and is not managed by bapm; rename it or remove it`,
-      );
-    }
-    nextServers[name] = entry;
-  }
-
+  const merged = mergeLspServers({
+    document: existing ?? {},
+    key: "lspServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    ownershipLabel: "CLAUDE_LSP_OWNERSHIP",
+    pathLabel: LSP_PLUGIN_REL,
+  });
+  const nextServers = merged.document.lspServers as Record<string, Record<string, unknown>>;
   const doc: Record<string, unknown> = {
-    ...existing,
+    ...merged.document,
     name: LSP_PLUGIN_NAME,
-    lspServers: nextServers,
   };
   const content = `${JSON.stringify(doc, null, 2)}\n`;
-  const writtenNames = Object.keys(incoming);
+  const writtenNames = merged.servers;
 
   if (Object.keys(nextServers).length === 0 && onlyOwnedLspKeys(doc)) {
     if (existsSync(destFile)) {
@@ -447,26 +403,18 @@ function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpS
 } {
   const out: Record<string, Record<string, unknown>> = {};
   const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({
-        ...value,
-        name: value.name ?? name,
-      }));
 
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
+  for (const server of normalizeNamedEntries(servers)) {
     const entry = toClaudeServerEntry(server);
     if (!entry) {
       diagnostics.push({
         code: "CLAUDE_PORTABLE_MCP_UNSUPPORTED",
-        message: `Claude cannot faithfully represent MCP server "${name}"`,
-        server: name,
+        message: `Claude cannot faithfully represent MCP server "${server.name}"`,
+        server: server.name,
       });
       continue;
     }
-    out[name] = entry;
+    out[server.name] = entry;
   }
   return { entries: out, diagnostics };
 }
@@ -541,61 +489,21 @@ function toClaudeServerEntry(server: McpServerConfig): Record<string, unknown> |
   return entry;
 }
 
-type SettingsDoc = {
-  hooks?: Record<string, unknown[]>;
-  [key: string]: unknown;
-};
-
 /**
  * Convert portable `applyTo` frontmatter to Claude `paths:` (omit when unconditional).
  */
 export function transformClaudeRulesMarkdown(source: string): string {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) return source;
+  const parsed = parseFrontmatter(source);
+  if (!parsed.hasFrontmatter) return source;
 
-  const rawFm = match[1] ?? "";
-  const body = match[2] ?? "";
-  const lines = rawFm.split(/\r?\n/);
-  const kept: string[] = [];
+  const kept: string[] = [...parsed.prelude];
   const paths: string[] = [];
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i]!;
-    const keyMatch = line.match(/^([A-Za-z0-9_-]+)\s*:(.*)$/);
-    if (!keyMatch) {
-      if (line.trim()) kept.push(line);
-      i += 1;
+  for (const field of parsed.fields) {
+    if (field.key === "applyTo" || field.key === "paths") {
+      paths.push(...frontmatterList(field));
       continue;
     }
-    const key = keyMatch[1]!;
-    const rest = keyMatch[2] ?? "";
-    if (key === "applyTo" || key === "paths") {
-      const inline = rest.trim();
-      if (inline.startsWith("[") && inline.endsWith("]")) {
-        for (const part of inline.slice(1, -1).split(",")) {
-          const v = part.trim().replace(/^["']|["']$/g, "");
-          if (v) paths.push(v);
-        }
-        i += 1;
-        continue;
-      }
-      if (inline && inline !== "|" && inline !== ">") {
-        paths.push(inline.replace(/^["']|["']$/g, ""));
-        i += 1;
-        continue;
-      }
-      i += 1;
-      while (i < lines.length) {
-        const item = lines[i]!;
-        const listMatch = item.match(/^[ \t]*-[ \t]*(.+)$/);
-        if (!listMatch) break;
-        paths.push(listMatch[1]!.trim().replace(/^["']|["']$/g, ""));
-        i += 1;
-      }
-      continue;
-    }
-    kept.push(line);
-    i += 1;
+    kept.push(...field.lines);
   }
 
   const fmLines = [...kept];
@@ -606,8 +514,7 @@ export function transformClaudeRulesMarkdown(source: string): string {
     }
   }
 
-  if (fmLines.length === 0) return body.replace(/\s+$/, "\n") || body;
-  return `---\n${fmLines.join("\n")}\n---\n${body}`.replace(/\s+$/, "\n");
+  return renderFrontmatter(fmLines, parsed.body);
 }
 
 function materializeClaudeHooks(args: {
@@ -619,123 +526,30 @@ function materializeClaudeHooks(args: {
   diagnostics: NonNullable<MaterializeReport["diagnostics"]>;
 } {
   const { cwd, roots, hooks } = args;
-  const deployedFiles: MaterializeReport["deployedFiles"] = [];
-  const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
-
   const settingsPath = join(cwd, SETTINGS_JSON_REL);
   const ownershipPath = join(cwd, HOOKS_OWNERSHIP_REL);
   assertUnderDeployRoots(cwd, settingsPath, roots);
   assertUnderDeployRoots(cwd, ownershipPath, roots);
   mkdirSync(join(cwd, ".claude"), { recursive: true });
 
-  const doc = readSettingsDoc(settingsPath);
-  const ownership = readHookOwnershipSidecar(ownershipPath);
-
-  if (doc.hooks && typeof doc.hooks === "object") {
-    stripOwnedHookCommands(doc.hooks as Record<string, unknown>, ownership);
-  }
-
-  const nextOwned: HookOwnershipSidecar["owned"] = {};
-
-  for (const p of hooks) {
-    const name = sanitizeName(String(p.name));
-    const srcPath = p.path ? resolve(p.path) : undefined;
-    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
-      diagnostics.push({
-        code: "CLAUDE_HOOK_SOURCE_MISSING",
-        message: `Hook primitive "${p.name}" has no readable source JSON`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    let parsed: SettingsDoc;
-    try {
-      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as SettingsDoc;
-    } catch (cause) {
-      diagnostics.push({
-        code: "CLAUDE_HOOK_JSON_INVALID",
-        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
-    const ownedEntries: Array<{ event: string; command: string }> = [];
-    const scripts: string[] = [];
-
-    if (!doc.hooks || typeof doc.hooks !== "object") doc.hooks = {};
-
-    for (const [event, entries] of Object.entries(sourceHooks)) {
-      if (!Array.isArray(entries)) continue;
-      const destList = Array.isArray(doc.hooks[event]) ? [...doc.hooks[event]!] : [];
-      const rendered = renderNativeHookEntries({
-        entries: entries as unknown[],
-        defaultMatcher: "*",
-        defaultHandlerType: true,
-        rewriteCommand: (command) => {
-          const rewritten = copyHookScript({
-            cwd,
-            deployRoots: roots,
-            hookFile: srcPath,
-            command,
-            alreadyDeployedNeedle: ".claude/",
-            destRel: `.claude/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
-            commandAsDotSlash: true,
-          });
-          return {
-            command: rewritten.commandRel,
-            ...(rewritten.scriptRel ? { scriptRel: rewritten.scriptRel } : {}),
-          };
-        },
-      });
-      for (const entry of rendered.owned) ownedEntries.push({ event, command: entry.command });
-      for (const scriptRel of rendered.scripts) {
-        if (scripts.includes(scriptRel)) continue;
-        scripts.push(scriptRel);
-        deployedFiles.push({
-          path: scriptRel,
-          primitive: { name: String(p.name), packageName: p.packageName },
-        });
-      }
-      doc.hooks[event] = [...destList, ...rendered.entries];
-    }
-
-    nextOwned[name] = {
-      ...(p.packageName ? { packageName: p.packageName } : {}),
-      entries: ownedEntries,
-      scripts,
-    };
-  }
-
-  writeFileSync(settingsPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
-
-  deployedFiles.push({
-    path: SETTINGS_JSON_REL,
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
-  });
-  deployedFiles.push({
-    path: HOOKS_OWNERSHIP_REL,
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
+  const result = mergeHookDeployment({
+    cwd,
+    deployRoots: roots,
+    hooks,
+    docPath: settingsPath,
+    ownershipPath,
+    docRel: SETTINGS_JSON_REL,
+    ownershipRel: HOOKS_OWNERSHIP_REL,
+    mode: "native-groups",
+    code: "CLAUDE",
+    defaultMatcher: "*",
+    defaultHandlerType: true,
+    alreadyDeployedNeedle: ".claude/",
+    commandAsDotSlash: true,
+    propagateVersion: false,
+    scriptDestRel: ({ name, command }) =>
+      `.claude/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
   });
 
-  return { deployedFiles, diagnostics };
-}
-
-function readSettingsDoc(path: string): SettingsDoc {
-  if (!existsSync(path)) return { hooks: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as SettingsDoc;
-    if (!raw || typeof raw !== "object") return { hooks: {} };
-    if (!raw.hooks || typeof raw.hooks !== "object") raw.hooks = {};
-    return raw;
-  } catch {
-    return { hooks: {} };
-  }
+  return { deployedFiles: result.deployedFiles, diagnostics: result.diagnostics };
 }

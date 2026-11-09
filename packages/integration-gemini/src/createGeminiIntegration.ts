@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { stringify as stringifyToml } from "smol-toml";
 import type {
@@ -7,25 +7,23 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
-  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
-  compileMarkdownReport,
-  copyHookScript,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
   materializeSkill,
-  primitivesList,
+  mergeHookDeployment,
+  mergeMcpServers,
+  normalizeNamedEntries,
   primitivesMaterialize,
-  pruneManagedMcpServerNames,
-  readHookOwnershipSidecar,
+  readJsonDocument,
   readPrimitiveContent,
-  renderPrimitivesMarkdown,
   sanitizeName,
-  stripOwnedHookCommands,
   writeDeployedFile,
-  writeHookOwnershipSidecar,
+  writeJsonDocument,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".gemini", ".agents", "."] as const;
@@ -64,34 +62,26 @@ export function createGeminiIntegration(options?: {
     detect: ({ cwd }) => detectGemini(cwd),
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# GEMINI.md",
-        filter: (p) => /instruction/i.test(String(p.type ?? "")),
+        defaultOutput: COMPILE_DEFAULT,
+        instructions: "only",
         emptyMessage: "_No discoverable instruction primitives._",
         sectionHeading: (p) => String(p.name),
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? COMPILE_DEFAULT,
-        write: context.write,
-        content,
         requireBasename: "GEMINI.md",
         outsideCwdMessage: "Gemini compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".gemini" || r.startsWith(".gemini"))) {
-        throw new Error("gemini target missing .gemini deploy root");
-      }
-      if (!roots.some((r) => r === ".agents" || r.startsWith(".agents"))) {
-        throw new Error("gemini target missing .agents deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".gemini", ".agents"],
+        label: "gemini",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
       const hookPrimitives: AttributedPrimitive[] = [];
 
       await primitivesMaterialize(primitives, {
@@ -149,11 +139,7 @@ export function createGeminiIntegration(options?: {
         diagnostics.push(...hookDeployed.diagnostics);
       }
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeGeminiMcpConfig(servers, {
@@ -260,28 +246,21 @@ function writeGeminiMcpConfig(
   assertUnderDeployRoots(cwd, destFile, deployRoots);
 
   const existingDoc = readSettingsDoc(destFile);
-  const existingServers =
-    existingDoc.mcpServers && typeof existingDoc.mcpServers === "object"
-      ? { ...(existingDoc.mcpServers as Record<string, Record<string, unknown>>) }
-      : {};
 
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
-  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
-
-  const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
-  for (const [name, entry] of Object.entries(incoming)) {
-    nextServers[name] = { ...entry };
-    writtenNames.push(name);
-  }
-
-  const doc: SettingsDoc = { ...existingDoc, mcpServers: nextServers };
-  writeFileSync(destFile, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const merged = mergeMcpServers({
+    document: existingDoc as Record<string, unknown>,
+    key: "mcpServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    merge: "replace",
+  });
+  writeJsonDocument(destFile, merged.document);
 
   return {
     targetId: ctx.targetId,
     configPath: SETTINGS_JSON_REL,
-    servers: writtenNames,
+    servers: merged.servers,
     deployedFiles: [{ path: SETTINGS_JSON_REL }],
     diagnostics,
   };
@@ -293,26 +272,18 @@ function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpS
 } {
   const out: Record<string, Record<string, unknown>> = {};
   const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({
-        ...value,
-        name: value.name ?? name,
-      }));
 
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
+  for (const server of normalizeNamedEntries(servers)) {
     const entry = toGeminiServerEntry(server);
     if (!entry) {
       diagnostics.push({
         code: "GEMINI_MCP_UNSUPPORTED",
-        message: `Gemini cannot faithfully represent MCP server "${name}"`,
-        server: name,
+        message: `Gemini cannot faithfully represent MCP server "${server.name}"`,
+        server: server.name,
       });
       continue;
     }
-    out[name] = entry;
+    out[server.name] = entry;
   }
   return { entries: out, diagnostics };
 }
@@ -361,126 +332,35 @@ function materializeGeminiHooks(args: {
   diagnostics: NonNullable<MaterializeReport["diagnostics"]>;
 } {
   const { cwd, roots, hooks } = args;
-  const deployedFiles: MaterializeReport["deployedFiles"] = [];
-  const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
-
   const settingsPath = join(cwd, SETTINGS_JSON_REL);
   const ownershipPath = join(cwd, HOOKS_OWNERSHIP_REL);
   assertUnderDeployRoots(cwd, settingsPath, roots);
   assertUnderDeployRoots(cwd, ownershipPath, roots);
   mkdirSync(join(cwd, ".gemini"), { recursive: true });
 
-  const doc = readSettingsDoc(settingsPath);
-  const ownership = readHookOwnershipSidecar(ownershipPath);
-
-  if (doc.hooks && typeof doc.hooks === "object") {
-    stripOwnedHookCommands(doc.hooks as Record<string, unknown>, ownership);
-  }
-
-  const nextOwned: HookOwnershipSidecar["owned"] = {};
-
-  for (const p of hooks) {
-    const name = sanitizeName(String(p.name));
-    const srcPath = p.path ? resolve(p.path) : undefined;
-    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
-      diagnostics.push({
-        code: "GEMINI_HOOK_SOURCE_MISSING",
-        message: `Hook primitive "${p.name}" has no readable source JSON`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    let parsed: SettingsDoc;
-    try {
-      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as SettingsDoc;
-    } catch (cause) {
-      diagnostics.push({
-        code: "GEMINI_HOOK_JSON_INVALID",
-        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
-    const ownedEntries: Array<{ event: string; command: string }> = [];
-    const scripts: string[] = [];
-
-    if (!doc.hooks || typeof doc.hooks !== "object") doc.hooks = {};
-
-    for (const [rawEvent, entries] of Object.entries(sourceHooks)) {
-      if (!Array.isArray(entries)) continue;
-      const event = GEMINI_EVENT_REMAP[rawEvent] ?? rawEvent;
-      const destList = Array.isArray(doc.hooks[event]) ? [...doc.hooks[event]!] : [];
-      for (const entry of entries) {
-        if (!entry || typeof entry !== "object") continue;
-        const command = typeof entry.command === "string" ? entry.command.trim() : "";
-        if (!command) {
-          const { _apm_source: _drop, ...clean } = entry as HookEntry & { _apm_source?: unknown };
-          void _drop;
-          destList.push({ ...clean });
-          continue;
-        }
-
-        const rewritten = copyHookScript({
-          cwd,
-          deployRoots: roots,
-          hookFile: srcPath,
-          command,
-          alreadyDeployedNeedle: ".gemini/",
-          destRel: `.gemini/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
-          commandAsDotSlash: true,
-        });
-        const { _apm_source: _drop, ...clean } = entry as HookEntry & { _apm_source?: unknown };
-        void _drop;
-        const nextEntry: HookEntry = { ...clean, command: rewritten.commandRel };
-        destList.push(nextEntry);
-        ownedEntries.push({ event, command: rewritten.commandRel });
-        if (rewritten.scriptRel) {
-          scripts.push(rewritten.scriptRel);
-          deployedFiles.push({
-            path: rewritten.scriptRel,
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
-        }
-      }
-      doc.hooks[event] = destList;
-    }
-
-    nextOwned[name] = {
-      ...(p.packageName ? { packageName: p.packageName } : {}),
-      entries: ownedEntries,
-      scripts,
-    };
-  }
-
-  writeFileSync(settingsPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
-
-  deployedFiles.push({
-    path: SETTINGS_JSON_REL,
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
-  });
-  deployedFiles.push({
-    path: HOOKS_OWNERSHIP_REL,
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
+  const result = mergeHookDeployment({
+    cwd,
+    deployRoots: roots,
+    hooks,
+    docPath: settingsPath,
+    ownershipPath,
+    docRel: SETTINGS_JSON_REL,
+    ownershipRel: HOOKS_OWNERSHIP_REL,
+    mode: "flat",
+    code: "GEMINI",
+    normalizeEvent: (event) => GEMINI_EVENT_REMAP[event] ?? event,
+    alreadyDeployedNeedle: ".gemini/",
+    commandAsDotSlash: true,
+    propagateVersion: false,
+    scriptDestRel: ({ name, command }) =>
+      `.gemini/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
   });
 
-  return { deployedFiles, diagnostics };
+  return { deployedFiles: result.deployedFiles, diagnostics: result.diagnostics };
 }
 
 function readSettingsDoc(path: string): SettingsDoc {
-  if (!existsSync(path)) return { hooks: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as SettingsDoc;
-    if (!raw || typeof raw !== "object") return { hooks: {} };
-    return raw;
-  } catch {
-    return { hooks: {} };
-  }
+  const doc = readJsonDocument({ path }) as SettingsDoc;
+  if (!doc.hooks || typeof doc.hooks !== "object") doc.hooks = {};
+  return doc;
 }

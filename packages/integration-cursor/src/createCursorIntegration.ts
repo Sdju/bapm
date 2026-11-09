@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import type {
@@ -7,27 +7,26 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
-  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@b-apm/integration-api";
 import {
   SHARED_COMMAND_FRONTMATTER_KEYS,
   assertUnderDeployRoots,
-  compileMarkdownReport,
-  copyHookScript,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
   filterFrontmatterKeys,
   materializeSkill,
-  primitivesList,
+  mergeHookDeployment,
+  mergeMcpServers,
+  normalizeNamedEntries,
   primitivesMaterialize,
-  pruneManagedMcpServerNames,
-  readHookOwnershipSidecar,
+  readJsonDocument,
   readPrimitiveContent,
-  renderPrimitivesMarkdown,
-  sanitizeName,
-  stripOwnedHookCommands,
+  translateEnvMap,
+  translateEnvReferences,
   writeDeployedFile,
-  writeHookOwnershipSidecar,
+  writeJsonDocument,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".agents/skills", ".cursor"] as const;
@@ -73,32 +72,24 @@ export function createCursorIntegration(options?: {
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# AGENTS.md",
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? "AGENTS.md",
-        write: context.write,
-        content,
+        defaultOutput: "AGENTS.md",
         outsideCwdMessage: "Cursor compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
       // Global file materialize receives the user home as `ctx.cwd`, so the
       // same home-relative roots (`.cursor`, `.agents/skills`) are reused.
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".agents/skills" || r.startsWith(".agents/skills"))) {
-        throw new Error("cursor target missing .agents/skills deploy root");
-      }
-      if (!roots.some((r) => r === ".cursor" || r.startsWith(".cursor"))) {
-        throw new Error("cursor target missing .cursor deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".agents/skills", ".cursor"],
+        label: "cursor",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
       const hookPrimitives: AttributedPrimitive[] = [];
 
       await primitivesMaterialize(primitives, {
@@ -172,11 +163,7 @@ export function createCursorIntegration(options?: {
         diagnostics.push(...hookDeployed.diagnostics);
       }
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeCursorMcpConfig(servers, {
@@ -206,39 +193,24 @@ function writeCursorMcpConfig(
   if (!globalScope) assertUnderDeployRoots(cwd, destFile, deployRoots);
   mkdirSync(dirname(destFile), { recursive: true });
 
-  const existing = readExistingMcpServers(destFile);
+  const existingDoc = readJsonDocument({ path: destFile });
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
-  const next: Record<string, Record<string, unknown>> = { ...existing };
-
-  const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(next, Object.keys(incoming), ctx.managedServers);
-  for (const [name, entry] of Object.entries(incoming)) {
-    next[name] = entry;
-    writtenNames.push(name);
-  }
-
-  const doc = { mcpServers: next };
-  writeFileSync(destFile, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const merged = mergeMcpServers({
+    document: existingDoc,
+    key: "mcpServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    merge: "replace",
+  });
+  writeJsonDocument(destFile, merged.document);
 
   return {
     targetId: ctx.targetId,
     configPath: globalScope ? destFile : MCP_JSON_REL,
-    servers: writtenNames,
+    servers: merged.servers,
     ...(globalScope ? {} : { deployedFiles: [{ path: MCP_JSON_REL }] }),
     diagnostics,
   } as ConfigureMcpReport;
-}
-
-function readExistingMcpServers(path: string): Record<string, Record<string, unknown>> {
-  if (!existsSync(path)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as {
-      mcpServers?: Record<string, Record<string, unknown>>;
-    };
-    return raw.mcpServers && typeof raw.mcpServers === "object" ? { ...raw.mcpServers } : {};
-  } catch {
-    return {};
-  }
 }
 
 function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpServerConfig>): {
@@ -247,26 +219,18 @@ function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpS
 } {
   const out: Record<string, Record<string, unknown>> = {};
   const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({
-        ...value,
-        name: value.name ?? name,
-      }));
 
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
+  for (const server of normalizeNamedEntries(servers)) {
     const entry = toCursorServerEntry(server);
     if (!entry) {
       diagnostics.push({
         code: "CURSOR_PORTABLE_MCP_UNSUPPORTED",
-        message: `Cursor cannot faithfully represent portable MCP server "${name}"`,
-        server: name,
+        message: `Cursor cannot faithfully represent portable MCP server "${server.name}"`,
+        server: server.name,
       });
       continue;
     }
-    out[name] = entry;
+    out[server.name] = entry;
   }
   return { entries: out, diagnostics };
 }
@@ -292,7 +256,7 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
       return undefined;
     }
     if (server.env && typeof server.env === "object") {
-      entry.env = translateEnvPlaceholders(server.env);
+      entry.env = translateEnvMap(server.env, "dollar-env");
     }
     const portableHeaders = translateHeaders(server.headers);
     if (portableHeaders) entry.headers = portableHeaders;
@@ -310,7 +274,7 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
   }
 
   if (server.env && typeof server.env === "object") {
-    entry.env = translateEnvPlaceholders(server.env);
+    entry.env = translateEnvMap(server.env, "dollar-env");
   }
   const headers = translateHeaders(server.headers);
   if (headers) entry.headers = headers;
@@ -346,43 +310,24 @@ function toCursorServerEntry(server: McpServerConfig): Record<string, unknown> |
  * (`${VAR}`, `${env:VAR}`, legacy `<VAR>`, OpenCode-native `{env:VAR}`) so no
  * resolved secret is written into `.cursor/mcp.json`.
  */
-function translateEnvPlaceholders(values: Record<string, string>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [key, raw] of Object.entries(values)) {
-    out[key] = typeof raw === "string" ? translateCursorPlaceholders(raw) : String(raw);
-  }
-  return out;
-}
-
-function translateCursorPlaceholders(value: string): string {
-  return value.replace(
-    /\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}|\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\{env:([A-Za-z_][A-Za-z0-9_]*)\}|<([A-Z_][A-Z0-9_]*)>/g,
-    (_match, native: string, bare: string, braceNative: string, angle: string) =>
-      `\${env:${native ?? bare ?? braceNative ?? angle}}`,
-  );
-}
-
 function translateCursorArgs(args: unknown[]): unknown[] {
-  return args.map((arg) => (typeof arg === "string" ? translateCursorPlaceholders(arg) : arg));
+  return args.map((arg) =>
+    typeof arg === "string" ? translateEnvReferences(arg, "dollar-env") : arg,
+  );
 }
 
 function translateHeaders(
   headers: Record<string, string> | undefined,
 ): Record<string, string> | undefined {
   if (!headers || typeof headers !== "object" || Array.isArray(headers)) return undefined;
-  return translateEnvPlaceholders(
+  return translateEnvMap(
     Object.fromEntries(
       Object.entries(headers).filter(([, value]) => typeof value === "string"),
     ) as Record<string, string>,
+    "dollar-env",
   );
 }
 
-type HookEntry = { command?: string; [key: string]: unknown };
-type HooksDoc = {
-  version?: number;
-  hooks?: Record<string, HookEntry[]>;
-  [key: string]: unknown;
-};
 function materializeCursorHooks(args: {
   cwd: string;
   roots: string[];
@@ -392,128 +337,29 @@ function materializeCursorHooks(args: {
   diagnostics: NonNullable<MaterializeReport["diagnostics"]>;
 } {
   const { cwd, roots, hooks } = args;
-  const deployedFiles: MaterializeReport["deployedFiles"] = [];
-  const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
-
   const hooksPath = join(cwd, HOOKS_JSON_REL);
   const ownershipPath = join(cwd, HOOKS_OWNERSHIP_REL);
   assertUnderDeployRoots(cwd, hooksPath, roots);
   assertUnderDeployRoots(cwd, ownershipPath, roots);
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
 
-  const doc = readHooksDoc(hooksPath);
-  const ownership = readHookOwnershipSidecar(ownershipPath);
-
-  // Remove previously owned bapm entries so re-install is idempotent.
-  if (doc.hooks && typeof doc.hooks === "object") {
-    stripOwnedHookCommands(doc.hooks as Record<string, unknown>, ownership);
-  }
-
-  const nextOwned: HookOwnershipSidecar["owned"] = {};
-
-  for (const p of hooks) {
-    const name = sanitizeName(String(p.name));
-    const srcPath = p.path ? resolve(p.path) : undefined;
-    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
-      diagnostics.push({
-        code: "CURSOR_HOOK_SOURCE_MISSING",
-        message: `Hook primitive "${p.name}" has no readable source JSON`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    let parsed: HooksDoc;
-    try {
-      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as HooksDoc;
-    } catch (cause) {
-      diagnostics.push({
-        code: "CURSOR_HOOK_JSON_INVALID",
-        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
-    const ownedEntries: Array<{ event: string; command: string }> = [];
-    const scripts: string[] = [];
-
-    if (!doc.hooks || typeof doc.hooks !== "object") doc.hooks = {};
-    if (typeof parsed.version === "number" && doc.version === undefined) {
-      doc.version = parsed.version;
-    }
-
-    for (const [event, entries] of Object.entries(sourceHooks)) {
-      if (!Array.isArray(entries)) continue;
-      const destList = Array.isArray(doc.hooks[event]) ? [...doc.hooks[event]!] : [];
-      for (const entry of entries) {
-        if (!entry || typeof entry !== "object") continue;
-        const command = typeof entry.command === "string" ? entry.command.trim() : "";
-        if (!command) {
-          destList.push({ ...entry });
-          continue;
-        }
-
-        const rewritten = copyHookScript({
-          cwd,
-          deployRoots: roots,
-          hookFile: srcPath,
-          command,
-          alreadyDeployedNeedle: ".cursor/",
-          destRel: `.cursor/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
-          commandAsDotSlash: true,
-        });
-        const nextEntry: HookEntry = { ...entry, command: rewritten.commandRel };
-        destList.push(nextEntry);
-        ownedEntries.push({ event, command: rewritten.commandRel });
-        if (rewritten.scriptRel) {
-          scripts.push(rewritten.scriptRel);
-          deployedFiles.push({
-            path: rewritten.scriptRel,
-            primitive: { name: String(p.name), packageName: p.packageName },
-          });
-        }
-      }
-      doc.hooks[event] = destList;
-    }
-
-    nextOwned[name] = {
-      ...(p.packageName ? { packageName: p.packageName } : {}),
-      entries: ownedEntries,
-      scripts,
-    };
-  }
-
-  if (doc.version === undefined) doc.version = 1;
-  writeFileSync(hooksPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
-
-  deployedFiles.push({
-    path: HOOKS_JSON_REL,
-    // Attribute to first hook when possible for lock inventory.
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
-  });
-  deployedFiles.push({
-    path: HOOKS_OWNERSHIP_REL,
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
+  const result = mergeHookDeployment({
+    cwd,
+    deployRoots: roots,
+    hooks,
+    docPath: hooksPath,
+    ownershipPath,
+    docRel: HOOKS_JSON_REL,
+    ownershipRel: HOOKS_OWNERSHIP_REL,
+    mode: "flat",
+    code: "CURSOR",
+    alreadyDeployedNeedle: ".cursor/",
+    commandAsDotSlash: true,
+    stripOwnershipKey: false,
+    versionDefault: 1,
+    scriptDestRel: ({ name, command }) =>
+      `.cursor/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
   });
 
-  return { deployedFiles, diagnostics };
-}
-
-function readHooksDoc(path: string): HooksDoc {
-  if (!existsSync(path)) return { version: 1, hooks: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as HooksDoc;
-    if (!raw || typeof raw !== "object") return { version: 1, hooks: {} };
-    if (!raw.hooks || typeof raw.hooks !== "object") raw.hooks = {};
-    return raw;
-  } catch {
-    return { version: 1, hooks: {} };
-  }
+  return { deployedFiles: result.deployedFiles, diagnostics: result.diagnostics };
 }

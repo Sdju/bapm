@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, statSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import type {
   AttributedPrimitive,
@@ -12,19 +12,28 @@ import type {
 } from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
-  compileMarkdownReport,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
   findPackageRoot,
+  frontmatterList,
   materializeSkill,
-  primitivesList,
+  mergeMcpServers,
+  normalizeNamedEntries,
+  parseFrontmatter,
+  primitivePackageKey,
   primitivesMaterialize,
-  pruneManagedMcpServerNames,
   readHookOwnershipSidecar,
+  readHookSource,
+  readJsonDocument,
   readPrimitiveContent,
   removeOwnedHookArtifacts,
-  renderPrimitivesMarkdown,
+  safeHookSlug,
   sanitizeName,
+  skipMcpWhenDirMissing,
+  translateEnvMap,
   writeDeployedFile,
   writeHookOwnershipSidecar,
+  writeJsonDocument,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".kiro", "."] as const;
@@ -96,29 +105,23 @@ export function createKiroIntegration(options?: {
     },
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# AGENTS.md",
-        filter: (p) =>
-          context.includeInstructions === true || !/instruction/i.test(String(p.type ?? "")),
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? COMPILE_DEFAULT,
-        write: context.write,
-        content,
+        defaultOutput: COMPILE_DEFAULT,
+        instructions: "omit",
         outsideCwdMessage: "Kiro compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".kiro" || r.startsWith(".kiro"))) {
-        throw new Error("kiro target missing .kiro deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".kiro"],
+        label: "kiro",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
       const hookPrimitives: AttributedPrimitive[] = [];
 
       await primitivesMaterialize(primitives, {
@@ -194,11 +197,7 @@ export function createKiroIntegration(options?: {
         diagnostics.push(...hookDeployed.diagnostics);
       }
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       return writeKiroMcpConfig(servers, {
@@ -216,73 +215,39 @@ function writeKiroMcpConfig(
   ctx: ConfigureMcpContext & { cwd: string; deployRoots: string[] },
 ): ConfigureMcpReport {
   const { cwd, deployRoots } = ctx;
-  const kiroDir = join(cwd, ".kiro");
-  if (!existsSync(kiroDir) || !statSync(kiroDir).isDirectory()) {
-    return {
-      targetId: ctx.targetId,
-      configPath: MCP_JSON_REL,
-      servers: [],
-      deployedFiles: [],
-      diagnostics: [
-        {
-          code: "KIRO_MCP_SKIP_NO_KIRO_DIR",
-          message:
-            "Skipping project MCP write for kiro: .kiro/ directory is absent (Kiro project-scope MCP is opt-in; create .kiro/ and re-run install)",
-          target: ctx.targetId,
-          dir: ".kiro/",
-          warn: true,
-        },
-      ],
-    };
-  }
+  const skipped = skipMcpWhenDirMissing({
+    cwd,
+    dir: ".kiro",
+    targetId: ctx.targetId,
+    code: "KIRO_MCP_SKIP_NO_KIRO_DIR",
+    label: "kiro",
+    configPath: MCP_JSON_REL,
+  });
+  if (skipped) return skipped;
 
   const destFile = join(cwd, MCP_JSON_REL);
   assertUnderDeployRoots(cwd, destFile, deployRoots);
-  mkdirSync(dirname(destFile), { recursive: true });
 
-  const existingDoc = readExistingMcpDoc(destFile);
-  const existingServers =
-    existingDoc.mcpServers && typeof existingDoc.mcpServers === "object"
-      ? { ...(existingDoc.mcpServers as Record<string, Record<string, unknown>>) }
-      : {};
+  const existingDoc = readJsonDocument({ path: destFile });
 
   const { entries: incoming, diagnostics } = normalizeServerEntries(servers);
-  const nextServers: Record<string, Record<string, unknown>> = { ...existingServers };
-  const writtenNames: string[] = [];
-  pruneManagedMcpServerNames(nextServers, Object.keys(incoming), ctx.managedServers);
-
-  for (const [name, entry] of Object.entries(incoming)) {
-    const prior = existingServers[name];
-    const merged = prior && typeof prior === "object" ? { ...prior, ...entry } : { ...entry };
-    delete merged.format;
-    delete merged.packageName;
-    delete merged.registry;
-    nextServers[name] = merged;
-    writtenNames.push(name);
-  }
-
-  const doc: Record<string, unknown> = { ...existingDoc, mcpServers: nextServers };
-  writeFileSync(destFile, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+  const merged = mergeMcpServers({
+    document: existingDoc,
+    key: "mcpServers",
+    incoming,
+    managedServers: ctx.managedServers,
+    merge: "shallow",
+    stripKeys: ["format", "packageName", "registry"],
+  });
+  writeJsonDocument(destFile, merged.document);
 
   return {
     targetId: ctx.targetId,
     configPath: MCP_JSON_REL,
-    servers: writtenNames,
+    servers: merged.servers,
     deployedFiles: [{ path: MCP_JSON_REL }],
     diagnostics,
   };
-}
-
-function readExistingMcpDoc(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
-    return raw && typeof raw === "object" && !Array.isArray(raw)
-      ? { ...(raw as Record<string, unknown>) }
-      : {};
-  } catch {
-    return {};
-  }
 }
 
 function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpServerConfig>): {
@@ -291,33 +256,15 @@ function normalizeServerEntries(servers: McpServerConfig[] | Record<string, McpS
 } {
   const out: Record<string, Record<string, unknown>> = {};
   const diagnostics: Array<{ code: string; message: string; server?: string }> = [];
-  const list: McpServerConfig[] = Array.isArray(servers)
-    ? servers
-    : Object.entries(servers).map(([name, value]) => ({
-        ...value,
-        name: value.name ?? name,
-      }));
 
-  for (const server of list) {
-    const name = String(server.name ?? "").trim();
-    if (!name) continue;
-    out[name] = toKiroServerEntry(server);
+  for (const server of normalizeNamedEntries(servers)) {
+    out[server.name] = toKiroServerEntry(server);
   }
   return { entries: out, diagnostics };
 }
 
 function translateEnvPlaceholders(env: Record<string, string>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [key, raw] of Object.entries(env)) {
-    if (typeof raw !== "string") {
-      out[key] = String(raw);
-      continue;
-    }
-    out[key] = raw
-      .replace(/\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}/g, "${$1}")
-      .replace(/<([A-Z_][A-Z0-9_]*)>/g, "${$1}");
-  }
-  return out;
+  return translateEnvMap(env, "dollar-bare");
 }
 
 function toKiroServerEntry(server: McpServerConfig): Record<string, unknown> {
@@ -362,52 +309,11 @@ function toKiroServerEntry(server: McpServerConfig): Record<string, unknown> {
 
 /** Map instruction markdown to Kiro steering frontmatter. */
 export function transformKiroSteeringMarkdown(source: string): string {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  const parsed = parseFrontmatter(source);
   const applyToValues: string[] = [];
-  let body = source;
-
-  if (match) {
-    const rawFm = match[1] ?? "";
-    body = match[2] ?? "";
-    const lines = rawFm.split(/\r?\n/);
-    let i = 0;
-    while (i < lines.length) {
-      const line = lines[i]!;
-      const keyMatch = line.match(/^([A-Za-z0-9_-]+)\s*:(.*)$/);
-      if (!keyMatch) {
-        i += 1;
-        continue;
-      }
-      const key = keyMatch[1]!;
-      const rest = (keyMatch[2] ?? "").trim();
-      if (key !== "applyTo") {
-        i += 1;
-        continue;
-      }
-      if (rest.startsWith("[") && rest.endsWith("]")) {
-        for (const part of rest.slice(1, -1).split(",")) {
-          const v = part.trim().replace(/^["']|["']$/g, "");
-          if (v) applyToValues.push(v);
-        }
-        i += 1;
-        continue;
-      }
-      if (rest && rest !== "|" && rest !== ">") {
-        for (const part of rest.split(",")) {
-          const v = part.trim().replace(/^["']|["']$/g, "");
-          if (v) applyToValues.push(v);
-        }
-        i += 1;
-        continue;
-      }
-      i += 1;
-      while (i < lines.length) {
-        const item = lines[i]!;
-        const listMatch = item.match(/^[ \t]*-[ \t]*(.+)$/);
-        if (!listMatch) break;
-        applyToValues.push(listMatch[1]!.trim().replace(/^["']|["']$/g, ""));
-        i += 1;
-      }
+  for (const field of parsed.fields) {
+    if (field.key === "applyTo") {
+      applyToValues.push(...frontmatterList(field, { splitScalarCommas: true }));
     }
   }
 
@@ -421,6 +327,7 @@ export function transformKiroSteeringMarkdown(source: string): string {
     fmLines.push("inclusion: always");
   }
 
+  const body = parsed.hasFrontmatter ? parsed.body : source;
   return `---\n${fmLines.join("\n")}\n---\n\n${body.replace(/^\n+/, "")}`;
 }
 
@@ -577,23 +484,7 @@ function unquote(value: string): string {
 }
 
 function packageKey(p: AttributedPrimitive): string {
-  if (typeof p.packageName === "string" && p.packageName.trim()) {
-    return sanitizeName(p.packageName);
-  }
-  const source = String(p.source ?? "");
-  if (source.startsWith("dependency:")) {
-    return sanitizeName(source.slice("dependency:".length));
-  }
-  return "local";
-}
-
-function safeHookSlug(value: string, fallback = "hook"): string {
-  const safe = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, "-")
-    .replace(/^[-._]+|[-._]+$/g, "");
-  return safe || fallback;
+  return primitivePackageKey(p);
 }
 
 function mapKiroEvent(event: string): string {
@@ -624,29 +515,16 @@ function materializeKiroHooks(args: {
   for (const p of hooks) {
     const stem = sanitizeName(String(p.name));
     const pkg = packageKey(p);
-    const srcPath = p.path ? resolve(p.path) : undefined;
-    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
-      diagnostics.push({
-        code: "KIRO_HOOK_SOURCE_MISSING",
-        message: `Hook primitive "${p.name}" has no readable source JSON`,
-        primitive: String(p.name),
-      });
+    const source = readHookSource(p, {
+      missingCode: "KIRO_HOOK_SOURCE_MISSING",
+      invalidCode: "KIRO_HOOK_JSON_INVALID",
+    });
+    if (source.diagnostics.length > 0) {
+      diagnostics.push(...source.diagnostics);
       continue;
     }
-
-    let parsed: { hooks?: Record<string, unknown[]> };
-    try {
-      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as { hooks?: Record<string, unknown[]> };
-    } catch (cause) {
-      diagnostics.push({
-        code: "KIRO_HOOK_JSON_INVALID",
-        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
+    const srcPath = resolve(p.path!);
+    const sourceHooks = source.hooks;
     const hookFiles: string[] = [];
     const scripts: string[] = [];
     const perEventCounts: Record<string, number> = {};
@@ -703,7 +581,7 @@ function materializeKiroHooks(args: {
               },
             ],
           };
-          writeFileSync(hookAbs, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
+          writeJsonDocument(hookAbs, doc);
           hookFiles.push(hookRel);
           deployedFiles.push({
             path: hookRel,

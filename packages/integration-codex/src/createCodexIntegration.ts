@@ -8,26 +8,22 @@ import type {
   CompileReport,
   ConfigureMcpContext,
   ConfigureMcpReport,
-  HookOwnershipSidecar,
   MaterializeReport,
   McpServerConfig,
 } from "@b-apm/integration-api";
 import {
   assertUnderDeployRoots,
-  compileMarkdownReport,
-  copyHookScript,
+  compilePrimitivesMarkdown,
+  createMaterializeRun,
+  extractEnvReference,
+  hasEnvReference,
   materializeSkill,
-  primitivesList,
+  mergeHookDeployment,
+  normalizeHookEventName,
   primitivesMaterialize,
   pruneManagedMcpServerNames,
-  readHookOwnershipSidecar,
   readPrimitiveContent,
-  renderNativeHookEntries,
-  renderPrimitivesMarkdown,
-  sanitizeName,
-  stripOwnedHookCommands,
   writeDeployedFile,
-  writeHookOwnershipSidecar,
 } from "@b-apm/integration-api";
 
 const DEFAULT_DEPLOY_ROOTS = [".codex", ".agents", "."] as const;
@@ -71,31 +67,23 @@ export function createCodexIntegration(options?: {
     globalCompileOutput: ".codex/AGENTS.md",
     getDeployRoots: () => [...deployRoots],
     async compile(primitives, context): Promise<CompileReport> {
-      const content = renderPrimitivesMarkdown({
-        primitives: primitivesList(primitives),
+      return compilePrimitivesMarkdown(primitives, context, {
         title: "# AGENTS.md",
-      });
-      return compileMarkdownReport({
-        cwd: context.cwd,
-        outputFile: context.outputFile ?? "AGENTS.md",
-        write: context.write,
-        content,
+        defaultOutput: "AGENTS.md",
         requireBasename: "AGENTS.md",
         outsideCwdMessage: "Codex compile output must be a cwd-relative file path",
       });
     },
     async materialize(primitives, ctx): Promise<MaterializeReport> {
-      const cwd = resolve(ctx?.cwd ?? process.cwd());
-      const roots = ctx?.deployRoots?.length ? [...ctx.deployRoots] : deployRoots;
-      if (!roots.some((r) => r === ".codex" || r.startsWith(".codex"))) {
-        throw new Error("codex target missing .codex deploy root");
-      }
-      if (!roots.some((r) => r === ".agents" || r.startsWith(".agents"))) {
-        throw new Error("codex target missing .agents deploy root");
-      }
-
-      const deployedFiles: MaterializeReport["deployedFiles"] = [];
-      const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
+      const run = createMaterializeRun({
+        primitives,
+        ctx,
+        defaultDeployRoots: deployRoots,
+        targetId: id,
+        requiredRoots: [".codex", ".agents"],
+        label: "codex",
+      });
+      const { cwd, roots, deployedFiles, diagnostics } = run;
       const hookPrimitives: AttributedPrimitive[] = [];
 
       await primitivesMaterialize(primitives, {
@@ -155,11 +143,7 @@ export function createCodexIntegration(options?: {
         diagnostics.push(...hookDeployed.diagnostics);
       }
 
-      return {
-        targetId: id,
-        deployedFiles,
-        ...(diagnostics.length > 0 ? { diagnostics } : {}),
-      };
+      return run.report();
     },
     async configureMcp(servers, ctx): Promise<ConfigureMcpReport> {
       if (ctx?.scope === "global") {
@@ -519,14 +503,14 @@ function mapCodexHeaders(
 
     const bearer = /^Bearer\s+(.+)$/.exec(raw);
     if (bearer && header.toLowerCase() === "authorization") {
-      const varName = extractSingleEnvRef(bearer[1]!.trim());
+      const varName = extractEnvReference(bearer[1]!.trim());
       if (varName) {
         bearerTokenEnvVar = varName;
         continue;
       }
     }
 
-    const direct = extractSingleEnvRef(raw.trim());
+    const direct = extractEnvReference(raw.trim());
     if (direct) {
       envHttpHeaders[header] = direct;
       continue;
@@ -549,25 +533,6 @@ function mapCodexHeaders(
   };
 }
 
-function hasEnvReference(value: string): boolean {
-  return /\$\{|<[A-Z_][A-Z0-9_]*>|\{env:[A-Za-z_][A-Za-z0-9_]*\}/.test(value);
-}
-
-function extractSingleEnvRef(value: string): string | undefined {
-  const match =
-    /^\$\{env:([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
-    /^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
-    /^\{env:([A-Za-z_][A-Za-z0-9_]*)\}$/.exec(value) ??
-    /^<([A-Z_][A-Z0-9_]*)>$/.exec(value);
-  return match?.[1];
-}
-
-type HooksDoc = {
-  version?: number;
-  hooks?: Record<string, unknown[]>;
-  [key: string]: unknown;
-};
-
 function materializeCodexHooks(args: {
   cwd: string;
   roots: string[];
@@ -577,137 +542,29 @@ function materializeCodexHooks(args: {
   diagnostics: NonNullable<MaterializeReport["diagnostics"]>;
 } {
   const { cwd, roots, hooks } = args;
-  const deployedFiles: MaterializeReport["deployedFiles"] = [];
-  const diagnostics: NonNullable<MaterializeReport["diagnostics"]> = [];
-
   const hooksPath = join(cwd, HOOKS_JSON_REL);
   const ownershipPath = join(cwd, HOOKS_OWNERSHIP_REL);
   assertUnderDeployRoots(cwd, hooksPath, roots);
   assertUnderDeployRoots(cwd, ownershipPath, roots);
   mkdirSync(join(cwd, ".codex"), { recursive: true });
 
-  const doc = readHooksDoc(hooksPath);
-  const ownership = readHookOwnershipSidecar(ownershipPath);
-  if (doc.hooks && typeof doc.hooks === "object") {
-    stripOwnedHookCommands(doc.hooks as Record<string, unknown>, ownership);
-  }
-
-  const nextOwned: HookOwnershipSidecar["owned"] = {};
-
-  for (const p of hooks) {
-    const name = sanitizeName(String(p.name));
-    const srcPath = p.path ? resolve(p.path) : undefined;
-    if (!srcPath || !existsSync(srcPath) || !statSync(srcPath).isFile()) {
-      diagnostics.push({
-        code: "CODEX_HOOK_SOURCE_MISSING",
-        message: `Hook primitive "${p.name}" has no readable source JSON`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    let parsed: HooksDoc;
-    try {
-      parsed = JSON.parse(readFileSync(srcPath, "utf8")) as HooksDoc;
-    } catch (cause) {
-      diagnostics.push({
-        code: "CODEX_HOOK_JSON_INVALID",
-        message: `Hook "${p.name}" JSON is invalid: ${cause instanceof Error ? cause.message : String(cause)}`,
-        primitive: String(p.name),
-      });
-      continue;
-    }
-
-    const sourceHooks = parsed.hooks && typeof parsed.hooks === "object" ? parsed.hooks : {};
-    const ownedEntries: Array<{ event: string; command: string }> = [];
-    const scripts: string[] = [];
-
-    if (!doc.hooks || typeof doc.hooks !== "object") doc.hooks = {};
-    if (typeof parsed.version === "number" && doc.version === undefined) {
-      doc.version = parsed.version;
-    }
-
-    for (const [rawEvent, entries] of Object.entries(sourceHooks)) {
-      if (!Array.isArray(entries)) continue;
-      const event = normalizeCodexHookEvent(rawEvent);
-      const destList = Array.isArray(doc.hooks[event]) ? [...doc.hooks[event]!] : [];
-      const rendered = renderNativeHookEntries({
-        entries: entries as unknown[],
-        rewriteCommand: (command) => {
-          const rewritten = copyHookScript({
-            cwd,
-            deployRoots: roots,
-            hookFile: srcPath,
-            command,
-            alreadyDeployedNeedle: ".codex/",
-            destRel: `.codex/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
-            commandAsDotSlash: true,
-          });
-          return {
-            command: rewritten.commandRel,
-            ...(rewritten.scriptRel ? { scriptRel: rewritten.scriptRel } : {}),
-          };
-        },
-      });
-      for (const entry of rendered.owned) ownedEntries.push({ event, command: entry.command });
-      for (const scriptRel of rendered.scripts) {
-        if (scripts.includes(scriptRel)) continue;
-        scripts.push(scriptRel);
-        deployedFiles.push({
-          path: scriptRel,
-          primitive: { name: String(p.name), packageName: p.packageName },
-        });
-      }
-      doc.hooks[event] = [...destList, ...rendered.entries];
-    }
-
-    nextOwned[name] = {
-      ...(p.packageName ? { packageName: p.packageName } : {}),
-      entries: ownedEntries,
-      scripts,
-    };
-  }
-
-  if (doc.version === undefined) doc.version = 1;
-  writeFileSync(hooksPath, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
-  writeHookOwnershipSidecar(ownershipPath, { owned: nextOwned });
-
-  deployedFiles.push({
-    path: HOOKS_JSON_REL,
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
-  });
-  deployedFiles.push({
-    path: HOOKS_OWNERSHIP_REL,
-    ...(hooks[0]
-      ? { primitive: { name: String(hooks[0].name), packageName: hooks[0].packageName } }
-      : {}),
+  const result = mergeHookDeployment({
+    cwd,
+    deployRoots: roots,
+    hooks,
+    docPath: hooksPath,
+    ownershipPath,
+    docRel: HOOKS_JSON_REL,
+    ownershipRel: HOOKS_OWNERSHIP_REL,
+    mode: "native-groups",
+    code: "CODEX",
+    normalizeEvent: (event) => normalizeHookEventName(event, "pascal"),
+    alreadyDeployedNeedle: ".codex/",
+    commandAsDotSlash: true,
+    versionDefault: 1,
+    scriptDestRel: ({ name, command }) =>
+      `.codex/hooks/${name}/${basename(command.replace(/^\.\//, ""))}`,
   });
 
-  return { deployedFiles, diagnostics };
-}
-
-/** Prefer PascalCase event names when normalizing (APM Codex expected casing). */
-function normalizeCodexHookEvent(event: string): string {
-  const trimmed = event.trim();
-  if (!trimmed) return trimmed;
-  if (/^[A-Z][A-Za-z0-9]*$/.test(trimmed)) return trimmed;
-  return trimmed
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join("");
-}
-
-function readHooksDoc(path: string): HooksDoc {
-  if (!existsSync(path)) return { version: 1, hooks: {} };
-  try {
-    const raw = JSON.parse(readFileSync(path, "utf8")) as HooksDoc;
-    if (!raw || typeof raw !== "object") return { version: 1, hooks: {} };
-    if (!raw.hooks || typeof raw.hooks !== "object") raw.hooks = {};
-    return raw;
-  } catch {
-    return { version: 1, hooks: {} };
-  }
+  return { deployedFiles: result.deployedFiles, diagnostics: result.diagnostics };
 }
