@@ -142,7 +142,7 @@ describe("install materializes only the declared subset", () => {
   });
 });
 
-describe("empty skill-subset match is diagnosed (req-mf-022)", () => {
+describe("skill-subset mismatches are diagnosed (req-mf-022)", () => {
   let project: TempProject | undefined;
 
   afterEach(() => {
@@ -167,9 +167,72 @@ describe("empty skill-subset match is diagnosed (req-mf-022)", () => {
     expect(skillNames).not.toContain(KEEP_SKILL);
     expect(skillNames).not.toContain(DROP_SKILL);
     expect(skillNames).not.toContain(STALE_SKILL);
+    const diag = subsetDiagnostic(result, "EMPTY_SKILL_SUBSET");
+    expect(diag).toMatchObject({
+      code: "EMPTY_SKILL_SUBSET",
+      warn: true,
+      requested: [STALE_SKILL],
+    });
+    expect(diag?.unmatched).toEqual([STALE_SKILL]);
     const blob = flattenDiagnostics(result);
     expect(blob).toMatch(new RegExp(STALE_SKILL));
     expect(blob).toMatch(new RegExp(`${KEEP_SKILL}|${DROP_SKILL}`));
     expect(blob).toMatch(/acme\/toolkit|toolkit|git:/i);
   });
+
+  test("partial skill subset warns about leftover unknown names", async () => {
+    project = createTempProject();
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    writeManifestYaml(
+      project.cwd,
+      consumerManifest({
+        name: "partial-pin",
+        target: "cursor",
+        depYaml: gitObjectDepYaml({ skills: [KEEP_SKILL, STALE_SKILL] }),
+      }),
+    );
+
+    const { result, skillNames } = await installWithCursorSpy(project.cwd);
+    expect(result).toMatchObject({ ok: true });
+    expect(skillNames).toContain(KEEP_SKILL);
+    expect(skillNames).not.toContain(DROP_SKILL);
+    expect(skillNames).not.toContain(STALE_SKILL);
+    const diag = subsetDiagnostic(result, "SKILL_SUBSET_UNMATCHED");
+    expect(diag).toMatchObject({
+      code: "SKILL_SUBSET_UNMATCHED",
+      warn: true,
+    });
+    expect(diag?.unmatched).toEqual([STALE_SKILL]);
+    expect(flattenDiagnostics(result)).toMatch(new RegExp(STALE_SKILL));
+  });
+
+  test("exact skill subset does not diagnose unmatched names", async () => {
+    project = createTempProject();
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    writeManifestYaml(
+      project.cwd,
+      consumerManifest({
+        name: "exact-pin",
+        target: "cursor",
+        depYaml: gitObjectDepYaml({ skills: [KEEP_SKILL] }),
+      }),
+    );
+
+    const { result, skillNames } = await installWithCursorSpy(project.cwd);
+    expect(result).toMatchObject({ ok: true });
+    expect(skillNames).toContain(KEEP_SKILL);
+    expect(skillNames).not.toContain(DROP_SKILL);
+    expect(subsetDiagnostic(result, "EMPTY_SKILL_SUBSET")).toBeUndefined();
+    expect(subsetDiagnostic(result, "SKILL_SUBSET_UNMATCHED")).toBeUndefined();
+  });
 });
+
+function subsetDiagnostic(result: unknown, code: string): Record<string, unknown> | undefined {
+  if (!result || typeof result !== "object") return undefined;
+  const bag = (result as { diagnostics?: unknown }).diagnostics;
+  if (!Array.isArray(bag)) return undefined;
+  return bag.find(
+    (item): item is Record<string, unknown> =>
+      !!item && typeof item === "object" && (item as { code?: unknown }).code === code,
+  );
+}

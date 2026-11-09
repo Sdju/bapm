@@ -190,4 +190,90 @@ describe("CLI install · diagnostics visibility", () => {
     expect(existsSync(join(project.cwd, ".mcp.json"))).toBe(false);
     expect(existsSync(join(project.cwd, ".claude"))).toBe(false);
   });
+
+  test("unknown skill subset names print EMPTY_SKILL_SUBSET and deploy nothing", async () => {
+    project = createTempProject();
+    linkCursorIntegration(project.cwd);
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    writeSkillPackage(project.cwd, "fixture", ["alpha", "beta"]);
+    writeText(
+      project.cwd,
+      "bapm.yml",
+      [
+        "name: empty-skill-subset",
+        "version: 0.0.1",
+        "active:",
+        "  target: cursor",
+        "dependencies:",
+        "  apm:",
+        "    - path: ./fixture",
+        "      skills: [gamma]",
+        "",
+      ].join("\n"),
+    );
+
+    const { result, stderr, combined } = await runInProject(project.cwd, [
+      "install",
+      "--no-frozen",
+      "--no-policy",
+      "--target",
+      "cursor",
+    ]);
+
+    expect(result, combined).toBe(0);
+    expect(stderr.join("\n")).toMatch(/bapm: warning:/i);
+    expect(stderr.join("\n")).toMatch(/EMPTY_SKILL_SUBSET|matched zero skills/i);
+    expect(stderr.join("\n")).toMatch(/gamma/);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "alpha", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "gamma", "SKILL.md"))).toBe(false);
+  });
+
+  test("partial skill subset prints unmatched names and deploys the rest", async () => {
+    project = createTempProject();
+    linkCursorIntegration(project.cwd);
+    mkdirSync(join(project.cwd, ".cursor"), { recursive: true });
+    writeSkillPackage(project.cwd, "fixture", ["alpha", "beta"]);
+    writeText(
+      project.cwd,
+      "bapm.yml",
+      [
+        "name: partial-skill-subset",
+        "version: 0.0.1",
+        "active:",
+        "  target: cursor",
+        "dependencies:",
+        "  apm:",
+        "    - path: ./fixture",
+        "      skills: [alpha, ghost]",
+        "",
+      ].join("\n"),
+    );
+
+    const { result, stderr, combined } = await runInProject(project.cwd, [
+      "install",
+      "--no-frozen",
+      "--no-policy",
+      "--target",
+      "cursor",
+    ]);
+
+    expect(result, combined).toBe(0);
+    expect(stderr.join("\n")).toMatch(/bapm: warning:/i);
+    expect(stderr.join("\n")).toMatch(/SKILL_SUBSET_UNMATCHED|dropped unknown names/i);
+    expect(stderr.join("\n")).toMatch(/ghost/);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "alpha", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "ghost", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(project.cwd, ".agents", "skills", "beta", "SKILL.md"))).toBe(false);
+  });
 });
+
+function writeSkillPackage(cwd: string, dir: string, skills: string[]): void {
+  writeText(cwd, `${dir}/bapm.yml`, `name: ${dir}\nversion: 0.1.0\ndependencies:\n  apm: []\n`);
+  for (const skill of skills) {
+    writeText(
+      cwd,
+      `${dir}/.apm/skills/${skill}/SKILL.md`,
+      `---\nname: ${skill}\n---\n# ${skill}\n`,
+    );
+  }
+}
