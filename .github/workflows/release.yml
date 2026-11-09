@@ -122,6 +122,7 @@ jobs:
           exit "$failed"
 
       - name: Publish to npm (OIDC trusted publishing)
+        id: publish
         run: |
           set -euo pipefail
           # Do not export NODE_AUTH_TOKEN / NPM_TOKEN — OIDC only.
@@ -131,9 +132,11 @@ jobs:
           #
           # Publish package-by-package and skip versions that are already on
           # npm. This makes a retried release idempotent after a partial
-          # publish. Brand-new package names still need a one-time manual
-          # bootstrap + Trusted Publishing setup on npmjs.com before OIDC can
-          # publish them.
+          # publish. One package failing (OIDC 404, replication lag 403)
+          # MUST NOT abort the remaining packages.
+          # Brand-new package names still need a one-time manual bootstrap +
+          # Trusted Publishing setup on npmjs.com before OIDC can publish them.
+          failed=()
           for dir in packages/*/; do
             if node -p "Boolean(require('./${dir}package.json').private)" | grep -qx true; then
               echo "skip private ${dir}"
@@ -146,10 +149,23 @@ jobs:
               continue
             fi
             echo "publish ${name}@${version}"
-            (cd "$dir" && pnpm publish --access public --no-git-checks)
+            if (cd "$dir" && pnpm publish --access public --no-git-checks); then
+              continue
+            fi
+            if npm view "${name}@${version}" version >/dev/null 2>&1; then
+              echo "skip ${name}@${version} (already published after lag)"
+              continue
+            fi
+            echo "::error::failed to publish ${name}@${version}"
+            failed+=("${name}@${version}")
           done
+          if [ "${#failed[@]}" -ne 0 ]; then
+            echo "Unpublished packages: ${failed[*]}"
+            exit 1
+          fi
 
       - name: Create GitHub Release
+        if: success() || steps.publish.outcome == 'failure'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
