@@ -4,7 +4,8 @@
  */
 import { afterEach, describe, expect, test } from "vite-plus/test";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createIsolatedHome,
   readText,
@@ -13,8 +14,10 @@ import {
   writeText,
   type IsolatedHome,
 } from "./approve-deny-helpers.ts";
-import { linkCursorIntegration } from "./helpers.ts";
+import { linkCursorIntegration, linkPackageDir } from "./helpers.ts";
 import { createDeny } from "../../src/modules/Deny/index.ts";
+
+const PACKAGES_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 function writeDenyPruneProject(cwd: string): void {
   linkCursorIntegration(cwd);
@@ -48,8 +51,43 @@ dependencies:
   mkdirSync(join(cwd, ".cursor"), { recursive: true });
 }
 
-function readMcpServers(cwd: string): Record<string, unknown> {
-  const path = join(cwd, ".cursor", "mcp.json");
+function writeDenyPruneClaudeProject(cwd: string): void {
+  linkPackageDir(cwd, join(PACKAGES_ROOT, "integration-claude"));
+  writeText(
+    cwd,
+    "dep/apm.yml",
+    `name: mcp-dep
+version: 0.0.1
+dependencies:
+  mcp:
+    - name: dep-server
+      type: stdio
+      command: echo
+`,
+  );
+  writeText(
+    cwd,
+    "bapm.yml",
+    `name: deny-prune-claude-root
+version: 0.0.1
+target: claude
+executables:
+  allow:
+    mcp-dep:
+      mcp: true
+dependencies:
+  apm:
+    - path: ./dep
+`,
+  );
+  mkdirSync(join(cwd, ".claude"), { recursive: true });
+}
+
+function readMcpServers(
+  cwd: string,
+  configPath = join(".cursor", "mcp.json"),
+): Record<string, unknown> {
+  const path = join(cwd, configPath);
   if (!existsSync(path)) return {};
   const doc = JSON.parse(readFileSync(path, "utf8")) as {
     mcpServers?: Record<string, unknown>;
@@ -107,6 +145,19 @@ describe("bapm deny prunes host MCP entries", () => {
     expect(readUserConfig(env.home).executables?.deny?.["mcp-dep"]).toBeTruthy();
     expect(readMcpServers(env.cwd)).not.toHaveProperty("dep-server");
     expect(readText(join(env.cwd, "bapm.yml"))).toBe(manifestBefore);
+  });
+
+  test("Claude host config loses the denied server after deny", async () => {
+    env = createIsolatedHome();
+    writeDenyPruneClaudeProject(env.cwd);
+
+    const installed = await runInEnv(env, ["install", "--target", "claude"]);
+    expect(installed.result, installed.combined).toBe(0);
+    expect(readMcpServers(env.cwd, ".mcp.json")).toHaveProperty("dep-server");
+
+    const denied = await runInEnv(env, ["deny", "mcp-dep"]);
+    expect(denied.result, denied.combined).toBe(0);
+    expect(readMcpServers(env.cwd, ".mcp.json")).not.toHaveProperty("dep-server");
   });
 
   test("no manifest/lock still exits 0 with a manual cleanup hint", async () => {
